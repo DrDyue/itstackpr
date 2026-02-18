@@ -9,7 +9,7 @@ class DeviceSetItem extends Model
     protected $table = 'device_set_items';
 
     public const UPDATED_AT = null;
-    public $timestamps = true; // created_at есть
+    public $timestamps = true;
 
     protected $fillable = [
         'device_set_id',

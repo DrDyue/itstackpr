@@ -8,7 +8,6 @@ class DeviceHistory extends Model
 {
     protected $table = 'device_history';
 
-    // у нас нет created_at/updated_at, вместо этого поле timestamp
     public $timestamps = false;
 
     protected $fillable = [
@@ -24,5 +23,10 @@ class DeviceHistory extends Model
     public function device()
     {
         return $this->belongsTo(Device::class);
+    }
+
+    public function changedBy()
+    {
+        return $this->belongsTo(User::class, 'changed_by');
     }
 }

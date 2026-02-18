@@ -15,6 +15,11 @@ class Employee extends Model
         'email',
         'phone',
         'job_title',
-        'is_active'
+        'is_active',
     ];
+
+    public function rooms()
+    {
+        return $this->hasMany(Room::class);
+    }
 }

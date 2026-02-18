@@ -27,4 +27,9 @@ class DeviceSet extends Model
     {
         return $this->hasMany(DeviceSetItem::class, 'device_set_id');
     }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 }

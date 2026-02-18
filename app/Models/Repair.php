@@ -8,8 +8,8 @@ class Repair extends Model
 {
     protected $table = 'repairs';
 
-    public const UPDATED_AT = null; // у нас нет updated_at
-    public $timestamps = true; // created_at есть
+    public const UPDATED_AT = null;
+    public $timestamps = true;
 
     protected $fillable = [
         'device_id',
@@ -31,5 +31,15 @@ class Repair extends Model
     public function device()
     {
         return $this->belongsTo(Device::class);
+    }
+
+    public function reporter()
+    {
+        return $this->belongsTo(User::class, 'issue_reported_by');
+    }
+
+    public function assignee()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 }
