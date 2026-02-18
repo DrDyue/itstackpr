@@ -19,23 +19,19 @@ jobs:
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ftpupload.net
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
+          username: if0_41181306
+          password: Neonon32
           server-dir: /htdocs/
 
           dangerous-clean-slate: false
 
-          security: loose
-          
-  exclude: |
-    **/.git/**
-    **/.git*
-    **/.github/**
-    node_modules/**
-    vendor/**
-    storage/logs/**
-    storage/framework/cache/**
-    storage/framework/sessions/**
-    storage/framework/views/**
-    .env
-
+          exclude: |
+            **/.git/**
+            **/.git*
+            **/.github/**
+            **/node_modules/**
+            **/storage/logs/**
+            **/storage/framework/cache/**
+            **/storage/framework/sessions/**
+            **/storage/framework/views/**
+            .env
