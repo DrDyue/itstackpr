@@ -120,7 +120,7 @@ class DeviceSetController extends Controller
         return redirect()->route('device-sets.index')->with('success', 'Device set deleted');
     }
 
-    // ------- ВАЖНОЕ: добавление устройства в комплект -------
+    
     public function addItem(Request $request, DeviceSet $deviceSet)
     {
         $data = $request->validate([

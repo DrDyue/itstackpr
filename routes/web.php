@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 /*-------------------------- Routes for Employee Management --------------------------*/
 use App\Http\Controllers\EmployeeController;
 
-Route::resource('employees', EmployeeController::class);
+Route::resource('employees', EmployeeController::class)->except(['show']);
 
 
 /*-------------------------- Routes for Building Management --------------------------*/
@@ -52,6 +52,9 @@ Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.
 
 /*-------------------------- Routes for Device Set Management --------------------------*/
 use App\Http\Controllers\DeviceSetController;
+Route::resource('device-sets', DeviceSetController::class)
+    ->except(['show'])
+    ->parameters(['device-sets' => 'deviceSet']);
 
 Route::resource('device-sets', DeviceSetController::class)->except(['show']);
 
