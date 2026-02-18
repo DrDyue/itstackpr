@@ -17,4 +17,14 @@ class Building extends Model
         'total_floors',
         'notes',
     ];
+
+    public function rooms()
+    {
+        return $this->hasMany(Room::class);
+    }
+
+    public function devices()
+    {
+        return $this->hasMany(Device::class);
+    }
 }

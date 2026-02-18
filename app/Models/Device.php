@@ -44,4 +44,24 @@ class Device extends Model
     {
         return $this->belongsTo(Room::class);
     }
+
+    public function repairs()
+    {
+        return $this->hasMany(Repair::class);
+    }
+
+    public function history()
+    {
+        return $this->hasMany(DeviceHistory::class);
+    }
+
+    public function setItems()
+    {
+        return $this->hasMany(DeviceSetItem::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 }

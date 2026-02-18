@@ -29,4 +29,14 @@ class Room extends Model
     {
         return $this->belongsTo(Employee::class);
     }
+
+    public function devices()
+    {
+        return $this->hasMany(Device::class);
+    }
+
+    public function deviceSets()
+    {
+        return $this->hasMany(DeviceSet::class);
+    }
 }
