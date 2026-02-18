@@ -1,66 +1,31 @@
 <?php
 
-namespace App\Http\Controllers;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-use App\Models\DeviceType;
-use Illuminate\Http\Request;
-
-class DeviceTypeController extends Controller
+return new class extends Migration
 {
-    public function index()
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
     {
-        $types = DeviceType::orderBy('type_name')->get();
-        return view('device_types.index', compact('types'));
+        Schema::create('device_types', function (Blueprint $table) {
+            $table->id();
+            $table->string('type_name', 30)->unique();
+            $table->string('category', 50);
+            $table->string('icon_name', 50)->nullable();
+            $table->text('description')->nullable();
+            $table->unsignedInteger('expected_lifetime_years')->nullable();
+        });
     }
 
-    public function create()
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
     {
-        return view('device_types.create');
+        Schema::dropIfExists('device_types');
     }
-
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'type_name' => ['required', 'string', 'max:30', 'unique:device_types,type_name'],
-            'category' => ['required', 'string', 'max:50'],
-            'icon_name' => ['nullable', 'string', 'max:50'],
-            'description' => ['nullable', 'string'],
-            'expected_lifetime_years' => ['nullable', 'integer', 'min:0', 'max:100'],
-        ]);
-
-        DeviceType::create($data);
-
-        return redirect()->route('device-types.index')->with('success', 'Device type created');
-    }
-
-    public function edit(DeviceType $deviceType)
-    {
-        return view('device_types.edit', ['type' => $deviceType]);
-    }
-
-    public function update(Request $request, DeviceType $deviceType)
-    {
-        $data = $request->validate([
-            'type_name' => ['required', 'string', 'max:30', 'unique:device_types,type_name,' . $deviceType->id],
-            'category' => ['required', 'string', 'max:50'],
-            'icon_name' => ['nullable', 'string', 'max:50'],
-            'description' => ['nullable', 'string'],
-            'expected_lifetime_years' => ['nullable', 'integer', 'min:0', 'max:100'],
-        ]);
-
-        $deviceType->update($data);
-
-        return redirect()->route('device-types.index')->with('success', 'Device type updated');
-    }
-
-    public function destroy(DeviceType $deviceType)
-    {
-        $deviceType->delete();
-        return redirect()->route('device-types.index')->with('success', 'Device type deleted');
-    }
-
-    public function show(DeviceType $deviceType)
-    {
-        return redirect()->route('device-types.index');
-    }
-}
+};
