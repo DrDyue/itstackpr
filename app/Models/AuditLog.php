@@ -8,14 +8,15 @@ class AuditLog extends Model
 {
     protected $table = 'audit_log';
 
-    public const UPDATED_AT = null;
-    public $timestamps = true;
+    public $timestamps = false; 
 
     protected $fillable = [
+        'timestamp',
         'user_id',
         'action',
         'entity_type',
         'entity_id',
         'description',
+        'severity',
     ];
 }

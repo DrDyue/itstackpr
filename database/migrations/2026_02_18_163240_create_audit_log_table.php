@@ -14,18 +14,26 @@ public function up(): void
     Schema::create('audit_log', function (Blueprint $table) {
         $table->id();
 
+        // в документе есть timestamp (не created_at/updated_at)
+        $table->timestamp('timestamp')->useCurrent()->nullable();
+
         $table->foreignId('user_id')
             ->nullable()
             ->constrained('users')
             ->nullOnDelete();
 
-        $table->string('action', 50);          // CREATE, UPDATE, DELETE, LOGIN
-        $table->string('entity_type', 100);    // Device, Repair, Building...
-        $table->string('entity_id', 50)->nullable();
+        // enum как в документе
+        $table->enum('action', [
+            'CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'EXPORT', 'BACKUP', 'RESTORE', 'VIEW'
+        ]);
 
-        $table->text('description')->nullable();
+        $table->string('entity_type', 50);
+        $table->unsignedBigInteger('entity_id')->nullable();
 
-        $table->timestamp('created_at')->useCurrent();
+        $table->text('description');
+
+        // severity как в документе
+        $table->enum('severity', ['info', 'warning', 'error', 'critical'])->default('info');
     });
 }
 

@@ -34,7 +34,7 @@ class DeviceController extends Controller
         $buildings = Building::orderBy('building_name')->get();
         $rooms = Room::with('building')->orderBy('room_number')->get();
 
-        $statuses = ['active', 'reserve', 'broken', 'repair', 'retired', 'kitting'];
+        $statuses = ['active', 'in_repair', 'reserved', 'retired'];
 
         return view('devices.create', compact('types', 'buildings', 'rooms', 'statuses'));
     }
@@ -46,7 +46,7 @@ class DeviceController extends Controller
             'name' => ['required', 'string', 'max:200'],
             'device_type_id' => ['required', 'exists:device_types,id'],
             'model' => ['required', 'string', 'max:100'],
-            'status_id' => ['required', 'in:active,reserve,broken,repair,retired,kitting'],
+            'status' => ['required', 'in:active,in_repair,reserved,retired'],
             'building_id' => ['nullable', 'exists:buildings,id'],
             'room_id' => ['nullable', 'exists:rooms,id'],
             'assigned_to' => ['nullable', 'string', 'max:100'],
@@ -71,7 +71,6 @@ class DeviceController extends Controller
 
         $device = Device::create($data);
 
-        // device_history: CREATE
         DeviceHistory::create([
             'device_id' => $device->id,
             'action' => 'CREATE',
@@ -81,13 +80,13 @@ class DeviceController extends Controller
             'changed_by' => $userId,
         ]);
 
-        // audit_log: CREATE
         AuditLog::create([
             'user_id' => $userId,
             'action' => 'CREATE',
             'entity_type' => 'Device',
             'entity_id' => (string)$device->id,
             'description' => 'Device created: ' . $device->name,
+            'severity' => 'info',
         ]);
 
         return redirect()->route('devices.index')->with('success', 'Device created');
@@ -99,7 +98,7 @@ class DeviceController extends Controller
         $buildings = Building::orderBy('building_name')->get();
         $rooms = Room::with('building')->orderBy('room_number')->get();
 
-        $statuses = ['active', 'reserve', 'broken', 'repair', 'retired', 'kitting'];
+        $statuses = ['active', 'in_repair', 'reserved', 'retired'];
 
         return view('devices.edit', compact('device', 'types', 'buildings', 'rooms', 'statuses'));
     }
@@ -111,7 +110,7 @@ class DeviceController extends Controller
             'name' => ['required', 'string', 'max:200'],
             'device_type_id' => ['required', 'exists:device_types,id'],
             'model' => ['required', 'string', 'max:100'],
-            'status_id' => ['required', 'in:active,reserve,broken,repair,retired,kitting'],
+            'status' => ['required', 'in:active,in_repair,reserved,retired'],
             'building_id' => ['nullable', 'exists:buildings,id'],
             'room_id' => ['nullable', 'exists:rooms,id'],
             'assigned_to' => ['nullable', 'string', 'max:100'],
@@ -133,19 +132,16 @@ class DeviceController extends Controller
 
         $userId = auth()->check() ? auth()->id() : null;
 
-        // BEFORE
         $before = $device->only([
-            'code', 'name', 'device_type_id', 'model', 'status_id',
+            'code', 'name', 'device_type_id', 'model', 'status',
             'building_id', 'room_id', 'assigned_to',
             'purchase_date', 'purchase_price', 'warranty_until',
             'warranty_photo_name', 'serial_number', 'manufacturer',
             'notes', 'device_image_url'
         ]);
 
-        // UPDATE
         $device->update($data);
 
-        // AFTER
         $after = $device->fresh()->only(array_keys($before));
 
         $changedFields = [];
@@ -169,13 +165,13 @@ class DeviceController extends Controller
             ]);
         }
 
-        // audit_log: UPDATE (одна запись, со списком полей)
         AuditLog::create([
             'user_id' => $userId,
             'action' => 'UPDATE',
             'entity_type' => 'Device',
             'entity_id' => (string)$device->id,
             'description' => 'Device updated: ' . $device->name . (count($changedFields) ? ' | fields: ' . implode(', ', $changedFields) : ''),
+            'severity' => 'info',
         ]);
 
         return redirect()->route('devices.index')->with('success', 'Device updated');
@@ -189,7 +185,6 @@ class DeviceController extends Controller
         $code = $device->code;
         $name = $device->name;
 
-        // device_history: DELETE (пишем ДО удаления)
         DeviceHistory::create([
             'device_id' => $id,
             'action' => 'DELETE',
@@ -199,13 +194,13 @@ class DeviceController extends Controller
             'changed_by' => $userId,
         ]);
 
-        // audit_log: DELETE (пишем ДО удаления)
         AuditLog::create([
             'user_id' => $userId,
             'action' => 'DELETE',
             'entity_type' => 'Device',
             'entity_id' => (string)$id,
             'description' => 'Device deleted: ' . trim(($code ?? '') . ' ' . ($name ?? '')),
+            'severity' => 'warning',
         ]);
 
         $device->delete();

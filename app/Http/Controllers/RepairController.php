@@ -4,33 +4,39 @@ namespace App\Http\Controllers;
 
 use App\Models\Device;
 use App\Models\Repair;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class RepairController extends Controller
 {
     public function index(Request $request)
     {
-        $status = $request->query('status');
+        $q = $request->query('q');
 
-        $repairs = Repair::with('device')
-            ->when($status, fn($q) => $q->where('status', $status))
+        $repairs = Repair::with(['device', 'reporter', 'assignee'])
+            ->when($q, function ($query) use ($q) {
+                $query->where('description', 'like', "%{$q}%")
+                    ->orWhere('invoice_number', 'like', "%{$q}%")
+                    ->orWhere('vendor_name', 'like', "%{$q}%");
+            })
             ->orderByDesc('id')
             ->get();
 
-        $statuses = ['waiting', 'in-progress', 'completed', 'cancelled'];
-
-        return view('repairs.index', compact('repairs', 'status', 'statuses'));
+        return view('repairs.index', compact('repairs', 'q'));
     }
 
     public function create()
     {
-        $devices = Device::orderBy('name')->get();
+        $devices = Device::orderByDesc('id')->get();
+
+        // если у тебя пока нет пользователей/авторизации — можно оставить пустыми
+        $users = User::orderBy('name')->get();
 
         $statuses = ['waiting', 'in-progress', 'completed', 'cancelled'];
-        $types = ['internal', 'external'];
+        $repairTypes = ['internal', 'external'];
         $priorities = ['low', 'medium', 'high', 'critical'];
 
-        return view('repairs.create', compact('devices', 'statuses', 'types', 'priorities'));
+        return view('repairs.create', compact('devices', 'users', 'statuses', 'repairTypes', 'priorities'));
     }
 
     public function store(Request $request)
@@ -39,23 +45,32 @@ class RepairController extends Controller
             'device_id' => ['required', 'exists:devices,id'],
             'description' => ['required', 'string'],
 
-            'status' => ['required', 'in:waiting,in-progress,completed,cancelled'],
+            'status' => ['nullable', 'in:waiting,in-progress,completed,cancelled'],
             'repair_type' => ['required', 'in:internal,external'],
-            'priority' => ['required', 'in:low,medium,high,critical'],
+            'priority' => ['nullable', 'in:low,medium,high,critical'],
 
             'start_date' => ['required', 'date'],
             'estimated_completion' => ['nullable', 'date'],
             'actual_completion' => ['nullable', 'date'],
 
             'cost' => ['nullable', 'numeric', 'min:0'],
+
             'vendor_name' => ['nullable', 'string', 'max:100'],
             'vendor_contact' => ['nullable', 'string', 'max:100'],
             'invoice_number' => ['nullable', 'string', 'max:50'],
+
+            'issue_reported_by' => ['nullable', 'exists:users,id'],
+            'assigned_to' => ['nullable', 'exists:users,id'],
         ]);
 
-        // пока без users — позже подключим auth и будем писать issue_reported_by/assigned_to
-        $data['issue_reported_by'] = auth()->check() ? auth()->id() : null;
-        $data['assigned_to'] = null;
+        // Если status/priority пустые, база сама подставит default
+        // Но чтобы не было "" строк, приводим к null
+        foreach ([
+            'status','priority','estimated_completion','actual_completion',
+            'vendor_name','vendor_contact','invoice_number','issue_reported_by','assigned_to'
+        ] as $k) {
+            if (($data[$k] ?? null) === '') $data[$k] = null;
+        }
 
         Repair::create($data);
 
@@ -64,13 +79,14 @@ class RepairController extends Controller
 
     public function edit(Repair $repair)
     {
-        $devices = Device::orderBy('name')->get();
+        $devices = Device::orderByDesc('id')->get();
+        $users = User::orderBy('name')->get();
 
         $statuses = ['waiting', 'in-progress', 'completed', 'cancelled'];
-        $types = ['internal', 'external'];
+        $repairTypes = ['internal', 'external'];
         $priorities = ['low', 'medium', 'high', 'critical'];
 
-        return view('repairs.edit', compact('repair', 'devices', 'statuses', 'types', 'priorities'));
+        return view('repairs.edit', compact('repair', 'devices', 'users', 'statuses', 'repairTypes', 'priorities'));
     }
 
     public function update(Request $request, Repair $repair)
@@ -79,19 +95,30 @@ class RepairController extends Controller
             'device_id' => ['required', 'exists:devices,id'],
             'description' => ['required', 'string'],
 
-            'status' => ['required', 'in:waiting,in-progress,completed,cancelled'],
+            'status' => ['nullable', 'in:waiting,in-progress,completed,cancelled'],
             'repair_type' => ['required', 'in:internal,external'],
-            'priority' => ['required', 'in:low,medium,high,critical'],
+            'priority' => ['nullable', 'in:low,medium,high,critical'],
 
             'start_date' => ['required', 'date'],
             'estimated_completion' => ['nullable', 'date'],
             'actual_completion' => ['nullable', 'date'],
 
             'cost' => ['nullable', 'numeric', 'min:0'],
+
             'vendor_name' => ['nullable', 'string', 'max:100'],
             'vendor_contact' => ['nullable', 'string', 'max:100'],
             'invoice_number' => ['nullable', 'string', 'max:50'],
+
+            'issue_reported_by' => ['nullable', 'exists:users,id'],
+            'assigned_to' => ['nullable', 'exists:users,id'],
         ]);
+
+        foreach ([
+            'status','priority','estimated_completion','actual_completion',
+            'vendor_name','vendor_contact','invoice_number','issue_reported_by','assigned_to'
+        ] as $k) {
+            if (($data[$k] ?? null) === '') $data[$k] = null;
+        }
 
         $repair->update($data);
 
@@ -109,3 +136,4 @@ class RepairController extends Controller
         return redirect()->route('repairs.index');
     }
 }
+    

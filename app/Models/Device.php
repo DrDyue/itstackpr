@@ -8,14 +8,12 @@ class Device extends Model
 {
     protected $table = 'devices';
 
-    public $timestamps = true;
-
     protected $fillable = [
         'code',
         'name',
         'device_type_id',
         'model',
-        'status_id',
+        'status',
         'building_id',
         'room_id',
         'assigned_to',

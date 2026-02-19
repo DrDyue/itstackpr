@@ -6,55 +6,62 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-public function up(): void
-{
-    Schema::create('repairs', function (Blueprint $table) {
-        $table->id();
+    public function up(): void
+    {
+        Schema::create('repairs', function (Blueprint $table) {
+            $table->id();
 
-        $table->foreignId('device_id')
-            ->constrained('devices')
-            ->cascadeOnDelete();
+            // FK -> devices (NOT NULL)
+            $table->foreignId('device_id')
+                ->constrained('devices')
+                ->cascadeOnDelete();
 
-        $table->text('description');
+            // description (NOT NULL)
+            $table->text('description');
 
-        $table->enum('status', ['waiting', 'in-progress', 'completed', 'cancelled'])
-            ->default('waiting');
+            // status ENUM, NULL allowed, default 'waiting'
+            $table->enum('status', ['waiting', 'in-progress', 'completed', 'cancelled'])
+                ->nullable()
+                ->default('waiting');
 
-        $table->enum('repair_type', ['internal', 'external']);
-        $table->enum('priority', ['low', 'medium', 'high', 'critical'])
-            ->default('medium');
+            // repair_type ENUM (NOT NULL)
+            $table->enum('repair_type', ['internal', 'external']);
 
-        $table->date('start_date');
-        $table->date('estimated_completion')->nullable();
-        $table->date('actual_completion')->nullable();
+            // priority ENUM, NULL allowed, default 'medium'
+            $table->enum('priority', ['low', 'medium', 'high', 'critical'])
+                ->nullable()
+                ->default('medium');
 
-        $table->decimal('cost', 10, 2)->nullable();
+            // dates
+            $table->date('start_date'); // NOT NULL
+            $table->date('estimated_completion')->nullable()->default(null);
+            $table->date('actual_completion')->nullable()->default(null);
 
-        $table->string('vendor_name', 100)->nullable();
-        $table->string('vendor_contact', 100)->nullable();
-        $table->string('invoice_number', 50)->nullable();
+            // cost
+            $table->decimal('cost', 10, 2)->nullable()->default(null);
 
-        $table->foreignId('issue_reported_by')
-            ->nullable()
-            ->constrained('users')
-            ->nullOnDelete();
+            // vendor fields (only needed when external, but keep nullable as in doc)
+            $table->string('vendor_name', 100)->nullable()->default(null);
+            $table->string('vendor_contact', 100)->nullable()->default(null);
+            $table->string('invoice_number', 50)->nullable()->default(null);
 
-        $table->foreignId('assigned_to')
-            ->nullable()
-            ->constrained('users')
-            ->nullOnDelete();
+            // issue_reported_by -> users (nullable)
+            $table->foreignId('issue_reported_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
 
-        $table->timestamp('created_at')->useCurrent();
-    });
-}
+            // assigned_to -> users (nullable)
+            $table->foreignId('assigned_to')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
 
+            // created_at только один (как в документе)
+            $table->timestamp('created_at')->useCurrent();
+        });
+    }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('repairs');
