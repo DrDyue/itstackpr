@@ -18,12 +18,14 @@ class Employee extends Model
         'phone',
         'job_title',
         'is_active',
+        'created_at',
     ];
 
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
+            'created_at' => 'datetime',
         ];
     }
 

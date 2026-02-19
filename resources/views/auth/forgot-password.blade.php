@@ -1,6 +1,6 @@
 <x-guest-layout>
     <div style="color: #555; font-size: 14px; margin-bottom: 20px;">
-        Aizmirsi paroli? Bez problēmām. Vienkārši ievadi savu e-pasta adresi un mēs nosūtīsim paroles atiestatīšanas saiti.
+        Aizmirsi paroli? Bez problmm. Vienkri ievadi savu e-pasta adresi un ms nostsim paroles atiestatanas saiti.
     </div>
 
     @if (session('status'))
@@ -21,7 +21,7 @@
 
         <div style="text-align: right; margin-top: 20px;">
             <button type="submit" class="btn-primary" style="width: auto; display: inline-block;">
-                Sūtīt paroles atiestatīšanas saiti
+                Stt paroles atiestatanas saiti
             </button>
         </div>
     </form>

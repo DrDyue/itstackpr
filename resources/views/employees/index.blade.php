@@ -1,59 +1,75 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Employees</title>
-</head>
-<body>
-<h1>Employees</h1>
+﻿<x-app-layout>
+    <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
+            <div>
+                <h1 class="text-2xl font-semibold text-gray-900">Darbinieki</h1>
+                <p class="text-sm text-gray-500">Darbinieku saraksts un kontaktinformācija</p>
+            </div>
+            <a href="{{ route('employees.create') }}" class="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Pievienot darbinieku</a>
+        </div>
 
-@if (session('success'))
-    <p style="color: green">{{ session('success') }}</p>
-@endif
+        <form method="GET" action="{{ route('employees.index') }}" class="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div class="flex flex-wrap items-center gap-2">
+                <input type="text" name="q" value="{{ $q }}" placeholder="Meklēt pēc vārda, e-pasta, telefona..." class="w-full max-w-md rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                <button type="submit" class="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">Meklēt</button>
+                <a href="{{ route('employees.index') }}" class="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">Notīrīt</a>
+            </div>
+        </form>
 
-<form method="GET" action="{{ route('employees.index') }}">
-    <input name="q" value="{{ $q }}" placeholder="Search...">
-    <button type="submit">Search</button>
-    <a href="{{ route('employees.index') }}">Reset</a>
-</form>
+        @if (session('success'))
+            <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
+        @endif
 
-<p><a href="{{ route('employees.create') }}">+ Add employee</a></p>
-
-<table border="1" cellpadding="6">
-    <thead>
-    <tr>
-        <th>ID</th>
-        <th>Full name</th>
-        <th>Email</th>
-        <th>Phone</th>
-        <th>Job title</th>
-        <th>Active</th>
-        <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    @forelse($employees as $e)
-        <tr>
-            <td>{{ $e->id }}</td>
-            <td>{{ $e->full_name }}</td>
-            <td>{{ $e->email }}</td>
-            <td>{{ $e->phone }}</td>
-            <td>{{ $e->job_title }}</td>
-            <td>{{ $e->is_active ? 'Yes' : 'No' }}</td>
-            <td>
-                <a href="{{ route('employees.edit', $e) }}">Edit</a>
-                <form action="{{ route('employees.destroy', $e) }}" method="POST" style="display:inline">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" onclick="return confirm('Delete employee?')">Delete</button>
-                </form>
-            </td>
-        </tr>
-    @empty
-        <tr><td colspan="7">No employees yet</td></tr>
-    @endforelse
-    </tbody>
-</table>
-
-</body>
-</html>
+        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
+                        <tr>
+                            <th class="px-4 py-3 text-left">ID</th>
+                            <th class="px-4 py-3 text-left">Vārds, uzvārds</th>
+                            <th class="px-4 py-3 text-left">E-pasts</th>
+                            <th class="px-4 py-3 text-left">Telefons</th>
+                            <th class="px-4 py-3 text-left">Amats</th>
+                            <th class="px-4 py-3 text-left">Darbinieks aktīvs</th>
+                            <th class="px-4 py-3 text-left">Izveidots</th>
+                            <th class="px-4 py-3 text-left">Darbības</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @forelse($employees as $employee)
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3">{{ $employee->id }}</td>
+                                <td class="px-4 py-3 font-medium text-gray-900">{{ $employee->full_name }}</td>
+                                <td class="px-4 py-3">{{ $employee->email ?: '-' }}</td>
+                                <td class="px-4 py-3">{{ $employee->phone ?: '-' }}</td>
+                                <td class="px-4 py-3">{{ $employee->job_title ?: '-' }}</td>
+                                <td class="px-4 py-3">
+                                    @if($employee->is_active)
+                                        <span class="inline-flex rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">Aktīvs</span>
+                                    @else
+                                        <span class="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">Neaktīvs</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3">{{ $employee->created_at?->format('d.m.Y H:i') ?: '-' }}</td>
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <a href="{{ route('employees.edit', $employee) }}" class="text-blue-600 hover:text-blue-700">Rediģēt</a>
+                                        <form method="POST" action="{{ route('employees.destroy', $employee) }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" onclick="return confirm('Dzēst šo darbinieku?')" class="text-red-600 hover:text-red-700">Dzēst</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="px-4 py-8 text-center text-gray-500">Darbinieki vēl nav pievienoti.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</x-app-layout>

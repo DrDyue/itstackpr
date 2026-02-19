@@ -35,6 +35,15 @@ class LoginRequest extends FormRequest
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'Lauks "Darbinieka e-pasts" ir obligats.',
+            'email.email' => 'Lauks "Darbinieka e-pasts" nav deriga e-pasta adrese.',
+            'password.required' => 'Lauks "Parole" ir obligats.',
+        ];
+    }
+
     /**
      * Attempt to authenticate the request's credentials.
      *
@@ -44,8 +53,10 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        // Find employee by email
-        $employee = Employee::where('email', $this->email)->first();
+        // Find active employee by email
+        $employee = Employee::where('email', $this->email)
+            ->where('is_active', true)
+            ->first();
 
         if (!$employee) {
             RateLimiter::hit($this->throttleKey());

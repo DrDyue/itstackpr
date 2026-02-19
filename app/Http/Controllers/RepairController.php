@@ -6,9 +6,14 @@ use App\Models\Device;
 use App\Models\Repair;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class RepairController extends Controller
 {
+    private const STATUSES = ['waiting', 'in-progress', 'completed', 'cancelled'];
+    private const TYPES = ['internal', 'external'];
+    private const PRIORITIES = ['low', 'medium', 'high', 'critical'];
+
     public function index(Request $request)
     {
         $q = $request->query('q');
@@ -27,113 +32,79 @@ class RepairController extends Controller
 
     public function create()
     {
-        $devices = Device::orderByDesc('id')->get();
-
-        // если у тебя пока нет пользователей/авторизации — можно оставить пустыми
-        $users = User::orderBy('name')->get();
-
-        $statuses = ['waiting', 'in-progress', 'completed', 'cancelled'];
-        $repairTypes = ['internal', 'external'];
-        $priorities = ['low', 'medium', 'high', 'critical'];
-
-        return view('repairs.create', compact('devices', 'users', 'statuses', 'repairTypes', 'priorities'));
+        return view('repairs.create', $this->formData());
     }
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'device_id' => ['required', 'exists:devices,id'],
-            'description' => ['required', 'string'],
+        Repair::create($this->validatedData($request));
 
-            'status' => ['nullable', 'in:waiting,in-progress,completed,cancelled'],
-            'repair_type' => ['required', 'in:internal,external'],
-            'priority' => ['nullable', 'in:low,medium,high,critical'],
-
-            'start_date' => ['required', 'date'],
-            'estimated_completion' => ['nullable', 'date'],
-            'actual_completion' => ['nullable', 'date'],
-
-            'cost' => ['nullable', 'numeric', 'min:0'],
-
-            'vendor_name' => ['nullable', 'string', 'max:100'],
-            'vendor_contact' => ['nullable', 'string', 'max:100'],
-            'invoice_number' => ['nullable', 'string', 'max:50'],
-
-            'issue_reported_by' => ['nullable', 'exists:users,id'],
-            'assigned_to' => ['nullable', 'exists:users,id'],
-        ]);
-
-        // Если status/priority пустые, база сама подставит default
-        // Но чтобы не было "" строк, приводим к null
-        foreach ([
-            'status','priority','estimated_completion','actual_completion',
-            'vendor_name','vendor_contact','invoice_number','issue_reported_by','assigned_to'
-        ] as $k) {
-            if (($data[$k] ?? null) === '') $data[$k] = null;
-        }
-
-        Repair::create($data);
-
-        return redirect()->route('repairs.index')->with('success', 'Repair created');
+        return redirect()->route('repairs.index')->with('success', 'Remonts veiksmigi pievienots');
     }
 
     public function edit(Repair $repair)
     {
-        $devices = Device::orderByDesc('id')->get();
-        $users = User::orderBy('name')->get();
-
-        $statuses = ['waiting', 'in-progress', 'completed', 'cancelled'];
-        $repairTypes = ['internal', 'external'];
-        $priorities = ['low', 'medium', 'high', 'critical'];
-
-        return view('repairs.edit', compact('repair', 'devices', 'users', 'statuses', 'repairTypes', 'priorities'));
+        return view('repairs.edit', array_merge(['repair' => $repair], $this->formData()));
     }
 
     public function update(Request $request, Repair $repair)
     {
-        $data = $request->validate([
-            'device_id' => ['required', 'exists:devices,id'],
-            'description' => ['required', 'string'],
+        $repair->update($this->validatedData($request));
 
-            'status' => ['nullable', 'in:waiting,in-progress,completed,cancelled'],
-            'repair_type' => ['required', 'in:internal,external'],
-            'priority' => ['nullable', 'in:low,medium,high,critical'],
-
-            'start_date' => ['required', 'date'],
-            'estimated_completion' => ['nullable', 'date'],
-            'actual_completion' => ['nullable', 'date'],
-
-            'cost' => ['nullable', 'numeric', 'min:0'],
-
-            'vendor_name' => ['nullable', 'string', 'max:100'],
-            'vendor_contact' => ['nullable', 'string', 'max:100'],
-            'invoice_number' => ['nullable', 'string', 'max:50'],
-
-            'issue_reported_by' => ['nullable', 'exists:users,id'],
-            'assigned_to' => ['nullable', 'exists:users,id'],
-        ]);
-
-        foreach ([
-            'status','priority','estimated_completion','actual_completion',
-            'vendor_name','vendor_contact','invoice_number','issue_reported_by','assigned_to'
-        ] as $k) {
-            if (($data[$k] ?? null) === '') $data[$k] = null;
-        }
-
-        $repair->update($data);
-
-        return redirect()->route('repairs.index')->with('success', 'Repair updated');
+        return redirect()->route('repairs.index')->with('success', 'Remonts atjauninats');
     }
 
     public function destroy(Repair $repair)
     {
         $repair->delete();
-        return redirect()->route('repairs.index')->with('success', 'Repair deleted');
+
+        return redirect()->route('repairs.index')->with('success', 'Remonts dzests');
     }
 
     public function show(Repair $repair)
     {
         return redirect()->route('repairs.index');
     }
+
+    private function formData(): array
+    {
+        return [
+            'devices' => Device::orderByDesc('id')->get(),
+            'users' => User::with('employee')->orderByDesc('id')->get(),
+            'statuses' => self::STATUSES,
+            'repairTypes' => self::TYPES,
+            'priorities' => self::PRIORITIES,
+        ];
+    }
+
+    private function validatedData(Request $request): array
+    {
+        $data = $request->validate([
+            'device_id' => ['required', 'exists:devices,id'],
+            'description' => ['required', 'string'],
+            'status' => ['nullable', Rule::in(self::STATUSES)],
+            'repair_type' => ['required', Rule::in(self::TYPES)],
+            'priority' => ['nullable', Rule::in(self::PRIORITIES)],
+            'start_date' => ['required', 'date'],
+            'estimated_completion' => ['nullable', 'date'],
+            'actual_completion' => ['nullable', 'date'],
+            'cost' => ['nullable', 'numeric', 'min:0'],
+            'vendor_name' => ['nullable', 'string', 'max:100'],
+            'vendor_contact' => ['nullable', 'string', 'max:100'],
+            'invoice_number' => ['nullable', 'string', 'max:50'],
+            'issue_reported_by' => ['nullable', 'exists:users,id'],
+            'assigned_to' => ['nullable', 'exists:users,id'],
+        ]);
+
+        foreach ([
+            'status', 'priority', 'estimated_completion', 'actual_completion',
+            'vendor_name', 'vendor_contact', 'invoice_number', 'issue_reported_by', 'assigned_to',
+        ] as $field) {
+            if (($data[$field] ?? null) === '') {
+                $data[$field] = null;
+            }
+        }
+
+        return $data;
+    }
 }
-    

@@ -1,15 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="lv">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>IT Inventāra uzskaite</title>
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+
+        <title>IT inventra uzskaite</title>
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body style="margin: 0; padding: 0; background: #f5f5f7;">
-        <header style="background: white; padding: 20px; border-bottom: 1px solid #e5e5e7;">
-            <h1 style="margin: 0;">IT Inventāra uzskaite</h1>
-        </header>
-        <main style="padding: 20px;">
+    <body class="min-h-screen bg-gray-100 antialiased">
+        @include('layouts.navigation')
+
+        <main class="py-6">
             {{ $slot }}
         </main>
     </body>

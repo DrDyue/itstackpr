@@ -18,7 +18,15 @@ class Room extends Model
         'employee_id',
         'department',
         'notes',
+        'created_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'created_at' => 'datetime',
+        ];
+    }
 
     public function building()
     {

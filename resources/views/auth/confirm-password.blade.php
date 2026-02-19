@@ -1,6 +1,6 @@
 <x-guest-layout>
     <div style="color: #555; font-size: 14px; margin-bottom: 20px;">
-        Tas ir draudzīgs aplikācijas apgabals. Lūdzu apstipriniet savu paroli pirms turpināšanas.
+        Tas ir draudzgs aplikcijas apgabals. Ldzu apstipriniet savu paroli pirms turpinanas.
     </div>
 
     <form method="POST" action="{{ route('password.confirm') }}">

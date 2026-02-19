@@ -5,7 +5,7 @@
     <title>Device history</title>
 </head>
 <body>
-    <h1>History: {{ $device->code }} — {{ $device->name }}</h1>
+    <h1>History: {{ $device->code }}  {{ $device->name }}</h1>
 
     <p><a href="{{ route('devices.index') }}">Back to devices</a></p>
 

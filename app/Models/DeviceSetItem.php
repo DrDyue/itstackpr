@@ -14,12 +14,21 @@ class DeviceSetItem extends Model
     protected $fillable = [
         'device_set_id',
         'device_id',
+        'quantity',
         'role',
         'description',
+        'created_at',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'created_at' => 'datetime',
+        ];
+    }
+
     // Relations
-    public function set(): BelongsTo
+    public function deviceSet(): BelongsTo
     {
         return $this->belongsTo(DeviceSet::class, 'device_set_id');
     }

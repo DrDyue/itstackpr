@@ -2,7 +2,7 @@
     <form method="POST" action="{{ route('password.store') }}">
         @csrf
 
-        <!-- Paroles atiestatīšanas tokens -->
+        <!-- Paroles atiestatanas tokens -->
         <input type="hidden" name="token" value="{{ $request->route('token') }}">
 
         <!-- E-pasta adrese -->
@@ -28,7 +28,7 @@
 
         <div style="text-align: right; margin-top: 20px;">
             <button type="submit" class="btn-primary" style="width: auto; display: inline-block;">
-                Atiestatīt paroli
+                Atiestatt paroli
             </button>
         </div>
     </form>

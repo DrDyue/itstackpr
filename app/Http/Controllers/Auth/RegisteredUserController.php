@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\Employee;
+use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,33 +15,33 @@ use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
-    /**
-     * Display the registration view.
-     */
     public function create(): View
     {
-        // Only allow authenticated users to access
-        if (!\Illuminate\Support\Facades\Auth::check()) {
-            redirect(route('login'))->send();
+        if (Auth::user()?->role !== 'admin') {
+            abort(403);
         }
-        
-        $employees = Employee::where('is_active', true)->orderBy('full_name')->get();
-        $roles = ['technician', 'user', 'admin'];
-        
+
+        $employees = Employee::query()
+            ->where('is_active', true)
+            ->whereDoesntHave('user')
+            ->orderBy('full_name')
+            ->get();
+
+        $roles = ['user', 'admin'];
+
         return view('auth.register', compact('employees', 'roles'));
     }
 
-    /**
-     * Handle an incoming registration request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     */
     public function store(Request $request): RedirectResponse
     {
+        if (Auth::user()?->role !== 'admin') {
+            abort(403);
+        }
+
         $request->validate([
             'employee_id' => ['required', 'exists:employees,id', 'unique:users,employee_id'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => ['required', 'in:technician,user,admin'],
+            'role' => ['required', 'in:user,admin'],
         ]);
 
         $user = User::create([

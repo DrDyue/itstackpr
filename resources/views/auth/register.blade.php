@@ -11,7 +11,7 @@
                 class="form-select" 
                 required
             >
-                <option value="">-- Izvēlieties darbnieku --</option>
+                <option value="">-- Izvlieties darbnieku --</option>
                 @foreach($employees as $emp)
                     <option value="{{ $emp->id }}" @selected(old('employee_id') == $emp->id)>
                         {{ $emp->full_name }} ({{ $emp->email }})
@@ -28,12 +28,12 @@
                 id="password" 
                 type="password"
                 name="password"
-                placeholder="••••••••"
+                placeholder="********"
                 required 
                 autocomplete="new-password" 
             />
             <x-input-error :messages="$errors->get('password')" />
-            <p class="helper-text">Vismaz 8 rakstzīmes</p>
+            <p class="helper-text">Vismaz 8 rakstzmes</p>
         </div>
 
         <!-- Apstiprini paroli -->
@@ -43,7 +43,7 @@
                 id="password_confirmation" 
                 type="password"
                 name="password_confirmation"
-                placeholder="••••••••"
+                placeholder="********"
                 required 
                 autocomplete="new-password" 
             />
@@ -59,7 +59,7 @@
                 class="form-select" 
                 required
             >
-                <option value="">-- Izvēlieties lomu --</option>
+                <option value="">-- Izvlieties lomu --</option>
                 @foreach($roles as $role)
                     <option value="{{ $role }}" @selected(old('role') == $role)>{{ $role }}</option>
                 @endforeach
@@ -72,11 +72,11 @@
             Izveidot kontu
         </button>
 
-        <!-- Pieteikšanās saite -->
+        <!-- Pieteiksanas saite -->
         <div style="text-align: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid #d5d5d7;">
             <span style="color: #555;">Jau ir konts? </span>
             <a href="{{ route('login') }}" class="auth-link">
-                Pierakstīties
+                Pierakstities
             </a>
         </div>
     </form>

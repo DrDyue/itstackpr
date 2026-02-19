@@ -30,7 +30,7 @@ class DeviceTypeController extends Controller
 
         DeviceType::create($data);
 
-        return redirect()->route('device-types.index')->with('success', 'Device type created');
+        return redirect()->route('device-types.index')->with('success', 'Ierices tips veiksmigi pievienots');
     }
 
     public function edit(DeviceType $deviceType)
@@ -50,13 +50,13 @@ class DeviceTypeController extends Controller
 
         $deviceType->update($data);
 
-        return redirect()->route('device-types.index')->with('success', 'Device type updated');
+        return redirect()->route('device-types.index')->with('success', 'Ierices tips atjauninats');
     }
 
     public function destroy(DeviceType $deviceType)
     {
         $deviceType->delete();
-        return redirect()->route('device-types.index')->with('success', 'Device type deleted');
+        return redirect()->route('device-types.index')->with('success', 'Ierices tips dzests');
     }
 
     public function show(DeviceType $deviceType)

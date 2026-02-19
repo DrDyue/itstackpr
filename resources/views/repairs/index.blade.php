@@ -1,163 +1,92 @@
 <x-app-layout>
-<div style="padding: 0; margin: 0; background-color: white;">
-    <!-- Main Container with Sidebar -->
-    <div style="display: flex; min-height: calc(100vh - 80px); background-color: #f5f5f7;">
-        <!-- Sidebar Navigation -->
-        <nav style="width: 240px; background-color: white; border-right: 1px solid #e5e5e7; padding: 20px 0; position: fixed; height: calc(100vh - 80px); overflow-y: auto;">
-            <div style="padding: 16px; border-bottom: 1px solid #e5e5e7; margin-bottom: 8px;">
-                <h3 style="font-size: 14px; font-weight: 700; color: #1d1d1f; margin: 0;">NAVIGĀCIJA</h3>
+    @php
+        $statusLabels = [
+            'waiting' => 'Gaida',
+            'in-progress' => 'Procesā',
+            'completed' => 'Pabeigts',
+            'cancelled' => 'Atcelts',
+        ];
+        $typeLabels = [
+            'internal' => 'Iekšējais',
+            'external' => '&#256;rējais',
+        ];
+        $priorityLabels = [
+            'low' => 'Zema',
+            'medium' => 'Vidēja',
+            'high' => 'Augsta',
+            'critical' => 'Kritiska',
+        ];
+    @endphp
+
+    <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
+            <div>
+                <h1 class="text-2xl font-semibold text-gray-900">Remonti</h1>
+                <p class="text-sm text-gray-500">Remontdarbu uzskaite un statuss</p>
             </div>
+            <a href="{{ route('repairs.create') }}" class="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Pievienot remontu</a>
+        </div>
 
-            <a href="{{ route('dashboard') }}" style="display: block; padding: 12px 16px; color: #555; text-decoration: none; font-size: 14px; cursor: pointer; border-left: 3px solid transparent; transition: all 0.2s ease;">
-                📊 Darbvirsma
-            </a>
-            <a href="{{ route('devices.index') }}" style="display: block; padding: 12px 16px; color: #555; text-decoration: none; font-size: 14px; cursor: pointer; border-left: 3px solid transparent; transition: all 0.2s ease;">
-                💻 Inventārs
-            </a>
-            <a href="{{ route('buildings.index') }}" style="display: block; padding: 12px 16px; color: #555; text-decoration: none; font-size: 14px; cursor: pointer; border-left: 3px solid transparent; transition: all 0.2s ease;">
-                🏢 Ēkas & Kabineti
-            </a>
-            <a href="{{ route('repairs.index') }}" style="display: block; padding: 12px 16px; color: #0071e3; text-decoration: none; font-size: 14px; cursor: pointer; border-left: 3px solid #0071e3; background-color: #eff6ff; font-weight: 600;">
-                🔧 Remonti
-            </a>
-            <a href="#" style="display: block; padding: 12px 16px; color: #555; text-decoration: none; font-size: 14px; cursor: pointer; border-left: 3px solid transparent; transition: all 0.2s ease;">
-                💾 Rezerves Kopijas
-            </a>
-            <a href="#" style="display: block; padding: 12px 16px; color: #555; text-decoration: none; font-size: 14px; cursor: pointer; border-left: 3px solid transparent; transition: all 0.2s ease;">
-                📋 Audita Žurnāls
-            </a>
-            <a href="{{ route('device-sets.index') }}" style="display: block; padding: 12px 16px; color: #555; text-decoration: none; font-size: 14px; cursor: pointer; border-left: 3px solid transparent; transition: all 0.2s ease;">
-                📦 Komplektācijas
-            </a>
-
-            <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e5e7;">
-                <a href="{{ route('profile.edit') }}" style="display: block; padding: 12px 16px; color: #555; text-decoration: none; font-size: 14px; cursor: pointer;">
-                    ⚙️ Profils
-                </a>
-                <form method="POST" action="{{ route('logout') }}" style="margin-top: 8px;">
-                    @csrf
-                    <button type="submit" style="width: 100%; display: block; padding: 12px 16px; color: #d70015; text-decoration: none; font-size: 14px; cursor: pointer; background: none; border: none; text-align: left; font-family: inherit;">
-                        🚪 Izloģēties
-                    </button>
-                </form>
+        <form method="GET" action="{{ route('repairs.index') }}" class="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div class="flex flex-wrap items-center gap-2">
+                <input type="text" name="q" value="{{ $q ?? '' }}" placeholder="Meklēt pēc apraksta, piegādātāja vai rēķina numura..." class="w-full max-w-md rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                <button type="submit" class="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">Meklēt</button>
+                <a href="{{ route('repairs.index') }}" class="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">Notīrīt</a>
             </div>
-        </nav>
+        </form>
 
-        <!-- Main Content Area -->
-        <div style="margin-left: 240px; flex: 1; padding: 20px;">
-            <!-- Header -->
-            <div style="display: flex; justify-content: space-between; align-items: center; background-color: white; padding: 16px 24px; border-radius: 12px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
-                <div>
-                    <h1 style="font-size: 24px; font-weight: 700; color: #1d1d1f; margin: 0;">🔧 Remonti</h1>
-                    <p style="font-size: 12px; color: #86868b; margin: 4px 0 0 0;">Visu ierīču remontu vadība</p>
-                </div>
-                <div style="display: flex; gap: 12px;">
-                    <a href="{{ route('repairs.create') }}" style="padding: 10px 16px; background-color: #0071e3; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; text-decoration: none;">+ Jauns Remonts</a>
-                </div>
-            </div>
+        @if(session('success'))
+            <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
+        @endif
 
-            <!-- Filters -->
-            <div style="background-color: white; padding: 16px 24px; border-radius: 12px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
-                <form method="GET" action="{{ route('repairs.index') }}" style="display: flex; gap: 12px; align-items: flex-end;">
-                    <div style="flex: 1;">
-                        <label style="display: block; font-size: 12px; color: #86868b; margin-bottom: 4px; text-transform: uppercase; font-weight: 600;">Meklēt</label>
-                        <input type="text" name="q" value="{{ $q ?? '' }}" placeholder="Meklēt pēc apraksta, piegādātāja, rēķina..." style="width: 100%; padding: 10px; border: 1px solid #e5e5e7; border-radius: 8px; font-size: 14px;"/>
-                    </div>
-                    <button style="padding: 10px 16px; background-color: #0071e3; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">Meklēt</button>
-                    <a href="{{ route('repairs.index') }}" style="padding: 10px 16px; background-color: #f5f5f7; color: #1d1d1f; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; text-decoration: none;">Atiestatīt</a>
-                </form>
-            </div>
-
-            <!-- Table Section -->
-            <div style="background-color: white; border: 1px solid #e5e5e7; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
-                @if(session('success'))
-                    <div style="padding: 16px 24px; background-color: #f0fdf4; border-bottom: 1px solid #e5e5e7; color: #15803d;">
-                        {{ session('success') }}
-                    </div>
-                @endif
-
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead style="background-color: #f5f5f7; border-bottom: 2px solid #e5e5e7;">
-                            <tr>
-                                <th style="padding: 12px 16px; text-align: left; font-weight: 600; font-size: 13px; color: #555; text-transform: uppercase; letter-spacing: 0.5px;">ID</th>
-                                <th style="padding: 12px 16px; text-align: left; font-weight: 600; font-size: 13px; color: #555; text-transform: uppercase; letter-spacing: 0.5px;">Ierīce</th>
-                                <th style="padding: 12px 16px; text-align: left; font-weight: 600; font-size: 13px; color: #555; text-transform: uppercase; letter-spacing: 0.5px;">Statuss</th>
-                                <th style="padding: 12px 16px; text-align: left; font-weight: 600; font-size: 13px; color: #555; text-transform: uppercase; letter-spacing: 0.5px;">Tips</th>
-                                <th style="padding: 12px 16px; text-align: left; font-weight: 600; font-size: 13px; color: #555; text-transform: uppercase; letter-spacing: 0.5px;">Prioritāte</th>
-                                <th style="padding: 12px 16px; text-align: left; font-weight: 600; font-size: 13px; color: #555; text-transform: uppercase; letter-spacing: 0.5px;">Sākums</th>
-                                <th style="padding: 12px 16px; text-align: left; font-weight: 600; font-size: 13px; color: #555; text-transform: uppercase; letter-spacing: 0.5px;">Paredzams Beigums</th>
-                                <th style="padding: 12px 16px; text-align: left; font-weight: 600; font-size: 13px; color: #555; text-transform: uppercase; letter-spacing: 0.5px;">Faktiskais Beigums</th>
-                                <th style="padding: 12px 16px; text-align: left; font-weight: 600; font-size: 13px; color: #555; text-transform: uppercase; letter-spacing: 0.5px;">Izmaksas</th>
-                                <th style="padding: 12px 16px; text-align: left; font-weight: 600; font-size: 13px; color: #555; text-transform: uppercase; letter-spacing: 0.5px;">Piegādātājs</th>
-                                <th style="padding: 12px 16px; text-align: left; font-weight: 600; font-size: 13px; color: #555; text-transform: uppercase; letter-spacing: 0.5px;">Darbības</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($repairs as $repair)
-                                <tr style="border-bottom: 1px solid #f5f5f7;">
-                                    <td style="padding: 12px 16px; font-size: 14px; color: #333;"><strong>#{{ $repair->id }}</strong></td>
-                                    <td style="padding: 12px 16px; font-size: 14px; color: #333;">
-                                        @if($repair->device)
-                                            <div style="font-weight: 600;">{{ $repair->device->code ?? ('Device #' . $repair->device->id) }}</div>
-                                            <div style="font-size: 12px; color: #86868b;">{{ $repair->device->name ?? '' }}</div>
-                                        @else
-                                            <span style="color: #86868b;">—</span>
-                                        @endif
-                                    </td>
-                                    <td style="padding: 12px 16px; font-size: 14px; color: #333;">
-                                        @if($repair->status === 'completed')
-                                            <span style="display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; background-color: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0;">Pabeigts</span>
-                                        @elseif($repair->status === 'in-progress')
-                                            <span style="display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; background-color: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe;">Notiek</span>
-                                        @elseif($repair->status === 'pending')
-                                            <span style="display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; background-color: #fff7ed; color: #b45309; border: 1px solid #fed7aa;">Gaida</span>
-                                        @else
-                                            <span style="display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; background-color: #f5f5f7; color: #555;">{{ $repair->status }}</span>
-                                        @endif
-                                    </td>
-                                    <td style="padding: 12px 16px; font-size: 14px; color: #333;">{{ $repair->repair_type ?? '—' }}</td>
-                                    <td style="padding: 12px 16px; font-size: 14px; color: #333;">
-                                        @if($repair->priority === 'high')
-                                            <span style="color: #d70015;">🔴 Augsta</span>
-                                        @elseif($repair->priority === 'medium')
-                                            <span style="color: #f59e0b;">🟡 Normāla</span>
-                                        @else
-                                            <span style="color: #10b981;">🟢 Zema</span>
-                                        @endif
-                                    </td>
-                                    <td style="padding: 12px 16px; font-size: 14px; color: #333;">{{ $repair->start_date ? \Carbon\Carbon::parse($repair->start_date)->format('d.m.Y') : '—' }}</td>
-                                    <td style="padding: 12px 16px; font-size: 14px; color: #333;">{{ $repair->estimated_completion ? \Carbon\Carbon::parse($repair->estimated_completion)->format('d.m.Y') : '—' }}</td>
-                                    <td style="padding: 12px 16px; font-size: 14px; color: #333;">{{ $repair->actual_completion ? \Carbon\Carbon::parse($repair->actual_completion)->format('d.m.Y') : '—' }}</td>
-                                    <td style="padding: 12px 16px; font-size: 14px; color: #333;">
-                                        {{ $repair->cost !== null ? number_format((float)$repair->cost, 2) . ' €' : '—' }}
-                                    </td>
-                                    <td style="padding: 12px 16px; font-size: 14px; color: #333;">
-                                        <div style="font-weight: 600;">{{ $repair->vendor_name ?? '—' }}</div>
-                                        <div style="font-size: 12px; color: #86868b;">{{ $repair->vendor_contact ?? '' }}</div>
-                                        <div style="font-size: 12px; color: #86868b;">{{ $repair->invoice_number ?? '' }}</div>
-                                    </td>
-                                    <td style="padding: 12px 16px; font-size: 14px; text-align: center;">
-                                        <a href="{{ route('repairs.edit', $repair) }}" style="color: #0071e3; text-decoration: none; margin: 0 4px;">✏️</a>
-                                        <form method="POST" action="{{ route('repairs.destroy', $repair) }}" style="display: inline;">
+        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
+                        <tr>
+                            <th class="px-4 py-3 text-left">ID</th>
+                            <th class="px-4 py-3 text-left">Ierīce</th>
+                            <th class="px-4 py-3 text-left">Statuss</th>
+                            <th class="px-4 py-3 text-left">Tips</th>
+                            <th class="px-4 py-3 text-left">Prioritāte</th>
+                            <th class="px-4 py-3 text-left">Sākums</th>
+                            <th class="px-4 py-3 text-left">Plānotais beigums</th>
+                            <th class="px-4 py-3 text-left">Izmaksas</th>
+                            <th class="px-4 py-3 text-left">Piegādātājs</th>
+                            <th class="px-4 py-3 text-left">Izveidots</th>
+                            <th class="px-4 py-3 text-left">Darbības</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @forelse($repairs as $repair)
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3">#{{ $repair->id }}</td>
+                                <td class="px-4 py-3">{{ $repair->device?->code ?: '' }} {{ $repair->device?->name ?: '' }}</td>
+                                <td class="px-4 py-3">{{ $statusLabels[$repair->status] ?? ($repair->status ?: '') }}</td>
+                                <td class="px-4 py-3">{{ $typeLabels[$repair->repair_type] ?? ($repair->repair_type ?: '') }}</td>
+                                <td class="px-4 py-3">{{ $priorityLabels[$repair->priority] ?? ($repair->priority ?: '') }}</td>
+                                <td class="px-4 py-3">{{ $repair->start_date ? \Carbon\Carbon::parse($repair->start_date)->format('d.m.Y') : '' }}</td>
+                                <td class="px-4 py-3">{{ $repair->estimated_completion ? \Carbon\Carbon::parse($repair->estimated_completion)->format('d.m.Y') : '' }}</td>
+                                <td class="px-4 py-3">{{ $repair->cost !== null ? number_format((float) $repair->cost, 2) . ' EUR' : '' }}</td>
+                                <td class="px-4 py-3">{{ $repair->vendor_name ?: '' }}</td>
+                                <td class="px-4 py-3">{{ $repair->created_at?->format('d.m.Y H:i') ?: '' }}</td>
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <a href="{{ route('repairs.edit', $repair) }}" class="text-blue-600 hover:text-blue-700">Rediģēt</a>
+                                        <form method="POST" action="{{ route('repairs.destroy', $repair) }}">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" style="background: none; border: none; color: #d70015; cursor: pointer; margin: 0 4px; font-size: 14px;" onclick="return confirm('Dzēst šo remontu?')">🗑️</button>
+                                            <button type="submit" onclick="return confirm('Dzēst šo remontu?')" class="text-red-600 hover:text-red-700">Dzēst</button>
                                         </form>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td style="padding: 32px 16px; text-align: center; color: #86868b;" colspan="11">
-                                        Nav remontu. <a href="{{ route('repairs.create') }}" style="color: #0071e3; text-decoration: none;">Pievienot pirmo</a>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="11" class="px-4 py-8 text-center text-gray-500">Remontdarbu vēl nav.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
-    </div>
-</div>
+    </section>
 </x-app-layout>

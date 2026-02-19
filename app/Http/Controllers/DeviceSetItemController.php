@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Device;
 use App\Models\DeviceSet;
 use App\Models\DeviceSetItem;
-use App\Models\Device;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class DeviceSetItemController extends Controller
 {
@@ -14,63 +15,69 @@ class DeviceSetItemController extends Controller
         $deviceSetId = $request->query('device_set_id');
 
         $items = DeviceSetItem::with(['deviceSet', 'device'])
-            ->when($deviceSetId, function ($query) use ($deviceSetId) {
-                $query->where('device_set_id', $deviceSetId);
-            })
+            ->when($deviceSetId, fn ($query) => $query->where('device_set_id', $deviceSetId))
             ->orderByDesc('id')
             ->get();
 
         return view('device_set_items.index', compact('items', 'deviceSetId'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $deviceSets = DeviceSet::orderBy('name')->get();
-        $devices = Device::orderBy('name')->get();
+        $selectedDeviceSetId = $request->query('device_set_id');
 
-        return view('device_set_items.create', compact('deviceSets', 'devices'));
+        return view('device_set_items.create', [
+            'deviceSets' => DeviceSet::orderBy('set_name')->get(),
+            'devices' => Device::orderBy('name')->get(),
+            'selectedDeviceSetId' => $selectedDeviceSetId,
+        ]);
     }
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'device_set_id' => ['required', 'exists:device_sets,id'],
-            'device_id' => ['required', 'exists:devices,id', 'unique:device_set_items,device_id,NULL,id,device_set_id,' . $request->device_set_id],
-            'role' => ['nullable', 'string', 'max:50'],
-            'description' => ['nullable', 'string'],
-        ]);
+        DeviceSetItem::create($this->validatedData($request));
 
-        DeviceSetItem::create($data);
-
-        return redirect()->route('device-set-items.index')->with('success', 'Item added to set successfully');
+        return redirect()->route('device-set-items.index')->with('success', 'Pozicija veiksmigi pievienota komplektam');
     }
 
     public function edit(DeviceSetItem $deviceSetItem)
     {
-        $deviceSets = DeviceSet::orderBy('name')->get();
-        $devices = Device::orderBy('name')->get();
-
-        return view('device_set_items.edit', compact('deviceSetItem', 'deviceSets', 'devices'));
+        return view('device_set_items.edit', [
+            'deviceSetItem' => $deviceSetItem,
+            'deviceSets' => DeviceSet::orderBy('set_name')->get(),
+            'devices' => Device::orderBy('name')->get(),
+        ]);
     }
 
     public function update(Request $request, DeviceSetItem $deviceSetItem)
     {
-        $data = $request->validate([
-            'device_set_id' => ['required', 'exists:device_sets,id'],
-            'device_id' => ['required', 'exists:devices,id'],
-            'role' => ['nullable', 'string', 'max:50'],
-            'description' => ['nullable', 'string'],
-        ]);
+        $deviceSetItem->update($this->validatedData($request, $deviceSetItem));
 
-        $deviceSetItem->update($data);
-
-        return redirect()->route('device-set-items.index')->with('success', 'Item updated successfully');
+        return redirect()->route('device-set-items.index')->with('success', 'Pozicija veiksmigi atjauninata');
     }
 
     public function destroy(DeviceSetItem $deviceSetItem)
     {
         $deviceSetItem->delete();
 
-        return redirect()->route('device-set-items.index')->with('success', 'Item removed from set successfully');
+        return redirect()->route('device-set-items.index')->with('success', 'Pozicija veiksmigi dzesta no komplekta');
+    }
+
+    private function validatedData(Request $request, ?DeviceSetItem $deviceSetItem = null): array
+    {
+        $uniqueDeviceInSet = Rule::unique('device_set_items', 'device_id')
+            ->where(fn ($query) => $query->where('device_set_id', $request->input('device_set_id')));
+
+        if ($deviceSetItem) {
+            $uniqueDeviceInSet->ignore($deviceSetItem->id);
+        }
+
+        return $request->validate([
+            'device_set_id' => ['required', 'exists:device_sets,id'],
+            'device_id' => ['required', 'exists:devices,id', $uniqueDeviceInSet],
+            'quantity' => ['nullable', 'integer', 'min:1', 'max:999'],
+            'role' => ['nullable', 'string', 'max:50'],
+            'description' => ['nullable', 'string'],
+        ]);
     }
 }

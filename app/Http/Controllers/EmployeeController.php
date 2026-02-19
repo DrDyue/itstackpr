@@ -55,7 +55,7 @@ class EmployeeController extends Controller
             'description' => 'Employee created: ' . $employee->full_name,
         ]);
 
-        return redirect()->route('employees.index')->with('success', 'Employee created');
+        return redirect()->route('employees.index')->with('success', 'Darbinieks veiksmigi pievienots');
     }
 
     public function edit(Employee $employee)
@@ -97,7 +97,7 @@ class EmployeeController extends Controller
             'description' => 'Employee updated: ' . $employee->full_name . (count($changed) ? ' | fields: ' . implode(', ', $changed) : ''),
         ]);
 
-        return redirect()->route('employees.index')->with('success', 'Employee updated');
+        return redirect()->route('employees.index')->with('success', 'Darbinieka dati atjauninati');
     }
 
     public function destroy(Employee $employee)
@@ -114,7 +114,7 @@ class EmployeeController extends Controller
 
         $employee->delete();
 
-        return redirect()->route('employees.index')->with('success', 'Employee deleted');
+        return redirect()->route('employees.index')->with('success', 'Darbinieks dzests');
     }
 
     

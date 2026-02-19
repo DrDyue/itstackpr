@@ -17,7 +17,15 @@ class Building extends Model
         'city',
         'total_floors',
         'notes',
+        'created_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'created_at' => 'datetime',
+        ];
+    }
 
     // Relations
     public function rooms(): HasMany

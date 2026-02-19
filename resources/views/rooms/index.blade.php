@@ -1,57 +1,63 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Rooms</title>
-</head>
-<body>
-    <h1>Rooms</h1>
+<x-app-layout>
+    <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mb-6 flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-semibold text-gray-900">Telpas</h1>
+                <p class="text-sm text-gray-500">Telpu saraksts pa ēkām</p>
+            </div>
+            <a href="{{ route('rooms.create') }}" class="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Pievienot telpu</a>
+        </div>
 
-    @if (session('success'))
-        <p style="color: green">{{ session('success') }}</p>
-    @endif
+        @if (session('success'))
+            <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
+        @endif
 
-    <p><a href="{{ route('rooms.create') }}">+ Add room</a></p>
-
-    <table border="1" cellpadding="6">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Building</th>
-                <th>Floor</th>
-                <th>Room №</th>
-                <th>Name</th>
-                <th>Responsible</th>
-                <th>Department</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        @forelse ($rooms as $r)
-            <tr>
-                <td>{{ $r->id }}</td>
-                <td>{{ $r->building?->building_name }}</td>
-                <td>{{ $r->floor_number }}</td>
-                <td>{{ $r->room_number }}</td>
-                <td>{{ $r->room_name }}</td>
-                <td>{{ $r->employee?->full_name }}</td>
-                <td>{{ $r->department }}</td>
-                <td>
-                    <a href="{{ route('rooms.edit', $r) }}">Edit</a>
-
-                    <form action="{{ route('rooms.destroy', $r) }}" method="POST" style="display:inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" onclick="return confirm('Delete?')">Delete</button>
-                    </form>
-                </td>
-            </tr>
-        @empty
-            <tr><td colspan="8">No rooms yet</td></tr>
-        @endforelse
-        </tbody>
-    </table>
-
-    <p><a href="{{ url('/') }}">Home</a></p>
-</body>
-</html>
+        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
+                        <tr>
+                            <th class="px-4 py-3 text-left">ID</th>
+                            <th class="px-4 py-3 text-left">&#274;ka</th>
+                            <th class="px-4 py-3 text-left">Stāvs</th>
+                            <th class="px-4 py-3 text-left">Telpas Nr.</th>
+                            <th class="px-4 py-3 text-left">Nosaukums</th>
+                            <th class="px-4 py-3 text-left">Atbildīgais</th>
+                            <th class="px-4 py-3 text-left">Nodaļa</th>
+                            <th class="px-4 py-3 text-left">Izveidots</th>
+                            <th class="px-4 py-3 text-left">Darbības</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @forelse ($rooms as $room)
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3">{{ $room->id }}</td>
+                                <td class="px-4 py-3">{{ $room->building?->building_name ?: '' }}</td>
+                                <td class="px-4 py-3">{{ $room->floor_number }}</td>
+                                <td class="px-4 py-3 font-medium text-gray-900">{{ $room->room_number }}</td>
+                                <td class="px-4 py-3">{{ $room->room_name ?: '' }}</td>
+                                <td class="px-4 py-3">{{ $room->employee?->full_name ?: '' }}</td>
+                                <td class="px-4 py-3">{{ $room->department ?: '' }}</td>
+                                <td class="px-4 py-3">{{ $room->created_at?->format('d.m.Y H:i') ?: '' }}</td>
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <a href="{{ route('rooms.edit', $room) }}" class="text-blue-600 hover:text-blue-700">Rediģēt</a>
+                                        <form method="POST" action="{{ route('rooms.destroy', $room) }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" onclick="return confirm('Dzēst šo telpu?')" class="text-red-600 hover:text-red-700">Dzēst</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="9" class="px-4 py-8 text-center text-gray-500">Telpas vēl nav pievienotas.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</x-app-layout>

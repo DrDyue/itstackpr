@@ -17,7 +17,15 @@ class DeviceType extends Model
         'icon_name',
         'description',
         'expected_lifetime_years',
+        'created_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'created_at' => 'datetime',
+        ];
+    }
 
     // Relations
     public function devices(): HasMany

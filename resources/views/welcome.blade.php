@@ -153,9 +153,9 @@
 <body>
     <div class="container">
         <header>
-            <h1>🖥️ IT Stack</h1>
+            <h1>s-?l IT Stack</h1>
             <p class="subtitle">Inventory Management System</p>
-            <div class="status">✓ System Ready</div>
+            <div class="status">a" System Ready</div>
         </header>
 
         <div class="stats">
@@ -179,7 +179,7 @@
 
         <div class="modules">
             <a href="{{ route('employees.index') }}" class="module-card">
-                <h3>👥 Employees</h3>
+                <h3>s'? Employees</h3>
                 <p>Manage employees and staff information</p>
                 <div class="module-buttons">
                     <a href="{{ route('employees.index') }}" class="btn">View</a>
@@ -188,7 +188,7 @@
             </a>
 
             <a href="{{ route('devices.index') }}" class="module-card">
-                <h3>💻 Devices</h3>
+                <h3>s' Devices</h3>
                 <p>Manage IT equipment and devices</p>
                 <div class="module-buttons">
                     <a href="{{ route('devices.index') }}" class="btn">View</a>
@@ -197,7 +197,7 @@
             </a>
 
             <a href="{{ route('buildings.index') }}" class="module-card">
-                <h3>🏢 Buildings</h3>
+                <h3>s Buildings</h3>
                 <p>Manage office buildings and locations</p>
                 <div class="module-buttons">
                     <a href="{{ route('buildings.index') }}" class="btn">View</a>
@@ -206,7 +206,7 @@
             </a>
 
             <a href="{{ route('rooms.index') }}" class="module-card">
-                <h3>🚪 Rooms</h3>
+                <h3>sR Rooms</h3>
                 <p>Manage rooms and office spaces</p>
                 <div class="module-buttons">
                     <a href="{{ route('rooms.index') }}" class="btn">View</a>
@@ -215,7 +215,7 @@
             </a>
 
             <a href="{{ route('device-types.index') }}" class="module-card">
-                <h3>📱 Device Types</h3>
+                <h3>s" Device Types</h3>
                 <p>Manage device categories and types</p>
                 <div class="module-buttons">
                     <a href="{{ route('device-types.index') }}" class="btn">View</a>
@@ -224,7 +224,7 @@
             </a>
 
             <a href="{{ route('repairs.index') }}" class="module-card">
-                <h3>🔧 Repairs</h3>
+                <h3>s" Repairs</h3>
                 <p>Track device repairs and maintenance</p>
                 <div class="module-buttons">
                     <a href="{{ route('repairs.index') }}" class="btn">View</a>
@@ -233,7 +233,7 @@
             </a>
 
             <a href="{{ route('device-history.index') }}" class="module-card">
-                <h3>📋 Device History</h3>
+                <h3>s"< Device History</h3>
                 <p>View device change history and audit trail</p>
                 <div class="module-buttons">
                     <a href="{{ route('device-history.index') }}" class="btn">View</a>
@@ -241,7 +241,7 @@
             </a>
 
             <a href="{{ route('audit-log.index') }}" class="module-card">
-                <h3>📊 Audit Log</h3>
+                <h3>s" Audit Log</h3>
                 <p>System activity and user actions log</p>
                 <div class="module-buttons">
                     <a href="{{ route('audit-log.index') }}" class="btn">View</a>
