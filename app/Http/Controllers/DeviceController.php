@@ -66,7 +66,7 @@ class DeviceController extends Controller
             }
         }
 
-        $userId = auth()->check() ? auth()->id() : null;
+        $userId = \Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::id() : null;
         $data['created_by'] = $userId;
 
         $device = Device::create($data);
@@ -130,7 +130,7 @@ class DeviceController extends Controller
             }
         }
 
-        $userId = auth()->check() ? auth()->id() : null;
+        $userId = \Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::id() : null;
 
         $before = $device->only([
             'code', 'name', 'device_type_id', 'model', 'status',
@@ -179,7 +179,7 @@ class DeviceController extends Controller
 
     public function destroy(Device $device)
     {
-        $userId = auth()->check() ? auth()->id() : null;
+        $userId = \Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::id() : null;
 
         $id = $device->id;
         $code = $device->code;

@@ -3,28 +3,35 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DeviceSet extends Model
 {
     protected $table = 'device_sets';
 
+    public $timestamps = false;
+
     protected $fillable = [
-        'set_name',
-        'set_code',
-        'status',
-        'room_id',
-        'assigned_to',
-        'notes',
-        'created_by',
+        'name',
+        'description',
+        'created_at',
     ];
 
-    public function room()
+    protected function casts(): array
     {
-        return $this->belongsTo(Room::class);
+        return [
+            'created_at' => 'datetime',
+        ];
     }
 
-    public function items()
+    // Relations
+    public function items(): HasMany
     {
-        return $this->hasMany(DeviceSetItem::class, 'device_set_id');
+        return $this->hasMany(DeviceSetItem::class);
+    }
+
+    public function devices()
+    {
+        return $this->belongsToMany(Device::class, 'device_set_items');
     }
 }

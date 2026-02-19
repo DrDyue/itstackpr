@@ -15,9 +15,7 @@ return new class extends Migration
             $table->string('category', 50);
             $table->string('icon_name', 50)->nullable();
             $table->text('description')->nullable();
-            $table->unsignedTinyInteger('expected_lifetime_years')->nullable(); // 0..255
-
-            // timestamps не делаем, раз у тебя их нигде не используешь (можно добавить, но не обязательно)
+            $table->integer('expected_lifetime_years')->nullable()->default(5);
         });
     }
 

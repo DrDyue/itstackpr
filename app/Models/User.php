@@ -2,47 +2,68 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    protected $table = 'users';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    public $timestamps = false;
+
     protected $fillable = [
-        'name',
-        'email',
+        'employee_id',
         'password',
-    ];
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'password',
+        'role',
+        'is_active',
+        'last_login',
+        'created_at',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    protected $hidden = [
+        'password',
+    ];
+
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
+            'is_active' => 'boolean',
             'password' => 'hashed',
+            'created_at' => 'datetime',
+            'last_login' => 'datetime',
         ];
+    }
+
+    // Relations
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class);
+    }
+
+    public function devices(): HasMany
+    {
+        return $this->hasMany(Device::class, 'created_by');
+    }
+
+    public function deviceHistories(): HasMany
+    {
+        return $this->hasMany(DeviceHistory::class, 'changed_by');
+    }
+
+    public function repairsReported(): HasMany
+    {
+        return $this->hasMany(Repair::class, 'issue_reported_by');
+    }
+
+    public function repairsAssigned(): HasMany
+    {
+        return $this->hasMany(Repair::class, 'assigned_to');
+    }
+
+    public function auditLogs(): HasMany
+    {
+        return $this->hasMany(AuditLog::class);
     }
 }

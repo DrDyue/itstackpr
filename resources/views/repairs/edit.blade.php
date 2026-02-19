@@ -1,179 +1,150 @@
-@extends('layouts.app')
+<x-app-layout>
+<div style="background-color: #f5f5f7; padding: 20px;">
+    <div style="max-width: 800px; margin: 0 auto;">
+        <!-- Header -->
+        <div style="background-color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h1 style="font-size: 24px; font-weight: 700; color: #1d1d1f; margin: 0;">🔧 Rediģēt Remontu #{{ $repair->id }}</h1>
+                <a href="{{ route('repairs.index') }}" style="padding: 10px 16px; background-color: #f5f5f7; color: #1d1d1f; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; text-decoration: none;">Atpakaļ</a>
+            </div>
+        </div>
 
-@section('content')
-<div class="max-w-3xl mx-auto p-4">
-    <div class="flex items-center justify-between mb-4">
-        <h1 class="text-2xl font-bold">Edit Repair #{{ $repair->id }}</h1>
-        <a href="{{ route('repairs.index') }}" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">
-            Back
-        </a>
+        <!-- Form Section -->
+        <div style="background-color: white; border: 1px solid #e5e5e7; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
+            @if ($errors->any())
+                <div style="padding: 16px; background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; margin-bottom: 20px; color: #991b1b;">
+                    <p style="font-weight: 600; margin: 0 0 8px 0;">Validācijas Kļūdas:</p>
+                    <ul style="margin: 0; padding-left: 20px;">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <form method="POST" action="{{ route('repairs.update', $repair) }}" style="display: flex; flex-direction: column; gap: 16px;">
+                @csrf
+                @method('PUT')
+
+                <!-- Device -->
+                <div>
+                    <label style="display: block; font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 6px;">Ierīce *</label>
+                    <select name="device_id" required style="width: 100%; padding: 10px; border: 1px solid #e5e5e7; border-radius: 8px; font-size: 14px;">
+                        <option value="">-- Izvēlieties ierīci --</option>
+                        @foreach($devices as $device)
+                            <option value="{{ $device->id }}" @selected(old('device_id', $repair->device_id) == $device->id)>
+                                {{ $device->code ?? ('Device #' . $device->id) }} - {{ $device->name ?? '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label style="display: block; font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 6px;">Apraksts *</label>
+                    <textarea name="description" rows="4" required style="width: 100%; padding: 10px; border: 1px solid #e5e5e7; border-radius: 8px; font-size: 14px; font-family: inherit;">{{ old('description', $repair->description) }}</textarea>
+                </div>
+
+                <!-- Grid Row 1 -->
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 6px;">Statuss</label>
+                        <select name="status" style="width: 100%; padding: 10px; border: 1px solid #e5e5e7; border-radius: 8px; font-size: 14px;">
+                            <option value="">(noklusējums: waiting)</option>
+                            @foreach($statuses as $s)
+                                <option value="{{ $s }}" @selected(old('status', $repair->status) == $s)>{{ $s }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 6px;">Remonta tips *</label>
+                        <select name="repair_type" required style="width: 100%; padding: 10px; border: 1px solid #e5e5e7; border-radius: 8px; font-size: 14px;">
+                            <option value="">-- Izvēlieties --</option>
+                            @foreach($repairTypes as $t)
+                                <option value="{{ $t }}" @selected(old('repair_type', $repair->repair_type) == $t)>{{ $t }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 6px;">Prioritāte</label>
+                        <select name="priority" style="width: 100%; padding: 10px; border: 1px solid #e5e5e7; border-radius: 8px; font-size: 14px;">
+                            <option value="">(noklusējums: medium)</option>
+                            @foreach($priorities as $p)
+                                <option value="{{ $p }}" @selected(old('priority', $repair->priority) == $p)>{{ $p }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Dates -->
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 6px;">Sākuma datums *</label>
+                        <input type="date" name="start_date" value="{{ old('start_date', $repair->start_date) }}" required style="width: 100%; padding: 10px; border: 1px solid #e5e5e7; border-radius: 8px; font-size: 14px;"/>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 6px;">Paredzamais beigums</label>
+                        <input type="date" name="estimated_completion" value="{{ old('estimated_completion', $repair->estimated_completion) }}" style="width: 100%; padding: 10px; border: 1px solid #e5e5e7; border-radius: 8px; font-size: 14px;"/>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 6px;">Faktiskais beigums</label>
+                        <input type="date" name="actual_completion" value="{{ old('actual_completion', $repair->actual_completion) }}" style="width: 100%; padding: 10px; border: 1px solid #e5e5e7; border-radius: 8px; font-size: 14px;"/>
+                    </div>
+                </div>
+
+                <!-- Cost & Invoice -->
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 6px;">Izmaksas (EUR)</label>
+                        <input type="number" step="0.01" min="0" name="cost" value="{{ old('cost', $repair->cost) }}" style="width: 100%; padding: 10px; border: 1px solid #e5e5e7; border-radius: 8px; font-size: 14px;"/>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 6px;">Rēķina numurs</label>
+                        <input type="text" name="invoice_number" maxlength="50" value="{{ old('invoice_number', $repair->invoice_number) }}" style="width: 100%; padding: 10px; border: 1px solid #e5e5e7; border-radius: 8px; font-size: 14px;"/>
+                    </div>
+                </div>
+
+                <!-- Vendor -->
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 6px;">Piegādātāja nosaukums</label>
+                        <input type="text" name="vendor_name" maxlength="100" value="{{ old('vendor_name', $repair->vendor_name) }}" style="width: 100%; padding: 10px; border: 1px solid #e5e5e7; border-radius: 8px; font-size: 14px;"/>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 6px;">Piegādātāja kontakts</label>
+                        <input type="text" name="vendor_contact" maxlength="100" value="{{ old('vendor_contact', $repair->vendor_contact) }}" style="width: 100%; padding: 10px; border: 1px solid #e5e5e7; border-radius: 8px; font-size: 14px;"/>
+                    </div>
+                </div>
+
+                <!-- Users -->
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 6px;">Problēmu ziņojusi (lietotājs)</label>
+                        <select name="issue_reported_by" style="width: 100%; padding: 10px; border: 1px solid #e5e5e7; border-radius: 8px; font-size: 14px;">
+                            <option value="">-- Nav --</option>
+                            @foreach($users as $u)
+                                <option value="{{ $u->id }}" @selected(old('issue_reported_by', $repair->issue_reported_by) == $u->id)>{{ $u->name ?? ('User #' . $u->id) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 6px;">Piešķirts (lietotājs)</label>
+                        <select name="assigned_to" style="width: 100%; padding: 10px; border: 1px solid #e5e5e7; border-radius: 8px; font-size: 14px;">
+                            <option value="">-- Nav --</option>
+                            @foreach($users as $u)
+                                <option value="{{ $u->id }}" @selected(old('assigned_to', $repair->assigned_to) == $u->id)>{{ $u->name ?? ('User #' . $u->id) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button type="submit" style="padding: 10px 16px; background-color: #0071e3; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">Atjaunināt</button>
+                    <a href="{{ route('repairs.index') }}" style="padding: 10px 16px; background-color: #f5f5f7; color: #1d1d1f; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; text-decoration: none;">Atcelt</a>
+                </div>
+            </form>
+        </div>
     </div>
-
-    @if ($errors->any())
-        <div class="mb-4 p-3 rounded bg-red-100 text-red-800">
-            <div class="font-semibold mb-1">Validation errors:</div>
-            <ul class="list-disc pl-5">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    <form method="POST" action="{{ route('repairs.update', $repair) }}" class="bg-white border rounded p-4 space-y-4">
-        @csrf
-        @method('PUT')
-
-        <div>
-            <label class="block font-medium mb-1">Device *</label>
-            <select name="device_id" class="w-full border rounded px-3 py-2" required>
-                <option value="">-- select device --</option>
-                @foreach($devices as $device)
-                    <option value="{{ $device->id }}"
-                        @selected(old('device_id', $repair->device_id) == $device->id)>
-                        {{ $device->code ?? ('Device #' . $device->id) }} - {{ $device->name ?? '' }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
-        <div>
-            <label class="block font-medium mb-1">Description *</label>
-            <textarea name="description" rows="4" class="w-full border rounded px-3 py-2" required>{{ old('description', $repair->description) }}</textarea>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div>
-                <label class="block font-medium mb-1">Status</label>
-                <select name="status" class="w-full border rounded px-3 py-2">
-                    <option value="">(default: waiting)</option>
-                    @foreach($statuses as $s)
-                        <option value="{{ $s }}"
-                            @selected(old('status', $repair->status) == $s)>
-                            {{ $s }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                <label class="block font-medium mb-1">Repair type *</label>
-                <select name="repair_type" class="w-full border rounded px-3 py-2" required>
-                    <option value="">-- select --</option>
-                    @foreach($repairTypes as $t)
-                        <option value="{{ $t }}"
-                            @selected(old('repair_type', $repair->repair_type) == $t)>
-                            {{ $t }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                <label class="block font-medium mb-1">Priority</label>
-                <select name="priority" class="w-full border rounded px-3 py-2">
-                    <option value="">(default: medium)</option>
-                    @foreach($priorities as $p)
-                        <option value="{{ $p }}"
-                            @selected(old('priority', $repair->priority) == $p)>
-                            {{ $p }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div>
-                <label class="block font-medium mb-1">Start date *</label>
-                <input type="date" name="start_date"
-                       value="{{ old('start_date', $repair->start_date) }}"
-                       class="w-full border rounded px-3 py-2" required />
-            </div>
-
-            <div>
-                <label class="block font-medium mb-1">Estimated completion</label>
-                <input type="date" name="estimated_completion"
-                       value="{{ old('estimated_completion', $repair->estimated_completion) }}"
-                       class="w-full border rounded px-3 py-2" />
-            </div>
-
-            <div>
-                <label class="block font-medium mb-1">Actual completion</label>
-                <input type="date" name="actual_completion"
-                       value="{{ old('actual_completion', $repair->actual_completion) }}"
-                       class="w-full border rounded px-3 py-2" />
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-                <label class="block font-medium mb-1">Cost (EUR)</label>
-                <input type="number" step="0.01" min="0" name="cost"
-                       value="{{ old('cost', $repair->cost) }}"
-                       class="w-full border rounded px-3 py-2" />
-            </div>
-
-            <div>
-                <label class="block font-medium mb-1">Invoice number</label>
-                <input type="text" name="invoice_number" maxlength="50"
-                       value="{{ old('invoice_number', $repair->invoice_number) }}"
-                       class="w-full border rounded px-3 py-2" />
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-                <label class="block font-medium mb-1">Vendor name</label>
-                <input type="text" name="vendor_name" maxlength="100"
-                       value="{{ old('vendor_name', $repair->vendor_name) }}"
-                       class="w-full border rounded px-3 py-2" />
-            </div>
-
-            <div>
-                <label class="block font-medium mb-1">Vendor contact</label>
-                <input type="text" name="vendor_contact" maxlength="100"
-                       value="{{ old('vendor_contact', $repair->vendor_contact) }}"
-                       class="w-full border rounded px-3 py-2" />
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-                <label class="block font-medium mb-1">Issue reported by (user)</label>
-                <select name="issue_reported_by" class="w-full border rounded px-3 py-2">
-                    <option value="">-- none --</option>
-                    @foreach($users as $u)
-                        <option value="{{ $u->id }}"
-                            @selected(old('issue_reported_by', $repair->issue_reported_by) == $u->id)>
-                            {{ $u->name ?? ('User #' . $u->id) }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                <label class="block font-medium mb-1">Assigned to (user)</label>
-                <select name="assigned_to" class="w-full border rounded px-3 py-2">
-                    <option value="">-- none --</option>
-                    @foreach($users as $u)
-                        <option value="{{ $u->id }}"
-                            @selected(old('assigned_to', $repair->assigned_to) == $u->id)>
-                            {{ $u->name ?? ('User #' . $u->id) }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
-
-        <div class="flex gap-2">
-            <button class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">
-                Update
-            </button>
-            <a href="{{ route('repairs.index') }}" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">
-                Cancel
-            </a>
-        </div>
-    </form>
 </div>
-@endsection
+</x-app-layout>

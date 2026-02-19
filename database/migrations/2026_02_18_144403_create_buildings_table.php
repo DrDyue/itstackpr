@@ -17,7 +17,7 @@ public function up(): void
         $table->string('address', 200)->nullable();
         $table->string('city', 100)->nullable();
         $table->integer('total_floors')->nullable();
-        $table->string('notes', 200)->nullable();
+        $table->string('notes', 200);
     });
 }
 

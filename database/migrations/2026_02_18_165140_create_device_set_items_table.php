@@ -20,14 +20,10 @@ public function up(): void
 
         $table->foreignId('device_id')
             ->constrained('devices')
-            ->restrictOnDelete();
+            ->cascadeOnDelete();
 
-        $table->integer('quantity')->default(1);
-
-        $table->timestamp('created_at')->useCurrent();
-
-        // чтобы одно и то же устройство не было два раза в одном наборе
-        $table->unique(['device_set_id', 'device_id']);
+        $table->string('role', 50)->nullable();
+        $table->text('description')->nullable();
     });
 }
 

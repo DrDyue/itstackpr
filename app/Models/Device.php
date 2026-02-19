@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Device extends Model
 {
@@ -28,18 +30,53 @@ class Device extends Model
         'created_by',
     ];
 
-    public function type()
+    protected function casts(): array
+    {
+        return [
+            'purchase_date' => 'date',
+            'warranty_until' => 'date',
+            'purchase_price' => 'decimal:2',
+        ];
+    }
+
+    // Relations
+    public function type(): BelongsTo
     {
         return $this->belongsTo(DeviceType::class, 'device_type_id');
     }
 
-    public function building()
+    public function device_type(): BelongsTo
+    {
+        return $this->type();
+    }
+
+    public function building(): BelongsTo
     {
         return $this->belongsTo(Building::class);
     }
 
-    public function room()
+    public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function histories(): HasMany
+    {
+        return $this->hasMany(DeviceHistory::class);
+    }
+
+    public function repairs(): HasMany
+    {
+        return $this->hasMany(Repair::class);
+    }
+
+    public function sets()
+    {
+        return $this->belongsToMany(DeviceSet::class, 'device_set_items');
     }
 }

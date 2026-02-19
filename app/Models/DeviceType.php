@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DeviceType extends Model
 {
@@ -17,4 +18,10 @@ class DeviceType extends Model
         'description',
         'expected_lifetime_years',
     ];
+
+    // Relations
+    public function devices(): HasMany
+    {
+        return $this->hasMany(Device::class);
+    }
 }

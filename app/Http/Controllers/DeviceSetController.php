@@ -41,7 +41,7 @@ class DeviceSetController extends Controller
 
         if (($data['room_id'] ?? null) === '') $data['room_id'] = null;
 
-        $userId = auth()->check() ? auth()->id() : null;
+        $userId = \Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::id() : null;
         $data['created_by'] = $userId;
 
         $set = DeviceSet::create($data);
@@ -91,7 +91,7 @@ class DeviceSetController extends Controller
 
         $deviceSet->update($data);
 
-        $userId = auth()->check() ? auth()->id() : null;
+        $userId = \Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::id() : null;
         AuditLog::create([
             'user_id' => $userId,
             'action' => 'UPDATE',
@@ -105,7 +105,7 @@ class DeviceSetController extends Controller
 
     public function destroy(DeviceSet $deviceSet)
     {
-        $userId = auth()->check() ? auth()->id() : null;
+        $userId = \Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::id() : null;
 
         AuditLog::create([
             'user_id' => $userId,
@@ -144,7 +144,7 @@ class DeviceSetController extends Controller
             ]);
         }
 
-        $userId = auth()->check() ? auth()->id() : null;
+        $userId = \Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::id() : null;
         $device = Device::find($data['device_id']);
 
         AuditLog::create([
@@ -165,7 +165,7 @@ class DeviceSetController extends Controller
             abort(404);
         }
 
-        $userId = auth()->check() ? auth()->id() : null;
+        $userId = \Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::id() : null;
 
         AuditLog::create([
             'user_id' => $userId,

@@ -46,7 +46,7 @@ class EmployeeController extends Controller
         $employee = Employee::create($data);
 
         // audit log
-        $userId = auth()->check() ? auth()->id() : null;
+        $userId = \Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::id() : null;
         AuditLog::create([
             'user_id' => $userId,
             'action' => 'CREATE',
@@ -88,7 +88,7 @@ class EmployeeController extends Controller
             if ((string)$old !== (string)$new) $changed[] = $k;
         }
 
-        $userId = auth()->check() ? auth()->id() : null;
+        $userId = \Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::id() : null;
         AuditLog::create([
             'user_id' => $userId,
             'action' => 'UPDATE',
@@ -102,7 +102,7 @@ class EmployeeController extends Controller
 
     public function destroy(Employee $employee)
     {
-        $userId = auth()->check() ? auth()->id() : null;
+        $userId = \Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::id() : null;
 
         AuditLog::create([
             'user_id' => $userId,

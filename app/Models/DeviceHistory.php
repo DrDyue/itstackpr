@@ -3,12 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DeviceHistory extends Model
 {
     protected $table = 'device_history';
 
-    // у нас нет created_at/updated_at, вместо этого поле timestamp
     public $timestamps = false;
 
     protected $fillable = [
@@ -21,8 +21,21 @@ class DeviceHistory extends Model
         'timestamp',
     ];
 
-    public function device()
+    protected function casts(): array
+    {
+        return [
+            'timestamp' => 'datetime',
+        ];
+    }
+
+    // Relations
+    public function device(): BelongsTo
     {
         return $this->belongsTo(Device::class);
+    }
+
+    public function changedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'changed_by');
     }
 }
