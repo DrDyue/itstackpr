@@ -22,7 +22,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: "8.2"
           extensions: mbstring, bcmath, ctype, fileinfo, json, openssl, pdo, pdo_mysql, tokenizer, xml
           coverage: none
 
@@ -32,7 +32,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
           cache: npm
 
       - name: Build frontend assets
@@ -46,11 +46,12 @@ jobs:
           server: ftpupload.net
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
+
+          
           server-dir: /htdocs/
+
           dangerous-clean-slate: false
 
-          # ВАЖНО: vendor и public/build НЕ исключаем,
-          # потому что они собираются на runner и должны попасть на сервер.
           exclude: |
             /.git/
             /.github/
@@ -61,3 +62,12 @@ jobs:
             **/*.log
             .env
             .env.*
+            **/.DS_Store
+            **/Thumbs.db
+            /.phpunit.cache/
+            /.fleet/
+            /.zed/
+            /storage/logs/
+            /storage/framework/cache/
+            /storage/framework/sessions/
+            /storage/framework/views/
