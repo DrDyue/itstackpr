@@ -43,10 +43,10 @@ jobs:
       - name: Deploy to InfinityFree
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.INFINITYFREE_FTP_SERVER }}
+          server: ftpupload.net
           username: ${{ secrets.INFINITYFREE_FTP_USERNAME }}
           password: ${{ secrets.INFINITYFREE_FTP_PASSWORD }}
-          server-dir: ${{ secrets.INFINITYFREE_REMOTE_DIR }}
+          server-dir: ftpupload.net
           dangerous-clean-slate: false
           exclude: |
             **/.git/**
