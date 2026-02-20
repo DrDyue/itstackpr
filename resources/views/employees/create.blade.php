@@ -2,7 +2,7 @@
     <section class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
         <div class="mb-6 flex items-center justify-between">
             <h1 class="text-2xl font-semibold text-gray-900">Jauns darbinieks</h1>
-            <a href="{{ route('employees.index') }}" class="text-sm font-medium text-blue-600 hover:text-blue-700">Atpakaï uz sarakstu</a>
+            <a href="{{ route('employees.index') }}" class="text-sm font-medium text-blue-600 hover:text-blue-700">AtpakaÄ¼ uz sarakstu</a>
         </div>
 
         @if ($errors->any())
@@ -19,7 +19,7 @@
             @csrf
 
             <div>
-                <label class="crud-label">Vârds, uzvârds *</label>
+                <label class="crud-label">VÄrds, uzvÄrds *</label>
                 <input type="text" name="full_name" value="{{ old('full_name') }}" class="crud-control" required>
             </div>
             <div class="grid gap-4 sm:grid-cols-2">
@@ -38,11 +38,11 @@
             </div>
             <label class="inline-flex items-center gap-2 text-sm text-gray-700">
                 <input type="checkbox" name="is_active" value="1" @checked(old('is_active', true)) class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                Aktîvs
+                AktÄ«vs
             </label>
 
             <div class="flex gap-3 pt-2">
-                <button type="submit" class="crud-btn-primary">Saglabât</button>
+                <button type="submit" class="crud-btn-primary">SaglabÄt</button>
                 <a href="{{ route('employees.index') }}" class="crud-btn-secondary">Atcelt</a>
             </div>
         </form>

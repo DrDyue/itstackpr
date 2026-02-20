@@ -3,16 +3,16 @@
         <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
             <div>
                 <h1 class="text-2xl font-semibold text-gray-900">Darbinieki</h1>
-                <p class="text-sm text-gray-500">Darbinieku saraksts un kontaktinformâcija</p>
+                <p class="text-sm text-gray-500">Darbinieku saraksts un kontaktinformÄcija</p>
             </div>
             <a href="{{ route('employees.create') }}" class="crud-btn-primary-inline">Pievienot darbinieku</a>
         </div>
 
         <form method="GET" action="{{ route('employees.index') }}" class="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
             <div class="flex flex-wrap items-center gap-2">
-                <input type="text" name="q" value="{{ $q }}" placeholder="Meklçt pçc vârda, e-pasta, telefona..." class="w-full max-w-md rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-                <button type="submit" class="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">Meklçt</button>
-                <a href="{{ route('employees.index') }}" class="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">Notîrît</a>
+                <input type="text" name="q" value="{{ $q }}" placeholder="MeklÄ“t pÄ“c vÄrda, e-pasta, telefona..." class="w-full max-w-md rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                <button type="submit" class="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">MeklÄ“t</button>
+                <a href="{{ route('employees.index') }}" class="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">NotÄ«rÄ«t</a>
             </div>
         </form>
 
@@ -26,13 +26,13 @@
                     <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
                         <tr>
                             <th class="px-4 py-3 text-left">ID</th>
-                            <th class="px-4 py-3 text-left">Vârds, uzvârds</th>
+                            <th class="px-4 py-3 text-left">VÄrds, uzvÄrds</th>
                             <th class="px-4 py-3 text-left">E-pasts</th>
                             <th class="px-4 py-3 text-left">Telefons</th>
                             <th class="px-4 py-3 text-left">Amats</th>
-                            <th class="px-4 py-3 text-left">Darbinieks aktîvs</th>
+                            <th class="px-4 py-3 text-left">Darbinieks aktÄ«vs</th>
                             <th class="px-4 py-3 text-left">Izveidots</th>
-                            <th class="px-4 py-3 text-left">Darbîbas</th>
+                            <th class="px-4 py-3 text-left">DarbÄ«bas</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -45,26 +45,26 @@
                                 <td class="px-4 py-3">{{ $employee->job_title ?: '-' }}</td>
                                 <td class="px-4 py-3">
                                     @if($employee->is_active)
-                                        <span class="inline-flex rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">Aktîvs</span>
+                                        <span class="inline-flex rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">AktÄ«vs</span>
                                     @else
-                                        <span class="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">Neaktîvs</span>
+                                        <span class="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">NeaktÄ«vs</span>
                                     @endif
                                 </td>
                                 <td class="px-4 py-3">{{ $employee->created_at?->format('d.m.Y H:i') ?: '-' }}</td>
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-3">
-                                        <a href="{{ route('employees.edit', $employee) }}" class="text-blue-600 hover:text-blue-700">Rediìçt</a>
+                                        <a href="{{ route('employees.edit', $employee) }}" class="text-blue-600 hover:text-blue-700">RediÄ£Ä“t</a>
                                         <form method="POST" action="{{ route('employees.destroy', $employee) }}">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" onclick="return confirm('Dzçst ğo darbinieku?')" class="text-red-600 hover:text-red-700">Dzçst</button>
+                                            <button type="submit" onclick="return confirm('DzÄ“st Å¡o darbinieku?')" class="text-red-600 hover:text-red-700">DzÄ“st</button>
                                         </form>
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-4 py-8 text-center text-gray-500">Darbinieki vçl nav pievienoti.</td>
+                                <td colspan="8" class="px-4 py-8 text-center text-gray-500">Darbinieki vÄ“l nav pievienoti.</td>
                             </tr>
                         @endforelse
                     </tbody>
