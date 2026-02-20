@@ -53,21 +53,30 @@ jobs:
           dangerous-clean-slate: false
 
           exclude: |
-            .git/
-            .github/
-            .vscode/
-            .idea/
-            node_modules/
-            tests/
-            *.log
+            .git/**
+            .github/**
+            .vscode/**
+            .idea/**
+            node_modules/**
+            tests/**
+            vendor/**
+            database/**
+            storage/logs/**
+            storage/framework/cache/**
+            storage/framework/sessions/**
+            storage/framework/views/**
+            .phpunit.cache/**
+            .fleet/**
+            .zed/**
+            package.json
+            package-lock.json
+            postcss.config.js
+            tailwind.config.js
+            vite.config.js
+            phpunit.xml
+            **/*.md
+            **/*.log
             .env
             .env.*
-            .DS_Store
-            Thumbs.db
-            .phpunit.cache/
-            .fleet/
-            .zed/
-            storage/logs/
-            storage/framework/cache/
-            storage/framework/sessions/
-            storage/framework/views/
+            **/.DS_Store
+            **/Thumbs.db
