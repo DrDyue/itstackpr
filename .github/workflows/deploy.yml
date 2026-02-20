@@ -48,14 +48,16 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: /htdocs/
           dangerous-clean-slate: false
+
+          # ВАЖНО: vendor и public/build НЕ исключаем,
+          # потому что они собираются на runner и должны попасть на сервер.
           exclude: |
-            **/.git/**
-            **/.github/**
-            **/.vscode/**
-            **/node_modules/**
-            **/tests/**
-            **/storage/logs/**
-            **/storage/framework/cache/**
-            **/storage/framework/sessions/**
-            **/storage/framework/views/**
+            /.git/
+            /.github/
+            /.vscode/
+            /.idea/
+            /node_modules/
+            /tests/
+            **/*.log
             .env
+            .env.*
