@@ -4,7 +4,7 @@
             <h1 class="text-2xl font-semibold text-gray-900">Audita zurnals</h1>
             <p class="text-sm text-gray-500">Pedejie 300 sistemas notikumi</p>
         </div>
-
+        
         <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
             <div class="overflow-x-auto">
                 <table class="min-w-full text-sm">
