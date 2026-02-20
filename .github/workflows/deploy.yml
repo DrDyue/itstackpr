@@ -60,10 +60,6 @@ jobs:
             node_modules/**
             tests/**
             database/**
-            storage/logs/**
-            storage/framework/cache/**
-            storage/framework/sessions/**
-            storage/framework/views/**
             .phpunit.cache/**
             .fleet/**
             .zed/**
