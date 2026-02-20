@@ -5,7 +5,7 @@
                 <h1 class="text-2xl font-semibold text-gray-900">&#274;kas</h1>
                 <p class="text-sm text-gray-500">&#274;ku saraksts un pamata dati</p>
             </div>
-            <a href="{{ route('buildings.create') }}" class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Pievienot ēku</a>
+            <a href="{{ route('buildings.create') }}" class="inline-flex items-center crud-btn-primary">Pievienot ēku</a>
         </div>
 
         @if (session('success'))
@@ -59,3 +59,5 @@
         </div>
     </section>
 </x-app-layout>
+
+

@@ -15,12 +15,12 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('device-set-items.store') }}" class="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <form method="POST" action="{{ route('device-set-items.store') }}" class="crud-form-card">
             @csrf
 
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Komplekts *</label>
-                <select name="device_set_id" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                <label class="crud-label">Komplekts *</label>
+                <select name="device_set_id" required class="crud-control">
                     <option value="">Izvēlieties komplektu</option>
                     @foreach ($deviceSets as $set)
                         <option value="{{ $set->id }}" @selected(old('device_set_id', $selectedDeviceSetId) == $set->id)>{{ $set->set_name ?? $set->name }}</option>
@@ -29,8 +29,8 @@
             </div>
 
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Ierīce *</label>
-                <select name="device_id" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                <label class="crud-label">Ierīce *</label>
+                <select name="device_id" required class="crud-control">
                     <option value="">Izvēlieties ierīci</option>
                     @foreach ($devices as $device)
                         <option value="{{ $device->id }}" @selected(old('device_id') == $device->id)>{{ $device->name }} ({{ $device->code }})</option>
@@ -40,24 +40,26 @@
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Daudzums</label>
-                    <input type="number" name="quantity" min="1" max="999" value="{{ old('quantity', 1) }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Daudzums</label>
+                    <input type="number" name="quantity" min="1" max="999" value="{{ old('quantity', 1) }}" class="crud-control">
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Loma komplektā</label>
-                    <input type="text" name="role" maxlength="50" value="{{ old('role') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Piemērs: galvenais dators">
+                    <label class="crud-label">Loma komplektā</label>
+                    <input type="text" name="role" maxlength="50" value="{{ old('role') }}" class="crud-control" placeholder="Piemērs: galvenais dators">
                 </div>
             </div>
 
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Apraksts</label>
-                <textarea name="description" rows="3" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('description') }}</textarea>
+                <label class="crud-label">Apraksts</label>
+                <textarea name="description" rows="3" class="crud-control">{{ old('description') }}</textarea>
             </div>
 
             <div class="flex gap-3 pt-2">
-                <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Saglabāt</button>
-                <a href="{{ route('device-set-items.index') }}" class="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">Atcelt</a>
+                <button type="submit" class="crud-btn-primary">Saglabāt</button>
+                <a href="{{ route('device-set-items.index') }}" class="crud-btn-secondary">Atcelt</a>
             </div>
         </form>
     </section>
 </x-app-layout>
+
+

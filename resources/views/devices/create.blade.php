@@ -26,36 +26,36 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('devices.store') }}" class="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <form method="POST" action="{{ route('devices.store') }}" class="crud-form-card">
             @csrf
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Kods</label>
-                    <input type="text" name="code" value="{{ old('code') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Kods</label>
+                    <input type="text" name="code" value="{{ old('code') }}" class="crud-control">
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Nosaukums *</label>
-                    <input type="text" name="name" value="{{ old('name') }}" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Nosaukums *</label>
+                    <input type="text" name="name" value="{{ old('name') }}" required class="crud-control">
                 </div>
             </div>
 
             <div class="grid gap-4 sm:grid-cols-3">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Tips *</label>
-                    <select name="device_type_id" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Tips *</label>
+                    <select name="device_type_id" required class="crud-control">
                         @foreach ($types as $type)
                             <option value="{{ $type->id }}" @selected(old('device_type_id') == $type->id)>{{ $type->type_name }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Modelis *</label>
-                    <input type="text" name="model" value="{{ old('model') }}" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Modelis *</label>
+                    <input type="text" name="model" value="{{ old('model') }}" required class="crud-control">
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Statuss *</label>
-                    <select name="status" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Statuss *</label>
+                    <select name="status" required class="crud-control">
                         @foreach ($statuses as $status)
                             <option value="{{ $status }}" @selected(old('status', 'active') === $status)>{{ $statusLabels[$status] ?? $status }}</option>
                         @endforeach
@@ -65,8 +65,8 @@
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">&#274;ka</label>
-                    <select name="building_id" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">&#274;ka</label>
+                    <select name="building_id" class="crud-control">
                         <option value="">Nav</option>
                         @foreach ($buildings as $building)
                             <option value="{{ $building->id }}" @selected(old('building_id') == $building->id)>{{ $building->building_name }}</option>
@@ -74,8 +74,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Telpa</label>
-                    <select name="room_id" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Telpa</label>
+                    <select name="room_id" class="crud-control">
                         <option value="">Nav</option>
                         @foreach ($rooms as $room)
                             <option value="{{ $room->id }}" @selected(old('room_id') == $room->id)>{{ $room->building?->building_name }} / {{ $room->room_number }}</option>
@@ -86,55 +86,57 @@
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Piešķirta personai</label>
-                    <input type="text" name="assigned_to" value="{{ old('assigned_to') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Piešķirta personai</label>
+                    <input type="text" name="assigned_to" value="{{ old('assigned_to') }}" class="crud-control">
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Ražotājs</label>
-                    <input type="text" name="manufacturer" value="{{ old('manufacturer') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Ražotājs</label>
+                    <input type="text" name="manufacturer" value="{{ old('manufacturer') }}" class="crud-control">
                 </div>
             </div>
 
             <div class="grid gap-4 sm:grid-cols-3">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Pirkuma datums *</label>
-                    <input type="date" name="purchase_date" value="{{ old('purchase_date') }}" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Pirkuma datums *</label>
+                    <input type="date" name="purchase_date" value="{{ old('purchase_date') }}" required class="crud-control">
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Cena</label>
-                    <input type="number" step="0.01" min="0" name="purchase_price" value="{{ old('purchase_price') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Cena</label>
+                    <input type="number" step="0.01" min="0" name="purchase_price" value="{{ old('purchase_price') }}" class="crud-control">
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Garantija līdz</label>
-                    <input type="date" name="warranty_until" value="{{ old('warranty_until') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Garantija līdz</label>
+                    <input type="date" name="warranty_until" value="{{ old('warranty_until') }}" class="crud-control">
                 </div>
             </div>
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Garantijas faila nosaukums</label>
-                    <input type="text" name="warranty_photo_name" value="{{ old('warranty_photo_name') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Garantijas faila nosaukums</label>
+                    <input type="text" name="warranty_photo_name" value="{{ old('warranty_photo_name') }}" class="crud-control">
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Sērijas numurs</label>
-                    <input type="text" name="serial_number" value="{{ old('serial_number') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Sērijas numurs</label>
+                    <input type="text" name="serial_number" value="{{ old('serial_number') }}" class="crud-control">
                 </div>
             </div>
 
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Piezīmes</label>
-                <textarea name="notes" rows="3" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('notes') }}</textarea>
+                <label class="crud-label">Piezīmes</label>
+                <textarea name="notes" rows="3" class="crud-control">{{ old('notes') }}</textarea>
             </div>
 
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Attēla URL</label>
-                <input type="text" name="device_image_url" value="{{ old('device_image_url') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                <label class="crud-label">Attēla URL</label>
+                <input type="text" name="device_image_url" value="{{ old('device_image_url') }}" class="crud-control">
             </div>
 
             <div class="flex gap-3 pt-2">
-                <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Saglabāt</button>
-                <a href="{{ route('devices.index') }}" class="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">Atcelt</a>
+                <button type="submit" class="crud-btn-primary">Saglabāt</button>
+                <a href="{{ route('devices.index') }}" class="crud-btn-secondary">Atcelt</a>
             </div>
         </form>
     </section>
 </x-app-layout>
+
+

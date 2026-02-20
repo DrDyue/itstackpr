@@ -1,4 +1,4 @@
-﻿<nav x-data="{ open: false }" class="border-b border-gray-200 bg-white shadow-sm">
+<nav x-data="{ open: false }" class="border-b border-gray-200 bg-white shadow-sm">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 justify-between">
             <div class="flex items-center gap-6">
@@ -13,7 +13,7 @@
                     <x-nav-link :href="route('repairs.index')" :active="request()->routeIs('repairs*')">Remonti</x-nav-link>
                     <x-nav-link :href="route('employees.index')" :active="request()->routeIs('employees*')">Darbinieki</x-nav-link>
                     <x-nav-link :href="route('users.index')" :active="request()->routeIs('users*')">Lietotāji</x-nav-link>
-                    <x-nav-link :href="route('buildings.index')" :active="request()->routeIs('buildings*') || request()->routeIs('rooms*')">&#274;kas un telpas</x-nav-link>
+                    <x-nav-link :href="route('buildings.index')" :active="request()->routeIs('buildings*') || request()->routeIs('rooms*')">Ēkas un telpas</x-nav-link>
                     <x-nav-link :href="route('device-sets.index')" :active="request()->routeIs('device-sets*') || request()->routeIs('device-set-items*')">Komplekti</x-nav-link>
                 </div>
             </div>
@@ -65,7 +65,7 @@
             <x-responsive-nav-link :href="route('repairs.index')" :active="request()->routeIs('repairs*')">Remonti</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('employees.index')" :active="request()->routeIs('employees*')">Darbinieki</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users*')">Lietotāji</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('buildings.index')" :active="request()->routeIs('buildings*') || request()->routeIs('rooms*')">&#274;kas un telpas</x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('buildings.index')" :active="request()->routeIs('buildings*') || request()->routeIs('rooms*')">Ēkas un telpas</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('device-sets.index')" :active="request()->routeIs('device-sets*') || request()->routeIs('device-set-items*')">Komplekti</x-responsive-nav-link>
         </div>
 

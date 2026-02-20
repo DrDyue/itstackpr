@@ -14,7 +14,7 @@
                 <h1 class="text-2xl font-semibold text-gray-900">Komplekti</h1>
                 <p class="text-sm text-gray-500">Ierīču komplektu pārvaldība</p>
             </div>
-            <a href="{{ route('device-sets.create') }}" class="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Pievienot komplektu</a>
+            <a href="{{ route('device-sets.create') }}" class="crud-btn-primary-inline">Pievienot komplektu</a>
         </div>
 
         @if (session('success'))
@@ -65,3 +65,5 @@
         </div>
     </section>
 </x-app-layout>
+
+

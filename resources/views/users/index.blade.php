@@ -6,7 +6,7 @@
                 <p class="text-sm text-gray-500">Sistēmas kontu pārvaldība</p>
             </div>
             @if(auth()->user()?->role === 'admin')
-                <a href="{{ route('users.create') }}" class="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Pievienot lietotāju</a>
+                <a href="{{ route('users.create') }}" class="crud-btn-primary-inline">Pievienot lietotāju</a>
             @endif
         </div>
 
@@ -81,3 +81,5 @@
         </div>
     </section>
 </x-app-layout>
+
+

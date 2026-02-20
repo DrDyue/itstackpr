@@ -26,10 +26,12 @@
             <x-input-error :messages="$errors->get('password_confirmation')" />
         </div>
 
-        <div style="text-align: right; margin-top: 20px;">
-            <button type="submit" class="btn-primary" style="width: auto; display: inline-block;">
+        <div class="form-actions-end">
+            <button type="submit" class="btn-primary btn-auto-inline">
                 Atiestatt paroli
             </button>
         </div>
     </form>
 </x-guest-layout>
+
+

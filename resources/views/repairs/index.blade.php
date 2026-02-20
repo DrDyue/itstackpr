@@ -24,7 +24,7 @@
                 <h1 class="text-2xl font-semibold text-gray-900">Remonti</h1>
                 <p class="text-sm text-gray-500">Remontdarbu uzskaite un statuss</p>
             </div>
-            <a href="{{ route('repairs.create') }}" class="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Pievienot remontu</a>
+            <a href="{{ route('repairs.create') }}" class="crud-btn-primary-inline">Pievienot remontu</a>
         </div>
 
         <form method="GET" action="{{ route('repairs.index') }}" class="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -90,3 +90,5 @@
         </div>
     </section>
 </x-app-layout>
+
+

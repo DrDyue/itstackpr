@@ -15,39 +15,41 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('buildings.store') }}" class="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <form method="POST" action="{{ route('buildings.store') }}" class="crud-form-card">
             @csrf
 
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Nosaukums *</label>
-                <input type="text" name="building_name" value="{{ old('building_name') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500" required>
+                <label class="crud-label">Nosaukums *</label>
+                <input type="text" name="building_name" value="{{ old('building_name') }}" class="crud-control" required>
             </div>
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Pilsēta</label>
-                    <input type="text" name="city" value="{{ old('city') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Pilsēta</label>
+                    <input type="text" name="city" value="{{ old('city') }}" class="crud-control">
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Stāvu skaits</label>
-                    <input type="number" name="total_floors" value="{{ old('total_floors') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500" min="0">
+                    <label class="crud-label">Stāvu skaits</label>
+                    <input type="number" name="total_floors" value="{{ old('total_floors') }}" class="crud-control" min="0">
                 </div>
             </div>
 
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Adrese</label>
-                <input type="text" name="address" value="{{ old('address') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                <label class="crud-label">Adrese</label>
+                <input type="text" name="address" value="{{ old('address') }}" class="crud-control">
             </div>
 
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Piezīmes</label>
-                <textarea name="notes" rows="3" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('notes') }}</textarea>
+                <label class="crud-label">Piezīmes</label>
+                <textarea name="notes" rows="3" class="crud-control">{{ old('notes') }}</textarea>
             </div>
 
             <div class="flex gap-3 pt-2">
-                <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Saglabāt</button>
-                <a href="{{ route('buildings.index') }}" class="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">Atcelt</a>
+                <button type="submit" class="crud-btn-primary">Saglabāt</button>
+                <a href="{{ route('buildings.index') }}" class="crud-btn-secondary">Atcelt</a>
             </div>
         </form>
     </section>
 </x-app-layout>
+
+

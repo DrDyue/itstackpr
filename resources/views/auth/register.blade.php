@@ -73,11 +73,13 @@
         </button>
 
         <!-- Pieteiksanas saite -->
-        <div style="text-align: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid #d5d5d7;">
-            <span style="color: #555;">Jau ir konts? </span>
+        <div class="auth-link-row">
+            <span class="auth-muted-text">Jau ir konts? </span>
             <a href="{{ route('login') }}" class="auth-link">
                 Pierakstities
             </a>
         </div>
     </form>
 </x-guest-layout>
+
+

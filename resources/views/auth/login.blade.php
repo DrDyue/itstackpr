@@ -46,7 +46,7 @@
         </button>
 
         @if (Route::has('password.request'))
-            <div style="text-align: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid #d5d5d7;">
+            <div class="auth-link-row">
                 <a href="{{ route('password.request') }}" class="auth-link">
                     Aizmirsi paroli?
                 </a>
@@ -54,5 +54,7 @@
         @endif
     </form>
 </x-guest-layout>
+
+
 
 

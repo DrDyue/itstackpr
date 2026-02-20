@@ -5,7 +5,7 @@
                 <h1 class="text-2xl font-semibold text-gray-900">Telpas</h1>
                 <p class="text-sm text-gray-500">Telpu saraksts pa ēkām</p>
             </div>
-            <a href="{{ route('rooms.create') }}" class="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Pievienot telpu</a>
+            <a href="{{ route('rooms.create') }}" class="crud-btn-primary-inline">Pievienot telpu</a>
         </div>
 
         @if (session('success'))
@@ -61,3 +61,5 @@
         </div>
     </section>
 </x-app-layout>
+
+

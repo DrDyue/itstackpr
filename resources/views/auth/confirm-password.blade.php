@@ -1,5 +1,5 @@
 <x-guest-layout>
-    <div style="color: #555; font-size: 14px; margin-bottom: 20px;">
+    <div class="auth-intro-text">
         Tas ir draudzgs aplikcijas apgabals. Ldzu apstipriniet savu paroli pirms turpinanas.
     </div>
 
@@ -13,10 +13,12 @@
             <x-input-error :messages="$errors->get('password')" />
         </div>
 
-        <div style="text-align: right; margin-top: 20px;">
-            <button type="submit" class="btn-primary" style="width: auto; display: inline-block;">
+        <div class="form-actions-end">
+            <button type="submit" class="btn-primary btn-auto-inline">
                 Apstipriniet
             </button>
         </div>
     </form>
 </x-guest-layout>
+
+

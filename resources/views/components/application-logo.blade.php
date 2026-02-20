@@ -20,3 +20,5 @@
         <span class="text-sm text-blue-600 font-semibold">IT inventra uzskaite</span>
     </div>
 </div>
+
+

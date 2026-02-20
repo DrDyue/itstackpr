@@ -16,7 +16,7 @@
                 <h1 class="text-2xl font-semibold text-gray-900">Ierīces</h1>
                 <p class="text-sm text-gray-500">Inventāra vienību saraksts</p>
             </div>
-            <a href="{{ route('devices.create') }}" class="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Pievienot ierīci</a>
+            <a href="{{ route('devices.create') }}" class="crud-btn-primary-inline">Pievienot ierīci</a>
         </div>
 
         <form method="GET" action="{{ route('devices.index') }}" class="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -80,3 +80,5 @@
         </div>
     </section>
 </x-app-layout>
+
+

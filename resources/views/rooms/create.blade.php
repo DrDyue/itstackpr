@@ -15,12 +15,12 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('rooms.store') }}" class="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <form method="POST" action="{{ route('rooms.store') }}" class="crud-form-card">
             @csrf
 
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">'ka *</label>
-                <select name="building_id" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500" required>
+                <label class="crud-label">'ka *</label>
+                <select name="building_id" class="crud-control" required>
                     @foreach ($buildings as $building)
                         <option value="{{ $building->id }}" @selected(old('building_id') == $building->id)>{{ $building->building_name }}</option>
                     @endforeach
@@ -29,23 +29,23 @@
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Stvs *</label>
-                    <input type="number" name="floor_number" value="{{ old('floor_number') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500" required>
+                    <label class="crud-label">Stvs *</label>
+                    <input type="number" name="floor_number" value="{{ old('floor_number') }}" class="crud-control" required>
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Telpas numurs *</label>
-                    <input type="text" name="room_number" value="{{ old('room_number') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500" required>
+                    <label class="crud-label">Telpas numurs *</label>
+                    <input type="text" name="room_number" value="{{ old('room_number') }}" class="crud-control" required>
                 </div>
             </div>
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Telpas nosaukums</label>
-                    <input type="text" name="room_name" value="{{ old('room_name') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Telpas nosaukums</label>
+                    <input type="text" name="room_name" value="{{ old('room_name') }}" class="crud-control">
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Atbildgais darbinieks</label>
-                    <select name="employee_id" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Atbildgais darbinieks</label>
+                    <select name="employee_id" class="crud-control">
                         <option value="">Nav</option>
                         @foreach ($employees as $employee)
                             <option value="{{ $employee->id }}" @selected(old('employee_id') == $employee->id)>{{ $employee->full_name }}</option>
@@ -55,19 +55,21 @@
             </div>
 
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Nodaa</label>
-                <input type="text" name="department" value="{{ old('department') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                <label class="crud-label">Nodaa</label>
+                <input type="text" name="department" value="{{ old('department') }}" class="crud-control">
             </div>
 
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Piezmes</label>
-                <textarea name="notes" rows="3" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('notes') }}</textarea>
+                <label class="crud-label">Piezmes</label>
+                <textarea name="notes" rows="3" class="crud-control">{{ old('notes') }}</textarea>
             </div>
 
             <div class="flex gap-3 pt-2">
-                <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Saglabt</button>
-                <a href="{{ route('rooms.index') }}" class="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">Atcelt</a>
+                <button type="submit" class="crud-btn-primary">Saglabt</button>
+                <a href="{{ route('rooms.index') }}" class="crud-btn-secondary">Atcelt</a>
             </div>
         </form>
     </section>
 </x-app-layout>
+
+

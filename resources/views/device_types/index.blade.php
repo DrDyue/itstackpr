@@ -5,7 +5,7 @@
                 <h1 class="text-2xl font-semibold text-gray-900">Ierīču tipi</h1>
                 <p class="text-sm text-gray-500">Tipu klasifikācija un dzīves cikls</p>
             </div>
-            <a href="{{ route('device-types.create') }}" class="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Pievienot tipu</a>
+            <a href="{{ route('device-types.create') }}" class="crud-btn-primary-inline">Pievienot tipu</a>
         </div>
 
         @if (session('success'))
@@ -55,3 +55,5 @@
         </div>
     </section>
 </x-app-layout>
+
+

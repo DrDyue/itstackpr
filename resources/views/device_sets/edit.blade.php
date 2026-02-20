@@ -34,22 +34,22 @@
                 @method('PUT')
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Komplekta nosaukums *</label>
-                    <input type="text" name="set_name" value="{{ old('set_name', $set->set_name) }}" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Komplekta nosaukums *</label>
+                    <input type="text" name="set_name" value="{{ old('set_name', $set->set_name) }}" required class="crud-control">
                 </div>
 
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-gray-700">Statuss *</label>
-                        <select name="status" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <label class="crud-label">Statuss *</label>
+                        <select name="status" required class="crud-control">
                             @foreach($statuses as $status)
                                 <option value="{{ $status }}" @selected(old('status', $set->status) === $status)>{{ $statusLabels[$status] ?? $status }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-gray-700">Telpa</label>
-                        <select name="room_id" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <label class="crud-label">Telpa</label>
+                        <select name="room_id" class="crud-control">
                             <option value="">Nav</option>
                             @foreach($rooms as $room)
                                 <option value="{{ $room->id }}" @selected(old('room_id', $set->room_id) == $room->id)>{{ $room->building?->building_name }} / {{ $room->room_number }}</option>
@@ -59,18 +59,18 @@
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Atbildīgā persona</label>
-                    <input type="text" name="assigned_to" value="{{ old('assigned_to', $set->assigned_to) }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Atbildīgā persona</label>
+                    <input type="text" name="assigned_to" value="{{ old('assigned_to', $set->assigned_to) }}" class="crud-control">
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Piezīmes</label>
-                    <textarea name="notes" rows="3" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('notes', $set->notes) }}</textarea>
+                    <label class="crud-label">Piezīmes</label>
+                    <textarea name="notes" rows="3" class="crud-control">{{ old('notes', $set->notes) }}</textarea>
                 </div>
 
                 <div class="flex gap-3 pt-2">
-                    <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Atjaunināt</button>
-                    <a href="{{ route('device-sets.index') }}" class="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">Atcelt</a>
+                    <button type="submit" class="crud-btn-primary">Atjaunināt</button>
+                    <a href="{{ route('device-sets.index') }}" class="crud-btn-secondary">Atcelt</a>
                 </div>
             </form>
         </div>
@@ -115,21 +115,23 @@
                 <form method="POST" action="{{ route('device-sets.items.add', $set) }}" class="space-y-3">
                     @csrf
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-gray-700">Ierīce *</label>
-                        <select name="device_id" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500" required>
+                        <label class="crud-label">Ierīce *</label>
+                        <select name="device_id" class="crud-control" required>
                             @foreach($devices as $device)
                                 <option value="{{ $device->id }}">{{ $device->code }} - {{ $device->name }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-gray-700">Daudzums *</label>
-                        <input type="number" name="quantity" value="1" min="1" max="999" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <label class="crud-label">Daudzums *</label>
+                        <input type="number" name="quantity" value="1" min="1" max="999" required class="crud-control">
                     </div>
-                    <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Pievienot</button>
+                    <button type="submit" class="crud-btn-primary">Pievienot</button>
                 </form>
             </div>
         </div>
     </section>
 </x-app-layout>
+
+
 

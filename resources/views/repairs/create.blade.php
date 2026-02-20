@@ -34,12 +34,12 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('repairs.store') }}" class="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <form method="POST" action="{{ route('repairs.store') }}" class="crud-form-card">
             @csrf
 
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Ierīce *</label>
-                <select name="device_id" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                <label class="crud-label">Ierīce *</label>
+                <select name="device_id" required class="crud-control">
                     <option value="">Izvēlieties ierīci</option>
                     @foreach($devices as $device)
                         <option value="{{ $device->id }}" @selected(old('device_id') == $device->id)>{{ $device->code ?? ('Ierīce #' . $device->id) }} - {{ $device->name ?? '' }}</option>
@@ -48,14 +48,14 @@
             </div>
 
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Apraksts *</label>
-                <textarea name="description" rows="4" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('description') }}</textarea>
+                <label class="crud-label">Apraksts *</label>
+                <textarea name="description" rows="4" required class="crud-control">{{ old('description') }}</textarea>
             </div>
 
             <div class="grid gap-4 sm:grid-cols-3">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Statuss</label>
-                    <select name="status" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Statuss</label>
+                    <select name="status" class="crud-control">
                         <option value="">Noklusējums (gaida)</option>
                         @foreach($statuses as $status)
                             <option value="{{ $status }}" @selected(old('status') === $status)>{{ $statusLabels[$status] ?? $status }}</option>
@@ -63,8 +63,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Remonta tips *</label>
-                    <select name="repair_type" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Remonta tips *</label>
+                    <select name="repair_type" required class="crud-control">
                         <option value="">Izvēlieties</option>
                         @foreach($repairTypes as $type)
                             <option value="{{ $type }}" @selected(old('repair_type') === $type)>{{ $typeLabels[$type] ?? $type }}</option>
@@ -72,8 +72,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Prioritāte</label>
-                    <select name="priority" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Prioritāte</label>
+                    <select name="priority" class="crud-control">
                         <option value="">Noklusējums (vidēja)</option>
                         @foreach($priorities as $priority)
                             <option value="{{ $priority }}" @selected(old('priority') === $priority)>{{ $priorityLabels[$priority] ?? $priority }}</option>
@@ -84,45 +84,45 @@
 
             <div class="grid gap-4 sm:grid-cols-3">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Sākuma datums *</label>
-                    <input type="date" name="start_date" value="{{ old('start_date') }}" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Sākuma datums *</label>
+                    <input type="date" name="start_date" value="{{ old('start_date') }}" required class="crud-control">
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Plānotais beigums</label>
-                    <input type="date" name="estimated_completion" value="{{ old('estimated_completion') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Plānotais beigums</label>
+                    <input type="date" name="estimated_completion" value="{{ old('estimated_completion') }}" class="crud-control">
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Faktiskais beigums</label>
-                    <input type="date" name="actual_completion" value="{{ old('actual_completion') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-            </div>
-
-            <div class="grid gap-4 sm:grid-cols-2">
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Izmaksas (EUR)</label>
-                    <input type="number" step="0.01" min="0" name="cost" value="{{ old('cost') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Rēķina numurs</label>
-                    <input type="text" name="invoice_number" maxlength="50" value="{{ old('invoice_number') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Faktiskais beigums</label>
+                    <input type="date" name="actual_completion" value="{{ old('actual_completion') }}" class="crud-control">
                 </div>
             </div>
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Piegādātājs</label>
-                    <input type="text" name="vendor_name" maxlength="100" value="{{ old('vendor_name') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Izmaksas (EUR)</label>
+                    <input type="number" step="0.01" min="0" name="cost" value="{{ old('cost') }}" class="crud-control">
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Piegādātāja kontakts</label>
-                    <input type="text" name="vendor_contact" maxlength="100" value="{{ old('vendor_contact') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Rēķina numurs</label>
+                    <input type="text" name="invoice_number" maxlength="50" value="{{ old('invoice_number') }}" class="crud-control">
                 </div>
             </div>
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Ziņoja lietotājs</label>
-                    <select name="issue_reported_by" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Piegādātājs</label>
+                    <input type="text" name="vendor_name" maxlength="100" value="{{ old('vendor_name') }}" class="crud-control">
+                </div>
+                <div>
+                    <label class="crud-label">Piegādātāja kontakts</label>
+                    <input type="text" name="vendor_contact" maxlength="100" value="{{ old('vendor_contact') }}" class="crud-control">
+                </div>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label class="crud-label">Ziņoja lietotājs</label>
+                    <select name="issue_reported_by" class="crud-control">
                         <option value="">Nav</option>
                         @foreach($users as $user)
                             <option value="{{ $user->id }}" @selected(old('issue_reported_by') == $user->id)>{{ $user->employee?->full_name ?? ('Lietotājs #' . $user->id) }}</option>
@@ -130,8 +130,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Piešķirts lietotājam</label>
-                    <select name="assigned_to" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Piešķirts lietotājam</label>
+                    <select name="assigned_to" class="crud-control">
                         <option value="">Nav</option>
                         @foreach($users as $user)
                             <option value="{{ $user->id }}" @selected(old('assigned_to') == $user->id)>{{ $user->employee?->full_name ?? ('Lietotājs #' . $user->id) }}</option>
@@ -141,10 +141,12 @@
             </div>
 
             <div class="flex gap-3 pt-2">
-                <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Saglabāt</button>
-                <a href="{{ route('repairs.index') }}" class="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">Atcelt</a>
+                <button type="submit" class="crud-btn-primary">Saglabāt</button>
+                <a href="{{ route('repairs.index') }}" class="crud-btn-secondary">Atcelt</a>
             </div>
         </form>
     </section>
 </x-app-layout>
+
+
 

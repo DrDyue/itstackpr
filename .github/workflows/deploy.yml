@@ -54,7 +54,6 @@ jobs:
             .vscode/**
             .idea/**
             node_modules/**
-            vendor/**
             tests/**
             database/**
             .phpunit.cache/**

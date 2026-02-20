@@ -24,26 +24,26 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('device-sets.store') }}" class="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <form method="POST" action="{{ route('device-sets.store') }}" class="crud-form-card">
             @csrf
 
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Komplekta nosaukums *</label>
-                <input type="text" name="set_name" value="{{ old('set_name') }}" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                <label class="crud-label">Komplekta nosaukums *</label>
+                <input type="text" name="set_name" value="{{ old('set_name') }}" required class="crud-control">
             </div>
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Statuss *</label>
-                    <select name="status" required class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Statuss *</label>
+                    <select name="status" required class="crud-control">
                         @foreach($statuses as $status)
                             <option value="{{ $status }}" @selected(old('status', 'draft') === $status)>{{ $statusLabels[$status] ?? $status }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700">Telpa</label>
-                    <select name="room_id" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label class="crud-label">Telpa</label>
+                    <select name="room_id" class="crud-control">
                         <option value="">Nav</option>
                         @foreach($rooms as $room)
                             <option value="{{ $room->id }}" @selected(old('room_id') == $room->id)>{{ $room->building?->building_name }} / {{ $room->room_number }}</option>
@@ -53,19 +53,21 @@
             </div>
 
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Atbildīgā persona</label>
-                <input type="text" name="assigned_to" value="{{ old('assigned_to') }}" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                <label class="crud-label">Atbildīgā persona</label>
+                <input type="text" name="assigned_to" value="{{ old('assigned_to') }}" class="crud-control">
             </div>
 
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Piezīmes</label>
-                <textarea name="notes" rows="3" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">{{ old('notes') }}</textarea>
+                <label class="crud-label">Piezīmes</label>
+                <textarea name="notes" rows="3" class="crud-control">{{ old('notes') }}</textarea>
             </div>
 
             <div class="flex gap-3 pt-2">
-                <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Saglabāt</button>
-                <a href="{{ route('device-sets.index') }}" class="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">Atcelt</a>
+                <button type="submit" class="crud-btn-primary">Saglabāt</button>
+                <a href="{{ route('device-sets.index') }}" class="crud-btn-secondary">Atcelt</a>
             </div>
         </form>
     </section>
 </x-app-layout>
+
+
