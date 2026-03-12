@@ -14,6 +14,7 @@ use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\RepairController;
 use App\Http\Controllers\DeviceHistoryController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\DeviceAssetController;
 use App\Http\Controllers\DeviceSetController;
 use App\Http\Controllers\DeviceSetItemController;
 use App\Http\Controllers\UserController;
@@ -55,6 +56,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('rooms', RoomController::class)->except(['show']);
     Route::resource('device-types', DeviceTypeController::class)->except(['show']);
     Route::resource('devices', DeviceController::class);
+    Route::get('/device-assets/{path}', [DeviceAssetController::class, 'show'])
+        ->where('path', '.*')
+        ->name('device-assets.show');
     Route::resource('repairs', RepairController::class)->except(['show']);
     Route::get('/device-history', [DeviceHistoryController::class, 'index'])->name('device-history.index');
     Route::get('/devices/{device}/history', [DeviceHistoryController::class, 'device'])->name('devices.history');

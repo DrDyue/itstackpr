@@ -749,6 +749,162 @@ tbody td {
     @apply items-center;
 }
 
+.device-shell {
+    @apply mx-auto max-w-6xl px-4 sm:px-6 lg:px-8;
+}
+
+.device-page-header {
+    @apply mb-6 flex flex-wrap items-start justify-between gap-4;
+}
+
+.device-page-title {
+    @apply text-3xl font-semibold tracking-tight text-slate-900;
+}
+
+.device-page-subtitle {
+    @apply mt-1 text-sm text-slate-500;
+}
+
+.device-panel {
+    @apply overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm;
+}
+
+.device-panel-header {
+    @apply border-b border-slate-200 px-5 py-4 sm:px-6;
+}
+
+.device-panel-body {
+    @apply p-5 sm:p-6;
+}
+
+.device-tab-list {
+    @apply flex flex-wrap gap-2 rounded-3xl border border-slate-200 bg-white p-2 shadow-sm;
+}
+
+.device-tab-button {
+    @apply rounded-2xl px-4 py-2.5 text-sm font-semibold text-slate-600 transition;
+}
+
+.device-tab-button-active {
+    @apply bg-slate-900 text-white shadow-sm;
+}
+
+.device-tab-button-idle {
+    @apply hover:bg-slate-100 hover:text-slate-900;
+}
+
+.device-stat-grid {
+    @apply mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4;
+}
+
+.device-stat-card {
+    @apply rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4;
+}
+
+.device-stat-label {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-slate-500;
+}
+
+.device-stat-value {
+    @apply mt-2 text-lg font-semibold text-slate-900;
+}
+
+.device-kv-grid {
+    @apply grid gap-x-8 gap-y-5 sm:grid-cols-2;
+}
+
+.device-kv-label {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-slate-500;
+}
+
+.device-kv-value {
+    @apply mt-1 text-sm text-slate-900;
+}
+
+.device-media-grid {
+    @apply grid gap-5 lg:grid-cols-2;
+}
+
+.device-media-card {
+    @apply rounded-3xl border border-slate-200 bg-slate-50 p-4;
+}
+
+.device-media-frame {
+    @apply mt-3 flex h-80 items-center justify-center overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200;
+}
+
+.device-media-image {
+    @apply h-full w-full object-cover;
+}
+
+.device-empty-media {
+    @apply text-sm text-slate-500;
+}
+
+.device-form-shell {
+    @apply mx-auto max-w-6xl px-4 sm:px-6 lg:px-8;
+}
+
+.device-form-grid {
+    @apply grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_340px];
+}
+
+.device-form-card {
+    @apply rounded-3xl border border-slate-200 bg-white p-6 shadow-sm;
+}
+
+.device-form-section-title {
+    @apply mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-slate-500;
+}
+
+.device-upload-box {
+    @apply rounded-3xl border border-dashed border-slate-300 bg-white p-4;
+}
+
+.device-upload-preview {
+    @apply mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50;
+}
+
+.device-upload-preview img {
+    @apply h-52 w-full object-cover;
+}
+
+.device-upload-preview-empty {
+    @apply flex h-52 items-center justify-center text-sm text-slate-400;
+}
+
+.device-timeline {
+    @apply relative space-y-4;
+}
+
+.device-timeline-item {
+    @apply relative rounded-2xl border border-slate-200 bg-slate-50 p-4 pl-12;
+}
+
+.device-timeline-dot {
+    @apply absolute left-4 top-5 h-4 w-4 rounded-full ring-4 ring-white;
+}
+
+.device-timeline-line {
+    @apply absolute left-[1.45rem] top-10 bottom-[-1.5rem] w-0.5 bg-slate-200;
+}
+
+.device-lightbox {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4;
+}
+
+.device-lightbox-panel {
+    @apply relative max-h-[90vh] w-full max-w-5xl overflow-hidden rounded-3xl bg-slate-900 p-3 shadow-2xl;
+}
+
+.device-lightbox-image {
+    @apply max-h-[82vh] w-full rounded-2xl object-contain bg-slate-950;
+}
+
+.device-lightbox-close {
+    @apply absolute right-5 top-5 rounded-full bg-white/10 px-3 py-2 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20;
+}
+
 /* Guest layout page */
 .auth-wrapper {
     display: flex;

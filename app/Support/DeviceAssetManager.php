@@ -33,7 +33,14 @@ class DeviceAssetManager
             return $path;
         }
 
-        return Storage::disk($this->disk())->url($path);
+        $diskName = $this->disk();
+        $driver = config("filesystems.disks.{$diskName}.driver");
+
+        if (in_array($driver, ['local'], true)) {
+            return route('device-assets.show', ['path' => $path]);
+        }
+
+        return Storage::disk($diskName)->url($path);
     }
 
     public function delete(?string $path): void
