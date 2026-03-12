@@ -2,87 +2,110 @@
     @php
         $statusLabels = [
             'waiting' => 'Gaida',
-            'in-progress' => 'Procesā',
+            'in-progress' => 'Procesa',
             'completed' => 'Pabeigts',
             'cancelled' => 'Atcelts',
         ];
+        $statusClasses = [
+            'waiting' => 'bg-amber-100 text-amber-800',
+            'in-progress' => 'bg-sky-100 text-sky-800',
+            'completed' => 'bg-emerald-100 text-emerald-800',
+            'cancelled' => 'bg-slate-100 text-slate-700',
+        ];
         $typeLabels = [
-            'internal' => 'Iekšējais',
-            'external' => '&#256;rējais',
+            'internal' => 'Ieksejais',
+            'external' => 'Arejais',
+        ];
+        $typeClasses = [
+            'internal' => 'bg-violet-100 text-violet-800',
+            'external' => 'bg-rose-100 text-rose-800',
         ];
         $priorityLabels = [
             'low' => 'Zema',
-            'medium' => 'Vidēja',
+            'medium' => 'Videja',
             'high' => 'Augsta',
             'critical' => 'Kritiska',
         ];
     @endphp
 
-    <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
+    <section class="repair-shell">
+        <div class="repair-header">
             <div>
-                <h1 class="text-2xl font-semibold text-gray-900">Remonti</h1>
-                <p class="text-sm text-gray-500">Remontdarbu uzskaite un statuss</p>
+                <h1 class="device-page-title">Remonti</h1>
+                <p class="device-page-subtitle">Ieksejo un arejo remontu uzskaite ar statusiem un terminiem.</p>
             </div>
             <a href="{{ route('repairs.create') }}" class="crud-btn-primary-inline">Pievienot remontu</a>
         </div>
 
-        <form method="GET" action="{{ route('repairs.index') }}" class="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <div class="flex flex-wrap items-center gap-2">
-                <input type="text" name="q" value="{{ $q ?? '' }}" placeholder="Meklēt pēc apraksta, piegādātāja vai rēķina numura..." class="w-full max-w-md rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-                <button type="submit" class="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">Meklēt</button>
-                <a href="{{ route('repairs.index') }}" class="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">Notīrīt</a>
+        <form method="GET" action="{{ route('repairs.index') }}" class="repair-toolbar">
+            <div class="repair-search-grid">
+                <label class="block">
+                    <span class="repair-filter-label">Meklesana</span>
+                    <input type="text" name="q" value="{{ $q ?? '' }}" placeholder="Apraksts, piegadatajs vai rekina numurs" class="crud-control">
+                </label>
+                <div class="repair-filter-actions">
+                    <button type="submit" class="crud-btn-primary">Meklet</button>
+                    <a href="{{ route('repairs.index') }}" class="crud-btn-secondary">Notirit</a>
+                </div>
             </div>
         </form>
 
-        @if(session('success'))
+        @if (session('success'))
             <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
         @endif
 
-        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div class="repair-table-wrap">
             <div class="overflow-x-auto">
-                <table class="min-w-full text-sm">
-                    <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
+                <table class="repair-table">
+                    <thead class="repair-table-head">
                         <tr>
                             <th class="px-4 py-3 text-left">ID</th>
-                            <th class="px-4 py-3 text-left">Ierīce</th>
+                            <th class="px-4 py-3 text-left">Ierice</th>
                             <th class="px-4 py-3 text-left">Statuss</th>
                             <th class="px-4 py-3 text-left">Tips</th>
-                            <th class="px-4 py-3 text-left">Prioritāte</th>
-                            <th class="px-4 py-3 text-left">Sākums</th>
-                            <th class="px-4 py-3 text-left">Plānotais beigums</th>
+                            <th class="px-4 py-3 text-left">Prioritate</th>
+                            <th class="px-4 py-3 text-left">Sakums</th>
+                            <th class="px-4 py-3 text-left">Planotais beigums</th>
                             <th class="px-4 py-3 text-left">Izmaksas</th>
-                            <th class="px-4 py-3 text-left">Piegādātājs</th>
+                            <th class="px-4 py-3 text-left">Piegadatajs</th>
                             <th class="px-4 py-3 text-left">Izveidots</th>
-                            <th class="px-4 py-3 text-left">Darbības</th>
+                            <th class="px-4 py-3 text-left">Darbibas</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @forelse($repairs as $repair)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-3">#{{ $repair->id }}</td>
-                                <td class="px-4 py-3">{{ $repair->device?->code ?: '' }} {{ $repair->device?->name ?: '' }}</td>
-                                <td class="px-4 py-3">{{ $statusLabels[$repair->status] ?? ($repair->status ?: '') }}</td>
-                                <td class="px-4 py-3">{{ $typeLabels[$repair->repair_type] ?? ($repair->repair_type ?: '') }}</td>
-                                <td class="px-4 py-3">{{ $priorityLabels[$repair->priority] ?? ($repair->priority ?: '') }}</td>
-                                <td class="px-4 py-3">{{ $repair->start_date ? \Carbon\Carbon::parse($repair->start_date)->format('d.m.Y') : '' }}</td>
-                                <td class="px-4 py-3">{{ $repair->estimated_completion ? \Carbon\Carbon::parse($repair->estimated_completion)->format('d.m.Y') : '' }}</td>
-                                <td class="px-4 py-3">{{ $repair->cost !== null ? number_format((float) $repair->cost, 2) . ' EUR' : '' }}</td>
-                                <td class="px-4 py-3">{{ $repair->vendor_name ?: '' }}</td>
-                                <td class="px-4 py-3">{{ $repair->created_at?->format('d.m.Y H:i') ?: '' }}</td>
+                    <tbody class="repair-table-body">
+                        @forelse ($repairs as $repair)
+                            <tr>
+                                <td class="px-4 py-3 text-sm text-slate-500">#{{ $repair->id }}</td>
                                 <td class="px-4 py-3">
-                                    <div class="flex items-center gap-3">
-                                        <a href="{{ route('repairs.edit', $repair) }}" class="text-blue-600 hover:text-blue-700">Rediģēt</a>
+                                    <div class="font-semibold text-slate-900">{{ $repair->device?->code ?: '' }} {{ $repair->device?->name ?: '' }}</div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="repair-badge {{ $statusClasses[$repair->status ?? 'waiting'] ?? 'bg-slate-100 text-slate-700' }}">{{ $statusLabels[$repair->status] ?? ($repair->status ?: '') }}</span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="repair-badge {{ $typeClasses[$repair->repair_type] ?? 'bg-slate-100 text-slate-700' }}">{{ $typeLabels[$repair->repair_type] ?? ($repair->repair_type ?: '') }}</span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-slate-600">{{ $priorityLabels[$repair->priority] ?? ($repair->priority ?: '') }}</td>
+                                <td class="px-4 py-3 text-sm text-slate-600">{{ $repair->start_date?->format('d.m.Y') ?: '' }}</td>
+                                <td class="px-4 py-3 text-sm text-slate-600">{{ $repair->estimated_completion?->format('d.m.Y') ?: '' }}</td>
+                                <td class="px-4 py-3 text-sm text-slate-600">{{ $repair->cost !== null ? number_format((float) $repair->cost, 2) . ' EUR' : '' }}</td>
+                                <td class="px-4 py-3 text-sm text-slate-600">{{ $repair->vendor_name ?: ($repair->repair_type === 'internal' ? 'Ieksejais' : '') }}</td>
+                                <td class="px-4 py-3 text-sm text-slate-600">{{ $repair->created_at?->format('d.m.Y H:i') ?: '' }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <div class="repair-actions-row">
+                                        <a href="{{ route('repairs.edit', $repair) }}" class="repair-action repair-action-edit">Rediget</a>
                                         <form method="POST" action="{{ route('repairs.destroy', $repair) }}">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" onclick="return confirm('Dzēst šo remontu?')" class="text-red-600 hover:text-red-700">Dzēst</button>
+                                            <button type="submit" onclick="return confirm('Dzest so remontu?')" class="repair-action repair-action-delete">Dzest</button>
                                         </form>
                                     </div>
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="11" class="px-4 py-8 text-center text-gray-500">Remontdarbu vēl nav.</td></tr>
+                            <tr>
+                                <td colspan="11" class="px-4 py-10 text-center text-sm text-slate-500">Remontdarbu vel nav.</td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -90,5 +113,3 @@
         </div>
     </section>
 </x-app-layout>
-
-

@@ -32,7 +32,9 @@ class RepairController extends Controller
 
     public function create()
     {
-        return view('repairs.create', $this->formData());
+        return view('repairs.create', array_merge($this->formData(), [
+            'defaultReporterId' => auth()->id(),
+        ]));
     }
 
     public function store(Request $request)
@@ -69,7 +71,7 @@ class RepairController extends Controller
     private function formData(): array
     {
         return [
-            'devices' => Device::orderByDesc('id')->get(),
+            'devices' => Device::with(['createdBy.employee'])->orderBy('name')->get(),
             'users' => User::with('employee')->orderByDesc('id')->get(),
             'statuses' => self::STATUSES,
             'repairTypes' => self::TYPES,
@@ -85,7 +87,7 @@ class RepairController extends Controller
             'status' => ['nullable', Rule::in(self::STATUSES)],
             'repair_type' => ['required', Rule::in(self::TYPES)],
             'priority' => ['nullable', Rule::in(self::PRIORITIES)],
-            'start_date' => ['required', 'date'],
+            'start_date' => ['nullable', 'date'],
             'estimated_completion' => ['nullable', 'date'],
             'actual_completion' => ['nullable', 'date'],
             'cost' => ['nullable', 'numeric', 'min:0'],
@@ -103,6 +105,68 @@ class RepairController extends Controller
             if (($data[$field] ?? null) === '') {
                 $data[$field] = null;
             }
+        }
+
+        $repair = $request->route('repair');
+        $data['status'] = $data['status'] ?? ($repair?->status ?? 'waiting');
+        $data['priority'] = $data['priority'] ?? ($repair?->priority ?? 'medium');
+        $data['start_date'] = $repair?->start_date?->format('Y-m-d') ?? now()->toDateString();
+
+        if ($data['repair_type'] === 'internal') {
+            $data['vendor_name'] = null;
+            $data['vendor_contact'] = null;
+            $data['invoice_number'] = null;
+        }
+
+        if ($data['repair_type'] === 'external') {
+            if (! filled($data['vendor_name'] ?? null)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'vendor_name' => ['Arejam remontam noradi piegadataju.'],
+                ]);
+            }
+
+            if (! filled($data['vendor_contact'] ?? null)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'vendor_contact' => ['Arejam remontam noradi piegadataja kontaktu.'],
+                ]);
+            }
+        }
+
+        if (($data['issue_reported_by'] ?? null) === null && auth()->check()) {
+            $data['issue_reported_by'] = auth()->id();
+        }
+
+        if (($data['assigned_to'] ?? null) === null) {
+            $device = Device::query()->find($data['device_id']);
+            $data['assigned_to'] = $device?->created_by;
+        }
+
+        if (
+            ! empty($data['estimated_completion'])
+            && strtotime((string) $data['estimated_completion']) < strtotime((string) $data['start_date'])
+        ) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'estimated_completion' => ['Planotais beigums nevar but agraks par sakuma datumu.'],
+            ]);
+        }
+
+        if (
+            ! empty($data['actual_completion'])
+            && strtotime((string) $data['actual_completion']) < strtotime((string) $data['start_date'])
+        ) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'actual_completion' => ['Faktiskais beigums nevar but agraks par sakuma datumu.'],
+            ]);
+        }
+
+        if (($data['status'] ?? null) === 'completed' && empty($data['actual_completion'])) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'actual_completion' => ['Pabeigtam remontam noradi faktisko beigu datumu.'],
+            ]);
+        }
+
+        if (($data['status'] ?? null) !== 'completed') {
+            $data['actual_completion'] = null;
         }
 
         return $data;

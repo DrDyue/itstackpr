@@ -1305,6 +1305,86 @@ tbody td {
     @apply inline-flex items-center gap-3 text-sm font-medium text-slate-700;
 }
 
+.repair-shell {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+.repair-header {
+    @apply mb-6 flex flex-wrap items-end justify-between gap-3;
+}
+
+.repair-toolbar {
+    @apply mb-5 rounded-3xl border border-sky-100 bg-gradient-to-br from-white via-sky-50 to-blue-50 p-5 shadow-sm;
+}
+
+.repair-search-grid {
+    @apply grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto];
+}
+
+.repair-filter-label {
+    @apply mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500;
+}
+
+.repair-filter-actions {
+    @apply flex items-end gap-2;
+}
+
+.repair-table-wrap {
+    @apply overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm;
+}
+
+.repair-table {
+    @apply min-w-full text-sm;
+}
+
+.repair-table-head {
+    @apply border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-[0.18em] text-slate-500;
+}
+
+.repair-table-body {
+    @apply divide-y divide-slate-100;
+}
+
+.repair-table-body tr {
+    @apply transition hover:bg-slate-50;
+}
+
+.repair-badge {
+    @apply inline-flex rounded-full px-2.5 py-1 text-xs font-semibold;
+}
+
+.repair-actions-row {
+    @apply flex flex-nowrap items-center gap-2;
+}
+
+.repair-action {
+    @apply inline-flex items-center whitespace-nowrap rounded-2xl border px-3 py-1.5 text-sm font-semibold transition;
+}
+
+.repair-action-edit {
+    @apply border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100;
+}
+
+.repair-action-delete {
+    @apply border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100;
+}
+
+.repair-form-shell {
+    @apply mx-auto max-w-6xl px-4 sm:px-6 lg:px-8;
+}
+
+.repair-form-grid {
+    @apply grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_280px];
+}
+
+.repair-form-card {
+    @apply rounded-3xl border border-slate-200 bg-white p-5 shadow-sm;
+}
+
+.repair-info-row {
+    @apply flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3;
+}
+
 /* Guest layout page */
 .auth-wrapper {
     display: flex;
