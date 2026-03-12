@@ -1030,27 +1030,19 @@ tbody td {
 }
 
 .type-form-shell {
-    @apply mx-auto max-w-5xl px-4 sm:px-6 lg:px-8;
+    @apply mx-auto max-w-6xl px-4 sm:px-6 lg:px-8;
 }
 
 .type-form-grid {
-    @apply grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_320px];
+    @apply grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_280px];
 }
 
 .type-form-card {
-    @apply rounded-3xl border border-slate-200 bg-white p-6 shadow-sm;
+    @apply rounded-3xl border border-slate-200 bg-white p-5 shadow-sm;
 }
 
 .type-form-section-head {
-    @apply border-b border-slate-100 pb-4;
-}
-
-.type-form-note {
-    @apply mt-1 text-sm leading-6 text-slate-500;
-}
-
-.type-field-hint {
-    @apply mt-2 text-xs leading-5 text-slate-500;
+    @apply border-b border-slate-100 pb-3;
 }
 
 .type-back-link {
@@ -1058,11 +1050,7 @@ tbody td {
 }
 
 .type-form-actions {
-    @apply sticky top-4 rounded-3xl border border-sky-100 bg-gradient-to-br from-white to-sky-50 p-5 shadow-sm;
-}
-
-.type-action-help {
-    @apply mt-4 rounded-2xl bg-white/80 px-4 py-3 text-sm text-slate-600 ring-1 ring-sky-100;
+    @apply sticky top-4 rounded-3xl border border-sky-100 bg-gradient-to-br from-white to-sky-50 p-4 shadow-sm;
 }
 
 /* Guest layout page */
