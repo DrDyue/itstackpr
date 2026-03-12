@@ -1,77 +1,166 @@
 <x-app-layout>
-    <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
+    @php
+        $filters = $filters ?? ['first_name' => '', 'last_name' => '', 'phone' => '', 'job_title' => '', 'is_active' => ''];
+
+        $sortUrl = function (string $column) use ($filters, $sort, $direction) {
+            $nextDirection = $sort === $column && $direction === 'asc' ? 'desc' : 'asc';
+
+            return route('employees.index', array_filter([
+                'first_name' => $filters['first_name'] ?: null,
+                'last_name' => $filters['last_name'] ?: null,
+                'phone' => $filters['phone'] ?: null,
+                'job_title' => $filters['job_title'] ?: null,
+                'is_active' => $filters['is_active'] !== '' ? $filters['is_active'] : null,
+                'sort' => $column,
+                'direction' => $nextDirection,
+            ], fn ($value) => $value !== null));
+        };
+    @endphp
+
+    <section class="employee-shell">
+        <div class="employee-header">
             <div>
-                <h1 class="text-2xl font-semibold text-gray-900">Darbinieki</h1>
-                <p class="text-sm text-gray-500">Darbinieku saraksts un kontaktinformācija</p>
+                <h1 class="device-page-title">Darbinieki</h1>
+                <p class="device-page-subtitle">Pilns darbinieku saraksts ar kontaktinformaciju un amatiem.</p>
             </div>
             <a href="{{ route('employees.create') }}" class="crud-btn-primary-inline">Pievienot darbinieku</a>
         </div>
 
-        <form method="GET" action="{{ route('employees.index') }}" class="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <div class="flex flex-wrap items-center gap-2">
-                <input type="text" name="q" value="{{ $q }}" placeholder="Meklēt pēc vārda, e-pasta, telefona..." class="w-full max-w-md rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-                <button type="submit" class="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">Meklēt</button>
-                <a href="{{ route('employees.index') }}" class="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">Notīrīt</a>
-            </div>
-        </form>
+        <div class="employee-toolbar">
+            <form method="GET" action="{{ route('employees.index') }}" class="space-y-4">
+                <div class="employee-search-grid">
+                    <label class="block">
+                        <span class="employee-filter-label">Vards</span>
+                        <input type="text" name="first_name" value="{{ $filters['first_name'] }}" placeholder="Piem. Janis" class="crud-control">
+                    </label>
+                    <label class="block">
+                        <span class="employee-filter-label">Uzvards</span>
+                        <input type="text" name="last_name" value="{{ $filters['last_name'] }}" placeholder="Piem. Berzins" class="crud-control">
+                    </label>
+                    <label class="block">
+                        <span class="employee-filter-label">Telefons</span>
+                        <input type="text" name="phone" value="{{ $filters['phone'] }}" placeholder="Piem. 20000000" class="crud-control">
+                    </label>
+                    <label class="block">
+                        <span class="employee-filter-label">Amats</span>
+                        <select name="job_title" class="crud-control">
+                            <option value="">Visi amati</option>
+                            @foreach ($jobTitles as $jobTitle)
+                                <option value="{{ $jobTitle }}" @selected($filters['job_title'] === $jobTitle)>{{ $jobTitle }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                    <label class="block">
+                        <span class="employee-filter-label">Aktivitate</span>
+                        <select name="is_active" class="crud-control">
+                            <option value="">Visi</option>
+                            <option value="1" @selected($filters['is_active'] === '1')>Aktivi</option>
+                            <option value="0" @selected($filters['is_active'] === '0')>Neaktivi</option>
+                        </select>
+                    </label>
+                    <div class="employee-filter-actions">
+                        <button type="submit" class="crud-btn-primary">Meklet</button>
+                        <a href="{{ route('employees.index') }}" class="crud-btn-secondary">Notirit</a>
+                    </div>
+                </div>
+
+                <div class="employee-toolbar-meta">
+                    <span class="employee-results-chip">Atrasti darbinieki: {{ $employees->total() }}</span>
+                </div>
+            </form>
+        </div>
 
         @if (session('success'))
             <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
         @endif
 
-        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div class="employee-table-wrap">
             <div class="overflow-x-auto">
-                <table class="min-w-full text-sm">
-                    <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
+                <table class="employee-table">
+                    <thead class="employee-table-head">
                         <tr>
                             <th class="px-4 py-3 text-left">ID</th>
-                            <th class="px-4 py-3 text-left">Vārds, uzvārds</th>
+                            <th class="px-4 py-3 text-left">
+                                <a href="{{ $sortUrl('full_name') }}" class="employee-sort-link">
+                                    Vards, uzvards
+                                    <span>{{ $sort === 'full_name' ? strtoupper($direction) : 'SORT' }}</span>
+                                </a>
+                            </th>
                             <th class="px-4 py-3 text-left">E-pasts</th>
-                            <th class="px-4 py-3 text-left">Telefons</th>
-                            <th class="px-4 py-3 text-left">Amats</th>
-                            <th class="px-4 py-3 text-left">Darbinieks aktīvs</th>
-                            <th class="px-4 py-3 text-left">Izveidots</th>
-                            <th class="px-4 py-3 text-left">Darbības</th>
+                            <th class="px-4 py-3 text-left">
+                                <a href="{{ $sortUrl('phone') }}" class="employee-sort-link">
+                                    Telefons
+                                    <span>{{ $sort === 'phone' ? strtoupper($direction) : 'SORT' }}</span>
+                                </a>
+                            </th>
+                            <th class="px-4 py-3 text-left">
+                                <a href="{{ $sortUrl('job_title') }}" class="employee-sort-link">
+                                    Amats
+                                    <span>{{ $sort === 'job_title' ? strtoupper($direction) : 'SORT' }}</span>
+                                </a>
+                            </th>
+                            <th class="px-4 py-3 text-left">
+                                <a href="{{ $sortUrl('is_active') }}" class="employee-sort-link">
+                                    Darbinieks aktivs
+                                    <span>{{ $sort === 'is_active' ? strtoupper($direction) : 'SORT' }}</span>
+                                </a>
+                            </th>
+                            <th class="px-4 py-3 text-left">
+                                <a href="{{ $sortUrl('created_at') }}" class="employee-sort-link">
+                                    Izveidots
+                                    <span>{{ $sort === 'created_at' ? strtoupper($direction) : 'SORT' }}</span>
+                                </a>
+                            </th>
+                            <th class="px-4 py-3 text-left">Darbibas</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @forelse($employees as $employee)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-3">{{ $employee->id }}</td>
-                                <td class="px-4 py-3 font-medium text-gray-900">{{ $employee->full_name }}</td>
-                                <td class="px-4 py-3">{{ $employee->email ?: '-' }}</td>
-                                <td class="px-4 py-3">{{ $employee->phone ?: '-' }}</td>
-                                <td class="px-4 py-3">{{ $employee->job_title ?: '-' }}</td>
-                                <td class="px-4 py-3">
-                                    @if($employee->is_active)
-                                        <span class="inline-flex rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">Aktīvs</span>
+                    <tbody class="employee-table-body">
+                        @forelse ($employees as $employee)
+                            <tr>
+                                <td class="px-4 py-4 text-sm text-slate-500">ID {{ $employee->id }}</td>
+                                <td class="px-4 py-4">
+                                    <div class="font-semibold text-slate-900">{{ $employee->full_name }}</div>
+                                </td>
+                                <td class="px-4 py-4 text-sm text-slate-600">{{ $employee->email ?: '-' }}</td>
+                                <td class="px-4 py-4 text-sm text-slate-600">{{ $employee->phone ?: '-' }}</td>
+                                <td class="px-4 py-4 text-sm text-slate-600">{{ $employee->job_title ?: '-' }}</td>
+                                <td class="px-4 py-4">
+                                    @if ($employee->is_active)
+                                        <span class="employee-status employee-status-active">Aktivs</span>
                                     @else
-                                        <span class="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">Neaktīvs</span>
+                                        <span class="employee-status employee-status-inactive">Neaktivs</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3">{{ $employee->created_at?->format('d.m.Y H:i') ?: '-' }}</td>
-                                <td class="px-4 py-3">
-                                    <div class="flex items-center gap-3">
-                                        <a href="{{ route('employees.edit', $employee) }}" class="text-blue-600 hover:text-blue-700">Rediģēt</a>
+                                <td class="px-4 py-4 text-sm text-slate-600">{{ $employee->created_at?->format('d.m.Y H:i') ?: '-' }}</td>
+                                <td class="px-4 py-4">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <a href="{{ route('employees.edit', $employee) }}" class="employee-action employee-action-edit">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 7.125 16.875 4.5"/></svg>
+                                            Rediget
+                                        </a>
                                         <form method="POST" action="{{ route('employees.destroy', $employee) }}">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" onclick="return confirm('Dzēst šo darbinieku?')" class="text-red-600 hover:text-red-700">Dzēst</button>
+                                            <button type="submit" onclick="return confirm('Dzest so darbinieku?')" class="employee-action employee-action-delete">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673A2.25 2.25 0 0 1 15.916 21.75H8.084a2.25 2.25 0 0 1-2.245-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0V4.875A2.25 2.25 0 0 0 13.5 2.625h-3a2.25 2.25 0 0 0-2.25 2.25V5.79m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+                                                Dzest
+                                            </button>
                                         </form>
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-4 py-8 text-center text-gray-500">Darbinieki vēl nav pievienoti.</td>
+                                <td colspan="8" class="px-4 py-10 text-center text-sm text-slate-500">Darbinieki vel nav pievienoti vai neatbilst filtriem.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
+
+        @if ($employees->hasPages())
+            <div class="mt-5">{{ $employees->links() }}</div>
+        @endif
     </section>
 </x-app-layout>
-
-
