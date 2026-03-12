@@ -54,7 +54,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('buildings', BuildingController::class)->except(['show']);
     Route::resource('rooms', RoomController::class)->except(['show']);
     Route::resource('device-types', DeviceTypeController::class)->except(['show']);
-    Route::resource('devices', DeviceController::class)->except(['show']);
+    Route::resource('devices', DeviceController::class);
     Route::resource('repairs', RepairController::class)->except(['show']);
     Route::get('/device-history', [DeviceHistoryController::class, 'index'])->name('device-history.index');
     Route::get('/devices/{device}/history', [DeviceHistoryController::class, 'device'])->name('devices.history');

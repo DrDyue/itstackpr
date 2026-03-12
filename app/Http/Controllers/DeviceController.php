@@ -8,6 +8,7 @@ use App\Models\Device;
 use App\Models\DeviceHistory;
 use App\Models\DeviceType;
 use App\Models\Room;
+use App\Support\DeviceAssetManager;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -102,6 +103,7 @@ class DeviceController extends Controller
         $data['created_by'] = $userId;
 
         $device = Device::create($data);
+        $this->syncUploads($request, $device);
 
         DeviceHistory::create([
             'device_id' => $device->id,
@@ -122,6 +124,24 @@ class DeviceController extends Controller
         return view('devices.edit', array_merge(['device' => $device], $this->formData()));
     }
 
+    public function show(Device $device)
+    {
+        $device->load([
+            'type',
+            'building',
+            'room.building',
+            'createdBy.employee',
+            'histories.changedBy.employee',
+            'sets.room.building',
+        ]);
+
+        return view('devices.show', [
+            'device' => $device,
+            'deviceImageUrl' => $device->deviceImageUrl(),
+            'warrantyImageUrl' => $device->warrantyImageUrl(),
+        ]);
+    }
+
     public function update(Request $request, Device $device)
     {
         $userId = auth()->id();
@@ -130,6 +150,7 @@ class DeviceController extends Controller
         $before = $device->only($this->trackedFields());
 
         $device->update($data);
+        $this->syncUploads($request, $device);
 
         $after = $device->fresh()->only(array_keys($before));
         $changedFields = $this->writeHistoryChanges($device->id, $before, $after, $userId);
@@ -160,15 +181,11 @@ class DeviceController extends Controller
         ]);
 
         $this->writeAudit($userId, 'DELETE', $device, 'Device deleted: ' . $label, 'warning');
+        $this->deleteDeviceAssets($device);
 
         $device->delete();
 
         return redirect()->route('devices.index')->with('success', 'Ierice dzesta');
-    }
-
-    public function show(Device $device)
-    {
-        return redirect()->route('devices.index');
     }
 
     private function formData(): array
@@ -200,11 +217,11 @@ class DeviceController extends Controller
             'purchase_date' => ['required', 'date'],
             'purchase_price' => ['nullable', 'numeric', 'min:0'],
             'warranty_until' => ['nullable', 'date'],
-            'warranty_photo_name' => ['nullable', 'string', 'max:50'],
             'serial_number' => ['nullable', 'string', 'max:100'],
             'manufacturer' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string'],
-            'device_image_url' => ['nullable', 'string'],
+            'device_image' => ['nullable', 'image', 'max:' . (int) config('devices.max_upload_kb', 5120)],
+            'warranty_image' => ['nullable', 'image', 'max:' . (int) config('devices.max_upload_kb', 5120)],
         ]);
 
         foreach (['building_id', 'room_id'] as $field) {
@@ -213,8 +230,10 @@ class DeviceController extends Controller
             }
         }
 
-        // TR: Eski kayitlarla uyum icin bos degeri null yerine bos stringe ceviriyoruz.
-        $data['warranty_photo_name'] = $data['warranty_photo_name'] ?? '';
+        unset($data['device_image'], $data['warranty_image']);
+
+        $data['warranty_photo_name'] = $device?->warranty_photo_name ?? '';
+        $data['device_image_url'] = $device?->device_image_url;
 
         return $data;
     }
@@ -265,6 +284,37 @@ class DeviceController extends Controller
             'description' => $description,
             'severity' => $severity,
         ]);
+    }
+
+    private function syncUploads(Request $request, Device $device): void
+    {
+        $assetManager = app(DeviceAssetManager::class);
+        $updates = [];
+
+        if ($request->hasFile('device_image')) {
+            $updates['device_image_url'] = $assetManager->storeDeviceImage(
+                $request->file('device_image'),
+                $device->device_image_url
+            );
+        }
+
+        if ($request->hasFile('warranty_image')) {
+            $updates['warranty_photo_name'] = $assetManager->storeWarrantyImage(
+                $request->file('warranty_image'),
+                $device->warranty_photo_name
+            );
+        }
+
+        if ($updates !== []) {
+            $device->forceFill($updates)->save();
+        }
+    }
+
+    private function deleteDeviceAssets(Device $device): void
+    {
+        $assetManager = app(DeviceAssetManager::class);
+        $assetManager->delete($device->device_image_url);
+        $assetManager->delete($device->warranty_photo_name);
     }
 
     private function statusLabel(string $status): string

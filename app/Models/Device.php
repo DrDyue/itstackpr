@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Support\DeviceAssetManager;
 
 class Device extends Model
 {
@@ -77,6 +78,22 @@ class Device extends Model
 
     public function sets()
     {
-        return $this->belongsToMany(DeviceSet::class, 'device_set_items');
+        return $this->belongsToMany(DeviceSet::class, 'device_set_items')
+            ->withPivot(['quantity', 'role', 'description']);
+    }
+
+    public function deviceSetItems(): HasMany
+    {
+        return $this->hasMany(DeviceSetItem::class);
+    }
+
+    public function deviceImageUrl(): ?string
+    {
+        return app(DeviceAssetManager::class)->url($this->device_image_url);
+    }
+
+    public function warrantyImageUrl(): ?string
+    {
+        return app(DeviceAssetManager::class)->url($this->warranty_photo_name);
     }
 }

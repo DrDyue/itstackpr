@@ -204,6 +204,7 @@
                                 <td class="px-4 py-4">{{ $device->created_at?->format('d.m.Y H:i') ?: '-' }}</td>
                                 <td class="px-4 py-4">
                                     <div class="flex items-center gap-3 whitespace-nowrap">
+                                        <a href="{{ route('devices.show', $device) }}" class="font-medium text-emerald-700 transition hover:text-emerald-900">Apskatit</a>
                                         <a href="{{ route('devices.edit', $device) }}" class="font-medium text-sky-700 transition hover:text-sky-900">Rediget</a>
                                         <form method="POST" action="{{ route('devices.destroy', $device) }}">
                                             @csrf

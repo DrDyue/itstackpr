@@ -1,19 +1,25 @@
 <x-app-layout>
     @php
         $statusLabels = [
-            'active' => 'Aktīva',
-            'reserve' => 'Rezervē',
-            'broken' => 'Bojāta',
-            'repair' => 'Remontā',
-            'retired' => 'Norakstīta',
-            'kitting' => 'Komplektācijā',
+            'active' => 'Aktiva',
+            'reserve' => 'Rezerve',
+            'broken' => 'Bojata',
+            'repair' => 'Remonta',
+            'retired' => 'Norakstita',
+            'kitting' => 'Komplektacija',
         ];
     @endphp
 
     <section class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        <div class="mb-6 flex items-center justify-between">
-            <h1 class="text-2xl font-semibold text-gray-900">Rediģēt ierīci</h1>
-            <a href="{{ route('devices.index') }}" class="text-sm font-medium text-blue-600 hover:text-blue-700">Atpakaļ uz sarakstu</a>
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h1 class="text-2xl font-semibold text-gray-900">Rediget ierici</h1>
+                <p class="text-sm text-gray-500">Atjauno datus, foto un garantijas attelu.</p>
+            </div>
+            <div class="flex gap-2">
+                <a href="{{ route('devices.show', $device) }}" class="text-sm font-medium text-slate-600 hover:text-slate-800">Skatit detalas</a>
+                <a href="{{ route('devices.index') }}" class="text-sm font-medium text-blue-600 hover:text-blue-700">Atpakal uz sarakstu</a>
+            </div>
         </div>
 
         @if ($errors->any())
@@ -26,7 +32,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('devices.update', $device) }}" class="crud-form-card">
+        <form method="POST" action="{{ route('devices.update', $device) }}" enctype="multipart/form-data" class="crud-form-card">
             @csrf
             @method('PUT')
 
@@ -66,7 +72,7 @@
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="crud-label">&#274;ka</label>
+                    <label class="crud-label">Eka</label>
                     <select name="building_id" class="crud-control">
                         <option value="">Nav</option>
                         @foreach ($buildings as $building)
@@ -87,11 +93,11 @@
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="crud-label">Piešķirta personai</label>
+                    <label class="crud-label">Pieskirta personai</label>
                     <input type="text" name="assigned_to" value="{{ old('assigned_to', $device->assigned_to) }}" class="crud-control">
                 </div>
                 <div>
-                    <label class="crud-label">Ražotājs</label>
+                    <label class="crud-label">Razotajs</label>
                     <input type="text" name="manufacturer" value="{{ old('manufacturer', $device->manufacturer) }}" class="crud-control">
                 </div>
             </div>
@@ -99,45 +105,51 @@
             <div class="grid gap-4 sm:grid-cols-3">
                 <div>
                     <label class="crud-label">Pirkuma datums *</label>
-                    <input type="date" name="purchase_date" value="{{ old('purchase_date', $device->purchase_date) }}" required class="crud-control">
+                    <input type="date" name="purchase_date" value="{{ old('purchase_date', optional($device->purchase_date)->format('Y-m-d')) }}" required class="crud-control">
                 </div>
                 <div>
                     <label class="crud-label">Cena</label>
                     <input type="number" step="0.01" min="0" name="purchase_price" value="{{ old('purchase_price', $device->purchase_price) }}" class="crud-control">
                 </div>
                 <div>
-                    <label class="crud-label">Garantija līdz</label>
-                    <input type="date" name="warranty_until" value="{{ old('warranty_until', $device->warranty_until) }}" class="crud-control">
+                    <label class="crud-label">Garantija lidz</label>
+                    <input type="date" name="warranty_until" value="{{ old('warranty_until', optional($device->warranty_until)->format('Y-m-d')) }}" class="crud-control">
                 </div>
+            </div>
+
+            <div>
+                <label class="crud-label">Serijas numurs</label>
+                <input type="text" name="serial_number" value="{{ old('serial_number', $device->serial_number) }}" class="crud-control">
+            </div>
+
+            <div>
+                <label class="crud-label">Piezimes</label>
+                <textarea name="notes" rows="3" class="crud-control">{{ old('notes', $device->notes) }}</textarea>
             </div>
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="crud-label">Garantijas faila nosaukums</label>
-                    <input type="text" name="warranty_photo_name" value="{{ old('warranty_photo_name', $device->warranty_photo_name) }}" class="crud-control">
+                    <label class="crud-label">Ierices foto</label>
+                    <input type="file" name="device_image" accept="image/*" class="crud-control">
+                    <p class="mt-2 text-xs text-gray-500">Atstaj tuksu, ja negribi nomainit attelu.</p>
+                    @if ($device->deviceImageUrl())
+                        <a href="{{ $device->deviceImageUrl() }}" target="_blank" class="mt-3 inline-flex text-sm font-medium text-blue-600 hover:text-blue-700">Apskatit pasreizejo foto</a>
+                    @endif
                 </div>
                 <div>
-                    <label class="crud-label">Sērijas numurs</label>
-                    <input type="text" name="serial_number" value="{{ old('serial_number', $device->serial_number) }}" class="crud-control">
+                    <label class="crud-label">Garantijas attels</label>
+                    <input type="file" name="warranty_image" accept="image/*" class="crud-control">
+                    <p class="mt-2 text-xs text-gray-500">Atstaj tuksu, ja negribi nomainit garantijas attelu.</p>
+                    @if ($device->warrantyImageUrl())
+                        <a href="{{ $device->warrantyImageUrl() }}" target="_blank" class="mt-3 inline-flex text-sm font-medium text-blue-600 hover:text-blue-700">Apskatit pasreizejo garantijas attelu</a>
+                    @endif
                 </div>
-            </div>
-
-            <div>
-                <label class="crud-label">Piezīmes</label>
-                <textarea name="notes" rows="3" class="crud-control">{{ old('notes', $device->notes) }}</textarea>
-            </div>
-
-            <div>
-                <label class="crud-label">Attēla URL</label>
-                <input type="text" name="device_image_url" value="{{ old('device_image_url', $device->device_image_url) }}" class="crud-control">
             </div>
 
             <div class="flex gap-3 pt-2">
-                <button type="submit" class="crud-btn-primary">Atjaunināt</button>
+                <button type="submit" class="crud-btn-primary">Atjaunot</button>
                 <a href="{{ route('devices.index') }}" class="crud-btn-secondary">Atcelt</a>
             </div>
         </form>
     </section>
 </x-app-layout>
-
-
