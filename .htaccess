@@ -4,6 +4,12 @@ DirectoryIndex index.php public/index.php
     RewriteEngine On
     RewriteBase /
 
+    # Force HTTPS unless the request already arrived over HTTPS
+    # or a reverse proxy has marked it as HTTPS.
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
     # Serve files/directories that exist under /public directly.
     RewriteCond %{REQUEST_URI} !^/public/
     RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f [OR]
