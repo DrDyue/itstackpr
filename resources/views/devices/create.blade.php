@@ -14,7 +14,7 @@
         <div class="device-page-header">
             <div>
                 <h1 class="device-page-title">Jauna ierice</h1>
-                <p class="device-page-subtitle">Pievieno ierici ar foto un garantijas dokumenta attelu.</p>
+                <p class="device-page-subtitle">Sakartota ievade ar skaidru sadalijumu pa blokiem.</p>
             </div>
             <a href="{{ route('devices.index') }}" class="text-sm font-medium text-blue-600 hover:text-blue-700">Atpakal uz sarakstu</a>
         </div>
@@ -40,7 +40,15 @@
 
             <div class="space-y-6">
                 <div class="device-form-card">
-                    <div class="device-form-section-title">Pamata dati</div>
+                    <div class="device-form-section-header">
+                        <div class="device-form-section-icon bg-sky-100 text-sky-700 ring-sky-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.75h4.5m-7.5 3h10.5m-12 4.5h13.5m-15 4.5h16.5M6 20.25h12"/></svg>
+                        </div>
+                        <div class="device-form-section-copy">
+                            <div class="device-form-section-name">Pamata dati</div>
+                            <div class="device-form-section-note">Nosaukums, kods, tips, modelis un statuss.</div>
+                        </div>
+                    </div>
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div>
                             <label class="crud-label">Kods</label>
@@ -51,7 +59,6 @@
                             <input type="text" name="name" value="{{ old('name') }}" required class="crud-control">
                         </div>
                     </div>
-
                     <div class="mt-4 grid gap-4 sm:grid-cols-3">
                         <div>
                             <label class="crud-label">Tips *</label>
@@ -77,7 +84,15 @@
                 </div>
 
                 <div class="device-form-card">
-                    <div class="device-form-section-title">Atrasanas vieta un piesaiste</div>
+                    <div class="device-form-section-header">
+                        <div class="device-form-section-icon bg-amber-100 text-amber-700 ring-amber-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M5.25 21V7.5l7.5-3 7.5 3V21M9 9.75h.008v.008H9V9.75Zm0 3.75h.008v.008H9V13.5Zm0 3.75h.008v.008H9v-.008Zm6-7.5h.008v.008H15V9.75Zm0 3.75h.008v.008H15V13.5Zm0 3.75h.008v.008H15v-.008Z"/></svg>
+                        </div>
+                        <div class="device-form-section-copy">
+                            <div class="device-form-section-name">Atrasanas vieta</div>
+                            <div class="device-form-section-note">Eka, telpa un kam ierice ir pieskirta.</div>
+                        </div>
+                    </div>
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div>
                             <label class="crud-label">Eka</label>
@@ -98,22 +113,33 @@
                             </select>
                         </div>
                     </div>
-
-                    <div class="mt-4 grid gap-4 sm:grid-cols-2">
-                        <div>
-                            <label class="crud-label">Pieskirta personai</label>
-                            <input type="text" name="assigned_to" value="{{ old('assigned_to') }}" class="crud-control">
-                        </div>
-                        <div>
-                            <label class="crud-label">Razotajs</label>
-                            <input type="text" name="manufacturer" value="{{ old('manufacturer') }}" class="crud-control">
-                        </div>
+                    <div class="mt-4">
+                        <label class="crud-label">Pieskirta personai</label>
+                        <input type="text" name="assigned_to" value="{{ old('assigned_to') }}" class="crud-control">
                     </div>
                 </div>
 
                 <div class="device-form-card">
-                    <div class="device-form-section-title">Iegade un piezimes</div>
-                    <div class="grid gap-4 sm:grid-cols-3">
+                    <div class="device-form-section-header">
+                        <div class="device-form-section-icon bg-emerald-100 text-emerald-700 ring-emerald-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12m-12 5.25h12m-12 5.25h12M3.75 6.75h.008v.008H3.75V6.75Zm0 5.25h.008v.008H3.75V12Zm0 5.25h.008v.008H3.75v-.008Z"/></svg>
+                        </div>
+                        <div class="device-form-section-copy">
+                            <div class="device-form-section-name">Iegade un apraksts</div>
+                            <div class="device-form-section-note">Razotajs, serijas numurs, iegades dati un piezimes.</div>
+                        </div>
+                    </div>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label class="crud-label">Razotajs</label>
+                            <input type="text" name="manufacturer" value="{{ old('manufacturer') }}" class="crud-control">
+                        </div>
+                        <div>
+                            <label class="crud-label">Serijas numurs</label>
+                            <input type="text" name="serial_number" value="{{ old('serial_number') }}" class="crud-control">
+                        </div>
+                    </div>
+                    <div class="mt-4 grid gap-4 sm:grid-cols-3">
                         <div>
                             <label class="crud-label">Pirkuma datums *</label>
                             <input type="date" name="purchase_date" value="{{ old('purchase_date') }}" required class="crud-control">
@@ -127,12 +153,6 @@
                             <input type="date" name="warranty_until" value="{{ old('warranty_until') }}" class="crud-control">
                         </div>
                     </div>
-
-                    <div class="mt-4">
-                        <label class="crud-label">Serijas numurs</label>
-                        <input type="text" name="serial_number" value="{{ old('serial_number') }}" class="crud-control">
-                    </div>
-
                     <div class="mt-4">
                         <label class="crud-label">Piezimes</label>
                         <textarea name="notes" rows="4" class="crud-control">{{ old('notes') }}</textarea>
@@ -141,18 +161,28 @@
             </div>
 
             <div class="space-y-6">
+                <div class="device-action-bar">
+                    <div class="device-action-title">Darbibas</div>
+                    <div class="mt-3 flex flex-wrap gap-3">
+                        <button type="submit" class="crud-btn-primary">Saglabat</button>
+                        <a href="{{ route('devices.index') }}" class="crud-btn-secondary">Atcelt</a>
+                    </div>
+                </div>
+
                 <div class="device-form-card">
-                    <div class="device-form-section-title">Faili un atteli</div>
+                    <div class="device-form-section-header">
+                        <div class="device-form-section-icon bg-violet-100 text-violet-700 ring-violet-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5h10.5m-10.5 4.5h10.5m-10.5 4.5h7.5M4.5 5.25h15A1.5 1.5 0 0 1 21 6.75v10.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.25V6.75a1.5 1.5 0 0 1 1.5-1.5Z"/></svg>
+                        </div>
+                        <div class="device-form-section-copy">
+                            <div class="device-form-section-name">Faili un atteli</div>
+                            <div class="device-form-section-note">Atteli glabajas uz servera diska un tiek optimizeti.</div>
+                        </div>
+                    </div>
                     <div class="space-y-4">
                         <div class="device-upload-box">
                             <label class="crud-label">Ierices foto</label>
-                            <input
-                                type="file"
-                                name="device_image"
-                                accept="image/*"
-                                class="crud-control"
-                                @change="devicePreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null"
-                            >
+                            <input type="file" name="device_image" accept="image/*" class="crud-control" @change="devicePreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null">
                             <p class="mt-2 text-xs text-gray-500">JPG, PNG vai WEBP. Augsuplade tiks optimizeta un glabata uz servera diska.</p>
                             <div class="device-upload-preview">
                                 <template x-if="devicePreview">
@@ -165,13 +195,7 @@
                         </div>
                         <div class="device-upload-box">
                             <label class="crud-label">Garantijas attels</label>
-                            <input
-                                type="file"
-                                name="warranty_image"
-                                accept="image/*"
-                                class="crud-control"
-                                @change="warrantyPreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null"
-                            >
+                            <input type="file" name="warranty_image" accept="image/*" class="crud-control" @change="warrantyPreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null">
                             <p class="mt-2 text-xs text-gray-500">Pievieno garantijas foto vai skenu, lai to var redzet detalas skatā.</p>
                             <div class="device-upload-preview">
                                 <template x-if="warrantyPreview">
@@ -182,14 +206,6 @@
                                 </template>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <div class="device-form-card">
-                    <div class="device-form-section-title">Darbibas</div>
-                    <div class="flex flex-wrap gap-3">
-                        <button type="submit" class="crud-btn-primary">Saglabat</button>
-                        <a href="{{ route('devices.index') }}" class="crud-btn-secondary">Atcelt</a>
                     </div>
                 </div>
             </div>

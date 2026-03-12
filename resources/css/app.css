@@ -857,6 +857,26 @@ tbody td {
     @apply mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-slate-500;
 }
 
+.device-form-section-header {
+    @apply mb-4 flex items-center gap-3;
+}
+
+.device-form-section-icon {
+    @apply flex h-10 w-10 items-center justify-center rounded-2xl ring-1;
+}
+
+.device-form-section-copy {
+    @apply min-w-0;
+}
+
+.device-form-section-name {
+    @apply text-base font-semibold text-slate-900;
+}
+
+.device-form-section-note {
+    @apply text-sm text-slate-500;
+}
+
 .device-upload-box {
     @apply rounded-3xl border border-dashed border-slate-300 bg-white p-4;
 }
@@ -903,6 +923,34 @@ tbody td {
 
 .device-lightbox-close {
     @apply absolute right-5 top-5 rounded-full bg-white/10 px-3 py-2 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20;
+}
+
+.device-action-bar {
+    @apply sticky top-4 z-10 rounded-3xl border border-slate-200 bg-white/95 p-4 shadow-sm backdrop-blur;
+}
+
+.device-action-title {
+    @apply text-sm font-semibold uppercase tracking-[0.18em] text-slate-500;
+}
+
+.device-summary-grid {
+    @apply mt-4 grid gap-4 md:grid-cols-2;
+}
+
+.device-summary-card {
+    @apply rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4;
+}
+
+.device-summary-head {
+    @apply mb-3 flex items-center gap-3;
+}
+
+.device-summary-icon {
+    @apply flex h-11 w-11 items-center justify-center rounded-2xl ring-1;
+}
+
+.device-summary-title {
+    @apply text-sm font-semibold uppercase tracking-[0.18em] text-slate-500;
 }
 
 /* Guest layout page */

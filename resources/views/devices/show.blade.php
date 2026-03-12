@@ -19,6 +19,7 @@
         $creatorName = $device->createdBy?->employee?->full_name
             ?? $device->createdBy?->employee?->email
             ?? ($device->created_by ? 'User #' . $device->created_by : 'Nav zinams');
+        $setCountLabel = $device->sets->count() > 0 ? (string) $device->sets->count() : 'Nav';
     @endphp
 
     <section x-data="{ tab: 'overview', lightboxOpen: false, lightboxImage: '', lightboxTitle: '' }" class="device-shell">
@@ -67,7 +68,7 @@
             </div>
             <div class="device-stat-card">
                 <div class="device-stat-label">Komplektacijas</div>
-                <div class="device-stat-value">{{ $device->sets->count() }}</div>
+                <div class="device-stat-value">{{ $setCountLabel }}</div>
             </div>
         </div>
 
@@ -78,30 +79,129 @@
             <button type="button" @click="tab = 'files'" :class="tab === 'files' ? 'device-tab-button device-tab-button-active' : 'device-tab-button device-tab-button-idle'">Atteli un faili</button>
         </div>
 
-        <div x-show="tab === 'overview'" x-cloak class="device-panel">
-            <div class="device-panel-header">
-                <h2 class="text-lg font-semibold text-slate-900">Pilna informacija</h2>
-                <p class="text-sm text-slate-500">Galvena informacija par ierici vienkopus.</p>
-            </div>
-            <div class="device-panel-body">
-                <div class="device-kv-grid">
-                    <div><p class="device-kv-label">Nosaukums</p><p class="device-kv-value">{{ $device->name }}</p></div>
-                    <div><p class="device-kv-label">Kods</p><p class="device-kv-value">{{ $device->code ?: '-' }}</p></div>
-                    <div><p class="device-kv-label">Tips</p><p class="device-kv-value">{{ $device->type?->type_name ?: '-' }}</p></div>
-                    <div><p class="device-kv-label">Modelis</p><p class="device-kv-value">{{ $device->model ?: '-' }}</p></div>
-                    <div><p class="device-kv-label">Razotajs</p><p class="device-kv-value">{{ $device->manufacturer ?: '-' }}</p></div>
-                    <div><p class="device-kv-label">Serijas numurs</p><p class="device-kv-value">{{ $device->serial_number ?: '-' }}</p></div>
-                    <div><p class="device-kv-label">Pirkuma datums</p><p class="device-kv-value">{{ $device->purchase_date?->format('d.m.Y') ?: '-' }}</p></div>
-                    <div><p class="device-kv-label">Cena</p><p class="device-kv-value">{{ $device->purchase_price !== null ? number_format((float) $device->purchase_price, 2) . ' EUR' : '-' }}</p></div>
-                    <div><p class="device-kv-label">Garantija lidz</p><p class="device-kv-value">{{ $device->warranty_until?->format('d.m.Y') ?: '-' }}</p></div>
-                    <div><p class="device-kv-label">Pieskirta</p><p class="device-kv-value">{{ $device->assigned_to ?: '-' }}</p></div>
-                    <div><p class="device-kv-label">Eka</p><p class="device-kv-value">{{ $device->building?->building_name ?: ($device->room?->building?->building_name ?: '-') }}</p></div>
-                    <div><p class="device-kv-label">Telpa</p><p class="device-kv-value">{{ $device->room?->room_number ?: '-' }}@if ($device->room?->room_name)<span class="text-slate-500"> / {{ $device->room->room_name }}</span>@endif</p></div>
-                    <div><p class="device-kv-label">Izveidoja</p><p class="device-kv-value">{{ $creatorName }}</p></div>
-                    <div><p class="device-kv-label">Izveidots</p><p class="device-kv-value">{{ $device->created_at?->format('d.m.Y H:i') ?: '-' }}</p></div>
-                    <div class="sm:col-span-2">
-                        <p class="device-kv-label">Piezimes</p>
-                        <div class="device-kv-value rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">{{ $device->notes ?: 'Piezimes nav pievienotas.' }}</div>
+        <div x-show="tab === 'overview'" x-cloak class="space-y-6">
+            <div class="device-panel">
+                <div class="device-panel-header">
+                    <h2 class="text-lg font-semibold text-slate-900">Pilna informacija</h2>
+                    <p class="text-sm text-slate-500">Kopsavilkums ar vizualo un tehnisko informaciju vienā skatā.</p>
+                </div>
+                <div class="device-panel-body">
+                    <div class="device-summary-grid">
+                        <div class="device-summary-card">
+                            <div class="device-summary-head">
+                                <div class="device-summary-icon bg-sky-100 text-sky-700 ring-sky-200">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 7.5h15m-15 4.5h15m-15 4.5h9m-11.25-12h18a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75h-18a.75.75 0 0 1-.75-.75V5.25a.75.75 0 0 1 .75-.75Z"/></svg>
+                                </div>
+                                <div>
+                                    <div class="device-summary-title">Pamata dati</div>
+                                    <div class="text-sm text-slate-500">Galvenie identifikatori</div>
+                                </div>
+                            </div>
+                            <div class="device-kv-grid">
+                                <div><p class="device-kv-label">Nosaukums</p><p class="device-kv-value">{{ $device->name }}</p></div>
+                                <div><p class="device-kv-label">Kods</p><p class="device-kv-value">{{ $device->code ?: '-' }}</p></div>
+                                <div><p class="device-kv-label">Tips</p><p class="device-kv-value">{{ $device->type?->type_name ?: '-' }}</p></div>
+                                <div><p class="device-kv-label">Modelis</p><p class="device-kv-value">{{ $device->model ?: '-' }}</p></div>
+                                <div><p class="device-kv-label">Razotajs</p><p class="device-kv-value">{{ $device->manufacturer ?: '-' }}</p></div>
+                                <div><p class="device-kv-label">Serijas numurs</p><p class="device-kv-value">{{ $device->serial_number ?: '-' }}</p></div>
+                            </div>
+                        </div>
+
+                        <div class="device-summary-card">
+                            <div class="device-summary-head">
+                                <div class="device-summary-icon bg-amber-100 text-amber-700 ring-amber-200">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M5.25 21V7.5l7.5-3 7.5 3V21M9 9.75h.008v.008H9V9.75Zm0 3.75h.008v.008H9V13.5Zm0 3.75h.008v.008H9v-.008Zm6-7.5h.008v.008H15V9.75Zm0 3.75h.008v.008H15V13.5Zm0 3.75h.008v.008H15v-.008Z"/></svg>
+                                </div>
+                                <div>
+                                    <div class="device-summary-title">Atrasanas vieta</div>
+                                    <div class="text-sm text-slate-500">Telpa un piesaiste</div>
+                                </div>
+                            </div>
+                            <div class="device-kv-grid">
+                                <div><p class="device-kv-label">Eka</p><p class="device-kv-value">{{ $device->building?->building_name ?: ($device->room?->building?->building_name ?: '-') }}</p></div>
+                                <div><p class="device-kv-label">Telpa</p><p class="device-kv-value">{{ $device->room?->room_number ?: '-' }}@if ($device->room?->room_name)<span class="text-slate-500"> / {{ $device->room->room_name }}</span>@endif</p></div>
+                                <div><p class="device-kv-label">Pieskirta</p><p class="device-kv-value">{{ $device->assigned_to ?: '-' }}</p></div>
+                                <div><p class="device-kv-label">Komplektacijas</p><p class="device-kv-value">{{ $setCountLabel }}</p></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 device-summary-grid">
+                        <div class="device-summary-card">
+                            <div class="device-summary-head">
+                                <div class="device-summary-icon bg-emerald-100 text-emerald-700 ring-emerald-200">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12m-12 5.25h12m-12 5.25h12M3.75 6.75h.008v.008H3.75V6.75Zm0 5.25h.008v.008H3.75V12Zm0 5.25h.008v.008H3.75v-.008Z"/></svg>
+                                </div>
+                                <div>
+                                    <div class="device-summary-title">Iegade</div>
+                                    <div class="text-sm text-slate-500">Iegades un garantijas informacija</div>
+                                </div>
+                            </div>
+                            <div class="device-kv-grid">
+                                <div><p class="device-kv-label">Pirkuma datums</p><p class="device-kv-value">{{ $device->purchase_date?->format('d.m.Y') ?: '-' }}</p></div>
+                                <div><p class="device-kv-label">Cena</p><p class="device-kv-value">{{ $device->purchase_price !== null ? number_format((float) $device->purchase_price, 2) . ' EUR' : '-' }}</p></div>
+                                <div><p class="device-kv-label">Garantija lidz</p><p class="device-kv-value">{{ $device->warranty_until?->format('d.m.Y') ?: '-' }}</p></div>
+                                <div><p class="device-kv-label">Izveidots</p><p class="device-kv-value">{{ $device->created_at?->format('d.m.Y H:i') ?: '-' }}</p></div>
+                            </div>
+                        </div>
+
+                        <div class="device-summary-card">
+                            <div class="device-summary-head">
+                                <div class="device-summary-icon bg-violet-100 text-violet-700 ring-violet-200">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14.25c2.9 0 5.25-2.35 5.25-5.25S14.9 3.75 12 3.75 6.75 6.1 6.75 9 9.1 14.25 12 14.25Zm0 0c-4.142 0-7.5 2.015-7.5 4.5v1.5h15v-1.5c0-2.485-3.358-4.5-7.5-4.5Z"/></svg>
+                                </div>
+                                <div>
+                                    <div class="device-summary-title">Atbildiba un piezimes</div>
+                                    <div class="text-sm text-slate-500">Izveidotajs un papildinformacija</div>
+                                </div>
+                            </div>
+                            <div class="device-kv-grid">
+                                <div><p class="device-kv-label">Izveidoja</p><p class="device-kv-value">{{ $creatorName }}</p></div>
+                                <div><p class="device-kv-label">Statuss</p><p class="device-kv-value">{{ $statusLabels[$device->status] ?? $device->status }}</p></div>
+                            </div>
+                            <div class="mt-4">
+                                <p class="device-kv-label">Piezimes</p>
+                                <div class="device-kv-value rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200">{{ $device->notes ?: 'Piezimes nav pievienotas.' }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 device-media-grid">
+                        <div class="device-media-card">
+                            <div class="flex items-center justify-between gap-3">
+                                <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Ierices foto</h3>
+                                @if ($deviceImageUrl)
+                                    <a href="{{ $deviceImageUrl }}" target="_blank" class="text-sm font-medium text-sky-700 hover:text-sky-900">Atvert</a>
+                                @endif
+                            </div>
+                            <div class="device-media-frame">
+                                @if ($deviceImageUrl)
+                                    <button type="button" class="h-full w-full" @click="lightboxImage = '{{ $deviceImageUrl }}'; lightboxTitle = 'Ierices foto'; lightboxOpen = true">
+                                        <img src="{{ $deviceImageUrl }}" alt="Ierices attels" class="device-media-image">
+                                    </button>
+                                @else
+                                    <div class="device-empty-media">Foto vel nav pievienots</div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="device-media-card">
+                            <div class="flex items-center justify-between gap-3">
+                                <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Garantijas attels</h3>
+                                @if ($warrantyImageUrl)
+                                    <a href="{{ $warrantyImageUrl }}" target="_blank" class="text-sm font-medium text-sky-700 hover:text-sky-900">Atvert</a>
+                                @endif
+                            </div>
+                            <div class="device-media-frame">
+                                @if ($warrantyImageUrl)
+                                    <button type="button" class="h-full w-full" @click="lightboxImage = '{{ $warrantyImageUrl }}'; lightboxTitle = 'Garantijas attels'; lightboxOpen = true">
+                                        <img src="{{ $warrantyImageUrl }}" alt="Garantijas attels" class="device-media-image">
+                                    </button>
+                                @else
+                                    <div class="device-empty-media">Garantijas attels vel nav pievienots</div>
+                                @endif
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -158,7 +258,7 @@
         <div x-show="tab === 'sets'" x-cloak class="device-panel">
             <div class="device-panel-header">
                 <h2 class="text-lg font-semibold text-slate-900">Komplektacijas</h2>
-                <p class="text-sm text-slate-500">Kur sis aprikojums ir izmantots.</p>
+                <p class="text-sm text-slate-500">Ierice var nebut piesaistita nevienam komplektam, vienam vai vairakiem.</p>
             </div>
             <div class="device-panel-body">
                 <div class="space-y-3">
@@ -192,7 +292,7 @@
                         </div>
                     @empty
                         <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
-                            Ierice pagaidam nav piesaistita nevienai komplektacijai.
+                            Sai iericei pagaidam nav piesaistita nevienai komplektacijai.
                         </div>
                     @endforelse
                 </div>
@@ -206,21 +306,17 @@
                     <p class="text-sm text-slate-500">Vizuālā informācija un saites uz failiem.</p>
                 </div>
                 <div class="device-panel-body">
-                <div class="device-media-grid">
-                    <div class="device-media-card">
-                        <div class="flex items-center justify-between gap-3">
-                            <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Ierices foto</h3>
+                    <div class="device-media-grid">
+                        <div class="device-media-card">
+                            <div class="flex items-center justify-between gap-3">
+                                <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Ierices foto</h3>
                                 @if ($deviceImageUrl)
                                     <a href="{{ $deviceImageUrl }}" target="_blank" class="text-sm font-medium text-sky-700 hover:text-sky-900">Atvert</a>
                                 @endif
                             </div>
                             <div class="device-media-frame">
                                 @if ($deviceImageUrl)
-                                    <button
-                                        type="button"
-                                        class="h-full w-full"
-                                        @click="lightboxImage = '{{ $deviceImageUrl }}'; lightboxTitle = 'Ierices foto'; lightboxOpen = true"
-                                    >
+                                    <button type="button" class="h-full w-full" @click="lightboxImage = '{{ $deviceImageUrl }}'; lightboxTitle = 'Ierices foto'; lightboxOpen = true">
                                         <img src="{{ $deviceImageUrl }}" alt="Ierices attels" class="device-media-image">
                                     </button>
                                 @else
@@ -228,7 +324,6 @@
                                 @endif
                             </div>
                         </div>
-
                         <div class="device-media-card">
                             <div class="flex items-center justify-between gap-3">
                                 <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Garantijas attels</h3>
@@ -238,11 +333,7 @@
                             </div>
                             <div class="device-media-frame">
                                 @if ($warrantyImageUrl)
-                                    <button
-                                        type="button"
-                                        class="h-full w-full"
-                                        @click="lightboxImage = '{{ $warrantyImageUrl }}'; lightboxTitle = 'Garantijas attels'; lightboxOpen = true"
-                                    >
+                                    <button type="button" class="h-full w-full" @click="lightboxImage = '{{ $warrantyImageUrl }}'; lightboxTitle = 'Garantijas attels'; lightboxOpen = true">
                                         <img src="{{ $warrantyImageUrl }}" alt="Garantijas attels" class="device-media-image">
                                     </button>
                                 @else
@@ -253,36 +344,9 @@
                     </div>
                 </div>
             </div>
-
-            <div class="device-panel">
-                <div class="device-panel-header">
-                    <h2 class="text-lg font-semibold text-slate-900">Glabasana</h2>
-                    <p class="text-sm text-slate-500">Faili glabajas uz konfigurēta servera diska.</p>
-                </div>
-                <div class="device-panel-body space-y-4 text-sm text-slate-600">
-                    <div class="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200">
-                        <div class="font-semibold text-slate-900">Ierices foto</div>
-                        <div class="mt-1 break-all">{{ $device->device_image_url ?: 'Nav faila' }}</div>
-                    </div>
-                    <div class="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200">
-                        <div class="font-semibold text-slate-900">Garantijas attels</div>
-                        <div class="mt-1 break-all">{{ $device->warranty_photo_name ?: 'Nav faila' }}</div>
-                    </div>
-                    <p class="text-xs leading-6 text-slate-500">
-                        Pec noklusejuma faili glabajas servera `public` diskā. Produkcijai vari iestatīt `DEVICE_ASSET_DISK=s3`, lai izmantotu mākoņglabātuvi.
-                    </p>
-                </div>
-            </div>
         </div>
 
-        <div
-            x-cloak
-            x-show="lightboxOpen"
-            x-transition.opacity
-            class="device-lightbox"
-            @click.self="lightboxOpen = false"
-            @keydown.escape.window="lightboxOpen = false"
-        >
+        <div x-cloak x-show="lightboxOpen" x-transition.opacity class="device-lightbox" @click.self="lightboxOpen = false" @keydown.escape.window="lightboxOpen = false">
             <div class="device-lightbox-panel">
                 <button type="button" class="device-lightbox-close" @click="lightboxOpen = false">Aizvert</button>
                 <div class="mb-3 px-2 pt-2 text-sm font-semibold text-white" x-text="lightboxTitle"></div>
