@@ -43,6 +43,57 @@
                 </p>
             </div>
 
+        </div>
+
+        <div class="device-stat-grid">
+            <div class="device-stat-card">
+                <div class="device-stat-head">
+                    <div class="device-stat-icon bg-rose-100 text-rose-700 ring-rose-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m6 2.25a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                    </div>
+                    <div>
+                        <div class="device-stat-label">Statuss</div>
+                        <div class="device-stat-value">{{ $statusLabels[$device->status] ?? $device->status }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="device-stat-card">
+                <div class="device-stat-head">
+                    <div class="device-stat-icon bg-amber-100 text-amber-700 ring-amber-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M5.25 21V7.5l7.5-3 7.5 3V21"/></svg>
+                    </div>
+                    <div>
+                        <div class="device-stat-label">Telpa</div>
+                        <div class="device-stat-value">{{ $device->room?->room_number ?: '-' }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="device-stat-card">
+                <div class="device-stat-head">
+                    <div class="device-stat-icon bg-violet-100 text-violet-700 ring-violet-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14.25c2.9 0 5.25-2.35 5.25-5.25S14.9 3.75 12 3.75 6.75 6.1 6.75 9 9.1 14.25 12 14.25Zm0 0c-4.142 0-7.5 2.015-7.5 4.5v1.5h15v-1.5c0-2.485-3.358-4.5-7.5-4.5Z"/></svg>
+                    </div>
+                    <div>
+                        <div class="device-stat-label">Izveidoja</div>
+                        <div class="device-stat-value">{{ $creatorName }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="device-stat-card">
+                <div class="device-stat-head">
+                    <div class="device-stat-icon bg-emerald-100 text-emerald-700 ring-emerald-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5 12 12.75 3 7.5m18 0L12 2.25 3 7.5m18 0v9L12 21.75 3 16.5v-9"/></svg>
+                    </div>
+                    <div>
+                        <div class="device-stat-label">Komplektacijas</div>
+                        <div class="device-stat-value">{{ $setCountLabel }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="device-toolbar">
+            <div class="device-toolbar-copy">Izvelies, ko apskatit par ierici.</div>
             <div class="flex flex-wrap gap-2">
                 <a href="{{ route('devices.history', $device) }}" class="inline-flex items-center rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
                     Pilna vesture
@@ -53,37 +104,16 @@
             </div>
         </div>
 
-        <div class="device-stat-grid">
-            <div class="device-stat-card">
-                <div class="device-stat-label">Statuss</div>
-                <div class="device-stat-value">{{ $statusLabels[$device->status] ?? $device->status }}</div>
-            </div>
-            <div class="device-stat-card">
-                <div class="device-stat-label">Telpa</div>
-                <div class="device-stat-value">{{ $device->room?->room_number ?: '-' }}</div>
-            </div>
-            <div class="device-stat-card">
-                <div class="device-stat-label">Izveidoja</div>
-                <div class="device-stat-value">{{ $creatorName }}</div>
-            </div>
-            <div class="device-stat-card">
-                <div class="device-stat-label">Komplektacijas</div>
-                <div class="device-stat-value">{{ $setCountLabel }}</div>
-            </div>
-        </div>
-
         <div class="mb-6 device-tab-list">
             <button type="button" @click="tab = 'overview'" :class="tab === 'overview' ? 'device-tab-button device-tab-button-active' : 'device-tab-button device-tab-button-idle'">Pilna informacija</button>
             <button type="button" @click="tab = 'history'" :class="tab === 'history' ? 'device-tab-button device-tab-button-active' : 'device-tab-button device-tab-button-idle'">Vesture</button>
             <button type="button" @click="tab = 'sets'" :class="tab === 'sets' ? 'device-tab-button device-tab-button-active' : 'device-tab-button device-tab-button-idle'">Komplektacijas</button>
-            <button type="button" @click="tab = 'files'" :class="tab === 'files' ? 'device-tab-button device-tab-button-active' : 'device-tab-button device-tab-button-idle'">Atteli un faili</button>
         </div>
 
         <div x-show="tab === 'overview'" x-cloak class="space-y-6">
             <div class="device-panel">
                 <div class="device-panel-header">
                     <h2 class="text-lg font-semibold text-slate-900">Pilna informacija</h2>
-                    <p class="text-sm text-slate-500">Kopsavilkums ar vizualo un tehnisko informaciju vienā skatā.</p>
                 </div>
                 <div class="device-panel-body">
                     <div class="device-summary-grid">
@@ -210,7 +240,6 @@
         <div x-show="tab === 'history'" x-cloak class="device-panel">
             <div class="device-panel-header">
                 <h2 class="text-lg font-semibold text-slate-900">Vesture</h2>
-                <p class="text-sm text-slate-500">Sinhronizeta ar `device_history` tabulu.</p>
             </div>
             <div class="device-panel-body">
                 <div class="device-timeline">
@@ -258,7 +287,6 @@
         <div x-show="tab === 'sets'" x-cloak class="device-panel">
             <div class="device-panel-header">
                 <h2 class="text-lg font-semibold text-slate-900">Komplektacijas</h2>
-                <p class="text-sm text-slate-500">Ierice var nebut piesaistita nevienam komplektam, vienam vai vairakiem.</p>
             </div>
             <div class="device-panel-body">
                 <div class="space-y-3">
@@ -295,53 +323,6 @@
                             Sai iericei pagaidam nav piesaistita nevienai komplektacijai.
                         </div>
                     @endforelse
-                </div>
-            </div>
-        </div>
-
-        <div x-show="tab === 'files'" x-cloak class="space-y-6">
-            <div class="device-panel">
-                <div class="device-panel-header">
-                    <h2 class="text-lg font-semibold text-slate-900">Atteli un faili</h2>
-                    <p class="text-sm text-slate-500">Vizuālā informācija un saites uz failiem.</p>
-                </div>
-                <div class="device-panel-body">
-                    <div class="device-media-grid">
-                        <div class="device-media-card">
-                            <div class="flex items-center justify-between gap-3">
-                                <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Ierices foto</h3>
-                                @if ($deviceImageUrl)
-                                    <a href="{{ $deviceImageUrl }}" target="_blank" class="text-sm font-medium text-sky-700 hover:text-sky-900">Atvert</a>
-                                @endif
-                            </div>
-                            <div class="device-media-frame">
-                                @if ($deviceImageUrl)
-                                    <button type="button" class="h-full w-full" @click="lightboxImage = '{{ $deviceImageUrl }}'; lightboxTitle = 'Ierices foto'; lightboxOpen = true">
-                                        <img src="{{ $deviceImageUrl }}" alt="Ierices attels" class="device-media-image">
-                                    </button>
-                                @else
-                                    <div class="device-empty-media">Foto vel nav pievienots</div>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="device-media-card">
-                            <div class="flex items-center justify-between gap-3">
-                                <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Garantijas attels</h3>
-                                @if ($warrantyImageUrl)
-                                    <a href="{{ $warrantyImageUrl }}" target="_blank" class="text-sm font-medium text-sky-700 hover:text-sky-900">Atvert</a>
-                                @endif
-                            </div>
-                            <div class="device-media-frame">
-                                @if ($warrantyImageUrl)
-                                    <button type="button" class="h-full w-full" @click="lightboxImage = '{{ $warrantyImageUrl }}'; lightboxTitle = 'Garantijas attels'; lightboxOpen = true">
-                                        <img src="{{ $warrantyImageUrl }}" alt="Garantijas attels" class="device-media-image">
-                                    </button>
-                                @else
-                                    <div class="device-empty-media">Garantijas attels vel nav pievienots</div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

@@ -801,6 +801,14 @@ tbody td {
     @apply rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4;
 }
 
+.device-stat-head {
+    @apply flex items-center gap-3;
+}
+
+.device-stat-icon {
+    @apply flex h-11 w-11 items-center justify-center rounded-2xl ring-1;
+}
+
 .device-stat-label {
     @apply text-xs font-semibold uppercase tracking-[0.18em] text-slate-500;
 }
@@ -951,6 +959,14 @@ tbody td {
 
 .device-summary-title {
     @apply text-sm font-semibold uppercase tracking-[0.18em] text-slate-500;
+}
+
+.device-toolbar {
+    @apply mb-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm;
+}
+
+.device-toolbar-copy {
+    @apply text-sm text-slate-500;
 }
 
 /* Guest layout page */
