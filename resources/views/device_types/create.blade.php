@@ -1,8 +1,11 @@
 <x-app-layout>
-    <section class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-        <div class="mb-6 flex items-center justify-between">
-            <h1 class="text-2xl font-semibold text-gray-900">Jauns ierīces tips</h1>
-            <a href="{{ route('device-types.index') }}" class="text-sm font-medium text-blue-600 hover:text-blue-700">Atpakaļ uz sarakstu</a>
+    <section class="type-form-shell">
+        <div class="device-page-header">
+            <div>
+                <h1 class="device-page-title">Jauns ierices tips</h1>
+                <p class="device-page-subtitle">Vienkarsota forma bez lieka `icon_name` lauka.</p>
+            </div>
+            <a href="{{ route('device-types.index') }}" class="text-sm font-medium text-blue-600 hover:text-blue-700">Atpakal uz sarakstu</a>
         </div>
 
         @if ($errors->any())
@@ -15,36 +18,45 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('device-types.store') }}" class="crud-form-card">
+        <form method="POST" action="{{ route('device-types.store') }}" class="type-form-grid">
             @csrf
-            <div>
-                <label class="crud-label">Tipa nosaukums *</label>
-                <input type="text" name="type_name" value="{{ old('type_name') }}" class="crud-control" required>
-            </div>
-            <div class="grid gap-4 sm:grid-cols-2">
-                <div>
-                    <label class="crud-label">Kategorija *</label>
-                    <input type="text" name="category" value="{{ old('category') }}" class="crud-control" required>
+            <div class="space-y-6">
+                <div class="type-form-card">
+                    <div class="device-form-section-name">Pamata informacija</div>
+                    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label class="crud-label">Tipa nosaukums *</label>
+                            <input type="text" name="type_name" value="{{ old('type_name') }}" class="crud-control" required>
+                        </div>
+                        <div>
+                            <label class="crud-label">Kategorija *</label>
+                            <input type="text" name="category" value="{{ old('category') }}" class="crud-control" required>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <label class="crud-label">Apraksts</label>
+                        <textarea name="description" rows="4" class="crud-control">{{ old('description') }}</textarea>
+                    </div>
                 </div>
-                <div>
-                    <label class="crud-label">Ikonas nosaukums</label>
-                    <input type="text" name="icon_name" value="{{ old('icon_name') }}" class="crud-control">
+            </div>
+
+            <div class="space-y-6">
+                <div class="type-form-card">
+                    <div class="device-form-section-name">Papildinformacija</div>
+                    <div class="mt-4">
+                        <label class="crud-label">Paredzamais kalposanas ilgums</label>
+                        <input type="number" name="expected_lifetime_years" value="{{ old('expected_lifetime_years', 5) }}" min="0" class="crud-control">
+                    </div>
                 </div>
-            </div>
-            <div>
-                <label class="crud-label">Paredzamais kalpošanas ilgums (gadi)</label>
-                <input type="number" name="expected_lifetime_years" value="{{ old('expected_lifetime_years', 5) }}" min="0" class="crud-control">
-            </div>
-            <div>
-                <label class="crud-label">Apraksts</label>
-                <textarea name="description" rows="3" class="crud-control">{{ old('description') }}</textarea>
-            </div>
-            <div class="flex gap-3 pt-2">
-                <button type="submit" class="crud-btn-primary">Saglabāt</button>
-                <a href="{{ route('device-types.index') }}" class="crud-btn-secondary">Atcelt</a>
+
+                <div class="type-form-card">
+                    <div class="device-form-section-name">Darbibas</div>
+                    <div class="mt-4 flex flex-wrap gap-3">
+                        <button type="submit" class="crud-btn-primary">Saglabat</button>
+                        <a href="{{ route('device-types.index') }}" class="crud-btn-secondary">Atcelt</a>
+                    </div>
+                </div>
             </div>
         </form>
     </section>
 </x-app-layout>
-
-

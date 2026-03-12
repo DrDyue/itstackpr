@@ -14,7 +14,6 @@ class DeviceType extends Model
     protected $fillable = [
         'type_name',
         'category',
-        'icon_name',
         'description',
         'expected_lifetime_years',
         'created_at',
