@@ -25,6 +25,29 @@
 
         <div class="type-toolbar">
             <form method="GET" action="{{ route('device-types.index') }}" class="space-y-4">
+                <div class="type-category-chips">
+                    <a href="{{ route('device-types.index', array_filter([
+                        'q' => $filters['q'] ?: null,
+                        'sort' => $sort,
+                        'direction' => $direction,
+                    ])) }}"
+                       class="type-category-chip {{ $filters['category'] === '' ? 'type-category-chip-active' : 'type-category-chip-idle' }}">
+                        Visas kategorijas
+                    </a>
+                    @foreach ($categoryOptions as $categoryOption)
+                        <a href="{{ route('device-types.index', array_filter([
+                            'q' => $filters['q'] ?: null,
+                            'category' => $categoryOption->category,
+                            'sort' => $sort,
+                            'direction' => $direction,
+                        ])) }}"
+                           class="type-category-chip {{ $filters['category'] === $categoryOption->category ? 'type-category-chip-active' : 'type-category-chip-idle' }}">
+                            {{ $categoryOption->category }}
+                            <span class="type-category-count">{{ $categoryOption->total }}</span>
+                        </a>
+                    @endforeach
+                </div>
+
                 <div class="type-search-grid">
                     <label class="block">
                         <span class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Meklet pec tipa nosaukuma</span>

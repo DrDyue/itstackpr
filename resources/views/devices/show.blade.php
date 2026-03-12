@@ -20,6 +20,14 @@
             ?? $device->createdBy?->employee?->email
             ?? ($device->created_by ? 'User #' . $device->created_by : 'Nav zinams');
         $setCountLabel = $device->sets->count() > 0 ? (string) $device->sets->count() : 'Nav';
+        $historyAccents = [
+            'CREATE' => ['dot' => 'bg-emerald-500', 'card' => 'border-emerald-200 bg-emerald-50/60', 'label' => 'Izveidota'],
+            'UPDATE' => ['dot' => 'bg-sky-500', 'card' => 'border-sky-200 bg-sky-50/60', 'label' => 'Labojums'],
+            'DELETE' => ['dot' => 'bg-rose-500', 'card' => 'border-rose-200 bg-rose-50/60', 'label' => 'Dzesta'],
+            'MOVE' => ['dot' => 'bg-amber-500', 'card' => 'border-amber-200 bg-amber-50/60', 'label' => 'Parvietota'],
+            'STATUS_CHANGE' => ['dot' => 'bg-violet-500', 'card' => 'border-violet-200 bg-violet-50/60', 'label' => 'Statusa maina'],
+            'SET_ATTACH' => ['dot' => 'bg-teal-500', 'card' => 'border-teal-200 bg-teal-50/60', 'label' => 'Pievienota komplektacijai'],
+        ];
     @endphp
 
     <section x-data="{ tab: 'overview', lightboxOpen: false, lightboxImage: '', lightboxTitle: '' }" class="device-shell">
@@ -92,8 +100,16 @@
             </div>
         </div>
 
+        @if (session('success'))
+            <div class="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
+        @endif
+
+        @if (session('error'))
+            <div class="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
+        @endif
+
         <div class="device-toolbar">
-            <div class="device-toolbar-copy">Izvelies, ko apskatit par ierici.</div>
+            <div class="device-toolbar-copy">Izvelies, ko apskatit par ierici vai veic atro darbibu uzreiz seit.</div>
             <div class="flex flex-wrap gap-2">
                 <a href="{{ route('devices.history', $device) }}" class="inline-flex items-center rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
                     Pilna vesture
@@ -102,6 +118,55 @@
                     Rediget
                 </a>
             </div>
+        </div>
+
+        <div class="mb-6 grid gap-4 xl:grid-cols-3">
+            <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+                @csrf
+                <input type="hidden" name="action" value="status">
+                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Atra darbiba</div>
+                <div class="mt-1 text-base font-semibold text-slate-900">Mainit statusu</div>
+                <div class="mt-3 flex gap-2">
+                    <select name="target_status" class="crud-control">
+                        @foreach ($statuses as $status)
+                            <option value="{{ $status }}" @selected($device->status === $status)>{{ $statusLabels[$status] ?? $status }}</option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="crud-btn-primary">Saglabat</button>
+                </div>
+            </form>
+
+            <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+                @csrf
+                <input type="hidden" name="action" value="room">
+                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Atra darbiba</div>
+                <div class="mt-1 text-base font-semibold text-slate-900">Parvietot telpu</div>
+                <div class="mt-3 flex gap-2">
+                    <select name="target_room_id" class="crud-control">
+                        <option value="">Izvelies telpu</option>
+                        @foreach ($rooms as $room)
+                            <option value="{{ $room->id }}" @selected((int) $device->room_id === (int) $room->id)>{{ $room->building?->building_name }} / {{ $room->room_number }}</option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="crud-btn-primary">Parvietot</button>
+                </div>
+            </form>
+
+            <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+                @csrf
+                <input type="hidden" name="action" value="set">
+                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Atra darbiba</div>
+                <div class="mt-1 text-base font-semibold text-slate-900">Pievienot komplektacijai</div>
+                <div class="mt-3 flex gap-2">
+                    <select name="target_set_id" class="crud-control">
+                        <option value="">Izvelies komplektaciju</option>
+                        @foreach ($deviceSets as $deviceSet)
+                            <option value="{{ $deviceSet->id }}">{{ $deviceSet->set_name }}</option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="crud-btn-primary">Pievienot</button>
+                </div>
+            </form>
         </div>
 
         <div class="mb-6 device-tab-list">
@@ -244,18 +309,21 @@
             <div class="device-panel-body">
                 <div class="device-timeline">
                     @forelse ($device->histories->sortByDesc('timestamp') as $event)
-                        <div class="device-timeline-item">
+                        @php
+                            $accent = $historyAccents[$event->action] ?? ['dot' => 'bg-slate-400', 'card' => 'border-slate-200 bg-slate-50', 'label' => $event->action];
+                        @endphp
+                        <div class="device-timeline-item {{ $accent['card'] }}">
                             @if (! $loop->last)
                                 <div class="device-timeline-line"></div>
                             @endif
-                            <div class="device-timeline-dot {{ match($event->action) {
-                                'CREATE' => 'bg-emerald-500',
-                                'UPDATE' => 'bg-sky-500',
-                                'DELETE' => 'bg-rose-500',
-                                default => 'bg-slate-400',
-                            } }}"></div>
+                            <div class="device-timeline-dot {{ $accent['dot'] }}"></div>
                             <div>
-                                <div class="text-sm font-semibold text-slate-900">{{ $event->action }} @if ($event->field_changed)<span class="text-slate-500">/ {{ $event->field_changed }}</span>@endif</div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="inline-flex rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">{{ $accent['label'] }}</span>
+                                    @if ($event->field_changed)
+                                        <span class="text-sm font-semibold text-slate-900">{{ $event->field_changed }}</span>
+                                    @endif
+                                </div>
                                 <div class="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500">
                                     {{ $event->timestamp?->format('d.m.Y H:i') ?: '-' }}
                                     <span class="mx-2 text-slate-300">|</span>

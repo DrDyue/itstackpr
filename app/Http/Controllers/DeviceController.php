@@ -6,10 +6,13 @@ use App\Models\AuditLog;
 use App\Models\Building;
 use App\Models\Device;
 use App\Models\DeviceHistory;
+use App\Models\DeviceSet;
+use App\Models\DeviceSetItem;
 use App\Models\DeviceType;
 use App\Models\Room;
 use App\Support\DeviceAssetManager;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 
 class DeviceController extends Controller
@@ -65,6 +68,14 @@ class DeviceController extends Controller
             ->orderBy('type_name')
             ->get();
 
+        $categories = DeviceType::query()
+            ->selectRaw('category, COUNT(*) as total')
+            ->whereNotNull('category')
+            ->where('category', '!=', '')
+            ->groupBy('category')
+            ->orderBy('category')
+            ->pluck('total', 'category');
+
         $statusCounts = Device::query()
             ->selectRaw('status, COUNT(*) as total')
             ->groupBy('status')
@@ -86,8 +97,12 @@ class DeviceController extends Controller
             'devices' => $devices,
             'filters' => $filters,
             'types' => $types,
+            'rooms' => Room::with('building')->orderBy('room_number')->get(),
+            'deviceSets' => DeviceSet::orderBy('set_name')->get(),
             'statusOptions' => $statusOptions,
             'activeFilterCount' => $activeFilterCount,
+            'statusLabels' => $this->statusLabels(),
+            'categoryOptions' => $categories,
         ]);
     }
 
@@ -138,7 +153,12 @@ class DeviceController extends Controller
         return view('devices.show', [
             'device' => $device,
             'deviceImageUrl' => $device->deviceImageUrl(),
+            'deviceThumbUrl' => $device->deviceImageThumbUrl(),
             'warrantyImageUrl' => $device->warrantyImageUrl(),
+            'rooms' => Room::with('building')->orderBy('room_number')->get(),
+            'deviceSets' => DeviceSet::orderBy('set_name')->get(),
+            'statuses' => self::STATUSES,
+            'statusLabels' => $this->statusLabels(),
         ]);
     }
 
@@ -188,6 +208,62 @@ class DeviceController extends Controller
         return redirect()->route('devices.index')->with('success', 'Ierice dzesta');
     }
 
+    public function quickUpdate(Request $request, Device $device)
+    {
+        $validated = $request->validate([
+            'action' => ['required', Rule::in(['status', 'room', 'set'])],
+            'target_status' => ['nullable', Rule::in(self::STATUSES)],
+            'target_room_id' => ['nullable', 'exists:rooms,id'],
+            'target_set_id' => ['nullable', 'exists:device_sets,id'],
+        ]);
+
+        $result = $this->performDeviceAction($device, $validated, auth()->id());
+
+        return redirect()
+            ->route('devices.show', $device)
+            ->with($result['level'], $result['message']);
+    }
+
+    public function bulkUpdate(Request $request)
+    {
+        $validated = $request->validate([
+            'device_ids' => ['required', 'array', 'min:1'],
+            'device_ids.*' => ['integer', 'exists:devices,id'],
+            'action' => ['required', Rule::in(['status', 'room', 'set'])],
+            'target_status' => ['nullable', Rule::in(self::STATUSES)],
+            'target_room_id' => ['nullable', 'exists:rooms,id'],
+            'target_set_id' => ['nullable', 'exists:device_sets,id'],
+        ]);
+
+        $devices = Device::query()
+            ->whereIn('id', $validated['device_ids'])
+            ->get();
+
+        $processed = 0;
+        $messages = [];
+
+        foreach ($devices as $device) {
+            $result = $this->performDeviceAction($device, $validated, auth()->id());
+            if ($result['level'] === 'success') {
+                $processed++;
+            } else {
+                $messages[] = ($device->code ?: ('ID ' . $device->id)) . ': ' . $result['message'];
+            }
+        }
+
+        $flash = $processed > 0
+            ? 'Apstradatas ierices: ' . $processed . '.'
+            : 'Neviena ierice netika apstradata.';
+
+        if ($messages !== []) {
+            $flash .= ' ' . implode(' ', array_slice($messages, 0, 3));
+        }
+
+        return redirect()
+            ->route('devices.index')
+            ->with($processed > 0 ? 'success' : 'error', $flash);
+    }
+
     private function formData(): array
     {
         return [
@@ -228,6 +304,36 @@ class DeviceController extends Controller
             if (($data[$field] ?? null) === '') {
                 $data[$field] = null;
             }
+        }
+
+        if (($data['room_id'] ?? null) !== null) {
+            $room = Room::query()->find($data['room_id']);
+
+            if ($room && ($data['building_id'] ?? null) === null) {
+                $data['building_id'] = $room->building_id;
+            }
+
+            if ($room && ($data['building_id'] ?? null) !== null && (int) $room->building_id !== (int) $data['building_id']) {
+                throw ValidationException::withMessages([
+                    'room_id' => ['Izveleta telpa nepieder noraditajai ekai.'],
+                ]);
+            }
+        }
+
+        if (
+            ! empty($data['warranty_until'])
+            && ! empty($data['purchase_date'])
+            && strtotime((string) $data['warranty_until']) < strtotime((string) $data['purchase_date'])
+        ) {
+            throw ValidationException::withMessages([
+                'warranty_until' => ['Garantijas datums nevar but agraks par pirkuma datumu.'],
+            ]);
+        }
+
+        if (($data['status'] ?? null) === 'retired' && ! empty($data['assigned_to'])) {
+            throw ValidationException::withMessages([
+                'assigned_to' => ['Norakstitai iericei nevajag but pieskirtai personai.'],
+            ]);
         }
 
         unset($data['device_image'], $data['warranty_image']);
@@ -314,7 +420,9 @@ class DeviceController extends Controller
     {
         $assetManager = app(DeviceAssetManager::class);
         $assetManager->delete($device->device_image_url);
+        $assetManager->delete($assetManager->thumbnailPath($device->device_image_url));
         $assetManager->delete($device->warranty_photo_name);
+        $assetManager->delete($assetManager->thumbnailPath($device->warranty_photo_name));
     }
 
     private function statusLabel(string $status): string
@@ -328,5 +436,132 @@ class DeviceController extends Controller
             'kitting' => 'Komplektacija',
             default => ucfirst($status),
         };
+    }
+
+    private function statusLabels(): array
+    {
+        return collect(self::STATUSES)
+            ->mapWithKeys(fn (string $status) => [$status => $this->statusLabel($status)])
+            ->all();
+    }
+
+    private function performDeviceAction(Device $device, array $data, ?int $userId): array
+    {
+        return match ($data['action']) {
+            'status' => $this->changeDeviceStatus($device, (string) ($data['target_status'] ?? ''), $userId),
+            'room' => $this->moveDevice($device, $data['target_room_id'] ?? null, $userId),
+            'set' => $this->attachDeviceToSet($device, $data['target_set_id'] ?? null, $userId),
+            default => ['level' => 'error', 'message' => 'Neatbalstita darbiba.'],
+        };
+    }
+
+    private function changeDeviceStatus(Device $device, string $status, ?int $userId): array
+    {
+        if (! in_array($status, self::STATUSES, true)) {
+            return ['level' => 'error', 'message' => 'Nav izvelets korekts statuss.'];
+        }
+
+        if ($status === 'retired' && filled($device->assigned_to)) {
+            return ['level' => 'error', 'message' => 'Norakstitu ierici vispirms atsaisti no personas.'];
+        }
+
+        if ($device->status === $status) {
+            return ['level' => 'error', 'message' => 'Statuss jau ir iestatits.'];
+        }
+
+        $oldStatus = $device->status;
+        $device->forceFill(['status' => $status])->save();
+
+        DeviceHistory::create([
+            'device_id' => $device->id,
+            'action' => 'STATUS_CHANGE',
+            'field_changed' => 'status',
+            'old_value' => $oldStatus,
+            'new_value' => $status,
+            'changed_by' => $userId,
+        ]);
+
+        $this->writeAudit($userId, 'UPDATE', $device, 'Device status changed: ' . $device->name . ' | ' . $oldStatus . ' -> ' . $status, 'info');
+
+        return ['level' => 'success', 'message' => 'Statuss atjauninats.'];
+    }
+
+    private function moveDevice(Device $device, mixed $roomId, ?int $userId): array
+    {
+        if (! $roomId) {
+            return ['level' => 'error', 'message' => 'Nav izveleta telpa.'];
+        }
+
+        $room = Room::query()->with('building')->find($roomId);
+        if (! $room) {
+            return ['level' => 'error', 'message' => 'Telpa nav atrasta.'];
+        }
+
+        if ((int) $device->room_id === (int) $room->id) {
+            return ['level' => 'error', 'message' => 'Ierice jau atrodas saja telpa.'];
+        }
+
+        $oldValue = $device->room?->room_number ?: '-';
+
+        $device->forceFill([
+            'room_id' => $room->id,
+            'building_id' => $room->building_id,
+        ])->save();
+
+        DeviceHistory::create([
+            'device_id' => $device->id,
+            'action' => 'MOVE',
+            'field_changed' => 'room_id',
+            'old_value' => $oldValue,
+            'new_value' => $room->room_number,
+            'changed_by' => $userId,
+        ]);
+
+        $this->writeAudit($userId, 'UPDATE', $device, 'Device moved: ' . $device->name . ' -> room ' . $room->room_number, 'info');
+
+        return ['level' => 'success', 'message' => 'Ierice parvietota uz citu telpu.'];
+    }
+
+    private function attachDeviceToSet(Device $device, mixed $setId, ?int $userId): array
+    {
+        if (! $setId) {
+            return ['level' => 'error', 'message' => 'Nav izveleta komplektacija.'];
+        }
+
+        $set = DeviceSet::query()->find($setId);
+        if (! $set) {
+            return ['level' => 'error', 'message' => 'Komplektacija nav atrasta.'];
+        }
+
+        $existing = DeviceSetItem::query()
+            ->where('device_set_id', $set->id)
+            ->where('device_id', $device->id)
+            ->first();
+
+        if ($existing) {
+            return ['level' => 'error', 'message' => 'Ierice jau ir saja komplektacija.'];
+        }
+
+        DeviceSetItem::create([
+            'device_set_id' => $set->id,
+            'device_id' => $device->id,
+        ]);
+
+        if ($device->status !== 'kitting') {
+            $device->forceFill(['status' => 'kitting'])->save();
+        }
+
+        DeviceHistory::create([
+            'device_id' => $device->id,
+            'action' => 'SET_ATTACH',
+            'field_changed' => 'device_set_id',
+            'old_value' => null,
+            'new_value' => $set->set_name,
+            'changed_by' => $userId,
+        ]);
+
+        $this->writeAudit($userId, 'UPDATE', $device, 'Device added to set: ' . $device->name . ' -> ' . $set->set_name, 'info');
+
+        return ['level' => 'success', 'message' => 'Ierice pievienota komplektacijai.'];
     }
 }

@@ -13,20 +13,60 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
-        $q = $request->query('q');
+        $filters = [
+            'employee' => trim((string) $request->query('employee', '')),
+            'email' => trim((string) $request->query('email', '')),
+            'role' => trim((string) $request->query('role', '')),
+            'employee_active' => (string) $request->query('employee_active', ''),
+            'is_active' => (string) $request->query('is_active', ''),
+        ];
+
+        $allowedSorts = ['created_at', 'last_login'];
+        $sort = $request->query('sort', 'created_at');
+        $direction = $request->query('direction', 'desc');
+
+        if (! in_array($sort, $allowedSorts, true)) {
+            $sort = 'created_at';
+        }
+
+        if (! in_array($direction, ['asc', 'desc'], true)) {
+            $direction = 'desc';
+        }
 
         $users = User::with('employee')
-            ->when($q, function ($query) use ($q) {
-                $query->where('role', 'like', "%{$q}%")
-                    ->orWhereHas('employee', function ($employeeQuery) use ($q) {
-                        $employeeQuery->where('full_name', 'like', "%{$q}%")
-                            ->orWhere('email', 'like', "%{$q}%");
-                    });
+            ->when($filters['employee'] !== '', function ($query) use ($filters) {
+                $query->whereHas('employee', function ($employeeQuery) use ($filters) {
+                    $employeeQuery->where('full_name', 'like', '%' . $filters['employee'] . '%');
+                });
             })
-            ->orderByDesc('id')
-            ->get();
+            ->when($filters['email'] !== '', function ($query) use ($filters) {
+                $query->whereHas('employee', function ($employeeQuery) use ($filters) {
+                    $employeeQuery->where('email', 'like', '%' . $filters['email'] . '%');
+                });
+            })
+            ->when($filters['role'] !== '', function ($query) use ($filters) {
+                $query->where('role', $filters['role']);
+            })
+            ->when($filters['employee_active'] !== '', function ($query) use ($filters) {
+                $query->whereHas('employee', function ($employeeQuery) use ($filters) {
+                    $employeeQuery->where('is_active', $filters['employee_active'] === '1');
+                });
+            })
+            ->when($filters['is_active'] !== '', function ($query) use ($filters) {
+                $query->where('is_active', $filters['is_active'] === '1');
+            })
+            ->orderBy($sort, $direction)
+            ->orderBy('id')
+            ->paginate(15)
+            ->withQueryString();
 
-        return view('users.index', compact('users', 'q'));
+        return view('users.index', [
+            'users' => $users,
+            'filters' => $filters,
+            'roles' => self::ROLES,
+            'sort' => $sort,
+            'direction' => $direction,
+        ]);
     }
 
     public function create()
@@ -86,6 +126,12 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        if (auth()->id() === $user->id) {
+            return redirect()
+                ->route('users.index')
+                ->with('error', 'Nevar dzest savu lietotaja kontu.');
+        }
+
         $user->delete();
 
         return redirect()->route('users.index')->with('success', 'Lietotajs dzests');

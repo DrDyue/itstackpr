@@ -15,12 +15,12 @@ class DeviceAssetManager
 
     public function storeDeviceImage(UploadedFile $file, ?string $previousPath = null): string
     {
-        return $this->storeImage($file, (string) config('devices.device_image_dir', 'd'), $previousPath);
+        return $this->storeImage($file, (string) config('devices.device_image_dir', 'd'), $previousPath, true);
     }
 
     public function storeWarrantyImage(UploadedFile $file, ?string $previousPath = null): string
     {
-        return $this->storeImage($file, (string) config('devices.warranty_image_dir', 'w'), $previousPath);
+        return $this->storeImage($file, (string) config('devices.warranty_image_dir', 'w'), $previousPath, true);
     }
 
     public function url(?string $path): ?string
@@ -56,7 +56,21 @@ class DeviceAssetManager
         }
     }
 
-    private function storeImage(UploadedFile $file, string $directory, ?string $previousPath = null): string
+    public function thumbUrl(?string $path): ?string
+    {
+        return $this->url($this->thumbnailPath($path));
+    }
+
+    public function thumbnailPath(?string $path): ?string
+    {
+        if (! $path || Str::startsWith($path, ['http://', 'https://'])) {
+            return null;
+        }
+
+        return trim((string) config('devices.thumbnail_dir', 'devices/thumbs'), '/') . '/' . basename($path);
+    }
+
+    private function storeImage(UploadedFile $file, string $directory, ?string $previousPath = null, bool $withThumbnail = false): string
     {
         $optimized = $this->optimize($file);
 
@@ -70,14 +84,22 @@ class DeviceAssetManager
             $disk->putFileAs(trim($directory, '/'), $file, basename($path), ['visibility' => 'public']);
         }
 
+        if ($withThumbnail) {
+            $thumbnail = $this->optimize($file, (int) config('devices.thumbnail_dimension', 480));
+            if (isset($thumbnail['contents'])) {
+                $disk->put($this->thumbnailPath($path), $thumbnail['contents'], ['visibility' => 'public']);
+            }
+        }
+
         if ($previousPath && $previousPath !== $path) {
             $this->delete($previousPath);
+            $this->delete($this->thumbnailPath($previousPath));
         }
 
         return $path;
     }
 
-    private function optimize(UploadedFile $file): array
+    private function optimize(UploadedFile $file, ?int $maxDimension = null): array
     {
         if (! extension_loaded('gd')) {
             return [];
@@ -101,7 +123,7 @@ class DeviceAssetManager
             return [];
         }
 
-        $maxDimension = (int) config('devices.max_dimension', 1800);
+        $maxDimension = $maxDimension ?: (int) config('devices.max_dimension', 1800);
         $scale = min(1, $maxDimension / max($width, $height));
         $targetWidth = max(1, (int) round($width * $scale));
         $targetHeight = max(1, (int) round($height * $scale));

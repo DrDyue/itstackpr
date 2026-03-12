@@ -33,11 +33,20 @@ class DeviceTypeController extends Controller
             ->paginate(16)
             ->withQueryString();
 
+        $categoryOptions = DeviceType::query()
+            ->selectRaw('category, COUNT(*) as total')
+            ->whereNotNull('category')
+            ->where('category', '!=', '')
+            ->groupBy('category')
+            ->orderBy('category')
+            ->get();
+
         return view('device_types.index', [
             'types' => $types,
             'filters' => $filters,
             'sort' => $sort,
             'direction' => $direction,
+            'categoryOptions' => $categoryOptions,
         ]);
     }
 

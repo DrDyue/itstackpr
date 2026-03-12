@@ -985,6 +985,26 @@ tbody td {
     @apply grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.7fr)_auto];
 }
 
+.type-category-chips {
+    @apply flex flex-wrap items-center gap-2;
+}
+
+.type-category-chip {
+    @apply inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold transition;
+}
+
+.type-category-chip-active {
+    @apply bg-slate-900 text-white shadow-sm;
+}
+
+.type-category-chip-idle {
+    @apply bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-900;
+}
+
+.type-category-count {
+    @apply rounded-full bg-black/10 px-2 py-0.5 text-xs;
+}
+
 .type-results-grid {
     @apply grid gap-3;
 }
@@ -1154,6 +1174,134 @@ tbody td {
 }
 
 .employee-checkbox {
+    @apply inline-flex items-center gap-3 text-sm font-medium text-slate-700;
+}
+
+.user-shell {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+.user-header {
+    @apply mb-6 flex flex-wrap items-end justify-between gap-3;
+}
+
+.user-toolbar {
+    @apply mb-5 rounded-3xl border border-sky-100 bg-gradient-to-br from-white via-sky-50 to-blue-50 p-5 shadow-sm;
+}
+
+.user-search-grid {
+    @apply grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_auto];
+}
+
+.user-filter-label {
+    @apply mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500;
+}
+
+.user-filter-actions {
+    @apply flex items-end gap-2;
+}
+
+.user-role-chips {
+    @apply flex flex-wrap items-center gap-2;
+}
+
+.user-role-chip {
+    @apply inline-flex rounded-full px-3 py-1.5 text-sm font-semibold transition;
+}
+
+.user-role-chip-active {
+    @apply bg-slate-900 text-white shadow-sm;
+}
+
+.user-role-chip-idle {
+    @apply bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-900;
+}
+
+.user-toolbar-meta {
+    @apply flex flex-wrap items-end gap-3;
+}
+
+.user-results-chip {
+    @apply rounded-full bg-white px-3 py-1 text-sm font-medium text-slate-600 ring-1 ring-slate-200;
+}
+
+.user-table-wrap {
+    @apply overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm;
+}
+
+.user-table {
+    @apply min-w-full text-sm;
+}
+
+.user-table-head {
+    @apply border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-[0.18em] text-slate-500;
+}
+
+.user-table-body {
+    @apply divide-y divide-slate-100;
+}
+
+.user-table-body tr {
+    @apply transition hover:bg-slate-50;
+}
+
+.user-role-badge {
+    @apply inline-flex rounded-full px-2.5 py-1 text-xs font-semibold uppercase;
+}
+
+.user-role-admin {
+    @apply bg-amber-100 text-amber-800;
+}
+
+.user-role-user {
+    @apply bg-blue-100 text-blue-700;
+}
+
+.user-status {
+    @apply inline-flex rounded-full px-2.5 py-1 text-xs font-semibold;
+}
+
+.user-status-active {
+    @apply bg-emerald-100 text-emerald-700;
+}
+
+.user-status-inactive {
+    @apply bg-slate-100 text-slate-600;
+}
+
+.user-action {
+    @apply inline-flex items-center gap-2 whitespace-nowrap rounded-2xl border px-2.5 py-1.5 text-sm font-semibold transition;
+}
+
+.user-action:disabled {
+    @apply cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 hover:bg-slate-100;
+}
+
+.user-action-edit {
+    @apply border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100;
+}
+
+.user-action-delete {
+    @apply border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100;
+}
+
+.user-actions-row {
+    @apply flex flex-nowrap items-center gap-2;
+}
+
+.user-form-shell {
+    @apply mx-auto max-w-6xl px-4 sm:px-6 lg:px-8;
+}
+
+.user-form-grid {
+    @apply grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_280px];
+}
+
+.user-form-card {
+    @apply rounded-3xl border border-slate-200 bg-white p-5 shadow-sm;
+}
+
+.user-checkbox {
     @apply inline-flex items-center gap-3 text-sm font-medium text-slate-700;
 }
 

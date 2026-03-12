@@ -96,4 +96,14 @@ class Device extends Model
     {
         return app(DeviceAssetManager::class)->url($this->warranty_photo_name);
     }
+
+    public function deviceImageThumbUrl(): ?string
+    {
+        return app(DeviceAssetManager::class)->thumbUrl($this->device_image_url);
+    }
+
+    public function warrantyImageThumbUrl(): ?string
+    {
+        return app(DeviceAssetManager::class)->thumbUrl($this->warranty_photo_name);
+    }
 }
