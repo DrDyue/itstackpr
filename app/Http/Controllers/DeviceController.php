@@ -17,18 +17,77 @@ class DeviceController extends Controller
 
     public function index(Request $request)
     {
-        $q = $request->query('q');
+        $filters = [
+            'q' => trim((string) $request->query('q', '')),
+            'code' => trim((string) $request->query('code', '')),
+            'room' => trim((string) $request->query('room', '')),
+            'status' => trim((string) $request->query('status', '')),
+            'type' => trim((string) $request->query('type', '')),
+        ];
 
-        $devices = Device::with(['type', 'building', 'room'])
-            ->when($q, function ($query) use ($q) {
-                $query->where('code', 'like', "%{$q}%")
-                    ->orWhere('name', 'like', "%{$q}%")
-                    ->orWhere('serial_number', 'like', "%{$q}%");
+        $devices = Device::query()
+            ->with(['type', 'building', 'room'])
+            ->when($filters['q'] !== '', function ($query) use ($filters) {
+                $term = $filters['q'];
+
+                $query->where(function ($deviceQuery) use ($term) {
+                    $deviceQuery->where('name', 'like', "%{$term}%")
+                        ->orWhere('serial_number', 'like', "%{$term}%")
+                        ->orWhere('manufacturer', 'like', "%{$term}%")
+                        ->orWhere('model', 'like', "%{$term}%");
+                });
+            })
+            ->when($filters['code'] !== '', function ($query) use ($filters) {
+                $query->where('code', 'like', '%' . $filters['code'] . '%');
+            })
+            ->when($filters['room'] !== '', function ($query) use ($filters) {
+                $term = $filters['room'];
+
+                $query->whereHas('room', function ($roomQuery) use ($term) {
+                    $roomQuery->where('room_number', 'like', "%{$term}%")
+                        ->orWhere('room_name', 'like', "%{$term}%")
+                        ->orWhere('department', 'like', "%{$term}%");
+                });
+            })
+            ->when(in_array($filters['status'], self::STATUSES, true), function ($query) use ($filters) {
+                $query->where('status', $filters['status']);
+            })
+            ->when($filters['type'] !== '' && ctype_digit($filters['type']), function ($query) use ($filters) {
+                $query->where('device_type_id', (int) $filters['type']);
             })
             ->orderByDesc('id')
+            ->paginate(20)
+            ->withQueryString();
+
+        $types = DeviceType::query()
+            ->withCount('devices')
+            ->orderBy('type_name')
             ->get();
 
-        return view('devices.index', compact('devices', 'q'));
+        $statusCounts = Device::query()
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $statusOptions = collect(self::STATUSES)->map(function (string $status) use ($statusCounts) {
+            return [
+                'value' => $status,
+                'label' => $this->statusLabel($status),
+                'count' => (int) ($statusCounts[$status] ?? 0),
+            ];
+        });
+
+        $activeFilterCount = collect($filters)
+            ->filter(fn ($value) => $value !== '')
+            ->count();
+
+        return view('devices.index', [
+            'devices' => $devices,
+            'filters' => $filters,
+            'types' => $types,
+            'statusOptions' => $statusOptions,
+            'activeFilterCount' => $activeFilterCount,
+        ]);
     }
 
     public function create()
@@ -206,5 +265,18 @@ class DeviceController extends Controller
             'description' => $description,
             'severity' => $severity,
         ]);
+    }
+
+    private function statusLabel(string $status): string
+    {
+        return match ($status) {
+            'active' => 'Aktiva',
+            'reserve' => 'Rezerve',
+            'broken' => 'Bojata',
+            'repair' => 'Remonta',
+            'retired' => 'Norakstita',
+            'kitting' => 'Komplektacija',
+            default => ucfirst($status),
+        };
     }
 }
