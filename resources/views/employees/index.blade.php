@@ -65,6 +65,23 @@
                 </div>
 
                 <div class="employee-toolbar-meta">
+                    <label class="block min-w-[180px]">
+                        <span class="employee-filter-label">Kartot pec</span>
+                        <select name="sort" class="crud-control">
+                            <option value="created_at" @selected($sort === 'created_at')>Izveidots</option>
+                            <option value="full_name" @selected($sort === 'full_name')>Vards, uzvards</option>
+                            <option value="phone" @selected($sort === 'phone')>Telefons</option>
+                            <option value="job_title" @selected($sort === 'job_title')>Amats</option>
+                            <option value="is_active" @selected($sort === 'is_active')>Aktivitate</option>
+                        </select>
+                    </label>
+                    <label class="block min-w-[180px]">
+                        <span class="employee-filter-label">Seciba</span>
+                        <select name="direction" class="crud-control">
+                            <option value="asc" @selected($direction === 'asc')>Augosa</option>
+                            <option value="desc" @selected($direction === 'desc')>Dilstoša</option>
+                        </select>
+                    </label>
                     <span class="employee-results-chip">Atrasti darbinieki: {{ $employees->total() }}</span>
                 </div>
             </form>
@@ -83,32 +100,42 @@
                             <th class="px-4 py-3 text-left">
                                 <a href="{{ $sortUrl('full_name') }}" class="employee-sort-link">
                                     Vards, uzvards
-                                    <span>{{ $sort === 'full_name' ? strtoupper($direction) : 'SORT' }}</span>
+                                    @if ($sort === 'full_name')
+                                        <span>{{ $direction === 'asc' ? '↑' : '↓' }}</span>
+                                    @endif
                                 </a>
                             </th>
                             <th class="px-4 py-3 text-left">E-pasts</th>
                             <th class="px-4 py-3 text-left">
                                 <a href="{{ $sortUrl('phone') }}" class="employee-sort-link">
                                     Telefons
-                                    <span>{{ $sort === 'phone' ? strtoupper($direction) : 'SORT' }}</span>
+                                    @if ($sort === 'phone')
+                                        <span>{{ $direction === 'asc' ? '↑' : '↓' }}</span>
+                                    @endif
                                 </a>
                             </th>
                             <th class="px-4 py-3 text-left">
                                 <a href="{{ $sortUrl('job_title') }}" class="employee-sort-link">
                                     Amats
-                                    <span>{{ $sort === 'job_title' ? strtoupper($direction) : 'SORT' }}</span>
+                                    @if ($sort === 'job_title')
+                                        <span>{{ $direction === 'asc' ? '↑' : '↓' }}</span>
+                                    @endif
                                 </a>
                             </th>
                             <th class="px-4 py-3 text-left">
                                 <a href="{{ $sortUrl('is_active') }}" class="employee-sort-link">
                                     Darbinieks aktivs
-                                    <span>{{ $sort === 'is_active' ? strtoupper($direction) : 'SORT' }}</span>
+                                    @if ($sort === 'is_active')
+                                        <span>{{ $direction === 'asc' ? '↑' : '↓' }}</span>
+                                    @endif
                                 </a>
                             </th>
                             <th class="px-4 py-3 text-left">
                                 <a href="{{ $sortUrl('created_at') }}" class="employee-sort-link">
                                     Izveidots
-                                    <span>{{ $sort === 'created_at' ? strtoupper($direction) : 'SORT' }}</span>
+                                    @if ($sort === 'created_at')
+                                        <span>{{ $direction === 'asc' ? '↑' : '↓' }}</span>
+                                    @endif
                                 </a>
                             </th>
                             <th class="px-4 py-3 text-left">Darbibas</th>
@@ -132,8 +159,8 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-4 text-sm text-slate-600">{{ $employee->created_at?->format('d.m.Y H:i') ?: '-' }}</td>
-                                <td class="px-4 py-4">
-                                    <div class="flex flex-wrap items-center gap-2">
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <div class="employee-actions-row">
                                         <a href="{{ route('employees.edit', $employee) }}" class="employee-action employee-action-edit">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 7.125 16.875 4.5"/></svg>
                                             Rediget

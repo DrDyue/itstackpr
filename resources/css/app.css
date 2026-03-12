@@ -1078,7 +1078,7 @@ tbody td {
 }
 
 .employee-toolbar-meta {
-    @apply flex flex-wrap items-center gap-3;
+    @apply flex flex-wrap items-end gap-3;
 }
 
 .employee-results-chip {
@@ -1109,6 +1109,10 @@ tbody td {
     @apply transition hover:bg-slate-50;
 }
 
+.employee-table-body td {
+    @apply align-middle;
+}
+
 .employee-status {
     @apply inline-flex rounded-full px-2.5 py-1 text-xs font-semibold;
 }
@@ -1122,7 +1126,7 @@ tbody td {
 }
 
 .employee-action {
-    @apply inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-semibold transition;
+    @apply inline-flex items-center gap-2 whitespace-nowrap rounded-2xl border px-2.5 py-1.5 text-sm font-semibold transition;
 }
 
 .employee-action-edit {
@@ -1131,6 +1135,10 @@ tbody td {
 
 .employee-action-delete {
     @apply border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100;
+}
+
+.employee-actions-row {
+    @apply flex flex-nowrap items-center gap-2;
 }
 
 .employee-form-shell {
