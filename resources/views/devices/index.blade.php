@@ -272,6 +272,13 @@
                                     <div class="flex items-center gap-2 whitespace-nowrap">
                                         <a href="{{ route('devices.show', $device) }}" class="inline-flex items-center rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 font-medium text-emerald-700 transition hover:bg-emerald-100">Apskatit</a>
                                         <a href="{{ route('devices.edit', $device) }}" class="inline-flex items-center rounded-2xl border border-sky-200 bg-sky-50 px-3 py-1.5 font-medium text-sky-700 transition hover:bg-sky-100">Rediget</a>
+                                        @if ($device->status === 'retired')
+                                            <span class="inline-flex items-center rounded-2xl border border-slate-200 bg-slate-100 px-3 py-1.5 font-medium text-slate-400">Neremonte</span>
+                                        @elseif ($device->activeRepair)
+                                            <a href="{{ route('repairs.edit', $device->activeRepair) }}" class="inline-flex items-center rounded-2xl border border-amber-200 bg-amber-50 px-3 py-1.5 font-medium text-amber-700 transition hover:bg-amber-100">Skatit remontu</a>
+                                        @else
+                                            <a href="{{ route('repairs.create', ['device_id' => $device->id]) }}" class="inline-flex items-center rounded-2xl border border-violet-200 bg-violet-50 px-3 py-1.5 font-medium text-violet-700 transition hover:bg-violet-100">Atdot remonta</a>
+                                        @endif
                                         <form method="POST" action="{{ route('devices.destroy', $device) }}">
                                             @csrf
                                             @method('DELETE')

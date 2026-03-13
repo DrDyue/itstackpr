@@ -11,6 +11,7 @@
             'external' => 'Arejais',
         ];
         $deviceAssignees = $devices->mapWithKeys(fn ($device) => [$device->id => $device->created_by])->all();
+        $selectedDeviceId = old('device_id', $preselectedDeviceId);
     @endphp
 
     <section class="repair-form-shell"
@@ -26,7 +27,7 @@
                 }
             }
         }"
-        x-init="onDeviceChange(@js(old('device_id', '')))">
+        x-init="onDeviceChange(@js($selectedDeviceId))">
         <div class="device-page-header">
             <div>
                 <h1 class="device-page-title">Jauns remonts</h1>
@@ -67,7 +68,7 @@
                             <select name="device_id" required class="crud-control" @change="onDeviceChange($event.target.value)">
                                 <option value="">Izvelies ierici</option>
                                 @foreach ($devices as $device)
-                                    <option value="{{ $device->id }}" @selected(old('device_id') == $device->id)>{{ $device->code ?? ('Ierice #' . $device->id) }} - {{ $device->name ?? '' }}</option>
+                                    <option value="{{ $device->id }}" @selected($selectedDeviceId == $device->id)>{{ $device->code ?? ('Ierice #' . $device->id) }} - {{ $device->name ?? '' }}</option>
                                 @endforeach
                             </select>
                         </div>

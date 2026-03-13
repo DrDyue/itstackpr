@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Support\DeviceAssetManager;
 
@@ -74,6 +75,13 @@ class Device extends Model
     public function repairs(): HasMany
     {
         return $this->hasMany(Repair::class);
+    }
+
+    public function activeRepair(): HasOne
+    {
+        return $this->hasOne(Repair::class)
+            ->whereIn('status', ['waiting', 'in-progress'])
+            ->latestOfMany('id');
     }
 
     public function sets()

@@ -30,10 +30,11 @@ class RepairController extends Controller
         return view('repairs.index', compact('repairs', 'q'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         return view('repairs.create', array_merge($this->formData(), [
             'defaultReporterId' => auth()->id(),
+            'preselectedDeviceId' => $request->query('device_id'),
         ]));
     }
 

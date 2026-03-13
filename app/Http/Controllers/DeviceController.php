@@ -30,7 +30,7 @@ class DeviceController extends Controller
         ];
 
         $devices = Device::query()
-            ->with(['type', 'building', 'room'])
+            ->with(['type', 'building', 'room', 'activeRepair'])
             ->when($filters['q'] !== '', function ($query) use ($filters) {
                 $term = $filters['q'];
 
