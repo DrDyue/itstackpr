@@ -269,21 +269,40 @@
                                 <td class="px-4 py-4">{{ $device->serial_number ?: '-' }}</td>
                                 <td class="px-4 py-4">{{ $device->created_at?->format('d.m.Y H:i') ?: '-' }}</td>
                                 <td class="px-4 py-4">
-                                    <div class="flex items-center gap-2 whitespace-nowrap">
-                                        <a href="{{ route('devices.show', $device) }}" class="inline-flex items-center rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 font-medium text-emerald-700 transition hover:bg-emerald-100">Apskatit</a>
-                                        <a href="{{ route('devices.edit', $device) }}" class="inline-flex items-center rounded-2xl border border-sky-200 bg-sky-50 px-3 py-1.5 font-medium text-sky-700 transition hover:bg-sky-100">Rediget</a>
-                                        @if ($device->status === 'retired')
-                                            <span class="inline-flex items-center rounded-2xl border border-slate-200 bg-slate-100 px-3 py-1.5 font-medium text-slate-400">Neremonte</span>
-                                        @elseif ($device->activeRepair)
-                                            <a href="{{ route('repairs.edit', $device->activeRepair) }}" class="inline-flex items-center rounded-2xl border border-amber-200 bg-amber-50 px-3 py-1.5 font-medium text-amber-700 transition hover:bg-amber-100">Skatit remontu</a>
-                                        @else
-                                            <a href="{{ route('repairs.create', ['device_id' => $device->id]) }}" class="inline-flex items-center rounded-2xl border border-violet-200 bg-violet-50 px-3 py-1.5 font-medium text-violet-700 transition hover:bg-violet-100">Atdot remonta</a>
-                                        @endif
-                                        <form method="POST" action="{{ route('devices.destroy', $device) }}">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" onclick="return confirm('Dzest so ierici?')" class="inline-flex items-center rounded-2xl border border-rose-200 bg-rose-50 px-3 py-1.5 font-medium text-rose-700 transition hover:bg-rose-100">Dzest</button>
-                                        </form>
+                                    <div x-data="{ open: false }" class="relative">
+                                        <button
+                                            type="button"
+                                            @click="open = !open"
+                                            class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                                        >
+                                            Darbibas
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/>
+                                            </svg>
+                                        </button>
+
+                                        <div
+                                            x-cloak
+                                            x-show="open"
+                                            x-transition
+                                            @click.outside="open = false"
+                                            class="absolute right-0 z-20 mt-2 w-52 rounded-2xl border border-slate-200 bg-white p-2 shadow-lg"
+                                        >
+                                            <a href="{{ route('devices.show', $device) }}" class="flex items-center rounded-xl px-3 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50">Apskatit</a>
+                                            <a href="{{ route('devices.edit', $device) }}" class="mt-1 flex items-center rounded-xl px-3 py-2 text-sm font-medium text-sky-700 transition hover:bg-sky-50">Rediget</a>
+
+                                            @if ($device->status === 'repair' && $device->activeRepair)
+                                                <a href="{{ route('repairs.edit', $device->activeRepair) }}" class="mt-1 flex items-center rounded-xl px-3 py-2 text-sm font-medium text-amber-700 transition hover:bg-amber-50">Skatit remontu</a>
+                                            @elseif (! in_array($device->status, ['repair', 'retired'], true))
+                                                <a href="{{ route('repairs.create', ['device_id' => $device->id]) }}" class="mt-1 flex items-center rounded-xl px-3 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-50">Atdot remonta</a>
+                                            @endif
+
+                                            <form method="POST" action="{{ route('devices.destroy', $device) }}" class="mt-1">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" onclick="return confirm('Dzest so ierici?')" class="flex w-full items-center rounded-xl px-3 py-2 text-left text-sm font-medium text-rose-700 transition hover:bg-rose-50">Dzest</button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
