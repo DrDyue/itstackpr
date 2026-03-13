@@ -51,8 +51,14 @@
 
             <div class="space-y-4">
                 <div class="repair-form-card">
-                    <div class="type-form-section-head">
-                        <div class="device-form-section-name">1. Izvelies ierici un remonta tipu</div>
+                    <div class="device-form-section-header">
+                        <div class="device-form-section-icon bg-sky-100 text-sky-700 ring-sky-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 7.5h15m-15 4.5h15m-15 4.5h9M3.75 5.25h16.5A1.5 1.5 0 0 1 21.75 6.75v10.5a1.5 1.5 0 0 1-1.5 1.5H3.75a1.5 1.5 0 0 1-1.5-1.5V6.75a1.5 1.5 0 0 1 1.5-1.5Z"/></svg>
+                        </div>
+                        <div class="device-form-section-copy">
+                            <div class="device-form-section-name">1. Ierice un remonta tips</div>
+                            <div class="device-form-section-note">Vispirms izvelies, ko remontesim un kada veida remonts tas bus.</div>
+                        </div>
                     </div>
 
                     <div class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -77,8 +83,14 @@
                 </div>
 
                 <div class="repair-form-card">
-                    <div class="type-form-section-head">
-                        <div class="device-form-section-name">2. Remonta saturs</div>
+                    <div class="device-form-section-header">
+                        <div class="device-form-section-icon bg-amber-100 text-amber-700 ring-amber-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m6 2.25a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                        </div>
+                        <div class="device-form-section-copy">
+                            <div class="device-form-section-name">2. Remonta saturs</div>
+                            <div class="device-form-section-note">Apraksts, prioritate, datumi un izmaksas.</div>
+                        </div>
                     </div>
 
                     <div class="mt-4">
@@ -86,7 +98,7 @@
                         <textarea name="description" rows="4" required class="crud-control">{{ old('description') }}</textarea>
                     </div>
 
-                    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                         <div>
                             <label class="crud-label">Prioritate</label>
                             <select name="priority" class="crud-control">
@@ -96,15 +108,40 @@
                             </select>
                         </div>
                         <div>
+                            <label class="crud-label">Sakuma datums</label>
+                            <input type="date" name="start_date" value="{{ old('start_date', now()->toDateString()) }}" class="crud-control">
+                        </div>
+                        <div>
                             <label class="crud-label">Planotais beigums</label>
                             <input type="date" name="estimated_completion" value="{{ old('estimated_completion') }}" class="crud-control">
+                        </div>
+                        <div>
+                            <label class="crud-label">Realais beigu datums</label>
+                            <input type="date" name="actual_completion" value="{{ old('actual_completion') }}" class="crud-control">
+                        </div>
+                    </div>
+
+                    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label class="crud-label">Izmaksas (EUR)</label>
+                            <input type="number" step="0.01" min="0" name="cost" value="{{ old('cost') }}" class="crud-control">
+                        </div>
+                        <div>
+                            <label class="crud-label">Statuss</label>
+                            <input type="text" value="Gaida" class="crud-control bg-slate-50" disabled>
                         </div>
                     </div>
                 </div>
 
                 <div class="repair-form-card">
-                    <div class="type-form-section-head">
-                        <div class="device-form-section-name">3. Atbildiba</div>
+                    <div class="device-form-section-header">
+                        <div class="device-form-section-icon bg-emerald-100 text-emerald-700 ring-emerald-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14.25c2.9 0 5.25-2.35 5.25-5.25S14.9 3.75 12 3.75 6.75 6.1 6.75 9 9.1 14.25 12 14.25Zm0 0c-4.142 0-7.5 2.015-7.5 4.5v1.5h15v-1.5c0-2.485-3.358-4.5-7.5-4.5Z"/></svg>
+                        </div>
+                        <div class="device-form-section-copy">
+                            <div class="device-form-section-name">3. Atbildiba</div>
+                            <div class="device-form-section-note">Kas pieteica remontu un kam tas ir piešķirts.</div>
+                        </div>
                     </div>
 
                     <div class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -130,8 +167,14 @@
                 </div>
 
                 <div x-show="repairType === 'external'" x-cloak class="repair-form-card">
-                    <div class="type-form-section-head">
-                        <div class="device-form-section-name">4. Areja remonta dati</div>
+                    <div class="device-form-section-header">
+                        <div class="device-form-section-icon bg-rose-100 text-rose-700 ring-rose-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5 12 3l9 4.5M4.5 9.75V18L12 21l7.5-3V9.75M9 12h6"/></svg>
+                        </div>
+                        <div class="device-form-section-copy">
+                            <div class="device-form-section-name">4. Areja remonta dati</div>
+                            <div class="device-form-section-note">Piegadatajs un ar arejo remontu saistitie ieraksti.</div>
+                        </div>
                     </div>
 
                     <div class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -145,14 +188,10 @@
                         </div>
                     </div>
 
-                    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div class="mt-4">
                         <div>
                             <label class="crud-label">Rekina numurs</label>
                             <input type="text" name="invoice_number" maxlength="50" value="{{ old('invoice_number') }}" class="crud-control">
-                        </div>
-                        <div>
-                            <label class="crud-label">Izmaksas (EUR)</label>
-                            <input type="number" step="0.01" min="0" name="cost" value="{{ old('cost') }}" class="crud-control">
                         </div>
                     </div>
                 </div>
@@ -166,26 +205,6 @@
                     <div class="mt-4 flex flex-wrap gap-3">
                         <button type="submit" class="crud-btn-primary">Saglabat</button>
                         <a href="{{ route('repairs.index') }}" class="crud-btn-secondary">Atcelt</a>
-                    </div>
-                </div>
-
-                <div class="repair-form-card">
-                    <div class="type-form-section-head">
-                        <div class="device-form-section-name">Kas notiek automatiski</div>
-                    </div>
-                    <div class="mt-4 space-y-3 text-sm text-slate-600">
-                        <div class="repair-info-row">
-                            <span>Sakuma datums</span>
-                            <strong>tiks iestatits automatiski</strong>
-                        </div>
-                        <div class="repair-info-row">
-                            <span>Statuss</span>
-                            <strong>Gaida</strong>
-                        </div>
-                        <div class="repair-info-row">
-                            <span>Pieskirts</span>
-                            <strong>pec noklusejuma ierices izveidotajam</strong>
-                        </div>
                     </div>
                 </div>
             </div>

@@ -110,7 +110,9 @@ class RepairController extends Controller
         $repair = $request->route('repair');
         $data['status'] = $data['status'] ?? ($repair?->status ?? 'waiting');
         $data['priority'] = $data['priority'] ?? ($repair?->priority ?? 'medium');
-        $data['start_date'] = $repair?->start_date?->format('Y-m-d') ?? now()->toDateString();
+        $data['start_date'] = filled($data['start_date'] ?? null)
+            ? $data['start_date']
+            : ($repair?->start_date?->format('Y-m-d') ?? now()->toDateString());
 
         if ($data['repair_type'] === 'internal') {
             $data['vendor_name'] = null;
@@ -163,10 +165,6 @@ class RepairController extends Controller
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'actual_completion' => ['Pabeigtam remontam noradi faktisko beigu datumu.'],
             ]);
-        }
-
-        if (($data['status'] ?? null) !== 'completed') {
-            $data['actual_completion'] = null;
         }
 
         return $data;
