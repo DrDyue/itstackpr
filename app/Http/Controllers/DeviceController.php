@@ -25,7 +25,6 @@ class DeviceController extends Controller
             'q' => trim((string) $request->query('q', '')),
             'code' => trim((string) $request->query('code', '')),
             'room' => trim((string) $request->query('room', '')),
-            'status' => trim((string) $request->query('status', '')),
             'type' => trim((string) $request->query('type', '')),
         ];
 
@@ -53,9 +52,6 @@ class DeviceController extends Controller
                         ->orWhere('department', 'like', "%{$term}%");
                 });
             })
-            ->when(in_array($filters['status'], self::STATUSES, true), function ($query) use ($filters) {
-                $query->where('status', $filters['status']);
-            })
             ->when($filters['type'] !== '' && ctype_digit($filters['type']), function ($query) use ($filters) {
                 $query->where('device_type_id', (int) $filters['type']);
             })
@@ -76,19 +72,6 @@ class DeviceController extends Controller
             ->orderBy('category')
             ->pluck('total', 'category');
 
-        $statusCounts = Device::query()
-            ->selectRaw('status, COUNT(*) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
-
-        $statusOptions = collect(self::STATUSES)->map(function (string $status) use ($statusCounts) {
-            return [
-                'value' => $status,
-                'label' => $this->statusLabel($status),
-                'count' => (int) ($statusCounts[$status] ?? 0),
-            ];
-        });
-
         $activeFilterCount = collect($filters)
             ->filter(fn ($value) => $value !== '')
             ->count();
@@ -97,9 +80,6 @@ class DeviceController extends Controller
             'devices' => $devices,
             'filters' => $filters,
             'types' => $types,
-            'rooms' => Room::with('building')->orderBy('room_number')->get(),
-            'deviceSets' => DeviceSet::orderBy('set_name')->get(),
-            'statusOptions' => $statusOptions,
             'activeFilterCount' => $activeFilterCount,
             'statusLabels' => $this->statusLabels(),
             'categoryOptions' => $categories,
@@ -155,9 +135,6 @@ class DeviceController extends Controller
             'deviceImageUrl' => $device->deviceImageUrl(),
             'deviceThumbUrl' => $device->deviceImageThumbUrl(),
             'warrantyImageUrl' => $device->warrantyImageUrl(),
-            'rooms' => Room::with('building')->orderBy('room_number')->get(),
-            'deviceSets' => DeviceSet::orderBy('set_name')->get(),
-            'statuses' => self::STATUSES,
             'statusLabels' => $this->statusLabels(),
         ]);
     }

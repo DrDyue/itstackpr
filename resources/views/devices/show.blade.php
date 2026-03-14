@@ -120,55 +120,6 @@
             </div>
         </div>
 
-        <div class="mb-6 grid gap-4 xl:grid-cols-3">
-            <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-                @csrf
-                <input type="hidden" name="action" value="status">
-                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Atra darbiba</div>
-                <div class="mt-1 text-base font-semibold text-slate-900">Mainit statusu</div>
-                <div class="mt-3 flex gap-2">
-                    <select name="target_status" class="crud-control">
-                        @foreach ($statuses as $status)
-                            <option value="{{ $status }}" @selected($device->status === $status)>{{ $statusLabels[$status] ?? $status }}</option>
-                        @endforeach
-                    </select>
-                    <button type="submit" class="crud-btn-primary">Saglabat</button>
-                </div>
-            </form>
-
-            <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-                @csrf
-                <input type="hidden" name="action" value="room">
-                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Atra darbiba</div>
-                <div class="mt-1 text-base font-semibold text-slate-900">Parvietot telpu</div>
-                <div class="mt-3 flex gap-2">
-                    <select name="target_room_id" class="crud-control">
-                        <option value="">Izvelies telpu</option>
-                        @foreach ($rooms as $room)
-                            <option value="{{ $room->id }}" @selected((int) $device->room_id === (int) $room->id)>{{ $room->building?->building_name }} / {{ $room->room_number }}</option>
-                        @endforeach
-                    </select>
-                    <button type="submit" class="crud-btn-primary">Parvietot</button>
-                </div>
-            </form>
-
-            <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-                @csrf
-                <input type="hidden" name="action" value="set">
-                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Atra darbiba</div>
-                <div class="mt-1 text-base font-semibold text-slate-900">Pievienot komplektacijai</div>
-                <div class="mt-3 flex gap-2">
-                    <select name="target_set_id" class="crud-control">
-                        <option value="">Izvelies komplektaciju</option>
-                        @foreach ($deviceSets as $deviceSet)
-                            <option value="{{ $deviceSet->id }}">{{ $deviceSet->set_name }}</option>
-                        @endforeach
-                    </select>
-                    <button type="submit" class="crud-btn-primary">Pievienot</button>
-                </div>
-            </form>
-        </div>
-
         <div class="mb-6 device-tab-list">
             <button type="button" @click="tab = 'overview'" :class="tab === 'overview' ? 'device-tab-button device-tab-button-active' : 'device-tab-button device-tab-button-idle'">Pilna informacija</button>
             <button type="button" @click="tab = 'history'" :class="tab === 'history' ? 'device-tab-button device-tab-button-active' : 'device-tab-button device-tab-button-idle'">Vesture</button>
