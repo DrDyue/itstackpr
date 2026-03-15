@@ -386,14 +386,14 @@
                                         @click="selectDeviceImage(image)"
                                         :class="autoDeviceImageUrl === image ? 'ring-2 ring-sky-500 border-sky-400' : ''"
                                     >
-                                        <img :src="image" alt="Atrasts attels" class="h-32 w-full object-cover" loading="lazy" referrerpolicy="no-referrer" @error="removeBrokenCandidate(image)">
+                                        <img :src="image" alt="Atrasts attels" class="h-32 w-full object-cover" loading="lazy" referrerpolicy="no-referrer" x-on:error="removeBrokenCandidate(image)">
                                         <div class="px-3 py-2 text-xs font-medium text-slate-600">Izveleties so attelu</div>
                                     </button>
                                 </template>
                             </div>
                             <div class="device-upload-preview">
                                 <template x-if="devicePreview">
-                                    <img :src="devicePreview" alt="Ierices foto preview" loading="lazy" referrerpolicy="no-referrer" @error="clearDeviceImage()">
+                                    <img :src="devicePreview" alt="Ierices foto preview" loading="lazy" referrerpolicy="no-referrer" x-on:error="clearDeviceImage()">
                                 </template>
                                 <template x-if="!devicePreview">
                                     <div class="device-upload-preview-empty">Foto nav pievienots</div>
