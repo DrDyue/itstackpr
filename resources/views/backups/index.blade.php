@@ -53,7 +53,7 @@
         <div class="user-header">
             <div>
                 <h1 class="device-page-title">Rezerves kopijas</h1>
-                <p class="device-page-subtitle">Pilna datubazes dublēšana, lejupielāde, atjaunošana un automātisko kopiju grafiks.</p>
+                <p class="device-page-subtitle">Pilna datubazes dublesana, lejupielade, atjaunosana un automatisko kopiju grafiks.</p>
             </div>
 
             <form method="POST" action="{{ route('backups.store') }}">
@@ -151,7 +151,7 @@
 
                         <div class="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm text-sky-800">
                             <p class="font-semibold">{{ $frequencyLabel }}</p>
-                            <p class="mt-1 text-sky-700">Serverim japalaiz `php artisan schedule:run` ik minūti, lai grafiks stradatu automātiski.</p>
+                            <p class="mt-1 text-sky-700">Serverim japalaiz `php artisan schedule:run` ik minuti, lai grafiks stradatu automatiski.</p>
                         </div>
                     </div>
 
@@ -204,7 +204,7 @@
                     </label>
 
                     <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                        Pirms atjaunosanas parliecinies, ka fails ir pilna datubazes kopija no shis sistemas. Pēc augshuplades tas paradisies kopiju vesture.
+                        Pirms atjaunosanas parliecinies, ka fails ir pilna datubazes kopija no shis sistemas. Pec augshuplades tas paradisies kopiju vesture.
                     </div>
 
                     <button type="submit" class="crud-btn-primary inline-flex items-center gap-2" onclick="return confirm('Atjaunot datubazi no augshupladeta faila?')">
@@ -221,7 +221,7 @@
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
                 <div>
                     <h2 class="text-lg font-semibold text-slate-900">Rezerves kopiju vesture</h2>
-                    <p class="text-sm text-slate-500">Izmers, ilgums, ierakstu skaits, autors, lejupielade, atjaunosana un dzešana.</p>
+                    <p class="text-sm text-slate-500">Izmers, ilgums, ierakstu skaits, autors, lejupielade, atjaunosana un dzesana.</p>
                 </div>
                 <div class="rounded-2xl bg-slate-100 px-3 py-2 text-sm text-slate-600">
                     Kopiju skaits: {{ $backups->total() }}
