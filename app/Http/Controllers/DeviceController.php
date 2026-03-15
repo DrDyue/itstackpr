@@ -95,21 +95,17 @@ class DeviceController extends Controller
     public function previewAutoImage(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:200'],
             'model' => ['required', 'string', 'max:100'],
             'manufacturer' => ['required', 'string', 'max:100'],
-            'device_type_id' => ['required', 'exists:device_types,id'],
             'batch' => ['nullable', 'integer', 'min:1', 'max:10'],
         ]);
-
-        $type = DeviceType::query()->find($validated['device_type_id']);
         $batch = (int) ($validated['batch'] ?? 1);
 
-        $imageUrls = app(DeviceImageAutoFetcher::class)->previewMany($validated, $type, $batch, 3);
+        $imageUrls = app(DeviceImageAutoFetcher::class)->previewMany($validated, null, $batch, 3);
 
         if ($imageUrls === []) {
             return response()->json([
-                'message' => 'Attelus interneta neizdevas atrast. Precize nosaukumu, modeli, tipu vai razotaju un meginiet velreiz.',
+                'message' => 'Attelus interneta neizdevas atrast. Precize modeli vai razotaju un meginiet velreiz.',
             ], 404);
         }
 

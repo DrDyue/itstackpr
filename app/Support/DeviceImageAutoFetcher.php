@@ -23,9 +23,7 @@ class DeviceImageAutoFetcher
         $imageUrl = $this->preview([
             'manufacturer' => $device->manufacturer,
             'model' => $device->model,
-            'name' => $device->name,
-            'device_type_id' => $device->device_type_id,
-        ], $device->relationLoaded('type') ? $device->type : null);
+        ]);
 
         if (! $imageUrl) {
             return false;
@@ -44,25 +42,25 @@ class DeviceImageAutoFetcher
 
     public function preview(array $attributes, ?DeviceType $deviceType = null): ?string
     {
-        return $this->previewMany($attributes, $deviceType, 1)[0] ?? null;
+        return $this->previewMany($attributes, null, 1)[0] ?? null;
     }
 
     public function previewMany(array $attributes, ?DeviceType $deviceType = null, int $batch = 1, int $perBatch = 3): array
     {
         $batch = max(1, $batch);
         $perBatch = max(1, min($perBatch, 6));
-        $context = $this->searchContext($attributes, $deviceType);
+        $context = $this->searchContext($attributes);
         $results = [];
         $searchStage = $this->searchStage($batch);
 
-        foreach ($this->searchQueries($attributes, $deviceType, $searchStage) as $query) {
+        foreach ($this->searchQueries($attributes, $searchStage) as $query) {
             foreach ($this->findCommonsImageCandidates($query, $context) as $candidate) {
                 $results[$candidate['url']] = $candidate;
             }
         }
 
         if ($results === []) {
-            foreach ($this->searchQueries($attributes, $deviceType, $searchStage) as $query) {
+            foreach ($this->searchQueries($attributes, $searchStage) as $query) {
                 foreach ($this->findWikipediaImageCandidates($query, $context) as $candidate) {
                     $results[$candidate['url']] = $candidate;
                 }
@@ -86,12 +84,10 @@ class DeviceImageAutoFetcher
         return $this->downloadAndStore($imageUrl, $previousPath);
     }
 
-    private function searchQueries(array $attributes, ?DeviceType $deviceType = null, int $searchStage = 1): array
+    private function searchQueries(array $attributes, int $searchStage = 1): array
     {
         $manufacturer = trim((string) ($attributes['manufacturer'] ?? ''));
         $model = trim((string) ($attributes['model'] ?? ''));
-        $name = trim((string) ($attributes['name'] ?? ''));
-        $type = trim((string) ($deviceType?->type_name ?? ''));
 
         $queries = match ($searchStage) {
             1 => [
@@ -101,17 +97,16 @@ class DeviceImageAutoFetcher
                 trim("{$model} {$manufacturer}"),
             ],
             2 => [
-                trim("\"{$manufacturer}\" \"{$model}\" {$name}"),
-                trim("{$manufacturer} {$model} {$name}"),
-                trim("\"{$model}\" {$name} {$manufacturer}"),
-                trim("{$manufacturer} {$name} {$model}"),
+                trim("\"{$manufacturer}\" {$model}"),
+                trim("{$manufacturer} \"{$model}\""),
+                trim("\"{$model}\" {$manufacturer}"),
+                trim("{$model} \"{$manufacturer}\""),
             ],
             default => [
-                trim("\"{$manufacturer}\" \"{$model}\" {$name} {$type}"),
-                trim("{$manufacturer} {$model} {$type}"),
-                trim("{$manufacturer} {$name} {$type}"),
-                trim("\"{$model}\" {$type} {$manufacturer}"),
-                trim("{$name} {$type} {$manufacturer} {$model}"),
+                trim("{$manufacturer} {$model} device"),
+                trim("{$manufacturer} {$model} hardware"),
+                trim("\"{$manufacturer}\" \"{$model}\" device"),
+                trim("\"{$model}\" {$manufacturer} device"),
             ],
         };
 
@@ -221,13 +216,11 @@ class DeviceImageAutoFetcher
         }
     }
 
-    private function searchContext(array $attributes, ?DeviceType $deviceType = null): array
+    private function searchContext(array $attributes): array
     {
         $tokens = collect([
             $attributes['manufacturer'] ?? '',
             $attributes['model'] ?? '',
-            $attributes['name'] ?? '',
-            $deviceType?->type_name ?? '',
         ])
             ->flatMap(fn (string $value) => preg_split('/[^[:alnum:]]+/u', Str::lower($value)) ?: [])
             ->filter(fn (?string $token) => $token !== null && $token !== '' && strlen($token) >= 2)
@@ -238,8 +231,6 @@ class DeviceImageAutoFetcher
             'tokens' => array_values(array_unique($tokens)),
             'manufacturer' => Str::lower((string) ($attributes['manufacturer'] ?? '')),
             'model' => Str::lower((string) ($attributes['model'] ?? '')),
-            'name' => Str::lower((string) ($attributes['name'] ?? '')),
-            'type' => Str::lower((string) ($deviceType?->type_name ?? '')),
         ];
     }
 
@@ -254,7 +245,7 @@ class DeviceImageAutoFetcher
             }
         }
 
-        foreach (['manufacturer' => 34, 'model' => 42, 'name' => 10, 'type' => 6] as $field => $weight) {
+        foreach (['manufacturer' => 36, 'model' => 46] as $field => $weight) {
             $value = trim((string) ($context[$field] ?? ''));
 
             if ($value !== '' && str_contains($normalized, $value)) {

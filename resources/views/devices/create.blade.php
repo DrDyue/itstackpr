@@ -45,15 +45,13 @@
                 deviceImageBatch: 1,
                 get canSearchDeviceImage() {
                     return !!(
-                        this.$refs.name?.value.trim()
                         && this.$refs.model?.value.trim()
                         && this.$refs.manufacturer?.value.trim()
-                        && this.$refs.deviceType?.value
                     );
                 },
                 async findDeviceImage(batch = 1) {
                     if (! this.canSearchDeviceImage) {
-                        this.deviceImageError = 'Lai mekletu attelu, aizpildi nosaukumu, tipu, modeli un razotaju.';
+                        this.deviceImageError = 'Lai mekletu attelu, aizpildi modeli un razotaju.';
                         return;
                     }
 
@@ -70,10 +68,8 @@
                                 'X-CSRF-TOKEN': @js(csrf_token()),
                             },
                             body: JSON.stringify({
-                                name: this.$refs.name.value,
                                 model: this.$refs.model.value,
                                 manufacturer: this.$refs.manufacturer.value,
-                                device_type_id: this.$refs.deviceType.value,
                                 batch: batch,
                             }),
                         });
@@ -135,7 +131,7 @@
                             <input type="text" name="name" value="{{ old('name') }}" required class="crud-control" x-ref="name">
                         </div>
                     </div>
-                    <div class="mt-4 grid gap-4 sm:grid-cols-3">
+                    <div class="mt-4 grid gap-4 sm:grid-cols-4">
                         <div>
                             <label class="crud-label">Tips *</label>
                             <select name="device_type_id" required class="crud-control" x-ref="deviceType">
@@ -147,6 +143,10 @@
                         <div>
                             <label class="crud-label">Modelis *</label>
                             <input type="text" name="model" value="{{ old('model') }}" required class="crud-control" x-ref="model">
+                        </div>
+                        <div>
+                            <label class="crud-label">Razotajs</label>
+                            <input type="text" name="manufacturer" value="{{ old('manufacturer') }}" class="crud-control" x-ref="manufacturer">
                         </div>
                         <div>
                             <label class="crud-label">Statuss *</label>
@@ -207,10 +207,6 @@
                     </div>
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div>
-                            <label class="crud-label">Razotajs</label>
-                            <input type="text" name="manufacturer" value="{{ old('manufacturer') }}" class="crud-control" x-ref="manufacturer">
-                        </div>
-                        <div>
                             <label class="crud-label">Serijas numurs</label>
                             <input type="text" name="serial_number" value="{{ old('serial_number') }}" class="crud-control">
                         </div>
@@ -269,7 +265,7 @@
                                             @click="findDeviceImage(1)"
                                             :disabled="isFindingDeviceImage || !canSearchDeviceImage"
                                         >
-                                            <span x-text="isFindingDeviceImage ? 'Mekle...' : 'Atrast attelu interneta'"></span>
+                                    <span x-text="isFindingDeviceImage ? 'Mekle...' : 'Atrast attelu interneta'"></span>
                                         </button>
                                     </span>
                                     <div
@@ -278,7 +274,7 @@
                                         x-transition.opacity
                                         class="absolute left-0 top-full z-20 mt-2 w-72 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 shadow-lg"
                                     >
-                                        Si poga nav pieejama, kamer nav aizpilditi lauki: nosaukums, tips, modelis un razotajs.
+                                        Si poga nav pieejama, kamer nav aizpilditi lauki: modelis un razotajs.
                                     </div>
                                 </div>
                                 <button
