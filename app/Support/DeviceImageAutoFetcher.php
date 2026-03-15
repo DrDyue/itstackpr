@@ -53,15 +53,16 @@ class DeviceImageAutoFetcher
         $perBatch = max(1, min($perBatch, 6));
         $context = $this->searchContext($attributes, $deviceType);
         $results = [];
+        $searchStage = $this->searchStage($batch);
 
-        foreach ($this->searchQueries($attributes, $deviceType) as $query) {
+        foreach ($this->searchQueries($attributes, $deviceType, $searchStage) as $query) {
             foreach ($this->findCommonsImageCandidates($query, $context) as $candidate) {
                 $results[$candidate['url']] = $candidate;
             }
         }
 
         if ($results === []) {
-            foreach ($this->searchQueries($attributes, $deviceType) as $query) {
+            foreach ($this->searchQueries($attributes, $deviceType, $searchStage) as $query) {
                 foreach ($this->findWikipediaImageCandidates($query, $context) as $candidate) {
                     $results[$candidate['url']] = $candidate;
                 }
@@ -76,7 +77,7 @@ class DeviceImageAutoFetcher
 
         return array_values(array_map(
             fn (array $candidate) => $candidate['url'],
-            array_slice($results, ($batch - 1) * $perBatch, $perBatch)
+            array_slice($results, 0, $perBatch)
         ));
     }
 
@@ -85,25 +86,45 @@ class DeviceImageAutoFetcher
         return $this->downloadAndStore($imageUrl, $previousPath);
     }
 
-    private function searchQueries(array $attributes, ?DeviceType $deviceType = null): array
+    private function searchQueries(array $attributes, ?DeviceType $deviceType = null, int $searchStage = 1): array
     {
         $manufacturer = trim((string) ($attributes['manufacturer'] ?? ''));
         $model = trim((string) ($attributes['model'] ?? ''));
         $name = trim((string) ($attributes['name'] ?? ''));
         $type = trim((string) ($deviceType?->type_name ?? ''));
 
-        $queries = [
-            trim("{$manufacturer} {$model} {$name} {$type}"),
-            trim("{$manufacturer} {$model} {$type}"),
-            trim("{$manufacturer} {$name} {$type}"),
-            trim("{$manufacturer} \"{$model}\" {$type}"),
-            trim("\"{$manufacturer} {$model}\" {$name}"),
-            trim("{$model} {$name} {$type}"),
-            trim("{$manufacturer} {$model}"),
-            trim("{$name} {$type}"),
-        ];
+        $queries = match ($searchStage) {
+            1 => [
+                trim("\"{$manufacturer}\" \"{$model}\""),
+                trim("{$manufacturer} {$model}"),
+                trim("\"{$manufacturer} {$model}\""),
+                trim("{$model} {$manufacturer}"),
+            ],
+            2 => [
+                trim("\"{$manufacturer}\" \"{$model}\" {$name}"),
+                trim("{$manufacturer} {$model} {$name}"),
+                trim("\"{$model}\" {$name} {$manufacturer}"),
+                trim("{$manufacturer} {$name} {$model}"),
+            ],
+            default => [
+                trim("\"{$manufacturer}\" \"{$model}\" {$name} {$type}"),
+                trim("{$manufacturer} {$model} {$type}"),
+                trim("{$manufacturer} {$name} {$type}"),
+                trim("\"{$model}\" {$type} {$manufacturer}"),
+                trim("{$name} {$type} {$manufacturer} {$model}"),
+            ],
+        };
 
         return array_values(array_unique(array_filter($queries, fn (string $query) => $query !== '')));
+    }
+
+    private function searchStage(int $batch): int
+    {
+        return match (true) {
+            $batch <= 1 => 1,
+            $batch === 2 => 2,
+            default => 3,
+        };
     }
 
     private function findCommonsImageCandidates(string $query, array $context): array
@@ -233,7 +254,7 @@ class DeviceImageAutoFetcher
             }
         }
 
-        foreach (['manufacturer' => 18, 'model' => 22, 'name' => 14, 'type' => 10] as $field => $weight) {
+        foreach (['manufacturer' => 34, 'model' => 42, 'name' => 10, 'type' => 6] as $field => $weight) {
             $value = trim((string) ($context[$field] ?? ''));
 
             if ($value !== '' && str_contains($normalized, $value)) {
@@ -242,7 +263,16 @@ class DeviceImageAutoFetcher
         }
 
         if (str_contains($normalized, Str::lower($query))) {
-            $score += 16;
+            $score += 18;
+        }
+
+        if (
+            $context['manufacturer'] !== ''
+            && $context['model'] !== ''
+            && str_contains($normalized, $context['manufacturer'])
+            && str_contains($normalized, $context['model'])
+        ) {
+            $score += 50;
         }
 
         if (str_contains($normalized, 'logo') || str_contains($normalized, 'icon')) {
