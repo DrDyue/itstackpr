@@ -7,6 +7,8 @@ use App\Support\DatabaseBackupService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use RuntimeException;
@@ -24,18 +26,72 @@ class BackupController extends Controller
         $this->ensureAdmin();
 
         $settings = $this->backupService->getSettings();
-        $backups = $this->backupService->paginateBackups(15);
         $allBackups = $this->backupService->allBackups();
+        $filters = [
+            'q' => trim((string) request()->query('q', '')),
+            'trigger' => trim((string) request()->query('trigger', '')),
+            'creator_scope' => trim((string) request()->query('creator_scope', '')),
+            'creator_name' => trim((string) request()->query('creator_name', '')),
+            'date_from' => trim((string) request()->query('date_from', '')),
+            'date_to' => trim((string) request()->query('date_to', '')),
+        ];
+
+        $filteredBackups = $allBackups
+            ->filter(function ($backup) use ($filters) {
+                if ($filters['q'] !== '') {
+                    $haystack = mb_strtolower(trim($backup->name . ' ' . ($backup->database_name ?? '')));
+                    if (! str_contains($haystack, mb_strtolower($filters['q']))) {
+                        return false;
+                    }
+                }
+
+                if ($filters['trigger'] !== '' && $backup->trigger_type !== $filters['trigger']) {
+                    return false;
+                }
+
+                if ($filters['creator_scope'] === 'system' && $backup->creator_type !== 'system') {
+                    return false;
+                }
+
+                if ($filters['creator_scope'] === 'user' && $backup->creator_type !== 'user') {
+                    return false;
+                }
+
+                if ($filters['creator_name'] !== '') {
+                    $creator = mb_strtolower((string) ($backup->created_by_name ?? ''));
+                    if (! str_contains($creator, mb_strtolower($filters['creator_name']))) {
+                        return false;
+                    }
+                }
+
+                if ($filters['date_from'] !== '' && $backup->created_at?->lt(CarbonImmutable::parse($filters['date_from'])->startOfDay())) {
+                    return false;
+                }
+
+                if ($filters['date_to'] !== '' && $backup->created_at?->gt(CarbonImmutable::parse($filters['date_to'])->endOfDay())) {
+                    return false;
+                }
+
+                return true;
+            })
+            ->values();
+
+        $backups = $this->paginateCollection($filteredBackups, 15);
 
         return view('backups.index', [
             'settings' => $settings,
-            'backups' => $backups,
+            'backups' => $backups->appends(request()->query()),
+            'filters' => $filters,
             'summary' => [
                 'count' => $allBackups->count(),
                 'latest' => $allBackups->first(),
                 'current' => $allBackups->first(fn ($backup) => $backup->is_current),
                 'total_size' => (int) $allBackups->sum('file_size_bytes'),
                 'next_run_at' => $this->backupService->nextRunAt($settings, CarbonImmutable::now()),
+                'scheduled_count' => $allBackups->where('trigger_type', 'scheduled')->count(),
+                'manual_count' => $allBackups->where('trigger_type', 'manual')->count(),
+                'uploaded_count' => $allBackups->where('trigger_type', 'uploaded')->count(),
+                'filtered_count' => $filteredBackups->count(),
             ],
         ]);
     }
@@ -183,5 +239,21 @@ class BackupController extends Controller
         }
 
         return $record;
+    }
+
+    private function paginateCollection($items, int $perPage): LengthAwarePaginator
+    {
+        $page = Paginator::resolveCurrentPage('page');
+
+        return new LengthAwarePaginator(
+            $items->forPage($page, $perPage)->values(),
+            $items->count(),
+            $perPage,
+            $page,
+            [
+                'path' => Paginator::resolveCurrentPath(),
+                'pageName' => 'page',
+            ]
+        );
     }
 }
