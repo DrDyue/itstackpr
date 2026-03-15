@@ -87,217 +87,31 @@
                     }
                 },
                 async searchDeviceCandidates(batch) {
-                    const manufacturer = this.normalizeQueryPart(this.$refs.manufacturer.value);
-                    const model = this.normalizeQueryPart(this.$refs.model.value);
-                    const query = `${manufacturer} ${model}`.trim();
-                    const queries = [...new Set([
-                        query,
-                        `${query} photo`.trim(),
-                        `${query} product`.trim(),
-                        `${query} device`.trim(),
-                    ].filter(Boolean))];
-                    const perBatch = 3;
-                    const needed = batch * perBatch;
-                    const pageSize = Math.max(8, needed * 2);
-                    const tasks = [];
-
-                    for (const currentQuery of queries) {
-                        tasks.push(this.fetchOpenverseImages(currentQuery, batch, pageSize));
-                        tasks.push(this.fetchCommonsImages(currentQuery, batch, pageSize));
-                        tasks.push(this.fetchWikipediaImages(currentQuery, batch, pageSize));
-                    }
-
-                    const settled = await Promise.allSettled(tasks);
-                    const candidates = settled
-                        .filter(result => result.status === 'fulfilled')
-                        .flatMap(result => Array.isArray(result.value) ? result.value : [])
-                        .map(candidate => ({
-                            ...candidate,
-                            score: this.scoreCandidate(candidate, manufacturer, model),
-                        }))
-                        .filter(candidate => candidate.score > 0);
-
-                    const ranked = this.uniqueCandidates(
-                        candidates.sort((a, b) => b.score - a.score)
-                    );
-                    const combined = this.uniqueCandidates([
-                        ...ranked,
-                        ...this.fallbackImageCandidates(query, needed + 3),
-                    ]);
-
-                    return combined.slice((batch - 1) * perBatch, batch * perBatch);
-                },
-                async fetchOpenverseImages(query, batch, pageSize) {
-                    const url = new URL('https://api.openverse.org/v1/images/');
-                    url.search = new URLSearchParams({
-                        q: query,
-                        page: String(batch),
-                        page_size: String(pageSize),
-                        mature: 'false',
-                    }).toString();
-
-                    const data = await this.fetchJson(url.toString());
-                    const results = Array.isArray(data?.results) ? data.results : [];
-
-                    return results
-                        .map(item => ({
-                            preview_url: item?.thumbnail || item?.url || '',
-                            image_url: item?.url || item?.thumbnail || '',
-                            source: 'openverse',
-                            label: item?.title || 'Openverse',
-                        }))
-                        .filter(candidate => this.isAllowedImageUrl(candidate.preview_url) && !this.looksLikeNonPhoto(candidate.label || ''));
-                },
-                async fetchCommonsImages(query, batch, pageSize) {
-                    const url = new URL('https://commons.wikimedia.org/w/api.php');
-                    url.search = new URLSearchParams({
-                        action: 'query',
-                        format: 'json',
-                        origin: '*',
-                        generator: 'search',
-                        gsrsearch: query,
-                        gsrnamespace: '6',
-                        gsrlimit: String(pageSize),
-                        gsroffset: String((batch - 1) * pageSize),
-                        prop: 'imageinfo',
-                        iiprop: 'url',
-                        iiurlwidth: '1200',
-                    }).toString();
-
-                    const data = await this.fetchJson(url.toString());
-                    const pages = Object.values(data?.query?.pages || {});
-
-                    return pages
-                        .map(page => ({
-                            preview_url: page?.imageinfo?.[0]?.thumburl || page?.imageinfo?.[0]?.url || '',
-                            image_url: page?.imageinfo?.[0]?.url || page?.imageinfo?.[0]?.thumburl || '',
-                            source: 'commons',
-                            label: page?.title || 'Wikimedia Commons',
-                        }))
-                        .filter(candidate => this.isAllowedImageUrl(candidate.preview_url) && !this.looksLikeNonPhoto(candidate.label || ''));
-                },
-                async fetchWikipediaImages(query, batch, pageSize) {
-                    const url = new URL('https://en.wikipedia.org/w/api.php');
-                    url.search = new URLSearchParams({
-                        action: 'query',
-                        format: 'json',
-                        origin: '*',
-                        generator: 'search',
-                        gsrsearch: query,
-                        gsrlimit: String(pageSize),
-                        gsroffset: String((batch - 1) * pageSize),
-                        prop: 'pageimages|extracts',
-                        piprop: 'original|thumbnail',
-                        pithumbsize: '1200',
-                        exintro: '1',
-                        explaintext: '1',
-                    }).toString();
-
-                    const data = await this.fetchJson(url.toString());
-                    const pages = Object.values(data?.query?.pages || {});
-
-                    return pages
-                        .map(page => ({
-                            preview_url: page?.thumbnail?.source || page?.original?.source || '',
-                            image_url: page?.original?.source || page?.thumbnail?.source || '',
-                            source: 'wikipedia',
-                            label: `${page?.title || ''} ${page?.extract || ''}`.trim() || 'Wikipedia',
-                        }))
-                        .filter(candidate => this.isAllowedImageUrl(candidate.preview_url) && !this.looksLikeNonPhoto(candidate.label || ''));
-                },
-                fallbackImageCandidates(query, count) {
-                    return Array.from({ length: count }, (_, index) => {
-                        const url = `https://source.unsplash.com/1600x900/?${encodeURIComponent(`${query} device`)}&sig=${index + 1}`;
-
-                        return {
-                            preview_url: url,
-                            image_url: url,
-                            source: 'fallback',
-                            label: 'Fallback',
-                            score: -100,
-                        };
+                    const response = await fetch(@js(route('devices.preview-auto-image')), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': @js(csrf_token()),
+                        },
+                        body: JSON.stringify({
+                            model: this.$refs.model.value,
+                            manufacturer: this.$refs.manufacturer.value,
+                            batch: batch,
+                        }),
                     });
+
+                    const payload = await response.json().catch(() => ({}));
+                    const images = Array.isArray(payload.images) ? payload.images : [];
+
+                    return this.uniqueCandidates(images).map(candidate => ({
+                        ...candidate,
+                        label: this.truncateLabel(candidate?.label || 'Izveleties so attelu'),
+                    }));
                 },
-                async fetchJson(url) {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 6000);
-
-                    try {
-                        const response = await fetch(url, {
-                            headers: {
-                                Accept: 'application/json',
-                            },
-                            signal: controller.signal,
-                        });
-
-                        if (!response.ok) {
-                            return null;
-                        }
-
-                        return await response.json();
-                    } catch (error) {
-                        return null;
-                    } finally {
-                        clearTimeout(timeoutId);
-                    }
-                },
-                normalizeQueryPart(value) {
-                    return String(value || '').replace(/\s+/g, ' ').trim();
-                },
-                tokenize(value) {
-                    return [...new Set(
-                        String(value || '')
-                            .toLowerCase()
-                            .split(/[^a-z0-9]+/i)
-                            .filter(Boolean)
-                    )];
-                },
-                scoreCandidate(candidate, manufacturer, model) {
-                    const haystack = `${candidate?.label || ''} ${candidate?.image_url || ''} ${candidate?.preview_url || ''}`.toLowerCase();
-                    if (!haystack) {
-                        return 0;
-                    }
-
-                    const bonuses = {
-                        openverse: 30,
-                        commons: 18,
-                        wikipedia: 10,
-                        fallback: -120,
-                    };
-
-                    let score = bonuses[candidate?.source] ?? 0;
-                    const normalizedManufacturer = manufacturer.toLowerCase();
-                    const normalizedModel = model.toLowerCase();
-
-                    if (normalizedManufacturer && haystack.includes(normalizedManufacturer)) {
-                        score += 80;
-                    }
-
-                    if (normalizedModel && haystack.includes(normalizedModel)) {
-                        score += 140;
-                    }
-
-                    for (const token of this.tokenize(manufacturer)) {
-                        if (token.length >= 2 && haystack.includes(token)) {
-                            score += 20;
-                        }
-                    }
-
-                    for (const token of this.tokenize(model)) {
-                        if (token.length >= 2 && haystack.includes(token)) {
-                            score += /^\d+$/.test(token) ? 18 : 30;
-                        }
-                    }
-
-                    if (normalizedManufacturer && normalizedModel && haystack.includes(normalizedManufacturer) && haystack.includes(normalizedModel)) {
-                        score += 120;
-                    }
-
-                    if (this.looksLikeNonPhoto(haystack)) {
-                        score -= 160;
-                    }
-
-                    return score;
+                truncateLabel(label) {
+                    const text = String(label || '').replace(/\s+/g, ' ').trim();
+                    return text.length > 72 ? `${text.slice(0, 69)}...` : text;
                 },
                 uniqueCandidates(candidates) {
                     const seen = new Set();
@@ -571,7 +385,7 @@
                                     >
                                         <img :src="proxyImageUrl(candidate.preview_url || candidate.image_url)" alt="Atrasts attels" class="h-32 w-full object-cover" loading="lazy" x-on:error="removeBrokenCandidate(candidate.image_url)">
                                         <div class="px-3 py-2 text-xs font-medium text-slate-600">
-                                            <span x-text="candidate.label || 'Izveleties so attelu'"></span>
+                                            <span class="device-image-candidate-label" x-text="candidate.label || 'Izveleties so attelu'"></span>
                                             <span class="ml-1 text-slate-400" x-show="candidate.source" x-text="`(${candidate.source})`"></span>
                                         </div>
                                     </button>

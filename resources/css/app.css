@@ -901,6 +901,16 @@ tbody td {
     @apply flex h-52 items-center justify-center text-sm text-slate-400;
 }
 
+.device-image-candidate-label {
+    display: -webkit-box;
+    overflow: hidden;
+    line-height: 1.35;
+    min-height: 2.7em;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    word-break: break-word;
+}
+
 .device-timeline {
     @apply relative space-y-4;
 }
