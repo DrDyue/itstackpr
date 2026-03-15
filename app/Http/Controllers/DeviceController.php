@@ -11,6 +11,7 @@ use App\Models\DeviceSetItem;
 use App\Models\DeviceType;
 use App\Models\Room;
 use App\Support\DeviceAssetManager;
+use App\Support\DeviceImageAutoFetcher;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
@@ -99,6 +100,7 @@ class DeviceController extends Controller
 
         $device = Device::create($data);
         $this->syncUploads($request, $device);
+        $this->populateAutoImage($request, $device);
 
         DeviceHistory::create([
             'device_id' => $device->id,
@@ -148,6 +150,7 @@ class DeviceController extends Controller
 
         $device->update($data);
         $this->syncUploads($request, $device);
+        $this->populateAutoImage($request, $device->fresh());
 
         $after = $device->fresh()->only(array_keys($before));
         $changedFields = $this->writeHistoryChanges($device->id, $before, $after, $userId);
@@ -391,6 +394,17 @@ class DeviceController extends Controller
         if ($updates !== []) {
             $device->forceFill($updates)->save();
         }
+    }
+
+    private function populateAutoImage(Request $request, Device $device): void
+    {
+        if ($request->hasFile('device_image') || filled($device->device_image_url)) {
+            return;
+        }
+
+        $device->loadMissing('type');
+
+        app(DeviceImageAutoFetcher::class)->populate($device);
     }
 
     private function deleteDeviceAssets(Device $device): void

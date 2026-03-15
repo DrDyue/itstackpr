@@ -23,6 +23,17 @@ class DeviceAssetManager
         return $this->storeImage($file, (string) config('devices.warranty_image_dir', 'w'), $previousPath, true);
     }
 
+    public function storeDeviceImageContents(string $contents, ?string $extension = null, ?string $previousPath = null): string
+    {
+        return $this->storeImageContents(
+            $contents,
+            (string) config('devices.device_image_dir', 'd'),
+            $extension,
+            $previousPath,
+            true
+        );
+    }
+
     public function url(?string $path): ?string
     {
         if (! $path) {
@@ -99,25 +110,69 @@ class DeviceAssetManager
         return $path;
     }
 
+    private function storeImageContents(
+        string $contents,
+        string $directory,
+        ?string $extension = null,
+        ?string $previousPath = null,
+        bool $withThumbnail = false
+    ): string {
+        $optimized = $this->optimizeContents($contents);
+        $extension = $optimized['extension']
+            ?? $this->normalizeExtension($extension)
+            ?? 'jpg';
+        $path = trim($directory, '/') . '/' . Str::lower(Str::random(40)) . '.' . $extension;
+        $disk = Storage::disk($this->disk());
+
+        $disk->put($path, $optimized['contents'] ?? $contents, ['visibility' => 'public']);
+
+        if ($withThumbnail) {
+            $thumbnail = $this->optimizeContents($contents, (int) config('devices.thumbnail_dimension', 480));
+            $disk->put(
+                $this->thumbnailPath($path),
+                $thumbnail['contents'] ?? ($optimized['contents'] ?? $contents),
+                ['visibility' => 'public']
+            );
+        }
+
+        if ($previousPath && $previousPath !== $path) {
+            $this->delete($previousPath);
+            $this->delete($this->thumbnailPath($previousPath));
+        }
+
+        return $path;
+    }
+
     private function optimize(UploadedFile $file, ?int $maxDimension = null): array
     {
-        if (! extension_loaded('gd')) {
+        $contents = @file_get_contents($file->getPathname());
+
+        if ($contents === false) {
             return [];
         }
 
-        $imageInfo = @getimagesize($file->getPathname());
+        return $this->optimizeContents($contents, $maxDimension);
+    }
+
+    private function optimizeContents(string $contents, ?int $maxDimension = null): array
+    {
+        if (! extension_loaded('gd') || $contents === '') {
+            return [];
+        }
+
+        $imageInfo = @getimagesizefromstring($contents);
         if ($imageInfo === false) {
             return [];
         }
 
         [$width, $height, $imageType] = $imageInfo;
 
-        $source = match ($imageType) {
-            IMAGETYPE_JPEG => function_exists('imagecreatefromjpeg') ? @imagecreatefromjpeg($file->getPathname()) : false,
-            IMAGETYPE_PNG => function_exists('imagecreatefrompng') ? @imagecreatefrompng($file->getPathname()) : false,
-            IMAGETYPE_WEBP => function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($file->getPathname()) : false,
-            default => false,
-        };
+        $supportedTypes = [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP, IMAGETYPE_GIF];
+        if (! in_array($imageType, $supportedTypes, true) || ! function_exists('imagecreatefromstring')) {
+            return [];
+        }
+
+        $source = @imagecreatefromstring($contents);
 
         if (! $source) {
             return [];
@@ -168,5 +223,16 @@ class DeviceAssetManager
             'contents' => $contents,
             'extension' => $extension,
         ];
+    }
+
+    private function normalizeExtension(?string $extension): ?string
+    {
+        $extension = strtolower(trim((string) $extension));
+
+        return match ($extension) {
+            'jpeg' => 'jpg',
+            'jpg', 'png', 'webp', 'gif' => $extension,
+            default => null,
+        };
     }
 }
