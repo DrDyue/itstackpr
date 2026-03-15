@@ -68,7 +68,7 @@ class DeviceImageAutoFetcher
         }
 
         if ($results === []) {
-            return [];
+            return $this->fallbackImageUrls($attributes, $batch, $perBatch);
         }
 
         uasort($results, fn (array $a, array $b) => $b['score'] <=> $a['score']);
