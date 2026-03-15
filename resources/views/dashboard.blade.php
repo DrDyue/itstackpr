@@ -44,6 +44,12 @@
                 <p class="dash-shortcut-title">Telpas</p>
                 <p class="dash-shortcut-text">Eku un kabinetu struktura</p>
             </a>
+            @if (auth()->user()?->role === 'admin')
+                <a href="{{ route('backups.index') }}" class="dash-shortcut-card">
+                    <p class="dash-shortcut-title">Rezerves kopijas</p>
+                    <p class="dash-shortcut-text">Datubazes dublesana, lejupielade un atjaunosana</p>
+                </a>
+            @endif
         </div>
 
         <div class="dash-main-grid">

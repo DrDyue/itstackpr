@@ -45,6 +45,15 @@
                         </svg>
                         <span>Lietotaji</span>
                     </x-nav-link>
+                    @if (auth()->user()?->role === 'admin')
+                        <x-nav-link :href="route('backups.index')" :active="request()->routeIs('backups*')">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 7.5h16.5M6 3.75h12a2.25 2.25 0 0 1 2.25 2.25v12A2.25 2.25 0 0 1 18 20.25H6A2.25 2.25 0 0 1 3.75 18V6A2.25 2.25 0 0 1 6 3.75Z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5h7.5M8.25 12h7.5M8.25 16.5h4.5"/>
+                            </svg>
+                            <span>Kopijas</span>
+                        </x-nav-link>
+                    @endif
                     <x-nav-link :href="route('buildings.index')" :active="request()->routeIs('buildings*') || request()->routeIs('rooms*')">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M5.25 21V7.5l7.5-3 7.5 3V21"/>
@@ -151,6 +160,17 @@
                     <span>Lietotaji</span>
                 </span>
             </x-responsive-nav-link>
+            @if (auth()->user()?->role === 'admin')
+                <x-responsive-nav-link :href="route('backups.index')" :active="request()->routeIs('backups*')">
+                    <span class="inline-flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 7.5h16.5M6 3.75h12a2.25 2.25 0 0 1 2.25 2.25v12A2.25 2.25 0 0 1 18 20.25H6A2.25 2.25 0 0 1 3.75 18V6A2.25 2.25 0 0 1 6 3.75Z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5h7.5M8.25 12h7.5M8.25 16.5h4.5"/>
+                        </svg>
+                        <span>Kopijas</span>
+                    </span>
+                </x-responsive-nav-link>
+            @endif
             <x-responsive-nav-link :href="route('buildings.index')" :active="request()->routeIs('buildings*') || request()->routeIs('rooms*')">
                 <span class="inline-flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
