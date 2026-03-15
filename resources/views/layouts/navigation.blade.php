@@ -53,6 +53,13 @@
                             </svg>
                             <span>Kopijas</span>
                         </x-nav-link>
+                        <x-nav-link :href="route('audit-log.index')" :active="request()->routeIs('audit-log*')">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75h6m-6-4.5h6M7.5 3.75h9A2.25 2.25 0 0 1 18.75 6v12A2.25 2.25 0 0 1 16.5 20.25h-9A2.25 2.25 0 0 1 5.25 18V6A2.25 2.25 0 0 1 7.5 3.75Z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 20.25v-3a2.25 2.25 0 0 0-2.25-2.25h-3A2.25 2.25 0 0 0 8.25 17.25v3"/>
+                            </svg>
+                            <span>Audits</span>
+                        </x-nav-link>
                     @endif
                     <x-nav-link :href="route('buildings.index')" :active="request()->routeIs('buildings*') || request()->routeIs('rooms*')">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -181,6 +188,15 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5h7.5M8.25 12h7.5M8.25 16.5h4.5"/>
                         </svg>
                         <span>Kopijas</span>
+                    </span>
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('audit-log.index')" :active="request()->routeIs('audit-log*')">
+                    <span class="inline-flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75h6m-6-4.5h6M7.5 3.75h9A2.25 2.25 0 0 1 18.75 6v12A2.25 2.25 0 0 1 16.5 20.25h-9A2.25 2.25 0 0 1 5.25 18V6A2.25 2.25 0 0 1 7.5 3.75Z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 20.25v-3a2.25 2.25 0 0 0-2.25-2.25h-3A2.25 2.25 0 0 0 8.25 17.25v3"/>
+                        </svg>
+                        <span>Audits</span>
                     </span>
                 </x-responsive-nav-link>
             @endif

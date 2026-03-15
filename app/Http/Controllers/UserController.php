@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use App\Models\User;
+use App\Support\AuditTrail;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -89,7 +90,8 @@ class UserController extends Controller
         $data = $this->validatedData($request);
         $data['password'] = bcrypt($data['password']);
 
-        User::create($data);
+        $user = User::create($data);
+        AuditTrail::created(auth()->id(), $user);
 
         return redirect()->route('users.index')->with('success', 'Lietotajs veiksmigi izveidots');
     }
@@ -119,7 +121,10 @@ class UserController extends Controller
             unset($data['password']);
         }
 
-        $user->update($data);
+        $user->fill($data);
+        $changedFields = array_values(array_diff(array_keys($user->getDirty()), ['last_login', 'remember_token']));
+        $user->save();
+        AuditTrail::updated(auth()->id(), $user, $changedFields);
 
         return redirect()->route('users.index')->with('success', 'Lietotajs veiksmigi atjauninats');
     }
@@ -132,6 +137,7 @@ class UserController extends Controller
                 ->with('error', 'Nevar dzest savu lietotaja kontu.');
         }
 
+        AuditTrail::deleted(auth()->id(), $user, severity: AuditTrail::SEVERITY_WARNING);
         $user->delete();
 
         return redirect()->route('users.index')->with('success', 'Lietotajs dzests');

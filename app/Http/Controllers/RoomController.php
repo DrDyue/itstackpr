@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Building;
 use App\Models\Employee;
 use App\Models\Room;
+use App\Support\AuditTrail;
 use Illuminate\Http\Request;
 
 class RoomController extends Controller
@@ -30,7 +31,8 @@ class RoomController extends Controller
 
     public function store(Request $request)
     {
-        Room::create($this->validatedData($request));
+        $room = Room::create($this->validatedData($request));
+        AuditTrail::created(auth()->id(), $room);
 
         return redirect()->route('rooms.index')->with('success', 'Telpa veiksmigi pievienota');
     }
@@ -46,13 +48,17 @@ class RoomController extends Controller
 
     public function update(Request $request, Room $room)
     {
-        $room->update($this->validatedData($request));
+        $room->fill($this->validatedData($request));
+        $changedFields = array_keys($room->getDirty());
+        $room->save();
+        AuditTrail::updated(auth()->id(), $room, $changedFields);
 
         return redirect()->route('rooms.index')->with('success', 'Telpas dati atjauninati');
     }
 
     public function destroy(Room $room)
     {
+        AuditTrail::deleted(auth()->id(), $room);
         $room->delete();
 
         return redirect()->route('rooms.index')->with('success', 'Telpa dzesta');

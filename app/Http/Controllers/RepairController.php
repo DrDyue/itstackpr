@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Device;
 use App\Models\Repair;
 use App\Models\User;
+use App\Support\AuditTrail;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -41,7 +42,8 @@ class RepairController extends Controller
 
     public function store(Request $request)
     {
-        Repair::create($this->validatedData($request));
+        $repair = Repair::create($this->validatedData($request));
+        AuditTrail::created(auth()->id(), $repair, severity: null);
 
         return redirect()->route('repairs.index')->with('success', 'Remonts veiksmigi pievienots');
     }
@@ -53,13 +55,17 @@ class RepairController extends Controller
 
     public function update(Request $request, Repair $repair)
     {
-        $repair->update($this->validatedData($request));
+        $repair->fill($this->validatedData($request));
+        $changedFields = array_keys($repair->getDirty());
+        $repair->save();
+        AuditTrail::updated(auth()->id(), $repair, $changedFields);
 
         return redirect()->route('repairs.index')->with('success', 'Remonts atjauninats');
     }
 
     public function destroy(Repair $repair)
     {
+        AuditTrail::deleted(auth()->id(), $repair);
         $repair->delete();
 
         return redirect()->route('repairs.index')->with('success', 'Remonts dzests');

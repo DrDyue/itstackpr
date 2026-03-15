@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Building;
+use App\Support\AuditTrail;
 use Illuminate\Http\Request;
 
 class BuildingController extends Controller
@@ -23,7 +24,8 @@ class BuildingController extends Controller
 
     public function store(Request $request)
     {
-        Building::create($this->validatedData($request));
+        $building = Building::create($this->validatedData($request));
+        AuditTrail::created(auth()->id(), $building);
 
         return redirect()->route('buildings.index')->with('success', 'Eka veiksmigi pievienota');
     }
@@ -35,13 +37,17 @@ class BuildingController extends Controller
 
     public function update(Request $request, Building $building)
     {
-        $building->update($this->validatedData($request));
+        $building->fill($this->validatedData($request));
+        $changedFields = array_keys($building->getDirty());
+        $building->save();
+        AuditTrail::updated(auth()->id(), $building, $changedFields);
 
         return redirect()->route('buildings.index')->with('success', 'Ekas dati atjauninati');
     }
 
     public function destroy(Building $building)
     {
+        AuditTrail::deleted(auth()->id(), $building);
         $building->delete();
 
         return redirect()->route('buildings.index')->with('success', 'Eka dzesta');

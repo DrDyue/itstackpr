@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AuditLog;
 use App\Models\Building;
 use App\Models\Device;
 use App\Models\DeviceHistory;
@@ -10,6 +9,7 @@ use App\Models\DeviceSet;
 use App\Models\DeviceSetItem;
 use App\Models\DeviceType;
 use App\Models\Room;
+use App\Support\AuditTrail;
 use App\Support\DeviceAssetManager;
 use App\Support\DeviceImageAutoFetcher;
 use Illuminate\Http\Request;
@@ -384,14 +384,7 @@ class DeviceController extends Controller
 
     private function writeAudit(?int $userId, string $action, Device $device, string $description, string $severity): void
     {
-        AuditLog::create([
-            'user_id' => $userId,
-            'action' => $action,
-            'entity_type' => 'Device',
-            'entity_id' => (string) $device->id,
-            'description' => $description,
-            'severity' => $severity,
-        ]);
+        AuditTrail::writeForModel($userId, $action, $device, $description, $severity);
     }
 
     private function syncUploads(Request $request, Device $device): void

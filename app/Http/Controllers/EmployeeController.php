@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AuditLog;
 use App\Models\Employee;
+use App\Support\AuditTrail;
 use Illuminate\Http\Request;
 
 class EmployeeController extends Controller
@@ -83,13 +83,7 @@ class EmployeeController extends Controller
 
         // audit log
         $userId = \Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::id() : null;
-        AuditLog::create([
-            'user_id' => $userId,
-            'action' => 'CREATE',
-            'entity_type' => 'Employee',
-            'entity_id' => (string)$employee->id,
-            'description' => 'Employee created: ' . $employee->full_name,
-        ]);
+        AuditTrail::created($userId, $employee);
 
         return redirect()->route('employees.index')->with('success', 'Darbinieks veiksmigi pievienots');
     }
@@ -125,13 +119,7 @@ class EmployeeController extends Controller
         }
 
         $userId = \Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::id() : null;
-        AuditLog::create([
-            'user_id' => $userId,
-            'action' => 'UPDATE',
-            'entity_type' => 'Employee',
-            'entity_id' => (string)$employee->id,
-            'description' => 'Employee updated: ' . $employee->full_name . (count($changed) ? ' | fields: ' . implode(', ', $changed) : ''),
-        ]);
+        AuditTrail::updated($userId, $employee, $changed);
 
         return redirect()->route('employees.index')->with('success', 'Darbinieka dati atjauninati');
     }
@@ -140,13 +128,7 @@ class EmployeeController extends Controller
     {
         $userId = \Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::id() : null;
 
-        AuditLog::create([
-            'user_id' => $userId,
-            'action' => 'DELETE',
-            'entity_type' => 'Employee',
-            'entity_id' => (string)$employee->id,
-            'description' => 'Employee deleted: ' . $employee->full_name,
-        ]);
+        AuditTrail::deleted($userId, $employee);
 
         $employee->delete();
 

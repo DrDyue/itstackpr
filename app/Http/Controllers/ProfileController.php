@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Support\AuditTrail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -47,6 +48,7 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+        AuditTrail::deleted($user?->id, $user, 'User account deleted: ' . AuditTrail::labelFor($user), AuditTrail::SEVERITY_WARNING);
 
         Auth::logout();
 

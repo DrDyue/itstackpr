@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DeviceType;
+use App\Support\AuditTrail;
 use Illuminate\Http\Request;
 
 class DeviceTypeController extends Controller
@@ -64,7 +65,8 @@ class DeviceTypeController extends Controller
             'expected_lifetime_years' => ['nullable', 'integer', 'min:0', 'max:100'],
         ]);
 
-        DeviceType::create($data);
+        $deviceType = DeviceType::create($data);
+        AuditTrail::created(auth()->id(), $deviceType);
 
         return redirect()->route('device-types.index')->with('success', 'Ierices tips veiksmigi pievienots');
     }
@@ -83,13 +85,17 @@ class DeviceTypeController extends Controller
             'expected_lifetime_years' => ['nullable', 'integer', 'min:0', 'max:100'],
         ]);
 
-        $deviceType->update($data);
+        $deviceType->fill($data);
+        $changedFields = array_keys($deviceType->getDirty());
+        $deviceType->save();
+        AuditTrail::updated(auth()->id(), $deviceType, $changedFields);
 
         return redirect()->route('device-types.index')->with('success', 'Ierices tips atjauninats');
     }
 
     public function destroy(DeviceType $deviceType)
     {
+        AuditTrail::deleted(auth()->id(), $deviceType);
         $deviceType->delete();
         return redirect()->route('device-types.index')->with('success', 'Ierices tips dzests');
     }

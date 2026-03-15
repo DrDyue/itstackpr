@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Device;
 use App\Models\DeviceSet;
 use App\Models\DeviceSetItem;
+use App\Support\AuditTrail;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -35,7 +36,8 @@ class DeviceSetItemController extends Controller
 
     public function store(Request $request)
     {
-        DeviceSetItem::create($this->validatedData($request));
+        $item = DeviceSetItem::create($this->validatedData($request));
+        AuditTrail::created(auth()->id(), $item);
 
         return redirect()->route('device-set-items.index')->with('success', 'Pozicija veiksmigi pievienota komplektam');
     }
@@ -51,13 +53,17 @@ class DeviceSetItemController extends Controller
 
     public function update(Request $request, DeviceSetItem $deviceSetItem)
     {
-        $deviceSetItem->update($this->validatedData($request, $deviceSetItem));
+        $deviceSetItem->fill($this->validatedData($request, $deviceSetItem));
+        $changedFields = array_keys($deviceSetItem->getDirty());
+        $deviceSetItem->save();
+        AuditTrail::updated(auth()->id(), $deviceSetItem, $changedFields);
 
         return redirect()->route('device-set-items.index')->with('success', 'Pozicija veiksmigi atjauninata');
     }
 
     public function destroy(DeviceSetItem $deviceSetItem)
     {
+        AuditTrail::deleted(auth()->id(), $deviceSetItem);
         $deviceSetItem->delete();
 
         return redirect()->route('device-set-items.index')->with('success', 'Pozicija veiksmigi dzesta no komplekta');

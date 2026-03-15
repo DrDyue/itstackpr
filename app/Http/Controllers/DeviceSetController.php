@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AuditLog;
 use App\Models\Device;
 use App\Models\DeviceSet;
 use App\Models\DeviceSetItem;
 use App\Models\Room;
+use App\Support\AuditTrail;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -154,12 +154,6 @@ class DeviceSetController extends Controller
 
     private function writeAudit(?int $userId, string $action, DeviceSet $set, string $description): void
     {
-        AuditLog::create([
-            'user_id' => $userId,
-            'action' => $action,
-            'entity_type' => 'DeviceSet',
-            'entity_id' => (string) $set->id,
-            'description' => $description,
-        ]);
+        AuditTrail::writeForModel($userId, $action, $set, $description);
     }
 }
