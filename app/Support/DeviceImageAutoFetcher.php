@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Device;
+use App\Models\DeviceType;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Throwable;
@@ -19,34 +20,53 @@ class DeviceImageAutoFetcher
             return false;
         }
 
-        foreach ($this->searchQueries($device) as $query) {
-            $imageUrl = $this->findImageUrl($query);
+        $imageUrl = $this->preview([
+            'manufacturer' => $device->manufacturer,
+            'model' => $device->model,
+            'name' => $device->name,
+            'device_type_id' => $device->device_type_id,
+        ], $device->relationLoaded('type') ? $device->type : null);
 
-            if (! $imageUrl) {
-                continue;
-            }
-
-            $storedPath = $this->downloadAndStore($imageUrl, $device->device_image_url);
-
-            if (! $storedPath) {
-                continue;
-            }
-
-            $device->forceFill(['device_image_url' => $storedPath])->save();
-
-            return true;
+        if (! $imageUrl) {
+            return false;
         }
 
-        return false;
+        $storedPath = $this->storeFromUrl($imageUrl, $device->device_image_url);
+
+        if (! $storedPath) {
+            return false;
+        }
+
+        $device->forceFill(['device_image_url' => $storedPath])->save();
+
+        return true;
     }
 
-    private function searchQueries(Device $device): array
+    public function preview(array $attributes, ?DeviceType $deviceType = null): ?string
+    {
+        foreach ($this->searchQueries($attributes, $deviceType) as $query) {
+            $imageUrl = $this->findImageUrl($query);
+
+            if ($imageUrl) {
+                return $imageUrl;
+            }
+        }
+
+        return null;
+    }
+
+    public function storeFromUrl(string $imageUrl, ?string $previousPath = null): ?string
+    {
+        return $this->downloadAndStore($imageUrl, $previousPath);
+    }
+
+    private function searchQueries(array $attributes, ?DeviceType $deviceType = null): array
     {
         $parts = array_values(array_filter([
-            trim((string) $device->manufacturer),
-            trim((string) $device->model),
-            trim((string) $device->name),
-            trim((string) $device->type?->type_name),
+            trim((string) ($attributes['manufacturer'] ?? '')),
+            trim((string) ($attributes['model'] ?? '')),
+            trim((string) ($attributes['name'] ?? '')),
+            trim((string) ($deviceType?->type_name ?? '')),
         ]));
 
         $queries = [

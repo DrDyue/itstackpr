@@ -34,9 +34,62 @@
             action="{{ route('devices.store') }}"
             enctype="multipart/form-data"
             class="device-form-grid"
-            x-data="{ devicePreview: null, warrantyPreview: null }"
+            x-data="{
+                devicePreview: @js(old('auto_device_image_url', '')),
+                warrantyPreview: null,
+                autoDeviceImageUrl: @js(old('auto_device_image_url', '')),
+                removeDeviceImage: false,
+                isFindingDeviceImage: false,
+                deviceImageError: '',
+                async findDeviceImage() {
+                    this.isFindingDeviceImage = true;
+                    this.deviceImageError = '';
+
+                    try {
+                        const response = await fetch(@js(route('devices.preview-auto-image')), {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': @js(csrf_token()),
+                            },
+                            body: JSON.stringify({
+                                name: this.$refs.name.value,
+                                model: this.$refs.model.value,
+                                manufacturer: this.$refs.manufacturer.value,
+                                device_type_id: this.$refs.deviceType.value,
+                            }),
+                        });
+
+                        const data = await response.json();
+
+                        if (! response.ok || ! data.image_url) {
+                            this.deviceImageError = data.message || 'Attelu neizdevas atrast.';
+                            return;
+                        }
+
+                        this.devicePreview = data.image_url;
+                        this.autoDeviceImageUrl = data.image_url;
+                        this.removeDeviceImage = false;
+                        this.$refs.deviceImageInput.value = '';
+                    } catch (error) {
+                        this.deviceImageError = 'Neizdevas sazinas ar attelu meklosanu.';
+                    } finally {
+                        this.isFindingDeviceImage = false;
+                    }
+                },
+                clearDeviceImage() {
+                    this.devicePreview = null;
+                    this.autoDeviceImageUrl = '';
+                    this.removeDeviceImage = false;
+                    this.deviceImageError = '';
+                    this.$refs.deviceImageInput.value = '';
+                }
+            }"
         >
             @csrf
+            <input type="hidden" name="auto_device_image_url" x-model="autoDeviceImageUrl">
+            <input type="hidden" name="remove_device_image" :value="removeDeviceImage ? '1' : '0'">
 
             <div class="space-y-6">
                 <div class="device-form-card">
@@ -56,13 +109,13 @@
                         </div>
                         <div>
                             <label class="crud-label">Nosaukums *</label>
-                            <input type="text" name="name" value="{{ old('name') }}" required class="crud-control">
+                            <input type="text" name="name" value="{{ old('name') }}" required class="crud-control" x-ref="name">
                         </div>
                     </div>
                     <div class="mt-4 grid gap-4 sm:grid-cols-3">
                         <div>
                             <label class="crud-label">Tips *</label>
-                            <select name="device_type_id" required class="crud-control">
+                            <select name="device_type_id" required class="crud-control" x-ref="deviceType">
                                 @foreach ($types as $type)
                                     <option value="{{ $type->id }}" @selected(old('device_type_id') == $type->id)>{{ $type->type_name }}</option>
                                 @endforeach
@@ -70,7 +123,7 @@
                         </div>
                         <div>
                             <label class="crud-label">Modelis *</label>
-                            <input type="text" name="model" value="{{ old('model') }}" required class="crud-control">
+                            <input type="text" name="model" value="{{ old('model') }}" required class="crud-control" x-ref="model">
                         </div>
                         <div>
                             <label class="crud-label">Statuss *</label>
@@ -132,7 +185,7 @@
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div>
                             <label class="crud-label">Razotajs</label>
-                            <input type="text" name="manufacturer" value="{{ old('manufacturer') }}" class="crud-control">
+                            <input type="text" name="manufacturer" value="{{ old('manufacturer') }}" class="crud-control" x-ref="manufacturer">
                         </div>
                         <div>
                             <label class="crud-label">Serijas numurs</label>
@@ -182,8 +235,19 @@
                     <div class="space-y-4">
                         <div class="device-upload-box">
                             <label class="crud-label">Ierices foto</label>
-                            <input type="file" name="device_image" accept="image/*" class="crud-control" @change="devicePreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null">
+                            <input type="file" name="device_image" accept="image/*" class="crud-control" x-ref="deviceImageInput" @change="devicePreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null; autoDeviceImageUrl = ''; removeDeviceImage = false; deviceImageError = ''">
                             <p class="mt-2 text-xs text-gray-500">JPG, PNG vai WEBP. Augsuplade tiks optimizeta un glabata uz servera diska.</p>
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                <button type="button" class="crud-btn-secondary" @click="findDeviceImage()" :disabled="isFindingDeviceImage">
+                                    <span x-text="isFindingDeviceImage ? 'Mekle...' : 'Atrast attelu interneta'"></span>
+                                </button>
+                                <button type="button" class="crud-btn-secondary" @click="clearDeviceImage()" x-show="devicePreview" x-cloak>
+                                    Notirit attelu
+                                </button>
+                            </div>
+                            <template x-if="deviceImageError">
+                                <p class="mt-2 text-xs text-rose-600" x-text="deviceImageError"></p>
+                            </template>
                             <div class="device-upload-preview">
                                 <template x-if="devicePreview">
                                     <img :src="devicePreview" alt="Ierices foto preview">
