@@ -74,7 +74,13 @@
                             }),
                         });
 
-                        const data = await response.json();
+                        const raw = await response.text();
+                        let data = {};
+                        try {
+                            data = JSON.parse(raw);
+                        } catch (e) {
+                            data = {};
+                        }
 
                         if (! response.ok || ! data.images?.length) {
                             this.deviceCandidates = [];

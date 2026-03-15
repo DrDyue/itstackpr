@@ -51,7 +51,7 @@ class DeviceImageAutoFetcher
         $perBatch = max(1, min($perBatch, 6));
         $context = $this->searchContext($attributes);
         $results = [];
-        $searchStage = $this->searchStage($batch);
+        [$searchStage, $stagePage] = $this->searchStage($batch);
 
         foreach ($this->searchQueries($attributes, $searchStage) as $query) {
             foreach ($this->findCommonsImageCandidates($query, $context) as $candidate) {
@@ -73,10 +73,18 @@ class DeviceImageAutoFetcher
 
         uasort($results, fn (array $a, array $b) => $b['score'] <=> $a['score']);
 
-        return array_values(array_map(
+        $offset = $stagePage * $perBatch;
+
+        $final = array_values(array_map(
             fn (array $candidate) => $candidate['url'],
-            array_slice($results, 0, $perBatch)
+            array_slice($results, $offset, $perBatch)
         ));
+
+        if ($final !== []) {
+            return $final;
+        }
+
+        return $this->fallbackImageUrls($attributes, $batch, $perBatch);
     }
 
     public function storeFromUrl(string $imageUrl, ?string $previousPath = null): ?string
@@ -113,13 +121,18 @@ class DeviceImageAutoFetcher
         return array_values(array_unique(array_filter($queries, fn (string $query) => $query !== '')));
     }
 
-    private function searchStage(int $batch): int
+    private function searchStage(int $batch): array
     {
-        return match (true) {
-            $batch <= 1 => 1,
-            $batch === 2 => 2,
-            default => 3,
-        };
+        if ($batch <= 1) {
+            return [1, 0];
+        }
+
+        if ($batch === 2) {
+            return [2, 0];
+        }
+
+        // For batch >= 3 we stay in stage 3 and page forward 3-image chunks.
+        return [3, $batch - 3];
     }
 
     private function findCommonsImageCandidates(string $query, array $context): array
@@ -154,7 +167,7 @@ class DeviceImageAutoFetcher
                 $source = data_get($page, 'imageinfo.0.url');
                 $title = (string) ($page['title'] ?? '');
 
-                if (is_string($source) && Str::startsWith($source, ['http://', 'https://'])) {
+                if ($this->isAllowedImageUrl($source) && ! $this->looksLikeNonPhoto($title)) {
                     $candidates[] = [
                         'url' => $source,
                         'score' => $this->scoreCandidate($title, $query, $context) + 20,
@@ -202,7 +215,7 @@ class DeviceImageAutoFetcher
                 $title = (string) ($page['title'] ?? '');
                 $extract = (string) ($page['extract'] ?? '');
 
-                if (is_string($source) && Str::startsWith($source, ['http://', 'https://'])) {
+                if ($this->isAllowedImageUrl($source) && ! $this->looksLikeNonPhoto($title . ' ' . $extract)) {
                     $candidates[] = [
                         'url' => $source,
                         'score' => $this->scoreCandidate($title . ' ' . $extract, $query, $context),
@@ -271,6 +284,57 @@ class DeviceImageAutoFetcher
         }
 
         return $score;
+    }
+
+    private function isAllowedImageUrl(mixed $source): bool
+    {
+        if (! is_string($source) || ! Str::startsWith($source, ['http://', 'https://'])) {
+            return false;
+        }
+
+        $path = (string) parse_url($source, PHP_URL_PATH);
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        if ($extension === '') {
+            return true;
+        }
+
+        return in_array($extension, ['jpg', 'jpeg', 'png', 'webp'], true);
+    }
+
+    private function looksLikeNonPhoto(string $text): bool
+    {
+        $normalized = Str::lower($text);
+        $blocked = ['logo', 'icon', 'vector', 'svg', 'wordmark', 'symbol', 'coat of arms'];
+
+        foreach ($blocked as $token) {
+            if (str_contains($normalized, $token)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function fallbackImageUrls(array $attributes, int $batch, int $perBatch): array
+    {
+        $manufacturer = trim((string) ($attributes['manufacturer'] ?? ''));
+        $model = trim((string) ($attributes['model'] ?? ''));
+        $query = trim($manufacturer . ' ' . $model . ' device');
+
+        if ($query === '') {
+            return [];
+        }
+
+        $offset = max(0, $batch - 1) * $perBatch;
+        $urls = [];
+
+        for ($i = 1; $i <= $perBatch; $i++) {
+            $sig = $offset + $i;
+            $urls[] = 'https://source.unsplash.com/1600x900/?' . rawurlencode($query) . '&sig=' . $sig;
+        }
+
+        return $urls;
     }
 
     private function downloadAndStore(string $imageUrl, ?string $previousPath = null): ?string
