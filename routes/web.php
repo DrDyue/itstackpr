@@ -65,6 +65,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/device-assets/{path}', [DeviceAssetController::class, 'show'])
         ->where('path', '.*')
         ->name('device-assets.show');
+    Route::post('/repairs/{repair}/transition', [RepairController::class, 'transition'])->name('repairs.transition');
     Route::resource('repairs', RepairController::class)->except(['show']);
     Route::get('/device-history', [DeviceHistoryController::class, 'index'])->name('device-history.index');
     Route::get('/devices/{device}/history', [DeviceHistoryController::class, 'device'])->name('devices.history');

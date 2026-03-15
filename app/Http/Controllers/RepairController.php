@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
+use App\Models\Building;
 use App\Models\Device;
 use App\Models\Repair;
 use App\Models\User;
 use App\Support\AuditTrail;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -15,21 +19,42 @@ class RepairController extends Controller
     private const TYPES = ['internal', 'external'];
     private const PRIORITIES = ['low', 'medium', 'high', 'critical'];
     private const DEVICE_STATUSES_BLOCKED_FOR_NEW_REPAIR = ['repair', 'retired'];
+    private const ALLOWED_TRANSITIONS = [
+        'waiting' => ['in-progress', 'cancelled'],
+        'in-progress' => ['waiting', 'completed', 'cancelled'],
+        'completed' => ['in-progress'],
+        'cancelled' => ['waiting', 'in-progress'],
+    ];
 
     public function index(Request $request)
     {
-        $q = $request->query('q');
-
-        $repairs = Repair::with(['device', 'reporter', 'assignee'])
-            ->when($q, function ($query) use ($q) {
-                $query->where('description', 'like', "%{$q}%")
-                    ->orWhere('invoice_number', 'like', "%{$q}%")
-                    ->orWhere('vendor_name', 'like', "%{$q}%");
-            })
+        $repairs = $this->applyFilters($this->repairsQuery(), $request)
             ->orderByDesc('id')
             ->get();
 
-        return view('repairs.index', compact('repairs', 'q'));
+        $columns = [
+            'waiting' => $repairs->where('status', 'waiting')->values(),
+            'in-progress' => $repairs->where('status', 'in-progress')->values(),
+            'completed' => $repairs->where('status', 'completed')->values(),
+        ];
+
+        $cancelledRepairs = $repairs->where('status', 'cancelled')->values();
+        $stats = $this->statsFor($repairs, $columns, $cancelledRepairs);
+
+        return view('repairs.index', array_merge([
+            'repairs' => $repairs,
+            'columns' => $columns,
+            'cancelledRepairs' => $cancelledRepairs,
+            'stats' => $stats,
+            'buildings' => Building::query()->orderBy('building_name')->get(),
+            'filters' => [
+                'q' => (string) $request->query('q', ''),
+                'status' => (string) $request->query('status', ''),
+                'repair_type' => (string) $request->query('repair_type', ''),
+                'building_id' => (string) $request->query('building_id', ''),
+                'priority' => (string) $request->query('priority', ''),
+            ],
+        ], $this->viewMeta()));
     }
 
     public function create(Request $request)
@@ -43,6 +68,8 @@ class RepairController extends Controller
     public function store(Request $request)
     {
         $repair = Repair::create($this->validatedData($request));
+        $repair->load(['device', 'reporter.employee', 'assignee.employee']);
+        $this->syncDeviceStatus($repair);
         AuditTrail::created(auth()->id(), $repair, severity: null);
 
         return redirect()->route('repairs.index')->with('success', 'Remonts veiksmigi pievienots');
@@ -50,7 +77,12 @@ class RepairController extends Controller
 
     public function edit(Repair $repair)
     {
-        return view('repairs.edit', array_merge(['repair' => $repair], $this->formData($repair)));
+        $repair->load(['device.building', 'device.room', 'device.type', 'reporter.employee', 'assignee.employee']);
+
+        return view('repairs.edit', array_merge([
+            'repair' => $repair,
+            'timeline' => $this->timelineFor($repair),
+        ], $this->formData($repair), $this->viewMeta()));
     }
 
     public function update(Request $request, Repair $repair)
@@ -61,18 +93,98 @@ class RepairController extends Controller
             'invoice_number', 'issue_reported_by', 'assigned_to',
         ]);
         $repair->update($this->validatedData($request));
+        $repair->load(['device', 'reporter.employee', 'assignee.employee']);
+        $this->syncDeviceStatus($repair, $before['status'] ?? null);
         $after = $repair->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState(auth()->id(), $repair, $before, $after);
 
-        return redirect()->route('repairs.index')->with('success', 'Remonts atjauninats');
+        return redirect()->route('repairs.edit', $repair)->with('success', 'Remonts atjauninats');
     }
 
     public function destroy(Repair $repair)
     {
+        $previousStatus = $repair->status;
         AuditTrail::deleted(auth()->id(), $repair);
         $repair->delete();
+        $this->syncDeviceStatus($repair, $previousStatus);
 
         return redirect()->route('repairs.index')->with('success', 'Remonts dzests');
+    }
+
+    public function transition(Request $request, Repair $repair)
+    {
+        $data = $request->validate([
+            'target_status' => ['required', Rule::in(self::STATUSES)],
+            'assigned_to' => ['nullable', 'exists:users,id'],
+            'estimated_completion' => ['nullable', 'date'],
+            'actual_completion' => ['nullable', 'date'],
+            'cost' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $targetStatus = $data['target_status'];
+
+        if (! $this->isTransitionAllowed((string) $repair->status, $targetStatus)) {
+            return back()->withErrors([
+                'transition' => 'Sadu statusa parvietosanu nevar izpildit no pasreizeja stavokla.',
+            ]);
+        }
+
+        $before = $repair->only([
+            'status',
+            'assigned_to',
+            'estimated_completion',
+            'actual_completion',
+            'cost',
+        ]);
+
+        $payload = ['status' => $targetStatus];
+
+        if ($targetStatus === 'in-progress' && empty($repair->assigned_to) && auth()->check()) {
+            $payload['assigned_to'] = $data['assigned_to'] ?? auth()->id();
+        } elseif (array_key_exists('assigned_to', $data) && filled($data['assigned_to'] ?? null)) {
+            $payload['assigned_to'] = $data['assigned_to'];
+        }
+
+        if ($targetStatus === 'completed') {
+            if (! filled($data['actual_completion'] ?? null)) {
+                return back()->withErrors([
+                    'actual_completion' => 'Pabeigtam remontam noradi faktisko beigu datumu.',
+                ]);
+            }
+
+            if (! array_key_exists('cost', $data) || $data['cost'] === null || $data['cost'] === '') {
+                return back()->withErrors([
+                    'cost' => 'Pabeigtam remontam noradi gala izmaksas.',
+                ]);
+            }
+
+            $payload['actual_completion'] = $data['actual_completion'] ?? now()->toDateString();
+        } elseif ($targetStatus !== 'completed' && $repair->status === 'completed') {
+            $payload['actual_completion'] = null;
+        }
+
+        if (filled($data['estimated_completion'] ?? null)) {
+            $payload['estimated_completion'] = $data['estimated_completion'];
+        }
+
+        if (array_key_exists('cost', $data) && $data['cost'] !== null && $data['cost'] !== '') {
+            $payload['cost'] = $data['cost'];
+        }
+
+        $repair->update($payload);
+        $repair->load(['device', 'reporter.employee', 'assignee.employee']);
+        $this->syncDeviceStatus($repair, $before['status'] ?? null);
+
+        $after = $repair->fresh()->only(array_keys($before));
+        AuditTrail::updatedFromState(
+            auth()->id(),
+            $repair,
+            $before,
+            $after,
+            description: 'Repair status changed: ' . $this->statusLabel($before['status'] ?? 'waiting') . ' -> ' . $this->statusLabel($after['status'] ?? 'waiting')
+        );
+
+        return back()->with('success', 'Remonta statuss atjauninats');
     }
 
     public function show(Repair $repair)
@@ -83,7 +195,7 @@ class RepairController extends Controller
     private function formData(?Repair $repair = null): array
     {
         $devices = Device::query()
-            ->with(['createdBy.employee'])
+            ->with(['createdBy.employee', 'building', 'room', 'type'])
             ->whereNotIn('status', self::DEVICE_STATUSES_BLOCKED_FOR_NEW_REPAIR)
             ->when($repair?->device_id, function ($query) use ($repair) {
                 $query->orWhere('id', $repair->device_id);
@@ -94,6 +206,7 @@ class RepairController extends Controller
         return [
             'devices' => $devices,
             'users' => User::with('employee')->orderByDesc('id')->get(),
+            'buildings' => Building::query()->orderBy('building_name')->get(),
             'statuses' => self::STATUSES,
             'repairTypes' => self::TYPES,
             'priorities' => self::PRIORITIES,
@@ -199,6 +312,180 @@ class RepairController extends Controller
             ]);
         }
 
+        if (($data['status'] ?? null) === 'completed' && (($data['cost'] ?? null) === null || $data['cost'] === '')) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'cost' => ['Pabeigtam remontam noradi gala izmaksas.'],
+            ]);
+        }
+
         return $data;
+    }
+
+    private function repairsQuery(): Builder
+    {
+        return Repair::query()->with([
+            'device.building',
+            'device.room',
+            'device.type',
+            'reporter.employee',
+            'assignee.employee',
+        ]);
+    }
+
+    private function applyFilters(Builder $query, Request $request): Builder
+    {
+        $q = trim((string) $request->query('q', ''));
+        $status = (string) $request->query('status', '');
+        $repairType = (string) $request->query('repair_type', '');
+        $buildingId = (string) $request->query('building_id', '');
+        $priority = (string) $request->query('priority', '');
+
+        return $query
+            ->when($status !== '' && in_array($status, self::STATUSES, true), function (Builder $builder) use ($status) {
+                $builder->where('status', $status);
+            })
+            ->when($repairType !== '' && in_array($repairType, self::TYPES, true), function (Builder $builder) use ($repairType) {
+                $builder->where('repair_type', $repairType);
+            })
+            ->when($priority !== '' && in_array($priority, self::PRIORITIES, true), function (Builder $builder) use ($priority) {
+                $builder->where('priority', $priority);
+            })
+            ->when($buildingId !== '', function (Builder $builder) use ($buildingId) {
+                $builder->whereHas('device', function (Builder $deviceQuery) use ($buildingId) {
+                    $deviceQuery->where('building_id', $buildingId);
+                });
+            })
+            ->when($q !== '', function (Builder $builder) use ($q) {
+                $builder->where(function (Builder $searchQuery) use ($q) {
+                    $searchQuery
+                        ->where('description', 'like', "%{$q}%")
+                        ->orWhere('invoice_number', 'like', "%{$q}%")
+                        ->orWhere('vendor_name', 'like', "%{$q}%")
+                        ->orWhereHas('device', function (Builder $deviceQuery) use ($q) {
+                            $deviceQuery
+                                ->where('code', 'like', "%{$q}%")
+                                ->orWhere('name', 'like', "%{$q}%");
+                        })
+                        ->orWhereHas('device.building', function (Builder $buildingQuery) use ($q) {
+                            $buildingQuery->where('building_name', 'like', "%{$q}%");
+                        })
+                        ->orWhereHas('device.room', function (Builder $roomQuery) use ($q) {
+                            $roomQuery
+                                ->where('room_number', 'like', "%{$q}%")
+                                ->orWhere('room_name', 'like', "%{$q}%");
+                        });
+                });
+            });
+    }
+
+    private function statsFor($repairs, array $columns, $cancelledRepairs): array
+    {
+        $completed = $columns['completed'];
+        $activeRepairs = $columns['waiting']->concat($columns['in-progress']);
+        $averageDays = $completed
+            ->filter(fn (Repair $repair) => $repair->start_date && $repair->actual_completion)
+            ->map(fn (Repair $repair) => Carbon::parse($repair->start_date)->diffInDays(Carbon::parse($repair->actual_completion)))
+            ->avg();
+
+        return [
+            'total' => $repairs->count(),
+            'waiting' => $columns['waiting']->count(),
+            'in_progress' => $columns['in-progress']->count(),
+            'completed' => $columns['completed']->count(),
+            'cancelled' => $cancelledRepairs->count(),
+            'active_cost' => (float) $activeRepairs->sum(fn (Repair $repair) => (float) ($repair->cost ?? 0)),
+            'completed_cost' => (float) $completed->sum(fn (Repair $repair) => (float) ($repair->cost ?? 0)),
+            'average_days' => $averageDays !== null ? round((float) $averageDays, 1) : null,
+            'latest_started_at' => $repairs->filter(fn (Repair $repair) => $repair->created_at)->max('created_at'),
+        ];
+    }
+
+    private function timelineFor(Repair $repair)
+    {
+        return AuditLog::query()
+            ->with('user.employee')
+            ->where('entity_type', 'Repair')
+            ->where('entity_id', (string) $repair->id)
+            ->orderByDesc('timestamp')
+            ->limit(20)
+            ->get();
+    }
+
+    private function syncDeviceStatus(Repair $repair, ?string $previousStatus = null): void
+    {
+        $device = $repair->device()->first();
+
+        if (! $device) {
+            return;
+        }
+
+        $hasActiveRepairs = $device->repairs()
+            ->whereIn('status', ['waiting', 'in-progress'])
+            ->exists();
+
+        if ($hasActiveRepairs) {
+            if ($device->status !== 'repair') {
+                $device->update(['status' => 'repair']);
+            }
+
+            return;
+        }
+
+        if (($previousStatus === 'waiting' || $previousStatus === 'in-progress' || $device->status === 'repair')) {
+            $device->update(['status' => 'active']);
+        }
+    }
+
+    private function statusLabel(string $status): string
+    {
+        return match ($status) {
+            'in-progress' => 'Procesa',
+            'completed' => 'Pabeigts',
+            'cancelled' => 'Atcelts',
+            default => 'Gaida',
+        };
+    }
+
+    private function isTransitionAllowed(string $fromStatus, string $toStatus): bool
+    {
+        return in_array($toStatus, self::ALLOWED_TRANSITIONS[$fromStatus] ?? [], true);
+    }
+
+    private function viewMeta(): array
+    {
+        return [
+            'statusLabels' => [
+                'waiting' => 'Gaida',
+                'in-progress' => 'Procesa',
+                'completed' => 'Pabeigts',
+                'cancelled' => 'Atcelts',
+            ],
+            'statusClasses' => [
+                'waiting' => 'bg-amber-100 text-amber-800 ring-amber-200',
+                'in-progress' => 'bg-sky-100 text-sky-800 ring-sky-200',
+                'completed' => 'bg-emerald-100 text-emerald-800 ring-emerald-200',
+                'cancelled' => 'bg-slate-200 text-slate-700 ring-slate-300',
+            ],
+            'typeLabels' => [
+                'internal' => 'Ieksejais',
+                'external' => 'Arejais',
+            ],
+            'typeClasses' => [
+                'internal' => 'bg-violet-100 text-violet-800 ring-violet-200',
+                'external' => 'bg-rose-100 text-rose-800 ring-rose-200',
+            ],
+            'priorityLabels' => [
+                'low' => 'Zema',
+                'medium' => 'Videja',
+                'high' => 'Augsta',
+                'critical' => 'Kritiska',
+            ],
+            'priorityClasses' => [
+                'low' => 'bg-slate-100 text-slate-700 ring-slate-200',
+                'medium' => 'bg-amber-100 text-amber-800 ring-amber-200',
+                'high' => 'bg-orange-100 text-orange-800 ring-orange-200',
+                'critical' => 'bg-rose-100 text-rose-800 ring-rose-200',
+            ],
+        ];
     }
 }

@@ -1403,6 +1403,26 @@ tbody td {
     @apply flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3;
 }
 
+.repair-column-drop {
+    @apply transition duration-200;
+}
+
+.repair-column-drop-active {
+    @apply ring-2 ring-sky-300 ring-offset-2 ring-offset-white;
+}
+
+.repair-card-draggable {
+    @apply cursor-grab;
+}
+
+.repair-card-draggable:active {
+    @apply cursor-grabbing;
+}
+
+.repair-card-dragging {
+    @apply scale-[0.99] opacity-60 shadow-lg;
+}
+
 /* Guest layout page */
 .auth-wrapper {
     display: flex;

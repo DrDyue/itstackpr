@@ -1,52 +1,70 @@
 <x-app-layout>
     @php
-        $statusLabels = [
-            'waiting' => 'Gaida',
-            'in-progress' => 'Procesa',
-            'completed' => 'Pabeigts',
-            'cancelled' => 'Atcelts',
+        $currentBuilding = $repair->device?->building;
+        $currentRoom = $repair->device?->room;
+        $severityClasses = [
+            'info' => 'bg-slate-100 text-slate-700 ring-slate-200',
+            'warning' => 'bg-amber-100 text-amber-800 ring-amber-200',
+            'error' => 'bg-rose-100 text-rose-800 ring-rose-200',
+            'critical' => 'bg-rose-100 text-rose-800 ring-rose-200',
         ];
-        $priorityLabels = [
-            'low' => 'Zema',
-            'medium' => 'Videja',
-            'high' => 'Augsta',
-            'critical' => 'Kritiska',
+        $actionLabels = [
+            'CREATE' => 'Izveidots',
+            'UPDATE' => 'Atjauninats',
+            'DELETE' => 'Dzests',
+            'VIEW' => 'Skatits',
         ];
-        $typeLabels = [
-            'internal' => 'Ieksejais',
-            'external' => 'Arejais',
-        ];
-        $deviceAssignees = $devices->mapWithKeys(fn ($device) => [$device->id => $device->created_by])->all();
     @endphp
 
-    <section class="repair-form-shell"
-        x-data="{
+    <section
+        class="repair-form-shell space-y-6"
+        x-data="repairProcess({
+            transitionBaseUrl: @js(url('/repairs')),
+            csrfToken: @js(csrf_token()),
+            repairId: @js($repair->id),
             repairType: @js(old('repair_type', $repair->repair_type)),
             status: @js(old('status', $repair->status ?? 'waiting')),
-            assignedTo: @js((string) old('assigned_to', $repair->assigned_to)),
-            assignedTouched: true,
-            deviceAssignees: @js($deviceAssignees),
-            onDeviceChange(deviceId) {
-                if (!this.assignedTouched) {
-                    this.assignedTo = this.deviceAssignees[deviceId] ?? '';
-                }
-            }
-        }">
-        <div class="device-page-header">
+            today: @js(now()->toDateString()),
+            actualCompletion: @js(optional($repair->actual_completion)->format('Y-m-d')),
+            cost: @js($repair->cost),
+        })"
+    >
+        <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <h1 class="device-page-title">Rediget remontu #{{ $repair->id }}</h1>
-                <p class="device-page-subtitle">Labojiet statusu, terminus un remonta izpildi.</p>
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">Remonts #{{ $repair->id }}</span>
+                    <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 {{ $statusClasses[$repair->status] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">{{ $statusLabels[$repair->status] ?? $repair->status }}</span>
+                    <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 {{ $typeClasses[$repair->repair_type] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">{{ $typeLabels[$repair->repair_type] ?? $repair->repair_type }}</span>
+                </div>
+                <h1 class="mt-3 text-3xl font-semibold tracking-tight text-slate-900">{{ $repair->device?->name ?: 'Nezinama ierice' }}</h1>
+                <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">Procesa skats remonta izpildei, terminu kontrolei un gala noslegsanas darbam.</p>
             </div>
-            <a href="{{ route('repairs.index') }}" class="type-back-link inline-flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
-                </svg>
-                Atpakal uz sarakstu
-            </a>
+
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('repairs.index') }}" class="crud-btn-secondary inline-flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
+                    </svg>
+                    Atpakal uz paneli
+                </a>
+                <a href="{{ route('devices.show', $repair->device) }}" class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12 18 18.75 12 18.75 2.25 12 2.25 12Z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z"/>
+                    </svg>
+                    Skatit ierici
+                </a>
+            </div>
         </div>
 
+        @if (session('success'))
+            <div class="rounded-3xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800 shadow-sm">
+                {{ session('success') }}
+            </div>
+        @endif
+
         @if ($errors->any())
-            <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div class="rounded-3xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700 shadow-sm">
                 <ul class="list-disc pl-5">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -55,183 +73,376 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('repairs.update', $repair) }}" class="repair-form-grid">
-            @csrf
-            @method('PUT')
-
-            <div class="space-y-4">
-                <div class="repair-form-card">
-                    <div class="device-form-section-header">
-                        <div class="device-form-section-icon bg-sky-100 text-sky-700 ring-sky-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 7.5h15m-15 4.5h15m-15 4.5h9M3.75 5.25h16.5A1.5 1.5 0 0 1 21.75 6.75v10.5a1.5 1.5 0 0 1-1.5 1.5H3.75a1.5 1.5 0 0 1-1.5-1.5V6.75a1.5 1.5 0 0 1 1.5-1.5Z"/></svg>
-                        </div>
-                        <div class="device-form-section-copy">
-                            <div class="device-form-section-name">1. Ierice un remonta tips</div>
-                            <div class="device-form-section-note">Pamats remontam un remonta veids.</div>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 grid gap-4 sm:grid-cols-2">
-                        <div>
-                            <label class="crud-label">Ierice *</label>
-                            <select name="device_id" required class="crud-control" @change="onDeviceChange($event.target.value)">
-                                <option value="">Izvelies ierici</option>
-                                @foreach ($devices as $device)
-                                    <option value="{{ $device->id }}" @selected(old('device_id', $repair->device_id) == $device->id)>{{ $device->code ?? ('Ierice #' . $device->id) }} - {{ $device->name ?? '' }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="crud-label">Remonta tips *</label>
-                            <select name="repair_type" required class="crud-control" x-model="repairType">
-                                @foreach ($repairTypes as $type)
-                                    <option value="{{ $type }}" @selected(old('repair_type', $repair->repair_type) === $type)>{{ $typeLabels[$type] ?? $type }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="repair-form-card">
-                    <div class="device-form-section-header">
-                        <div class="device-form-section-icon bg-amber-100 text-amber-700 ring-amber-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m6 2.25a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
-                        </div>
-                        <div class="device-form-section-copy">
-                            <div class="device-form-section-name">2. Remonta saturs</div>
-                            <div class="device-form-section-note">Statuss, datumi, izmaksas un izpildes gaita.</div>
-                        </div>
-                    </div>
-
-                    <div class="mt-4">
-                        <label class="crud-label">Apraksts *</label>
-                        <textarea name="description" rows="4" required class="crud-control">{{ old('description', $repair->description) }}</textarea>
-                    </div>
-
-                    <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                        <div>
-                            <label class="crud-label">Statuss</label>
-                            <select name="status" class="crud-control" x-model="status">
-                                @foreach ($statuses as $status)
-                                    <option value="{{ $status }}" @selected(old('status', $repair->status ?? 'waiting') === $status)>{{ $statusLabels[$status] ?? $status }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="crud-label">Prioritate</label>
-                            <select name="priority" class="crud-control">
-                                @foreach ($priorities as $priority)
-                                    <option value="{{ $priority }}" @selected(old('priority', $repair->priority ?? 'medium') === $priority)>{{ $priorityLabels[$priority] ?? $priority }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="crud-label">Sakuma datums</label>
-                            <input type="date" name="start_date" value="{{ old('start_date', optional($repair->start_date)->format('Y-m-d')) }}" class="crud-control">
-                        </div>
-                        <div>
-                            <label class="crud-label">Planotais beigums</label>
-                            <input type="date" name="estimated_completion" value="{{ old('estimated_completion', optional($repair->estimated_completion)->format('Y-m-d')) }}" class="crud-control">
-                        </div>
-                        <div>
-                            <label class="crud-label">Faktiskais beigums</label>
-                            <input type="date" name="actual_completion" value="{{ old('actual_completion', optional($repair->actual_completion)->format('Y-m-d')) }}" class="crud-control">
-                        </div>
-                    </div>
-
-                    <div class="mt-4 grid gap-4 sm:grid-cols-2">
-                        <div>
-                            <label class="crud-label">Izmaksas (EUR)</label>
-                            <input type="number" step="0.01" min="0" name="cost" value="{{ old('cost', $repair->cost) }}" class="crud-control">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="repair-form-card">
-                    <div class="device-form-section-header">
-                        <div class="device-form-section-icon bg-emerald-100 text-emerald-700 ring-emerald-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14.25c2.9 0 5.25-2.35 5.25-5.25S14.9 3.75 12 3.75 6.75 6.1 6.75 9 9.1 14.25 12 14.25Zm0 0c-4.142 0-7.5 2.015-7.5 4.5v1.5h15v-1.5c0-2.485-3.358-4.5-7.5-4.5Z"/></svg>
-                        </div>
-                        <div class="device-form-section-copy">
-                            <div class="device-form-section-name">3. Atbildiba</div>
-                            <div class="device-form-section-note">Kas pieteica un kam uzdots pabeigt remontu.</div>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 grid gap-4 sm:grid-cols-2">
-                        <div>
-                            <label class="crud-label">Zinoja lietotajs</label>
-                            <select name="issue_reported_by" class="crud-control">
-                                <option value="">Nav</option>
-                                @foreach ($users as $user)
-                                    <option value="{{ $user->id }}" @selected(old('issue_reported_by', $repair->issue_reported_by) == $user->id)>{{ $user->employee?->full_name ?? ('Lietotajs #' . $user->id) }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="crud-label">Pieskirts lietotajam</label>
-                            <select name="assigned_to" class="crud-control" x-model="assignedTo" @change="assignedTouched = true">
-                                <option value="">Nav</option>
-                                @foreach ($users as $user)
-                                    <option value="{{ $user->id }}">{{ $user->employee?->full_name ?? ('Lietotajs #' . $user->id) }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div x-show="repairType === 'external'" x-cloak class="repair-form-card">
-                    <div class="device-form-section-header">
-                        <div class="device-form-section-icon bg-rose-100 text-rose-700 ring-rose-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5 12 3l9 4.5M4.5 9.75V18L12 21l7.5-3V9.75M9 12h6"/></svg>
-                        </div>
-                        <div class="device-form-section-copy">
-                            <div class="device-form-section-name">4. Areja remonta dati</div>
-                            <div class="device-form-section-note">Piegadataja un rekina informacija arejiem remontiem.</div>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 grid gap-4 sm:grid-cols-2">
-                        <div>
-                            <label class="crud-label">Piegadatajs *</label>
-                            <input type="text" name="vendor_name" value="{{ old('vendor_name', $repair->vendor_name) }}" class="crud-control">
-                        </div>
-                        <div>
-                            <label class="crud-label">Piegadataja kontakts *</label>
-                            <input type="text" name="vendor_contact" value="{{ old('vendor_contact', $repair->vendor_contact) }}" class="crud-control">
-                        </div>
-                    </div>
-
-                    <div class="mt-4">
-                        <div>
-                            <label class="crud-label">Rekina numurs</label>
-                            <input type="text" name="invoice_number" maxlength="50" value="{{ old('invoice_number', $repair->invoice_number) }}" class="crud-control">
-                        </div>
-                    </div>
-                </div>
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Ierices kods</p>
+                <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $repair->device?->code ?: '-' }}</div>
+                <p class="mt-2 text-sm text-slate-600">{{ $repair->device?->type?->type_name ?: 'Tips nav noradits' }}</p>
             </div>
+            <div class="rounded-3xl border border-sky-200 bg-gradient-to-br from-sky-50 via-white to-cyan-50 p-5 shadow-sm">
+                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">Atrasanas vieta</p>
+                <div class="mt-2 text-lg font-semibold text-slate-900">{{ $currentBuilding?->building_name ?: 'Eka nav noradita' }}</div>
+                <p class="mt-2 text-sm text-slate-600">
+                    @if ($currentRoom)
+                        {{ $currentRoom->floor_number }}. stavs | telpa {{ $currentRoom->room_number }}
+                        @if ($currentRoom->room_name)
+                            | {{ $currentRoom->room_name }}
+                        @endif
+                    @else
+                        Telpa nav noradita
+                    @endif
+                </p>
+            </div>
+            <div class="rounded-3xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-5 shadow-sm">
+                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-violet-700">Atbildigais</p>
+                <div class="mt-2 text-lg font-semibold text-slate-900">{{ $repair->assignee?->employee?->full_name ?? 'Nav pieskirta' }}</div>
+                <p class="mt-2 text-sm text-slate-600">Pieteica: {{ $repair->reporter?->employee?->full_name ?? 'Nav zinotaja' }}</p>
+            </div>
+            <div class="rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-5 shadow-sm">
+                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">Termini un izmaksas</p>
+                <div class="mt-2 text-lg font-semibold text-slate-900">{{ $repair->cost !== null ? number_format((float) $repair->cost, 2) . ' EUR' : '-' }}</div>
+                <p class="mt-2 text-sm text-slate-600">
+                    Sakts {{ $repair->start_date?->format('d.m.Y') ?? '-' }}
+                    @if ($repair->estimated_completion)
+                        | planots {{ $repair->estimated_completion->format('d.m.Y') }}
+                    @endif
+                    @if ($repair->actual_completion)
+                        | pabeigts {{ $repair->actual_completion->format('d.m.Y') }}
+                    @endif
+                </p>
+            </div>
+        </div>
 
-            <div class="space-y-4">
-                <div class="type-form-actions">
-                    <div class="type-form-section-head">
-                        <div class="device-form-section-name">Darbibas</div>
+        <div class="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_360px]">
+            <div class="space-y-6">
+                <div class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <h2 class="text-lg font-semibold text-slate-900">Atras darbibas</h2>
+                            <p class="mt-1 text-sm text-slate-600">Parvieto remontu starp gaida, procesa un pabeigts statusiem.</p>
+                        </div>
+                        <span class="inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold ring-1 {{ $priorityClasses[$repair->priority] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">{{ $priorityLabels[$repair->priority] ?? 'Videja' }}</span>
                     </div>
-                    <div class="mt-4 flex flex-wrap gap-3">
+
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        @if ($repair->status === 'waiting')
+                            <form method="POST" action="{{ route('repairs.transition', $repair) }}">
+                                @csrf
+                                <input type="hidden" name="target_status" value="in-progress">
+                                <button type="submit" class="inline-flex items-center gap-2 rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-7.5-7.5L20.25 12l-7.5 7.5"/>
+                                    </svg>
+                                    Panemt procesa
+                                </button>
+                            </form>
+                        @endif
+
+                        @if ($repair->status === 'in-progress')
+                            <form method="POST" action="{{ route('repairs.transition', $repair) }}">
+                                @csrf
+                                <input type="hidden" name="target_status" value="waiting">
+                                <button type="submit" class="inline-flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800 transition hover:bg-amber-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/>
+                                    </svg>
+                                    Atpakal uz gaida
+                                </button>
+                            </form>
+
+                            <button type="button" @click="openCompletionModal()" class="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+                                    </svg>
+                                    Pabeigt remontu
+                            </button>
+                        @endif
+
+                        @if (in_array($repair->status, ['completed', 'cancelled'], true))
+                            <form method="POST" action="{{ route('repairs.transition', $repair) }}">
+                                @csrf
+                                <input type="hidden" name="target_status" value="in-progress">
+                                <button type="submit" class="inline-flex items-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-800 transition hover:bg-sky-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5 19.5 4.5M9 4.5h10.5V15"/>
+                                    </svg>
+                                    Atvert no jauna
+                                </button>
+                            </form>
+                        @endif
+
+                        @if ($repair->status !== 'cancelled')
+                            <form method="POST" action="{{ route('repairs.transition', $repair) }}">
+                                @csrf
+                                <input type="hidden" name="target_status" value="cancelled">
+                                <button type="submit" class="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                                    </svg>
+                                    Atcelt remontu
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ route('repairs.update', $repair) }}" class="space-y-6">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="device_id" value="{{ old('device_id', $repair->device_id) }}">
+                    <input type="hidden" name="start_date" value="{{ old('start_date', optional($repair->start_date)->format('Y-m-d')) }}">
+
+                    <div class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <h2 class="text-lg font-semibold text-slate-900">Pamatinformacija</h2>
+                                <p class="mt-1 text-sm text-slate-600">Ierice un sakuma datums tiek tureti nemainigi, lai saglabatu remonta vesturi korektu.</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="crud-label">Ierice</label>
+                                <input type="text" value="{{ $repair->device?->code ?: 'Ierice' }} - {{ $repair->device?->name ?: 'Nezinama ierice' }}" class="crud-control bg-slate-50" disabled>
+                            </div>
+                            <div>
+                                <label class="crud-label">Sakuma datums</label>
+                                <input type="text" value="{{ $repair->start_date?->format('d.m.Y') ?? '-' }}" class="crud-control bg-slate-50" disabled>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <label class="crud-label">Apraksts *</label>
+                            <textarea name="description" rows="5" required class="crud-control">{{ old('description', $repair->description) }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <h2 class="text-lg font-semibold text-slate-900">Planosana un izpilde</h2>
+                                <p class="mt-1 text-sm text-slate-600">Tips, prioritate, statuss, termini un izmaksas.</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+                            <div>
+                                <label class="crud-label">Remonta tips *</label>
+                                <select name="repair_type" required class="crud-control" x-model="repairType">
+                                    @foreach ($repairTypes as $type)
+                                        <option value="{{ $type }}" @selected(old('repair_type', $repair->repair_type) === $type)>{{ $typeLabels[$type] ?? $type }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="crud-label">Statuss</label>
+                                <select name="status" class="crud-control" x-model="status">
+                                    @foreach ($statuses as $status)
+                                        <option value="{{ $status }}" @selected(old('status', $repair->status) === $status)>{{ $statusLabels[$status] ?? $status }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="crud-label">Prioritate</label>
+                                <select name="priority" class="crud-control">
+                                    @foreach ($priorities as $priority)
+                                        <option value="{{ $priority }}" @selected(old('priority', $repair->priority ?? 'medium') === $priority)>{{ $priorityLabels[$priority] ?? $priority }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="crud-label">Izmaksas (EUR)</label>
+                                <input type="number" step="0.01" min="0" name="cost" value="{{ old('cost', $repair->cost) }}" class="crud-control">
+                            </div>
+                            <div>
+                                <label class="crud-label">Planotais beigums</label>
+                                <input type="date" name="estimated_completion" value="{{ old('estimated_completion', optional($repair->estimated_completion)->format('Y-m-d')) }}" class="crud-control">
+                            </div>
+                            <div x-show="status === 'completed'" x-cloak>
+                                <label class="crud-label">Faktiskais beigums</label>
+                                <input type="date" name="actual_completion" value="{{ old('actual_completion', optional($repair->actual_completion)->format('Y-m-d')) }}" class="crud-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <h2 class="text-lg font-semibold text-slate-900">Atbildiba</h2>
+                                <p class="mt-1 text-sm text-slate-600">Kas pieteica un kuram pieskirta remonta izpilde.</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="crud-label">Zinoja lietotajs</label>
+                                <select name="issue_reported_by" class="crud-control">
+                                    <option value="">Nav</option>
+                                    @foreach ($users as $user)
+                                        <option value="{{ $user->id }}" @selected(old('issue_reported_by', $repair->issue_reported_by) == $user->id)>{{ $user->employee?->full_name ?? ('Lietotajs #' . $user->id) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="crud-label">Pieskirts lietotajam</label>
+                                <select name="assigned_to" class="crud-control">
+                                    <option value="">Nav</option>
+                                    @foreach ($users as $user)
+                                        <option value="{{ $user->id }}" @selected(old('assigned_to', $repair->assigned_to) == $user->id)>{{ $user->employee?->full_name ?? ('Lietotajs #' . $user->id) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div x-show="repairType === 'external'" x-cloak class="rounded-[2rem] border border-rose-200 bg-gradient-to-br from-rose-50 via-white to-white p-5 shadow-sm">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <h2 class="text-lg font-semibold text-slate-900">Areja remonta dati</h2>
+                                <p class="mt-1 text-sm text-slate-600">Piegadataja un rekina informacija arejiem servisa darbiem.</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="crud-label">Piegadatajs *</label>
+                                <input type="text" name="vendor_name" value="{{ old('vendor_name', $repair->vendor_name) }}" class="crud-control">
+                            </div>
+                            <div>
+                                <label class="crud-label">Piegadataja kontakts *</label>
+                                <input type="text" name="vendor_contact" value="{{ old('vendor_contact', $repair->vendor_contact) }}" class="crud-control">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="crud-label">Rekina numurs</label>
+                                <input type="text" name="invoice_number" maxlength="50" value="{{ old('invoice_number', $repair->invoice_number) }}" class="crud-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div class="text-sm text-slate-500">Pedejais ieraksts izveidots {{ $repair->created_at?->format('d.m.Y H:i') ?? '-' }}</div>
                         <button type="submit" class="crud-btn-primary inline-flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
                             </svg>
-                            Atjaunot
+                            Saglabat izmainas
                         </button>
-                        <a href="{{ route('repairs.index') }}" class="crud-btn-secondary inline-flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
-                            </svg>
-                            Atcelt
-                        </a>
+                    </div>
+                </form>
+
+                <form method="POST" action="{{ route('repairs.destroy', $repair) }}" onsubmit="return confirm('Dzest so remonta ierakstu?')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="inline-flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673A2.25 2.25 0 0 1 15.916 21.75H8.084a2.25 2.25 0 0 1-2.245-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 0 0 1 3.478-.397m7.5 0V4.875A2.25 2.25 0 0 0 13.5 2.625h-3a2.25 2.25 0 0 0-2.25 2.25V5.79m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
+                        </svg>
+                        Dzest remontu
+                    </button>
+                </form>
+            </div>
+
+            <aside class="space-y-6">
+                <div class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+                    <h2 class="text-lg font-semibold text-slate-900">Remonta vesture</h2>
+                    <p class="mt-1 text-sm text-slate-600">Automatiski ieraksti par visam galvenajam izmainam saistiba ar so remontu.</p>
+
+                    <div class="mt-5 space-y-4">
+                        @forelse ($timeline as $entry)
+                            <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="inline-flex items-center rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 ring-1 ring-slate-200">{{ $actionLabels[$entry->action] ?? $entry->action }}</span>
+                                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 {{ $severityClasses[$entry->severity] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">{{ \App\Support\AuditTrail::severityLabel($entry->severity) }}</span>
+                                </div>
+                                <p class="mt-3 text-sm font-medium text-slate-900">{{ $entry->description }}</p>
+                                <p class="mt-2 text-xs text-slate-500">
+                                    {{ $entry->timestamp?->format('d.m.Y H:i') ?? '-' }} | {{ $entry->user?->employee?->full_name ?? 'Sistema' }}
+                                </p>
+                            </div>
+                        @empty
+                            <div class="rounded-3xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+                                Vestures ierakstu vel nav.
+                            </div>
+                        @endforelse
                     </div>
                 </div>
+
+                <div class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+                    <h2 class="text-lg font-semibold text-slate-900">Atrasanas vieta</h2>
+                    <div class="mt-4 space-y-3">
+                        <div class="rounded-2xl bg-slate-50 px-4 py-3">
+                            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Eka</p>
+                            <p class="mt-1 text-sm font-medium text-slate-900">{{ $currentBuilding?->building_name ?: 'Nav' }}</p>
+                        </div>
+                        <div class="rounded-2xl bg-slate-50 px-4 py-3">
+                            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Telpa</p>
+                            <p class="mt-1 text-sm font-medium text-slate-900">
+                                @if ($currentRoom)
+                                    {{ $currentRoom->room_number }}
+                                    @if ($currentRoom->room_name)
+                                        | {{ $currentRoom->room_name }}
+                                    @endif
+                                @else
+                                    Nav noradita
+                                @endif
+                            </p>
+                        </div>
+                        <div class="rounded-2xl bg-slate-50 px-4 py-3">
+                            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Stavs</p>
+                            <p class="mt-1 text-sm font-medium text-slate-900">{{ $currentRoom?->floor_number !== null ? $currentRoom->floor_number . '. stavs' : 'Nav' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <div
+            x-cloak
+            x-show="completeModalOpen"
+            x-transition.opacity
+            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 py-6"
+        >
+            <div
+                class="w-full max-w-lg rounded-[2rem] border border-slate-200 bg-white p-6 shadow-2xl"
+                @click.outside="closeCompletionModal()"
+            >
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Pabeigt remontu</p>
+                        <h2 class="mt-2 text-2xl font-semibold text-slate-900">{{ $repair->device?->name ?: 'Nezinama ierice' }}</h2>
+                        <p class="mt-2 text-sm text-slate-600">Noradi faktisko beigu datumu un gala izmaksas, lai remonts butu korekti noslegts.</p>
+                    </div>
+                    <button type="button" @click="closeCompletionModal()" class="rounded-2xl bg-slate-100 p-2 text-slate-500 transition hover:bg-slate-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="mt-6 space-y-4">
+                    <label class="block">
+                        <span class="repair-filter-label">Faktiskais beigu datums</span>
+                        <input type="date" x-model="completionForm.date" class="crud-control" required>
+                    </label>
+
+                    <label class="block">
+                        <span class="repair-filter-label">Gala izmaksas (EUR)</span>
+                        <input type="number" step="0.01" min="0" x-model="completionForm.cost" class="crud-control" placeholder="0.00" required>
+                    </label>
+                </div>
+
+                <div class="mt-6 flex flex-wrap justify-end gap-2">
+                    <button type="button" @click="closeCompletionModal()" class="crud-btn-secondary inline-flex items-center gap-2">
+                        Atcelt
+                    </button>
+                    <button type="button" @click="submitCompletion()" class="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+                        </svg>
+                        Apstiprinat pabeigsanu
+                    </button>
+                </div>
             </div>
-        </form>
+        </div>
     </section>
 </x-app-layout>
