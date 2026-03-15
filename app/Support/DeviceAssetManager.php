@@ -41,7 +41,7 @@ class DeviceAssetManager
         }
 
         if (Str::startsWith($path, ['http://', 'https://'])) {
-            return $path;
+            return route('device-assets.remote-preview', ['url' => $path]);
         }
 
         $diskName = $this->disk();
@@ -70,7 +70,7 @@ class DeviceAssetManager
     public function thumbUrl(?string $path): ?string
     {
         if ($path && Str::startsWith($path, ['http://', 'https://'])) {
-            return $path;
+            return route('device-assets.remote-preview', ['url' => $path]);
         }
 
         return $this->url($this->thumbnailPath($path));

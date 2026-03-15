@@ -428,7 +428,12 @@ class DeviceController extends Controller
             $selectedImageUrl = (string) $request->input('auto_device_image_url');
 
             if (str_starts_with($selectedImageUrl, 'http://') || str_starts_with($selectedImageUrl, 'https://')) {
-                $device->forceFill(['device_image_url' => $selectedImageUrl])->save();
+                $storedPath = app(DeviceImageAutoFetcher::class)->storeFromUrl(
+                    $selectedImageUrl,
+                    $device->device_image_url
+                );
+
+                $device->forceFill(['device_image_url' => $storedPath ?: $selectedImageUrl])->save();
             } else {
                 $storedPath = app(DeviceImageAutoFetcher::class)->storeFromUrl(
                     $selectedImageUrl,

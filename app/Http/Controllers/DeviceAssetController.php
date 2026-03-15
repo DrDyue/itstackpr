@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class DeviceAssetController extends Controller
 {
@@ -13,5 +16,61 @@ class DeviceAssetController extends Controller
         abort_unless($disk->exists($path), 404);
 
         return $disk->response($path);
+    }
+
+    public function remotePreview(Request $request)
+    {
+        $url = (string) $request->query('url', '');
+
+        abort_unless($this->isAllowedRemoteUrl($url), 404);
+
+        $response = Http::timeout(12)
+            ->retry(1, 250)
+            ->withUserAgent((string) config('devices.auto_image_user_agent', 'ITStackPR Device Image Fetcher/1.0'))
+            ->withHeaders([
+                'Accept' => 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+            ])
+            ->get($url);
+
+        abort_unless($response->ok(), 404);
+
+        $contents = $response->body();
+        abort_unless($contents !== '', 404);
+
+        $contentType = strtolower((string) $response->header('Content-Type'));
+        $imageInfo = @getimagesizefromstring($contents);
+
+        if (! Str::startsWith($contentType, 'image/')) {
+            $contentType = is_array($imageInfo) ? (string) ($imageInfo['mime'] ?? '') : '';
+        }
+
+        abort_unless(Str::startsWith($contentType, 'image/'), 404);
+
+        return response($contents, 200, [
+            'Content-Type' => $contentType,
+            'Cache-Control' => 'public, max-age=86400',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    private function isAllowedRemoteUrl(string $url): bool
+    {
+        if (! Str::startsWith($url, ['http://', 'https://'])) {
+            return false;
+        }
+
+        $parts = parse_url($url);
+        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
+        $host = strtolower((string) ($parts['host'] ?? ''));
+
+        if (! in_array($scheme, ['http', 'https'], true) || $host === '' || $host === 'localhost' || str_ends_with($host, '.local')) {
+            return false;
+        }
+
+        if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
+            return filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false;
+        }
+
+        return true;
     }
 }

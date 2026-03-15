@@ -59,6 +59,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/devices/bulk-update', [DeviceController::class, 'bulkUpdate'])->name('devices.bulk-update');
     Route::post('/devices/{device}/quick-update', [DeviceController::class, 'quickUpdate'])->name('devices.quick-update');
     Route::resource('devices', DeviceController::class);
+    Route::get('/device-assets/remote-preview', [DeviceAssetController::class, 'remotePreview'])
+        ->name('device-assets.remote-preview');
     Route::get('/device-assets/{path}', [DeviceAssetController::class, 'show'])
         ->where('path', '.*')
         ->name('device-assets.show');

@@ -51,6 +51,7 @@
                 isFindingDeviceImage: false,
                 deviceImageError: '',
                 deviceImageBatch: 1,
+                remotePreviewBase: @js(route('device-assets.remote-preview')),
                 get canSearchDeviceImage() {
                     return !!(
                         this.$refs.model?.value.trim()
@@ -311,6 +312,27 @@
                         return this.isAllowedImageUrl(candidate.preview_url || candidate.image_url);
                     });
                 },
+                proxyImageUrl(url) {
+                    const normalized = String(url || '').trim();
+
+                    if (!normalized) {
+                        return '';
+                    }
+
+                    if (
+                        normalized.startsWith('blob:')
+                        || normalized.startsWith('data:')
+                        || normalized.startsWith('/')
+                    ) {
+                        return normalized;
+                    }
+
+                    if (normalized.startsWith('http://') || normalized.startsWith('https://')) {
+                        return `${this.remotePreviewBase}?url=${encodeURIComponent(normalized)}`;
+                    }
+
+                    return normalized;
+                },
                 isAllowedImageUrl(url) {
                     const normalized = String(url || '').toLowerCase();
                     if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
@@ -547,7 +569,7 @@
                                         @click="selectDeviceImage(candidate)"
                                         :class="autoDeviceImageUrl === candidate.image_url ? 'ring-2 ring-sky-500 border-sky-400' : ''"
                                     >
-                                        <img :src="candidate.preview_url || candidate.image_url" alt="Atrasts attels" class="h-32 w-full object-cover" loading="lazy" referrerpolicy="no-referrer" x-on:error="removeBrokenCandidate(candidate.image_url)">
+                                        <img :src="proxyImageUrl(candidate.preview_url || candidate.image_url)" alt="Atrasts attels" class="h-32 w-full object-cover" loading="lazy" x-on:error="removeBrokenCandidate(candidate.image_url)">
                                         <div class="px-3 py-2 text-xs font-medium text-slate-600">
                                             <span x-text="candidate.label || 'Izveleties so attelu'"></span>
                                             <span class="ml-1 text-slate-400" x-show="candidate.source" x-text="`(${candidate.source})`"></span>
@@ -557,7 +579,7 @@
                             </div>
                             <div class="device-upload-preview">
                                 <template x-if="devicePreview">
-                                    <img :src="devicePreview" alt="Ierices foto preview" loading="lazy" referrerpolicy="no-referrer" x-on:error="clearDeviceImage()">
+                                    <img :src="proxyImageUrl(devicePreview)" alt="Ierices foto preview" loading="lazy" x-on:error="clearDeviceImage()">
                                 </template>
                                 <template x-if="!devicePreview">
                                     <div class="device-upload-preview-empty">Foto nav pievienots</div>

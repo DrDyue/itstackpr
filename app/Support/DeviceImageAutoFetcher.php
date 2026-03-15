@@ -36,8 +36,8 @@ class DeviceImageAutoFetcher
             return false;
         }
 
-        // Save the remote image URL directly so automatic fill does not depend on server-side downloads.
-        $device->forceFill(['device_image_url' => $candidate['image_url']])->save();
+        $storedPath = $this->storeFromUrl($candidate['image_url'], $device->device_image_url);
+        $device->forceFill(['device_image_url' => $storedPath ?: $candidate['image_url']])->save();
 
         return true;
     }
