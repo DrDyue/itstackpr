@@ -104,6 +104,7 @@
                         gsroffset: String((batch - 1) * 12),
                         prop: 'imageinfo',
                         iiprop: 'url',
+                        iiurlwidth: '1200',
                     }).toString();
 
                     const response = await fetch(url.toString(), { headers: { Accept: 'application/json' } });
@@ -115,7 +116,7 @@
                     const pages = Object.values(data?.query?.pages || {});
 
                     return this.cleanImageUrls(
-                        pages.map(page => page?.imageinfo?.[0]?.url || '').filter(Boolean)
+                        pages.map(page => page?.imageinfo?.[0]?.thumburl || page?.imageinfo?.[0]?.url || '').filter(Boolean)
                     ).slice(0, 3);
                 },
                 async fetchWikipediaImages(query, batch) {
@@ -155,14 +156,24 @@
                 cleanImageUrls(urls) {
                     return [...new Set(urls.filter(url => {
                         const normalized = url.toLowerCase();
+                        const blockedExtensions = ['.svg', '.tif', '.tiff', '.pdf', '.djvu'];
 
                         return (
                             (normalized.startsWith('http://') || normalized.startsWith('https://'))
-                            && ! normalized.endsWith('.svg')
+                            && ! blockedExtensions.some(ext => normalized.includes(ext))
                             && ! normalized.includes('logo')
                             && ! normalized.includes('icon')
                         );
                     }))];
+                },
+                removeBrokenCandidate(imageUrl) {
+                    this.deviceCandidates = this.deviceCandidates.filter(candidate => candidate !== imageUrl);
+
+                    if (this.autoDeviceImageUrl === imageUrl) {
+                        const replacement = this.deviceCandidates[0] || '';
+                        this.devicePreview = replacement;
+                        this.autoDeviceImageUrl = replacement;
+                    }
                 },
                 selectDeviceImage(imageUrl) {
                     this.devicePreview = imageUrl;
@@ -375,14 +386,14 @@
                                         @click="selectDeviceImage(image)"
                                         :class="autoDeviceImageUrl === image ? 'ring-2 ring-sky-500 border-sky-400' : ''"
                                     >
-                                        <img :src="image" alt="Atrasts attels" class="h-32 w-full object-cover">
+                                        <img :src="image" alt="Atrasts attels" class="h-32 w-full object-cover" loading="lazy" referrerpolicy="no-referrer" @error="removeBrokenCandidate(image)">
                                         <div class="px-3 py-2 text-xs font-medium text-slate-600">Izveleties so attelu</div>
                                     </button>
                                 </template>
                             </div>
                             <div class="device-upload-preview">
                                 <template x-if="devicePreview">
-                                    <img :src="devicePreview" alt="Ierices foto preview">
+                                    <img :src="devicePreview" alt="Ierices foto preview" loading="lazy" referrerpolicy="no-referrer" @error="clearDeviceImage()">
                                 </template>
                                 <template x-if="!devicePreview">
                                     <div class="device-upload-preview-empty">Foto nav pievienots</div>
