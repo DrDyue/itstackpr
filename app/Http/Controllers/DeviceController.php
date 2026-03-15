@@ -177,12 +177,7 @@ class DeviceController extends Controller
         $after = $device->fresh()->only(array_keys($before));
         $changedFields = $this->writeHistoryChanges($device->id, $before, $after, $userId);
 
-        $description = 'Device updated: ' . $device->name;
-        if ($changedFields !== []) {
-            $description .= ' | fields: ' . implode(', ', $changedFields);
-        }
-
-        $this->writeAudit($userId, 'UPDATE', $device, $description, 'info');
+        AuditTrail::updatedFromState($userId, $device->fresh(), $before, $after);
 
         return redirect()->route('devices.index')->with('success', 'Ierices dati atjauninati');
     }

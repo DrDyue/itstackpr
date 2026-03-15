@@ -53,10 +53,10 @@ class DeviceSetItemController extends Controller
 
     public function update(Request $request, DeviceSetItem $deviceSetItem)
     {
-        $deviceSetItem->fill($this->validatedData($request, $deviceSetItem));
-        $changedFields = array_keys($deviceSetItem->getDirty());
-        $deviceSetItem->save();
-        AuditTrail::updated(auth()->id(), $deviceSetItem, $changedFields);
+        $before = $deviceSetItem->only(['device_set_id', 'device_id', 'quantity', 'role', 'description']);
+        $deviceSetItem->update($this->validatedData($request, $deviceSetItem));
+        $after = $deviceSetItem->fresh()->only(array_keys($before));
+        AuditTrail::updatedFromState(auth()->id(), $deviceSetItem, $before, $after);
 
         return redirect()->route('device-set-items.index')->with('success', 'Pozicija veiksmigi atjauninata');
     }

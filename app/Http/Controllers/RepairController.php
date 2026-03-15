@@ -55,10 +55,14 @@ class RepairController extends Controller
 
     public function update(Request $request, Repair $repair)
     {
-        $repair->fill($this->validatedData($request));
-        $changedFields = array_keys($repair->getDirty());
-        $repair->save();
-        AuditTrail::updated(auth()->id(), $repair, $changedFields);
+        $before = $repair->only([
+            'device_id', 'description', 'status', 'repair_type', 'priority', 'start_date',
+            'estimated_completion', 'actual_completion', 'cost', 'vendor_name', 'vendor_contact',
+            'invoice_number', 'issue_reported_by', 'assigned_to',
+        ]);
+        $repair->update($this->validatedData($request));
+        $after = $repair->fresh()->only(array_keys($before));
+        AuditTrail::updatedFromState(auth()->id(), $repair, $before, $after);
 
         return redirect()->route('repairs.index')->with('success', 'Remonts atjauninats');
     }

@@ -111,15 +111,8 @@ class EmployeeController extends Controller
         $employee->update($data);
 
         $after = $employee->fresh()->only(array_keys($before));
-        $changed = [];
-
-        foreach ($before as $k => $old) {
-            $new = $after[$k] ?? null;
-            if ((string)$old !== (string)$new) $changed[] = $k;
-        }
-
         $userId = \Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::id() : null;
-        AuditTrail::updated($userId, $employee, $changed);
+        AuditTrail::updatedFromState($userId, $employee, $before, $after);
 
         return redirect()->route('employees.index')->with('success', 'Darbinieka dati atjauninati');
     }

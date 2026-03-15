@@ -113,6 +113,7 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
+        $before = $user->only(['employee_id', 'role', 'is_active']);
         $data = $this->validatedData($request, $user);
 
         if (! empty($data['password'])) {
@@ -121,10 +122,13 @@ class UserController extends Controller
             unset($data['password']);
         }
 
-        $user->fill($data);
-        $changedFields = array_values(array_diff(array_keys($user->getDirty()), ['last_login', 'remember_token']));
-        $user->save();
-        AuditTrail::updated(auth()->id(), $user, $changedFields);
+        $user->update($data);
+        $after = $user->fresh()->only(array_keys($before));
+        if (array_key_exists('password', $data)) {
+            $before['password'] = '[mainita]';
+            $after['password'] = '[jauna parole]';
+        }
+        AuditTrail::updatedFromState(auth()->id(), $user, $before, $after);
 
         return redirect()->route('users.index')->with('success', 'Lietotajs veiksmigi atjauninats');
     }

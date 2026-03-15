@@ -57,9 +57,11 @@ class DeviceSetController extends Controller
     public function update(Request $request, DeviceSet $deviceSet)
     {
         $userId = auth()->id();
+        $before = $deviceSet->only(['set_name', 'status', 'room_id', 'assigned_to', 'notes']);
         $deviceSet->update($this->validatedData($request, $deviceSet));
+        $after = $deviceSet->fresh()->only(array_keys($before));
 
-        $this->writeAudit($userId, 'UPDATE', $deviceSet, 'Device set updated: ' . $deviceSet->set_name);
+        AuditTrail::updatedFromState($userId, $deviceSet, $before, $after);
 
         return redirect()->route('device-sets.edit', $deviceSet)->with('success', 'Komplekts atjaunin\u{101}ts.');
     }

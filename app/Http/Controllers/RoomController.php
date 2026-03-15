@@ -48,10 +48,10 @@ class RoomController extends Controller
 
     public function update(Request $request, Room $room)
     {
-        $room->fill($this->validatedData($request));
-        $changedFields = array_keys($room->getDirty());
-        $room->save();
-        AuditTrail::updated(auth()->id(), $room, $changedFields);
+        $before = $room->only(['building_id', 'floor_number', 'room_number', 'room_name', 'employee_id', 'department', 'notes']);
+        $room->update($this->validatedData($request));
+        $after = $room->fresh()->only(array_keys($before));
+        AuditTrail::updatedFromState(auth()->id(), $room, $before, $after);
 
         return redirect()->route('rooms.index')->with('success', 'Telpas dati atjauninati');
     }

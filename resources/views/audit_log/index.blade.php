@@ -11,6 +11,8 @@
             default => 'bg-sky-100 text-sky-700 ring-sky-200',
         };
 
+        $severityLabel = fn (string $severity) => \App\Support\AuditTrail::severityLabel($severity);
+
         $actionTone = fn (string $action) => match ($action) {
             'DELETE' => 'bg-rose-100 text-rose-700',
             'RESTORE' => 'bg-amber-100 text-amber-700',
@@ -19,28 +21,35 @@
             default => 'bg-slate-100 text-slate-700',
         };
 
+        $actionLabel = fn (string $action) => match ($action) {
+            'CREATE' => 'Izveide',
+            'UPDATE' => 'Atjaunosana',
+            'DELETE' => 'Dzesana',
+            'LOGIN' => 'Pieslegsanas',
+            'LOGOUT' => 'Izrakstisanas',
+            'EXPORT' => 'Eksports',
+            'BACKUP' => 'Kopija',
+            'RESTORE' => 'Atjaunosana no kopijas',
+            'VIEW' => 'Apskate',
+            default => $action,
+        };
+
         $queryLink = function (array $overrides = []) use ($filters): string {
             return route('audit-log.index', array_filter(array_merge($filters, $overrides), fn ($value) => $value !== ''));
         };
     @endphp
 
     <section class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div class="mb-6">
             <div>
                 <h1 class="text-3xl font-semibold tracking-tight text-slate-900">Audita zurnals</h1>
                 <p class="mt-2 max-w-3xl text-sm text-slate-600">
                     Parsiets notikumu zurnals ar lietotajiem, darbibam, entitijam un svariguma pakapi.
                 </p>
             </div>
-            <a href="#audit-history" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-100">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h9"/>
-                </svg>
-                Atvert notikumus
-            </a>
         </div>
 
-        <div class="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div class="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div class="flex h-full flex-col justify-between rounded-[1.75rem] border border-sky-100 bg-gradient-to-br from-white to-sky-50 p-5 shadow-sm">
                 <div class="flex items-start gap-3">
                     <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
@@ -53,7 +62,7 @@
                         <p class="mt-1 text-3xl font-semibold text-slate-900">{{ $summary['total'] }}</p>
                     </div>
                 </div>
-                <p class="mt-5 rounded-2xl bg-white/80 px-3 py-2 text-sm text-slate-600 ring-1 ring-sky-100">Filtrā atrasti: {{ $summary['filtered'] }}</p>
+                <p class="mt-5 rounded-2xl bg-white/80 px-3 py-2 text-sm text-slate-600 ring-1 ring-sky-100">Filtra atrasti: {{ $summary['filtered'] }}</p>
             </div>
 
             <div class="flex h-full flex-col justify-between rounded-[1.75rem] border border-emerald-100 bg-gradient-to-br from-white to-emerald-50 p-5 shadow-sm">
@@ -69,22 +78,6 @@
                     </div>
                 </div>
                 <p class="mt-5 rounded-2xl bg-white/80 px-3 py-2 text-sm text-slate-600 ring-1 ring-emerald-100">Tikai siodienas notikumi.</p>
-            </div>
-
-            <div class="flex h-full flex-col justify-between rounded-[1.75rem] border border-rose-100 bg-gradient-to-br from-white to-rose-50 p-5 shadow-sm">
-                <div class="flex items-start gap-3">
-                    <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.007v.008H12v-.008Z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.29 3.86 1.82 18a2.25 2.25 0 0 0 1.93 3.375h16.5A2.25 2.25 0 0 0 22.18 18L13.71 3.86a2.25 2.25 0 0 0-3.42 0Z"/>
-                        </svg>
-                    </span>
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Kritiski</p>
-                        <p class="mt-1 text-3xl font-semibold text-slate-900">{{ $summary['critical'] }}</p>
-                    </div>
-                </div>
-                <p class="mt-5 rounded-2xl bg-white/80 px-3 py-2 text-sm text-slate-600 ring-1 ring-rose-100">Ieraksti ar augstāko svarīgumu.</p>
             </div>
 
             <div class="flex h-full flex-col justify-between rounded-[1.75rem] border border-violet-100 bg-gradient-to-br from-white to-violet-50 p-5 shadow-sm">
@@ -130,10 +123,10 @@
 
             <div class="mb-4 flex flex-wrap gap-2">
                 <a href="{{ $queryLink(['severity' => '']) }}" class="user-role-chip {{ $filters['severity'] === '' ? 'user-role-chip-active' : 'user-role-chip-idle' }}">Visi svarigumi</a>
-                <a href="{{ $queryLink(['severity' => 'info']) }}" class="user-role-chip {{ $filters['severity'] === 'info' ? 'user-role-chip-active' : 'user-role-chip-idle' }}">Info</a>
-                <a href="{{ $queryLink(['severity' => 'warning']) }}" class="user-role-chip {{ $filters['severity'] === 'warning' ? 'user-role-chip-active' : 'user-role-chip-idle' }}">Warning</a>
-                <a href="{{ $queryLink(['severity' => 'error']) }}" class="user-role-chip {{ $filters['severity'] === 'error' ? 'user-role-chip-active' : 'user-role-chip-idle' }}">Error</a>
-                <a href="{{ $queryLink(['severity' => 'critical']) }}" class="user-role-chip {{ $filters['severity'] === 'critical' ? 'user-role-chip-active' : 'user-role-chip-idle' }}">Critical</a>
+                <a href="{{ $queryLink(['severity' => 'info']) }}" class="user-role-chip {{ $filters['severity'] === 'info' ? 'user-role-chip-active' : 'user-role-chip-idle' }}">Informacija</a>
+                <a href="{{ $queryLink(['severity' => 'warning']) }}" class="user-role-chip {{ $filters['severity'] === 'warning' ? 'user-role-chip-active' : 'user-role-chip-idle' }}">Bridinajums</a>
+                <a href="{{ $queryLink(['severity' => 'error']) }}" class="user-role-chip {{ $filters['severity'] === 'error' ? 'user-role-chip-active' : 'user-role-chip-idle' }}">Kluda</a>
+                <a href="{{ $queryLink(['severity' => 'critical']) }}" class="user-role-chip {{ $filters['severity'] === 'critical' ? 'user-role-chip-active' : 'user-role-chip-idle' }}">Kritisks</a>
             </div>
 
             <form method="GET" action="{{ route('audit-log.index') }}" class="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_auto]">
@@ -160,7 +153,7 @@
                     <select name="severity" class="crud-control">
                         <option value="">Visi</option>
                         @foreach (['info', 'warning', 'error', 'critical'] as $severity)
-                            <option value="{{ $severity }}" @selected($filters['severity'] === $severity)>{{ ucfirst($severity) }}</option>
+                            <option value="{{ $severity }}" @selected($filters['severity'] === $severity)>{{ $severityLabel($severity) }}</option>
                         @endforeach
                     </select>
                 </label>
@@ -206,7 +199,7 @@
                             <th class="px-4 py-3 text-left">Laiks</th>
                             <th class="px-4 py-3 text-left">Lietotajs</th>
                             <th class="px-4 py-3 text-left">Darbiba</th>
-                            <th class="px-4 py-3 text-left">Entitija</th>
+                            <th class="px-4 py-3 text-left">Tabula</th>
                             <th class="px-4 py-3 text-left">ID</th>
                             <th class="px-4 py-3 text-left">Svarigums</th>
                             <th class="px-4 py-3 text-left">Apraksts</th>
@@ -224,7 +217,22 @@
                                     <div class="mt-1 text-sm text-slate-500">{{ $log->user_id ? 'User ID ' . $log->user_id : 'Bez lietotaja' }}</div>
                                 </td>
                                 <td class="px-4 py-4 align-top">
-                                    <span class="{{ $actionTone($log->action) }} inline-flex rounded-full px-2.5 py-1 text-xs font-semibold">{{ $log->action }}</span>
+                                    <span class="{{ $actionTone($log->action) }} inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-semibold">
+                                        @if ($log->action === 'UPDATE')
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m16.5 6.75 2.25-2.25m0 0L21 6.75m-2.25-2.25V15a3 3 0 0 1-3 3h-9"/><path stroke-linecap="round" stroke-linejoin="round" d="m7.5 17.25-2.25 2.25m0 0L3 17.25m2.25 2.25V9a3 3 0 0 1 3-3h9"/></svg>
+                                        @elseif ($log->action === 'DELETE')
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673A2.25 2.25 0 0 1 15.916 21.75H8.084a2.25 2.25 0 0 1-2.245-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0V4.875A2.25 2.25 0 0 0 13.5 2.625h-3a2.25 2.25 0 0 0-2.25 2.25V5.79m7.5 0a48.667 48.11 0 0 0-7.5 0"/></svg>
+                                        @elseif ($log->action === 'CREATE')
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                        @elseif ($log->action === 'LOGIN')
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6A2.25 2.25 0 0 0 5.25 5.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15"/><path stroke-linecap="round" stroke-linejoin="round" d="M18 15l3-3m0 0-3-3m3 3H9"/></svg>
+                                        @elseif ($log->action === 'LOGOUT')
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6A2.25 2.25 0 0 0 5.25 5.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12H3m0 0 3-3m-3 3 3 3"/></svg>
+                                        @else
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>
+                                        @endif
+                                        <span>{{ $actionLabel($log->action) }}</span>
+                                    </span>
                                 </td>
                                 <td class="px-4 py-4 align-top">
                                     <div class="font-semibold text-slate-900">{{ $log->entity_type }}</div>
@@ -233,7 +241,23 @@
                                     <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{{ $log->entity_id ?? '-' }}</span>
                                 </td>
                                 <td class="px-4 py-4 align-top">
-                                    <span class="{{ $severityTone($log->severity) }} inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1">{{ $log->severity }}</span>
+                                    <span class="{{ $severityTone($log->severity) }} inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-semibold ring-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            @if ($log->severity === 'critical')
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.007v.008H12v-.008Z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.29 3.86 1.82 18a2.25 2.25 0 0 0 1.93 3.375h16.5A2.25 2.25 0 0 0 22.18 18L13.71 3.86a2.25 2.25 0 0 0-3.42 0Z"/>
+                                            @elseif ($log->severity === 'error')
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.007v.008H12v-.008Z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75a8.25 8.25 0 1 0 0 16.5 8.25 8.25 0 0 0 0-16.5Z"/>
+                                            @elseif ($log->severity === 'warning')
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.007v.008H12v-.008Z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.29 3.86 1.82 18a2.25 2.25 0 0 0 1.93 3.375h16.5A2.25 2.25 0 0 0 22.18 18L13.71 3.86a2.25 2.25 0 0 0-3.42 0Z"/>
+                                            @else
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25 12 11.25v5.25h.75m-3.75 0h6a2.25 2.25 0 0 0 2.25-2.25v-6A2.25 2.25 0 0 0 15 6h-6A2.25 2.25 0 0 0 6.75 8.25v6A2.25 2.25 0 0 0 9 16.5Z"/>
+                                            @endif
+                                        </svg>
+                                        <span>{{ $severityLabel($log->severity) }}</span>
+                                    </span>
                                 </td>
                                 <td class="px-4 py-4 align-top">
                                     <div class="max-w-xl leading-6 text-slate-700">{{ $log->description }}</div>

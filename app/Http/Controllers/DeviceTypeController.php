@@ -85,10 +85,10 @@ class DeviceTypeController extends Controller
             'expected_lifetime_years' => ['nullable', 'integer', 'min:0', 'max:100'],
         ]);
 
-        $deviceType->fill($data);
-        $changedFields = array_keys($deviceType->getDirty());
-        $deviceType->save();
-        AuditTrail::updated(auth()->id(), $deviceType, $changedFields);
+        $before = $deviceType->only(['type_name', 'category', 'description', 'expected_lifetime_years']);
+        $deviceType->update($data);
+        $after = $deviceType->fresh()->only(array_keys($before));
+        AuditTrail::updatedFromState(auth()->id(), $deviceType, $before, $after);
 
         return redirect()->route('device-types.index')->with('success', 'Ierices tips atjauninats');
     }

@@ -75,6 +75,26 @@ class AuditTrail
         );
     }
 
+    public static function updatedFromState(
+        ?int $userId,
+        Model $model,
+        array $before,
+        array $after,
+        array $ignoredFields = [],
+        ?string $description = null,
+        ?string $severity = null
+    ): void {
+        $changes = self::changesFromState($before, $after, $ignoredFields);
+
+        self::updated(
+            $userId,
+            $model,
+            array_keys($changes),
+            $description ?? self::detailedUpdateDescription($model, $changes),
+            $severity
+        );
+    }
+
     public static function deleted(?int $userId, Model $model, ?string $description = null, ?string $severity = null): void
     {
         self::writeForModel(
@@ -149,6 +169,16 @@ class AuditTrail
         };
     }
 
+    public static function severityLabel(string $severity): string
+    {
+        return match ($severity) {
+            self::SEVERITY_WARNING => 'Bridinajums',
+            self::SEVERITY_ERROR => 'Kluda',
+            self::SEVERITY_CRITICAL => 'Kritisks',
+            default => 'Informacija',
+        };
+    }
+
     private static function defaultDescription(string $action, Model $model, array $changedFields = []): string
     {
         $entity = self::readableEntityName(class_basename($model));
@@ -160,6 +190,24 @@ class AuditTrail
             self::ACTION_DELETE => $entity . ' deleted: ' . $label,
             default => $entity . ' changed: ' . $label,
         };
+    }
+
+    private static function detailedUpdateDescription(Model $model, array $changes): string
+    {
+        $entity = self::readableEntityName(class_basename($model));
+        $label = self::labelFor($model);
+
+        if ($changes === []) {
+            return $entity . ' updated: ' . $label;
+        }
+
+        $details = collect($changes)
+            ->map(function (array $change, string $field) {
+                return $field . ': ' . self::formatValue($change['old']) . ' -> ' . self::formatValue($change['new']);
+            })
+            ->implode('; ');
+
+        return $entity . ' updated: ' . $label . ' | details: ' . $details;
     }
 
     private static function severityFor(string $action, ?Model $model = null): string
@@ -215,5 +263,51 @@ class AuditTrail
         ];
 
         return in_array($severity, $allowed, true) ? $severity : self::SEVERITY_INFO;
+    }
+
+    private static function changesFromState(array $before, array $after, array $ignoredFields = []): array
+    {
+        $changes = [];
+
+        foreach (array_unique(array_merge(array_keys($before), array_keys($after))) as $field) {
+            if (in_array($field, $ignoredFields, true)) {
+                continue;
+            }
+
+            $old = $before[$field] ?? null;
+            $new = $after[$field] ?? null;
+
+            if (self::formatValue($old) === self::formatValue($new)) {
+                continue;
+            }
+
+            $changes[$field] = [
+                'old' => $old,
+                'new' => $new,
+            ];
+        }
+
+        return $changes;
+    }
+
+    private static function formatValue(mixed $value): string
+    {
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d H:i:s');
+        }
+
+        if (is_bool($value)) {
+            return $value ? 'ja' : 'ne';
+        }
+
+        if ($value === null || $value === '') {
+            return 'tukss';
+        }
+
+        if (is_array($value)) {
+            return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: 'masivs';
+        }
+
+        return (string) $value;
     }
 }

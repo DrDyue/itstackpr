@@ -37,10 +37,10 @@ class BuildingController extends Controller
 
     public function update(Request $request, Building $building)
     {
-        $building->fill($this->validatedData($request));
-        $changedFields = array_keys($building->getDirty());
-        $building->save();
-        AuditTrail::updated(auth()->id(), $building, $changedFields);
+        $before = $building->only(['building_name', 'address', 'city', 'total_floors', 'notes']);
+        $building->update($this->validatedData($request));
+        $after = $building->fresh()->only(array_keys($before));
+        AuditTrail::updatedFromState(auth()->id(), $building, $before, $after);
 
         return redirect()->route('buildings.index')->with('success', 'Ekas dati atjauninati');
     }
