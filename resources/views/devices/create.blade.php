@@ -45,7 +45,7 @@
                 deviceImageBatch: 1,
                 get canSearchDeviceImage() {
                     return !!(
-                        && this.$refs.model?.value.trim()
+                        this.$refs.model?.value.trim()
                         && this.$refs.manufacturer?.value.trim()
                     );
                 },
@@ -202,14 +202,12 @@
                         </div>
                         <div class="device-form-section-copy">
                             <div class="device-form-section-name">Iegade un apraksts</div>
-                            <div class="device-form-section-note">Razotajs, serijas numurs, iegades dati un piezimes.</div>
+                            <div class="device-form-section-note">Serijas numurs, iegades dati un piezimes.</div>
                         </div>
                     </div>
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        <div>
-                            <label class="crud-label">Serijas numurs</label>
-                            <input type="text" name="serial_number" value="{{ old('serial_number') }}" class="crud-control">
-                        </div>
+                    <div>
+                        <label class="crud-label">Serijas numurs</label>
+                        <input type="text" name="serial_number" value="{{ old('serial_number') }}" class="crud-control">
                     </div>
                     <div class="mt-4 grid gap-4 sm:grid-cols-3">
                         <div>
