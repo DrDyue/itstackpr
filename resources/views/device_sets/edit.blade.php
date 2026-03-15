@@ -2,16 +2,21 @@
     @php
         $statusLabels = [
             'draft' => 'Melnraksts',
-            'active' => 'Aktīvs',
+            'active' => 'Aktivs',
             'returned' => 'Atgriezts',
-            'archived' => 'Arhivēts',
+            'archived' => 'Arhivets',
         ];
     @endphp
 
     <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-6 flex items-center justify-between">
-            <h1 class="text-2xl font-semibold text-gray-900">Rediģēt komplektu: {{ $set->set_name }}</h1>
-            <a href="{{ route('device-sets.index') }}" class="text-sm font-medium text-blue-600 hover:text-blue-700">Atpakaļ uz sarakstu</a>
+            <h1 class="text-2xl font-semibold text-gray-900">Rediget komplektu: {{ $set->set_name }}</h1>
+            <a href="{{ route('device-sets.index') }}" class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
+                </svg>
+                Atpakal uz sarakstu
+            </a>
         </div>
 
         @if (session('success'))
@@ -59,18 +64,28 @@
                 </div>
 
                 <div>
-                    <label class="crud-label">Atbildīgā persona</label>
+                    <label class="crud-label">Atbildiga persona</label>
                     <input type="text" name="assigned_to" value="{{ old('assigned_to', $set->assigned_to) }}" class="crud-control">
                 </div>
 
                 <div>
-                    <label class="crud-label">Piezīmes</label>
+                    <label class="crud-label">Piezimes</label>
                     <textarea name="notes" rows="3" class="crud-control">{{ old('notes', $set->notes) }}</textarea>
                 </div>
 
                 <div class="flex gap-3 pt-2">
-                    <button type="submit" class="crud-btn-primary">Atjaunināt</button>
-                    <a href="{{ route('device-sets.index') }}" class="crud-btn-secondary">Atcelt</a>
+                    <button type="submit" class="crud-btn-primary inline-flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+                        </svg>
+                        Atjauninat
+                    </button>
+                    <a href="{{ route('device-sets.index') }}" class="crud-btn-secondary inline-flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                        </svg>
+                        Atcelt
+                    </a>
                 </div>
             </form>
         </div>
@@ -78,15 +93,15 @@
         <div class="grid gap-6 lg:grid-cols-2">
             <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
                 <div class="border-b border-gray-200 px-4 py-3">
-                    <h2 class="text-base font-semibold text-gray-900">Komplekta ierīces</h2>
+                    <h2 class="text-base font-semibold text-gray-900">Komplekta ierices</h2>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
                         <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
                             <tr>
-                                <th class="px-4 py-3 text-left">Ierīce</th>
+                                <th class="px-4 py-3 text-left">Ierice</th>
                                 <th class="px-4 py-3 text-left">Daudzums</th>
-                                <th class="px-4 py-3 text-left">Darbības</th>
+                                <th class="px-4 py-3 text-left">Darbibas</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
@@ -98,12 +113,17 @@
                                         <form method="POST" action="{{ route('device-sets.items.delete', [$set, $item]) }}">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" onclick="return confirm('Noņemt ierīci no komplekta?')" class="text-red-600 hover:text-red-700">Noņemt</button>
+                                            <button type="submit" onclick="return confirm('Nonemt ierici no komplekta?')" class="inline-flex items-center gap-2 text-red-600 hover:text-red-700">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                                                </svg>
+                                                Nonemt
+                                            </button>
                                         </form>
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="3" class="px-4 py-6 text-center text-gray-500">Komplekts ir tukšs.</td></tr>
+                                <tr><td colspan="3" class="px-4 py-6 text-center text-gray-500">Komplekts ir tuks.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -111,11 +131,11 @@
             </div>
 
             <div id="add-device-form" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                <h2 class="mb-3 text-base font-semibold text-gray-900">Pievienot ierīci komplektam</h2>
+                <h2 class="mb-3 text-base font-semibold text-gray-900">Pievienot ierici komplektam</h2>
                 <form method="POST" action="{{ route('device-sets.items.add', $set) }}" class="space-y-3">
                     @csrf
                     <div>
-                        <label class="crud-label">Ierīce *</label>
+                        <label class="crud-label">Ierice *</label>
                         <select name="device_id" class="crud-control" required>
                             @foreach($devices as $device)
                                 <option value="{{ $device->id }}">{{ $device->code }} - {{ $device->name }}</option>
@@ -126,12 +146,14 @@
                         <label class="crud-label">Daudzums *</label>
                         <input type="number" name="quantity" value="1" min="1" max="999" required class="crud-control">
                     </div>
-                    <button type="submit" class="crud-btn-primary">Pievienot</button>
+                    <button type="submit" class="crud-btn-primary inline-flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                        </svg>
+                        Pievienot
+                    </button>
                 </form>
             </div>
         </div>
     </section>
 </x-app-layout>
-
-
-

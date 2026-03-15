@@ -2,16 +2,21 @@
     @php
         $statusLabels = [
             'draft' => 'Melnraksts',
-            'active' => 'Aktīvs',
+            'active' => 'Aktivs',
             'returned' => 'Atgriezts',
-            'archived' => 'Arhivēts',
+            'archived' => 'Arhivets',
         ];
     @endphp
 
     <section class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
         <div class="mb-6 flex items-center justify-between">
             <h1 class="text-2xl font-semibold text-gray-900">Jauns komplekts</h1>
-            <a href="{{ route('device-sets.index') }}" class="text-sm font-medium text-blue-600 hover:text-blue-700">Atpakaļ uz sarakstu</a>
+            <a href="{{ route('device-sets.index') }}" class="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
+                </svg>
+                Atpakal uz sarakstu
+            </a>
         </div>
 
         @if ($errors->any())
@@ -53,21 +58,29 @@
             </div>
 
             <div>
-                <label class="crud-label">Atbildīgā persona</label>
+                <label class="crud-label">Atbildiga persona</label>
                 <input type="text" name="assigned_to" value="{{ old('assigned_to') }}" class="crud-control">
             </div>
 
             <div>
-                <label class="crud-label">Piezīmes</label>
+                <label class="crud-label">Piezimes</label>
                 <textarea name="notes" rows="3" class="crud-control">{{ old('notes') }}</textarea>
             </div>
 
             <div class="flex gap-3 pt-2">
-                <button type="submit" class="crud-btn-primary">Saglabāt</button>
-                <a href="{{ route('device-sets.index') }}" class="crud-btn-secondary">Atcelt</a>
+                <button type="submit" class="crud-btn-primary inline-flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+                    </svg>
+                    Saglabat
+                </button>
+                <a href="{{ route('device-sets.index') }}" class="crud-btn-secondary inline-flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                    </svg>
+                    Atcelt
+                </a>
             </div>
         </form>
     </section>
 </x-app-layout>
-
-

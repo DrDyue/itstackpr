@@ -13,6 +13,7 @@ class RepairController extends Controller
     private const STATUSES = ['waiting', 'in-progress', 'completed', 'cancelled'];
     private const TYPES = ['internal', 'external'];
     private const PRIORITIES = ['low', 'medium', 'high', 'critical'];
+    private const DEVICE_STATUSES_BLOCKED_FOR_NEW_REPAIR = ['repair', 'retired'];
 
     public function index(Request $request)
     {
@@ -47,7 +48,7 @@ class RepairController extends Controller
 
     public function edit(Repair $repair)
     {
-        return view('repairs.edit', array_merge(['repair' => $repair], $this->formData()));
+        return view('repairs.edit', array_merge(['repair' => $repair], $this->formData($repair)));
     }
 
     public function update(Request $request, Repair $repair)
@@ -69,10 +70,19 @@ class RepairController extends Controller
         return redirect()->route('repairs.index');
     }
 
-    private function formData(): array
+    private function formData(?Repair $repair = null): array
     {
+        $devices = Device::query()
+            ->with(['createdBy.employee'])
+            ->whereNotIn('status', self::DEVICE_STATUSES_BLOCKED_FOR_NEW_REPAIR)
+            ->when($repair?->device_id, function ($query) use ($repair) {
+                $query->orWhere('id', $repair->device_id);
+            })
+            ->orderBy('name')
+            ->get();
+
         return [
-            'devices' => Device::with(['createdBy.employee'])->orderBy('name')->get(),
+            'devices' => $devices,
             'users' => User::with('employee')->orderByDesc('id')->get(),
             'statuses' => self::STATUSES,
             'repairTypes' => self::TYPES,
@@ -109,6 +119,18 @@ class RepairController extends Controller
         }
 
         $repair = $request->route('repair');
+        $device = Device::query()->find($data['device_id']);
+
+        if (
+            $device
+            && in_array($device->status, self::DEVICE_STATUSES_BLOCKED_FOR_NEW_REPAIR, true)
+            && (! $repair || (int) $repair->device_id !== (int) $device->id)
+        ) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'device_id' => ['So ierici nevar nodot remonta, jo ta jau ir remonta vai ir norakstita.'],
+            ]);
+        }
+
         $data['status'] = $data['status'] ?? ($repair?->status ?? 'waiting');
         $data['priority'] = $data['priority'] ?? ($repair?->priority ?? 'medium');
         $data['start_date'] = filled($data['start_date'] ?? null)
@@ -140,7 +162,6 @@ class RepairController extends Controller
         }
 
         if (($data['assigned_to'] ?? null) === null) {
-            $device = Device::query()->find($data['device_id']);
             $data['assigned_to'] = $device?->created_by;
         }
 

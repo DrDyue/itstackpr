@@ -34,7 +34,12 @@
         <div class="device-page-header">
             <div>
                 <div class="mb-3 flex flex-wrap items-center gap-2">
-                    <a href="{{ route('devices.index') }}" class="text-sm font-medium text-sky-700 transition hover:text-sky-900">Atpakal uz sarakstu</a>
+                    <a href="{{ route('devices.index') }}" class="inline-flex items-center gap-2 text-sm font-medium text-sky-700 transition hover:text-sky-900">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
+                        </svg>
+                        Atpakal uz sarakstu
+                    </a>
                     <span class="text-slate-300">/</span>
                     <span class="text-sm text-slate-500">Ierices detalas</span>
                 </div>
@@ -111,10 +116,17 @@
         <div class="device-toolbar">
             <div class="device-toolbar-copy">Izvelies, ko apskatit par ierici vai veic atro darbibu uzreiz seit.</div>
             <div class="flex flex-wrap gap-2">
-                <a href="{{ route('devices.history', $device) }}" class="inline-flex items-center rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                <a href="{{ route('devices.history', $device) }}" class="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l3.75 3.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
                     Pilna vesture
                 </a>
-                <a href="{{ route('devices.edit', $device) }}" class="inline-flex items-center rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800">
+                <a href="{{ route('devices.edit', $device) }}" class="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 7.125 16.875 4.5"/>
+                    </svg>
                     Rediget
                 </a>
             </div>
@@ -217,7 +229,13 @@
                             <div class="flex items-center justify-between gap-3">
                                 <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Ierices foto</h3>
                                 @if ($deviceImageUrl)
-                                    <a href="{{ $deviceImageUrl }}" target="_blank" class="text-sm font-medium text-sky-700 hover:text-sky-900">Atvert</a>
+                                    <a href="{{ $deviceImageUrl }}" target="_blank" class="inline-flex items-center gap-2 text-sm font-medium text-sky-700 hover:text-sky-900">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H19.5M19.5 6V12M19.5 6l-7.5 7.5"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5h-1.5A2.25 2.25 0 0 0 3 9.75v9A2.25 2.25 0 0 0 5.25 21h9a2.25 2.25 0 0 0 2.25-2.25v-1.5"/>
+                                        </svg>
+                                        Atvert
+                                    </a>
                                 @endif
                             </div>
                             <div class="device-media-frame">
@@ -235,7 +253,13 @@
                             <div class="flex items-center justify-between gap-3">
                                 <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Garantijas attels</h3>
                                 @if ($warrantyImageUrl)
-                                    <a href="{{ $warrantyImageUrl }}" target="_blank" class="text-sm font-medium text-sky-700 hover:text-sky-900">Atvert</a>
+                                    <a href="{{ $warrantyImageUrl }}" target="_blank" class="inline-flex items-center gap-2 text-sm font-medium text-sky-700 hover:text-sky-900">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H19.5M19.5 6V12M19.5 6l-7.5 7.5"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5h-1.5A2.25 2.25 0 0 0 3 9.75v9A2.25 2.25 0 0 0 5.25 21h9a2.25 2.25 0 0 0 2.25-2.25v-1.5"/>
+                                        </svg>
+                                        Atvert
+                                    </a>
                                 @endif
                             </div>
                             <div class="device-media-frame">
@@ -334,7 +358,13 @@
                                         </div>
                                     @endif
                                 </div>
-                                <a href="{{ route('device-sets.edit', $set) }}" class="text-sm font-medium text-sky-700 hover:text-sky-900">Atvert</a>
+                                <a href="{{ route('device-sets.edit', $set) }}" class="inline-flex items-center gap-2 text-sm font-medium text-sky-700 hover:text-sky-900">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H19.5M19.5 6V12M19.5 6l-7.5 7.5"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5h-1.5A2.25 2.25 0 0 0 3 9.75v9A2.25 2.25 0 0 0 5.25 21h9a2.25 2.25 0 0 0 2.25-2.25v-1.5"/>
+                                    </svg>
+                                    Atvert
+                                </a>
                             </div>
                         </div>
                     @empty
