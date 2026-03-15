@@ -36,7 +36,12 @@
             class="device-form-grid"
             x-data="{
                 devicePreview: @js(old('auto_device_image_url', '')),
-                deviceCandidates: @js(old('auto_device_image_url') ? [old('auto_device_image_url')] : []),
+                deviceCandidates: @js(old('auto_device_image_url') ? [[
+                    'preview_url' => old('auto_device_image_url'),
+                    'image_url' => old('auto_device_image_url'),
+                    'source' => 'saved',
+                    'label' => 'Saglabata izvele',
+                ]] : []),
                 warrantyPreview: null,
                 autoDeviceImageUrl: @js(old('auto_device_image_url', '')),
                 removeDeviceImage: false,
@@ -49,9 +54,6 @@
                         && this.$refs.manufacturer?.value.trim()
                     );
                 },
-                buildImageQuery() {
-                    return `${this.$refs.manufacturer.value} ${this.$refs.model.value}`.trim();
-                },
                 async findDeviceImage(batch = 1) {
                     if (! this.canSearchDeviceImage) {
                         this.deviceImageError = 'Lai mekletu attelu, aizpildi modeli un razotaju.';
@@ -63,118 +65,51 @@
                     this.deviceImageBatch = batch;
 
                     try {
-                        const query = this.buildImageQuery();
-                        let images = await this.fetchCommonsImages(query, batch);
+                        const response = await fetch(@js(route('devices.preview-auto-image')), {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': @js(csrf_token()),
+                            },
+                            body: JSON.stringify({
+                                model: this.$refs.model.value,
+                                manufacturer: this.$refs.manufacturer.value,
+                                batch: batch,
+                            }),
+                        });
 
-                        if (! images.length) {
-                            images = await this.fetchWikipediaImages(query, batch);
-                        }
-
-                        if (! images.length) {
-                            images = this.fallbackImageCandidates(query, batch);
-                        }
+                        const rawPayload = await response.text();
+                        const payload = rawPayload ? JSON.parse(rawPayload) : {};
+                        const images = Array.isArray(payload.images) ? payload.images : [];
 
                         if (! images.length) {
                             this.deviceCandidates = [];
-                            this.deviceImageError = 'Attelu neizdevas atrast.';
+                            this.deviceImageError = payload.message || 'Attelu neizdevas atrast.';
                             return;
                         }
 
                         this.deviceCandidates = images;
                         this.selectDeviceImage(images[0]);
                     } catch (error) {
+                        this.deviceCandidates = [];
                         this.deviceImageError = 'Neizdevas sazinas ar attelu meklosanu.';
                     } finally {
                         this.isFindingDeviceImage = false;
                     }
                 },
-                async fetchCommonsImages(query, batch) {
-                    const url = new URL('https://commons.wikimedia.org/w/api.php');
-                    url.search = new URLSearchParams({
-                        action: 'query',
-                        format: 'json',
-                        origin: '*',
-                        generator: 'search',
-                        gsrsearch: query,
-                        gsrnamespace: '6',
-                        gsrlimit: '12',
-                        gsroffset: String((batch - 1) * 12),
-                        prop: 'imageinfo',
-                        iiprop: 'url',
-                        iiurlwidth: '1200',
-                    }).toString();
-
-                    const response = await fetch(url.toString(), { headers: { Accept: 'application/json' } });
-                    if (! response.ok) {
-                        return [];
-                    }
-
-                    const data = await response.json();
-                    const pages = Object.values(data?.query?.pages || {});
-
-                    return this.cleanImageUrls(
-                        pages.map(page => page?.imageinfo?.[0]?.thumburl || page?.imageinfo?.[0]?.url || '').filter(Boolean)
-                    ).slice(0, 3);
-                },
-                async fetchWikipediaImages(query, batch) {
-                    const url = new URL('https://en.wikipedia.org/w/api.php');
-                    url.search = new URLSearchParams({
-                        action: 'query',
-                        format: 'json',
-                        origin: '*',
-                        generator: 'search',
-                        gsrsearch: query,
-                        gsrlimit: '12',
-                        gsroffset: String((batch - 1) * 12),
-                        prop: 'pageimages',
-                        piprop: 'original|thumbnail',
-                        pithumbsize: '1200',
-                    }).toString();
-
-                    const response = await fetch(url.toString(), { headers: { Accept: 'application/json' } });
-                    if (! response.ok) {
-                        return [];
-                    }
-
-                    const data = await response.json();
-                    const pages = Object.values(data?.query?.pages || {});
-
-                    return this.cleanImageUrls(
-                        pages.map(page => page?.original?.source || page?.thumbnail?.source || '').filter(Boolean)
-                    ).slice(0, 3);
-                },
-                fallbackImageCandidates(query, batch) {
-                    const start = ((batch - 1) * 3) + 1;
-
-                    return Array.from({ length: 3 }, (_, index) =>
-                        `https://source.unsplash.com/1600x900/?${encodeURIComponent(query + ' device')}&sig=${start + index}`
-                    );
-                },
-                cleanImageUrls(urls) {
-                    return [...new Set(urls.filter(url => {
-                        const normalized = url.toLowerCase();
-                        const blockedExtensions = ['.svg', '.tif', '.tiff', '.pdf', '.djvu'];
-
-                        return (
-                            (normalized.startsWith('http://') || normalized.startsWith('https://'))
-                            && ! blockedExtensions.some(ext => normalized.includes(ext))
-                            && ! normalized.includes('logo')
-                            && ! normalized.includes('icon')
-                        );
-                    }))];
-                },
                 removeBrokenCandidate(imageUrl) {
-                    this.deviceCandidates = this.deviceCandidates.filter(candidate => candidate !== imageUrl);
+                    this.deviceCandidates = this.deviceCandidates.filter(candidate => candidate.image_url !== imageUrl && candidate.preview_url !== imageUrl);
 
-                    if (this.autoDeviceImageUrl === imageUrl) {
-                        const replacement = this.deviceCandidates[0] || '';
-                        this.devicePreview = replacement;
-                        this.autoDeviceImageUrl = replacement;
+                    if (this.autoDeviceImageUrl === imageUrl || this.devicePreview === imageUrl) {
+                        const replacement = this.deviceCandidates[0] || null;
+                        this.devicePreview = replacement?.preview_url || replacement?.image_url || '';
+                        this.autoDeviceImageUrl = replacement?.image_url || '';
                     }
                 },
-                selectDeviceImage(imageUrl) {
-                    this.devicePreview = imageUrl;
-                    this.autoDeviceImageUrl = imageUrl;
+                selectDeviceImage(candidate) {
+                    this.devicePreview = candidate?.preview_url || candidate?.image_url || '';
+                    this.autoDeviceImageUrl = candidate?.image_url || '';
                     this.removeDeviceImage = false;
                     this.$refs.deviceImageInput.value = '';
                 },
@@ -375,15 +310,18 @@
                                 <p class="mt-2 text-xs text-rose-600" x-text="deviceImageError"></p>
                             </template>
                             <div class="mt-4 grid gap-3 sm:grid-cols-3" x-show="deviceCandidates.length" x-cloak>
-                                <template x-for="image in deviceCandidates" :key="image">
+                                <template x-for="candidate in deviceCandidates" :key="candidate.image_url">
                                     <button
                                         type="button"
                                         class="overflow-hidden rounded-2xl border border-slate-200 bg-white text-left transition hover:border-sky-300 hover:shadow-sm"
-                                        @click="selectDeviceImage(image)"
-                                        :class="autoDeviceImageUrl === image ? 'ring-2 ring-sky-500 border-sky-400' : ''"
+                                        @click="selectDeviceImage(candidate)"
+                                        :class="autoDeviceImageUrl === candidate.image_url ? 'ring-2 ring-sky-500 border-sky-400' : ''"
                                     >
-                                        <img :src="image" alt="Atrasts attels" class="h-32 w-full object-cover" loading="lazy" referrerpolicy="no-referrer" x-on:error="removeBrokenCandidate(image)">
-                                        <div class="px-3 py-2 text-xs font-medium text-slate-600">Izveleties so attelu</div>
+                                        <img :src="candidate.preview_url || candidate.image_url" alt="Atrasts attels" class="h-32 w-full object-cover" loading="lazy" referrerpolicy="no-referrer" x-on:error="removeBrokenCandidate(candidate.image_url)">
+                                        <div class="px-3 py-2 text-xs font-medium text-slate-600">
+                                            <span x-text="candidate.label || 'Izveleties so attelu'"></span>
+                                            <span class="ml-1 text-slate-400" x-show="candidate.source" x-text="`(${candidate.source})`"></span>
+                                        </div>
                                     </button>
                                 </template>
                             </div>

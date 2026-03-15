@@ -3,13 +3,20 @@
 namespace App\Support;
 
 use App\Models\Device;
-use App\Models\DeviceType;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Throwable;
 
 class DeviceImageAutoFetcher
 {
+    private const SOURCE_BONUS = [
+        'openverse' => 30,
+        'commons' => 18,
+        'wikipedia' => 10,
+        'fallback' => -120,
+    ];
+
     public function __construct(private readonly DeviceAssetManager $assetManager)
     {
     }
@@ -20,71 +27,88 @@ class DeviceImageAutoFetcher
             return false;
         }
 
-        $imageUrl = $this->preview([
+        $candidate = $this->searchCandidates([
             'manufacturer' => $device->manufacturer,
             'model' => $device->model,
-        ]);
+        ], 1, 1)[0] ?? null;
 
-        if (! $imageUrl) {
+        if (! $candidate || empty($candidate['image_url'])) {
             return false;
         }
 
-        $storedPath = $this->storeFromUrl($imageUrl, $device->device_image_url);
-
-        if (! $storedPath) {
-            return false;
-        }
-
-        $device->forceFill(['device_image_url' => $storedPath])->save();
+        // Save the remote image URL directly so automatic fill does not depend on server-side downloads.
+        $device->forceFill(['device_image_url' => $candidate['image_url']])->save();
 
         return true;
     }
 
-    public function preview(array $attributes, ?DeviceType $deviceType = null): ?string
+    public function preview(array $attributes): ?string
     {
-        return $this->previewMany($attributes, null, 1)[0] ?? null;
+        return $this->previewMany($attributes, 1, 1)[0] ?? null;
     }
 
-    public function previewMany(array $attributes, ?DeviceType $deviceType = null, int $batch = 1, int $perBatch = 3): array
+    public function previewMany(array $attributes, int $batch = 1, int $perBatch = 3): array
+    {
+        return array_values(array_map(
+            fn (array $candidate) => (string) $candidate['image_url'],
+            $this->searchCandidates($attributes, $batch, $perBatch)
+        ));
+    }
+
+    public function searchCandidates(array $attributes, int $batch = 1, int $perBatch = 3): array
     {
         $batch = max(1, $batch);
         $perBatch = max(1, min($perBatch, 6));
-        $context = $this->searchContext($attributes);
-        $results = [];
-        [$searchStage, $stagePage] = $this->searchStage($batch);
 
-        foreach ($this->searchQueries($attributes, $searchStage) as $query) {
-            foreach ($this->findCommonsImageCandidates($query, $context) as $candidate) {
-                $results[$candidate['url']] = $candidate;
+        $search = $this->buildSearchContext($attributes);
+        if ($search['query'] === '') {
+            return [];
+        }
+
+        $offset = ($batch - 1) * $perBatch;
+        $needed = $offset + $perBatch;
+        $pageSize = min(18, max(9, $needed * 2));
+
+        $candidates = collect();
+
+        foreach ($search['queries'] as $query) {
+            foreach ($this->openverseCandidates($query, 1, $pageSize) as $candidate) {
+                $candidates->push($candidate);
+            }
+
+            foreach ($this->commonsCandidates($query, 1, $pageSize) as $candidate) {
+                $candidates->push($candidate);
+            }
+
+            foreach ($this->wikipediaCandidates($query, 1, $pageSize) as $candidate) {
+                $candidates->push($candidate);
+            }
+
+            if ($candidates->count() >= ($needed * 4)) {
+                break;
             }
         }
 
-        if ($results === []) {
-            foreach ($this->searchQueries($attributes, $searchStage) as $query) {
-                foreach ($this->findWikipediaImageCandidates($query, $context) as $candidate) {
-                    $results[$candidate['url']] = $candidate;
-                }
-            }
-        }
+        $ranked = $candidates
+            ->filter(fn (array $candidate) => $this->isAllowedImageUrl($candidate['preview_url'] ?? null))
+            ->map(function (array $candidate) use ($search) {
+                $candidate['score'] = $this->scoreCandidate($candidate, $search['manufacturer'], $search['model']);
 
-        if ($results === []) {
-            return $this->fallbackImageUrls($attributes, $batch, $perBatch);
-        }
+                return $candidate;
+            })
+            ->filter(fn (array $candidate) => ($candidate['score'] ?? 0) > 0)
+            ->sortByDesc('score')
+            ->unique(fn (array $candidate) => $candidate['image_url'] ?? $candidate['preview_url'])
+            ->values();
 
-        uasort($results, fn (array $a, array $b) => $b['score'] <=> $a['score']);
+        $combined = $ranked
+            ->merge($this->fallbackCandidates($search['query'], 1, max($needed, $perBatch * 3)))
+            ->unique(fn (array $candidate) => $candidate['image_url'])
+            ->values()
+            ->slice($offset, $perBatch)
+            ->all();
 
-        $offset = $stagePage * $perBatch;
-
-        $final = array_values(array_map(
-            fn (array $candidate) => $candidate['url'],
-            array_slice($results, $offset, $perBatch)
-        ));
-
-        if ($final !== []) {
-            return $final;
-        }
-
-        return $this->fallbackImageUrls($attributes, $batch, $perBatch);
+        return $combined;
     }
 
     public function storeFromUrl(string $imageUrl, ?string $previousPath = null): ?string
@@ -92,50 +116,70 @@ class DeviceImageAutoFetcher
         return $this->downloadAndStore($imageUrl, $previousPath);
     }
 
-    private function searchQueries(array $attributes, int $searchStage = 1): array
+    private function buildSearchContext(array $attributes): array
     {
-        $manufacturer = trim((string) ($attributes['manufacturer'] ?? ''));
-        $model = trim((string) ($attributes['model'] ?? ''));
+        $manufacturer = $this->normalizeQueryPart((string) ($attributes['manufacturer'] ?? ''));
+        $model = $this->normalizeQueryPart((string) ($attributes['model'] ?? ''));
+        $query = trim($manufacturer . ' ' . $model);
 
-        $queries = match ($searchStage) {
-            1 => [
-                trim("\"{$manufacturer}\" \"{$model}\""),
-                trim("{$manufacturer} {$model}"),
-                trim("\"{$manufacturer} {$model}\""),
-                trim("{$model} {$manufacturer}"),
-            ],
-            2 => [
-                trim("\"{$manufacturer}\" {$model}"),
-                trim("{$manufacturer} \"{$model}\""),
-                trim("\"{$model}\" {$manufacturer}"),
-                trim("{$model} \"{$manufacturer}\""),
-            ],
-            default => [
-                trim("{$manufacturer} {$model} device"),
-                trim("{$manufacturer} {$model} hardware"),
-                trim("\"{$manufacturer}\" \"{$model}\" device"),
-                trim("\"{$model}\" {$manufacturer} device"),
-            ],
-        };
+        $queries = collect([
+            $query,
+            trim($query . ' photo'),
+            trim($query . ' product'),
+            trim($query . ' hardware'),
+        ])
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
 
-        return array_values(array_unique(array_filter($queries, fn (string $query) => $query !== '')));
+        return [
+            'manufacturer' => $manufacturer,
+            'model' => $model,
+            'query' => $query,
+            'queries' => $queries,
+        ];
     }
 
-    private function searchStage(int $batch): array
+    private function openverseCandidates(string $query, int $batch, int $pageSize): array
     {
-        if ($batch <= 1) {
-            return [1, 0];
-        }
+        try {
+            $response = Http::timeout((int) config('devices.auto_image_timeout', 4))
+                ->retry(1, 200)
+                ->acceptJson()
+                ->withUserAgent((string) config('devices.auto_image_user_agent', 'ITStackPR Device Image Fetcher/1.0'))
+                ->get('https://api.openverse.org/v1/images/', [
+                    'q' => $query,
+                    'page' => $batch,
+                    'page_size' => $pageSize,
+                    'mature' => 'false',
+                ]);
 
-        if ($batch === 2) {
-            return [2, 0];
-        }
+            if (! $response->ok()) {
+                return [];
+            }
 
-        // For batch >= 3 we stay in stage 3 and page forward 3-image chunks.
-        return [3, $batch - 3];
+            return collect($response->json('results', []))
+                ->map(function (array $item) {
+                    $previewUrl = (string) ($item['thumbnail'] ?? $item['url'] ?? '');
+                    $imageUrl = (string) ($item['url'] ?? $previewUrl);
+
+                    return [
+                        'preview_url' => $previewUrl,
+                        'image_url' => $imageUrl,
+                        'source' => 'openverse',
+                        'label' => (string) ($item['title'] ?? 'Openverse'),
+                    ];
+                })
+                ->filter(fn (array $candidate) => $this->isAllowedImageUrl($candidate['preview_url']) && ! $this->looksLikeNonPhoto($candidate['label']))
+                ->values()
+                ->all();
+        } catch (Throwable) {
+            return [];
+        }
     }
 
-    private function findCommonsImageCandidates(string $query, array $context): array
+    private function commonsCandidates(string $query, int $batch, int $pageSize): array
     {
         try {
             $response = Http::timeout((int) config('devices.auto_image_timeout', 4))
@@ -148,39 +192,40 @@ class DeviceImageAutoFetcher
                     'generator' => 'search',
                     'gsrsearch' => $query,
                     'gsrnamespace' => 6,
-                    'gsrlimit' => min(20, max(9, (int) config('devices.auto_image_candidates', 9))),
+                    'gsrlimit' => $pageSize,
+                    'gsroffset' => ($batch - 1) * $pageSize,
                     'prop' => 'imageinfo',
                     'iiprop' => 'url',
+                    'iiurlwidth' => 1200,
                 ]);
 
             if (! $response->ok()) {
                 return [];
             }
 
-            $pages = collect($response->json('query.pages', []))
+            return collect($response->json('query.pages', []))
                 ->sortBy(fn (array $page) => $page['index'] ?? PHP_INT_MAX)
-                ->values();
+                ->map(function (array $page) {
+                    $previewUrl = (string) (data_get($page, 'imageinfo.0.thumburl') ?: data_get($page, 'imageinfo.0.url') ?: '');
+                    $imageUrl = (string) (data_get($page, 'imageinfo.0.url') ?: $previewUrl);
+                    $label = (string) ($page['title'] ?? 'Wikimedia Commons');
 
-            $candidates = [];
-
-            foreach ($pages as $page) {
-                $source = data_get($page, 'imageinfo.0.url');
-                $title = (string) ($page['title'] ?? '');
-
-                if ($this->isAllowedImageUrl($source) && ! $this->looksLikeNonPhoto($title)) {
-                    $candidates[] = [
-                        'url' => $source,
-                        'score' => $this->scoreCandidate($title, $query, $context) + 20,
+                    return [
+                        'preview_url' => $previewUrl,
+                        'image_url' => $imageUrl,
+                        'source' => 'commons',
+                        'label' => $label,
                     ];
-                }
-            }
-            return $candidates;
+                })
+                ->filter(fn (array $candidate) => $this->isAllowedImageUrl($candidate['preview_url']) && ! $this->looksLikeNonPhoto($candidate['label']))
+                ->values()
+                ->all();
         } catch (Throwable) {
             return [];
         }
     }
 
-    private function findWikipediaImageCandidates(string $query, array $context): array
+    private function wikipediaCandidates(string $query, int $batch, int $pageSize): array
     {
         try {
             $response = Http::timeout((int) config('devices.auto_image_timeout', 4))
@@ -192,7 +237,8 @@ class DeviceImageAutoFetcher
                     'format' => 'json',
                     'generator' => 'search',
                     'gsrsearch' => $query,
-                    'gsrlimit' => min(20, max(9, (int) config('devices.auto_image_candidates', 9))),
+                    'gsrlimit' => $pageSize,
+                    'gsroffset' => ($batch - 1) * $pageSize,
                     'prop' => 'pageimages|extracts',
                     'piprop' => 'original|thumbnail',
                     'pithumbsize' => 1200,
@@ -204,108 +250,63 @@ class DeviceImageAutoFetcher
                 return [];
             }
 
-            $pages = collect($response->json('query.pages', []))
+            return collect($response->json('query.pages', []))
                 ->sortBy(fn (array $page) => $page['index'] ?? PHP_INT_MAX)
-                ->values();
+                ->map(function (array $page) {
+                    $previewUrl = (string) (data_get($page, 'thumbnail.source') ?: data_get($page, 'original.source') ?: '');
+                    $imageUrl = (string) (data_get($page, 'original.source') ?: $previewUrl);
+                    $label = trim(((string) ($page['title'] ?? '')) . ' ' . ((string) ($page['extract'] ?? '')));
 
-            $candidates = [];
-
-            foreach ($pages as $page) {
-                $source = data_get($page, 'original.source') ?: data_get($page, 'thumbnail.source');
-                $title = (string) ($page['title'] ?? '');
-                $extract = (string) ($page['extract'] ?? '');
-
-                if ($this->isAllowedImageUrl($source) && ! $this->looksLikeNonPhoto($title . ' ' . $extract)) {
-                    $candidates[] = [
-                        'url' => $source,
-                        'score' => $this->scoreCandidate($title . ' ' . $extract, $query, $context),
+                    return [
+                        'preview_url' => $previewUrl,
+                        'image_url' => $imageUrl,
+                        'source' => 'wikipedia',
+                        'label' => $label !== '' ? $label : 'Wikipedia',
                     ];
-                }
-            }
-
-            return $candidates;
+                })
+                ->filter(fn (array $candidate) => $this->isAllowedImageUrl($candidate['preview_url']) && ! $this->looksLikeNonPhoto($candidate['label']))
+                ->values()
+                ->all();
         } catch (Throwable) {
             return [];
         }
     }
 
-    private function searchContext(array $attributes): array
+    private function fallbackCandidates(string $query, int $start, int $count): Collection
     {
-        $tokens = collect([
-            $attributes['manufacturer'] ?? '',
-            $attributes['model'] ?? '',
-        ])
-            ->flatMap(fn (string $value) => preg_split('/[^[:alnum:]]+/u', Str::lower($value)) ?: [])
-            ->filter(fn (?string $token) => $token !== null && $token !== '' && strlen($token) >= 2)
-            ->values()
-            ->all();
+        return collect(range($start, $start + $count - 1))
+            ->map(function (int $sig) use ($query) {
+                $url = 'https://source.unsplash.com/1600x900/?' . rawurlencode($query . ' device') . '&sig=' . $sig;
 
-        return [
-            'tokens' => array_values(array_unique($tokens)),
-            'manufacturer' => Str::lower((string) ($attributes['manufacturer'] ?? '')),
-            'model' => Str::lower((string) ($attributes['model'] ?? '')),
-        ];
+                return [
+                    'preview_url' => $url,
+                    'image_url' => $url,
+                    'source' => 'fallback',
+                    'label' => 'Fallback',
+                ];
+            });
     }
 
-    private function scoreCandidate(string $haystack, string $query, array $context): int
+    private function isAllowedImageUrl(mixed $url): bool
     {
-        $normalized = Str::lower($haystack);
-        $score = 0;
-
-        foreach ($context['tokens'] as $token) {
-            if (str_contains($normalized, $token)) {
-                $score += 8;
-            }
-        }
-
-        foreach (['manufacturer' => 36, 'model' => 46] as $field => $weight) {
-            $value = trim((string) ($context[$field] ?? ''));
-
-            if ($value !== '' && str_contains($normalized, $value)) {
-                $score += $weight;
-            }
-        }
-
-        if (str_contains($normalized, Str::lower($query))) {
-            $score += 18;
-        }
-
-        if (
-            $context['manufacturer'] !== ''
-            && $context['model'] !== ''
-            && str_contains($normalized, $context['manufacturer'])
-            && str_contains($normalized, $context['model'])
-        ) {
-            $score += 50;
-        }
-
-        if (str_contains($normalized, 'logo') || str_contains($normalized, 'icon')) {
-            $score -= 20;
-        }
-
-        return $score;
-    }
-
-    private function isAllowedImageUrl(mixed $source): bool
-    {
-        if (! is_string($source) || ! Str::startsWith($source, ['http://', 'https://'])) {
+        if (! is_string($url) || ! Str::startsWith($url, ['http://', 'https://'])) {
             return false;
         }
 
-        $path = (string) parse_url($source, PHP_URL_PATH);
-        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-
-        if ($extension === '') {
-            return true;
+        $normalized = Str::lower($url);
+        foreach (['.svg', '.tif', '.tiff', '.pdf', '.djvu'] as $blockedExtension) {
+            if (str_contains($normalized, $blockedExtension)) {
+                return false;
+            }
         }
 
-        return in_array($extension, ['jpg', 'jpeg', 'png', 'webp'], true);
+        return true;
     }
 
     private function looksLikeNonPhoto(string $text): bool
     {
         $normalized = Str::lower($text);
-        $blocked = ['logo', 'icon', 'vector', 'svg', 'wordmark', 'symbol', 'coat of arms'];
+        $blocked = ['logo', 'icon', 'vector', 'wordmark', 'symbol', 'coat of arms'];
 
         foreach ($blocked as $token) {
             if (str_contains($normalized, $token)) {
@@ -316,25 +317,67 @@ class DeviceImageAutoFetcher
         return false;
     }
 
-    private function fallbackImageUrls(array $attributes, int $batch, int $perBatch): array
+    private function scoreCandidate(array $candidate, string $manufacturer, string $model): int
     {
-        $manufacturer = trim((string) ($attributes['manufacturer'] ?? ''));
-        $model = trim((string) ($attributes['model'] ?? ''));
-        $query = trim($manufacturer . ' ' . $model . ' device');
+        $text = Str::lower(trim(implode(' ', [
+            (string) ($candidate['label'] ?? ''),
+            (string) ($candidate['image_url'] ?? ''),
+            (string) ($candidate['preview_url'] ?? ''),
+        ])));
 
-        if ($query === '') {
-            return [];
+        if ($text === '' || $this->looksLikeNonPhoto($text)) {
+            return 0;
         }
 
-        $offset = max(0, $batch - 1) * $perBatch;
-        $urls = [];
+        $score = self::SOURCE_BONUS[$candidate['source'] ?? 'fallback'] ?? 0;
+        $manufacturerTokens = $this->tokenize($manufacturer);
+        $modelTokens = $this->tokenize($model);
 
-        for ($i = 1; $i <= $perBatch; $i++) {
-            $sig = $offset + $i;
-            $urls[] = 'https://source.unsplash.com/1600x900/?' . rawurlencode($query) . '&sig=' . $sig;
+        if ($manufacturer !== '' && str_contains($text, Str::lower($manufacturer))) {
+            $score += 80;
         }
 
-        return $urls;
+        if ($model !== '' && str_contains($text, Str::lower($model))) {
+            $score += 140;
+        }
+
+        foreach ($manufacturerTokens as $token) {
+            if (strlen($token) >= 2 && str_contains($text, $token)) {
+                $score += 20;
+            }
+        }
+
+        foreach ($modelTokens as $token) {
+            if (strlen($token) >= 2 && str_contains($text, $token)) {
+                $score += ctype_digit($token) ? 18 : 30;
+            }
+        }
+
+        if ($manufacturer !== '' && $model !== '' && str_contains($text, Str::lower($manufacturer)) && str_contains($text, Str::lower($model))) {
+            $score += 120;
+        }
+
+        foreach (['switch', 'router', 'laptop', 'desktop', 'monitor', 'printer', 'server', 'phone', 'tablet', 'device'] as $photoToken) {
+            if (str_contains($text, $photoToken)) {
+                $score += 6;
+            }
+        }
+
+        return $score;
+    }
+
+    private function normalizeQueryPart(string $value): string
+    {
+        return trim(preg_replace('/\s+/', ' ', $value) ?? '');
+    }
+
+    private function tokenize(string $value): array
+    {
+        return collect(preg_split('/[^a-z0-9]+/i', Str::lower($value)) ?: [])
+            ->filter(fn (string $token) => $token !== '')
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function downloadAndStore(string $imageUrl, ?string $previousPath = null): ?string

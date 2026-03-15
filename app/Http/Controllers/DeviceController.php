@@ -101,15 +101,15 @@ class DeviceController extends Controller
         ]);
         $batch = (int) ($validated['batch'] ?? 1);
 
-        $imageUrls = app(DeviceImageAutoFetcher::class)->previewMany($validated, null, $batch, 3);
+        $candidates = app(DeviceImageAutoFetcher::class)->searchCandidates($validated, $batch, 3);
 
-        if ($imageUrls === []) {
+        if ($candidates === []) {
             return response()->json([
                 'message' => 'Attelus interneta neizdevas atrast. Precize modeli vai razotaju un meginiet velreiz.',
             ], 404);
         }
 
-        return response()->json(['images' => $imageUrls]);
+        return response()->json(['images' => $candidates]);
     }
 
     public function store(Request $request)
