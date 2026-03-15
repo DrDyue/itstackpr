@@ -69,6 +69,10 @@ class DeviceAssetManager
 
     public function thumbUrl(?string $path): ?string
     {
+        if ($path && Str::startsWith($path, ['http://', 'https://'])) {
+            return $path;
+        }
+
         return $this->url($this->thumbnailPath($path));
     }
 

@@ -52,6 +52,9 @@
                         && this.$refs.manufacturer?.value.trim()
                     );
                 },
+                buildImageQuery() {
+                    return `${this.$refs.manufacturer.value} ${this.$refs.model.value}`.trim();
+                },
                 async findDeviceImage(batch = 1) {
                     if (! this.canSearchDeviceImage) {
                         this.deviceImageError = 'Lai mekletu attelu, aizpildi modeli un razotaju.';
@@ -63,41 +66,103 @@
                     this.deviceImageBatch = batch;
 
                     try {
-                        const response = await fetch(@js(route('devices.preview-auto-image')), {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': @js(csrf_token()),
-                            },
-                            body: JSON.stringify({
-                                model: this.$refs.model.value,
-                                manufacturer: this.$refs.manufacturer.value,
-                                batch: batch,
-                            }),
-                        });
+                        const query = this.buildImageQuery();
+                        let images = await this.fetchCommonsImages(query, batch);
 
-                        const raw = await response.text();
-                        let data = {};
-                        try {
-                            data = JSON.parse(raw);
-                        } catch (e) {
-                            data = {};
+                        if (! images.length) {
+                            images = await this.fetchWikipediaImages(query, batch);
                         }
 
-                        if (! response.ok || ! data.images?.length) {
+                        if (! images.length) {
+                            images = this.fallbackImageCandidates(query, batch);
+                        }
+
+                        if (! images.length) {
                             this.deviceCandidates = [];
-                            this.deviceImageError = data.message || 'Attelu neizdevas atrast.';
+                            this.deviceImageError = 'Attelu neizdevas atrast.';
                             return;
                         }
 
-                        this.deviceCandidates = data.images;
-                        this.selectDeviceImage(data.images[0]);
+                        this.deviceCandidates = images;
+                        this.selectDeviceImage(images[0]);
                     } catch (error) {
                         this.deviceImageError = 'Neizdevas sazinas ar attelu meklosanu.';
                     } finally {
                         this.isFindingDeviceImage = false;
                     }
+                },
+                async fetchCommonsImages(query, batch) {
+                    const url = new URL('https://commons.wikimedia.org/w/api.php');
+                    url.search = new URLSearchParams({
+                        action: 'query',
+                        format: 'json',
+                        origin: '*',
+                        generator: 'search',
+                        gsrsearch: query,
+                        gsrnamespace: '6',
+                        gsrlimit: '12',
+                        gsroffset: String((batch - 1) * 12),
+                        prop: 'imageinfo',
+                        iiprop: 'url',
+                    }).toString();
+
+                    const response = await fetch(url.toString(), { headers: { Accept: 'application/json' } });
+                    if (! response.ok) {
+                        return [];
+                    }
+
+                    const data = await response.json();
+                    const pages = Object.values(data?.query?.pages || {});
+
+                    return this.cleanImageUrls(
+                        pages.map(page => page?.imageinfo?.[0]?.url || '').filter(Boolean)
+                    ).slice(0, 3);
+                },
+                async fetchWikipediaImages(query, batch) {
+                    const url = new URL('https://en.wikipedia.org/w/api.php');
+                    url.search = new URLSearchParams({
+                        action: 'query',
+                        format: 'json',
+                        origin: '*',
+                        generator: 'search',
+                        gsrsearch: query,
+                        gsrlimit: '12',
+                        gsroffset: String((batch - 1) * 12),
+                        prop: 'pageimages',
+                        piprop: 'original|thumbnail',
+                        pithumbsize: '1200',
+                    }).toString();
+
+                    const response = await fetch(url.toString(), { headers: { Accept: 'application/json' } });
+                    if (! response.ok) {
+                        return [];
+                    }
+
+                    const data = await response.json();
+                    const pages = Object.values(data?.query?.pages || {});
+
+                    return this.cleanImageUrls(
+                        pages.map(page => page?.original?.source || page?.thumbnail?.source || '').filter(Boolean)
+                    ).slice(0, 3);
+                },
+                fallbackImageCandidates(query, batch) {
+                    const start = ((batch - 1) * 3) + 1;
+
+                    return Array.from({ length: 3 }, (_, index) =>
+                        `https://source.unsplash.com/1600x900/?${encodeURIComponent(query + ' device')}&sig=${start + index}`
+                    );
+                },
+                cleanImageUrls(urls) {
+                    return [...new Set(urls.filter(url => {
+                        const normalized = url.toLowerCase();
+
+                        return (
+                            (normalized.startsWith('http://') || normalized.startsWith('https://'))
+                            && ! normalized.endsWith('.svg')
+                            && ! normalized.includes('logo')
+                            && ! normalized.includes('icon')
+                        );
+                    }))];
                 },
                 selectDeviceImage(imageUrl) {
                     this.devicePreview = imageUrl;
