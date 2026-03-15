@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class BackupSetting extends Model
 {
@@ -29,6 +30,10 @@ class BackupSetting extends Model
 
     public static function singleton(): self
     {
+        if (! static::tableExists()) {
+            return static::defaultInstance();
+        }
+
         return static::query()->firstOrCreate(
             ['id' => 1],
             [
@@ -39,5 +44,28 @@ class BackupSetting extends Model
                 'monthly_day' => 1,
             ]
         );
+    }
+
+    public static function tableExists(): bool
+    {
+        static $exists;
+
+        if ($exists !== null) {
+            return $exists;
+        }
+
+        return $exists = Schema::hasTable((new static())->getTable());
+    }
+
+    public static function defaultInstance(): self
+    {
+        return new static([
+            'enabled' => true,
+            'frequency' => 'daily',
+            'run_at' => '02:00:00',
+            'weekly_day' => 1,
+            'monthly_day' => 1,
+            'last_scheduled_backup_at' => null,
+        ]);
     }
 }

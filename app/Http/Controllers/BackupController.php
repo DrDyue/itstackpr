@@ -9,6 +9,7 @@ use App\Support\DatabaseBackupService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use RuntimeException;
@@ -25,6 +26,21 @@ class BackupController extends Controller
     {
         $this->ensureAdmin();
 
+        if (! $this->moduleReady()) {
+            return view('backups.index', [
+                'moduleReady' => false,
+                'settings' => BackupSetting::defaultInstance(),
+                'backups' => new LengthAwarePaginator([], 0, 15, 1),
+                'summary' => [
+                    'count' => 0,
+                    'latest' => null,
+                    'current' => null,
+                    'total_size' => 0,
+                    'next_run_at' => null,
+                ],
+            ]);
+        }
+
         $settings = BackupSetting::singleton();
         $backups = DatabaseBackup::query()
             ->with('createdBy.employee')
@@ -36,6 +52,7 @@ class BackupController extends Controller
         $nextRunAt = $this->backupService->nextRunAt($settings, CarbonImmutable::now());
 
         return view('backups.index', [
+            'moduleReady' => true,
             'settings' => $settings,
             'backups' => $backups,
             'summary' => [
@@ -51,6 +68,11 @@ class BackupController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $this->ensureAdmin();
+        $notReady = $this->redirectIfModuleNotReady();
+
+        if ($notReady) {
+            return $notReady;
+        }
 
         $backup = $this->backupService->createBackup($request->user(), 'manual');
 
@@ -62,6 +84,11 @@ class BackupController extends Controller
     public function updateSettings(Request $request): RedirectResponse
     {
         $this->ensureAdmin();
+        $notReady = $this->redirectIfModuleNotReady();
+
+        if ($notReady) {
+            return $notReady;
+        }
 
         $validated = $request->validate([
             'frequency' => ['required', 'in:daily,weekly,monthly'],
@@ -110,6 +137,11 @@ class BackupController extends Controller
     public function restore(Request $request, DatabaseBackup $backup): RedirectResponse
     {
         $this->ensureAdmin();
+        $notReady = $this->redirectIfModuleNotReady();
+
+        if ($notReady) {
+            return $notReady;
+        }
 
         try {
             $this->backupService->restoreBackup($backup, $request->user());
@@ -127,6 +159,11 @@ class BackupController extends Controller
     public function uploadAndRestore(Request $request): RedirectResponse
     {
         $this->ensureAdmin();
+        $notReady = $this->redirectIfModuleNotReady();
+
+        if ($notReady) {
+            return $notReady;
+        }
 
         $validated = $request->validate([
             'backup_file' => ['required', 'file', 'max:' . (int) config('backups.max_upload_kb', 102400)],
@@ -149,6 +186,11 @@ class BackupController extends Controller
     public function destroy(Request $request, DatabaseBackup $backup): RedirectResponse
     {
         $this->ensureAdmin();
+        $notReady = $this->redirectIfModuleNotReady();
+
+        if ($notReady) {
+            return $notReady;
+        }
 
         try {
             $this->backupService->deleteBackup($backup);
@@ -177,5 +219,21 @@ class BackupController extends Controller
         if (auth()->user()?->role !== 'admin') {
             abort(403);
         }
+    }
+
+    private function moduleReady(): bool
+    {
+        return BackupSetting::tableExists() && DatabaseBackup::tableExists();
+    }
+
+    private function redirectIfModuleNotReady(): ?RedirectResponse
+    {
+        if ($this->moduleReady()) {
+            return null;
+        }
+
+        return redirect()
+            ->route('backups.index')
+            ->with('error', 'Backup modulis vel nav aktivets. Palaidiet jaunakas migracijas produkcijas datubaze.');
     }
 }

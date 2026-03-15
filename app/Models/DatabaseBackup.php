@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Schema;
 
 class DatabaseBackup extends Model
 {
@@ -45,5 +46,16 @@ class DatabaseBackup extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_user_id');
+    }
+
+    public static function tableExists(): bool
+    {
+        static $exists;
+
+        if ($exists !== null) {
+            return $exists;
+        }
+
+        return $exists = Schema::hasTable((new static())->getTable());
     }
 }

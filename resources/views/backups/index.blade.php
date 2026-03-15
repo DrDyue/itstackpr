@@ -56,15 +56,17 @@
                 <p class="device-page-subtitle">Pilna datubazes dublesana, lejupielade, atjaunosana un automatisko kopiju grafiks.</p>
             </div>
 
-            <form method="POST" action="{{ route('backups.store') }}">
-                @csrf
-                <button type="submit" class="crud-btn-primary-inline inline-flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-                    </svg>
-                    Izveidot manualo kopiju
-                </button>
-            </form>
+            @if ($moduleReady)
+                <form method="POST" action="{{ route('backups.store') }}">
+                    @csrf
+                    <button type="submit" class="crud-btn-primary-inline inline-flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                        </svg>
+                        Izveidot manualo kopiju
+                    </button>
+                </form>
+            @endif
         </div>
 
         @if (session('success'))
@@ -78,6 +80,13 @@
         @if ($errors->any())
             <div class="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                 {{ $errors->first() }}
+            </div>
+        @endif
+
+        @if (! $moduleReady)
+            <div class="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900">
+                Backup modulis vel nav aktivets saja serveri. Trukst tabulas `backup_settings` un/vai `database_backups`.
+                Palaid produkcijas serveri `php artisan migrate --force`, un pec tam sadala stradas pilniba.
             </div>
         @endif
 
@@ -130,14 +139,14 @@
                     @method('PUT')
 
                     <label class="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
-                        <input type="checkbox" name="enabled" value="1" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" @checked(old('enabled', $settings->enabled))>
+                        <input type="checkbox" name="enabled" value="1" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" @checked(old('enabled', $settings->enabled)) @disabled(! $moduleReady)>
                         Ieslegt automatiskas rezerves kopijas
                     </label>
 
                     <div class="grid gap-4 md:grid-cols-3">
                         <label class="block">
                             <span class="user-filter-label">Biezums</span>
-                            <select name="frequency" x-model="frequency" class="crud-control">
+                            <select name="frequency" x-model="frequency" class="crud-control" @disabled(! $moduleReady)>
                                 <option value="daily">Katru dienu</option>
                                 <option value="weekly">Katru nedelu</option>
                                 <option value="monthly">Reizi menesi</option>
@@ -146,7 +155,7 @@
 
                         <label class="block">
                             <span class="user-filter-label">Laiks</span>
-                            <input type="time" name="run_at" value="{{ old('run_at', substr((string) $settings->run_at, 0, 5)) }}" class="crud-control">
+                            <input type="time" name="run_at" value="{{ old('run_at', substr((string) $settings->run_at, 0, 5)) }}" class="crud-control" @disabled(! $moduleReady)>
                         </label>
 
                         <div class="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm text-sky-800">
@@ -158,7 +167,7 @@
                     <div class="grid gap-4 md:grid-cols-2">
                         <label class="block" x-show="frequency === 'weekly'" x-cloak>
                             <span class="user-filter-label">Nedelas diena</span>
-                            <select name="weekly_day" class="crud-control">
+                            <select name="weekly_day" class="crud-control" @disabled(! $moduleReady)>
                                 @foreach ([1 => 'Pirmdiena', 2 => 'Otrdiena', 3 => 'Tresdiena', 4 => 'Ceturtdiena', 5 => 'Piektdiena', 6 => 'Sestdiena', 7 => 'Svetdiena'] as $day => $label)
                                     <option value="{{ $day }}" @selected((int) old('weekly_day', $settings->weekly_day) === $day)>{{ $label }}</option>
                                 @endforeach
@@ -167,7 +176,7 @@
 
                         <label class="block" x-show="frequency === 'monthly'" x-cloak>
                             <span class="user-filter-label">Menesa datums</span>
-                            <select name="monthly_day" class="crud-control">
+                            <select name="monthly_day" class="crud-control" @disabled(! $moduleReady)>
                                 @for ($day = 1; $day <= 31; $day++)
                                     <option value="{{ $day }}" @selected((int) old('monthly_day', $settings->monthly_day) === $day)>{{ $day }}. datums</option>
                                 @endfor
@@ -176,7 +185,7 @@
                     </div>
 
                     <div class="flex flex-wrap gap-3">
-                        <button type="submit" class="crud-btn-primary inline-flex items-center gap-2">
+                        <button type="submit" class="crud-btn-primary inline-flex items-center gap-2" @disabled(! $moduleReady)>
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75 10.5 18l9-13.5"/>
                             </svg>
@@ -200,14 +209,14 @@
 
                     <label class="block">
                         <span class="user-filter-label">Rezerves kopijas fails</span>
-                        <input type="file" name="backup_file" accept=".json,.bak,.backup,.txt" class="crud-control block w-full cursor-pointer file:mr-3 file:rounded-xl file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-800">
+                        <input type="file" name="backup_file" accept=".json,.bak,.backup,.txt" class="crud-control block w-full cursor-pointer file:mr-3 file:rounded-xl file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-800" @disabled(! $moduleReady)>
                     </label>
 
                     <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                         Pirms atjaunosanas parliecinies, ka fails ir pilna datubazes kopija no shis sistemas. Pec augshuplades tas paradisies kopiju vesture.
                     </div>
 
-                    <button type="submit" class="crud-btn-primary inline-flex items-center gap-2" onclick="return confirm('Atjaunot datubazi no augshupladeta faila?')">
+                    <button type="submit" class="crud-btn-primary inline-flex items-center gap-2" onclick="return confirm('Atjaunot datubazi no augshupladeta faila?')" @disabled(! $moduleReady)>
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V4.5m0 12 4.5-4.5M12 16.5 7.5 12M4.5 19.5h15"/>
                         </svg>
