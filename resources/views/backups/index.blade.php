@@ -36,6 +36,16 @@
         $queryLink = function (array $overrides = []) use ($filters): string {
             return route('backups.index', array_filter(array_merge($filters, $overrides), fn ($value) => $value !== ''));
         };
+
+        $selectedFrequency = old('frequency', $settings->frequency);
+        $scheduleEnabled = old('enabled') !== null ? (bool) old('enabled') : (bool) $settings->enabled;
+        $frequencyLabel = $scheduleEnabled
+            ? match ($selectedFrequency) {
+                'weekly' => 'Katru nedelu',
+                'monthly' => 'Reizi menesi',
+                default => 'Katru dienu',
+            }
+            : 'Izslegts';
     @endphp
 
     <section class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
