@@ -22,11 +22,11 @@ class BackupManagementTest extends TestCase
         $response = $this->actingAs($user)->post(route('backups.store'));
 
         $response->assertRedirect(route('backups.index'));
-        $this->assertDatabaseCount('database_backups', 1);
-
-        $backup = \App\Models\DatabaseBackup::query()->first();
+        $backups = app(DatabaseBackupService::class)->allBackups();
+        $backup = $backups->first();
 
         $this->assertNotNull($backup);
+        $this->assertCount(1, $backups);
         $this->assertSame('manual', $backup->trigger_type);
         $this->assertSame('user', $backup->creator_type);
         $this->assertSame($user->id, $backup->created_by_user_id);
@@ -48,22 +48,22 @@ class BackupManagementTest extends TestCase
 
         $this->assertDatabaseHas('employees', ['email' => 'temp@example.com']);
 
-        $restoreResponse = $this->actingAs($user)->post(route('backups.restore', $backup));
+        $restoreResponse = $this->actingAs($user)->post(route('backups.restore', ['backup' => $backup->id]));
 
         $restoreResponse->assertRedirect(route('backups.index'));
         $this->assertDatabaseMissing('employees', ['email' => 'temp@example.com']);
-        $this->assertDatabaseHas('database_backups', [
-            'id' => $backup->id,
-            'is_current' => true,
-            'restore_count' => 1,
-        ]);
+        $storedBackup = app(DatabaseBackupService::class)->findBackup((string) $backup->id);
+
+        $this->assertNotNull($storedBackup);
+        $this->assertTrue($storedBackup->is_current);
+        $this->assertSame(1, $storedBackup->restore_count);
 
         $deleteResponse = $this->actingAs(User::query()->findOrFail($user->id))
-            ->delete(route('backups.destroy', $backup));
+            ->delete(route('backups.destroy', ['backup' => $backup->id]));
 
         $deleteResponse->assertRedirect(route('backups.index'));
         $deleteResponse->assertSessionHas('error');
-        $this->assertDatabaseHas('database_backups', ['id' => $backup->id]);
+        $this->assertNotNull(app(DatabaseBackupService::class)->findBackup((string) $backup->id));
     }
 
     private function createAdminUser(): User
