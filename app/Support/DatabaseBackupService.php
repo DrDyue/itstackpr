@@ -2,15 +2,16 @@
 
 namespace App\Support;
 
-use App\Models\BackupSetting;
-use App\Models\DatabaseBackup;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Connection;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Fluent;
 use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
@@ -19,12 +20,16 @@ class DatabaseBackupService
 {
     private const FORMAT_VERSION = 1;
 
+    private const CATALOG_FILE = 'meta/catalog.json';
+
+    private const SETTINGS_FILE = 'meta/settings.json';
+
     private const EXCLUDED_TABLES = [
         'database_backups',
         'backup_settings',
     ];
 
-    public function createBackup(?User $user = null, string $trigger = 'manual'): DatabaseBackup
+    public function createBackup(?User $user = null, string $trigger = 'manual'): Fluent
     {
         $startedAt = microtime(true);
         $snapshot = $this->buildSnapshot($trigger, $user?->id);
@@ -36,9 +41,11 @@ class DatabaseBackupService
         $path = $this->generatePath($trigger, 'json');
         $disk = $this->disk();
 
+        $this->ensureDirectoryFor($path);
         Storage::disk($disk)->put($path, $payload);
 
-        $backup = DatabaseBackup::create([
+        $backup = $this->upsertBackupRecord([
+            'id' => $this->generateBackupId(),
             'name' => $this->defaultName($trigger),
             'disk' => $disk,
             'file_path' => $path,
@@ -49,10 +56,16 @@ class DatabaseBackupService
             'trigger_type' => $trigger,
             'creator_type' => $trigger === 'scheduled' ? 'system' : 'user',
             'created_by_user_id' => $user?->id,
+            'created_by_name' => $this->creatorName($user, $trigger),
             'file_size_bytes' => (int) Storage::disk($disk)->size($path),
             'duration_ms' => $this->elapsedMilliseconds($startedAt),
             'total_tables' => (int) ($snapshot['meta']['table_count'] ?? 0),
             'total_rows' => (int) ($snapshot['meta']['row_count'] ?? 0),
+            'is_current' => false,
+            'restore_count' => 0,
+            'last_restored_at' => null,
+            'created_at' => now()->toIso8601String(),
+            'updated_at' => now()->toIso8601String(),
         ]);
 
         AuditTrail::write(
@@ -67,7 +80,7 @@ class DatabaseBackupService
         return $backup;
     }
 
-    public function registerUploadedBackup(UploadedFile $file, ?User $user = null): DatabaseBackup
+    public function registerUploadedBackup(UploadedFile $file, ?User $user = null): Fluent
     {
         $startedAt = microtime(true);
         $contents = file_get_contents($file->getRealPath());
@@ -80,10 +93,12 @@ class DatabaseBackupService
         $path = $this->generatePath('uploaded', $file->getClientOriginalExtension() ?: 'json');
         $disk = $this->disk();
 
+        $this->ensureDirectoryFor($path);
         Storage::disk($disk)->put($path, $contents);
 
         $meta = $snapshot['meta'] ?? [];
-        $backup = DatabaseBackup::create([
+        $backup = $this->upsertBackupRecord([
+            'id' => $this->generateBackupId(),
             'name' => $this->uploadedName($file->getClientOriginalName()),
             'disk' => $disk,
             'file_path' => $path,
@@ -94,10 +109,16 @@ class DatabaseBackupService
             'trigger_type' => 'uploaded',
             'creator_type' => 'user',
             'created_by_user_id' => $user?->id,
+            'created_by_name' => $this->creatorName($user, 'uploaded'),
             'file_size_bytes' => (int) Storage::disk($disk)->size($path),
             'duration_ms' => $this->elapsedMilliseconds($startedAt),
             'total_tables' => count($this->restorableTables(collect($snapshot['tables'] ?? [])->all())),
             'total_rows' => $this->tableRowCount(collect($snapshot['tables'] ?? [])->all()),
+            'is_current' => false,
+            'restore_count' => 0,
+            'last_restored_at' => null,
+            'created_at' => now()->toIso8601String(),
+            'updated_at' => now()->toIso8601String(),
         ]);
 
         AuditTrail::write(
@@ -112,9 +133,10 @@ class DatabaseBackupService
         return $backup;
     }
 
-    public function restoreBackup(DatabaseBackup $backup, ?User $user = null): void
+    public function restoreBackup(string|Fluent $backup, ?User $user = null): Fluent
     {
-        $snapshot = $this->readBackupFile($backup);
+        $record = $this->resolveBackup($backup);
+        $snapshot = $this->readBackupFile($record);
         $driver = (string) ($snapshot['meta']['driver'] ?? '');
         $currentDriver = $this->connection()->getDriverName();
 
@@ -128,13 +150,7 @@ class DatabaseBackupService
         }
 
         $this->applySnapshot($tables);
-
-        DatabaseBackup::query()->where('is_current', true)->update(['is_current' => false]);
-        $backup->forceFill([
-            'is_current' => true,
-            'restore_count' => $backup->restore_count + 1,
-            'last_restored_at' => now(),
-        ])->save();
+        $record = $this->markBackupAsCurrent((string) $record->id);
 
         if (! $this->usingInMemorySqlite()) {
             DB::purge(DB::getDefaultConnection());
@@ -145,23 +161,90 @@ class DatabaseBackupService
             $user?->id,
             'RESTORE',
             'DatabaseBackup',
-            (string) $backup->id,
-            'Database restored from backup: ' . $backup->name,
+            (string) $record->id,
+            'Database restored from backup: ' . $record->name,
             'warning'
         );
+
+        return $record;
     }
 
-    public function deleteBackup(DatabaseBackup $backup): void
+    public function deleteBackup(string|Fluent $backup): void
     {
-        if ($backup->is_current) {
+        $record = $this->resolveBackup($backup);
+
+        if ($record->is_current) {
             throw new RuntimeException('Aktivo atjaunoto kopiju dzest nedrikst.');
         }
 
-        Storage::disk($backup->disk)->delete($backup->file_path);
-        $backup->delete();
+        Storage::disk((string) $record->disk)->delete((string) $record->file_path);
+        $payload = $this->readCatalogPayload();
+        $payload['backups'] = collect($payload['backups'] ?? [])
+            ->reject(fn (array $item) => (string) ($item['id'] ?? '') === (string) $record->id)
+            ->values()
+            ->all();
+        $this->writeCatalogPayload($payload);
     }
 
-    public function nextRunAt(BackupSetting $settings, ?CarbonImmutable $from = null): ?CarbonImmutable
+    public function getSettings(): Fluent
+    {
+        $payload = $this->readSettingsPayload();
+
+        return $this->toSettingsRecord($payload);
+    }
+
+    public function updateSettings(array $attributes): Fluent
+    {
+        $payload = array_merge($this->defaultSettingsData(), $this->readSettingsPayload(), $attributes);
+        $payload['updated_at'] = now()->toIso8601String();
+
+        if (! array_key_exists('created_at', $payload) || ! $payload['created_at']) {
+            $payload['created_at'] = now()->toIso8601String();
+        }
+
+        $this->writeSettingsPayload($payload);
+
+        return $this->toSettingsRecord($payload);
+    }
+
+    public function markScheduledRun(CarbonImmutable $scheduledAt): Fluent
+    {
+        return $this->updateSettings([
+            'last_scheduled_backup_at' => $scheduledAt->toIso8601String(),
+        ]);
+    }
+
+    public function allBackups(): Collection
+    {
+        return collect($this->readCatalogPayload()['backups'] ?? [])
+            ->map(fn (array $record) => $this->toBackupRecord($record))
+            ->sortByDesc(fn (Fluent $record) => optional($record->created_at)?->getTimestamp() ?? 0)
+            ->values();
+    }
+
+    public function paginateBackups(int $perPage = 15): LengthAwarePaginator
+    {
+        $page = Paginator::resolveCurrentPage('page');
+        $items = $this->allBackups();
+
+        return new LengthAwarePaginator(
+            $items->forPage($page, $perPage)->values(),
+            $items->count(),
+            $perPage,
+            $page,
+            [
+                'path' => Paginator::resolveCurrentPath(),
+                'pageName' => 'page',
+            ]
+        );
+    }
+
+    public function findBackup(string $id): ?Fluent
+    {
+        return $this->allBackups()->first(fn (Fluent $record) => (string) $record->id === $id);
+    }
+
+    public function nextRunAt(Fluent $settings, ?CarbonImmutable $from = null): ?CarbonImmutable
     {
         if (! $settings->enabled) {
             return null;
@@ -181,7 +264,7 @@ class DatabaseBackupService
         };
     }
 
-    public function scheduledMomentForReference(BackupSetting $settings, CarbonImmutable $reference): CarbonImmutable
+    public function scheduledMomentForReference(Fluent $settings, CarbonImmutable $reference): CarbonImmutable
     {
         $time = $this->normalizeRunAt($settings->run_at);
 
@@ -198,7 +281,7 @@ class DatabaseBackupService
         };
     }
 
-    public function dueScheduledRun(BackupSetting $settings, ?CarbonImmutable $now = null): ?CarbonImmutable
+    public function dueScheduledRun(Fluent $settings, ?CarbonImmutable $now = null): ?CarbonImmutable
     {
         if (! $settings->enabled) {
             return null;
@@ -309,20 +392,20 @@ class DatabaseBackupService
         ];
     }
 
-    private function readBackupFile(DatabaseBackup $backup): array
+    private function readBackupFile(Fluent $backup): array
     {
-        if (! Storage::disk($backup->disk)->exists($backup->file_path)) {
+        if (! Storage::disk((string) $backup->disk)->exists((string) $backup->file_path)) {
             throw new RuntimeException('Rezerves kopijas fails serveri vairs nav atrodams.');
         }
 
-        return $this->decodeSnapshot(Storage::disk($backup->disk)->get($backup->file_path));
+        return $this->decodeSnapshot(Storage::disk((string) $backup->disk)->get((string) $backup->file_path));
     }
 
     private function decodeSnapshot(string $contents): array
     {
         try {
             $payload = json_decode($contents, true, 512, JSON_THROW_ON_ERROR);
-        } catch (Throwable $exception) {
+        } catch (Throwable) {
             throw new RuntimeException('Fails nav deriga rezerves kopija.');
         }
 
@@ -340,10 +423,10 @@ class DatabaseBackupService
         return collect(match ($driver) {
             'sqlite' => DB::select("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name"),
             default => DB::select("SHOW FULL TABLES WHERE Table_type = 'BASE TABLE'"),
-        })->map(function ($row) use ($driver) {
+        })->map(function ($row) {
             $values = array_values((array) $row);
 
-            return (string) ($driver === 'sqlite' ? ($values[0] ?? '') : ($values[0] ?? ''));
+            return (string) ($values[0] ?? '');
         })->filter()->values();
     }
 
@@ -488,5 +571,204 @@ class DatabaseBackupService
     {
         return $this->connection()->getDriverName() === 'sqlite'
             && $this->databaseName() === ':memory:';
+    }
+
+    private function generateBackupId(): string
+    {
+        return now()->format('YmdHis') . '-' . Str::lower(Str::random(8));
+    }
+
+    private function creatorName(?User $user, string $trigger): string
+    {
+        if ($trigger === 'scheduled') {
+            return 'Sistema';
+        }
+
+        return trim((string) ($user?->employee?->full_name ?? 'Manuali'));
+    }
+
+    private function resolveBackup(string|Fluent $backup): Fluent
+    {
+        if ($backup instanceof Fluent) {
+            return $backup;
+        }
+
+        $record = $this->findBackup($backup);
+
+        if (! $record) {
+            throw new RuntimeException('Rezerves kopija nav atrasta.');
+        }
+
+        return $record;
+    }
+
+    private function markBackupAsCurrent(string $backupId): Fluent
+    {
+        $payload = $this->readCatalogPayload();
+        $updatedRecord = null;
+
+        $payload['backups'] = collect($payload['backups'] ?? [])
+            ->map(function (array $record) use ($backupId, &$updatedRecord) {
+                $isCurrent = (string) ($record['id'] ?? '') === $backupId;
+                $record['is_current'] = $isCurrent;
+                $record['updated_at'] = now()->toIso8601String();
+
+                if ($isCurrent) {
+                    $record['restore_count'] = (int) ($record['restore_count'] ?? 0) + 1;
+                    $record['last_restored_at'] = now()->toIso8601String();
+                    $updatedRecord = $record;
+                }
+
+                return $record;
+            })
+            ->all();
+
+        $this->writeCatalogPayload($payload);
+
+        if (! $updatedRecord) {
+            throw new RuntimeException('Rezerves kopiju neizdevas atzimet ka aktivu.');
+        }
+
+        return $this->toBackupRecord($updatedRecord);
+    }
+
+    private function upsertBackupRecord(array $record): Fluent
+    {
+        $payload = $this->readCatalogPayload();
+        $existing = false;
+
+        $payload['backups'] = collect($payload['backups'] ?? [])
+            ->map(function (array $item) use ($record, &$existing) {
+                if ((string) ($item['id'] ?? '') !== (string) $record['id']) {
+                    return $item;
+                }
+
+                $existing = true;
+
+                return array_merge($item, $record);
+            })
+            ->when(! $existing, fn (Collection $items) => $items->push($record))
+            ->values()
+            ->all();
+
+        $this->writeCatalogPayload($payload);
+
+        return $this->toBackupRecord($record);
+    }
+
+    private function readCatalogPayload(): array
+    {
+        return $this->readJsonFile(self::CATALOG_FILE, [
+            'version' => self::FORMAT_VERSION,
+            'backups' => [],
+        ]);
+    }
+
+    private function writeCatalogPayload(array $payload): void
+    {
+        $payload['version'] = self::FORMAT_VERSION;
+        $payload['backups'] = array_values($payload['backups'] ?? []);
+        $this->writeJsonFile(self::CATALOG_FILE, $payload);
+    }
+
+    private function readSettingsPayload(): array
+    {
+        return array_merge(
+            $this->defaultSettingsData(),
+            $this->readJsonFile(self::SETTINGS_FILE, $this->defaultSettingsData())
+        );
+    }
+
+    private function writeSettingsPayload(array $payload): void
+    {
+        $this->writeJsonFile(self::SETTINGS_FILE, array_merge($this->defaultSettingsData(), $payload));
+    }
+
+    private function readJsonFile(string $path, array $default): array
+    {
+        if (! Storage::disk($this->disk())->exists($path)) {
+            return $default;
+        }
+
+        try {
+            $data = json_decode((string) Storage::disk($this->disk())->get($path), true, 512, JSON_THROW_ON_ERROR);
+        } catch (Throwable) {
+            return $default;
+        }
+
+        return is_array($data) ? $data : $default;
+    }
+
+    private function writeJsonFile(string $path, array $payload): void
+    {
+        $this->ensureDirectoryFor($path);
+        Storage::disk($this->disk())->put(
+            $path,
+            json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)
+        );
+    }
+
+    private function ensureDirectoryFor(string $path): void
+    {
+        $directory = trim(dirname($path), '.\\/');
+
+        if ($directory !== '') {
+            Storage::disk($this->disk())->makeDirectory($directory);
+        }
+    }
+
+    private function defaultSettingsData(): array
+    {
+        return [
+            'enabled' => true,
+            'frequency' => 'daily',
+            'run_at' => '02:00:00',
+            'weekly_day' => 1,
+            'monthly_day' => 1,
+            'last_scheduled_backup_at' => null,
+            'created_at' => now()->toIso8601String(),
+            'updated_at' => now()->toIso8601String(),
+        ];
+    }
+
+    private function toBackupRecord(array $record): Fluent
+    {
+        return new Fluent([
+            'id' => (string) ($record['id'] ?? ''),
+            'name' => (string) ($record['name'] ?? ''),
+            'disk' => (string) ($record['disk'] ?? $this->disk()),
+            'file_path' => (string) ($record['file_path'] ?? ''),
+            'format' => (string) ($record['format'] ?? 'json'),
+            'database_connection' => (string) ($record['database_connection'] ?? ''),
+            'database_driver' => (string) ($record['database_driver'] ?? ''),
+            'database_name' => (string) ($record['database_name'] ?? ''),
+            'trigger_type' => (string) ($record['trigger_type'] ?? 'manual'),
+            'creator_type' => (string) ($record['creator_type'] ?? 'user'),
+            'created_by_user_id' => $record['created_by_user_id'] ?? null,
+            'created_by_name' => (string) ($record['created_by_name'] ?? ''),
+            'file_size_bytes' => (int) ($record['file_size_bytes'] ?? 0),
+            'duration_ms' => (int) ($record['duration_ms'] ?? 0),
+            'total_tables' => (int) ($record['total_tables'] ?? 0),
+            'total_rows' => (int) ($record['total_rows'] ?? 0),
+            'is_current' => (bool) ($record['is_current'] ?? false),
+            'restore_count' => (int) ($record['restore_count'] ?? 0),
+            'last_restored_at' => filled($record['last_restored_at'] ?? null) ? CarbonImmutable::parse((string) $record['last_restored_at']) : null,
+            'created_at' => filled($record['created_at'] ?? null) ? CarbonImmutable::parse((string) $record['created_at']) : null,
+            'updated_at' => filled($record['updated_at'] ?? null) ? CarbonImmutable::parse((string) $record['updated_at']) : null,
+        ]);
+    }
+
+    private function toSettingsRecord(array $record): Fluent
+    {
+        return new Fluent([
+            'enabled' => (bool) ($record['enabled'] ?? true),
+            'frequency' => (string) ($record['frequency'] ?? 'daily'),
+            'run_at' => (string) ($record['run_at'] ?? '02:00:00'),
+            'weekly_day' => (int) ($record['weekly_day'] ?? 1),
+            'monthly_day' => (int) ($record['monthly_day'] ?? 1),
+            'last_scheduled_backup_at' => filled($record['last_scheduled_backup_at'] ?? null) ? CarbonImmutable::parse((string) $record['last_scheduled_backup_at']) : null,
+            'created_at' => filled($record['created_at'] ?? null) ? CarbonImmutable::parse((string) $record['created_at']) : null,
+            'updated_at' => filled($record['updated_at'] ?? null) ? CarbonImmutable::parse((string) $record['updated_at']) : null,
+        ]);
     }
 }

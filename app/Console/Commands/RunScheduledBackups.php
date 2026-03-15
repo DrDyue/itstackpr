@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Models\BackupSetting;
 use App\Support\DatabaseBackupService;
 use Illuminate\Console\Command;
 
@@ -14,7 +13,7 @@ class RunScheduledBackups extends Command
 
     public function handle(DatabaseBackupService $backupService): int
     {
-        $settings = BackupSetting::singleton();
+        $settings = $backupService->getSettings();
         $scheduledAt = $backupService->dueScheduledRun($settings);
 
         if (! $scheduledAt) {
@@ -24,10 +23,7 @@ class RunScheduledBackups extends Command
         }
 
         $backup = $backupService->createBackup(null, 'scheduled');
-
-        $settings->forceFill([
-            'last_scheduled_backup_at' => now(),
-        ])->save();
+        $backupService->markScheduledRun($scheduledAt);
 
         $this->info('Scheduled backup created: #' . $backup->id);
 
