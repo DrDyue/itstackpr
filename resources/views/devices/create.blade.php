@@ -338,7 +338,7 @@
                                     <span @mouseenter="if (!canSearchDeviceImage) open = true" @mouseleave="open = false" @focusin="if (!canSearchDeviceImage) open = true" @focusout="open = false" class="inline-flex">
                                         <button
                                             type="button"
-                                            class="crud-btn-secondary"
+                                            class="crud-btn-neutral"
                                             @click="findDeviceImage(1)"
                                             :disabled="isFindingDeviceImage || !canSearchDeviceImage"
                                         >
@@ -356,7 +356,7 @@
                                 </div>
                                 <button
                                     type="button"
-                                    class="crud-btn-secondary"
+                                    class="crud-btn-neutral"
                                     @click="findDeviceImage(deviceImageBatch + 1)"
                                     x-show="deviceCandidates.length"
                                     x-cloak

@@ -22,7 +22,7 @@
                     </svg>
                     Filtrt
                 </button>
-                <a href="{{ route('device-set-items.index') }}" class="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">
+                    <a href="{{ route('device-set-items.index') }}" class="crud-btn-secondary rounded-lg px-3 py-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
                     </svg>
@@ -72,7 +72,7 @@
                                         <form method="POST" action="{{ route('device-set-items.destroy', $item) }}">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" onclick="return confirm('Nonemt so poziciju?')" class="inline-flex items-center gap-2 text-red-600 hover:text-red-700">
+                                            <button type="submit" onclick="return confirm('Nonemt so poziciju?')" class="crud-inline-danger">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673A2.25 2.25 0 0 1 15.916 21.75H8.084a2.25 2.25 0 0 1-2.245-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0V4.875A2.25 2.25 0 0 0 13.5 2.625h-3a2.25 2.25 0 0 0-2.25 2.25V5.79m7.5 0a48.667 48.11 0 0 0-7.5 0"/>
                                                 </svg>
