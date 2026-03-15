@@ -44,15 +44,23 @@ class DeviceImageAutoFetcher
 
     public function preview(array $attributes, ?DeviceType $deviceType = null): ?string
     {
-        foreach ($this->searchQueries($attributes, $deviceType) as $query) {
-            $imageUrl = $this->findImageUrl($query);
+        return $this->previewMany($attributes, $deviceType, 1)[0] ?? null;
+    }
 
-            if ($imageUrl) {
-                return $imageUrl;
+    public function previewMany(array $attributes, ?DeviceType $deviceType = null, int $batch = 1, int $perBatch = 3): array
+    {
+        $batch = max(1, $batch);
+        $perBatch = max(1, min($perBatch, 6));
+
+        foreach ($this->searchQueries($attributes, $deviceType) as $query) {
+            $imageUrls = $this->findImageUrls($query, $batch, $perBatch);
+
+            if ($imageUrls !== []) {
+                return $imageUrls;
             }
         }
 
-        return null;
+        return [];
     }
 
     public function storeFromUrl(string $imageUrl, ?string $previousPath = null): ?string
@@ -80,9 +88,10 @@ class DeviceImageAutoFetcher
         return array_values(array_unique(array_filter($queries, fn (string $query) => $query !== '')));
     }
 
-    private function findImageUrl(string $query): ?string
+    private function findImageUrls(string $query, int $batch = 1, int $perBatch = 3): array
     {
         try {
+            $limit = max(3, $batch * $perBatch);
             $response = Http::timeout((int) config('devices.auto_image_timeout', 4))
                 ->retry(1, 200)
                 ->acceptJson()
@@ -92,7 +101,7 @@ class DeviceImageAutoFetcher
                     'format' => 'json',
                     'generator' => 'search',
                     'gsrsearch' => $query,
-                    'gsrlimit' => (int) config('devices.auto_image_candidates', 3),
+                    'gsrlimit' => min(20, max($limit, (int) config('devices.auto_image_candidates', 9))),
                     'prop' => 'pageimages',
                     'piprop' => 'original|thumbnail',
                     'pithumbsize' => 1200,
@@ -106,18 +115,25 @@ class DeviceImageAutoFetcher
                 ->sortBy(fn (array $page) => $page['index'] ?? PHP_INT_MAX)
                 ->values();
 
+            $sources = [];
+
             foreach ($pages as $page) {
                 $source = data_get($page, 'original.source') ?: data_get($page, 'thumbnail.source');
 
                 if (is_string($source) && Str::startsWith($source, ['http://', 'https://'])) {
-                    return $source;
+                    $sources[] = $source;
                 }
             }
+
+            $sources = array_values(array_unique($sources));
+            $offset = ($batch - 1) * $perBatch;
+
+            return array_slice($sources, $offset, $perBatch);
         } catch (Throwable) {
-            return null;
+            return [];
         }
 
-        return null;
+        return [];
     }
 
     private function downloadAndStore(string $imageUrl, ?string $previousPath = null): ?string

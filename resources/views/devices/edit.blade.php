@@ -39,14 +39,30 @@
             class="device-form-grid"
             x-data="{
                 devicePreview: @js(old('auto_device_image_url', $device->deviceImageUrl() ?? '')),
+                deviceCandidates: @js(old('auto_device_image_url') ? [old('auto_device_image_url')] : []),
                 warrantyPreview: @js($device->warrantyImageUrl() ?? ''),
                 autoDeviceImageUrl: @js(old('auto_device_image_url', '')),
                 removeDeviceImage: @js(old('remove_device_image') === '1'),
                 isFindingDeviceImage: false,
                 deviceImageError: '',
-                async findDeviceImage() {
+                deviceImageBatch: 1,
+                get canSearchDeviceImage() {
+                    return !!(
+                        this.$refs.name?.value.trim()
+                        && this.$refs.model?.value.trim()
+                        && this.$refs.manufacturer?.value.trim()
+                        && this.$refs.deviceType?.value
+                    );
+                },
+                async findDeviceImage(batch = 1) {
+                    if (! this.canSearchDeviceImage) {
+                        this.deviceImageError = 'Lai mekletu attelu, aizpildi nosaukumu, tipu, modeli un razotaju.';
+                        return;
+                    }
+
                     this.isFindingDeviceImage = true;
                     this.deviceImageError = '';
+                    this.deviceImageBatch = batch;
 
                     try {
                         const response = await fetch(@js(route('devices.preview-auto-image')), {
@@ -61,28 +77,35 @@
                                 model: this.$refs.model.value,
                                 manufacturer: this.$refs.manufacturer.value,
                                 device_type_id: this.$refs.deviceType.value,
+                                batch: batch,
                             }),
                         });
 
                         const data = await response.json();
 
-                        if (! response.ok || ! data.image_url) {
+                        if (! response.ok || ! data.images?.length) {
+                            this.deviceCandidates = [];
                             this.deviceImageError = data.message || 'Attelu neizdevas atrast.';
                             return;
                         }
 
-                        this.devicePreview = data.image_url;
-                        this.autoDeviceImageUrl = data.image_url;
-                        this.removeDeviceImage = false;
-                        this.$refs.deviceImageInput.value = '';
+                        this.deviceCandidates = data.images;
+                        this.selectDeviceImage(data.images[0]);
                     } catch (error) {
                         this.deviceImageError = 'Neizdevas sazinas ar attelu meklosanu.';
                     } finally {
                         this.isFindingDeviceImage = false;
                     }
                 },
+                selectDeviceImage(imageUrl) {
+                    this.devicePreview = imageUrl;
+                    this.autoDeviceImageUrl = imageUrl;
+                    this.removeDeviceImage = false;
+                    this.$refs.deviceImageInput.value = '';
+                },
                 clearDeviceImage() {
                     this.devicePreview = null;
+                    this.deviceCandidates = [];
                     this.autoDeviceImageUrl = '';
                     this.removeDeviceImage = true;
                     this.deviceImageError = '';
@@ -242,8 +265,24 @@
                             <input type="file" name="device_image" accept="image/*" class="crud-control" x-ref="deviceImageInput" @change="devicePreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null; autoDeviceImageUrl = ''; removeDeviceImage = false; deviceImageError = ''">
                             <p class="mt-2 text-xs text-gray-500">Atstaj tuksu, ja negribi nomainit attelu.</p>
                             <div class="mt-3 flex flex-wrap gap-2">
-                                <button type="button" class="crud-btn-secondary" @click="findDeviceImage()" :disabled="isFindingDeviceImage">
+                                <button
+                                    type="button"
+                                    class="crud-btn-secondary"
+                                    @click="findDeviceImage(1)"
+                                    :disabled="isFindingDeviceImage || !canSearchDeviceImage"
+                                    :title="canSearchDeviceImage ? 'Meklet 3 attelus interneta' : 'Lai si funkcija stradatu, aizpildi nosaukumu, tipu, modeli un razotaju.'"
+                                >
                                     <span x-text="isFindingDeviceImage ? 'Mekle...' : 'Atrast attelu interneta'"></span>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="crud-btn-secondary"
+                                    @click="findDeviceImage(deviceImageBatch + 1)"
+                                    x-show="deviceCandidates.length"
+                                    x-cloak
+                                    :disabled="isFindingDeviceImage || !canSearchDeviceImage"
+                                >
+                                    Mainit attelus
                                 </button>
                                 <button type="button" class="crud-btn-secondary" @click="clearDeviceImage()" x-show="devicePreview" x-cloak>
                                     Nonemt attelu
@@ -252,6 +291,19 @@
                             <template x-if="deviceImageError">
                                 <p class="mt-2 text-xs text-rose-600" x-text="deviceImageError"></p>
                             </template>
+                            <div class="mt-4 grid gap-3 sm:grid-cols-3" x-show="deviceCandidates.length" x-cloak>
+                                <template x-for="image in deviceCandidates" :key="image">
+                                    <button
+                                        type="button"
+                                        class="overflow-hidden rounded-2xl border border-slate-200 bg-white text-left transition hover:border-sky-300 hover:shadow-sm"
+                                        @click="selectDeviceImage(image)"
+                                        :class="autoDeviceImageUrl === image ? 'ring-2 ring-sky-500 border-sky-400' : ''"
+                                    >
+                                        <img :src="image" alt="Atrasts attels" class="h-32 w-full object-cover">
+                                        <div class="px-3 py-2 text-xs font-medium text-slate-600">Izveleties so attelu</div>
+                                    </button>
+                                </template>
+                            </div>
                             <div class="device-upload-preview">
                                 <template x-if="devicePreview">
                                     <img :src="devicePreview" alt="Ierices foto preview">
