@@ -261,15 +261,26 @@
                             <input type="file" name="device_image" accept="image/*" class="crud-control" x-ref="deviceImageInput" @change="devicePreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null; autoDeviceImageUrl = ''; removeDeviceImage = false; deviceImageError = ''">
                             <p class="mt-2 text-xs text-gray-500">JPG, PNG vai WEBP. Augsuplade tiks optimizeta un glabata uz servera diska.</p>
                             <div class="mt-3 flex flex-wrap gap-2">
-                                <button
-                                    type="button"
-                                    class="crud-btn-secondary"
-                                    @click="findDeviceImage(1)"
-                                    :disabled="isFindingDeviceImage || !canSearchDeviceImage"
-                                    :title="canSearchDeviceImage ? 'Meklet 3 attelus interneta' : 'Lai si funkcija stradatu, aizpildi nosaukumu, tipu, modeli un razotaju.'"
-                                >
-                                    <span x-text="isFindingDeviceImage ? 'Mekle...' : 'Atrast attelu interneta'"></span>
-                                </button>
+                                <div class="relative" x-data="{ open: false }">
+                                    <span @mouseenter="if (!canSearchDeviceImage) open = true" @mouseleave="open = false" @focusin="if (!canSearchDeviceImage) open = true" @focusout="open = false" class="inline-flex">
+                                        <button
+                                            type="button"
+                                            class="crud-btn-secondary"
+                                            @click="findDeviceImage(1)"
+                                            :disabled="isFindingDeviceImage || !canSearchDeviceImage"
+                                        >
+                                            <span x-text="isFindingDeviceImage ? 'Mekle...' : 'Atrast attelu interneta'"></span>
+                                        </button>
+                                    </span>
+                                    <div
+                                        x-cloak
+                                        x-show="open"
+                                        x-transition.opacity
+                                        class="absolute left-0 top-full z-20 mt-2 w-72 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 shadow-lg"
+                                    >
+                                        Si poga nav pieejama, kamer nav aizpilditi lauki: nosaukums, tips, modelis un razotajs.
+                                    </div>
+                                </div>
                                 <button
                                     type="button"
                                     class="crud-btn-secondary"
