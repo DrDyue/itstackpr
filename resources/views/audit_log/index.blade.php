@@ -155,14 +155,8 @@
                         @endforeach
                     </select>
                 </label>
-                <label class="block">
-                    <span class="user-filter-label">No datuma</span>
-                    <input type="date" name="date_from" value="{{ $filters['date_from'] }}" class="crud-control">
-                </label>
-                <label class="block">
-                    <span class="user-filter-label">Lidz datumam</span>
-                    <input type="date" name="date_to" value="{{ $filters['date_to'] }}" class="crud-control">
-                </label>
+                <x-localized-date-picker name="date_from" :value="$filters['date_from']" label="No datuma" />
+                <x-localized-date-picker name="date_to" :value="$filters['date_to']" label="Lidz datumam" />
                 <div class="flex items-end gap-2">
                     <button type="submit" class="crud-btn-primary inline-flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

@@ -137,27 +137,24 @@
                                 'placeholder' => 'Izvelies prioritati',
                             ])
                         </div>
-                        <div>
-                            <label class="crud-label flex items-center gap-2">
-                                @include('repairs.partials.icon', ['name' => 'calendar', 'class' => 'h-4 w-4'])
-                                Sakuma datums
-                            </label>
-                            <input type="date" name="start_date" value="{{ old('start_date', now()->toDateString()) }}" class="crud-control">
-                        </div>
-                        <div>
-                            <label class="crud-label flex items-center gap-2">
-                                @include('repairs.partials.icon', ['name' => 'calendar', 'class' => 'h-4 w-4'])
-                                Planotais beigums
-                            </label>
-                            <input type="date" name="estimated_completion" value="{{ old('estimated_completion') }}" class="crud-control">
-                        </div>
-                        <div>
-                            <label class="crud-label flex items-center gap-2">
-                                @include('repairs.partials.icon', ['name' => 'calendar', 'class' => 'h-4 w-4'])
-                                Realais beigu datums
-                            </label>
-                            <input type="date" name="actual_completion" value="{{ old('actual_completion') }}" class="crud-control">
-                        </div>
+                        <x-localized-date-picker
+                            name="start_date"
+                            :value="old('start_date', now()->toDateString())"
+                            label="Sakuma datums"
+                            label-class="crud-label flex items-center gap-2"
+                        />
+                        <x-localized-date-picker
+                            name="estimated_completion"
+                            :value="old('estimated_completion')"
+                            label="Planotais beigums"
+                            label-class="crud-label flex items-center gap-2"
+                        />
+                        <x-localized-date-picker
+                            name="actual_completion"
+                            :value="old('actual_completion')"
+                            label="Realais beigu datums"
+                            label-class="crud-label flex items-center gap-2"
+                        />
                     </div>
 
                     <div class="mt-4 grid gap-4 sm:grid-cols-2">

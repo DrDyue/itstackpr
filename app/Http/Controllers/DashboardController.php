@@ -31,6 +31,8 @@ class DashboardController extends Controller
             $totalRooms = Room::count();
             $mappedRooms = Room::has('devices')->count();
             $activeRepairsCount = Repair::whereIn('status', ['waiting', 'in-progress'])->count();
+            $waitingRepairsCount = Repair::where('status', 'waiting')->count();
+            $inProgressRepairsCount = Repair::where('status', 'in-progress')->count();
             $completedRepairsThisMonth = Repair::where('status', 'completed')
                 ->where('actual_completion', '>=', now()->startOfMonth())
                 ->count();
@@ -113,6 +115,8 @@ class DashboardController extends Controller
             $totalRooms = 0;
             $mappedRooms = 0;
             $activeRepairsCount = 0;
+            $waitingRepairsCount = 0;
+            $inProgressRepairsCount = 0;
             $completedRepairsThisMonth = 0;
             $averageRepairCost = 0;
             $latestInventoryAt = null;
@@ -141,6 +145,8 @@ class DashboardController extends Controller
             'totalRooms',
             'mappedRooms',
             'activeRepairsCount',
+            'waitingRepairsCount',
+            'inProgressRepairsCount',
             'completedRepairsThisMonth',
             'averageRepairCost',
             'latestInventoryAt',

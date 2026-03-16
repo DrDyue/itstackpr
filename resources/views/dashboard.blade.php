@@ -7,8 +7,6 @@
         $backupTone = ($backupSummary['latest'] ?? null) ? 'emerald' : 'slate';
         $buildingCount = $buildingTree->count();
         $floorCount = $buildingTree->sum('floor_count');
-        $waitingRepairsCount = $activeRepairs->where('status', 'waiting')->count();
-        $inProgressRepairsCount = $activeRepairs->where('status', 'in-progress')->count();
         $singleBuilding = $buildingCount === 1;
 
         $backupStatus = ($backupSummary['latest'] ?? null)

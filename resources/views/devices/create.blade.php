@@ -148,18 +148,23 @@
                         <input type="text" name="serial_number" value="{{ old('serial_number') }}" class="crud-control">
                     </div>
                     <div class="mt-4 grid gap-4 sm:grid-cols-3">
-                        <div>
-                            <label class="crud-label">Pirkuma datums *</label>
-                            <input type="date" name="purchase_date" value="{{ old('purchase_date') }}" required class="crud-control">
-                        </div>
+                        <x-localized-date-picker
+                            name="purchase_date"
+                            :value="old('purchase_date')"
+                            label="Pirkuma datums *"
+                            label-class="crud-label"
+                            required
+                        />
                         <div>
                             <label class="crud-label">Cena</label>
                             <input type="number" step="0.01" min="0" name="purchase_price" value="{{ old('purchase_price') }}" class="crud-control">
                         </div>
-                        <div>
-                            <label class="crud-label">Garantija lidz</label>
-                            <input type="date" name="warranty_until" value="{{ old('warranty_until') }}" class="crud-control">
-                        </div>
+                        <x-localized-date-picker
+                            name="warranty_until"
+                            :value="old('warranty_until')"
+                            label="Garantija lidz"
+                            label-class="crud-label"
+                        />
                     </div>
                     <div class="mt-4">
                         <label class="crud-label">Piezimes</label>

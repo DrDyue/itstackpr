@@ -340,20 +340,21 @@
                                 </label>
                                 <input type="number" step="0.01" min="0" name="cost" value="{{ old('cost', $repair->cost) }}" class="crud-control">
                             </div>
-                            <div>
-                                <label class="crud-label flex items-center gap-2">
-                                    @include('repairs.partials.icon', ['name' => 'calendar', 'class' => 'h-4 w-4'])
-                                    Planotais beigums
-                                </label>
-                                <input type="date" name="estimated_completion" value="{{ old('estimated_completion', optional($repair->estimated_completion)->format('Y-m-d')) }}" class="crud-control">
-                            </div>
-                            <div x-show="status === 'completed'" x-cloak>
-                                <label class="crud-label flex items-center gap-2">
-                                    @include('repairs.partials.icon', ['name' => 'calendar', 'class' => 'h-4 w-4'])
-                                    Faktiskais beigums
-                                </label>
-                                <input type="date" name="actual_completion" value="{{ old('actual_completion', optional($repair->actual_completion)->format('Y-m-d')) }}" class="crud-control">
-                            </div>
+                            <x-localized-date-picker
+                                name="estimated_completion"
+                                :value="old('estimated_completion', optional($repair->estimated_completion)->format('Y-m-d'))"
+                                label="Planotais beigums"
+                                label-class="crud-label flex items-center gap-2"
+                            />
+                            <x-localized-date-picker
+                                name="actual_completion"
+                                :value="old('actual_completion', optional($repair->actual_completion)->format('Y-m-d'))"
+                                label="Faktiskais beigums"
+                                label-class="crud-label flex items-center gap-2"
+                                wrapper-class="block"
+                                x-show="status === 'completed'"
+                                x-cloak
+                            />
                         </div>
                     </div>
 
@@ -557,10 +558,12 @@
                 </div>
 
                 <div class="mt-6 space-y-4">
-                    <label class="block">
-                        <span class="repair-filter-label">Faktiskais beigu datums</span>
-                        <input type="date" x-model="completionForm.date" class="crud-control" required>
-                    </label>
+                    <x-localized-date-picker
+                        xModel="completionForm.date"
+                        label="Faktiskais beigu datums"
+                        label-class="repair-filter-label"
+                        required
+                    />
 
                     <label class="block">
                         <span class="repair-filter-label">Gala izmaksas (EUR)</span>

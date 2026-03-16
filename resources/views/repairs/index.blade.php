@@ -297,7 +297,7 @@
                     @drop.prevent="handleDrop('{{ $status }}')"
                     :class="dropTargetStatus === '{{ $status }}' ? 'repair-column-drop-active' : ''"
                 >
-                    <div class="mb-4 flex items-start justify-between gap-3 border-b border-white/70 pb-4">
+                    <div class="mb-4 border-b border-white/70 pb-4">
                         <div>
                             <div class="flex items-center gap-3">
                                 <span class="h-3 w-3 rounded-full {{ $columnMeta[$status]['dot'] }}"></span>
@@ -306,7 +306,6 @@
                             </div>
                             <p class="mt-2 max-w-sm text-sm leading-6 text-slate-600">{{ $columnMeta[$status]['subtitle'] }}</p>
                         </div>
-                        <div class="h-12 w-12 rounded-2xl {{ $columnMeta[$status]['accent'] }} opacity-90"></div>
                     </div>
 
                     <div class="space-y-4">
@@ -533,10 +532,12 @@
                 </div>
 
                 <div class="mt-6 space-y-4">
-                    <label class="block">
-                        <span class="repair-filter-label">Faktiskais beigu datums</span>
-                        <input type="date" x-model="completionForm.date" class="crud-control" required>
-                    </label>
+                    <x-localized-date-picker
+                        xModel="completionForm.date"
+                        label="Faktiskais beigu datums"
+                        label-class="repair-filter-label"
+                        required
+                    />
 
                     <label class="block">
                         <span class="repair-filter-label">Gala izmaksas (EUR)</span>
