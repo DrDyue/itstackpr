@@ -22,12 +22,43 @@ class ReportController extends Controller
     public function index(): View
     {
         $visibleRepairs = $this->visibleRepairsQuery();
+        $totalRepairs = (clone $visibleRepairs)->count();
         $activeRepairs = (clone $visibleRepairs)->whereIn('status', ['waiting', 'in-progress'])->count();
         $overdueRepairs = $this->overdueRepairsQuery()->count();
+        $totalDevices = Device::count();
+
+        $deviceStatusOverview = collect($this->deviceStatusMeta())
+            ->map(function (array $meta, string $status) use ($totalDevices) {
+                $count = Device::where('status', $status)->count();
+
+                return array_merge($meta, [
+                    'key' => $status,
+                    'count' => $count,
+                    'share' => $totalDevices > 0 ? (int) round(($count / $totalDevices) * 100) : 0,
+                ]);
+            })
+            ->filter(fn (array $row) => $row['count'] > 0)
+            ->sortByDesc('count')
+            ->take(4)
+            ->values();
+
+        $repairStatusOverview = collect($this->repairStatusMeta())
+            ->map(function (array $meta, string $status) use ($visibleRepairs, $totalRepairs) {
+                $count = (clone $visibleRepairs)->where('status', $status)->count();
+
+                return array_merge($meta, [
+                    'key' => $status,
+                    'count' => $count,
+                    'share' => $totalRepairs > 0 ? (int) round(($count / $totalRepairs) * 100) : 0,
+                ]);
+            })
+            ->filter(fn (array $row) => $row['count'] > 0)
+            ->values();
 
         return view('reports.index', [
             'summary' => [
-                'total_devices' => Device::count(),
+                'total_devices' => $totalDevices,
+                'total_repairs' => $totalRepairs,
                 'broken_devices' => Device::where('status', 'broken')->count(),
                 'devices_without_room' => Device::whereNull('room_id')->count(),
                 'active_repairs' => $activeRepairs,
@@ -41,6 +72,10 @@ class ReportController extends Controller
                     ->whereIn('severity', ['warning', 'error', 'critical'])
                     ->count(),
             ],
+            'deviceStatusOverview' => $deviceStatusOverview,
+            'deviceStatusOverviewMax' => max(1, (int) $deviceStatusOverview->max('count')),
+            'repairStatusOverview' => $repairStatusOverview,
+            'repairStatusOverviewMax' => max(1, (int) $repairStatusOverview->max('count')),
             'repairScope' => $this->repairScopeMeta(),
         ]);
     }
@@ -426,8 +461,11 @@ class ReportController extends Controller
                 'device_history_30_days' => DeviceHistory::where('timestamp', '>=', $recentStart)->count(),
             ],
             'actionBreakdown' => $actionBreakdown,
+            'actionBreakdownMax' => max(1, (int) $actionBreakdown->max('count')),
             'entityBreakdown' => $entityBreakdown,
+            'entityBreakdownMax' => max(1, (int) $entityBreakdown->max('count')),
             'userBreakdown' => $userBreakdown,
+            'userBreakdownMax' => max(1, (int) $userBreakdown->max('count')),
             'attentionEntries' => $attentionEntries,
             'repairEntries' => $repairEntries,
             'deviceHistoryEntries' => $deviceHistoryEntries,

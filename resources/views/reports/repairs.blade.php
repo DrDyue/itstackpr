@@ -186,6 +186,10 @@
                     <div class="space-y-3">
                         @forelse ($overdueRepairs as $repair)
                             <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                                @php
+                                    $estimatedDate = $repair->estimated_completion?->format('d.m.Y');
+                                    $startDate = $repair->start_date?->format('d.m.Y');
+                                @endphp
                                 <div class="flex flex-wrap items-start justify-between gap-3">
                                     <div class="min-w-0">
                                         <div class="text-sm font-semibold text-slate-900">Remonts #{{ $repair->id }} | {{ $repair->device?->name ?: 'Ierice nav atrasta' }}</div>
@@ -202,12 +206,15 @@
                                     <div class="flex flex-wrap gap-2 text-xs font-semibold">
                                         <span class="rounded-full bg-amber-100 px-3 py-1 text-amber-800">{{ $priorityLabels[$repair->priority ?: 'medium'] ?? 'Vidēja' }}</span>
                                         <span class="rounded-full bg-rose-100 px-3 py-1 text-rose-700">
-                                            @if ($repair->estimated_completion)
-                                                Lidz {{ $repair->estimated_completion->format('d.m.Y') }}
+                                            @if ($estimatedDate)
+                                                Paredzētais datums {{ $estimatedDate }}
                                             @else
-                                                No {{ optional($repair->start_date)->format('d.m.Y') ?: '-' }}
+                                                Paredzētais datums nav norādīts
                                             @endif
                                         </span>
+                                        @if ($startDate)
+                                            <span class="rounded-full bg-slate-200 px-3 py-1 text-slate-700">Sākts {{ $startDate }}</span>
+                                        @endif
                                     </div>
                                 </div>
                                 <p class="mt-3 text-sm leading-6 text-slate-600">{{ $repair->description }}</p>

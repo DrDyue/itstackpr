@@ -105,9 +105,13 @@
                         <div class="space-y-3">
                             @forelse ($actionBreakdown as $row)
                                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                    @php $width = $actionBreakdownMax > 0 ? max(8, (int) round(($row['count'] / $actionBreakdownMax) * 100)) : 8; @endphp
                                     <div class="flex items-center justify-between gap-3">
                                         <div class="text-sm font-semibold text-slate-900">{{ $row['label'] }}</div>
                                         <div class="text-sm font-semibold text-slate-500">{{ $row['count'] }}</div>
+                                    </div>
+                                    <div class="mt-3 h-2.5 rounded-full bg-white ring-1 ring-slate-200">
+                                        <div class="h-2.5 rounded-full bg-sky-500" style="width: {{ min(100, $width) }}%;"></div>
                                     </div>
                                 </div>
                             @empty
@@ -124,9 +128,13 @@
                         <div class="space-y-3">
                             @forelse ($entityBreakdown as $row)
                                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                    @php $width = $entityBreakdownMax > 0 ? max(8, (int) round(($row['count'] / $entityBreakdownMax) * 100)) : 8; @endphp
                                     <div class="flex items-center justify-between gap-3">
                                         <div class="text-sm font-semibold text-slate-900">{{ $row['label'] }}</div>
                                         <div class="text-sm font-semibold text-slate-500">{{ $row['count'] }}</div>
+                                    </div>
+                                    <div class="mt-3 h-2.5 rounded-full bg-white ring-1 ring-slate-200">
+                                        <div class="h-2.5 rounded-full bg-violet-500" style="width: {{ min(100, $width) }}%;"></div>
                                     </div>
                                 </div>
                             @empty
@@ -143,9 +151,13 @@
                         <div class="space-y-3">
                             @forelse ($userBreakdown as $row)
                                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                    @php $width = $userBreakdownMax > 0 ? max(8, (int) round(($row['count'] / $userBreakdownMax) * 100)) : 8; @endphp
                                     <div class="flex items-center justify-between gap-3">
                                         <div class="text-sm font-semibold text-slate-900">{{ $row['label'] }}</div>
                                         <div class="text-sm font-semibold text-slate-500">{{ $row['count'] }}</div>
+                                    </div>
+                                    <div class="mt-3 h-2.5 rounded-full bg-white ring-1 ring-slate-200">
+                                        <div class="h-2.5 rounded-full bg-amber-500" style="width: {{ min(100, $width) }}%;"></div>
                                     </div>
                                 </div>
                             @empty

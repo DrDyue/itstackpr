@@ -18,6 +18,15 @@
             'slate' => 'border-slate-200 bg-slate-50 text-slate-700',
         ];
 
+        $chartToneClasses = [
+            'sky' => ['pill' => 'bg-sky-100 text-sky-700', 'bar' => 'bg-sky-500'],
+            'amber' => ['pill' => 'bg-amber-100 text-amber-800', 'bar' => 'bg-amber-500'],
+            'rose' => ['pill' => 'bg-rose-100 text-rose-700', 'bar' => 'bg-rose-500'],
+            'emerald' => ['pill' => 'bg-emerald-100 text-emerald-700', 'bar' => 'bg-emerald-500'],
+            'violet' => ['pill' => 'bg-violet-100 text-violet-700', 'bar' => 'bg-violet-500'],
+            'slate' => ['pill' => 'bg-slate-100 text-slate-700', 'bar' => 'bg-slate-500'],
+        ];
+
         $reportCards = [
             [
                 'title' => 'Ierīču sadalījumi',
@@ -98,6 +107,64 @@
                         <p class="mt-2 text-sm text-slate-600">{{ $card['note'] }}</p>
                     </div>
                 @endforeach
+            </div>
+        </div>
+
+        <div class="grid gap-5 xl:grid-cols-2">
+            <div class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                <div class="mb-5 flex items-center justify-between gap-3 border-b border-slate-200 pb-4">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Grafiks</p>
+                        <h2 class="mt-1 text-xl font-semibold text-slate-900">Ierīču statusu sadalījums</h2>
+                    </div>
+                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">{{ $summary['total_devices'] }} ierīces</span>
+                </div>
+
+                <div class="space-y-4">
+                    @foreach ($deviceStatusOverview as $item)
+                        @php
+                            $tone = $chartToneClasses[$item['tone']] ?? $chartToneClasses['slate'];
+                            $width = $deviceStatusOverviewMax > 0 ? max(8, (int) round(($item['count'] / $deviceStatusOverviewMax) * 100)) : 8;
+                        @endphp
+                        <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="text-sm font-semibold text-slate-900">{{ $item['label'] }}</div>
+                                <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $tone['pill'] }}">{{ $item['count'] }} | {{ $item['share'] }}%</span>
+                            </div>
+                            <div class="mt-4 h-3 rounded-full bg-white ring-1 ring-slate-200">
+                                <div class="h-3 rounded-full {{ $tone['bar'] }}" style="width: {{ min(100, $width) }}%;"></div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                <div class="mb-5 flex items-center justify-between gap-3 border-b border-slate-200 pb-4">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Grafiks</p>
+                        <h2 class="mt-1 text-xl font-semibold text-slate-900">Remontu statusu sadalījums</h2>
+                    </div>
+                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">{{ $summary['total_repairs'] }} remonti</span>
+                </div>
+
+                <div class="space-y-4">
+                    @foreach ($repairStatusOverview as $item)
+                        @php
+                            $tone = $chartToneClasses[$item['tone']] ?? $chartToneClasses['slate'];
+                            $width = $repairStatusOverviewMax > 0 ? max(8, (int) round(($item['count'] / $repairStatusOverviewMax) * 100)) : 8;
+                        @endphp
+                        <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="text-sm font-semibold text-slate-900">{{ $item['label'] }}</div>
+                                <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $tone['pill'] }}">{{ $item['count'] }} | {{ $item['share'] }}%</span>
+                            </div>
+                            <div class="mt-4 h-3 rounded-full bg-white ring-1 ring-slate-200">
+                                <div class="h-3 rounded-full {{ $tone['bar'] }}" style="width: {{ min(100, $width) }}%;"></div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </div>
 
