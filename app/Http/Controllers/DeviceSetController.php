@@ -37,7 +37,7 @@ class DeviceSetController extends Controller
 
         $set = DeviceSet::create($data);
 
-        $this->writeAudit($userId, 'CREATE', $set, 'Device set created: ' . $set->set_name);
+        $this->writeAudit($userId, 'CREATE', $set, 'Komplekts izveidots: ' . $set->set_name);
 
         return redirect()->route('device-sets.edit', $set)->with('success', 'Komplekts veiksm\u{12B}gi izveidots.');
     }
@@ -70,7 +70,7 @@ class DeviceSetController extends Controller
     {
         $userId = auth()->id();
 
-        $this->writeAudit($userId, 'DELETE', $deviceSet, 'Device set deleted: ' . $deviceSet->set_name);
+        $this->writeAudit($userId, 'DELETE', $deviceSet, 'Komplekts dzests: ' . $deviceSet->set_name);
 
         $deviceSet->delete();
 
@@ -106,7 +106,7 @@ class DeviceSetController extends Controller
             $userId,
             'CREATE',
             $deviceSet,
-            'Added to set ' . $deviceSet->set_name . ': ' . ($device?->code ?? '') . ' ' . ($device?->name ?? '')
+            'Pievienots komplektam ' . $deviceSet->set_name . ': ' . trim(($device?->code ?? '') . ' ' . ($device?->name ?? ''))
         );
 
         return redirect()->route('device-sets.edit', $deviceSet)->with('success', 'Poz\u{12B}cija pievienota.');
@@ -121,7 +121,7 @@ class DeviceSetController extends Controller
 
         $userId = auth()->id();
 
-        $this->writeAudit($userId, 'DELETE', $deviceSet, 'Removed item from set ' . $deviceSet->set_name);
+        $this->writeAudit($userId, 'DELETE', $deviceSet, 'Pozicija iznemta no komplekta ' . $deviceSet->set_name);
 
         $item->delete();
 

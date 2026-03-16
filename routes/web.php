@@ -21,6 +21,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BackupController;
+use App\Http\Controllers\ReportController;
 
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
@@ -51,6 +52,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/', [ReportController::class, 'index'])->name('index');
+        Route::get('/devices', [ReportController::class, 'devices'])->name('devices');
+        Route::get('/repairs', [ReportController::class, 'repairs'])->name('repairs');
+        Route::get('/activity', [ReportController::class, 'activity'])->name('activity');
+    });
 
     Route::resource('employees', EmployeeController::class)->except(['show']);
     Route::resource('buildings', BuildingController::class)->except(['show']);

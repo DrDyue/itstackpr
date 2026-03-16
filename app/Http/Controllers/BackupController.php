@@ -131,7 +131,7 @@ class BackupController extends Controller
             'UPDATE',
             'BackupSetting',
             'filesystem',
-            'Backup schedule updated: ' . $settings->frequency . ' at ' . substr((string) $settings->run_at, 0, 5),
+            'Kopiju grafiks atjauninats: ' . $settings->frequency . ' plkst. ' . substr((string) $settings->run_at, 0, 5),
             'info'
         );
 
@@ -214,7 +214,7 @@ class BackupController extends Controller
             'DELETE',
             'DatabaseBackup',
             (string) $record->id,
-            'Backup deleted: ' . $record->name,
+            'Rezerves kopija dzesta: ' . $record->name,
             'warning'
         );
 

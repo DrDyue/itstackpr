@@ -73,7 +73,7 @@ class DatabaseBackupService
             'BACKUP',
             'DatabaseBackup',
             (string) $backup->id,
-            'Database backup created: ' . $backup->name,
+            'Datubazes kopija izveidota: ' . $backup->name,
             'info'
         );
 
@@ -126,7 +126,7 @@ class DatabaseBackupService
             'BACKUP',
             'DatabaseBackup',
             (string) $backup->id,
-            'Backup file uploaded from computer: ' . $backup->name,
+            'Kopijas fails augshupladets no datora: ' . $backup->name,
             'info'
         );
 
@@ -162,7 +162,7 @@ class DatabaseBackupService
             'RESTORE',
             'DatabaseBackup',
             (string) $record->id,
-            'Database restored from backup: ' . $record->name,
+            'Datubaze atjaunota no kopijas: ' . $record->name,
             'warning'
         );
 

@@ -44,7 +44,7 @@ class AuditTrail
                 'severity' => self::normalizeSeverity($severity),
             ]);
         } catch (Throwable) {
-            // Backup actions should still succeed if audit persistence is temporarily unavailable.
+            // Rezerves kopijam un citam kritiskam darbibam nav jauzluzt, ja audits uz bridi nav pieejams.
         }
     }
 
@@ -116,7 +116,7 @@ class AuditTrail
             $user->id,
             self::ACTION_LOGIN,
             $user,
-            'User logged in: ' . self::labelFor($user),
+            'Lietotajs piesledzas: ' . self::labelFor($user),
             self::SEVERITY_INFO
         );
     }
@@ -131,7 +131,7 @@ class AuditTrail
             $user->id,
             self::ACTION_LOGOUT,
             $user,
-            'User logged out: ' . self::labelFor($user),
+            'Lietotajs izrakstijas: ' . self::labelFor($user),
             self::SEVERITY_INFO
         );
     }
@@ -156,16 +156,52 @@ class AuditTrail
     public static function labelFor(Model $model): string
     {
         return match (class_basename($model)) {
-            'Building' => (string) ($model->building_name ?? ('Building #' . $model->getKey())),
-            'Room' => trim((string) (($model->room_number ?? 'Room #' . $model->getKey()) . ' ' . ($model->room_name ?? ''))),
-            'DeviceType' => (string) ($model->type_name ?? ('Device type #' . $model->getKey())),
-            'Device' => trim((string) (($model->code ? '[' . $model->code . '] ' : '') . ($model->name ?? ('Device #' . $model->getKey())))),
-            'Repair' => trim((string) (($model->device?->name ?? 'Device') . ' | ' . Str::limit((string) ($model->description ?? 'Repair #' . $model->getKey()), 70))),
-            'Employee' => (string) ($model->full_name ?? ('Employee #' . $model->getKey())),
-            'User' => (string) ($model->employee?->full_name ?? ('User #' . $model->getKey())),
-            'DeviceSet' => (string) ($model->set_name ?? $model->name ?? ('Device set #' . $model->getKey())),
-            'DeviceSetItem' => trim((string) (($model->deviceSet?->set_name ?? 'Set #' . ($model->device_set_id ?? $model->getKey())) . ' | ' . ($model->device?->name ?? 'Device #' . ($model->device_id ?? '')))),
-            default => class_basename($model) . ' #' . $model->getKey(),
+            'Building' => (string) ($model->building_name ?? ('Eka #' . $model->getKey())),
+            'Room' => trim((string) (($model->room_number ?? 'Telpa #' . $model->getKey()) . ' ' . ($model->room_name ?? ''))),
+            'DeviceType' => (string) ($model->type_name ?? ('Ierices tips #' . $model->getKey())),
+            'Device' => trim((string) (($model->code ? '[' . $model->code . '] ' : '') . ($model->name ?? ('Ierice #' . $model->getKey())))),
+            'Repair' => trim((string) (($model->device?->name ?? 'Ierice') . ' | ' . Str::limit((string) ($model->description ?? 'Remonts #' . $model->getKey()), 70))),
+            'Employee' => (string) ($model->full_name ?? ('Darbinieks #' . $model->getKey())),
+            'User' => (string) ($model->employee?->full_name ?? ('Lietotajs #' . $model->getKey())),
+            'DeviceSet' => (string) ($model->set_name ?? $model->name ?? ('Komplekts #' . $model->getKey())),
+            'DeviceSetItem' => trim((string) (($model->deviceSet?->set_name ?? 'Komplekts #' . ($model->device_set_id ?? $model->getKey())) . ' | ' . ($model->device?->name ?? 'Ierice #' . ($model->device_id ?? '')))),
+            default => self::entityLabel(class_basename($model)) . ' #' . $model->getKey(),
+        };
+    }
+
+    public static function actionLabel(string $action): string
+    {
+        return match (strtoupper($action)) {
+            self::ACTION_CREATE => 'Izveide',
+            self::ACTION_UPDATE => 'Atjaunosana',
+            self::ACTION_DELETE => 'Dzesana',
+            self::ACTION_LOGIN => 'Pieslegsanas',
+            self::ACTION_LOGOUT => 'Izrakstisanas',
+            self::ACTION_EXPORT => 'Eksports',
+            self::ACTION_BACKUP => 'Kopija',
+            self::ACTION_RESTORE => 'Atjaunosana no kopijas',
+            self::ACTION_VIEW => 'Apskate',
+            default => $action,
+        };
+    }
+
+    public static function entityLabel(?string $entityType): string
+    {
+        $key = self::normalizeEntityKey($entityType);
+
+        return match ($key) {
+            'building' => 'Eka',
+            'room' => 'Telpa',
+            'device_type' => 'Ierices tips',
+            'device' => 'Ierice',
+            'repair' => 'Remonts',
+            'employee' => 'Darbinieks',
+            'user' => 'Lietotajs',
+            'device_set' => 'Komplekts',
+            'device_set_item' => 'Komplekta ieraksts',
+            'database_backup' => 'Datubazes kopija',
+            'backup_setting' => 'Kopiju iestatijumi',
+            default => Str::headline((string) $entityType),
         };
     }
 
@@ -179,16 +215,121 @@ class AuditTrail
         };
     }
 
+    public static function localizedDescription(?string $description, ?string $entityType = null): string
+    {
+        $text = trim((string) $description);
+
+        if ($text === '') {
+            return 'Nav apraksta';
+        }
+
+        if (preg_match('/^User logged in: (?<label>.+)$/i', $text, $matches)) {
+            return 'Lietotajs piesledzas: ' . $matches['label'];
+        }
+
+        if (preg_match('/^User logged out: (?<label>.+)$/i', $text, $matches)) {
+            return 'Lietotajs izrakstijas: ' . $matches['label'];
+        }
+
+        if (preg_match('/^User account deleted: (?<label>.+)$/i', $text, $matches)) {
+            return 'Lietotaja konts dzests: ' . $matches['label'];
+        }
+
+        if (preg_match('/^User password changed: (?<label>.+)$/i', $text, $matches)) {
+            return 'Lietotaja parole nomainita: ' . $matches['label'];
+        }
+
+        if (preg_match('/^Database backup created: (?<label>.+)$/i', $text, $matches)) {
+            return 'Datubazes kopija izveidota: ' . $matches['label'];
+        }
+
+        if (preg_match('/^Backup file uploaded from computer: (?<label>.+)$/i', $text, $matches)) {
+            return 'Kopijas fails augshupladets no datora: ' . $matches['label'];
+        }
+
+        if (preg_match('/^Database restored from backup: (?<label>.+)$/i', $text, $matches)) {
+            return 'Datubaze atjaunota no kopijas: ' . $matches['label'];
+        }
+
+        if (preg_match('/^Backup deleted: (?<label>.+)$/i', $text, $matches)) {
+            return 'Rezerves kopija dzesta: ' . $matches['label'];
+        }
+
+        if (preg_match('/^Backup schedule updated: (?<frequency>[^ ]+) at (?<time>.+)$/i', $text, $matches)) {
+            return 'Kopiju grafiks atjauninats: '
+                . self::translateValue($matches['frequency'])
+                . ' plkst. '
+                . trim($matches['time']);
+        }
+
+        if (preg_match('/^Repair status changed: (?<states>.+)$/i', $text, $matches)) {
+            return 'Remonta statuss mainits: ' . self::translateArrowText($matches['states']);
+        }
+
+        if (preg_match('/^Device status changed: (?<label>.+?) \| (?<states>.+)$/i', $text, $matches)) {
+            return 'Ierices statuss mainits: ' . $matches['label'] . ' | ' . self::translateArrowText($matches['states']);
+        }
+
+        if (preg_match('/^Device status synced from repair #(?<repair>\d+): (?<states>.+)$/i', $text, $matches)) {
+            return 'Ierices statuss saskanots no remonta #' . $matches['repair'] . ': ' . self::translateArrowText($matches['states']);
+        }
+
+        if (preg_match('/^Device moved: (?<label>.+?) -> room (?<room>.+)$/i', $text, $matches)) {
+            return 'Ierice parvietota: ' . $matches['label'] . ' -> telpa ' . trim($matches['room']);
+        }
+
+        if (preg_match('/^Device added to set: (?<label>.+?) -> (?<set>.+)$/i', $text, $matches)) {
+            return 'Ierice pievienota komplektam: ' . $matches['label'] . ' -> ' . trim($matches['set']);
+        }
+
+        if (preg_match('/^(?<entity>.+?) updated: (?<label>.+?) \| details: (?<details>.+)$/i', $text, $matches)) {
+            return self::entityLabel($matches['entity']) . ' atjauninats: '
+                . $matches['label']
+                . ' | detalas: '
+                . self::translateDetails($matches['details']);
+        }
+
+        if (preg_match('/^(?<entity>.+?) updated: (?<label>.+?) \| fields: (?<fields>.+)$/i', $text, $matches)) {
+            return self::entityLabel($matches['entity']) . ' atjauninats: '
+                . $matches['label']
+                . ' | lauki: '
+                . self::translateFieldList($matches['fields']);
+        }
+
+        if (preg_match('/^(?<entity>.+?) created: (?<label>.+)$/i', $text, $matches)) {
+            return self::entityLabel($matches['entity']) . ' izveidots: ' . $matches['label'];
+        }
+
+        if (preg_match('/^(?<entity>.+?) updated: (?<label>.+)$/i', $text, $matches)) {
+            return self::entityLabel($matches['entity']) . ' atjauninats: ' . $matches['label'];
+        }
+
+        if (preg_match('/^(?<entity>.+?) deleted: (?<label>.+)$/i', $text, $matches)) {
+            return self::entityLabel($matches['entity']) . ' dzests: ' . $matches['label'];
+        }
+
+        if (preg_match('/^(?<entity>.+?) changed: (?<label>.+)$/i', $text, $matches)) {
+            return self::entityLabel($matches['entity']) . ' mainits: ' . $matches['label'];
+        }
+
+        $fallbackEntity = $entityType ? self::entityLabel($entityType) : null;
+        if ($fallbackEntity && ! str_starts_with($text, $fallbackEntity)) {
+            return $text;
+        }
+
+        return $text;
+    }
+
     private static function defaultDescription(string $action, Model $model, array $changedFields = []): string
     {
         $entity = self::readableEntityName(class_basename($model));
         $label = self::labelFor($model);
 
         return match ($action) {
-            self::ACTION_CREATE => $entity . ' created: ' . $label,
-            self::ACTION_UPDATE => $entity . ' updated: ' . $label . ($changedFields !== [] ? ' | fields: ' . implode(', ', $changedFields) : ''),
-            self::ACTION_DELETE => $entity . ' deleted: ' . $label,
-            default => $entity . ' changed: ' . $label,
+            self::ACTION_CREATE => $entity . ' izveidots: ' . $label,
+            self::ACTION_UPDATE => $entity . ' atjauninats: ' . $label . ($changedFields !== [] ? ' | lauki: ' . self::translateFieldList(implode(', ', $changedFields)) : ''),
+            self::ACTION_DELETE => $entity . ' dzests: ' . $label,
+            default => $entity . ' mainits: ' . $label,
         };
     }
 
@@ -198,16 +339,19 @@ class AuditTrail
         $label = self::labelFor($model);
 
         if ($changes === []) {
-            return $entity . ' updated: ' . $label;
+            return $entity . ' atjauninats: ' . $label;
         }
 
         $details = collect($changes)
             ->map(function (array $change, string $field) {
-                return $field . ': ' . self::formatValue($change['old']) . ' -> ' . self::formatValue($change['new']);
+                return self::translateFieldName($field) . ': '
+                    . self::formatValue($change['old'], $field)
+                    . ' -> '
+                    . self::formatValue($change['new'], $field);
             })
             ->implode('; ');
 
-        return $entity . ' updated: ' . $label . ' | details: ' . $details;
+        return $entity . ' atjauninats: ' . $label . ' | detalas: ' . $details;
     }
 
     private static function severityFor(string $action, ?Model $model = null): string
@@ -232,7 +376,7 @@ class AuditTrail
 
     private static function readableEntityName(string $entityType): string
     {
-        return str_replace('_', ' ', Str::headline($entityType));
+        return self::entityLabel($entityType);
     }
 
     private static function normalizeAction(string $action): string
@@ -277,7 +421,7 @@ class AuditTrail
             $old = $before[$field] ?? null;
             $new = $after[$field] ?? null;
 
-            if (self::formatValue($old) === self::formatValue($new)) {
+            if (self::formatValue($old, $field) === self::formatValue($new, $field)) {
                 continue;
             }
 
@@ -290,7 +434,7 @@ class AuditTrail
         return $changes;
     }
 
-    private static function formatValue(mixed $value): string
+    private static function formatValue(mixed $value, ?string $field = null): string
     {
         if ($value instanceof \DateTimeInterface) {
             return $value->format('Y-m-d H:i:s');
@@ -308,6 +452,136 @@ class AuditTrail
             return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: 'masivs';
         }
 
-        return (string) $value;
+        return self::translateValue((string) $value, $field);
+    }
+
+    private static function translateFieldList(string $fields): string
+    {
+        return collect(explode(',', $fields))
+            ->map(fn (string $field) => self::translateFieldName(trim($field)))
+            ->filter()
+            ->implode(', ');
+    }
+
+    private static function translateDetails(string $details): string
+    {
+        return collect(explode(';', $details))
+            ->map(function (string $entry) {
+                $entry = trim($entry);
+
+                if (! preg_match('/^(?<field>[^:]+): (?<old>.+?) -> (?<new>.+)$/', $entry, $matches)) {
+                    return $entry;
+                }
+
+                $field = trim($matches['field']);
+
+                return self::translateFieldName($field) . ': '
+                    . self::translateValue(trim($matches['old']), $field)
+                    . ' -> '
+                    . self::translateValue(trim($matches['new']), $field);
+            })
+            ->implode('; ');
+    }
+
+    private static function translateArrowText(string $text): string
+    {
+        if (! str_contains($text, '->')) {
+            return self::translateValue(trim($text));
+        }
+
+        [$old, $new] = array_map('trim', explode('->', $text, 2));
+
+        return self::translateValue($old) . ' -> ' . self::translateValue($new);
+    }
+
+    private static function translateFieldName(string $field): string
+    {
+        return match (Str::of($field)->snake()->lower()->toString()) {
+            'code' => 'kods',
+            'name' => 'nosaukums',
+            'description' => 'apraksts',
+            'status' => 'statuss',
+            'device_type_id' => 'ierices tips',
+            'device_id' => 'ierice',
+            'repair_type' => 'remonta tips',
+            'priority' => 'prioritate',
+            'start_date' => 'sakuma datums',
+            'estimated_completion' => 'planotais beigums',
+            'actual_completion' => 'faktiskais beigums',
+            'cost' => 'izmaksas',
+            'vendor_name' => 'pakalpojuma sniedzejs',
+            'vendor_contact' => 'kontakts',
+            'invoice_number' => 'rekina numurs',
+            'issue_reported_by' => 'zinotajs',
+            'reported_employee_id' => 'zinotajs',
+            'assigned_to' => 'pieskirtais lietotajs',
+            'building_id' => 'eka',
+            'room_id' => 'telpa',
+            'purchase_date' => 'iegades datums',
+            'purchase_price' => 'iegades cena',
+            'warranty_until' => 'garantija lidz',
+            'warranty_photo_name' => 'garantijas foto',
+            'serial_number' => 'serijas numurs',
+            'manufacturer' => 'razotajs',
+            'notes' => 'piezimes',
+            'device_image_url' => 'ierices attels',
+            'category' => 'kategorija',
+            'expected_lifetime_years' => 'paredzamais lietosanas ilgums',
+            'quantity' => 'daudzums',
+            'role' => 'loma',
+            default => str_replace('_', ' ', Str::lower($field)),
+        };
+    }
+
+    private static function translateValue(string $value, ?string $field = null): string
+    {
+        $normalized = Str::lower(trim($value));
+
+        $map = [
+            'active' => 'Aktiva',
+            'reserve' => 'Rezerve',
+            'broken' => 'Bojata',
+            'repair' => 'Remonta',
+            'retired' => 'Norakstita',
+            'kitting' => 'Komplektacija',
+            'waiting' => 'Gaida',
+            'in-progress' => 'Procesa',
+            'completed' => 'Pabeigts',
+            'cancelled' => 'Atcelts',
+            'internal' => 'Ieksejais',
+            'external' => 'Arejais',
+            'low' => 'Zema',
+            'medium' => 'Videja',
+            'high' => 'Augsta',
+            'critical' => 'Kritiska',
+            'daily' => 'katru dienu',
+            'weekly' => 'katru nedelu',
+            'monthly' => 'katru menesi',
+            'manual' => 'manuali',
+            'uploaded' => 'augshupladets',
+            'system' => 'sistema',
+            'info' => 'informacija',
+            'warning' => 'bridinajums',
+            'error' => 'kluda',
+        ];
+
+        if (array_key_exists($normalized, $map)) {
+            return $map[$normalized];
+        }
+
+        if ($field && Str::of($field)->snake()->lower()->toString() === 'run_at') {
+            return 'plkst. ' . $value;
+        }
+
+        return $value;
+    }
+
+    private static function normalizeEntityKey(?string $entityType): string
+    {
+        return Str::of((string) $entityType)
+            ->replace(['-', '/', '\\'], ' ')
+            ->snake()
+            ->lower()
+            ->toString();
     }
 }

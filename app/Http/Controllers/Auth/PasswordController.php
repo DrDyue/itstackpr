@@ -29,7 +29,7 @@ class PasswordController extends Controller
             $request->user()->id,
             $request->user()->fresh(),
             ['password'],
-            'User password changed: ' . AuditTrail::labelFor($request->user()),
+            'Lietotaja parole nomainita: ' . AuditTrail::labelFor($request->user()),
             AuditTrail::SEVERITY_WARNING
         );
 

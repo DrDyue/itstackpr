@@ -21,18 +21,7 @@
             default => 'bg-slate-100 text-slate-700',
         };
 
-        $actionLabel = fn (string $action) => match ($action) {
-            'CREATE' => 'Izveide',
-            'UPDATE' => 'Atjaunosana',
-            'DELETE' => 'Dzesana',
-            'LOGIN' => 'Pieslegsanas',
-            'LOGOUT' => 'Izrakstisanas',
-            'EXPORT' => 'Eksports',
-            'BACKUP' => 'Kopija',
-            'RESTORE' => 'Atjaunosana no kopijas',
-            'VIEW' => 'Apskate',
-            default => $action,
-        };
+        $actionLabel = fn (string $action) => \App\Support\AuditTrail::actionLabel($action);
 
         $queryLink = function (array $overrides = []) use ($filters): string {
             return route('audit-log.index', array_filter(array_merge($filters, $overrides), fn ($value) => $value !== ''));
@@ -108,7 +97,7 @@
                         <p class="mt-1 text-sm font-semibold leading-6 text-slate-900">{{ $formatDateTime($summary['latest']?->timestamp, 'Nav datu') }}</p>
                     </div>
                 </div>
-                <p class="mt-5 rounded-2xl bg-white/80 px-3 py-2 text-sm text-slate-600 ring-1 ring-amber-100">{{ $summary['latest']?->action ?? 'Nav notikumu' }}</p>
+                <p class="mt-5 rounded-2xl bg-white/80 px-3 py-2 text-sm text-slate-600 ring-1 ring-amber-100">{{ $summary['latest'] ? $actionLabel($summary['latest']->action) : 'Nav notikumu' }}</p>
             </div>
         </div>
 
@@ -162,7 +151,7 @@
                     <select name="entity_type" class="crud-control">
                         <option value="">Visas</option>
                         @foreach ($entityTypes as $entityType)
-                            <option value="{{ $entityType }}" @selected($filters['entity_type'] === $entityType)>{{ $entityType }}</option>
+                            <option value="{{ $entityType }}" @selected($filters['entity_type'] === $entityType)>{{ \App\Support\AuditTrail::entityLabel($entityType) }}</option>
                         @endforeach
                     </select>
                 </label>
@@ -214,7 +203,7 @@
                                 </td>
                                 <td class="px-4 py-4 align-top">
                                     <div class="font-semibold text-slate-900">{{ $log->user?->employee?->full_name ?? 'Sistema / nezinams' }}</div>
-                                    <div class="mt-1 text-sm text-slate-500">{{ $log->user_id ? 'User ID ' . $log->user_id : 'Bez lietotaja' }}</div>
+                                    <div class="mt-1 text-sm text-slate-500">{{ $log->user_id ? 'Lietotaja ID ' . $log->user_id : 'Bez lietotaja' }}</div>
                                 </td>
                                 <td class="px-4 py-4 align-top">
                                     <span class="{{ $actionTone($log->action) }} inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-semibold">
@@ -235,7 +224,7 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-4 align-top">
-                                    <div class="font-semibold text-slate-900">{{ $log->entity_type }}</div>
+                                    <div class="font-semibold text-slate-900">{{ $log->localized_entity_type }}</div>
                                 </td>
                                 <td class="px-4 py-4 align-top">
                                     <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{{ $log->entity_id ?? '-' }}</span>
@@ -260,7 +249,7 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-4 align-top">
-                                    <div class="max-w-xl leading-6 text-slate-700">{{ $log->description }}</div>
+                                    <div class="max-w-xl leading-6 text-slate-700">{{ $log->localized_description }}</div>
                                 </td>
                             </tr>
                         @empty

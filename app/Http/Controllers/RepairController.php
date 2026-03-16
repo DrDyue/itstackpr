@@ -201,7 +201,7 @@ class RepairController extends Controller
             $repair,
             $before,
             $after,
-            description: 'Repair status changed: ' . $this->statusLabel($before['status'] ?? 'waiting') . ' -> ' . $this->statusLabel($after['status'] ?? 'waiting')
+            description: 'Remonta statuss mainits: ' . $this->statusLabel($before['status'] ?? 'waiting') . ' -> ' . $this->statusLabel($after['status'] ?? 'waiting')
         );
 
         return back()->with('success', 'Remonta statuss atjauninats');
@@ -541,7 +541,7 @@ class RepairController extends Controller
             auth()->id(),
             'UPDATE',
             $device,
-            'Device status synced from repair #' . $repair->id . ': ' . $oldStatus . ' -> ' . $targetStatus,
+            'Ierices statuss saskanots no remonta #' . $repair->id . ': ' . $this->deviceStatusLabel($oldStatus) . ' -> ' . $this->deviceStatusLabel($targetStatus),
             'info'
         );
     }
@@ -617,6 +617,18 @@ class RepairController extends Controller
             'completed' => 'Pabeigts',
             'cancelled' => 'Atcelts',
             default => 'Gaida',
+        };
+    }
+
+    private function deviceStatusLabel(string $status): string
+    {
+        return match ($status) {
+            'reserve' => 'Rezerve',
+            'broken' => 'Bojata',
+            'repair' => 'Remonta',
+            'retired' => 'Norakstita',
+            'kitting' => 'Komplektacija',
+            default => 'Aktiva',
         };
     }
 

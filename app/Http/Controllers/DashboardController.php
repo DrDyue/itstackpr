@@ -80,7 +80,7 @@ class DashboardController extends Controller
                 ->limit(6)
                 ->get();
 
-            $recentDevices = Device::with(['room', 'type'])
+            $recentDevices = Device::with(['room', 'building', 'type'])
                 ->latest('created_at')
                 ->limit(6)
                 ->get();

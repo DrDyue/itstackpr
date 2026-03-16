@@ -132,7 +132,7 @@ class DeviceController extends Controller
             'changed_by' => $userId,
         ]);
 
-        $this->writeAudit($userId, 'CREATE', $device, 'Device created: ' . $device->name, 'info');
+        $this->writeAudit($userId, 'CREATE', $device, 'Ierice izveidota: ' . $device->name, 'info');
 
         return redirect()->route('devices.index')->with('success', 'Ierice veiksmigi pievienota');
     }
@@ -197,7 +197,7 @@ class DeviceController extends Controller
             'changed_by' => $userId,
         ]);
 
-        $this->writeAudit($userId, 'DELETE', $device, 'Device deleted: ' . $label, 'warning');
+        $this->writeAudit($userId, 'DELETE', $device, 'Ierice dzesta: ' . $label, 'warning');
         $this->deleteDeviceAssets($device);
 
         $device->delete();
@@ -525,7 +525,7 @@ class DeviceController extends Controller
             'changed_by' => $userId,
         ]);
 
-        $this->writeAudit($userId, 'UPDATE', $device, 'Device status changed: ' . $device->name . ' | ' . $oldStatus . ' -> ' . $status, 'info');
+        $this->writeAudit($userId, 'UPDATE', $device, 'Ierices statuss mainits: ' . $device->name . ' | ' . $this->statusLabel($oldStatus) . ' -> ' . $this->statusLabel($status), 'info');
 
         return ['level' => 'success', 'message' => 'Statuss atjauninats.'];
     }
@@ -561,7 +561,7 @@ class DeviceController extends Controller
             'changed_by' => $userId,
         ]);
 
-        $this->writeAudit($userId, 'UPDATE', $device, 'Device moved: ' . $device->name . ' -> room ' . $room->room_number, 'info');
+        $this->writeAudit($userId, 'UPDATE', $device, 'Ierice parvietota: ' . $device->name . ' -> telpa ' . $room->room_number, 'info');
 
         return ['level' => 'success', 'message' => 'Ierice parvietota uz citu telpu.'];
     }
@@ -604,7 +604,7 @@ class DeviceController extends Controller
             'changed_by' => $userId,
         ]);
 
-        $this->writeAudit($userId, 'UPDATE', $device, 'Device added to set: ' . $device->name . ' -> ' . $set->set_name, 'info');
+        $this->writeAudit($userId, 'UPDATE', $device, 'Ierice pievienota komplektam: ' . $device->name . ' -> ' . $set->set_name, 'info');
 
         return ['level' => 'success', 'message' => 'Ierice pievienota komplektacijai.'];
     }

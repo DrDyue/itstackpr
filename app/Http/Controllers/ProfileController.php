@@ -48,7 +48,7 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
-        AuditTrail::deleted($user?->id, $user, 'User account deleted: ' . AuditTrail::labelFor($user), AuditTrail::SEVERITY_WARNING);
+        AuditTrail::deleted($user?->id, $user, 'Lietotaja konts dzests: ' . AuditTrail::labelFor($user), AuditTrail::SEVERITY_WARNING);
 
         Auth::logout();
 

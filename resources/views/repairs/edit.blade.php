@@ -460,7 +460,7 @@
                                     <span class="inline-flex items-center rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 ring-1 ring-slate-200">{{ $actionLabels[$entry->action] ?? $entry->action }}</span>
                                     <span class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 {{ $severityClasses[$entry->severity] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">{{ \App\Support\AuditTrail::severityLabel($entry->severity) }}</span>
                                 </div>
-                                <p class="mt-3 text-sm font-medium text-slate-900">{{ $entry->description }}</p>
+                                <p class="mt-3 text-sm font-medium text-slate-900">{{ $entry->localized_description }}</p>
                                 <p class="mt-2 text-xs text-slate-500">
                                     {{ $entry->timestamp?->format('d.m.Y H:i') ?? '-' }} | {{ $entry->user?->employee?->full_name ?? 'Sistema' }}
                                 </p>
