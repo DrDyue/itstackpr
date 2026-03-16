@@ -63,7 +63,6 @@ Route::middleware('auth')->group(function () {
     Route::resource('buildings', BuildingController::class)->except(['show']);
     Route::resource('rooms', RoomController::class)->except(['show']);
     Route::resource('device-types', DeviceTypeController::class)->except(['show']);
-    Route::post('/devices/preview-auto-image', [DeviceController::class, 'previewAutoImage'])->name('devices.preview-auto-image');
     Route::post('/devices/bulk-update', [DeviceController::class, 'bulkUpdate'])->name('devices.bulk-update');
     Route::post('/devices/{device}/quick-update', [DeviceController::class, 'quickUpdate'])->name('devices.quick-update');
     Route::resource('devices', DeviceController::class);

@@ -10,8 +10,5 @@ return [
     'jpeg_quality' => 82,
     'webp_quality' => 80,
     'max_upload_kb' => 5120,
-    'auto_image_enabled' => env('DEVICE_AUTO_IMAGE_ENABLED', true),
-    'auto_image_timeout' => env('DEVICE_AUTO_IMAGE_TIMEOUT', 4),
-    'auto_image_candidates' => env('DEVICE_AUTO_IMAGE_CANDIDATES', 3),
     'auto_image_user_agent' => env('DEVICE_AUTO_IMAGE_USER_AGENT', 'ITStackPR Device Image Fetcher/1.0'),
 ];

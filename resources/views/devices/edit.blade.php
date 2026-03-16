@@ -38,159 +38,18 @@
             enctype="multipart/form-data"
             class="device-form-grid"
             x-data="{
-                devicePreview: @js(old('auto_device_image_url', $device->deviceImageUrl() ?? '')),
-                deviceCandidates: @js(old('auto_device_image_url') ? [[
-                    'preview_url' => old('auto_device_image_url'),
-                    'image_url' => old('auto_device_image_url'),
-                    'source' => 'saved',
-                    'label' => 'Saglabata izvele',
-                ]] : []),
+                devicePreview: @js($device->deviceImageUrl() ?? ''),
                 warrantyPreview: @js($device->warrantyImageUrl() ?? ''),
-                autoDeviceImageUrl: @js(old('auto_device_image_url', '')),
                 removeDeviceImage: @js(old('remove_device_image') === '1'),
-                isFindingDeviceImage: false,
-                deviceImageError: '',
-                deviceImageBatch: 1,
-                remotePreviewBase: @js(route('device-assets.remote-preview')),
-                get canSearchDeviceImage() {
-                    return !!(
-                        this.$refs.model?.value.trim()
-                        && this.$refs.manufacturer?.value.trim()
-                    );
-                },
-                async findDeviceImage(batch = 1) {
-                    if (! this.canSearchDeviceImage) {
-                        this.deviceImageError = 'Lai mekletu attelu, aizpildi modeli un razotaju.';
-                        return;
-                    }
-
-                    this.isFindingDeviceImage = true;
-                    this.deviceImageError = '';
-                    this.deviceImageBatch = batch;
-
-                    try {
-                        const images = await this.searchDeviceCandidates(batch);
-
-                        if (! images.length) {
-                            this.deviceCandidates = [];
-                            this.deviceImageError = 'Attelus interneta neizdevas atrast. Precize modeli vai razotaju un meginiet velreiz.';
-                            return;
-                        }
-
-                        this.deviceCandidates = images;
-                        this.selectDeviceImage(images[0]);
-                    } catch (error) {
-                        this.deviceCandidates = [];
-                        this.deviceImageError = 'Neizdevas atrast attelus interneta.';
-                    } finally {
-                        this.isFindingDeviceImage = false;
-                    }
-                },
-                async searchDeviceCandidates(batch) {
-                    const response = await fetch(@js(route('devices.preview-auto-image')), {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': @js(csrf_token()),
-                        },
-                        body: JSON.stringify({
-                            model: this.$refs.model.value,
-                            manufacturer: this.$refs.manufacturer.value,
-                            batch: batch,
-                        }),
-                    });
-
-                    const payload = await response.json().catch(() => ({}));
-                    const images = Array.isArray(payload.images) ? payload.images : [];
-
-                    return this.uniqueCandidates(images).map(candidate => ({
-                        ...candidate,
-                        label: this.truncateLabel(candidate?.label || 'Izveleties so attelu'),
-                    }));
-                },
-                truncateLabel(label) {
-                    const text = String(label || '').replace(/\s+/g, ' ').trim();
-                    return text.length > 72 ? `${text.slice(0, 69)}...` : text;
-                },
-                uniqueCandidates(candidates) {
-                    const seen = new Set();
-
-                    return candidates.filter(candidate => {
-                        const key = candidate?.image_url || candidate?.preview_url;
-                        if (!key || seen.has(key)) {
-                            return false;
-                        }
-
-                        seen.add(key);
-                        return this.isAllowedImageUrl(candidate.preview_url || candidate.image_url);
-                    });
-                },
-                proxyImageUrl(url) {
-                    const normalized = String(url || '').trim();
-
-                    if (!normalized) {
-                        return '';
-                    }
-
-                    if (
-                        normalized.startsWith('blob:')
-                        || normalized.startsWith('data:')
-                        || normalized.startsWith('/')
-                    ) {
-                        return normalized;
-                    }
-
-                    if (normalized.startsWith('http://') || normalized.startsWith('https://')) {
-                        return `${this.remotePreviewBase}?url=${encodeURIComponent(normalized)}`;
-                    }
-
-                    return normalized;
-                },
-                isAllowedImageUrl(url) {
-                    const normalized = String(url || '').toLowerCase();
-                    if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
-                        return false;
-                    }
-
-                    return !['.svg', '.tif', '.tiff', '.pdf', '.djvu'].some(ext => normalized.includes(ext));
-                },
-                looksLikeNonPhoto(text) {
-                    const normalized = String(text || '').toLowerCase();
-                    return ['logo', 'icon', 'vector', 'wordmark', 'symbol', 'coat of arms'].some(token => normalized.includes(token));
-                },
-                removeBrokenCandidate(imageUrl) {
-                    this.deviceCandidates = this.deviceCandidates.filter(candidate => candidate.image_url !== imageUrl && candidate.preview_url !== imageUrl);
-
-                    if (this.autoDeviceImageUrl === imageUrl || this.devicePreview === imageUrl) {
-                        const replacement = this.deviceCandidates[0] || null;
-                        this.devicePreview = replacement?.preview_url || replacement?.image_url || '';
-                        this.autoDeviceImageUrl = replacement?.image_url || '';
-                    }
-
-                    if (!this.deviceCandidates.length && !this.devicePreview) {
-                        this.deviceImageError = 'Atrastie atteli neieladejas. Megini velreiz ar citu partiju.';
-                    }
-                },
-                selectDeviceImage(candidate) {
-                    this.devicePreview = candidate?.preview_url || candidate?.image_url || '';
-                    this.autoDeviceImageUrl = candidate?.image_url || '';
-                    this.removeDeviceImage = false;
-                    this.$refs.deviceImageInput.value = '';
-                },
                 clearDeviceImage() {
                     this.devicePreview = null;
-                    this.deviceCandidates = [];
-                    this.autoDeviceImageUrl = '';
                     this.removeDeviceImage = true;
-                    this.deviceImageError = '';
                     this.$refs.deviceImageInput.value = '';
                 }
             }"
         >
             @csrf
             @method('PUT')
-            <input type="hidden" name="auto_device_image_url" x-model="autoDeviceImageUrl">
             <input type="hidden" name="remove_device_image" :value="removeDeviceImage ? '1' : '0'">
 
             <div class="space-y-6">
@@ -335,65 +194,16 @@
                     <div class="space-y-4">
                         <div class="device-upload-box">
                             <label class="crud-label">Ierices foto</label>
-                            <input type="file" name="device_image" accept="image/*" class="crud-control" x-ref="deviceImageInput" @change="devicePreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null; autoDeviceImageUrl = ''; removeDeviceImage = false; deviceImageError = ''">
+                            <input type="file" name="device_image" accept="image/*" class="crud-control" x-ref="deviceImageInput" @change="devicePreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : '{{ $device->deviceImageUrl() ?? '' }}'; removeDeviceImage = false">
                             <p class="mt-2 text-xs text-gray-500">Atstaj tuksu, ja negribi nomainit attelu.</p>
                             <div class="mt-3 flex flex-wrap gap-2">
-                                <div class="relative" x-data="{ open: false }">
-                                    <span @mouseenter="if (!canSearchDeviceImage) open = true" @mouseleave="open = false" @focusin="if (!canSearchDeviceImage) open = true" @focusout="open = false" class="inline-flex">
-                                        <button
-                                            type="button"
-                                            class="crud-btn-neutral"
-                                            @click="findDeviceImage(1)"
-                                            :disabled="isFindingDeviceImage || !canSearchDeviceImage"
-                                        >
-                                            <span x-text="isFindingDeviceImage ? 'Mekle...' : 'Atrast attelu interneta'"></span>
-                                        </button>
-                                    </span>
-                                    <div
-                                        x-cloak
-                                        x-show="open"
-                                        x-transition.opacity
-                                        class="absolute left-0 top-full z-20 mt-2 w-72 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 shadow-lg"
-                                    >
-                                        Si poga nav pieejama, kamer nav aizpilditi lauki: modelis un razotajs.
-                                    </div>
-                                </div>
-                                <button
-                                    type="button"
-                                    class="crud-btn-neutral"
-                                    @click="findDeviceImage(deviceImageBatch + 1)"
-                                    x-show="deviceCandidates.length"
-                                    x-cloak
-                                    :disabled="isFindingDeviceImage || !canSearchDeviceImage"
-                                >
-                                    Mainit attelus
-                                </button>
                                 <button type="button" class="crud-btn-secondary" @click="clearDeviceImage()" x-show="devicePreview" x-cloak>
                                     Nonemt attelu
                                 </button>
                             </div>
-                            <template x-if="deviceImageError">
-                                <p class="mt-2 text-xs text-rose-600" x-text="deviceImageError"></p>
-                            </template>
-                            <div class="mt-4 grid gap-3 sm:grid-cols-3" x-show="deviceCandidates.length" x-cloak>
-                                <template x-for="candidate in deviceCandidates" :key="candidate.image_url">
-                                    <button
-                                        type="button"
-                                        class="overflow-hidden rounded-2xl border border-slate-200 bg-white text-left transition hover:border-sky-300 hover:shadow-sm"
-                                        @click="selectDeviceImage(candidate)"
-                                        :class="autoDeviceImageUrl === candidate.image_url ? 'ring-2 ring-sky-500 border-sky-400' : ''"
-                                    >
-                                        <img :src="proxyImageUrl(candidate.preview_url || candidate.image_url)" alt="Atrasts attels" class="h-32 w-full object-cover" loading="lazy" x-on:error="removeBrokenCandidate(candidate.image_url)">
-                                        <div class="px-3 py-2 text-xs font-medium text-slate-600">
-                                            <span class="device-image-candidate-label" x-text="candidate.label || 'Izveleties so attelu'"></span>
-                                            <span class="ml-1 text-slate-400" x-show="candidate.source" x-text="`(${candidate.source})`"></span>
-                                        </div>
-                                    </button>
-                                </template>
-                            </div>
                             <div class="device-upload-preview">
                                 <template x-if="devicePreview">
-                                    <img :src="proxyImageUrl(devicePreview)" alt="Ierices foto preview" loading="lazy" x-on:error="clearDeviceImage()">
+                                    <img :src="devicePreview" alt="Ierices foto preview" loading="lazy" x-on:error="clearDeviceImage()">
                                 </template>
                                 <template x-if="!devicePreview">
                                     <div class="device-upload-preview-empty">Foto nav pievienots</div>

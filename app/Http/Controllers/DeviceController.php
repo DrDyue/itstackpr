@@ -11,7 +11,6 @@ use App\Models\DeviceType;
 use App\Models\Room;
 use App\Support\AuditTrail;
 use App\Support\DeviceAssetManager;
-use App\Support\DeviceImageAutoFetcher;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
@@ -92,26 +91,6 @@ class DeviceController extends Controller
         return view('devices.create', $this->formData());
     }
 
-    public function previewAutoImage(Request $request)
-    {
-        $validated = $request->validate([
-            'model' => ['required', 'string', 'max:100'],
-            'manufacturer' => ['required', 'string', 'max:100'],
-            'batch' => ['nullable', 'integer', 'min:1', 'max:10'],
-        ]);
-        $batch = (int) ($validated['batch'] ?? 1);
-
-        $candidates = app(DeviceImageAutoFetcher::class)->searchCandidates($validated, $batch, 3);
-
-        if ($candidates === []) {
-            return response()->json([
-                'message' => 'Attelus interneta neizdevas atrast. Precize modeli vai razotaju un meginiet velreiz.',
-            ], 404);
-        }
-
-        return response()->json(['images' => $candidates]);
-    }
-
     public function store(Request $request)
     {
         $userId = auth()->id();
@@ -120,8 +99,7 @@ class DeviceController extends Controller
 
         $device = Device::create($data);
         $this->syncUploads($request, $device);
-        $this->applySelectedDeviceImage($request, $device);
-        $this->populateAutoImage($request, $device);
+        $this->removeDeviceImage($request, $device);
 
         DeviceHistory::create([
             'device_id' => $device->id,
@@ -171,8 +149,7 @@ class DeviceController extends Controller
 
         $device->update($data);
         $this->syncUploads($request, $device);
-        $this->applySelectedDeviceImage($request, $device);
-        $this->populateAutoImage($request, $device->fresh());
+        $this->removeDeviceImage($request, $device);
 
         $after = $device->fresh()->only(array_keys($before));
         $changedFields = $this->writeHistoryChanges($device->id, $before, $after, $userId);
@@ -406,58 +383,20 @@ class DeviceController extends Controller
         }
     }
 
-    private function applySelectedDeviceImage(Request $request, Device $device): void
+    private function removeDeviceImage(Request $request, Device $device): void
     {
         if ($request->hasFile('device_image')) {
             return;
         }
 
-        if (filled($request->input('auto_device_image_url'))) {
-            $selectedImageUrl = (string) $request->input('auto_device_image_url');
-
-            if (str_starts_with($selectedImageUrl, 'http://') || str_starts_with($selectedImageUrl, 'https://')) {
-                $storedPath = app(DeviceImageAutoFetcher::class)->storeFromUrl(
-                    $selectedImageUrl,
-                    $device->device_image_url
-                );
-
-                $device->forceFill(['device_image_url' => $storedPath ?: $selectedImageUrl])->save();
-            } else {
-                $storedPath = app(DeviceImageAutoFetcher::class)->storeFromUrl(
-                    $selectedImageUrl,
-                    $device->device_image_url
-                );
-
-                if ($storedPath) {
-                    $device->forceFill(['device_image_url' => $storedPath])->save();
-                }
-            }
-
+        if (! $request->boolean('remove_device_image') || ! filled($device->device_image_url)) {
             return;
         }
 
-        if ($request->boolean('remove_device_image') && filled($device->device_image_url)) {
-            $assetManager = app(DeviceAssetManager::class);
-            $assetManager->delete($device->device_image_url);
-            $assetManager->delete($assetManager->thumbnailPath($device->device_image_url));
-            $device->forceFill(['device_image_url' => null])->save();
-        }
-    }
-
-    private function populateAutoImage(Request $request, Device $device): void
-    {
-        if (
-            $request->hasFile('device_image')
-            || filled($device->device_image_url)
-            || filled($request->input('auto_device_image_url'))
-            || $request->boolean('remove_device_image')
-        ) {
-            return;
-        }
-
-        $device->loadMissing('type');
-
-        app(DeviceImageAutoFetcher::class)->populate($device);
+        $assetManager = app(DeviceAssetManager::class);
+        $assetManager->delete($device->device_image_url);
+        $assetManager->delete($assetManager->thumbnailPath($device->device_image_url));
+        $device->forceFill(['device_image_url' => null])->save();
     }
 
     private function deleteDeviceAssets(Device $device): void
