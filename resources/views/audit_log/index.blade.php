@@ -39,7 +39,7 @@
         </div>
 
         <div class="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div class="flex h-full flex-col justify-between rounded-[1.75rem] border border-sky-100 bg-gradient-to-br from-white to-sky-50 p-5 shadow-sm">
+            <div class="flex h-full flex-col justify-between rounded-[1.75rem] border border-sky-100 bg-sky-50 p-5 shadow-sm">
                 <div class="flex items-start gap-3">
                     <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -54,7 +54,7 @@
                 <p class="mt-5 rounded-2xl bg-white/80 px-3 py-2 text-sm text-slate-600 ring-1 ring-sky-100">Filtra atrasti: {{ $summary['filtered'] }}</p>
             </div>
 
-            <div class="flex h-full flex-col justify-between rounded-[1.75rem] border border-emerald-100 bg-gradient-to-br from-white to-emerald-50 p-5 shadow-sm">
+            <div class="flex h-full flex-col justify-between rounded-[1.75rem] border border-emerald-100 bg-emerald-50 p-5 shadow-sm">
                 <div class="flex items-start gap-3">
                     <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -69,7 +69,7 @@
                 <p class="mt-5 rounded-2xl bg-white/80 px-3 py-2 text-sm text-slate-600 ring-1 ring-emerald-100">Tikai siodienas notikumi.</p>
             </div>
 
-            <div class="flex h-full flex-col justify-between rounded-[1.75rem] border border-violet-100 bg-gradient-to-br from-white to-violet-50 p-5 shadow-sm">
+            <div class="flex h-full flex-col justify-between rounded-[1.75rem] border border-violet-100 bg-violet-50 p-5 shadow-sm">
                 <div class="flex items-start gap-3">
                     <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -84,7 +84,7 @@
                 <p class="mt-5 rounded-2xl bg-white/80 px-3 py-2 text-sm text-slate-600 ring-1 ring-violet-100">Unikāli lietotāji auditā.</p>
             </div>
 
-            <div class="flex h-full flex-col justify-between rounded-[1.75rem] border border-amber-100 bg-gradient-to-br from-white to-amber-50 p-5 shadow-sm">
+            <div class="flex h-full flex-col justify-between rounded-[1.75rem] border border-amber-100 bg-amber-50 p-5 shadow-sm">
                 <div class="flex items-start gap-3">
                     <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

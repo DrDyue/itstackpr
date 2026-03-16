@@ -11,7 +11,7 @@
             class="h-11 w-11 shrink-0 rounded-lg object-contain bg-white p-1 shadow-sm ring-1 ring-gray-200"
         >
     @else
-        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 text-xl font-bold text-white shadow-lg">
+        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-700 text-xl font-bold text-white shadow-lg">
             IT
         </div>
     @endif
@@ -20,5 +20,4 @@
         <span class="hidden truncate text-xs font-semibold text-blue-600 xl:block">IT inventra uzskaite</span>
     </div>
 </div>
-
 

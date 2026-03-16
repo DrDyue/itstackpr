@@ -4,22 +4,22 @@
             'waiting' => [
                 'title' => 'Gaida',
                 'subtitle' => 'Pieteiktas ierices, kas vel nav panemtas darba.',
-                'accent' => 'from-amber-500 to-orange-500',
-                'surface' => 'border-amber-200 bg-gradient-to-b from-amber-50 via-white to-white',
+                'accent' => 'bg-amber-500',
+                'surface' => 'border-amber-200 bg-amber-50',
                 'dot' => 'bg-amber-500',
             ],
             'in-progress' => [
                 'title' => 'Procesa',
                 'subtitle' => 'Aktivie remonti ar izpildi, terminu un izmaksu kontroli.',
-                'accent' => 'from-sky-500 to-cyan-500',
-                'surface' => 'border-sky-200 bg-gradient-to-b from-sky-50 via-white to-white',
+                'accent' => 'bg-sky-500',
+                'surface' => 'border-sky-200 bg-sky-50',
                 'dot' => 'bg-sky-500',
             ],
             'completed' => [
                 'title' => 'Pabeigts',
                 'subtitle' => 'Noslegti remonti ar saglabatu vesturi un rezultatu.',
-                'accent' => 'from-emerald-500 to-teal-500',
-                'surface' => 'border-emerald-200 bg-gradient-to-b from-emerald-50 via-white to-white',
+                'accent' => 'bg-emerald-500',
+                'surface' => 'border-emerald-200 bg-emerald-50',
                 'dot' => 'bg-emerald-500',
             ],
         ];
@@ -79,7 +79,7 @@
         @endif
 
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div class="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-5 shadow-sm">
+            <div class="rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
                 <div class="flex items-start justify-between gap-3">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-700">Gaida</p>
@@ -94,7 +94,7 @@
                 </div>
             </div>
 
-            <div class="rounded-3xl border border-sky-200 bg-gradient-to-br from-sky-50 via-white to-cyan-50 p-5 shadow-sm">
+            <div class="rounded-3xl border border-sky-200 bg-sky-50 p-5 shadow-sm">
                 <div class="flex items-start justify-between gap-3">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">Procesa</p>
@@ -109,7 +109,7 @@
                 </div>
             </div>
 
-            <div class="rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-5 shadow-sm">
+            <div class="rounded-3xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
                 <div class="flex items-start justify-between gap-3">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">Pabeigts</p>
@@ -124,7 +124,7 @@
                 </div>
             </div>
 
-            <div class="rounded-3xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-5 shadow-sm">
+            <div class="rounded-3xl border border-violet-200 bg-violet-50 p-5 shadow-sm">
                 <div class="flex items-start justify-between gap-3">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-[0.22em] text-violet-700">Kopsavilkums</p>
@@ -306,7 +306,7 @@
                             </div>
                             <p class="mt-2 max-w-sm text-sm leading-6 text-slate-600">{{ $columnMeta[$status]['subtitle'] }}</p>
                         </div>
-                        <div class="h-12 w-12 rounded-2xl bg-gradient-to-br {{ $columnMeta[$status]['accent'] }} opacity-90"></div>
+                        <div class="h-12 w-12 rounded-2xl {{ $columnMeta[$status]['accent'] }} opacity-90"></div>
                     </div>
 
                     <div class="space-y-4">

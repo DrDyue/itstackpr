@@ -102,7 +102,7 @@
                 <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $repair->device?->code ?: '-' }}</div>
                 <p class="mt-2 text-sm text-slate-600">{{ $repair->device?->type?->type_name ?: 'Tips nav noradits' }}</p>
             </div>
-            <div class="rounded-3xl border border-sky-200 bg-gradient-to-br from-sky-50 via-white to-cyan-50 p-5 shadow-sm">
+            <div class="rounded-3xl border border-sky-200 bg-sky-50 p-5 shadow-sm">
                 <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">
                     @include('repairs.partials.icon', ['name' => 'building', 'class' => 'h-4 w-4'])
                     Atrasanas vieta
@@ -119,7 +119,7 @@
                     @endif
                 </p>
             </div>
-            <div class="rounded-3xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-5 shadow-sm">
+            <div class="rounded-3xl border border-violet-200 bg-violet-50 p-5 shadow-sm">
                 <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-violet-700">
                     @include('repairs.partials.icon', ['name' => 'users', 'class' => 'h-4 w-4'])
                     Atbildigais
@@ -127,7 +127,7 @@
                 <div class="mt-2 text-lg font-semibold text-slate-900">{{ $repair->assignee?->employee?->full_name ?? 'Nav pieskirta' }}</div>
                 <p class="mt-2 text-sm text-slate-600">Pieteica: {{ $repair->reporter?->full_name ?? $repair->legacyReporter?->employee?->full_name ?? 'Nav zinotaja' }}</p>
             </div>
-            <div class="rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-5 shadow-sm">
+            <div class="rounded-3xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
                 <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">
                     @include('repairs.partials.icon', ['name' => 'calendar', 'class' => 'h-4 w-4'])
                     Termini un izmaksas
@@ -396,7 +396,7 @@
                         </div>
                     </div>
 
-                    <div x-show="repairType === 'external'" x-cloak class="rounded-[2rem] border border-rose-200 bg-gradient-to-br from-rose-50 via-white to-white p-5 shadow-sm">
+                    <div x-show="repairType === 'external'" x-cloak class="rounded-[2rem] border border-rose-200 bg-rose-50 p-5 shadow-sm">
                         <div class="flex items-start justify-between gap-3">
                             <div>
                                 <h2 class="flex items-center gap-2 text-lg font-semibold text-slate-900">
@@ -512,7 +512,7 @@
                     </div>
                 </div>
 
-                <div class="rounded-[2rem] border border-rose-200 bg-gradient-to-br from-rose-50 via-white to-white p-5 shadow-sm">
+                <div class="rounded-[2rem] border border-rose-200 bg-rose-50 p-5 shadow-sm">
                     <h2 class="flex items-center gap-2 text-lg font-semibold text-slate-900">
                         @include('repairs.partials.icon', ['name' => 'x-mark', 'class' => 'h-5 w-5'])
                         Bistamas darbibas

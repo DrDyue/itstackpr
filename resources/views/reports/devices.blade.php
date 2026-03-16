@@ -18,7 +18,7 @@
     @endphp
 
     <section class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
-        <div class="overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-sky-50 shadow-sm">
+        <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div class="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 px-5 py-5 sm:px-6">
                 <div class="max-w-3xl">
                     <div class="mb-2 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-sky-700 ring-1 ring-sky-200">
