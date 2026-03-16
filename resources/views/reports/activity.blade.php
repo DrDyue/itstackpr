@@ -1,10 +1,10 @@
 <x-app-layout>
     @php
         $summaryCards = [
-            ['label' => 'Notikumi sodien', 'value' => $summary['audit_today'], 'note' => 'Auditora ieraksti', 'tone' => 'sky'],
-            ['label' => 'Bridinajumi 30 dienas', 'value' => $summary['attention_30_days'], 'note' => 'Bridinajumi, kludas un kritiskie', 'tone' => 'rose'],
+            ['label' => 'Notikumi šodien', 'value' => $summary['audit_today'], 'note' => 'Auditora ieraksti', 'tone' => 'sky'],
+            ['label' => 'Brīdinājumi 30 dienās', 'value' => $summary['attention_30_days'], 'note' => 'Brīdinājumi, kļūdas un kritiskie ieraksti', 'tone' => 'rose'],
             ['label' => 'Remontu notikumi', 'value' => $summary['repair_events_30_days'], 'note' => $repairScope['label'], 'tone' => 'amber'],
-            ['label' => 'Iericu vesture', 'value' => $summary['device_history_30_days'], 'note' => 'Izmainas pedejas 30 dienas', 'tone' => 'violet'],
+            ['label' => 'Ierīču vēsture', 'value' => $summary['device_history_30_days'], 'note' => 'Izmaiņas pēdējās 30 dienās', 'tone' => 'violet'],
         ];
 
         $severityClasses = [
@@ -16,13 +16,26 @@
 
         $historyActionLabels = [
             'CREATE' => 'Izveide',
-            'UPDATE' => 'Atjaunosana',
-            'DELETE' => 'Dzesana',
+            'UPDATE' => 'Atjaunošana',
+            'DELETE' => 'Dzēšana',
             'STATUS_CHANGE' => 'Statusa maina',
-            'MOVE' => 'Parvietosana',
-            'ASSIGNMENT' => 'Pieskirsana',
+            'MOVE' => 'Pārvietošana',
+            'ASSIGNMENT' => 'Piešķiršana',
             'SET_ADD' => 'Pievienots komplektam',
-            'SET_REMOVE' => 'Iznemts no komplekta',
+            'SET_REMOVE' => 'Izņemts no komplekta',
+        ];
+
+        $fieldLabels = [
+            'status' => 'Statuss',
+            'room_id' => 'Telpa',
+            'building_id' => 'Ēka',
+            'assigned_to' => 'Piešķirts',
+            'device_type_id' => 'Ierīces tips',
+            'serial_number' => 'Sērijas numurs',
+            'name' => 'Nosaukums',
+            'model' => 'Modelis',
+            'manufacturer' => 'Ražotājs',
+            'device_image_url' => 'Attēls',
         ];
     @endphp
 
@@ -31,19 +44,19 @@
             <div class="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 px-5 py-5 sm:px-6">
                 <div class="max-w-3xl">
                     <div class="mb-2 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-violet-700 ring-1 ring-violet-200">
-                        Aktivitates skats
+                        Aktivitātes skats
                     </div>
-                    <h1 class="text-3xl font-semibold tracking-tight text-slate-900">Auditora plusts un izmainu vesture</h1>
+                    <h1 class="text-3xl font-semibold tracking-tight text-slate-900">Auditora plūsma un izmaiņu vēsture</h1>
                     <p class="mt-2 text-sm text-slate-600">
-                        Skats uz sistemas darbibu, remonta notikumiem un iericu vestures ierakstiem.
+                        Skats uz sistēmas darbību, remonta notikumiem un ierīču vēstures ierakstiem.
                     </p>
                 </div>
                 <div class="flex flex-wrap gap-2">
                     <a href="{{ route('audit-log.index') }}" class="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                        Auditora zurnals
+                        Auditora žurnāls
                     </a>
                     <a href="{{ route('device-history.index') }}" class="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
-                        Iericu vesture
+                        Ierīču vēsture
                     </a>
                 </div>
             </div>
@@ -53,31 +66,41 @@
             </div>
         </div>
 
-        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            @foreach ($summaryCards as $card)
-                @php
-                    $cardClass = match ($card['tone']) {
-                        'sky' => 'border-sky-200 bg-sky-50 text-sky-700',
-                        'rose' => 'border-rose-200 bg-rose-50 text-rose-700',
-                        'amber' => 'border-amber-200 bg-amber-50 text-amber-700',
-                        default => 'border-violet-200 bg-violet-50 text-violet-700',
-                    };
-                @endphp
-                <div class="rounded-3xl border p-5 shadow-sm {{ $cardClass }}">
-                    <p class="text-xs font-semibold uppercase tracking-[0.22em]">{{ $card['label'] }}</p>
-                    <div class="mt-3 text-3xl font-semibold tracking-tight text-slate-900">{{ $card['value'] }}</div>
-                    <p class="mt-2 text-sm text-slate-600">{{ $card['note'] }}</p>
+        <div class="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <div class="mb-4 flex items-center justify-between gap-3 border-b border-slate-200 pb-4">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Ātrie rādītāji</p>
+                    <h2 class="mt-1 text-lg font-semibold text-slate-900">Aktivitātes un vēstures kopsavilkums</h2>
                 </div>
-            @endforeach
+                <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">Notikumu skats</span>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                @foreach ($summaryCards as $card)
+                    @php
+                        $cardClass = match ($card['tone']) {
+                            'sky' => 'border-sky-200 bg-sky-50 text-sky-700',
+                            'rose' => 'border-rose-200 bg-rose-50 text-rose-700',
+                            'amber' => 'border-amber-200 bg-amber-50 text-amber-700',
+                            default => 'border-violet-200 bg-violet-50 text-violet-700',
+                        };
+                    @endphp
+                    <div class="rounded-3xl border p-5 shadow-sm {{ $cardClass }}">
+                        <p class="text-xs font-semibold uppercase tracking-[0.22em]">{{ $card['label'] }}</p>
+                        <div class="mt-3 text-3xl font-semibold tracking-tight text-slate-900">{{ $card['value'] }}</div>
+                        <p class="mt-2 text-sm text-slate-600">{{ $card['note'] }}</p>
+                    </div>
+                @endforeach
+            </div>
         </div>
 
         <div class="grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)]">
-            <div class="space-y-5">
+            <div class="space-y-5 rounded-[2rem] bg-slate-100/80 p-3">
                 <div class="grid gap-5 lg:grid-cols-3">
                     <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <div class="mb-4">
-                            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Darbibas</p>
-                            <h2 class="mt-1 text-lg font-semibold text-slate-900">Kas notiek visbiezak</h2>
+                        <div class="mb-4 border-b border-slate-200 pb-4">
+                            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Darbības</p>
+                            <h2 class="mt-1 text-lg font-semibold text-slate-900">Kas notiek visbiežāk</h2>
                         </div>
                         <div class="space-y-3">
                             @forelse ($actionBreakdown as $row)
@@ -88,15 +111,15 @@
                                     </div>
                                 </div>
                             @empty
-                                <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Darbibu sadalijumam vel nav datu.</div>
+                                <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Darbību sadalījumam vēl nav datu.</div>
                             @endforelse
                         </div>
                     </div>
 
                     <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <div class="mb-4">
-                            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Entitates</p>
-                            <h2 class="mt-1 text-lg font-semibold text-slate-900">Par ko notiek darbibas</h2>
+                        <div class="mb-4 border-b border-slate-200 pb-4">
+                            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Entītijas</p>
+                            <h2 class="mt-1 text-lg font-semibold text-slate-900">Par ko notiek darbības</h2>
                         </div>
                         <div class="space-y-3">
                             @forelse ($entityBreakdown as $row)
@@ -107,15 +130,15 @@
                                     </div>
                                 </div>
                             @empty
-                                <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Entitasu sadalijumam vel nav datu.</div>
+                                <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Entītiju sadalījumam vēl nav datu.</div>
                             @endforelse
                         </div>
                     </div>
 
                     <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <div class="mb-4">
-                            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Lietotaji</p>
-                            <h2 class="mt-1 text-lg font-semibold text-slate-900">Aktivakie autori</h2>
+                        <div class="mb-4 border-b border-slate-200 pb-4">
+                            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Lietotāji</p>
+                            <h2 class="mt-1 text-lg font-semibold text-slate-900">Aktīvākie autori</h2>
                         </div>
                         <div class="space-y-3">
                             @forelse ($userBreakdown as $row)
@@ -126,7 +149,7 @@
                                     </div>
                                 </div>
                             @empty
-                                <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Lietotaju sadalijumam vel nav datu.</div>
+                                <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Lietotāju sadalījumam vēl nav datu.</div>
                             @endforelse
                         </div>
                     </div>
@@ -134,10 +157,10 @@
 
                 <div class="grid gap-5 lg:grid-cols-2">
                     <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
+                        <div class="mb-5 flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-4">
                             <div>
                                 <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Remontu notikumi</p>
-                                <h2 class="mt-1 text-xl font-semibold text-slate-900">Pedejie ieraksti</h2>
+                                <h2 class="mt-1 text-xl font-semibold text-slate-900">Pēdējie ieraksti</h2>
                             </div>
                             <span class="rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-800 ring-1 ring-amber-200">{{ $repairScope['label'] }}</span>
                         </div>
@@ -159,15 +182,15 @@
                                     </div>
                                 </div>
                             @empty
-                                <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Remontu notikumi vel nav atrasti.</div>
+                                <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Remontu notikumi vēl nav atrasti.</div>
                             @endforelse
                         </div>
                     </div>
 
                     <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <div class="mb-5">
-                            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Iericu vesture</p>
-                            <h2 class="mt-1 text-xl font-semibold text-slate-900">Pedejas izmainas</h2>
+                        <div class="mb-5 border-b border-slate-200 pb-4">
+                            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Ierīču vēsture</p>
+                            <h2 class="mt-1 text-xl font-semibold text-slate-900">Pēdējās izmaiņas</h2>
                         </div>
 
                         <div class="space-y-3">
@@ -183,12 +206,12 @@
                                             </div>
                                             <div class="mt-2 text-sm text-slate-600">
                                                 @if ($entry->field_changed)
-                                                    {{ $entry->field_changed }}
+                                                    {{ $fieldLabels[$entry->field_changed] ?? $entry->field_changed }}
                                                     @if ($entry->old_value !== null || $entry->new_value !== null)
                                                         : {{ $entry->old_value ?: '-' }} -> {{ $entry->new_value ?: '-' }}
                                                     @endif
                                                 @else
-                                                    Izmaina bez konkretas lauka norades
+                                                    Izmaiņa bez konkrētas lauka norādes
                                                 @endif
                                             </div>
                                             <div class="mt-2 text-xs uppercase tracking-[0.18em] text-slate-500">
@@ -204,18 +227,18 @@
                                     </div>
                                 </div>
                             @empty
-                                <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Iericu vestures ieraksti vel nav atrasti.</div>
+                                <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Ierīču vēstures ieraksti vēl nav atrasti.</div>
                             @endforelse
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="space-y-5">
+            <div class="space-y-5 xl:sticky xl:top-6 xl:self-start rounded-[2rem] bg-violet-50/70 p-3">
                 <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <div class="mb-5">
-                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Uzmaniba</p>
-                        <h2 class="mt-1 text-xl font-semibold text-slate-900">Ieraksti ar augstaku svarigumu</h2>
+                    <div class="mb-5 border-b border-slate-200 pb-4">
+                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Uzmanība</p>
+                        <h2 class="mt-1 text-xl font-semibold text-slate-900">Ieraksti ar augstāku svarīgumu</h2>
                     </div>
 
                     <div class="space-y-3">
@@ -236,7 +259,7 @@
                                 </div>
                             </div>
                         @empty
-                            <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Paaugstinata svariguma ieraksti vel nav atrasti.</div>
+                                <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Paaugstināta svarīguma ieraksti vēl nav atrasti.</div>
                         @endforelse
                     </div>
                 </div>

@@ -2,12 +2,12 @@
     $tabs = [
         [
             'route' => 'reports.index',
-            'label' => 'Parskats',
+            'label' => 'Pārskats',
             'icon' => 'M3.75 5.25h16.5v4.5H3.75Zm0 9h7.5v4.5h-7.5Zm10.5 0h6v4.5h-6Z',
         ],
         [
             'route' => 'reports.devices',
-            'label' => 'Ierices',
+            'label' => 'Ierīces',
             'icon' => 'M4.5 7.5h15m-15 4.5h15m-15 4.5h9M3.75 5.25h16.5A1.5 1.5 0 0 1 21.75 6.75v10.5a1.5 1.5 0 0 1-1.5 1.5H3.75a1.5 1.5 0 0 1-1.5-1.5V6.75a1.5 1.5 0 0 1 1.5-1.5Z',
         ],
         [
@@ -17,7 +17,7 @@
         ],
         [
             'route' => 'reports.activity',
-            'label' => 'Aktivitate',
+            'label' => 'Aktivitāte',
             'icon' => 'M3.75 12h4.5l1.5-5.25L13.5 17.25l2.25-6h4.5',
         ],
     ];

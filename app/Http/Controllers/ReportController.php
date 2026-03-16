@@ -510,7 +510,7 @@ class ReportController extends Controller
 
         return [
             'label' => 'Man pieejamie remonti',
-            'description' => 'Skats apvieno man pieskirtos un manus pieteiktos remontus.',
+            'description' => 'Skats apvieno man piešķirtos un manus pieteiktos remontus.',
         ];
     }
 
@@ -529,8 +529,8 @@ class ReportController extends Controller
             3 => 'Mar',
             4 => 'Apr',
             5 => 'Mai',
-            6 => 'Jun',
-            7 => 'Jul',
+            6 => 'Jūn',
+            7 => 'Jūl',
             8 => 'Aug',
             9 => 'Sep',
             10 => 'Okt',
@@ -544,12 +544,12 @@ class ReportController extends Controller
     private function deviceStatusMeta(): array
     {
         return [
-            'active' => ['label' => 'Aktivas', 'tone' => 'emerald'],
+            'active' => ['label' => 'Aktīvās', 'tone' => 'emerald'],
             'repair' => ['label' => 'Remonta', 'tone' => 'sky'],
-            'broken' => ['label' => 'Bojatas', 'tone' => 'rose'],
+            'broken' => ['label' => 'Bojātās', 'tone' => 'rose'],
             'reserve' => ['label' => 'Rezerve', 'tone' => 'amber'],
-            'kitting' => ['label' => 'Komplektacija', 'tone' => 'violet'],
-            'retired' => ['label' => 'Norakstitas', 'tone' => 'slate'],
+            'kitting' => ['label' => 'Komplektācijā', 'tone' => 'violet'],
+            'retired' => ['label' => 'Norakstītās', 'tone' => 'slate'],
         ];
     }
 
@@ -557,7 +557,7 @@ class ReportController extends Controller
     {
         return [
             'waiting' => ['label' => 'Gaida', 'tone' => 'amber'],
-            'in-progress' => ['label' => 'Procesa', 'tone' => 'sky'],
+            'in-progress' => ['label' => 'Procesā', 'tone' => 'sky'],
             'completed' => ['label' => 'Pabeigts', 'tone' => 'emerald'],
             'cancelled' => ['label' => 'Atcelts', 'tone' => 'slate'],
         ];
@@ -567,7 +567,7 @@ class ReportController extends Controller
     {
         return [
             'low' => ['label' => 'Zema', 'tone' => 'slate'],
-            'medium' => ['label' => 'Videja', 'tone' => 'amber'],
+            'medium' => ['label' => 'Vidēja', 'tone' => 'amber'],
             'high' => ['label' => 'Augsta', 'tone' => 'orange'],
             'critical' => ['label' => 'Kritiska', 'tone' => 'rose'],
         ];
@@ -576,8 +576,8 @@ class ReportController extends Controller
     private function repairTypeMeta(): array
     {
         return [
-            'internal' => ['label' => 'Ieksejais', 'tone' => 'violet'],
-            'external' => ['label' => 'Arejais', 'tone' => 'rose'],
+            'internal' => ['label' => 'Iekšējais', 'tone' => 'violet'],
+            'external' => ['label' => 'Ārējais', 'tone' => 'rose'],
         ];
     }
 }

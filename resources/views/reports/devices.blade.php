@@ -1,10 +1,10 @@
 <x-app-layout>
     @php
         $summaryCards = [
-            ['label' => 'Kopa iericu', 'value' => $summary['total_devices'], 'note' => 'Visas inventara vienibas', 'tone' => 'sky'],
-            ['label' => 'Telpu parklajums', 'value' => $summary['coverage_percent'] . '%', 'note' => $summary['rooms_with_devices'] . ' telpas ar iericem', 'tone' => 'emerald'],
-            ['label' => 'Bez telpas', 'value' => $summary['devices_without_room'], 'note' => 'Japarskata izvietojums', 'tone' => 'amber'],
-            ['label' => 'Tuksas telpas', 'value' => $summary['rooms_without_devices'], 'note' => 'Bez piesaistitam iericem', 'tone' => 'slate'],
+            ['label' => 'Kopā ierīču', 'value' => $summary['total_devices'], 'note' => 'Visas inventāra vienības', 'tone' => 'sky'],
+            ['label' => 'Telpu pārklājums', 'value' => $summary['coverage_percent'] . '%', 'note' => $summary['rooms_with_devices'] . ' telpas ar ierīcēm', 'tone' => 'emerald'],
+            ['label' => 'Bez telpas', 'value' => $summary['devices_without_room'], 'note' => 'Jāpārskata izvietojums', 'tone' => 'amber'],
+            ['label' => 'Tukšas telpas', 'value' => $summary['rooms_without_devices'], 'note' => 'Bez piesaistītām ierīcēm', 'tone' => 'slate'],
         ];
 
         $toneClasses = [
@@ -22,11 +22,11 @@
             <div class="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 px-5 py-5 sm:px-6">
                 <div class="max-w-3xl">
                     <div class="mb-2 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-sky-700 ring-1 ring-sky-200">
-                        Iericu skats
+                        Ierīču skats
                     </div>
-                    <h1 class="text-3xl font-semibold tracking-tight text-slate-900">Iericu sadalijumi un izvietojums</h1>
+                    <h1 class="text-3xl font-semibold tracking-tight text-slate-900">Ierīču sadalījumi un izvietojums</h1>
                     <p class="mt-2 text-sm text-slate-600">
-                        Statusi, telpu parklajums, eku noslodze un problemierices vienuviet, lai atri ieraudzitu inventara ainu.
+                        Statusi, telpu pārklājums, ēku noslodze un problēmierīces vienuviet, lai ātri ieraudzītu inventāra ainu.
                     </p>
                 </div>
                 <div class="flex flex-wrap gap-2">
@@ -34,7 +34,7 @@
                         Pilna tabula
                     </a>
                     <a href="{{ route('devices.create') }}" class="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
-                        Pievienot ierici
+                        Pievienot ierīci
                     </a>
                 </div>
             </div>
@@ -44,25 +44,35 @@
             </div>
         </div>
 
-        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            @foreach ($summaryCards as $card)
-                <div class="rounded-3xl border p-5 shadow-sm {{ $toneClasses[$card['tone']]['card'] }}">
-                    <p class="text-xs font-semibold uppercase tracking-[0.22em] {{ $toneClasses[$card['tone']]['text'] }}">{{ $card['label'] }}</p>
-                    <div class="mt-3 text-3xl font-semibold tracking-tight text-slate-900">{{ $card['value'] }}</div>
-                    <p class="mt-2 text-sm text-slate-600">{{ $card['note'] }}</p>
+        <div class="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <div class="mb-4 flex items-center justify-between gap-3 border-b border-slate-200 pb-4">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Ātrie rādītāji</p>
+                    <h2 class="mt-1 text-lg font-semibold text-slate-900">Ierīču stāvoklis īsumā</h2>
                 </div>
-            @endforeach
+                <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">Inventāra skats</span>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                @foreach ($summaryCards as $card)
+                    <div class="rounded-3xl border p-5 shadow-sm {{ $toneClasses[$card['tone']]['card'] }}">
+                        <p class="text-xs font-semibold uppercase tracking-[0.22em] {{ $toneClasses[$card['tone']]['text'] }}">{{ $card['label'] }}</p>
+                        <div class="mt-3 text-3xl font-semibold tracking-tight text-slate-900">{{ $card['value'] }}</div>
+                        <p class="mt-2 text-sm text-slate-600">{{ $card['note'] }}</p>
+                    </div>
+                @endforeach
+            </div>
         </div>
 
         <div class="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.95fr)]">
-            <div class="space-y-5">
+            <div class="space-y-5 rounded-[2rem] bg-slate-100/80 p-3">
                 <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-                    <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
+                    <div class="mb-5 flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-4">
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Pieaugums</p>
-                            <h2 class="mt-1 text-xl font-semibold text-slate-900">Iericu pievienosana pa menesiem</h2>
+                            <h2 class="mt-1 text-xl font-semibold text-slate-900">Ierīču pievienošana pa mēnešiem</h2>
                         </div>
-                        <span class="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">Pedejie 6 menesi</span>
+                        <span class="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">Pēdējie 6 mēneši</span>
                     </div>
 
                     <div class="grid gap-3 md:grid-cols-6">
@@ -82,9 +92,9 @@
                 </div>
 
                 <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-                    <div class="mb-5">
+                    <div class="mb-5 border-b border-slate-200 pb-4">
                         <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Statusi</p>
-                        <h2 class="mt-1 text-xl font-semibold text-slate-900">Iericu statuss un proporcijas</h2>
+                        <h2 class="mt-1 text-xl font-semibold text-slate-900">Ierīču statuss un proporcijas</h2>
                     </div>
 
                     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -105,12 +115,12 @@
                 </div>
 
                 <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-                    <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
+                    <div class="mb-5 flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-4">
                         <div>
-                            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Ekas</p>
-                            <h2 class="mt-1 text-xl font-semibold text-slate-900">Eku noslodze un statuss</h2>
+                            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Ēkas</p>
+                            <h2 class="mt-1 text-xl font-semibold text-slate-900">Ēku noslodze un statuss</h2>
                         </div>
-                        <a href="{{ route('buildings.index') }}" class="text-sm font-semibold text-sky-700 transition hover:text-sky-800">Atvert ekas</a>
+                        <a href="{{ route('buildings.index') }}" class="text-sm font-semibold text-sky-700 transition hover:text-sky-800">Atvērt ēkas</a>
                     </div>
 
                     <div class="space-y-3">
@@ -119,13 +129,13 @@
                                 <div class="flex flex-wrap items-start justify-between gap-3">
                                     <div>
                                         <h3 class="text-base font-semibold text-slate-900">{{ $building->building_name }}</h3>
-                                        <p class="mt-1 text-sm text-slate-500">{{ $building->rooms_count }} telpas | {{ $building->devices_count }} ierices</p>
+                                        <p class="mt-1 text-sm text-slate-500">{{ $building->rooms_count }} telpas | {{ $building->devices_count }} ierīces</p>
                                     </div>
                                     <span class="rounded-full bg-white px-3 py-1 text-sm font-semibold text-slate-700 ring-1 ring-slate-200">{{ $building->devices_count }}</span>
                                 </div>
                                 <div class="mt-4 grid gap-3 sm:grid-cols-3">
                                     <div class="rounded-2xl bg-white px-4 py-3 ring-1 ring-emerald-200">
-                                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Aktivas</div>
+                                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Aktīvās</div>
                                         <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $building->active_devices_count }}</div>
                                     </div>
                                     <div class="rounded-2xl bg-white px-4 py-3 ring-1 ring-sky-200">
@@ -133,23 +143,23 @@
                                         <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $building->repair_devices_count }}</div>
                                     </div>
                                     <div class="rounded-2xl bg-white px-4 py-3 ring-1 ring-rose-200">
-                                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-rose-700">Bojatas</div>
+                                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-rose-700">Bojātās</div>
                                         <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $building->broken_devices_count }}</div>
                                     </div>
                                 </div>
                             </div>
                         @empty
-                            <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Eku sadalijumam pagaidam nav datu.</div>
+                            <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Ēku sadalījumam pagaidām nav datu.</div>
                         @endforelse
                     </div>
                 </div>
             </div>
 
-            <div class="space-y-5">
+            <div class="space-y-5 xl:sticky xl:top-6 xl:self-start rounded-[2rem] bg-sky-50/70 p-3">
                 <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <div class="mb-5">
+                    <div class="mb-5 border-b border-slate-200 pb-4">
                         <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Tipi</p>
-                        <h2 class="mt-1 text-xl font-semibold text-slate-900">Biezakie iericu tipi</h2>
+                        <h2 class="mt-1 text-xl font-semibold text-slate-900">Biežākie ierīču tipi</h2>
                     </div>
 
                     <div class="space-y-3">
@@ -166,15 +176,15 @@
                                 <div class="mt-2 text-xs uppercase tracking-[0.18em] text-slate-500">{{ $share }}%</div>
                             </div>
                         @empty
-                            <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Iericu tipu statistika vel nav pieejama.</div>
+                            <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Ierīču tipu statistika vēl nav pieejama.</div>
                         @endforelse
                     </div>
                 </div>
 
                 <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <div class="mb-5">
+                    <div class="mb-5 border-b border-slate-200 pb-4">
                         <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Telpas</p>
-                        <h2 class="mt-1 text-xl font-semibold text-slate-900">Top telpas pec iericu skaita</h2>
+                        <h2 class="mt-1 text-xl font-semibold text-slate-900">Top telpas pēc ierīču skaita</h2>
                     </div>
 
                     <div class="space-y-3">
@@ -183,24 +193,24 @@
                                 <div class="flex items-center justify-between gap-3">
                                     <div>
                                         <div class="text-sm font-semibold text-slate-900">{{ $room->room_number }} @if ($room->room_name) | {{ $room->room_name }} @endif</div>
-                                        <div class="mt-1 text-sm text-slate-500">{{ $room->building?->building_name ?: 'Eka nav piesaistita' }}</div>
+                                        <div class="mt-1 text-sm text-slate-500">{{ $room->building?->building_name ?: 'Ēka nav piesaistīta' }}</div>
                                     </div>
                                     <div class="rounded-full bg-white px-3 py-1 text-sm font-semibold text-slate-700 ring-1 ring-slate-200">{{ $room->devices_count }}</div>
                                 </div>
                             </div>
                         @empty
-                            <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Top telpam pagaidam nav datu.</div>
+                            <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Top telpām pagaidām nav datu.</div>
                         @endforelse
                     </div>
                 </div>
 
                 <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
+                    <div class="mb-5 flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-4">
                         <div>
-                            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Problemierices</p>
-                            <h2 class="mt-1 text-xl font-semibold text-slate-900">Kas prasa uzmanibu</h2>
+                            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Problēmierīces</p>
+                            <h2 class="mt-1 text-xl font-semibold text-slate-900">Kas prasa uzmanību</h2>
                         </div>
-                        <span class="rounded-full bg-rose-50 px-3 py-1 text-sm font-semibold text-rose-700 ring-1 ring-rose-200">{{ $problemDevices->count() }} ierices</span>
+                        <span class="rounded-full bg-rose-50 px-3 py-1 text-sm font-semibold text-rose-700 ring-1 ring-rose-200">{{ $problemDevices->count() }} ierīces</span>
                     </div>
 
                     <div class="space-y-3">
@@ -208,7 +218,7 @@
                             <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
                                 <div class="flex items-start gap-3">
                                     @if ($device->deviceImageThumbUrl())
-                                        <img src="{{ $device->deviceImageThumbUrl() }}" alt="Ierices attels" class="h-14 w-14 rounded-2xl object-cover ring-1 ring-slate-200">
+                                        <img src="{{ $device->deviceImageThumbUrl() }}" alt="Ierīces attēls" class="h-14 w-14 rounded-2xl object-cover ring-1 ring-slate-200">
                                     @else
                                         <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-200 text-xs font-semibold text-slate-500">Nav</div>
                                     @endif
@@ -218,18 +228,18 @@
                                             <div>
                                                 <div class="text-sm font-semibold text-slate-900">{{ $device->name }}</div>
                                                 <div class="mt-1 text-sm text-slate-500">
-                                                    {{ $device->type?->type_name ?: 'Tips nav noradits' }}
+                                                    {{ $device->type?->type_name ?: 'Tips nav norādīts' }}
                                                     @if ($device->code)
                                                         | {{ $device->code }}
                                                     @endif
                                                 </div>
                                             </div>
-                                            <a href="{{ route('devices.edit', $device) }}" class="text-sm font-semibold text-sky-700 transition hover:text-sky-800">Atvert</a>
+                                            <a href="{{ route('devices.edit', $device) }}" class="text-sm font-semibold text-sky-700 transition hover:text-sky-800">Atvērt</a>
                                         </div>
 
                                         <div class="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
                                             @if ($device->status === 'broken')
-                                                <span class="rounded-full bg-rose-100 px-3 py-1 text-rose-700">Bojata</span>
+                                                <span class="rounded-full bg-rose-100 px-3 py-1 text-rose-700">Bojāta</span>
                                             @endif
                                             @if ($device->status === 'repair')
                                                 <span class="rounded-full bg-sky-100 px-3 py-1 text-sky-700">Remonta</span>
@@ -238,24 +248,24 @@
                                                 <span class="rounded-full bg-amber-100 px-3 py-1 text-amber-800">Bez telpas</span>
                                             @endif
                                             @if (! $device->device_image_url)
-                                                <span class="rounded-full bg-slate-200 px-3 py-1 text-slate-700">Bez attela</span>
+                                                <span class="rounded-full bg-slate-200 px-3 py-1 text-slate-700">Bez attēla</span>
                                             @endif
                                         </div>
 
                                         <div class="mt-3 text-sm text-slate-600">
-                                            {{ $device->building?->building_name ?: 'Eka nav piesaistita' }}
+                                            {{ $device->building?->building_name ?: 'Ēka nav piesaistīta' }}
                                             @if ($device->room)
                                                 | {{ $device->room->room_number }} @if ($device->room->room_name) {{ $device->room->room_name }} @endif
                                             @endif
                                             @if ($device->activeRepair)
-                                                | Aktivs remonts #{{ $device->activeRepair->id }}
+                                                | Aktīvs remonts #{{ $device->activeRepair->id }}
                                             @endif
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         @empty
-                            <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Problemierices pagaidam nav atrastas.</div>
+                            <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Problēmierīces pagaidām nav atrastas.</div>
                         @endforelse
                     </div>
                 </div>
