@@ -196,15 +196,22 @@
                         <div class="space-y-3">
                             @forelse ($deviceHistoryEntries as $entry)
                                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                    <div class="flex items-start justify-between gap-3">
-                                        <div>
-                                            <div class="text-sm font-semibold text-slate-900">
+                                    <div class="space-y-3">
+                                        <div class="flex flex-wrap items-start justify-between gap-3">
+                                            <div class="min-w-0 flex-1">
+                                                <div class="break-words text-sm font-semibold leading-6 text-slate-900">
                                                 {{ $historyActionLabels[$entry->action] ?? str_replace('_', ' ', $entry->action) }}
                                                 @if ($entry->device)
                                                     | {{ $entry->device->name }}
                                                 @endif
+                                                </div>
                                             </div>
-                                            <div class="mt-2 text-sm text-slate-600">
+                                            @if ($entry->device)
+                                                <span class="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">#{{ $entry->device->id }}</span>
+                                            @endif
+                                        </div>
+                                        <div class="rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200">
+                                            <div class="break-words text-sm leading-6 text-slate-600">
                                                 @if ($entry->field_changed)
                                                     {{ $fieldLabels[$entry->field_changed] ?? $entry->field_changed }}
                                                     @if ($entry->old_value !== null || $entry->new_value !== null)
@@ -214,16 +221,13 @@
                                                     Izmaiņa bez konkrētas lauka norādes
                                                 @endif
                                             </div>
-                                            <div class="mt-2 text-xs uppercase tracking-[0.18em] text-slate-500">
-                                                {{ $entry->timestamp?->format('d.m.Y H:i') ?: '-' }}
-                                                @if ($entry->changedBy?->employee)
-                                                    | {{ $entry->changedBy->employee->full_name }}
-                                                @endif
-                                            </div>
                                         </div>
-                                        @if ($entry->device)
-                                            <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">#{{ $entry->device->id }}</span>
-                                        @endif
+                                        <div class="break-words text-xs uppercase tracking-[0.18em] text-slate-500">
+                                            {{ $entry->timestamp?->format('d.m.Y H:i') ?: '-' }}
+                                            @if ($entry->changedBy?->employee)
+                                                | {{ $entry->changedBy->employee->full_name }}
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             @empty

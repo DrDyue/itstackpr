@@ -14,6 +14,8 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
+        $this->ensureAdminAccess();
+
         $filters = [
             'employee' => trim((string) $request->query('employee', '')),
             'email' => trim((string) $request->query('email', '')),
@@ -72,7 +74,7 @@ class UserController extends Controller
 
     public function create()
     {
-        $this->ensureAdminCanCreateUsers();
+        $this->ensureAdminAccess();
 
         return view('users.create', [
             'employees' => Employee::query()
@@ -85,7 +87,7 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        $this->ensureAdminCanCreateUsers();
+        $this->ensureAdminAccess();
 
         $data = $this->validatedData($request);
         $data['password'] = bcrypt($data['password']);
@@ -98,6 +100,8 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
+        $this->ensureAdminAccess();
+
         return view('users.edit', [
             'user' => $user,
             'employees' => Employee::query()
@@ -113,6 +117,8 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
+        $this->ensureAdminAccess();
+
         $before = $user->only(['employee_id', 'role', 'is_active']);
         $data = $this->validatedData($request, $user);
 
@@ -135,6 +141,8 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        $this->ensureAdminAccess();
+
         if (auth()->id() === $user->id) {
             return redirect()
                 ->route('users.index')
@@ -147,7 +155,7 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Lietotajs dzests');
     }
 
-    private function ensureAdminCanCreateUsers(): void
+    private function ensureAdminAccess(): void
     {
         if (auth()->user()?->role !== 'admin') {
             abort(403);

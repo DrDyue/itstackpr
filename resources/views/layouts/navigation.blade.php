@@ -1,8 +1,11 @@
 <nav x-data="{ open: false }" class="border-b border-gray-200 bg-white shadow-sm">
     @php
+        $isAdmin = auth()->user()?->role === 'admin';
         $moreActive = request()->routeIs('device-types*')
             || request()->routeIs('employees*')
             || request()->routeIs('users*')
+            || request()->routeIs('buildings*')
+            || request()->routeIs('rooms*')
             || request()->routeIs('device-sets*')
             || request()->routeIs('device-set-items*')
             || request()->routeIs('backups*')
@@ -15,7 +18,7 @@
                     <x-application-logo />
                 </a>
 
-                <div class="hidden items-center gap-1 lg:flex">
+                <div class="hidden min-w-0 items-center gap-1 lg:flex">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12 12 3.75 20.25 12M5.25 10.5v8.25h13.5V10.5"/>
@@ -41,7 +44,7 @@
                         </svg>
                         <span>Remonti</span>
                     </x-nav-link>
-                    <x-nav-link :href="route('buildings.index')" :active="request()->routeIs('buildings*') || request()->routeIs('rooms*')">
+                    <x-nav-link :href="route('buildings.index')" :active="request()->routeIs('buildings*') || request()->routeIs('rooms*')" class="hidden xl:inline-flex">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M5.25 21V7.5l7.5-3 7.5 3V21"/>
                         </svg>
@@ -78,15 +81,25 @@
                                     <span>Iericu tipi</span>
                                 </span>
                             </x-dropdown-link>
-                            <x-dropdown-link :href="route('users.index')">
+                            <x-dropdown-link :href="route('buildings.index')">
                                 <span class="inline-flex items-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.125a7.5 7.5 0 1 0-6 0"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.75 20.25v-.75a3 3 0 0 0-3-3h-7.5a3 3 0 0 0-3 3v.75"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M5.25 21V7.5l7.5-3 7.5 3V21"/>
                                     </svg>
-                                    <span>Lietotaji</span>
+                                    <span>Ekas un telpas</span>
                                 </span>
                             </x-dropdown-link>
+                            @if ($isAdmin)
+                                <x-dropdown-link :href="route('users.index')">
+                                    <span class="inline-flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.125a7.5 7.5 0 1 0-6 0"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M18.75 20.25v-.75a3 3 0 0 0-3-3h-7.5a3 3 0 0 0-3 3v.75"/>
+                                        </svg>
+                                        <span>Lietotaji</span>
+                                    </span>
+                                </x-dropdown-link>
+                            @endif
                             <x-dropdown-link :href="route('device-sets.index')">
                                 <span class="inline-flex items-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -95,7 +108,7 @@
                                     <span>Komplekti</span>
                                 </span>
                             </x-dropdown-link>
-                            @if (auth()->user()?->role === 'admin')
+                            @if ($isAdmin)
                                 <x-dropdown-link :href="route('backups.index')">
                                     <span class="inline-flex items-center gap-2">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -223,16 +236,16 @@
                     <span>Darbinieki</span>
                 </span>
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users*')">
-                <span class="inline-flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.125a7.5 7.5 0 1 0-6 0"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.75 20.25v-.75a3 3 0 0 0-3-3h-7.5a3 3 0 0 0-3 3v.75"/>
-                    </svg>
-                    <span>Lietotaji</span>
-                </span>
-            </x-responsive-nav-link>
-            @if (auth()->user()?->role === 'admin')
+            @if ($isAdmin)
+                <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users*')">
+                    <span class="inline-flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.125a7.5 7.5 0 1 0-6 0"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18.75 20.25v-.75a3 3 0 0 0-3-3h-7.5a3 3 0 0 0-3 3v.75"/>
+                        </svg>
+                        <span>Lietotaji</span>
+                    </span>
+                </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('backups.index')" :active="request()->routeIs('backups*')">
                     <span class="inline-flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
