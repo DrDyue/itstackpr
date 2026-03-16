@@ -13,6 +13,7 @@ use App\Models\Room;
 use App\Support\AuditTrail;
 use App\Support\DeviceAssetManager;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 
@@ -255,6 +256,8 @@ class DeviceController extends Controller
 
     private function validatedData(Request $request, ?Device $device = null): array
     {
+        $supportsAssignedEmployee = $this->supportsAssignedEmployeeColumn();
+
         $data = $request->validate(
             [
                 'code' => [
@@ -269,7 +272,9 @@ class DeviceController extends Controller
                 'status' => ['required', Rule::in(self::STATUSES)],
                 'building_id' => ['nullable', 'exists:buildings,id'],
                 'room_id' => ['nullable', 'exists:rooms,id'],
-                'assigned_employee_id' => ['nullable', 'exists:employees,id'],
+                'assigned_employee_id' => $supportsAssignedEmployee
+                    ? ['nullable', 'exists:employees,id']
+                    : ['nullable'],
                 'purchase_date' => ['required', 'date'],
                 'purchase_price' => ['nullable', 'numeric', 'min:0'],
                 'warranty_until' => ['nullable', 'date'],
@@ -297,7 +302,13 @@ class DeviceController extends Controller
             ]
         );
 
-        foreach (['building_id', 'room_id', 'assigned_employee_id'] as $field) {
+        $nullableFields = ['building_id', 'room_id'];
+
+        if ($supportsAssignedEmployee) {
+            $nullableFields[] = 'assigned_employee_id';
+        }
+
+        foreach ($nullableFields as $field) {
             if (($data[$field] ?? null) === '') {
                 $data[$field] = null;
             }
@@ -327,15 +338,19 @@ class DeviceController extends Controller
             ]);
         }
 
-        if (($data['status'] ?? null) === 'retired' && ! empty($data['assigned_employee_id'])) {
+        if ($supportsAssignedEmployee && ($data['status'] ?? null) === 'retired' && ! empty($data['assigned_employee_id'])) {
             throw ValidationException::withMessages([
                 'assigned_employee_id' => ['Norakstitai iericei nevajag but pieskirtai personai.'],
             ]);
         }
 
-        $data['assigned_to'] = filled($data['assigned_employee_id'] ?? null)
+        $data['assigned_to'] = $supportsAssignedEmployee && filled($data['assigned_employee_id'] ?? null)
             ? Employee::query()->whereKey($data['assigned_employee_id'])->value('full_name')
             : null;
+
+        if (! $supportsAssignedEmployee) {
+            unset($data['assigned_employee_id']);
+        }
 
         unset($data['device_image'], $data['warranty_image']);
 
@@ -347,12 +362,18 @@ class DeviceController extends Controller
 
     private function trackedFields(): array
     {
-        return [
+        $fields = [
             'code', 'name', 'device_type_id', 'model', 'status',
-            'building_id', 'room_id', 'assigned_employee_id', 'assigned_to', 'purchase_date',
+            'building_id', 'room_id', 'assigned_to', 'purchase_date',
             'purchase_price', 'warranty_until', 'warranty_photo_name',
             'serial_number', 'manufacturer', 'notes', 'device_image_url',
         ];
+
+        if ($this->supportsAssignedEmployeeColumn()) {
+            array_splice($fields, 7, 0, ['assigned_employee_id']);
+        }
+
+        return $fields;
     }
 
     private function writeHistoryChanges(int $deviceId, array $before, array $after, ?int $userId): array
@@ -384,6 +405,13 @@ class DeviceController extends Controller
     private function writeAudit(?int $userId, string $action, Device $device, string $description, string $severity): void
     {
         AuditTrail::writeForModel($userId, $action, $device, $description, $severity);
+    }
+
+    private function supportsAssignedEmployeeColumn(): bool
+    {
+        static $hasColumn;
+
+        return $hasColumn ??= Schema::hasColumn('devices', 'assigned_employee_id');
     }
 
     private function syncUploads(Request $request, Device $device): void
@@ -487,7 +515,7 @@ class DeviceController extends Controller
             return ['level' => 'error', 'message' => 'Nav izvelets korekts statuss.'];
         }
 
-        if ($status === 'retired' && filled($device->assigned_employee_id)) {
+        if ($status === 'retired' && $this->supportsAssignedEmployeeColumn() && filled($device->assigned_employee_id)) {
             return ['level' => 'error', 'message' => 'Norakstitu ierici vispirms atsaisti no personas.'];
         }
 
