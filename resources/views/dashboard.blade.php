@@ -3,6 +3,12 @@
         $latestInventoryLabel = $latestInventoryAt
             ? \Illuminate\Support\Carbon::parse($latestInventoryAt)->format('d.m.Y H:i')
             : 'Nav datu';
+        $coveragePercent = $totalRooms > 0 ? round(($mappedRooms / max($totalRooms, 1)) * 100) : 0;
+        $backupTone = ($backupSummary['latest'] ?? null) ? 'emerald' : 'slate';
+        $buildingCount = $buildingTree->count();
+        $floorCount = $buildingTree->sum('floor_count');
+        $waitingRepairsCount = $activeRepairs->where('status', 'waiting')->count();
+        $inProgressRepairsCount = $activeRepairs->where('status', 'in-progress')->count();
 
         $backupStatus = ($backupSummary['latest'] ?? null)
             ? 'Pedeja kopija ' . optional($backupSummary['latest']->created_at)->format('d.m.Y H:i')
