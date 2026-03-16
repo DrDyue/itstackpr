@@ -28,9 +28,20 @@ class RepairController extends Controller
 
     public function index(Request $request)
     {
+        $filters = [
+            'q' => (string) $request->query('q', ''),
+            'status' => (string) $request->query('status', ''),
+            'repair_type' => (string) $request->query('repair_type', ''),
+            'building_id' => (string) $request->query('building_id', ''),
+            'priority' => (string) $request->query('priority', ''),
+        ];
+
         $repairs = $this->applyFilters($this->repairsQuery(), $request)
             ->orderByDesc('id')
             ->get();
+
+        $quickFilterRepairs = $this->applyFilters($this->repairsQuery(), $request, ['repair_type'])
+            ->get(['id', 'repair_type']);
 
         $columns = [
             'waiting' => $repairs->where('status', 'waiting')->values(),
@@ -47,12 +58,11 @@ class RepairController extends Controller
             'cancelledRepairs' => $cancelledRepairs,
             'stats' => $stats,
             'buildings' => Building::query()->orderBy('building_name')->get(),
-            'filters' => [
-                'q' => (string) $request->query('q', ''),
-                'status' => (string) $request->query('status', ''),
-                'repair_type' => (string) $request->query('repair_type', ''),
-                'building_id' => (string) $request->query('building_id', ''),
-                'priority' => (string) $request->query('priority', ''),
+            'filters' => $filters,
+            'quickTypeCounts' => [
+                'all' => $quickFilterRepairs->count(),
+                'internal' => $quickFilterRepairs->where('repair_type', 'internal')->count(),
+                'external' => $quickFilterRepairs->where('repair_type', 'external')->count(),
             ],
         ], $this->viewMeta()));
     }
@@ -332,13 +342,13 @@ class RepairController extends Controller
         ]);
     }
 
-    private function applyFilters(Builder $query, Request $request): Builder
+    private function applyFilters(Builder $query, Request $request, array $ignoredFilters = []): Builder
     {
-        $q = trim((string) $request->query('q', ''));
-        $status = (string) $request->query('status', '');
-        $repairType = (string) $request->query('repair_type', '');
-        $buildingId = (string) $request->query('building_id', '');
-        $priority = (string) $request->query('priority', '');
+        $q = in_array('q', $ignoredFilters, true) ? '' : trim((string) $request->query('q', ''));
+        $status = in_array('status', $ignoredFilters, true) ? '' : (string) $request->query('status', '');
+        $repairType = in_array('repair_type', $ignoredFilters, true) ? '' : (string) $request->query('repair_type', '');
+        $buildingId = in_array('building_id', $ignoredFilters, true) ? '' : (string) $request->query('building_id', '');
+        $priority = in_array('priority', $ignoredFilters, true) ? '' : (string) $request->query('priority', '');
 
         return $query
             ->when($status !== '' && in_array($status, self::STATUSES, true), function (Builder $builder) use ($status) {

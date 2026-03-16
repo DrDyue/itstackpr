@@ -26,6 +26,10 @@
 
         $buildingNames = $buildings->pluck('building_name', 'id');
         $activeFilterCount = collect($filters)->filter(fn ($value) => $value !== null && $value !== '')->count();
+        $quickTypeFilterQuery = collect($filters)
+            ->except('repair_type')
+            ->filter(fn ($value) => $value !== null && $value !== '')
+            ->all();
     @endphp
 
     <section
@@ -133,6 +137,34 @@
         </div>
 
         <form method="GET" action="{{ route('repairs.index') }}" class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="mb-5 flex flex-wrap items-center gap-2 border-b border-slate-100 pb-5">
+                <span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Atrie filtri</span>
+
+                <a
+                    href="{{ route('repairs.index', $quickTypeFilterQuery) }}"
+                    class="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium ring-1 transition {{ $filters['repair_type'] === '' ? 'bg-slate-900 text-white ring-slate-900' : 'bg-white text-slate-700 ring-slate-300 hover:bg-slate-50' }}"
+                >
+                    Visi remonti
+                    <span class="rounded-full px-2 py-0.5 text-xs {{ $filters['repair_type'] === '' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600' }}">{{ $quickTypeCounts['all'] ?? $repairs->count() }}</span>
+                </a>
+
+                <a
+                    href="{{ route('repairs.index', array_merge($quickTypeFilterQuery, ['repair_type' => 'internal'])) }}"
+                    class="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium ring-1 transition {{ $filters['repair_type'] === 'internal' ? 'bg-violet-600 text-white ring-violet-600' : 'bg-white text-slate-700 ring-slate-300 hover:bg-violet-50 hover:text-violet-800 hover:ring-violet-200' }}"
+                >
+                    Ieksejais
+                    <span class="rounded-full px-2 py-0.5 text-xs {{ $filters['repair_type'] === 'internal' ? 'bg-white/20 text-white' : 'bg-violet-100 text-violet-700' }}">{{ $quickTypeCounts['internal'] ?? 0 }}</span>
+                </a>
+
+                <a
+                    href="{{ route('repairs.index', array_merge($quickTypeFilterQuery, ['repair_type' => 'external'])) }}"
+                    class="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium ring-1 transition {{ $filters['repair_type'] === 'external' ? 'bg-rose-600 text-white ring-rose-600' : 'bg-white text-slate-700 ring-slate-300 hover:bg-rose-50 hover:text-rose-800 hover:ring-rose-200' }}"
+                >
+                    Arejais
+                    <span class="rounded-full px-2 py-0.5 text-xs {{ $filters['repair_type'] === 'external' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-700' }}">{{ $quickTypeCounts['external'] ?? 0 }}</span>
+                </a>
+            </div>
+
             <div class="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,0.8fr))]">
                 <label class="block">
                     <span class="repair-filter-label">Meklesana</span>
