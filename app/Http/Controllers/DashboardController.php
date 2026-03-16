@@ -82,12 +82,12 @@ class DashboardController extends Controller
 
             $recentDevices = Device::with(['room', 'building', 'type'])
                 ->latest('created_at')
-                ->limit(6)
+                ->limit(4)
                 ->get();
 
             $recentActivity = AuditLog::with('user.employee')
                 ->latest('timestamp')
-                ->limit(8)
+                ->limit(6)
                 ->get();
 
             $allBackups = $this->backupService->allBackups();

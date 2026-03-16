@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -17,8 +18,11 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
+        $user = $request->user()?->load('employee');
+
         return view('profile.edit', [
-            'user' => $request->user(),
+            'user' => $user,
+            'employee' => $user?->employee,
         ]);
     }
 
@@ -27,13 +31,32 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user()->load('employee');
+        $employee = $user->employee;
+        abort_unless($employee, 404);
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
+        $validated = $request->validated();
+        $before = $employee->only(['full_name', 'email', 'phone', 'job_title']);
 
-        $request->user()->save();
+        DB::transaction(function () use ($employee, $validated) {
+            $employee->update([
+                'full_name' => $validated['full_name'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'] ?: null,
+                'job_title' => $validated['job_title'] ?: null,
+            ]);
+        });
+
+        $employee->refresh();
+        $after = $employee->only(array_keys($before));
+
+        AuditTrail::updatedFromState(
+            $user->id,
+            $employee,
+            $before,
+            $after,
+            description: 'Profila dati atjauninati: ' . AuditTrail::labelFor($employee)
+        );
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
