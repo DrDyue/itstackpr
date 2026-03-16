@@ -146,7 +146,7 @@
                     </div>
                 </div>
                 <p class="mt-5 rounded-2xl bg-white/80 px-3 py-2 text-sm text-slate-600 ring-1 ring-violet-100">
-                    Visas kopijas glabajas atseviski no galvenas datubazes shemas.
+                    Visu rezerves kopiju aiznemta vieta.
                 </p>
             </div>
 
@@ -167,42 +167,57 @@
         </div>
 
         <div class="mb-6 grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.85fr)]">
-            <div class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm" x-data="{ frequency: '{{ old('frequency', $settings->frequency) }}' }">
-                <div class="mb-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.95fr)]">
+            <div
+                class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm"
+                x-data="{
+                    frequency: '{{ old('frequency', $settings->frequency) }}',
+                    enabled: {{ old('enabled') !== null ? (old('enabled') ? 'true' : 'false') : ($settings->enabled ? 'true' : 'false') }},
+                    get scheduleStatus() {
+                        if (!this.enabled) return 'Izslegts';
+                        if (this.frequency === 'weekly') return 'Katru nedelu';
+                        if (this.frequency === 'monthly') return 'Reizi menesi';
+                        return 'Katru dienu';
+                    },
+                }"
+            >
+                <div class="mb-5 grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
                     <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
-                        <h2 class="text-xl font-semibold text-slate-900">Automatiskais grafiks</h2>
-                        <p class="mt-2 text-sm text-slate-500">Iestati biezhumu un laiku automatiskajai rezerves kopijai. Visi laiki tiek paraditi Latvijas laika josla.</p>
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <h2 class="text-xl font-semibold text-slate-900">Automatiskais grafiks</h2>
+                                <p class="mt-2 text-sm text-slate-500">Iestati biezhumu un laiku automatiskajai rezerves kopijai. Visi laiki tiek paraditi Latvijas laika josla.</p>
+                            </div>
+                            <span class="inline-flex items-center rounded-full bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600 ring-1 ring-slate-200" x-text="scheduleStatus"></span>
+                        </div>
                     </div>
-                    <div class="grid gap-3 sm:grid-cols-3">
-                        <div class="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600 ring-1 ring-slate-200">
-                            <span class="block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Statuss</span>
-                            <strong class="mt-1 block text-slate-900">{{ $frequencyLabel }}</strong>
-                        </div>
-                        <div class="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600 ring-1 ring-slate-200">
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
                             <span class="block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Nakamais starts</span>
-                            <strong class="mt-1 block text-slate-900">{{ $formatDateTime($summary['next_run_at'], 'Izslegts') }}</strong>
+                            <strong class="mt-2 block text-base leading-6 text-slate-900">{{ $formatDateTime($summary['next_run_at'], 'Izslegts') }}</strong>
                         </div>
-                        <div class="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600 ring-1 ring-slate-200">
+                        <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
                             <span class="block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pedejais starts</span>
-                            <strong class="mt-1 block text-slate-900">{{ $formatDateTime($settings->last_scheduled_backup_at, 'Vel nav bijis') }}</strong>
+                            <strong class="mt-2 block text-base leading-6 text-slate-900">{{ $formatDateTime($settings->last_scheduled_backup_at, 'Vel nav bijis') }}</strong>
                         </div>
                     </div>
                 </div>
 
-                <form method="POST" action="{{ route('backups.settings.update') }}" class="flex h-full flex-col gap-5">
+                <form method="POST" action="{{ route('backups.settings.update') }}" class="flex h-full flex-col gap-4">
                     @csrf
                     @method('PUT')
 
-                    <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                        <label class="inline-flex items-center gap-3 text-sm font-medium text-slate-700">
-                            <input type="checkbox" name="enabled" value="1" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" @checked(old('enabled', $settings->enabled))>
-                            <span>Aktivet automatiskas rezerves kopijas</span>
-                        </label>
-                        <span class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 ring-1 ring-slate-200">{{ $frequencyLabel }}</span>
+                    <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <label class="inline-flex items-center gap-3 text-sm font-medium text-slate-700">
+                                <input type="checkbox" name="enabled" value="1" x-model="enabled" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" @checked(old('enabled', $settings->enabled))>
+                                <span>Aktivet automatiskas rezerves kopijas</span>
+                            </label>
+                            <span class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 ring-1 ring-slate-200" x-text="scheduleStatus"></span>
+                        </div>
                     </div>
 
-                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                        <label class="block">
+                    <div class="grid gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-1 md:grid-cols-2 xl:grid-cols-4">
+                        <label class="block rounded-[1.2rem] border border-slate-200 bg-slate-50 p-4">
                             <span class="user-filter-label">Biezums</span>
                             <select name="frequency" x-model="frequency" class="crud-control">
                                 <option value="daily">Katru dienu</option>
@@ -210,7 +225,7 @@
                                 <option value="monthly">Reizi menesi</option>
                             </select>
                         </label>
-                        <label class="block">
+                        <label class="block rounded-[1.2rem] border border-slate-200 bg-slate-50 p-4">
                             <span class="user-filter-label">Laiks</span>
                             <select name="run_at" class="crud-control">
                                 @foreach ($timeOptions as $timeOption)
@@ -218,7 +233,7 @@
                                 @endforeach
                             </select>
                         </label>
-                        <label class="block" x-show="frequency === 'weekly'" x-cloak>
+                        <label class="block rounded-[1.2rem] border border-slate-200 bg-slate-50 p-4" x-show="frequency === 'weekly'" x-cloak>
                             <span class="user-filter-label">Nedelas diena</span>
                             <select name="weekly_day" class="crud-control">
                                 @foreach ([1 => 'Pirmdiena', 2 => 'Otrdiena', 3 => 'Tresdiena', 4 => 'Ceturtdiena', 5 => 'Piektdiena', 6 => 'Sestdiena', 7 => 'Svetdiena'] as $day => $label)
@@ -226,7 +241,7 @@
                                 @endforeach
                             </select>
                         </label>
-                        <label class="block" x-show="frequency === 'monthly'" x-cloak>
+                        <label class="block rounded-[1.2rem] border border-slate-200 bg-slate-50 p-4" x-show="frequency === 'monthly'" x-cloak>
                             <span class="user-filter-label">Menesa datums</span>
                             <select name="monthly_day" class="crud-control">
                                 @for ($day = 1; $day <= 31; $day++)
@@ -236,8 +251,7 @@
                         </label>
                     </div>
 
-                    <div class="mt-auto flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                        <p class="text-sm text-slate-500">Grafiks izmanto Latvijas laiku un 15 minusu intervalus, lai laiku butu vieglak iestatit precizi.</p>
+                    <div class="mt-auto flex flex-wrap items-center justify-end gap-3 rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-3">
                         <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75 10.5 18l9-13.5"/>
@@ -248,7 +262,7 @@
                 </form>
             </div>
 
-            <div class="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-6 shadow-sm" x-data="{ fileName: 'Nav atlasitas datnes' }">
+            <div class="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-6 shadow-sm" x-data="{ fileName: 'Nav atlasits' }">
                 <div class="mb-5">
                     <h2 class="text-xl font-semibold text-slate-900">Atjaunot no datora faila</h2>
                     <p class="mt-1 text-sm text-slate-500">Augshuplade pilnu datubazes eksportu, saglaba to serveri un uzreiz pievieno backup vesturei.</p>
@@ -270,7 +284,7 @@
                             name="backup_file"
                             accept=".json,.bak,.backup,.txt"
                             class="sr-only"
-                            @change="fileName = $event.target.files.length ? $event.target.files[0].name : 'Nav atlasitas datnes'"
+                            @change="fileName = $event.target.files.length ? $event.target.files[0].name : 'Nav atlasits'"
                         >
                         <div class="mt-3 flex flex-wrap items-center gap-3">
                             <button
@@ -278,9 +292,9 @@
                                 class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
                                 @click="$refs.backupFile.click()"
                             >
-                                Izveleties datni
+                                Izveleties failu
                             </button>
-                            <span class="text-sm text-slate-500" x-text="fileName">Nav atlasitas datnes</span>
+                            <span class="text-sm text-slate-500" x-text="fileName">Nav atlasits</span>
                         </div>
                     </label>
                     <div class="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -335,7 +349,7 @@
                     <span class="user-filter-label">No datuma</span>
                     <div class="relative" x-data="backupDatePicker('{{ $filters['date_from'] }}')">
                         <input type="hidden" name="date_from" x-model="value">
-                        <button type="button" class="crud-control flex w-full items-center justify-between text-left" @click="toggle()">
+                        <button type="button" class="crud-control flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left shadow-sm" @click="toggle()">
                             <span :class="displayValue ? 'text-slate-900' : 'text-slate-400'" x-text="displayValue || 'dd.mm.gggg'"></span>
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3.75v1.5m7.5-1.5v1.5M3.75 8.25h16.5M4.5 6h15a.75.75 0 0 1 .75.75v12.75a.75.75 0 0 1-.75.75h-15a.75.75 0 0 1-.75-.75V6.75A.75.75 0 0 1 4.5 6Z"/></svg>
                         </button>
@@ -375,7 +389,7 @@
                     <span class="user-filter-label">Lidz datumam</span>
                     <div class="relative" x-data="backupDatePicker('{{ $filters['date_to'] }}')">
                         <input type="hidden" name="date_to" x-model="value">
-                        <button type="button" class="crud-control flex w-full items-center justify-between text-left" @click="toggle()">
+                        <button type="button" class="crud-control flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left shadow-sm" @click="toggle()">
                             <span :class="displayValue ? 'text-slate-900' : 'text-slate-400'" x-text="displayValue || 'dd.mm.gggg'"></span>
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3.75v1.5m7.5-1.5v1.5M3.75 8.25h16.5M4.5 6h15a.75.75 0 0 1 .75.75v12.75a.75.75 0 0 1-.75.75h-15a.75.75 0 0 1-.75-.75V6.75A.75.75 0 0 1 4.5 6Z"/></svg>
                         </button>
