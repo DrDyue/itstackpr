@@ -130,7 +130,7 @@
                     @include('repairs.partials.icon', ['name' => 'calendar', 'class' => 'h-4 w-4'])
                     Termini un izmaksas
                 </p>
-                <div class="mt-2 text-lg font-semibold text-slate-900">{{ $repair->cost !== null ? number_format((float) $repair->cost, 2) . ' EUR' : '-' }}</div>
+                <div class="mt-2 text-lg font-semibold text-slate-900">{{ $repair->status === 'waiting' ? '-' : ($repair->cost !== null ? number_format((float) $repair->cost, 2) . ' EUR' : '-') }}</div>
                 <p class="mt-2 text-sm text-slate-600">
                     Sakts {{ $repair->start_date?->format('d.m.Y') ?? '-' }}
                     @if ($repair->estimated_completion)
@@ -277,7 +277,7 @@
                         </div>
 
                         <div class="mt-5 grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
-                            <div>
+                            <div class="xl:col-span-2">
                                 <label class="crud-label flex items-center gap-2">
                                     @include('repairs.partials.icon', ['name' => 'wrench', 'class' => 'h-4 w-4'])
                                     Remonta tips *
@@ -297,7 +297,7 @@
                                     'placeholder' => 'Izvelies remonta tipu',
                                 ])
                             </div>
-                            <div class="lg:col-span-2">
+                            <div class="xl:col-span-2">
                                 <label class="crud-label flex items-center gap-2">
                                     @include('repairs.partials.icon', ['name' => 'clock', 'class' => 'h-4 w-4'])
                                     Statuss
@@ -509,7 +509,7 @@
                         @include('repairs.partials.icon', ['name' => 'x-mark', 'class' => 'h-5 w-5'])
                         Bistamas darbibas
                     </h2>
-                    <p class="mt-1 text-sm text-slate-600">Dzeshot aktivu remontu, saistita ierice tiks iznemta no remonta statusa un atgriezta ieprieksejaja statusa.</p>
+                    <p class="mt-1 text-sm text-slate-600">Pec ieraksta izdzesanas iericei tiks mainits statuss no remonta uz bojata.</p>
 
                     <form method="POST" action="{{ route('repairs.destroy', $repair) }}" class="mt-4" onsubmit="return confirm('Dzest so remonta ierakstu?')">
                         @csrf
