@@ -255,29 +255,47 @@ class DeviceController extends Controller
 
     private function validatedData(Request $request, ?Device $device = null): array
     {
-        $data = $request->validate([
-            'code' => [
-                'nullable',
-                'string',
-                'max:20',
-                Rule::unique('devices', 'code')->ignore($device?->id),
+        $data = $request->validate(
+            [
+                'code' => [
+                    'nullable',
+                    'string',
+                    'max:20',
+                    Rule::unique('devices', 'code')->ignore($device?->id),
+                ],
+                'name' => ['required', 'string', 'max:200'],
+                'device_type_id' => ['required', 'exists:device_types,id'],
+                'model' => ['required', 'string', 'max:100'],
+                'status' => ['required', Rule::in(self::STATUSES)],
+                'building_id' => ['nullable', 'exists:buildings,id'],
+                'room_id' => ['nullable', 'exists:rooms,id'],
+                'assigned_employee_id' => ['nullable', 'exists:employees,id'],
+                'purchase_date' => ['required', 'date'],
+                'purchase_price' => ['nullable', 'numeric', 'min:0'],
+                'warranty_until' => ['nullable', 'date'],
+                'serial_number' => ['nullable', 'string', 'max:100'],
+                'manufacturer' => ['nullable', 'string', 'max:100'],
+                'notes' => ['nullable', 'string'],
+                'device_image' => ['nullable', 'image', 'max:' . (int) config('devices.max_upload_kb', 5120)],
+                'warranty_image' => ['nullable', 'image', 'max:' . (int) config('devices.max_upload_kb', 5120)],
             ],
-            'name' => ['required', 'string', 'max:200'],
-            'device_type_id' => ['required', 'exists:device_types,id'],
-            'model' => ['required', 'string', 'max:100'],
-            'status' => ['required', Rule::in(self::STATUSES)],
-            'building_id' => ['nullable', 'exists:buildings,id'],
-            'room_id' => ['nullable', 'exists:rooms,id'],
-            'assigned_employee_id' => ['nullable', 'exists:employees,id'],
-            'purchase_date' => ['required', 'date'],
-            'purchase_price' => ['nullable', 'numeric', 'min:0'],
-            'warranty_until' => ['nullable', 'date'],
-            'serial_number' => ['nullable', 'string', 'max:100'],
-            'manufacturer' => ['nullable', 'string', 'max:100'],
-            'notes' => ['nullable', 'string'],
-            'device_image' => ['nullable', 'image', 'max:' . (int) config('devices.max_upload_kb', 5120)],
-            'warranty_image' => ['nullable', 'image', 'max:' . (int) config('devices.max_upload_kb', 5120)],
-        ]);
+            [
+                'code.unique' => 'Sads ierices kods jau eksiste. Ludzu noradi citu kodu.',
+                'name.required' => 'Ludzu aizpildi ierices nosaukumu.',
+                'device_type_id.required' => 'Ludzu izvelies ierices tipu.',
+                'model.required' => 'Ludzu aizpildi ierices modeli.',
+                'status.required' => 'Ludzu izvelies ierices statusu.',
+                'purchase_date.required' => 'Ludzu noradi pirkuma datumu.',
+            ],
+            [
+                'code' => 'ierices kods',
+                'name' => 'nosaukums',
+                'device_type_id' => 'ierices tips',
+                'model' => 'modelis',
+                'status' => 'statuss',
+                'purchase_date' => 'pirkuma datums',
+            ]
+        );
 
         foreach (['building_id', 'room_id', 'assigned_employee_id'] as $field) {
             if (($data[$field] ?? null) === '') {
