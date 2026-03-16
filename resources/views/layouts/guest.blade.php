@@ -67,10 +67,10 @@
                     </div>
                 </div>
             </div>
-
+    
             <div class="auth-right">
                 <div class="auth-right-content">
-                    <h2>IT Inventory System</h2>
+                    <h2>IT Inventāra sistēma</h2>
                 </div>
             </div>
         </div>
