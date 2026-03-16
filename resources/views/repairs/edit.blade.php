@@ -2,6 +2,7 @@
     @php
         $currentBuilding = $repair->device?->building;
         $currentRoom = $repair->device?->room;
+        $selectedReporterId = old('issue_reported_by', $repair->reported_employee_id ?? $repair->legacyReporter?->employee_id);
         $severityClasses = [
             'info' => 'bg-slate-100 text-slate-700 ring-slate-200',
             'warning' => 'bg-amber-100 text-amber-800 ring-amber-200',
@@ -124,7 +125,7 @@
                     Atbildigais
                 </p>
                 <div class="mt-2 text-lg font-semibold text-slate-900">{{ $repair->assignee?->employee?->full_name ?? 'Nav pieskirta' }}</div>
-                <p class="mt-2 text-sm text-slate-600">Pieteica: {{ $repair->reporter?->employee?->full_name ?? 'Nav zinotaja' }}</p>
+                <p class="mt-2 text-sm text-slate-600">Pieteica: {{ $repair->reporter?->full_name ?? $repair->legacyReporter?->employee?->full_name ?? 'Nav zinotaja' }}</p>
             </div>
             <div class="rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-5 shadow-sm">
                 <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">
@@ -371,12 +372,12 @@
                             <div>
                                 <label class="crud-label flex items-center gap-2">
                                     @include('repairs.partials.icon', ['name' => 'user', 'class' => 'h-4 w-4'])
-                                    Zinoja lietotajs
+                                    Zinoja darbinieks
                                 </label>
                                 <select name="issue_reported_by" class="crud-control">
                                     <option value="">Nav</option>
-                                    @foreach ($users as $user)
-                                        <option value="{{ $user->id }}" @selected(old('issue_reported_by', $repair->issue_reported_by) == $user->id)>{{ $user->employee?->full_name ?? ('Lietotajs #' . $user->id) }}</option>
+                                    @foreach ($employees as $employee)
+                                        <option value="{{ $employee->id }}" @selected($selectedReporterId == $employee->id)>{{ $employee->full_name }}</option>
                                     @endforeach
                                 </select>
                             </div>

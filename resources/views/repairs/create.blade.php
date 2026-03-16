@@ -199,12 +199,12 @@
                         <div>
                             <label class="crud-label flex items-center gap-2">
                                 @include('repairs.partials.icon', ['name' => 'user', 'class' => 'h-4 w-4'])
-                                Zinoja lietotajs
+                                Zinoja darbinieks
                             </label>
                             <select name="issue_reported_by" class="crud-control">
                                 <option value="">Nav</option>
-                                @foreach ($users as $user)
-                                    <option value="{{ $user->id }}" @selected(old('issue_reported_by', $defaultReporterId) == $user->id)>{{ $user->employee?->full_name ?? ('Lietotajs #' . $user->id) }}</option>
+                                @foreach ($employees as $employee)
+                                    <option value="{{ $employee->id }}" @selected(old('issue_reported_by', $defaultReporterId) == $employee->id)>{{ $employee->full_name }}</option>
                                 @endforeach
                             </select>
                         </div>

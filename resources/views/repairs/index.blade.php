@@ -25,9 +25,19 @@
         ];
 
         $buildingNames = $buildings->pluck('building_name', 'id');
-        $activeFilterCount = collect($filters)->filter(fn ($value) => $value !== null && $value !== '')->count();
+        $activeFilterCount = collect($filters)->filter(function ($value, $key) {
+            if ($key === 'ownership' && auth()->user()?->role !== 'admin' && $value === 'all-mine') {
+                return false;
+            }
+
+            return $value !== null && $value !== '';
+        })->count();
         $quickTypeFilterQuery = collect($filters)
             ->except('repair_type')
+            ->filter(fn ($value) => $value !== null && $value !== '')
+            ->all();
+        $quickOwnershipFilterQuery = collect($filters)
+            ->except('ownership')
             ->filter(fn ($value) => $value !== null && $value !== '')
             ->all();
     @endphp
@@ -164,6 +174,33 @@
                     <span class="rounded-full px-2 py-0.5 text-xs {{ $filters['repair_type'] === 'external' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-700' }}">{{ $quickTypeCounts['external'] ?? 0 }}</span>
                 </a>
             </div>
+
+            @if (auth()->user()?->role !== 'admin')
+                <div class="mb-5 flex flex-wrap items-center gap-2 border-b border-slate-100 pb-5">
+                    <span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Mani remonti</span>
+
+                    <a
+                        href="{{ route('repairs.index', array_merge($quickOwnershipFilterQuery, ['ownership' => 'all-mine'])) }}"
+                        class="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium ring-1 transition {{ ($filters['ownership'] ?? 'all-mine') === 'all-mine' ? 'bg-slate-900 text-white ring-slate-900' : 'bg-white text-slate-700 ring-slate-300 hover:bg-slate-50' }}"
+                    >
+                        Visi mani
+                    </a>
+
+                    <a
+                        href="{{ route('repairs.index', array_merge($quickOwnershipFilterQuery, ['ownership' => 'reported-by-me'])) }}"
+                        class="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium ring-1 transition {{ ($filters['ownership'] ?? '') === 'reported-by-me' ? 'bg-emerald-600 text-white ring-emerald-600' : 'bg-white text-slate-700 ring-slate-300 hover:bg-emerald-50 hover:text-emerald-800 hover:ring-emerald-200' }}"
+                    >
+                        Manis pieteiktie
+                    </a>
+
+                    <a
+                        href="{{ route('repairs.index', array_merge($quickOwnershipFilterQuery, ['ownership' => 'assigned-to-me'])) }}"
+                        class="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium ring-1 transition {{ ($filters['ownership'] ?? '') === 'assigned-to-me' ? 'bg-sky-600 text-white ring-sky-600' : 'bg-white text-slate-700 ring-slate-300 hover:bg-sky-50 hover:text-sky-800 hover:ring-sky-200' }}"
+                    >
+                        Man pieskirtie
+                    </a>
+                </div>
+            @endif
 
             <div class="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,0.8fr))]">
                 <label class="block">
@@ -332,7 +369,7 @@
                                     <div class="rounded-2xl bg-slate-50 px-3 py-3">
                                         <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Atbildiba</p>
                                         <p class="mt-2 text-sm font-medium text-slate-900">{{ $repair->assignee?->employee?->full_name ?? 'Nav pieskirta' }}</p>
-                                        <p class="mt-1 text-sm text-slate-600">Pieteica: {{ $repair->reporter?->employee?->full_name ?? 'Nav zinotaja' }}</p>
+                                        <p class="mt-1 text-sm text-slate-600">Pieteica: {{ $repair->reporter?->full_name ?? $repair->legacyReporter?->employee?->full_name ?? 'Nav zinotaja' }}</p>
                                     </div>
                                 </div>
 

@@ -6,12 +6,14 @@ use App\Models\AuditLog;
 use App\Models\Building;
 use App\Models\Device;
 use App\Models\DeviceHistory;
+use App\Models\Employee;
 use App\Models\Repair;
 use App\Models\User;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class RepairController extends Controller
@@ -30,12 +32,14 @@ class RepairController extends Controller
 
     public function index(Request $request)
     {
+        $ownership = $this->defaultOwnershipFilter($request);
         $filters = [
             'q' => (string) $request->query('q', ''),
             'status' => (string) $request->query('status', ''),
             'repair_type' => (string) $request->query('repair_type', ''),
             'building_id' => (string) $request->query('building_id', ''),
             'priority' => (string) $request->query('priority', ''),
+            'ownership' => $ownership,
         ];
 
         $repairs = $this->applyFilters($this->repairsQuery(), $request)
@@ -72,7 +76,7 @@ class RepairController extends Controller
     public function create(Request $request)
     {
         return view('repairs.create', array_merge($this->formData(), [
-            'defaultReporterId' => auth()->id(),
+            'defaultReporterId' => auth()->user()?->employee_id,
             'preselectedDeviceId' => $request->query('device_id'),
         ], $this->viewMeta()));
     }
@@ -80,7 +84,7 @@ class RepairController extends Controller
     public function store(Request $request)
     {
         $repair = Repair::create($this->validatedData($request));
-        $repair->load(['device', 'reporter.employee', 'assignee.employee']);
+        $repair->load(['device', 'reporter', 'legacyReporter.employee', 'assignee.employee']);
         $this->syncDeviceStatus($repair);
         AuditTrail::created(auth()->id(), $repair, severity: null);
 
@@ -89,7 +93,8 @@ class RepairController extends Controller
 
     public function edit(Repair $repair)
     {
-        $repair->load(['device.building', 'device.room', 'device.type', 'reporter.employee', 'assignee.employee']);
+        $this->authorizeRepairAccess($repair);
+        $repair->load(['device.building', 'device.room', 'device.type', 'reporter', 'legacyReporter.employee', 'assignee.employee']);
 
         return view('repairs.edit', array_merge([
             'repair' => $repair,
@@ -99,13 +104,14 @@ class RepairController extends Controller
 
     public function update(Request $request, Repair $repair)
     {
+        $this->authorizeRepairAccess($repair);
         $before = $repair->only([
             'device_id', 'description', 'status', 'repair_type', 'priority', 'start_date',
             'estimated_completion', 'actual_completion', 'cost', 'vendor_name', 'vendor_contact',
-            'invoice_number', 'issue_reported_by', 'assigned_to',
+            'invoice_number', 'issue_reported_by', 'reported_employee_id', 'assigned_to',
         ]);
         $repair->update($this->validatedData($request));
-        $repair->load(['device', 'reporter.employee', 'assignee.employee']);
+        $repair->load(['device', 'reporter', 'legacyReporter.employee', 'assignee.employee']);
         $this->syncDeviceStatus($repair, $before['status'] ?? null);
         $after = $repair->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState(auth()->id(), $repair, $before, $after);
@@ -115,6 +121,7 @@ class RepairController extends Controller
 
     public function destroy(Repair $repair)
     {
+        $this->authorizeRepairAccess($repair);
         $previousStatus = $repair->status;
         AuditTrail::deleted(auth()->id(), $repair);
         $repair->delete();
@@ -125,6 +132,7 @@ class RepairController extends Controller
 
     public function transition(Request $request, Repair $repair)
     {
+        $this->authorizeRepairAccess($repair);
         $data = $request->validate([
             'target_status' => ['required', Rule::in(self::STATUSES)],
             'assigned_to' => ['nullable', 'exists:users,id'],
@@ -184,7 +192,7 @@ class RepairController extends Controller
         }
 
         $repair->update($payload);
-        $repair->load(['device', 'reporter.employee', 'assignee.employee']);
+        $repair->load(['device', 'reporter', 'legacyReporter.employee', 'assignee.employee']);
         $this->syncDeviceStatus($repair, $before['status'] ?? null);
 
         $after = $repair->fresh()->only(array_keys($before));
@@ -217,7 +225,8 @@ class RepairController extends Controller
 
         return [
             'devices' => $devices,
-            'users' => User::with('employee')->orderByDesc('id')->get(),
+            'employees' => Employee::query()->where('is_active', true)->orderBy('full_name')->get(),
+            'users' => User::with('employee')->where('is_active', true)->orderByDesc('id')->get(),
             'buildings' => Building::query()->orderBy('building_name')->get(),
             'statuses' => self::STATUSES,
             'repairTypes' => self::TYPES,
@@ -240,7 +249,7 @@ class RepairController extends Controller
             'vendor_name' => ['nullable', 'string', 'max:100'],
             'vendor_contact' => ['nullable', 'string', 'max:100'],
             'invoice_number' => ['nullable', 'string', 'max:50'],
-            'issue_reported_by' => ['nullable', 'exists:users,id'],
+            'issue_reported_by' => ['nullable', 'exists:employees,id'],
             'assigned_to' => ['nullable', 'exists:users,id'],
         ]);
 
@@ -271,8 +280,10 @@ class RepairController extends Controller
         $data['start_date'] = filled($data['start_date'] ?? null)
             ? $data['start_date']
             : ($repair?->start_date?->format('Y-m-d') ?? now()->toDateString());
-        $data['device_status_before_repair'] = $repair?->device_status_before_repair
-            ?? $this->normalizeDeviceStatusForRestore($device?->status);
+        if ($this->supportsDeviceStatusBeforeRepairColumn()) {
+            $data['device_status_before_repair'] = $repair?->device_status_before_repair
+                ?? $this->normalizeDeviceStatusForRestore($device?->status);
+        }
 
         if ($data['repair_type'] === 'internal') {
             $data['vendor_name'] = null;
@@ -295,11 +306,33 @@ class RepairController extends Controller
         }
 
         if (($data['issue_reported_by'] ?? null) === null && auth()->check()) {
-            $data['issue_reported_by'] = auth()->id();
+            $data['issue_reported_by'] = auth()->user()?->employee_id;
         }
 
         if (($data['assigned_to'] ?? null) === null) {
             $data['assigned_to'] = $device?->created_by;
+        }
+
+        $selectedEmployeeId = $data['issue_reported_by'] ?? null;
+        $reporterUserId = null;
+
+        if ($selectedEmployeeId !== null) {
+            $reporterUserId = User::query()
+                ->where('employee_id', $selectedEmployeeId)
+                ->value('id');
+        }
+
+        if ($this->supportsReportedEmployeeColumn()) {
+            $data['reported_employee_id'] = $selectedEmployeeId;
+            $data['issue_reported_by'] = $reporterUserId;
+        } else {
+            if ($selectedEmployeeId !== null && $reporterUserId === null) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'issue_reported_by' => ['So darbinieku var saglabat tikai pec datubazes migracijas palaides.'],
+                ]);
+            }
+
+            $data['issue_reported_by'] = $reporterUserId;
         }
 
         if (
@@ -341,20 +374,54 @@ class RepairController extends Controller
             'device.building',
             'device.room',
             'device.type',
-            'reporter.employee',
+            'reporter',
+            'legacyReporter.employee',
             'assignee.employee',
         ]);
     }
 
     private function applyFilters(Builder $query, Request $request, array $ignoredFilters = []): Builder
     {
+        $ownership = in_array('ownership', $ignoredFilters, true)
+            ? $this->defaultOwnershipFilter($request)
+            : (string) $request->query('ownership', $this->defaultOwnershipFilter($request));
         $q = in_array('q', $ignoredFilters, true) ? '' : trim((string) $request->query('q', ''));
         $status = in_array('status', $ignoredFilters, true) ? '' : (string) $request->query('status', '');
         $repairType = in_array('repair_type', $ignoredFilters, true) ? '' : (string) $request->query('repair_type', '');
         $buildingId = in_array('building_id', $ignoredFilters, true) ? '' : (string) $request->query('building_id', '');
         $priority = in_array('priority', $ignoredFilters, true) ? '' : (string) $request->query('priority', '');
+        $user = auth()->user();
+        $employeeId = $user?->employee_id;
 
         return $query
+            ->when($user && $user->role !== 'admin', function (Builder $builder) use ($ownership, $user, $employeeId) {
+                $builder->where(function (Builder $ownedBuilder) use ($ownership, $user, $employeeId) {
+                    if ($ownership === 'assigned-to-me') {
+                        $ownedBuilder->where('assigned_to', $user->id);
+
+                        return;
+                    }
+
+                    if ($ownership === 'reported-by-me') {
+                        if ($this->supportsReportedEmployeeColumn()) {
+                            $ownedBuilder->where('reported_employee_id', $employeeId);
+                        } else {
+                            $ownedBuilder->where('issue_reported_by', $user->id);
+                        }
+
+                        return;
+                    }
+
+                    $ownedBuilder->where('assigned_to', $user->id)
+                        ->orWhere(function (Builder $reporterBuilder) use ($user, $employeeId) {
+                            if ($this->supportsReportedEmployeeColumn()) {
+                                $reporterBuilder->where('reported_employee_id', $employeeId);
+                            } else {
+                                $reporterBuilder->where('issue_reported_by', $user->id);
+                            }
+                        });
+                });
+            })
             ->when($status !== '' && in_array($status, self::STATUSES, true), function (Builder $builder) use ($status) {
                 $builder->where('status', $status);
             })
@@ -446,7 +513,7 @@ class RepairController extends Controller
         if (($previousStatus === 'waiting' || $previousStatus === 'in-progress' || $device->status === 'repair')) {
             $this->updateDeviceStatusForRepair(
                 $device,
-                $this->normalizeDeviceStatusForRestore($repair->device_status_before_repair),
+                $this->statusBeforeRepair($repair, $device),
                 $repair
             );
         }
@@ -484,6 +551,63 @@ class RepairController extends Controller
         return in_array($status, self::DEVICE_RESTORABLE_STATUSES, true)
             ? $status
             : 'active';
+    }
+
+    private function statusBeforeRepair(Repair $repair, Device $device): string
+    {
+        if ($this->supportsDeviceStatusBeforeRepairColumn() && filled($repair->device_status_before_repair)) {
+            return $this->normalizeDeviceStatusForRestore($repair->device_status_before_repair);
+        }
+
+        $latestStatusChange = DeviceHistory::query()
+            ->where('device_id', $device->id)
+            ->where('field_changed', 'status')
+            ->where('new_value', 'repair')
+            ->latest('timestamp')
+            ->value('old_value');
+
+        return $this->normalizeDeviceStatusForRestore($latestStatusChange);
+    }
+
+    private function supportsDeviceStatusBeforeRepairColumn(): bool
+    {
+        static $hasColumn;
+
+        return $hasColumn ??= Schema::hasColumn('repairs', 'device_status_before_repair');
+    }
+
+    private function supportsReportedEmployeeColumn(): bool
+    {
+        static $hasColumn;
+
+        return $hasColumn ??= Schema::hasColumn('repairs', 'reported_employee_id');
+    }
+
+    private function defaultOwnershipFilter(Request $request): string
+    {
+        return auth()->user()?->role === 'admin'
+            ? (string) $request->query('ownership', '')
+            : (string) $request->query('ownership', 'all-mine');
+    }
+
+    private function authorizeRepairAccess(Repair $repair): void
+    {
+        $user = auth()->user();
+
+        if (! $user || $user->role === 'admin') {
+            return;
+        }
+
+        $employeeId = $user->employee_id;
+        $reportedEmployeeId = $this->supportsReportedEmployeeColumn()
+            ? ($repair->reported_employee_id ?? null)
+            : null;
+
+        $hasAccess = (int) ($repair->assigned_to ?? 0) === (int) $user->id
+            || ($reportedEmployeeId !== null && (int) $reportedEmployeeId === (int) $employeeId)
+            || (int) ($repair->issue_reported_by ?? 0) === (int) $user->id;
+
+        abort_unless($hasAccess, 403);
     }
 
     private function statusLabel(string $status): string

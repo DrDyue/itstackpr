@@ -14,6 +14,7 @@ class Repair extends Model
     protected $fillable = [
         'device_id',
         'device_status_before_repair',
+        'reported_employee_id',
         'description',
         'status',
         'repair_type',
@@ -48,6 +49,11 @@ class Repair extends Model
     }
 
     public function reporter(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'reported_employee_id');
+    }
+
+    public function legacyReporter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'issue_reported_by');
     }
