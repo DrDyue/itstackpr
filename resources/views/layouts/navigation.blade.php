@@ -25,12 +25,6 @@
                         </svg>
                         <span>Darbvirsma</span>
                     </x-nav-link>
-                    <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports*')">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5v4.5H3.75Zm0 9h7.5v4.5h-7.5Zm10.5 0h6v4.5h-6Z"/>
-                        </svg>
-                        <span>Skati</span>
-                    </x-nav-link>
                     <x-nav-link :href="route('devices.index')" :active="request()->routeIs('devices*')">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 7.5h15m-15 4.5h15m-15 4.5h9M3.75 5.25h16.5A1.5 1.5 0 0 1 21.75 6.75v10.5a1.5 1.5 0 0 1-1.5 1.5H3.75a1.5 1.5 0 0 1-1.5-1.5V6.75a1.5 1.5 0 0 1 1.5-1.5Z"/>
@@ -213,14 +207,6 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12 12 3.75 20.25 12M5.25 10.5v8.25h13.5V10.5"/>
                     </svg>
                     <span>Darbvirsma</span>
-                </span>
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports*')">
-                <span class="inline-flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5v4.5H3.75Zm0 9h7.5v4.5h-7.5Zm10.5 0h6v4.5h-6Z"/>
-                    </svg>
-                    <span>Skati</span>
                 </span>
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('devices.index')" :active="request()->routeIs('devices*')">

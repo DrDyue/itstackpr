@@ -394,7 +394,7 @@
                             <tr>
                                 <td colspan="6" class="px-4 py-12 text-center text-sm text-slate-500">Rezerves kopiju vel nav. Izveido pirmo manualo kopiju vai augshuplade eksportu no datora.</td>
                             </tr>
-                        @endforelse
+                        @endforelse 
                     </tbody>
                 </table>
             </div>
@@ -404,4 +404,4 @@
             <div class="mt-5">{{ $backups->links() }}</div>
         @endif
     </section>
-</x-app-layout>
+</x-app-layout> 
