@@ -50,12 +50,13 @@
 
     <button
         type="button"
-        class="crud-control flex w-full items-center justify-between gap-3 text-left"
+        class="flex min-h-[4.5rem] w-full items-center justify-between gap-3 rounded-[1.65rem] border border-slate-300 bg-white px-4 py-3 text-left shadow-sm transition hover:border-slate-400 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-200 focus:ring-offset-2"
         @click="open = !open"
         :aria-expanded="open ? 'true' : 'false'"
+        :class="open ? 'border-sky-300 ring-2 ring-sky-100 bg-sky-50/50' : ''"
     >
         <span class="flex min-w-0 items-center gap-3">
-            <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full ring-1" :class="optionFor(selected).toneClass">
+            <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ring-1" :class="optionFor(selected).toneClass">
                 <span x-html="optionFor(selected).icon"></span>
             </span>
             <span class="min-w-0">
@@ -63,16 +64,18 @@
                 <span class="mt-1 block truncate text-xs text-slate-500" x-text="optionFor(selected).description || @js($placeholderText)"></span>
             </span>
         </span>
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 text-slate-400 transition" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/>
-        </svg>
+        <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-500 transition" :class="open ? 'border-sky-200 bg-white text-sky-700' : ''">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/>
+            </svg>
+        </span>
     </button>
 
     <div
         x-cloak
         x-show="open"
         x-transition.origin.top.left
-        class="absolute z-30 mt-2 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl"
+        class="absolute z-30 mt-2 w-full overflow-hidden rounded-[1.65rem] border border-slate-200 bg-white shadow-xl ring-1 ring-slate-100"
         @click.outside="open = false"
     >
         <div class="max-h-80 overflow-y-auto p-2">
