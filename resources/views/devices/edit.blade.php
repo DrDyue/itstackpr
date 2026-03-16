@@ -40,9 +40,12 @@
             x-data="{
                 devicePreview: @js($device->deviceImageUrl() ?? ''),
                 warrantyPreview: @js($device->warrantyImageUrl() ?? ''),
+                deviceImageName: 'Nav atlasits fails',
+                warrantyImageName: 'Nav atlasits fails',
                 removeDeviceImage: @js(old('remove_device_image') === '1'),
                 clearDeviceImage() {
                     this.devicePreview = null;
+                    this.deviceImageName = 'Nav atlasits fails';
                     this.removeDeviceImage = true;
                     this.$refs.deviceImageInput.value = '';
                 }
@@ -199,7 +202,23 @@
                     <div class="space-y-4">
                         <div class="device-upload-box">
                             <label class="crud-label">Ierices foto</label>
-                            <input type="file" name="device_image" accept="image/*" class="crud-control" x-ref="deviceImageInput" @change="devicePreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : '{{ $device->deviceImageUrl() ?? '' }}'; removeDeviceImage = false">
+                            <input
+                                type="file"
+                                name="device_image"
+                                accept="image/*"
+                                class="sr-only"
+                                x-ref="deviceImageInput"
+                                @change="devicePreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : '{{ $device->deviceImageUrl() ?? '' }}'; deviceImageName = $event.target.files[0] ? $event.target.files[0].name : 'Nav atlasits fails'; removeDeviceImage = false"
+                            >
+                            <div class="mt-3 flex flex-wrap items-center gap-3">
+                                <button type="button" class="inline-flex items-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-100" @click="$refs.deviceImageInput.click()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V4.5m0 12 4.5-4.5M12 16.5 7.5 12M4.5 19.5h15"/>
+                                    </svg>
+                                    Izveleties failu
+                                </button>
+                                <span class="text-sm text-slate-500" x-text="deviceImageName">Nav atlasits fails</span>
+                            </div>
                             <p class="mt-2 text-xs text-gray-500">Atstaj tuksu, ja negribi nomainit attelu.</p>
                             <div class="mt-3 flex flex-wrap gap-2">
                                 <button type="button" class="crud-btn-secondary" @click="clearDeviceImage()" x-show="devicePreview" x-cloak>
@@ -217,7 +236,23 @@
                         </div>
                         <div class="device-upload-box">
                             <label class="crud-label">Garantijas attels</label>
-                            <input type="file" name="warranty_image" accept="image/*" class="crud-control" @change="warrantyPreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : '{{ $device->warrantyImageUrl() ?? '' }}'">
+                            <input
+                                type="file"
+                                name="warranty_image"
+                                accept="image/*"
+                                class="sr-only"
+                                x-ref="warrantyImageInput"
+                                @change="warrantyPreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : '{{ $device->warrantyImageUrl() ?? '' }}'; warrantyImageName = $event.target.files[0] ? $event.target.files[0].name : 'Nav atlasits fails'"
+                            >
+                            <div class="mt-3 flex flex-wrap items-center gap-3">
+                                <button type="button" class="inline-flex items-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-100" @click="$refs.warrantyImageInput.click()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V4.5m0 12 4.5-4.5M12 16.5 7.5 12M4.5 19.5h15"/>
+                                    </svg>
+                                    Izveleties failu
+                                </button>
+                                <span class="text-sm text-slate-500" x-text="warrantyImageName">Nav atlasits fails</span>
+                            </div>
                             <p class="mt-2 text-xs text-gray-500">Atstaj tuksu, ja negribi nomainit garantijas attelu.</p>
                             <div class="device-upload-preview">
                                 <template x-if="warrantyPreview">
