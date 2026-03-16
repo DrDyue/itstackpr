@@ -34,7 +34,7 @@
             </a>
         </div>
 
-        <div class="mb-5 overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-sky-50 shadow-sm">
+        <div class="mb-5 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-5 py-4 sm:px-6">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>

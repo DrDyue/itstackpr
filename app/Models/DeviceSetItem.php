@@ -25,7 +25,7 @@ class DeviceSetItem extends Model
         return [
             'created_at' => 'datetime',
         ];
-    }
+    } 
 
     // Relations
     public function deviceSet(): BelongsTo
