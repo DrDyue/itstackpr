@@ -1,6 +1,12 @@
 import './bootstrap';
 
 document.addEventListener('alpine:init', () => {
+    if (window.__localizedDatePickerRegistered) {
+        return;
+    }
+
+    window.__localizedDatePickerRegistered = true;
+
     Alpine.data('localizedDatePicker', ({ value = '' } = {}) => ({
         open: false,
         value: value || '',

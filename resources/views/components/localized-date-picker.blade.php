@@ -10,6 +10,12 @@
     'xModel' => null,
 ])
 
+@php
+    $fallbackText = filled($value)
+        ? \Illuminate\Support\Carbon::parse($value)->format('d.m.Y')
+        : $placeholder;
+@endphp
+
 <label {{ $attributes->merge(['class' => $wrapperClass]) }}>
     @if ($label !== '')
         <span class="{{ $labelClass }}">{{ $label }}</span>
@@ -25,7 +31,7 @@
         @endif
 
         <button type="button" class="{{ $buttonClass }}" @click="toggle()">
-            <span :class="displayValue ? 'text-slate-900' : 'text-slate-400'" x-text="displayValue || @js($placeholder)"></span>
+            <span :class="displayValue ? 'text-slate-900' : 'text-slate-400'" x-text="displayValue || @js($placeholder)">{{ $fallbackText }}</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3.75v1.5m7.5-1.5v1.5M3.75 8.25h16.5M4.5 6h15a.75.75 0 0 1 .75.75v12.75a.75.75 0 0 1-.75.75h-15a.75.75 0 0 1-.75-.75V6.75A.75.75 0 0 1 4.5 6Z"/>
             </svg>
@@ -66,3 +72,118 @@
         </div>
     </div>
 </label>
+
+@once
+    <script>
+        (() => {
+            const registerLocalizedDatePicker = () => {
+                if (!window.Alpine || window.__localizedDatePickerRegistered) {
+                    return;
+                }
+
+                window.__localizedDatePickerRegistered = true;
+
+                window.Alpine.data('localizedDatePicker', ({ value = '' } = {}) => ({
+                    open: false,
+                    value: value || '',
+                    viewDate: null,
+                    weekdays: ['Pr', 'Ot', 'Tr', 'Ce', 'Pk', 'Se', 'Sv'],
+                    months: ['Janvaris', 'Februaris', 'Marts', 'Aprilis', 'Maijs', 'Junijs', 'Julijs', 'Augusts', 'Septembris', 'Oktobris', 'Novembris', 'Decembris'],
+                    init() {
+                        this.viewDate = this.value ? this.parseDate(this.value) : new Date();
+                    },
+                    toggle() {
+                        this.open = !this.open;
+                    },
+                    previousMonth() {
+                        this.viewDate = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() - 1, 1);
+                    },
+                    nextMonth() {
+                        this.viewDate = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() + 1, 1);
+                    },
+                    select(selectedValue) {
+                        this.value = selectedValue;
+                        this.viewDate = this.parseDate(selectedValue);
+                        this.open = false;
+                    },
+                    clear() {
+                        this.value = '';
+                        this.open = false;
+                    },
+                    parseDate(dateValue) {
+                        const [year, month, day] = dateValue.split('-').map(Number);
+                        return new Date(year, month - 1, day);
+                    },
+                    formatDate(dateValue) {
+                        if (!dateValue) {
+                            return '';
+                        }
+
+                        const [year, month, day] = dateValue.split('-');
+                        return `${day}.${month}.${year}`;
+                    },
+                    toIso(date) {
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+
+                        return `${year}-${month}-${day}`;
+                    },
+                    get displayValue() {
+                        return this.formatDate(this.value);
+                    },
+                    get monthLabel() {
+                        return `${this.months[this.viewDate.getMonth()]} ${this.viewDate.getFullYear()}`;
+                    },
+                    get days() {
+                        const startOfMonth = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth(), 1);
+                        const endOfMonth = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() + 1, 0);
+                        const startWeekday = (startOfMonth.getDay() + 6) % 7;
+                        const days = [];
+
+                        for (let i = startWeekday; i > 0; i -= 1) {
+                            const date = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth(), 1 - i);
+                            days.push({
+                                key: `prev-${this.toIso(date)}`,
+                                label: date.getDate(),
+                                value: this.toIso(date),
+                                isCurrentMonth: false,
+                                isSelected: false,
+                            });
+                        }
+
+                        for (let day = 1; day <= endOfMonth.getDate(); day += 1) {
+                            const date = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth(), day);
+                            const iso = this.toIso(date);
+
+                            days.push({
+                                key: iso,
+                                label: day,
+                                value: iso,
+                                isCurrentMonth: true,
+                                isSelected: this.value === iso,
+                            });
+                        }
+
+                        while (days.length < 42) {
+                            const offset = days.length - (startWeekday + endOfMonth.getDate()) + 1;
+                            const date = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() + 1, offset);
+                            days.push({
+                                key: `next-${this.toIso(date)}`,
+                                label: date.getDate(),
+                                value: this.toIso(date),
+                                isCurrentMonth: false,
+                                isSelected: false,
+                            });
+                        }
+
+                        return days;
+                    },
+                }));
+            };
+
+            document.addEventListener('alpine:init', registerLocalizedDatePicker);
+            registerLocalizedDatePicker();
+        })();
+    </script>
+@endonce
