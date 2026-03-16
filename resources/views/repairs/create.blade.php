@@ -107,7 +107,7 @@
                         </div>
                         <div class="device-form-section-copy">
                             <div class="device-form-section-name">2. Remonta saturs</div>
-                            <div class="device-form-section-note">Apraksts, prioritate, datumi un izmaksas.</div>
+                            <div class="device-form-section-note">Apraksts un prioritate. Izmaksas bus pieejamas, kad remonts bus procesa.</div>
                         </div>
                     </div>
 
@@ -140,14 +140,7 @@
                     </div>
 
                     <div class="mt-4 grid gap-4 sm:grid-cols-2">
-                        <div>
-                            <label class="crud-label flex items-center gap-2">
-                                @include('repairs.partials.icon', ['name' => 'money', 'class' => 'h-4 w-4'])
-                                Izmaksas (EUR)
-                            </label>
-                            <input type="number" step="0.01" min="0" name="cost" value="{{ old('cost') }}" class="crud-control">
-                        </div>
-                        <div>
+                        <div class="sm:col-span-2">
                             <label class="crud-label flex items-center gap-2">
                                 @include('repairs.partials.icon', ['name' => 'clock', 'class' => 'h-4 w-4'])
                                 Statuss
@@ -209,7 +202,7 @@
                         </div>
                         <div class="device-form-section-copy">
                             <div class="device-form-section-name">4. Areja remonta dati</div>
-                            <div class="device-form-section-note">Piegadatajs un ar arejo remontu saistitie ieraksti.</div>
+                            <div class="device-form-section-note">Pakalpojuma sniedzejs un ar arejo remontu saistitie ieraksti.</div>
                         </div>
                     </div>
 
@@ -217,14 +210,14 @@
                         <div>
                             <label class="crud-label flex items-center gap-2">
                                 @include('repairs.partials.icon', ['name' => 'truck', 'class' => 'h-4 w-4'])
-                                Piegadatajs *
+                                Pakalpojuma sniedzejs *
                             </label>
                             <input type="text" name="vendor_name" value="{{ old('vendor_name') }}" class="crud-control">
                         </div>
                         <div>
                             <label class="crud-label flex items-center gap-2">
                                 @include('repairs.partials.icon', ['name' => 'users', 'class' => 'h-4 w-4'])
-                                Piegadataja kontakts *
+                                Pakalpojuma sniedzeja kontakts *
                             </label>
                             <input type="text" name="vendor_contact" value="{{ old('vendor_contact') }}" class="crud-control">
                         </div>

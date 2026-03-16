@@ -370,7 +370,7 @@
                                     </div>
                                 </div>
 
-                                <div class="mt-4 grid gap-3 sm:grid-cols-3">
+                                <div class="mt-4 grid gap-3 {{ $status === 'waiting' ? 'sm:grid-cols-2' : 'sm:grid-cols-3' }}">
                                     <div class="rounded-2xl border border-slate-200 px-3 py-3">
                                         <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Sakts</p>
                                         <p class="mt-2 text-sm font-medium text-slate-900">{{ $repair->start_date?->format('d.m.Y') ?? '-' }}</p>
@@ -383,10 +383,12 @@
                                             {{ ($status === 'completed' ? $repair->actual_completion : $repair->estimated_completion)?->format('d.m.Y') ?? '-' }}
                                         </p>
                                     </div>
-                                    <div class="rounded-2xl border border-slate-200 px-3 py-3">
-                                        <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Izmaksas</p>
-                                        <p class="mt-2 text-sm font-medium text-slate-900">{{ $repair->cost !== null ? number_format((float) $repair->cost, 2) . ' EUR' : '-' }}</p>
-                                    </div>
+                                    @if ($status !== 'waiting')
+                                        <div class="rounded-2xl border border-slate-200 px-3 py-3">
+                                            <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Izmaksas</p>
+                                            <p class="mt-2 text-sm font-medium text-slate-900">{{ $repair->cost !== null ? number_format((float) $repair->cost, 2) . ' EUR' : '-' }}</p>
+                                        </div>
+                                    @endif
                                 </div>
 
                                 <div class="mt-4 flex flex-wrap items-center gap-2">

@@ -292,13 +292,13 @@ class RepairController extends Controller
         if ($data['repair_type'] === 'external') {
             if (! filled($data['vendor_name'] ?? null)) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
-                    'vendor_name' => ['Arejam remontam noradi piegadataju.'],
+                    'vendor_name' => ['Arejam remontam noradi pakalpojuma sniedzeju.'],
                 ]);
             }
 
             if (! filled($data['vendor_contact'] ?? null)) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
-                    'vendor_contact' => ['Arejam remontam noradi piegadataja kontaktu.'],
+                    'vendor_contact' => ['Arejam remontam noradi pakalpojuma sniedzeja kontaktu.'],
                 ]);
             }
         }
@@ -355,6 +355,12 @@ class RepairController extends Controller
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'estimated_completion' => ['Procesa remontam noradi planoto beigu datumu.'],
             ]);
+        }
+
+        if (($data['status'] ?? null) === 'waiting') {
+            $data['cost'] = null;
+            $data['estimated_completion'] = null;
+            $data['actual_completion'] = null;
         }
 
         if (($data['status'] ?? null) === 'completed' && empty($data['actual_completion'])) {

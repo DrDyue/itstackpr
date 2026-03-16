@@ -272,7 +272,7 @@
                                     @include('repairs.partials.icon', ['name' => 'calendar', 'class' => 'h-5 w-5'])
                                     Planosana un izpilde
                                 </h2>
-                                <p class="mt-1 text-sm text-slate-600">Tips, prioritate, statuss, termini un izmaksas.</p>
+                                <p class="mt-1 text-sm text-slate-600">Tips, prioritate, statuss, termini un izmaksas tikai aktivam vai pabeigtam remontam.</p>
                             </div>
                         </div>
 
@@ -331,7 +331,7 @@
                                     'placeholder' => 'Izvelies prioritati',
                                 ])
                             </div>
-                            <div>
+                            <div x-show="status !== 'waiting'" x-cloak>
                                 <label class="crud-label flex items-center gap-2">
                                     @include('repairs.partials.icon', ['name' => 'money', 'class' => 'h-4 w-4'])
                                     Izmaksas (EUR)
@@ -395,7 +395,7 @@
                                     @include('repairs.partials.icon', ['name' => 'truck', 'class' => 'h-5 w-5'])
                                     Areja remonta dati
                                 </h2>
-                                <p class="mt-1 text-sm text-slate-600">Piegadataja un rekina informacija arejiem servisa darbiem.</p>
+                                <p class="mt-1 text-sm text-slate-600">Pakalpojuma sniedzeja un rekina informacija arejiem servisa darbiem.</p>
                             </div>
                         </div>
 
@@ -403,14 +403,14 @@
                             <div>
                                 <label class="crud-label flex items-center gap-2">
                                     @include('repairs.partials.icon', ['name' => 'truck', 'class' => 'h-4 w-4'])
-                                    Piegadatajs *
+                                    Pakalpojuma sniedzejs *
                                 </label>
                                 <input type="text" name="vendor_name" value="{{ old('vendor_name', $repair->vendor_name) }}" class="crud-control">
                             </div>
                             <div>
                                 <label class="crud-label flex items-center gap-2">
                                     @include('repairs.partials.icon', ['name' => 'users', 'class' => 'h-4 w-4'])
-                                    Piegadataja kontakts *
+                                    Pakalpojuma sniedzeja kontakts *
                                 </label>
                                 <input type="text" name="vendor_contact" value="{{ old('vendor_contact', $repair->vendor_contact) }}" class="crud-control">
                             </div>
