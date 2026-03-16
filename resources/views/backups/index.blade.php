@@ -180,24 +180,22 @@
                     },
                 }"
             >
-                <div class="mb-5 grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-                    <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
-                        <div class="flex flex-wrap items-start justify-between gap-3">
-                            <div>
-                                <h2 class="text-xl font-semibold text-slate-900">Automatiskais grafiks</h2>
-                                <p class="mt-2 text-sm text-slate-500">Iestati biezhumu un laiku automatiskajai rezerves kopijai. Visi laiki tiek paraditi Latvijas laika josla.</p>
-                            </div>
-                            <span class="inline-flex items-center rounded-full bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600 ring-1 ring-slate-200" x-text="scheduleStatus"></span>
+                <div class="mb-5 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+                    <div class="flex flex-wrap items-start justify-between gap-4">
+                        <div>
+                            <h2 class="text-xl font-semibold text-slate-900">Automatiskais grafiks</h2>
+                            <p class="mt-1 text-sm text-slate-500">Vienkarsi iestati rezerves kopijas biezhumu un laiku.</p>
                         </div>
+                        <span class="inline-flex items-center rounded-full bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600 ring-1 ring-slate-200" x-text="scheduleStatus"></span>
                     </div>
-                    <div class="grid gap-3 sm:grid-cols-2">
-                        <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+                    <div class="mt-4 grid gap-3 md:grid-cols-2">
+                        <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3">
                             <span class="block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Nakamais starts</span>
-                            <strong class="mt-2 block text-base leading-6 text-slate-900">{{ $formatDateTime($summary['next_run_at'], 'Izslegts') }}</strong>
+                            <strong class="mt-1 block text-base text-slate-900">{{ $formatDateTime($summary['next_run_at'], 'Izslegts') }}</strong>
                         </div>
-                        <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+                        <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3">
                             <span class="block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pedejais starts</span>
-                            <strong class="mt-2 block text-base leading-6 text-slate-900">{{ $formatDateTime($settings->last_scheduled_backup_at, 'Vel nav bijis') }}</strong>
+                            <strong class="mt-1 block text-base text-slate-900">{{ $formatDateTime($settings->last_scheduled_backup_at, 'Vel nav bijis') }}</strong>
                         </div>
                     </div>
                 </div>
@@ -206,52 +204,53 @@
                     @csrf
                     @method('PUT')
 
-                    <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+                    <div class="rounded-[1.5rem] border border-slate-200 bg-white p-5">
                         <div class="flex flex-wrap items-center justify-between gap-3">
                             <label class="inline-flex items-center gap-3 text-sm font-medium text-slate-700">
                                 <input type="checkbox" name="enabled" value="1" x-model="enabled" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" @checked(old('enabled', $settings->enabled))>
                                 <span>Aktivet automatiskas rezerves kopijas</span>
                             </label>
-                            <span class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 ring-1 ring-slate-200" x-text="scheduleStatus"></span>
+                            <span class="text-sm font-medium text-slate-500">Statuss: <span class="text-slate-900" x-text="scheduleStatus"></span></span>
+                        </div>
+                        <div class="mt-4 grid gap-4 md:grid-cols-2">
+                            <label class="block">
+                                <span class="user-filter-label">Biezums</span>
+                                <select name="frequency" x-model="frequency" class="crud-control">
+                                    <option value="daily">Katru dienu</option>
+                                    <option value="weekly">Katru nedelu</option>
+                                    <option value="monthly">Reizi menesi</option>
+                                </select>
+                            </label>
+                            <label class="block">
+                                <span class="user-filter-label">Laiks</span>
+                                <select name="run_at" class="crud-control">
+                                    @foreach ($timeOptions as $timeOption)
+                                        <option value="{{ $timeOption }}" @selected($selectedRunAt === $timeOption)>{{ $timeOption }}</option>
+                                    @endforeach
+                                </select>
+                            </label>
+                        </div>
+                        <div class="mt-4 grid gap-4 md:grid-cols-2" x-show="frequency === 'weekly' || frequency === 'monthly'" x-cloak>
+                            <label class="block" x-show="frequency === 'weekly'">
+                                <span class="user-filter-label">Nedelas diena</span>
+                                <select name="weekly_day" class="crud-control">
+                                    @foreach ([1 => 'Pirmdiena', 2 => 'Otrdiena', 3 => 'Tresdiena', 4 => 'Ceturtdiena', 5 => 'Piektdiena', 6 => 'Sestdiena', 7 => 'Svetdiena'] as $day => $label)
+                                        <option value="{{ $day }}" @selected((int) old('weekly_day', $settings->weekly_day) === $day)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </label>
+                            <label class="block" x-show="frequency === 'monthly'">
+                                <span class="user-filter-label">Menesa datums</span>
+                                <select name="monthly_day" class="crud-control">
+                                    @for ($day = 1; $day <= 31; $day++)
+                                        <option value="{{ $day }}" @selected((int) old('monthly_day', $settings->monthly_day) === $day)>{{ $day }}. datums</option>
+                                    @endfor
+                                </select>
+                            </label>
                         </div>
                     </div>
 
-                    <div class="grid gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-1 md:grid-cols-2 xl:grid-cols-4">
-                        <label class="block rounded-[1.2rem] border border-slate-200 bg-slate-50 p-4">
-                            <span class="user-filter-label">Biezums</span>
-                            <select name="frequency" x-model="frequency" class="crud-control">
-                                <option value="daily">Katru dienu</option>
-                                <option value="weekly">Katru nedelu</option>
-                                <option value="monthly">Reizi menesi</option>
-                            </select>
-                        </label>
-                        <label class="block rounded-[1.2rem] border border-slate-200 bg-slate-50 p-4">
-                            <span class="user-filter-label">Laiks</span>
-                            <select name="run_at" class="crud-control">
-                                @foreach ($timeOptions as $timeOption)
-                                    <option value="{{ $timeOption }}" @selected($selectedRunAt === $timeOption)>{{ $timeOption }}</option>
-                                @endforeach
-                            </select>
-                        </label>
-                        <label class="block rounded-[1.2rem] border border-slate-200 bg-slate-50 p-4" x-show="frequency === 'weekly'" x-cloak>
-                            <span class="user-filter-label">Nedelas diena</span>
-                            <select name="weekly_day" class="crud-control">
-                                @foreach ([1 => 'Pirmdiena', 2 => 'Otrdiena', 3 => 'Tresdiena', 4 => 'Ceturtdiena', 5 => 'Piektdiena', 6 => 'Sestdiena', 7 => 'Svetdiena'] as $day => $label)
-                                    <option value="{{ $day }}" @selected((int) old('weekly_day', $settings->weekly_day) === $day)>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </label>
-                        <label class="block rounded-[1.2rem] border border-slate-200 bg-slate-50 p-4" x-show="frequency === 'monthly'" x-cloak>
-                            <span class="user-filter-label">Menesa datums</span>
-                            <select name="monthly_day" class="crud-control">
-                                @for ($day = 1; $day <= 31; $day++)
-                                    <option value="{{ $day }}" @selected((int) old('monthly_day', $settings->monthly_day) === $day)>{{ $day }}. datums</option>
-                                @endfor
-                            </select>
-                        </label>
-                    </div>
-
-                    <div class="mt-auto flex flex-wrap items-center justify-end gap-3 rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-3">
+                    <div class="mt-auto flex flex-wrap items-center justify-end gap-3">
                         <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75 10.5 18l9-13.5"/>
