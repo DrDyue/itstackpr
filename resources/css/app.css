@@ -901,8 +901,28 @@ tbody td {
     @apply mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50;
 }
 
+.device-upload-preview-interactive {
+    @apply relative;
+}
+
+.device-upload-preview-media {
+    @apply relative;
+}
+
 .device-upload-preview img {
     @apply h-52 w-full object-cover;
+}
+
+.device-preview-overlay-action {
+    @apply absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-900/75 text-white opacity-0 shadow-lg backdrop-blur transition hover:bg-slate-900 focus:opacity-100 group-hover:opacity-100;
+}
+
+.device-inline-action {
+    @apply inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition;
+}
+
+.device-inline-action-download {
+    @apply border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100;
 }
 
 .device-upload-preview-empty {

@@ -10,7 +10,38 @@
         ];
     @endphp
 
-    <section class="device-form-shell">
+    <section
+        class="device-form-shell"
+        x-data="{
+            devicePreview: @js($device->deviceImageUrl() ?? ''),
+            warrantyPreview: @js($device->warrantyImageUrl() ?? ''),
+            deviceImageName: 'Nav atlasits fails',
+            warrantyImageName: 'Nav atlasits fails',
+            removeDeviceImage: @js(old('remove_device_image') === '1'),
+            removeWarrantyImage: @js(old('remove_warranty_image') === '1'),
+            lightboxOpen: false,
+            lightboxImage: '',
+            lightboxTitle: '',
+            clearDeviceImage() {
+                this.devicePreview = null;
+                this.deviceImageName = 'Nav atlasits fails';
+                this.removeDeviceImage = true;
+                this.$refs.deviceImageInput.value = '';
+            },
+            clearWarrantyImage() {
+                this.warrantyPreview = null;
+                this.warrantyImageName = 'Nav atlasits fails';
+                this.removeWarrantyImage = true;
+                this.$refs.warrantyImageInput.value = '';
+            },
+            openLightbox(title, image) {
+                if (!image) return;
+                this.lightboxTitle = title;
+                this.lightboxImage = image;
+                this.lightboxOpen = true;
+            }
+        }"
+    >
         <div class="device-page-header">
             <div>
                 <h1 class="device-page-title">Rediget ierici</h1>
@@ -37,35 +68,6 @@
             action="{{ route('devices.update', $device) }}"
             enctype="multipart/form-data"
             class="device-form-grid"
-            x-data="{
-                devicePreview: @js($device->deviceImageUrl() ?? ''),
-                warrantyPreview: @js($device->warrantyImageUrl() ?? ''),
-                deviceImageName: 'Nav atlasits fails',
-                warrantyImageName: 'Nav atlasits fails',
-                removeDeviceImage: @js(old('remove_device_image') === '1'),
-                removeWarrantyImage: @js(old('remove_warranty_image') === '1'),
-                lightboxOpen: false,
-                lightboxImage: '',
-                lightboxTitle: '',
-                clearDeviceImage() {
-                    this.devicePreview = null;
-                    this.deviceImageName = 'Nav atlasits fails';
-                    this.removeDeviceImage = true;
-                    this.$refs.deviceImageInput.value = '';
-                },
-                clearWarrantyImage() {
-                    this.warrantyPreview = null;
-                    this.warrantyImageName = 'Nav atlasits fails';
-                    this.removeWarrantyImage = true;
-                    this.$refs.warrantyImageInput.value = '';
-                },
-                openLightbox(title, image) {
-                    if (!image) return;
-                    this.lightboxTitle = title;
-                    this.lightboxImage = image;
-                    this.lightboxOpen = true;
-                }
-            }"
         >
             @csrf
             @method('PUT')
@@ -242,21 +244,14 @@
                                 <span class="text-sm text-slate-500" x-text="deviceImageName">Nav atlasits fails</span>
                             </div>
                             <p class="mt-2 text-xs text-gray-500">Atstaj tuksu, ja negribi nomainit attelu.</p>
-                            <div class="mt-3 flex flex-wrap gap-2">
+                            <div class="mt-3 flex flex-wrap items-center gap-2">
                                 <button type="button" class="crud-btn-secondary" @click="clearDeviceImage()" x-show="devicePreview" x-cloak>
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
                                     </svg>
                                     Nonemt attelu
                                 </button>
-                                <button type="button" class="crud-btn-secondary" @click="openLightbox('Ierices foto', devicePreview)" x-show="devicePreview" x-cloak>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H19.5M19.5 6V12M19.5 6l-7.5 7.5"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5h-1.5A2.25 2.25 0 0 0 3 9.75v9A2.25 2.25 0 0 0 5.25 21h9a2.25 2.25 0 0 0 2.25-2.25v-1.5"/>
-                                    </svg>
-                                    Skatit pilna izmara
-                                </button>
-                                <a :href="devicePreview || '#'" download class="crud-btn-secondary" x-show="devicePreview" x-cloak>
+                                <a :href="devicePreview || '#'" download class="device-inline-action device-inline-action-download" x-show="devicePreview" x-cloak>
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75v10.5m0 0 4.5-4.5m-4.5 4.5-4.5-4.5"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75v1.5A2.25 2.25 0 0 0 6.75 19.5h10.5a2.25 2.25 0 0 0 2.25-2.25v-1.5"/>
@@ -264,9 +259,17 @@
                                     Lejupieladet
                                 </a>
                             </div>
-                            <div class="device-upload-preview">
+                            <div class="device-upload-preview device-upload-preview-interactive">
                                 <template x-if="devicePreview">
-                                    <img :src="devicePreview" alt="Ierices foto preview" loading="lazy" class="cursor-zoom-in" @click="openLightbox('Ierices foto', devicePreview)" x-on:error="clearDeviceImage()">
+                                    <div class="device-upload-preview-media group">
+                                        <img :src="devicePreview" alt="Ierices foto preview" loading="lazy" class="cursor-zoom-in" @click="openLightbox('Ierices foto', devicePreview)" x-on:error="clearDeviceImage()">
+                                        <button type="button" class="device-preview-overlay-action" @click="openLightbox('Ierices foto', devicePreview)">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H19.5M19.5 6V12M19.5 6l-7.5 7.5"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5h-1.5A2.25 2.25 0 0 0 3 9.75v9A2.25 2.25 0 0 0 5.25 21h9a2.25 2.25 0 0 0 2.25-2.25v-1.5"/>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </template>
                                 <template x-if="!devicePreview">
                                     <div class="device-upload-preview-empty">Foto nav pievienots</div>
@@ -292,21 +295,14 @@
                                 </button>
                                 <span class="text-sm text-slate-500" x-text="warrantyImageName">Nav atlasits fails</span>
                             </div>
-                            <div class="mt-3 flex flex-wrap gap-2">
+                            <div class="mt-3 flex flex-wrap items-center gap-2">
                                 <button type="button" class="crud-btn-secondary" @click="clearWarrantyImage()" x-show="warrantyPreview" x-cloak>
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
                                     </svg>
                                     Nonemt attelu
                                 </button>
-                                <button type="button" class="crud-btn-secondary" @click="openLightbox('Garantijas attels', warrantyPreview)" x-show="warrantyPreview" x-cloak>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H19.5M19.5 6V12M19.5 6l-7.5 7.5"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5h-1.5A2.25 2.25 0 0 0 3 9.75v9A2.25 2.25 0 0 0 5.25 21h9a2.25 2.25 0 0 0 2.25-2.25v-1.5"/>
-                                    </svg>
-                                    Skatit pilna izmara
-                                </button>
-                                <a :href="warrantyPreview || '#'" download class="crud-btn-secondary" x-show="warrantyPreview" x-cloak>
+                                <a :href="warrantyPreview || '#'" download class="device-inline-action device-inline-action-download" x-show="warrantyPreview" x-cloak>
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75v10.5m0 0 4.5-4.5m-4.5 4.5-4.5-4.5"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75v1.5A2.25 2.25 0 0 0 6.75 19.5h10.5a2.25 2.25 0 0 0 2.25-2.25v-1.5"/>
@@ -315,9 +311,17 @@
                                 </a>
                             </div>
                             <p class="mt-2 text-xs text-gray-500">Atstaj tuksu, ja negribi nomainit garantijas attelu.</p>
-                            <div class="device-upload-preview">
+                            <div class="device-upload-preview device-upload-preview-interactive">
                                 <template x-if="warrantyPreview">
-                                    <img :src="warrantyPreview" alt="Garantijas preview" class="cursor-zoom-in" @click="openLightbox('Garantijas attels', warrantyPreview)">
+                                    <div class="device-upload-preview-media group">
+                                        <img :src="warrantyPreview" alt="Garantijas preview" class="cursor-zoom-in" @click="openLightbox('Garantijas attels', warrantyPreview)">
+                                        <button type="button" class="device-preview-overlay-action" @click="openLightbox('Garantijas attels', warrantyPreview)">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H19.5M19.5 6V12M19.5 6l-7.5 7.5"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5h-1.5A2.25 2.25 0 0 0 3 9.75v9A2.25 2.25 0 0 0 5.25 21h9a2.25 2.25 0 0 0 2.25-2.25v-1.5"/>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </template>
                                 <template x-if="!warrantyPreview">
                                     <div class="device-upload-preview-empty">Garantijas attels nav pievienots</div>
