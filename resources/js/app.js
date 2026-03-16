@@ -143,7 +143,6 @@ window.repairBoard = (config) => ({
     completionForm: {
         id: null,
         name: '',
-        date: config.today,
         cost: '',
     },
     startDrag(repair, event) {
@@ -196,7 +195,6 @@ window.repairBoard = (config) => ({
         this.completionForm = {
             id: repair.id,
             name: repair.name ?? 'Ierice',
-            date: config.today,
             cost: repair.cost ?? '',
         };
         this.completeModalOpen = true;
@@ -209,7 +207,6 @@ window.repairBoard = (config) => ({
     },
     submitCompletion() {
         this.submitTransition(this.completionForm.id, 'completed', {
-            actual_completion: this.completionForm.date,
             cost: this.completionForm.cost,
         });
     },
@@ -220,11 +217,9 @@ window.repairProcess = (config) => ({
     status: config.status,
     completeModalOpen: false,
     completionForm: {
-        date: config.actualCompletion || config.today,
         cost: config.cost ?? '',
     },
     openCompletionModal() {
-        this.completionForm.date = config.actualCompletion || config.today;
         this.completionForm.cost = config.cost ?? '';
         this.completeModalOpen = true;
     },
@@ -233,7 +228,6 @@ window.repairProcess = (config) => ({
     },
     submitCompletion() {
         window.submitRepairTransition(config.transitionBaseUrl, config.csrfToken, config.repairId, 'completed', {
-            actual_completion: this.completionForm.date,
             cost: this.completionForm.cost,
         });
     },

@@ -165,20 +165,18 @@ class RepairController extends Controller
             $payload['assigned_to'] = $data['assigned_to'];
         }
 
-        if ($targetStatus === 'completed') {
-            if (! filled($data['actual_completion'] ?? null)) {
-                return back()->withErrors([
-                    'actual_completion' => 'Pabeigtam remontam noradi faktisko beigu datumu.',
-                ]);
-            }
+        if ($targetStatus === 'in-progress' && ! filled($repair->start_date)) {
+            $payload['start_date'] = now()->toDateString();
+        }
 
+        if ($targetStatus === 'completed') {
             if (! array_key_exists('cost', $data) || $data['cost'] === null || $data['cost'] === '') {
                 return back()->withErrors([
                     'cost' => 'Pabeigtam remontam noradi gala izmaksas.',
                 ]);
             }
 
-            $payload['actual_completion'] = $data['actual_completion'] ?? now()->toDateString();
+            $payload['actual_completion'] = now()->toDateString();
         } elseif ($targetStatus !== 'completed' && $repair->status === 'completed') {
             $payload['actual_completion'] = null;
         }
@@ -279,7 +277,7 @@ class RepairController extends Controller
         $data['priority'] = $data['priority'] ?? ($repair?->priority ?? 'medium');
         $data['start_date'] = filled($data['start_date'] ?? null)
             ? $data['start_date']
-            : ($repair?->start_date?->format('Y-m-d') ?? now()->toDateString());
+            : ($repair?->start_date?->format('Y-m-d') ?? null);
         if ($this->supportsDeviceStatusBeforeRepairColumn()) {
             $data['device_status_before_repair'] = $repair?->device_status_before_repair
                 ?? $this->normalizeDeviceStatusForRestore($device?->status);
@@ -353,10 +351,14 @@ class RepairController extends Controller
             ]);
         }
 
-        if (($data['status'] ?? null) === 'completed' && empty($data['actual_completion'])) {
+        if (($data['status'] ?? null) === 'in-progress' && $repair && empty($data['estimated_completion'])) {
             throw \Illuminate\Validation\ValidationException::withMessages([
-                'actual_completion' => ['Pabeigtam remontam noradi faktisko beigu datumu.'],
+                'estimated_completion' => ['Procesa remontam noradi planoto beigu datumu.'],
             ]);
+        }
+
+        if (($data['status'] ?? null) === 'completed' && empty($data['actual_completion'])) {
+            $data['actual_completion'] = $repair?->actual_completion?->format('Y-m-d') ?? now()->toDateString();
         }
 
         if (($data['status'] ?? null) === 'completed' && (($data['cost'] ?? null) === null || $data['cost'] === '')) {

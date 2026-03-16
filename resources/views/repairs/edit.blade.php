@@ -38,8 +38,6 @@
             repairType: @js(old('repair_type', $repair->repair_type)),
             status: @js(old('status', $repair->status ?? 'waiting')),
             priority: @js(old('priority', $repair->priority ?? 'medium')),
-            today: @js(now()->toDateString()),
-            actualCompletion: @js(optional($repair->actual_completion)->format('Y-m-d')),
             cost: @js($repair->cost),
         })"
     >
@@ -345,14 +343,7 @@
                                 :value="old('estimated_completion', optional($repair->estimated_completion)->format('Y-m-d'))"
                                 label="Planotais beigums"
                                 label-class="crud-label flex items-center gap-2"
-                            />
-                            <x-localized-date-picker
-                                name="actual_completion"
-                                :value="old('actual_completion', optional($repair->actual_completion)->format('Y-m-d'))"
-                                label="Faktiskais beigums"
-                                label-class="crud-label flex items-center gap-2"
-                                wrapper-class="block"
-                                x-show="status === 'completed'"
+                                x-show="status === 'in-progress' || status === 'completed'"
                                 x-cloak
                             />
                         </div>
@@ -558,13 +549,9 @@
                 </div>
 
                 <div class="mt-6 space-y-4">
-                    <x-localized-date-picker
-                        xModel="completionForm.date"
-                        label="Faktiskais beigu datums"
-                        label-class="repair-filter-label"
-                        required
-                    />
-
+                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                        Faktiskais beigu datums tiks aizpildits automatiski ar sodienas datumu.
+                    </div>
                     <label class="block">
                         <span class="repair-filter-label">Gala izmaksas (EUR)</span>
                         <input type="number" step="0.01" min="0" x-model="completionForm.cost" class="crud-control" placeholder="0.00" required>

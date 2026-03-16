@@ -119,7 +119,7 @@
                         <textarea name="description" rows="4" required class="crud-control">{{ old('description') }}</textarea>
                     </div>
 
-                    <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <div class="mt-4 grid gap-4 sm:grid-cols-2">
                         <div class="sm:col-span-2 xl:col-span-4">
                             <label class="crud-label flex items-center gap-2">
                                 @include('repairs.partials.icon', ['name' => 'flame', 'class' => 'h-4 w-4'])
@@ -137,24 +137,6 @@
                                 'placeholder' => 'Izvelies prioritati',
                             ])
                         </div>
-                        <x-localized-date-picker
-                            name="start_date"
-                            :value="old('start_date', now()->toDateString())"
-                            label="Sakuma datums"
-                            label-class="crud-label flex items-center gap-2"
-                        />
-                        <x-localized-date-picker
-                            name="estimated_completion"
-                            :value="old('estimated_completion')"
-                            label="Planotais beigums"
-                            label-class="crud-label flex items-center gap-2"
-                        />
-                        <x-localized-date-picker
-                            name="actual_completion"
-                            :value="old('actual_completion')"
-                            label="Realais beigu datums"
-                            label-class="crud-label flex items-center gap-2"
-                        />
                     </div>
 
                     <div class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -175,7 +157,7 @@
                                     @include('repairs.partials.icon', ['name' => $statusIcons['waiting'] ?? 'clock', 'class' => 'h-3.5 w-3.5'])
                                     {{ $statusLabels['waiting'] ?? 'Gaida' }}
                                 </span>
-                                <span class="text-sm text-slate-500">Jauns remonts vienmer sakas ar gaidisanas statusu.</span>
+                                <span class="text-sm text-slate-500">Sakuma datums un pabeigsanas datumi tiks aizpilditi velak remonta procesa.</span>
                             </div>
                         </div>
                     </div>

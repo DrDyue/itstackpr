@@ -47,7 +47,6 @@
         x-data="repairBoard({
             transitionBaseUrl: @js(url('/repairs')),
             csrfToken: @js(csrf_token()),
-            today: @js(now()->toDateString()),
         })"
     >
         <div class="flex flex-wrap items-end justify-between gap-4">
@@ -532,13 +531,9 @@
                 </div>
 
                 <div class="mt-6 space-y-4">
-                    <x-localized-date-picker
-                        xModel="completionForm.date"
-                        label="Faktiskais beigu datums"
-                        label-class="repair-filter-label"
-                        required
-                    />
-
+                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                        Faktiskais beigu datums tiks aizpildits automatiski ar sodienas datumu.
+                    </div>
                     <label class="block">
                         <span class="repair-filter-label">Gala izmaksas (EUR)</span>
                         <input type="number" step="0.01" min="0" x-model="completionForm.cost" class="crud-control" placeholder="0.00" required>
