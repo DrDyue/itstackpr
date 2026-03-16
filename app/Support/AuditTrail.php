@@ -515,6 +515,7 @@ class AuditTrail
             'issue_reported_by' => 'zinotajs',
             'reported_employee_id' => 'zinotajs',
             'assigned_to' => 'pieskirtais lietotajs',
+            'assigned_employee_id' => 'pieskirtais darbinieks',
             'building_id' => 'eka',
             'room_id' => 'telpa',
             'purchase_date' => 'iegades datums',

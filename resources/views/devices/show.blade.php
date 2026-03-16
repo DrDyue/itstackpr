@@ -178,7 +178,7 @@
                             <div class="device-kv-grid">
                                 <div><p class="device-kv-label">Eka</p><p class="device-kv-value">{{ $device->building?->building_name ?: ($device->room?->building?->building_name ?: '-') }}</p></div>
                                 <div><p class="device-kv-label">Telpa</p><p class="device-kv-value">{{ $device->room?->room_number ?: '-' }}@if ($device->room?->room_name)<span class="text-slate-500"> / {{ $device->room->room_name }}</span>@endif</p></div>
-                                <div><p class="device-kv-label">Pieskirta</p><p class="device-kv-value">{{ $device->assigned_to ?: '-' }}</p></div>
+                                <div><p class="device-kv-label">Pieskirta</p><p class="device-kv-value">{{ $device->assignedEmployee?->full_name ?: '-' }}</p></div>
                                 <div><p class="device-kv-label">Komplektacijas</p><p class="device-kv-value">{{ $setCountLabel }}</p></div>
                             </div>
                         </div>
@@ -229,12 +229,12 @@
                             <div class="flex items-center justify-between gap-3">
                                 <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Ierices foto</h3>
                                 @if ($deviceImageUrl)
-                                    <a href="{{ $deviceImageUrl }}" target="_blank" class="inline-flex items-center gap-2 text-sm font-medium text-sky-700 hover:text-sky-900">
+                                    <a href="{{ $deviceImageUrl }}" download class="inline-flex items-center gap-2 text-sm font-medium text-sky-700 hover:text-sky-900">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H19.5M19.5 6V12M19.5 6l-7.5 7.5"/>
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5h-1.5A2.25 2.25 0 0 0 3 9.75v9A2.25 2.25 0 0 0 5.25 21h9a2.25 2.25 0 0 0 2.25-2.25v-1.5"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75v10.5m0 0 4.5-4.5m-4.5 4.5-4.5-4.5"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75v1.5A2.25 2.25 0 0 0 6.75 19.5h10.5a2.25 2.25 0 0 0 2.25-2.25v-1.5"/>
                                         </svg>
-                                        Atvert
+                                        Lejupieladet
                                     </a>
                                 @endif
                             </div>
@@ -253,12 +253,12 @@
                             <div class="flex items-center justify-between gap-3">
                                 <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Garantijas attels</h3>
                                 @if ($warrantyImageUrl)
-                                    <a href="{{ $warrantyImageUrl }}" target="_blank" class="inline-flex items-center gap-2 text-sm font-medium text-sky-700 hover:text-sky-900">
+                                    <a href="{{ $warrantyImageUrl }}" download class="inline-flex items-center gap-2 text-sm font-medium text-sky-700 hover:text-sky-900">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H19.5M19.5 6V12M19.5 6l-7.5 7.5"/>
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5h-1.5A2.25 2.25 0 0 0 3 9.75v9A2.25 2.25 0 0 0 5.25 21h9a2.25 2.25 0 0 0 2.25-2.25v-1.5"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75v10.5m0 0 4.5-4.5m-4.5 4.5-4.5-4.5"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75v1.5A2.25 2.25 0 0 0 6.75 19.5h10.5a2.25 2.25 0 0 0 2.25-2.25v-1.5"/>
                                         </svg>
-                                        Atvert
+                                        Lejupieladet
                                     </a>
                                 @endif
                             </div>

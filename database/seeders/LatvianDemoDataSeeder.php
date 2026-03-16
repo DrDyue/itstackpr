@@ -64,6 +64,9 @@ class LatvianDemoDataSeeder extends Seeder
             $employeeIds = DB::table('employees')
                 ->pluck('id', 'email')
                 ->all();
+            $employeeIdsByName = DB::table('employees')
+                ->pluck('id', 'full_name')
+                ->all();
 
             $users = [
                 ['employee_email' => 'artis.berzins@ludzas.lv', 'role' => 'admin', 'is_active' => 1],
@@ -188,6 +191,7 @@ class LatvianDemoDataSeeder extends Seeder
                     'status' => $status,
                     'building_id' => $building->id,
                     'room_id' => $roomIds[$roomNumber] ?? null,
+                    'assigned_employee_id' => $employeeIdsByName[$assignees[$i % count($assignees)]] ?? null,
                     'assigned_to' => $assignees[$i % count($assignees)],
                     'purchase_date' => $purchaseDate,
                     'purchase_price' => rand(120, 2200) + 0.99,

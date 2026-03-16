@@ -39,4 +39,9 @@ class Employee extends Model
     {
         return $this->hasOne(User::class);
     }
+
+    public function devices(): HasMany
+    {
+        return $this->hasMany(Device::class, 'assigned_employee_id');
+    }
 }

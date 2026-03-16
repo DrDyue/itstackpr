@@ -20,6 +20,7 @@ class Device extends Model
         'status',
         'building_id',
         'room_id',
+        'assigned_employee_id',
         'assigned_to',
         'purchase_date',
         'purchase_price',
@@ -60,6 +61,11 @@ class Device extends Model
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);
+    }
+
+    public function assignedEmployee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'assigned_employee_id');
     }
 
     public function createdBy(): BelongsTo

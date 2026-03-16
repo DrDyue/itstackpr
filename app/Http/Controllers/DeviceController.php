@@ -8,6 +8,7 @@ use App\Models\DeviceHistory;
 use App\Models\DeviceSet;
 use App\Models\DeviceSetItem;
 use App\Models\DeviceType;
+use App\Models\Employee;
 use App\Models\Room;
 use App\Support\AuditTrail;
 use App\Support\DeviceAssetManager;
@@ -29,7 +30,7 @@ class DeviceController extends Controller
         ];
 
         $devices = Device::query()
-            ->with(['type', 'building', 'room', 'activeRepair'])
+            ->with(['type', 'building', 'room', 'activeRepair', 'assignedEmployee'])
             ->when($filters['q'] !== '', function ($query) use ($filters) {
                 $term = $filters['q'];
 
@@ -100,6 +101,7 @@ class DeviceController extends Controller
         $device = Device::create($data);
         $this->syncUploads($request, $device);
         $this->removeDeviceImage($request, $device);
+        $this->removeWarrantyImage($request, $device);
 
         DeviceHistory::create([
             'device_id' => $device->id,
@@ -127,6 +129,7 @@ class DeviceController extends Controller
             'building',
             'room.building',
             'createdBy.employee',
+            'assignedEmployee',
             'histories.changedBy.employee',
             'sets.room.building',
         ]);
@@ -150,6 +153,7 @@ class DeviceController extends Controller
         $device->update($data);
         $this->syncUploads($request, $device);
         $this->removeDeviceImage($request, $device);
+        $this->removeWarrantyImage($request, $device);
 
         $after = $device->fresh()->only(array_keys($before));
         $changedFields = $this->writeHistoryChanges($device->id, $before, $after, $userId);
@@ -244,6 +248,7 @@ class DeviceController extends Controller
             'types' => DeviceType::orderBy('type_name')->get(),
             'buildings' => Building::orderBy('building_name')->get(),
             'rooms' => Room::with('building')->orderBy('room_number')->get(),
+            'employees' => Employee::query()->where('is_active', true)->orderBy('full_name')->get(),
             'statuses' => self::STATUSES,
         ];
     }
@@ -263,7 +268,7 @@ class DeviceController extends Controller
             'status' => ['required', Rule::in(self::STATUSES)],
             'building_id' => ['nullable', 'exists:buildings,id'],
             'room_id' => ['nullable', 'exists:rooms,id'],
-            'assigned_to' => ['nullable', 'string', 'max:100'],
+            'assigned_employee_id' => ['nullable', 'exists:employees,id'],
             'purchase_date' => ['required', 'date'],
             'purchase_price' => ['nullable', 'numeric', 'min:0'],
             'warranty_until' => ['nullable', 'date'],
@@ -274,7 +279,7 @@ class DeviceController extends Controller
             'warranty_image' => ['nullable', 'image', 'max:' . (int) config('devices.max_upload_kb', 5120)],
         ]);
 
-        foreach (['building_id', 'room_id'] as $field) {
+        foreach (['building_id', 'room_id', 'assigned_employee_id'] as $field) {
             if (($data[$field] ?? null) === '') {
                 $data[$field] = null;
             }
@@ -304,11 +309,15 @@ class DeviceController extends Controller
             ]);
         }
 
-        if (($data['status'] ?? null) === 'retired' && ! empty($data['assigned_to'])) {
+        if (($data['status'] ?? null) === 'retired' && ! empty($data['assigned_employee_id'])) {
             throw ValidationException::withMessages([
-                'assigned_to' => ['Norakstitai iericei nevajag but pieskirtai personai.'],
+                'assigned_employee_id' => ['Norakstitai iericei nevajag but pieskirtai personai.'],
             ]);
         }
+
+        $data['assigned_to'] = filled($data['assigned_employee_id'] ?? null)
+            ? Employee::query()->whereKey($data['assigned_employee_id'])->value('full_name')
+            : null;
 
         unset($data['device_image'], $data['warranty_image']);
 
@@ -322,7 +331,7 @@ class DeviceController extends Controller
     {
         return [
             'code', 'name', 'device_type_id', 'model', 'status',
-            'building_id', 'room_id', 'assigned_to', 'purchase_date',
+            'building_id', 'room_id', 'assigned_employee_id', 'assigned_to', 'purchase_date',
             'purchase_price', 'warranty_until', 'warranty_photo_name',
             'serial_number', 'manufacturer', 'notes', 'device_image_url',
         ];
@@ -399,6 +408,22 @@ class DeviceController extends Controller
         $device->forceFill(['device_image_url' => null])->save();
     }
 
+    private function removeWarrantyImage(Request $request, Device $device): void
+    {
+        if ($request->hasFile('warranty_image')) {
+            return;
+        }
+
+        if (! $request->boolean('remove_warranty_image') || ! filled($device->warranty_photo_name)) {
+            return;
+        }
+
+        $assetManager = app(DeviceAssetManager::class);
+        $assetManager->delete($device->warranty_photo_name);
+        $assetManager->delete($assetManager->thumbnailPath($device->warranty_photo_name));
+        $device->forceFill(['warranty_photo_name' => null])->save();
+    }
+
     private function deleteDeviceAssets(Device $device): void
     {
         $assetManager = app(DeviceAssetManager::class);
@@ -444,7 +469,7 @@ class DeviceController extends Controller
             return ['level' => 'error', 'message' => 'Nav izvelets korekts statuss.'];
         }
 
-        if ($status === 'retired' && filled($device->assigned_to)) {
+        if ($status === 'retired' && filled($device->assigned_employee_id)) {
             return ['level' => 'error', 'message' => 'Norakstitu ierici vispirms atsaisti no personas.'];
         }
 
