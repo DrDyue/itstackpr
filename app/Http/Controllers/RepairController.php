@@ -13,6 +13,7 @@ use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
@@ -278,6 +279,12 @@ class RepairController extends Controller
         $data['start_date'] = filled($data['start_date'] ?? null)
             ? $data['start_date']
             : ($repair?->start_date?->format('Y-m-d') ?? null);
+
+        if (($data['status'] ?? null) === 'waiting' && ! filled($data['start_date'] ?? null) && ! $this->allowsNullStartDate()) {
+            // Backward compatibility for environments where repairs.start_date is still NOT NULL.
+            $data['start_date'] = now()->toDateString();
+        }
+
         if ($this->supportsDeviceStatusBeforeRepairColumn()) {
             $data['device_status_before_repair'] = $repair?->device_status_before_repair
                 ?? $this->normalizeDeviceStatusForRestore($device?->status);
@@ -589,6 +596,26 @@ class RepairController extends Controller
         static $hasColumn;
 
         return $hasColumn ??= Schema::hasColumn('repairs', 'reported_employee_id');
+    }
+
+    private function allowsNullStartDate(): bool
+    {
+        static $allowsNull;
+
+        if ($allowsNull !== null) {
+            return $allowsNull;
+        }
+
+        $databaseName = DB::getDatabaseName();
+
+        $column = DB::table('information_schema.columns')
+            ->select('is_nullable')
+            ->where('table_schema', $databaseName)
+            ->where('table_name', 'repairs')
+            ->where('column_name', 'start_date')
+            ->first();
+
+        return $allowsNull = strtoupper((string) ($column->is_nullable ?? 'YES')) === 'YES';
     }
 
     private function defaultOwnershipFilter(Request $request): string
