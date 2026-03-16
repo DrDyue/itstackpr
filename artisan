@@ -17,3 +17,4 @@ $status = $app->handleCommand(new ArgvInput);
 
 exit($status);
 
+ 
