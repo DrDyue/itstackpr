@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>IT Inventory System</title>
+        <title>IT Inventāra uzskaites sistēma</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/cssfamily=figtree:400,500,600&display=swap" rel="stylesheet" />
@@ -20,7 +20,7 @@
                         <a href="/" class="auth-logo-link">
                             <x-application-logo />
                         </a>
-                        <h1>IT Inventory System</h1>
+                        <h1>IT Inventāra uzskaites sistēma</h1>
                         <p>
                             @if(request()->routeIs('login'))
                                 Laipni ludzam atpakal
@@ -52,7 +52,7 @@
                         </div>
 
                         <div class="auth-footer">
-                            <p>IT Inventory System  2026</p>
+                            <p>IT Inventāra uzskaites sistēma 2026</p>
                         </div>
                     </div>
 
