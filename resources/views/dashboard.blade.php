@@ -9,6 +9,7 @@
         $floorCount = $buildingTree->sum('floor_count');
         $waitingRepairsCount = $activeRepairs->where('status', 'waiting')->count();
         $inProgressRepairsCount = $activeRepairs->where('status', 'in-progress')->count();
+        $singleBuilding = $buildingCount === 1;
 
         $backupStatus = ($backupSummary['latest'] ?? null)
             ? 'Pedeja kopija ' . optional($backupSummary['latest']->created_at)->format('d.m.Y H:i')
@@ -94,10 +95,12 @@
                     </div>
 
                     <div class="dash-structure-stats">
-                        <div class="dash-structure-stat">
-                            <span class="dash-mini-label">Ekas</span>
-                            <strong>{{ $buildingCount }}</strong>
-                        </div>
+                        @unless ($singleBuilding)
+                            <div class="dash-structure-stat">
+                                <span class="dash-mini-label">Ekas</span>
+                                <strong>{{ $buildingCount }}</strong>
+                            </div>
+                        @endunless
                         <div class="dash-structure-stat">
                             <span class="dash-mini-label">Stavi</span>
                             <strong>{{ $floorCount }}</strong>
@@ -120,6 +123,38 @@
                                         </div>
                                         <span class="dash-structure-badge">{{ $buildingEntry['floor_count'] }} stavi</span>
                                     </summary>
+
+                                    <div class="dash-floor-list">
+                                        @forelse ($buildingEntry['floors'] as $floor)
+                                            <details class="dash-floor-card" @if ($loop->first) open @endif>
+                                                <summary class="dash-floor-summary">
+                                                    <div>
+                                                        <p class="dash-floor-title">{{ $floor['floor_label'] }}</p>
+                                                        <p class="dash-floor-meta">{{ $floor['room_count'] }} kabineti | {{ $floor['device_count'] }} ierices</p>
+                                                    </div>
+                                                    <span class="dash-floor-pill">{{ $floor['room_count'] }}</span>
+                                                </summary>
+
+                                                <div class="dash-room-list">
+                                                    @foreach ($floor['rooms'] as $room)
+                                                        <a href="{{ route('rooms.edit', $room) }}" class="dash-room-item">
+                                                            <div>
+                                                                <p class="dash-room-title">{{ $room->room_number }} @if ($room->room_name) | {{ $room->room_name }} @endif</p>
+                                                                <p class="dash-room-meta">
+                                                                    {{ $room->devices_count }} ierices
+                                                                    @if ($room->employee)
+                                                                        | {{ $room->employee->full_name }}
+                                                                    @endif
+                                                                </p>
+                                                            </div>
+                                                        </a>
+                                                    @endforeach
+                                                </div>
+                                            </details>
+                                        @empty
+                                            <div class="dash-empty-block">Sai ekai vel nav telpu.</div>
+                                        @endforelse
+                                    </div>
                                 </details>
                             @empty
                                 <div class="dash-empty-block">Ekas vel nav pievienotas.</div>
@@ -130,41 +165,6 @@
             </aside>
 
             <main class="dash-content-stack">
-                <div class="dash-panel">
-                    <div class="dash-panel-header">
-                        <div class="dash-panel-title-row">
-                            <span class="dash-panel-icon dash-panel-icon-violet">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h9"/>
-                                </svg>
-                            </span>
-                            <div>
-                                <p class="dash-panel-eyebrow">Kopsavilkums</p>
-                                <h2 class="dash-panel-title">Inventars un telpas</h2>
-                            </div>
-                        </div>
-                        <span class="dash-panel-chip">{{ $totalDevices }} ierices</span>
-                    </div>
-
-                    <div class="dash-quick-grid">
-                        <div class="dash-quick-card dash-quick-card-blue">
-                            <p class="dash-quick-label">Telpas ar iericem</p>
-                            <div class="dash-quick-value">{{ $mappedRooms }}</div>
-                            <p class="dash-quick-note">No {{ $totalRooms }} telpam</p>
-                        </div>
-                        <div class="dash-quick-card dash-quick-card-amber">
-                            <p class="dash-quick-label">Bez telpas</p>
-                            <div class="dash-quick-value">{{ $withoutRoom }}</div>
-                            <p class="dash-quick-note">Japrecize atrasanas vieta</p>
-                        </div>
-                        <div class="dash-quick-card dash-quick-card-emerald">
-                            <p class="dash-quick-label">Pabeigti menesi</p>
-                            <div class="dash-quick-value">{{ $completedRepairsThisMonth }}</div>
-                            <p class="dash-quick-note">Videjas izmaksas {{ number_format($averageRepairCost, 2) }} EUR</p>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="dash-panel">
                     <div class="dash-panel-header">
                         <div class="dash-panel-title-row">
@@ -279,70 +279,6 @@
             </main>
 
             <aside class="dash-side-stack">
-                <div class="dash-panel dash-action-panel">
-                    <div class="dash-panel-header">
-                        <div class="dash-panel-title-row">
-                            <span class="dash-panel-icon dash-panel-icon-emerald">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-                                </svg>
-                            </span>
-                            <div>
-                                <p class="dash-panel-eyebrow">Darbibas</p>
-                                <h2 class="dash-panel-title">Atras darbibas</h2>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="dash-action-list">
-                        <a href="{{ route('devices.index') }}" class="dash-action-item">
-                            <span class="dash-action-icon dash-action-icon-slate">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35m1.85-5.15a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/>
-                                </svg>
-                            </span>
-                            <span>
-                                <strong>Meklet ierices</strong>
-                                <small>Atvert inventaru un filtrus</small>
-                            </span>
-                        </a>
-                        <a href="{{ route('devices.create') }}" class="dash-action-item">
-                            <span class="dash-action-icon dash-action-icon-emerald">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-                                </svg>
-                            </span>
-                            <span>
-                                <strong>Pievienot ierici</strong>
-                                <small>Jauna inventara vieniba</small>
-                            </span>
-                        </a>
-                        <a href="{{ route('repairs.create') }}" class="dash-action-item">
-                            <span class="dash-action-icon dash-action-icon-sky">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m11.42 3.73 1.18 1.77a2.25 2.25 0 0 1-.28 2.84l-6.7 6.7a2.25 2.25 0 0 0 3.18 3.18l6.7-6.7a2.25 2.25 0 0 1 2.84-.28l1.77 1.18a6 6 0 0 0-8.69-8.69Z"/>
-                                </svg>
-                            </span>
-                            <span>
-                                <strong>Sakt remontu</strong>
-                                <small>Atvert jaunu ierakstu</small>
-                            </span>
-                        </a>
-                        <a href="{{ route('buildings.index') }}" class="dash-action-item">
-                            <span class="dash-action-icon dash-action-icon-violet">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21H3M6 21V7.5A1.5 1.5 0 0 1 7.5 6h9A1.5 1.5 0 0 1 18 7.5V21"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 12.75h3"/>
-                                </svg>
-                            </span>
-                            <span>
-                                <strong>Skatit ekas</strong>
-                                <small>Telpas, stavi un kabineti</small>
-                            </span>
-                        </a>
-                    </div>
-                </div>
-
                 <div class="dash-panel">
                     <div class="dash-panel-header">
                         <div class="dash-panel-title-row">
@@ -427,93 +363,6 @@
                     </div>
                 </div>
             </aside>
-        </div>
-
-        <div class="dash-bottom-grid">
-            <div class="dash-panel">
-                <div class="dash-panel-header">
-                    <div class="dash-panel-title-row">
-                        <span class="dash-panel-icon dash-panel-icon-sky">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 7.5h15m-15 4.5h15m-15 4.5h9M3.75 5.25h16.5A1.5 1.5 0 0 1 21.75 6.75v10.5a1.5 1.5 0 0 1-1.5 1.5H3.75a1.5 1.5 0 0 1-1.5-1.5V6.75a1.5 1.5 0 0 1 1.5-1.5Z"/>
-                            </svg>
-                        </span>
-                        <div>
-                            <p class="dash-panel-eyebrow">Inventars</p>
-                            <h2 class="dash-panel-title">Pedejas pievienotas ierices</h2>
-                        </div>
-                    </div>
-                    <a href="{{ route('devices.index') }}" class="dash-panel-link">Atvert inventaru</a>
-                </div>
-
-                <div class="dash-table-wrap">
-                    @if ($recentDevices->isNotEmpty())
-                        <table class="dash-table">
-                            <thead class="dash-table-head">
-                                <tr>
-                                    <th>Ierice</th>
-                                    <th>Tips</th>
-                                    <th>Statuss</th>
-                                    <th>Atrasanas vieta</th>
-                                    <th>Pievienots</th>
-                                    <th>Darbiba</th>
-                                </tr>
-                            </thead>
-                            <tbody class="dash-table-body">
-                                @foreach ($recentDevices as $device)
-                                    @php
-                                        $badgeClasses = match($device->status) {
-                                            'active' => 'dash-inline-badge dash-inline-badge-emerald',
-                                            'repair' => 'dash-inline-badge dash-inline-badge-sky',
-                                            'broken' => 'dash-inline-badge dash-inline-badge-rose',
-                                            default => 'dash-inline-badge dash-inline-badge-slate',
-                                        };
-                                        $statusText = match($device->status) {
-                                            'active' => 'Aktiva',
-                                            'repair' => 'Remonta',
-                                            'broken' => 'Bojata',
-                                            'reserve' => 'Rezerve',
-                                            'retired' => 'Norakstita',
-                                            'kitting' => 'Komplektacija',
-                                            default => ucfirst((string) $device->status),
-                                        };
-                                    @endphp
-                                    <tr>
-                                        <td>
-                                            <div class="dash-device-cell">
-                                                @if ($device->deviceImageThumbUrl())
-                                                    <img src="{{ $device->deviceImageThumbUrl() }}" alt="Ierices attels" class="dash-device-thumb">
-                                                @else
-                                                    <div class="dash-device-thumb dash-device-thumb-empty">Nav</div>
-                                                @endif
-                                                <div>
-                                                    <div class="dash-table-cell-strong">{{ $device->name ?: 'Nezinama ierice' }}</div>
-                                                    <div class="dash-table-subline">{{ $device->code ?: '-' }} | {{ $device->manufacturer ?: 'Nav razotaja' }}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>{{ $device->type?->type_name ?? 'Nezinams tips' }}</td>
-                                        <td><span class="{{ $badgeClasses }}">{{ $statusText }}</span></td>
-                                        <td>
-                                            @if ($device->room)
-                                                {{ $device->room->room_number }}
-                                            @elseif ($device->building)
-                                                {{ $device->building->building_name }}
-                                            @else
-                                                Nav piesaistes
-                                            @endif
-                                        </td>
-                                        <td>{{ $device->created_at?->format('d.m.Y H:i') ?? '-' }}</td>
-                                        <td><a href="{{ route('devices.edit', $device) }}" class="dash-table-link">Atvert</a></td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    @else
-                        <div class="dash-empty-block">Ierices vel nav pievienotas.</div>
-                    @endif
-                </div>
-            </div>
         </div>
     </section>
 </x-app-layout>
