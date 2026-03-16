@@ -14,6 +14,30 @@
             'DELETE' => 'Dzests',
             'VIEW' => 'Skatits',
         ];
+        $statusDescriptions = [
+            'waiting' => 'Vel nav uzsakta izpilde',
+            'in-progress' => 'Darbs notiek sobrid',
+            'completed' => 'Remonts ir pabeigts',
+            'cancelled' => 'Darbs tika atcelts',
+        ];
+        $statusOptionClasses = [
+            'waiting' => 'border-amber-300 bg-amber-50 text-amber-900',
+            'in-progress' => 'border-sky-300 bg-sky-50 text-sky-900',
+            'completed' => 'border-emerald-300 bg-emerald-50 text-emerald-900',
+            'cancelled' => 'border-slate-300 bg-slate-100 text-slate-900',
+        ];
+        $priorityDescriptions = [
+            'low' => 'Var planot bez steigas',
+            'medium' => 'Standarta izpildes seciba',
+            'high' => 'Jareage iespejami driz',
+            'critical' => 'Japrioritize uzreiz',
+        ];
+        $priorityOptionClasses = [
+            'low' => 'border-slate-300 bg-slate-50 text-slate-900',
+            'medium' => 'border-amber-300 bg-amber-50 text-amber-900',
+            'high' => 'border-orange-300 bg-orange-50 text-orange-900',
+            'critical' => 'border-rose-300 bg-rose-50 text-rose-900',
+        ];
     @endphp
 
     <section
@@ -24,6 +48,7 @@
             repairId: @js($repair->id),
             repairType: @js(old('repair_type', $repair->repair_type)),
             status: @js(old('status', $repair->status ?? 'waiting')),
+            priority: @js(old('priority', $repair->priority ?? 'medium')),
             today: @js(now()->toDateString()),
             actualCompletion: @js(optional($repair->actual_completion)->format('Y-m-d')),
             cost: @js($repair->cost),
@@ -33,8 +58,14 @@
             <div>
                 <div class="flex flex-wrap items-center gap-2">
                     <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">Remonts #{{ $repair->id }}</span>
-                    <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 {{ $statusClasses[$repair->status] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">{{ $statusLabels[$repair->status] ?? $repair->status }}</span>
-                    <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 {{ $typeClasses[$repair->repair_type] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">{{ $typeLabels[$repair->repair_type] ?? $repair->repair_type }}</span>
+                    <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ring-1 {{ $statusClasses[$repair->status] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">
+                        @include('repairs.partials.icon', ['name' => $statusIcons[$repair->status] ?? 'clock', 'class' => 'h-3.5 w-3.5'])
+                        {{ $statusLabels[$repair->status] ?? $repair->status }}
+                    </span>
+                    <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ring-1 {{ $typeClasses[$repair->repair_type] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">
+                        @include('repairs.partials.icon', ['name' => $typeIcons[$repair->repair_type] ?? 'wrench', 'class' => 'h-3.5 w-3.5'])
+                        {{ $typeLabels[$repair->repair_type] ?? $repair->repair_type }}
+                    </span>
                 </div>
                 <h1 class="mt-3 text-3xl font-semibold tracking-tight text-slate-900">{{ $repair->device?->name ?: 'Nezinama ierice' }}</h1>
                 <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">Procesa skats remonta izpildei, terminu kontrolei un gala noslegsanas darbam.</p>
@@ -121,7 +152,10 @@
                             <h2 class="text-lg font-semibold text-slate-900">Atras darbibas</h2>
                             <p class="mt-1 text-sm text-slate-600">Parvieto remontu starp gaida, procesa un pabeigts statusiem.</p>
                         </div>
-                        <span class="inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold ring-1 {{ $priorityClasses[$repair->priority] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">{{ $priorityLabels[$repair->priority] ?? 'Videja' }}</span>
+                        <span class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 {{ $priorityClasses[$repair->priority] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">
+                            @include('repairs.partials.icon', ['name' => $priorityIcons[$repair->priority] ?? 'bars', 'class' => 'h-3.5 w-3.5'])
+                            {{ $priorityLabels[$repair->priority] ?? 'Videja' }}
+                        </span>
                     </div>
 
                     <div class="mt-4 flex flex-wrap gap-2">
@@ -234,21 +268,45 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div>
+                            <div class="lg:col-span-2">
                                 <label class="crud-label">Statuss</label>
-                                <select name="status" class="crud-control" x-model="status">
+                                <div class="mt-2 grid gap-2 sm:grid-cols-2">
                                     @foreach ($statuses as $status)
-                                        <option value="{{ $status }}" @selected(old('status', $repair->status) === $status)>{{ $statusLabels[$status] ?? $status }}</option>
+                                        <label
+                                            class="flex cursor-pointer items-start gap-3 rounded-2xl border px-4 py-3 transition"
+                                            :class="status === '{{ $status }}' ? '{{ $statusOptionClasses[$status] ?? 'border-slate-300 bg-slate-50 text-slate-900' }} shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
+                                        >
+                                            <input type="radio" name="status" value="{{ $status }}" class="sr-only" x-model="status">
+                                            <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-1 {{ $statusClasses[$status] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">
+                                                @include('repairs.partials.icon', ['name' => $statusIcons[$status] ?? 'clock', 'class' => 'h-4 w-4'])
+                                            </span>
+                                            <span>
+                                                <span class="block text-sm font-semibold">{{ $statusLabels[$status] ?? $status }}</span>
+                                                <span class="mt-1 block text-xs text-slate-500">{{ $statusDescriptions[$status] ?? '' }}</span>
+                                            </span>
+                                        </label>
                                     @endforeach
-                                </select>
+                                </div>
                             </div>
-                            <div>
+                            <div class="lg:col-span-2 xl:col-span-4">
                                 <label class="crud-label">Prioritate</label>
-                                <select name="priority" class="crud-control">
+                                <div class="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                                     @foreach ($priorities as $priority)
-                                        <option value="{{ $priority }}" @selected(old('priority', $repair->priority ?? 'medium') === $priority)>{{ $priorityLabels[$priority] ?? $priority }}</option>
+                                        <label
+                                            class="flex cursor-pointer items-start gap-3 rounded-2xl border px-4 py-3 transition"
+                                            :class="priority === '{{ $priority }}' ? '{{ $priorityOptionClasses[$priority] ?? 'border-slate-300 bg-slate-50 text-slate-900' }} shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
+                                        >
+                                            <input type="radio" name="priority" value="{{ $priority }}" class="sr-only" x-model="priority">
+                                            <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-1 {{ $priorityClasses[$priority] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">
+                                                @include('repairs.partials.icon', ['name' => $priorityIcons[$priority] ?? 'bars', 'class' => 'h-4 w-4'])
+                                            </span>
+                                            <span>
+                                                <span class="block text-sm font-semibold">{{ $priorityLabels[$priority] ?? $priority }}</span>
+                                                <span class="mt-1 block text-xs text-slate-500">{{ $priorityDescriptions[$priority] ?? '' }}</span>
+                                            </span>
+                                        </label>
                                     @endforeach
-                                </select>
+                                </div>
                             </div>
                             <div>
                                 <label class="crud-label">Izmaksas (EUR)</label>
@@ -330,16 +388,6 @@
                     </div>
                 </form>
 
-                <form method="POST" action="{{ route('repairs.destroy', $repair) }}" onsubmit="return confirm('Dzest so remonta ierakstu?')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="inline-flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-100">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673A2.25 2.25 0 0 1 15.916 21.75H8.084a2.25 2.25 0 0 1-2.245-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 0 0 1 3.478-.397m7.5 0V4.875A2.25 2.25 0 0 0 13.5 2.625h-3a2.25 2.25 0 0 0-2.25 2.25V5.79m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
-                        </svg>
-                        Dzest remontu
-                    </button>
-                </form>
             </div>
 
             <aside class="space-y-6">
@@ -392,6 +440,22 @@
                             <p class="mt-1 text-sm font-medium text-slate-900">{{ $currentRoom?->floor_number !== null ? $currentRoom->floor_number . '. stavs' : 'Nav' }}</p>
                         </div>
                     </div>
+                </div>
+
+                <div class="rounded-[2rem] border border-rose-200 bg-gradient-to-br from-rose-50 via-white to-white p-5 shadow-sm">
+                    <h2 class="text-lg font-semibold text-slate-900">Bistamas darbibas</h2>
+                    <p class="mt-1 text-sm text-slate-600">Dzeshot aktivu remontu, saistita ierice tiks iznemta no remonta statusa un atgriezta ieprieksejaja statusa.</p>
+
+                    <form method="POST" action="{{ route('repairs.destroy', $repair) }}" class="mt-4" onsubmit="return confirm('Dzest so remonta ierakstu?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-100">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673A2.25 2.25 0 0 1 15.916 21.75H8.084a2.25 2.25 0 0 1-2.245-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0V4.875A2.25 2.25 0 0 0 13.5 2.625h-3a2.25 2.25 0 0 0-2.25 2.25V5.79m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
+                            </svg>
+                            Dzest remontu
+                        </button>
+                    </form>
                 </div>
             </aside>
         </div>

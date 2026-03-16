@@ -1,22 +1,25 @@
 <x-app-layout>
     @php
-        $priorityLabels = [
-            'low' => 'Zema',
-            'medium' => 'Videja',
-            'high' => 'Augsta',
-            'critical' => 'Kritiska',
-        ];
-        $typeLabels = [
-            'internal' => 'Ieksejais',
-            'external' => 'Arejais',
-        ];
         $deviceAssignees = $devices->mapWithKeys(fn ($device) => [$device->id => $device->created_by])->all();
         $selectedDeviceId = old('device_id', $preselectedDeviceId);
+        $priorityDescriptions = [
+            'low' => 'Var planot bez steigas',
+            'medium' => 'Standarta izpildes seciba',
+            'high' => 'Jareage iespejami driz',
+            'critical' => 'Japrioritize uzreiz',
+        ];
+        $priorityOptionClasses = [
+            'low' => 'border-slate-300 bg-slate-50 text-slate-900',
+            'medium' => 'border-amber-300 bg-amber-50 text-amber-900',
+            'high' => 'border-orange-300 bg-orange-50 text-orange-900',
+            'critical' => 'border-rose-300 bg-rose-50 text-rose-900',
+        ];
     @endphp
 
     <section class="repair-form-shell"
         x-data="{
             repairType: @js(old('repair_type', 'internal')),
+            priority: @js(old('priority', 'medium')),
             status: 'waiting',
             assignedTo: @js((string) old('assigned_to', '')),
             assignedTouched: {{ old('assigned_to') ? 'true' : 'false' }},
@@ -105,13 +108,25 @@
                     </div>
 
                     <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                        <div>
+                        <div class="sm:col-span-2 xl:col-span-4">
                             <label class="crud-label">Prioritate</label>
-                            <select name="priority" class="crud-control">
+                            <div class="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                                 @foreach ($priorities as $priority)
-                                    <option value="{{ $priority }}" @selected(old('priority', 'medium') === $priority)>{{ $priorityLabels[$priority] ?? $priority }}</option>
+                                    <label
+                                        class="flex cursor-pointer items-start gap-3 rounded-2xl border px-4 py-3 transition"
+                                        :class="priority === '{{ $priority }}' ? '{{ $priorityOptionClasses[$priority] ?? 'border-slate-300 bg-slate-50 text-slate-900' }} shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
+                                    >
+                                        <input type="radio" name="priority" value="{{ $priority }}" class="sr-only" x-model="priority">
+                                        <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-1 {{ $priorityClasses[$priority] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">
+                                            @include('repairs.partials.icon', ['name' => $priorityIcons[$priority] ?? 'bars', 'class' => 'h-4 w-4'])
+                                        </span>
+                                        <span>
+                                            <span class="block text-sm font-semibold">{{ $priorityLabels[$priority] ?? $priority }}</span>
+                                            <span class="mt-1 block text-xs text-slate-500">{{ $priorityDescriptions[$priority] ?? '' }}</span>
+                                        </span>
+                                    </label>
                                 @endforeach
-                            </select>
+                            </div>
                         </div>
                         <div>
                             <label class="crud-label">Sakuma datums</label>
@@ -134,7 +149,13 @@
                         </div>
                         <div>
                             <label class="crud-label">Statuss</label>
-                            <input type="text" value="Gaida" class="crud-control bg-slate-50" disabled>
+                            <div class="crud-control flex items-center gap-3 bg-slate-50">
+                                <span class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 {{ $statusClasses['waiting'] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">
+                                    @include('repairs.partials.icon', ['name' => $statusIcons['waiting'] ?? 'clock', 'class' => 'h-3.5 w-3.5'])
+                                    {{ $statusLabels['waiting'] ?? 'Gaida' }}
+                                </span>
+                                <span class="text-sm text-slate-500">Jauns remonts vienmer sakas ar gaidisanas statusu.</span>
+                            </div>
                         </div>
                     </div>
                 </div>

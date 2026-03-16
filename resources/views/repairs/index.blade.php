@@ -298,7 +298,8 @@
                                             <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
                                                 {{ $device?->code ?: 'Ierice' }}
                                             </span>
-                                            <span class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 {{ $typeClasses[$repair->repair_type] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">
+                                            <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 {{ $typeClasses[$repair->repair_type] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">
+                                                @include('repairs.partials.icon', ['name' => $typeIcons[$repair->repair_type] ?? 'wrench', 'class' => 'h-3.5 w-3.5'])
                                                 {{ $typeLabels[$repair->repair_type] ?? $repair->repair_type }}
                                             </span>
                                         </div>
@@ -306,7 +307,8 @@
                                         <p class="mt-1 text-sm leading-6 text-slate-600">{{ \Illuminate\Support\Str::limit($repair->description, 150) }}</p>
                                     </div>
 
-                                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 {{ $priorityClasses[$repair->priority] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">
+                                    <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 {{ $priorityClasses[$repair->priority] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">
+                                        @include('repairs.partials.icon', ['name' => $priorityIcons[$repair->priority] ?? 'bars', 'class' => 'h-3.5 w-3.5'])
                                         {{ $priorityLabels[$repair->priority] ?? 'Videja' }}
                                     </span>
                                 </div>
@@ -354,12 +356,14 @@
                                 </div>
 
                                 <div class="mt-4 flex flex-wrap items-center gap-2">
-                                    <span class="inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold ring-1 {{ $statusClasses[$repair->status] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">
+                                    <span class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 {{ $statusClasses[$repair->status] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">
+                                        @include('repairs.partials.icon', ['name' => $statusIcons[$repair->status] ?? 'clock', 'class' => 'h-3.5 w-3.5'])
                                         {{ $statusLabels[$repair->status] ?? $repair->status }}
                                     </span>
 
                                     @if ($repair->repair_type === 'external' && $repair->vendor_name)
-                                        <span class="inline-flex items-center rounded-full bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-700 ring-1 ring-rose-200">
+                                        <span class="inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-700 ring-1 ring-rose-200">
+                                            @include('repairs.partials.icon', ['name' => 'truck', 'class' => 'h-3.5 w-3.5'])
                                             {{ $repair->vendor_name }}
                                         </span>
                                     @endif

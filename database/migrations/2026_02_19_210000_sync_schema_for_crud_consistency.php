@@ -12,11 +12,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // building notes should allow empty values from forms
-        DB::statement("ALTER TABLE buildings MODIFY notes VARCHAR(200) NULL");
+        $driver = Schema::getConnection()->getDriverName();
 
-        // device warranty photo is optional in forms
-        DB::statement("ALTER TABLE devices MODIFY warranty_photo_name VARCHAR(50) NULL");
+        // building notes should allow empty values from forms
+        if ($driver === 'sqlite') {
+            Schema::table('buildings', function (Blueprint $table) {
+                $table->string('notes', 200)->nullable()->change();
+            });
+
+            Schema::table('devices', function (Blueprint $table) {
+                $table->string('warranty_photo_name', 50)->nullable()->change();
+            });
+        } else {
+            DB::statement("ALTER TABLE buildings MODIFY notes VARCHAR(200) NULL");
+
+            // device warranty photo is optional in forms
+            DB::statement("ALTER TABLE devices MODIFY warranty_photo_name VARCHAR(50) NULL");
+        }
 
         Schema::table('device_sets', function (Blueprint $table) {
             if (! Schema::hasColumn('device_sets', 'set_name')) {
@@ -47,7 +59,11 @@ return new class extends Migration
         // Backfill new fields for existing rows
         DB::statement("UPDATE device_sets SET set_name = name WHERE set_name IS NULL OR set_name = ''");
         DB::statement("UPDATE device_sets SET notes = description WHERE notes IS NULL");
-        DB::statement("UPDATE device_sets SET set_code = CONCAT('KIT-', LPAD(id, 5, '0')) WHERE set_code IS NULL OR set_code = ''");
+        if ($driver === 'sqlite') {
+            DB::statement("UPDATE device_sets SET set_code = 'KIT-' || printf('%05d', id) WHERE set_code IS NULL OR set_code = ''");
+        } else {
+            DB::statement("UPDATE device_sets SET set_code = CONCAT('KIT-', LPAD(id, 5, '0')) WHERE set_code IS NULL OR set_code = ''");
+        }
 
         Schema::table('device_set_items', function (Blueprint $table) {
             if (! Schema::hasColumn('device_set_items', 'quantity')) {

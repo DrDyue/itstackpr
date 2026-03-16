@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AuditLog;
 use App\Models\Building;
 use App\Models\Device;
+use App\Models\DeviceHistory;
 use App\Models\Repair;
 use App\Models\User;
 use App\Support\AuditTrail;
@@ -18,6 +19,7 @@ class RepairController extends Controller
     private const STATUSES = ['waiting', 'in-progress', 'completed', 'cancelled'];
     private const TYPES = ['internal', 'external'];
     private const PRIORITIES = ['low', 'medium', 'high', 'critical'];
+    private const DEVICE_RESTORABLE_STATUSES = ['active', 'reserve', 'broken', 'kitting'];
     private const DEVICE_STATUSES_BLOCKED_FOR_NEW_REPAIR = ['repair', 'retired'];
     private const ALLOWED_TRANSITIONS = [
         'waiting' => ['in-progress', 'cancelled'],
@@ -72,7 +74,7 @@ class RepairController extends Controller
         return view('repairs.create', array_merge($this->formData(), [
             'defaultReporterId' => auth()->id(),
             'preselectedDeviceId' => $request->query('device_id'),
-        ]));
+        ], $this->viewMeta()));
     }
 
     public function store(Request $request)
@@ -269,6 +271,8 @@ class RepairController extends Controller
         $data['start_date'] = filled($data['start_date'] ?? null)
             ? $data['start_date']
             : ($repair?->start_date?->format('Y-m-d') ?? now()->toDateString());
+        $data['device_status_before_repair'] = $repair?->device_status_before_repair
+            ?? $this->normalizeDeviceStatusForRestore($device?->status);
 
         if ($data['repair_type'] === 'internal') {
             $data['vendor_name'] = null;
@@ -434,16 +438,52 @@ class RepairController extends Controller
             ->exists();
 
         if ($hasActiveRepairs) {
-            if ($device->status !== 'repair') {
-                $device->update(['status' => 'repair']);
-            }
+            $this->updateDeviceStatusForRepair($device, 'repair', $repair);
 
             return;
         }
 
         if (($previousStatus === 'waiting' || $previousStatus === 'in-progress' || $device->status === 'repair')) {
-            $device->update(['status' => 'active']);
+            $this->updateDeviceStatusForRepair(
+                $device,
+                $this->normalizeDeviceStatusForRestore($repair->device_status_before_repair),
+                $repair
+            );
         }
+    }
+
+    private function updateDeviceStatusForRepair(Device $device, string $targetStatus, Repair $repair): void
+    {
+        if ($device->status === $targetStatus) {
+            return;
+        }
+
+        $oldStatus = (string) $device->status;
+        $device->forceFill(['status' => $targetStatus])->save();
+
+        DeviceHistory::create([
+            'device_id' => $device->id,
+            'action' => 'STATUS_CHANGE',
+            'field_changed' => 'status',
+            'old_value' => $oldStatus,
+            'new_value' => $targetStatus,
+            'changed_by' => auth()->id(),
+        ]);
+
+        AuditTrail::writeForModel(
+            auth()->id(),
+            'UPDATE',
+            $device,
+            'Device status synced from repair #' . $repair->id . ': ' . $oldStatus . ' -> ' . $targetStatus,
+            'info'
+        );
+    }
+
+    private function normalizeDeviceStatusForRestore(?string $status): string
+    {
+        return in_array($status, self::DEVICE_RESTORABLE_STATUSES, true)
+            ? $status
+            : 'active';
     }
 
     private function statusLabel(string $status): string
@@ -480,15 +520,31 @@ class RepairController extends Controller
                 'internal' => 'Ieksejais',
                 'external' => 'Arejais',
             ],
+            'typeIcons' => [
+                'internal' => 'wrench',
+                'external' => 'truck',
+            ],
             'typeClasses' => [
                 'internal' => 'bg-violet-100 text-violet-800 ring-violet-200',
                 'external' => 'bg-rose-100 text-rose-800 ring-rose-200',
+            ],
+            'statusIcons' => [
+                'waiting' => 'clock',
+                'in-progress' => 'wrench',
+                'completed' => 'check',
+                'cancelled' => 'x-mark',
             ],
             'priorityLabels' => [
                 'low' => 'Zema',
                 'medium' => 'Videja',
                 'high' => 'Augsta',
                 'critical' => 'Kritiska',
+            ],
+            'priorityIcons' => [
+                'low' => 'arrow-down',
+                'medium' => 'bars',
+                'high' => 'arrow-up',
+                'critical' => 'flame',
             ],
             'priorityClasses' => [
                 'low' => 'bg-slate-100 text-slate-700 ring-slate-200',

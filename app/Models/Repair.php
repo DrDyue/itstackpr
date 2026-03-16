@@ -13,6 +13,7 @@ class Repair extends Model
 
     protected $fillable = [
         'device_id',
+        'device_status_before_repair',
         'description',
         'status',
         'repair_type',
