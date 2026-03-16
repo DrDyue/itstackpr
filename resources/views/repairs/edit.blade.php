@@ -20,23 +20,11 @@
             'completed' => 'Remonts ir pabeigts',
             'cancelled' => 'Darbs tika atcelts',
         ];
-        $statusOptionClasses = [
-            'waiting' => 'border-amber-300 bg-amber-50 text-amber-900',
-            'in-progress' => 'border-sky-300 bg-sky-50 text-sky-900',
-            'completed' => 'border-emerald-300 bg-emerald-50 text-emerald-900',
-            'cancelled' => 'border-slate-300 bg-slate-100 text-slate-900',
-        ];
         $priorityDescriptions = [
             'low' => 'Var planot bez steigas',
             'medium' => 'Standarta izpildes seciba',
             'high' => 'Jareage iespejami driz',
             'critical' => 'Japrioritize uzreiz',
-        ];
-        $priorityOptionClasses = [
-            'low' => 'border-slate-300 bg-slate-50 text-slate-900',
-            'medium' => 'border-amber-300 bg-amber-50 text-amber-900',
-            'high' => 'border-orange-300 bg-orange-50 text-orange-900',
-            'critical' => 'border-rose-300 bg-rose-50 text-rose-900',
         ];
     @endphp
 
@@ -106,12 +94,18 @@
 
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Ierices kods</p>
+                <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                    @include('repairs.partials.icon', ['name' => 'device', 'class' => 'h-4 w-4'])
+                    Ierices kods
+                </p>
                 <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $repair->device?->code ?: '-' }}</div>
                 <p class="mt-2 text-sm text-slate-600">{{ $repair->device?->type?->type_name ?: 'Tips nav noradits' }}</p>
             </div>
             <div class="rounded-3xl border border-sky-200 bg-gradient-to-br from-sky-50 via-white to-cyan-50 p-5 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">Atrasanas vieta</p>
+                <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">
+                    @include('repairs.partials.icon', ['name' => 'building', 'class' => 'h-4 w-4'])
+                    Atrasanas vieta
+                </p>
                 <div class="mt-2 text-lg font-semibold text-slate-900">{{ $currentBuilding?->building_name ?: 'Eka nav noradita' }}</div>
                 <p class="mt-2 text-sm text-slate-600">
                     @if ($currentRoom)
@@ -125,12 +119,18 @@
                 </p>
             </div>
             <div class="rounded-3xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-5 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-violet-700">Atbildigais</p>
+                <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-violet-700">
+                    @include('repairs.partials.icon', ['name' => 'users', 'class' => 'h-4 w-4'])
+                    Atbildigais
+                </p>
                 <div class="mt-2 text-lg font-semibold text-slate-900">{{ $repair->assignee?->employee?->full_name ?? 'Nav pieskirta' }}</div>
                 <p class="mt-2 text-sm text-slate-600">Pieteica: {{ $repair->reporter?->employee?->full_name ?? 'Nav zinotaja' }}</p>
             </div>
             <div class="rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-5 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">Termini un izmaksas</p>
+                <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">
+                    @include('repairs.partials.icon', ['name' => 'calendar', 'class' => 'h-4 w-4'])
+                    Termini un izmaksas
+                </p>
                 <div class="mt-2 text-lg font-semibold text-slate-900">{{ $repair->cost !== null ? number_format((float) $repair->cost, 2) . ' EUR' : '-' }}</div>
                 <p class="mt-2 text-sm text-slate-600">
                     Sakts {{ $repair->start_date?->format('d.m.Y') ?? '-' }}
@@ -149,7 +149,10 @@
                 <div class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                            <h2 class="text-lg font-semibold text-slate-900">Atras darbibas</h2>
+                            <h2 class="flex items-center gap-2 text-lg font-semibold text-slate-900">
+                                @include('repairs.partials.icon', ['name' => 'wrench', 'class' => 'h-5 w-5'])
+                                Atras darbibas
+                            </h2>
                             <p class="mt-1 text-sm text-slate-600">Parvieto remontu starp gaida, procesa un pabeigts statusiem.</p>
                         </div>
                         <span class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 {{ $priorityClasses[$repair->priority] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">
@@ -229,24 +232,36 @@
                     <div class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
                         <div class="flex items-start justify-between gap-3">
                             <div>
-                                <h2 class="text-lg font-semibold text-slate-900">Pamatinformacija</h2>
+                                <h2 class="flex items-center gap-2 text-lg font-semibold text-slate-900">
+                                    @include('repairs.partials.icon', ['name' => 'document', 'class' => 'h-5 w-5'])
+                                    Pamatinformacija
+                                </h2>
                                 <p class="mt-1 text-sm text-slate-600">Ierice un sakuma datums tiek tureti nemainigi, lai saglabatu remonta vesturi korektu.</p>
                             </div>
                         </div>
 
                         <div class="mt-5 grid gap-4 sm:grid-cols-2">
                             <div>
-                                <label class="crud-label">Ierice</label>
+                                <label class="crud-label flex items-center gap-2">
+                                    @include('repairs.partials.icon', ['name' => 'device', 'class' => 'h-4 w-4'])
+                                    Ierice
+                                </label>
                                 <input type="text" value="{{ $repair->device?->code ?: 'Ierice' }} - {{ $repair->device?->name ?: 'Nezinama ierice' }}" class="crud-control bg-slate-50" disabled>
                             </div>
                             <div>
-                                <label class="crud-label">Sakuma datums</label>
+                                <label class="crud-label flex items-center gap-2">
+                                    @include('repairs.partials.icon', ['name' => 'calendar', 'class' => 'h-4 w-4'])
+                                    Sakuma datums
+                                </label>
                                 <input type="text" value="{{ $repair->start_date?->format('d.m.Y') ?? '-' }}" class="crud-control bg-slate-50" disabled>
                             </div>
                         </div>
 
                         <div class="mt-4">
-                            <label class="crud-label">Apraksts *</label>
+                            <label class="crud-label flex items-center gap-2">
+                                @include('repairs.partials.icon', ['name' => 'note', 'class' => 'h-4 w-4'])
+                                Apraksts *
+                            </label>
                             <textarea name="description" rows="5" required class="crud-control">{{ old('description', $repair->description) }}</textarea>
                         </div>
                     </div>
@@ -254,70 +269,88 @@
                     <div class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
                         <div class="flex items-start justify-between gap-3">
                             <div>
-                                <h2 class="text-lg font-semibold text-slate-900">Planosana un izpilde</h2>
+                                <h2 class="flex items-center gap-2 text-lg font-semibold text-slate-900">
+                                    @include('repairs.partials.icon', ['name' => 'calendar', 'class' => 'h-5 w-5'])
+                                    Planosana un izpilde
+                                </h2>
                                 <p class="mt-1 text-sm text-slate-600">Tips, prioritate, statuss, termini un izmaksas.</p>
                             </div>
                         </div>
 
                         <div class="mt-5 grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
                             <div>
-                                <label class="crud-label">Remonta tips *</label>
-                                <select name="repair_type" required class="crud-control" x-model="repairType">
-                                    @foreach ($repairTypes as $type)
-                                        <option value="{{ $type }}" @selected(old('repair_type', $repair->repair_type) === $type)>{{ $typeLabels[$type] ?? $type }}</option>
-                                    @endforeach
-                                </select>
+                                <label class="crud-label flex items-center gap-2">
+                                    @include('repairs.partials.icon', ['name' => 'wrench', 'class' => 'h-4 w-4'])
+                                    Remonta tips *
+                                </label>
+                                @include('repairs.partials.custom-select', [
+                                    'name' => 'repair_type',
+                                    'selected' => old('repair_type', $repair->repair_type),
+                                    'options' => $repairTypes,
+                                    'labels' => $typeLabels,
+                                    'icons' => $typeIcons,
+                                    'classes' => $typeClasses,
+                                    'descriptions' => [
+                                        'internal' => 'Darbs tiek veikts uz vietas',
+                                        'external' => 'Darbs tiek nodots arejam servisam',
+                                    ],
+                                    'syncModel' => 'repairType',
+                                    'placeholder' => 'Izvelies remonta tipu',
+                                ])
                             </div>
                             <div class="lg:col-span-2">
-                                <label class="crud-label">Statuss</label>
-                                <div class="mt-2 grid gap-2 sm:grid-cols-2">
-                                    @foreach ($statuses as $status)
-                                        <label
-                                            class="flex cursor-pointer items-start gap-3 rounded-2xl border px-4 py-3 transition"
-                                            :class="status === '{{ $status }}' ? '{{ $statusOptionClasses[$status] ?? 'border-slate-300 bg-slate-50 text-slate-900' }} shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
-                                        >
-                                            <input type="radio" name="status" value="{{ $status }}" class="sr-only" x-model="status">
-                                            <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-1 {{ $statusClasses[$status] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">
-                                                @include('repairs.partials.icon', ['name' => $statusIcons[$status] ?? 'clock', 'class' => 'h-4 w-4'])
-                                            </span>
-                                            <span>
-                                                <span class="block text-sm font-semibold">{{ $statusLabels[$status] ?? $status }}</span>
-                                                <span class="mt-1 block text-xs text-slate-500">{{ $statusDescriptions[$status] ?? '' }}</span>
-                                            </span>
-                                        </label>
-                                    @endforeach
-                                </div>
+                                <label class="crud-label flex items-center gap-2">
+                                    @include('repairs.partials.icon', ['name' => 'clock', 'class' => 'h-4 w-4'])
+                                    Statuss
+                                </label>
+                                @include('repairs.partials.custom-select', [
+                                    'name' => 'status',
+                                    'selected' => old('status', $repair->status),
+                                    'options' => $statuses,
+                                    'labels' => $statusLabels,
+                                    'icons' => $statusIcons,
+                                    'classes' => $statusClasses,
+                                    'descriptions' => $statusDescriptions,
+                                    'syncModel' => 'status',
+                                    'placeholder' => 'Izvelies statusu',
+                                ])
                             </div>
                             <div class="lg:col-span-2 xl:col-span-4">
-                                <label class="crud-label">Prioritate</label>
-                                <div class="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                                    @foreach ($priorities as $priority)
-                                        <label
-                                            class="flex cursor-pointer items-start gap-3 rounded-2xl border px-4 py-3 transition"
-                                            :class="priority === '{{ $priority }}' ? '{{ $priorityOptionClasses[$priority] ?? 'border-slate-300 bg-slate-50 text-slate-900' }} shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
-                                        >
-                                            <input type="radio" name="priority" value="{{ $priority }}" class="sr-only" x-model="priority">
-                                            <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-1 {{ $priorityClasses[$priority] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">
-                                                @include('repairs.partials.icon', ['name' => $priorityIcons[$priority] ?? 'bars', 'class' => 'h-4 w-4'])
-                                            </span>
-                                            <span>
-                                                <span class="block text-sm font-semibold">{{ $priorityLabels[$priority] ?? $priority }}</span>
-                                                <span class="mt-1 block text-xs text-slate-500">{{ $priorityDescriptions[$priority] ?? '' }}</span>
-                                            </span>
-                                        </label>
-                                    @endforeach
-                                </div>
+                                <label class="crud-label flex items-center gap-2">
+                                    @include('repairs.partials.icon', ['name' => 'flame', 'class' => 'h-4 w-4'])
+                                    Prioritate
+                                </label>
+                                @include('repairs.partials.custom-select', [
+                                    'name' => 'priority',
+                                    'selected' => old('priority', $repair->priority ?? 'medium'),
+                                    'options' => $priorities,
+                                    'labels' => $priorityLabels,
+                                    'icons' => $priorityIcons,
+                                    'classes' => $priorityClasses,
+                                    'descriptions' => $priorityDescriptions,
+                                    'syncModel' => 'priority',
+                                    'placeholder' => 'Izvelies prioritati',
+                                ])
                             </div>
                             <div>
-                                <label class="crud-label">Izmaksas (EUR)</label>
+                                <label class="crud-label flex items-center gap-2">
+                                    @include('repairs.partials.icon', ['name' => 'money', 'class' => 'h-4 w-4'])
+                                    Izmaksas (EUR)
+                                </label>
                                 <input type="number" step="0.01" min="0" name="cost" value="{{ old('cost', $repair->cost) }}" class="crud-control">
                             </div>
                             <div>
-                                <label class="crud-label">Planotais beigums</label>
+                                <label class="crud-label flex items-center gap-2">
+                                    @include('repairs.partials.icon', ['name' => 'calendar', 'class' => 'h-4 w-4'])
+                                    Planotais beigums
+                                </label>
                                 <input type="date" name="estimated_completion" value="{{ old('estimated_completion', optional($repair->estimated_completion)->format('Y-m-d')) }}" class="crud-control">
                             </div>
                             <div x-show="status === 'completed'" x-cloak>
-                                <label class="crud-label">Faktiskais beigums</label>
+                                <label class="crud-label flex items-center gap-2">
+                                    @include('repairs.partials.icon', ['name' => 'calendar', 'class' => 'h-4 w-4'])
+                                    Faktiskais beigums
+                                </label>
                                 <input type="date" name="actual_completion" value="{{ old('actual_completion', optional($repair->actual_completion)->format('Y-m-d')) }}" class="crud-control">
                             </div>
                         </div>
@@ -326,14 +359,20 @@
                     <div class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
                         <div class="flex items-start justify-between gap-3">
                             <div>
-                                <h2 class="text-lg font-semibold text-slate-900">Atbildiba</h2>
+                                <h2 class="flex items-center gap-2 text-lg font-semibold text-slate-900">
+                                    @include('repairs.partials.icon', ['name' => 'users', 'class' => 'h-5 w-5'])
+                                    Atbildiba
+                                </h2>
                                 <p class="mt-1 text-sm text-slate-600">Kas pieteica un kuram pieskirta remonta izpilde.</p>
                             </div>
                         </div>
 
                         <div class="mt-5 grid gap-4 sm:grid-cols-2">
                             <div>
-                                <label class="crud-label">Zinoja lietotajs</label>
+                                <label class="crud-label flex items-center gap-2">
+                                    @include('repairs.partials.icon', ['name' => 'user', 'class' => 'h-4 w-4'])
+                                    Zinoja lietotajs
+                                </label>
                                 <select name="issue_reported_by" class="crud-control">
                                     <option value="">Nav</option>
                                     @foreach ($users as $user)
@@ -342,7 +381,10 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="crud-label">Pieskirts lietotajam</label>
+                                <label class="crud-label flex items-center gap-2">
+                                    @include('repairs.partials.icon', ['name' => 'users', 'class' => 'h-4 w-4'])
+                                    Pieskirts lietotajam
+                                </label>
                                 <select name="assigned_to" class="crud-control">
                                     <option value="">Nav</option>
                                     @foreach ($users as $user)
@@ -356,22 +398,34 @@
                     <div x-show="repairType === 'external'" x-cloak class="rounded-[2rem] border border-rose-200 bg-gradient-to-br from-rose-50 via-white to-white p-5 shadow-sm">
                         <div class="flex items-start justify-between gap-3">
                             <div>
-                                <h2 class="text-lg font-semibold text-slate-900">Areja remonta dati</h2>
+                                <h2 class="flex items-center gap-2 text-lg font-semibold text-slate-900">
+                                    @include('repairs.partials.icon', ['name' => 'truck', 'class' => 'h-5 w-5'])
+                                    Areja remonta dati
+                                </h2>
                                 <p class="mt-1 text-sm text-slate-600">Piegadataja un rekina informacija arejiem servisa darbiem.</p>
                             </div>
                         </div>
 
                         <div class="mt-5 grid gap-4 sm:grid-cols-2">
                             <div>
-                                <label class="crud-label">Piegadatajs *</label>
+                                <label class="crud-label flex items-center gap-2">
+                                    @include('repairs.partials.icon', ['name' => 'truck', 'class' => 'h-4 w-4'])
+                                    Piegadatajs *
+                                </label>
                                 <input type="text" name="vendor_name" value="{{ old('vendor_name', $repair->vendor_name) }}" class="crud-control">
                             </div>
                             <div>
-                                <label class="crud-label">Piegadataja kontakts *</label>
+                                <label class="crud-label flex items-center gap-2">
+                                    @include('repairs.partials.icon', ['name' => 'users', 'class' => 'h-4 w-4'])
+                                    Piegadataja kontakts *
+                                </label>
                                 <input type="text" name="vendor_contact" value="{{ old('vendor_contact', $repair->vendor_contact) }}" class="crud-control">
                             </div>
                             <div class="sm:col-span-2">
-                                <label class="crud-label">Rekina numurs</label>
+                                <label class="crud-label flex items-center gap-2">
+                                    @include('repairs.partials.icon', ['name' => 'document', 'class' => 'h-4 w-4'])
+                                    Rekina numurs
+                                </label>
                                 <input type="text" name="invoice_number" maxlength="50" value="{{ old('invoice_number', $repair->invoice_number) }}" class="crud-control">
                             </div>
                         </div>
@@ -392,7 +446,10 @@
 
             <aside class="space-y-6">
                 <div class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
-                    <h2 class="text-lg font-semibold text-slate-900">Remonta vesture</h2>
+                    <h2 class="flex items-center gap-2 text-lg font-semibold text-slate-900">
+                        @include('repairs.partials.icon', ['name' => 'document', 'class' => 'h-5 w-5'])
+                        Remonta vesture
+                    </h2>
                     <p class="mt-1 text-sm text-slate-600">Automatiski ieraksti par visam galvenajam izmainam saistiba ar so remontu.</p>
 
                     <div class="mt-5 space-y-4">
@@ -416,14 +473,23 @@
                 </div>
 
                 <div class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
-                    <h2 class="text-lg font-semibold text-slate-900">Atrasanas vieta</h2>
+                    <h2 class="flex items-center gap-2 text-lg font-semibold text-slate-900">
+                        @include('repairs.partials.icon', ['name' => 'building', 'class' => 'h-5 w-5'])
+                        Atrasanas vieta
+                    </h2>
                     <div class="mt-4 space-y-3">
                         <div class="rounded-2xl bg-slate-50 px-4 py-3">
-                            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Eka</p>
+                            <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                @include('repairs.partials.icon', ['name' => 'building', 'class' => 'h-4 w-4'])
+                                Eka
+                            </p>
                             <p class="mt-1 text-sm font-medium text-slate-900">{{ $currentBuilding?->building_name ?: 'Nav' }}</p>
                         </div>
                         <div class="rounded-2xl bg-slate-50 px-4 py-3">
-                            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Telpa</p>
+                            <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                @include('repairs.partials.icon', ['name' => 'room', 'class' => 'h-4 w-4'])
+                                Telpa
+                            </p>
                             <p class="mt-1 text-sm font-medium text-slate-900">
                                 @if ($currentRoom)
                                     {{ $currentRoom->room_number }}
@@ -436,14 +502,20 @@
                             </p>
                         </div>
                         <div class="rounded-2xl bg-slate-50 px-4 py-3">
-                            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Stavs</p>
+                            <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                @include('repairs.partials.icon', ['name' => 'building', 'class' => 'h-4 w-4'])
+                                Stavs
+                            </p>
                             <p class="mt-1 text-sm font-medium text-slate-900">{{ $currentRoom?->floor_number !== null ? $currentRoom->floor_number . '. stavs' : 'Nav' }}</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="rounded-[2rem] border border-rose-200 bg-gradient-to-br from-rose-50 via-white to-white p-5 shadow-sm">
-                    <h2 class="text-lg font-semibold text-slate-900">Bistamas darbibas</h2>
+                    <h2 class="flex items-center gap-2 text-lg font-semibold text-slate-900">
+                        @include('repairs.partials.icon', ['name' => 'x-mark', 'class' => 'h-5 w-5'])
+                        Bistamas darbibas
+                    </h2>
                     <p class="mt-1 text-sm text-slate-600">Dzeshot aktivu remontu, saistita ierice tiks iznemta no remonta statusa un atgriezta ieprieksejaja statusa.</p>
 
                     <form method="POST" action="{{ route('repairs.destroy', $repair) }}" class="mt-4" onsubmit="return confirm('Dzest so remonta ierakstu?')">
