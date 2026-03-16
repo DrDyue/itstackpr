@@ -1,11 +1,11 @@
 <nav x-data="{ open: false }" class="border-b border-gray-200 bg-white shadow-sm">
     @php
         $isAdmin = auth()->user()?->role === 'admin';
+        $structureActive = request()->routeIs('buildings*')
+            || request()->routeIs('rooms*');
         $moreActive = request()->routeIs('device-types*')
             || request()->routeIs('employees*')
             || request()->routeIs('users*')
-            || request()->routeIs('buildings*')
-            || request()->routeIs('rooms*')
             || request()->routeIs('device-sets*')
             || request()->routeIs('device-set-items*')
             || request()->routeIs('backups*')
@@ -44,12 +44,40 @@
                         </svg>
                         <span>Remonti</span>
                     </x-nav-link>
-                    <x-nav-link :href="route('buildings.index')" :active="request()->routeIs('buildings*') || request()->routeIs('rooms*')" class="hidden xl:inline-flex">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M5.25 21V7.5l7.5-3 7.5 3V21"/>
-                        </svg>
-                        <span>Ekas</span>
-                    </x-nav-link>
+
+                    <x-dropdown align="left" width="w-64">
+                        <x-slot name="trigger">
+                            <button class="{{ $structureActive ? 'inline-flex items-center gap-2 whitespace-nowrap rounded-lg border-l-4 border-blue-600 bg-blue-50 px-2.5 py-2 text-sm font-semibold text-blue-700 transition duration-200' : 'inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium text-gray-600 transition duration-200 hover:bg-blue-50 hover:text-blue-700' }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M5.25 21V7.5l7.5-3 7.5 3V21"/>
+                                </svg>
+                                <span>Ekas</span>
+                                <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </x-slot>
+
+                        <x-slot name="content">
+                            <x-dropdown-link :href="route('buildings.index')">
+                                <span class="inline-flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M5.25 21V7.5l7.5-3 7.5 3V21"/>
+                                    </svg>
+                                    <span>Ekas</span>
+                                </span>
+                            </x-dropdown-link>
+                            <x-dropdown-link :href="route('rooms.index')">
+                                <span class="inline-flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5h15M6.75 4.5h10.5a1.5 1.5 0 0 1 1.5 1.5v13.5H5.25V6a1.5 1.5 0 0 1 1.5-1.5Z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 9.75h6M9 13.5h6"/>
+                                    </svg>
+                                    <span>Telpas</span>
+                                </span>
+                            </x-dropdown-link>
+                        </x-slot>
+                    </x-dropdown>
 
                     <x-dropdown align="left" width="w-64">
                         <x-slot name="trigger">
@@ -79,14 +107,6 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/>
                                     </svg>
                                     <span>Iericu tipi</span>
-                                </span>
-                            </x-dropdown-link>
-                            <x-dropdown-link :href="route('buildings.index')">
-                                <span class="inline-flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M5.25 21V7.5l7.5-3 7.5 3V21"/>
-                                    </svg>
-                                    <span>Ekas un telpas</span>
                                 </span>
                             </x-dropdown-link>
                             @if ($isAdmin)
@@ -236,6 +256,23 @@
                     <span>Darbinieki</span>
                 </span>
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('buildings.index')" :active="request()->routeIs('buildings*')">
+                <span class="inline-flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M5.25 21V7.5l7.5-3 7.5 3V21"/>
+                    </svg>
+                    <span>Ekas</span>
+                </span>
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('rooms.index')" :active="request()->routeIs('rooms*')">
+                <span class="inline-flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5h15M6.75 4.5h10.5a1.5 1.5 0 0 1 1.5 1.5v13.5H5.25V6a1.5 1.5 0 0 1 1.5-1.5Z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 9.75h6M9 13.5h6"/>
+                    </svg>
+                    <span>Telpas</span>
+                </span>
+            </x-responsive-nav-link>
             @if ($isAdmin)
                 <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users*')">
                     <span class="inline-flex items-center gap-2">
@@ -265,14 +302,6 @@
                     </span>
                 </x-responsive-nav-link>
             @endif
-            <x-responsive-nav-link :href="route('buildings.index')" :active="request()->routeIs('buildings*') || request()->routeIs('rooms*')">
-                <span class="inline-flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M5.25 21V7.5l7.5-3 7.5 3V21"/>
-                    </svg>
-                    <span>Ekas un telpas</span>
-                </span>
-            </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('device-sets.index')" :active="request()->routeIs('device-sets*') || request()->routeIs('device-set-items*')">
                 <span class="inline-flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

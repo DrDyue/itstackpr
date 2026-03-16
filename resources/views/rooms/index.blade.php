@@ -4,13 +4,30 @@
             <div>
                 <h1 class="text-2xl font-semibold text-gray-900">Telpas</h1>
                 <p class="text-sm text-gray-500">Telpu saraksts pa ekam</p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <a href="{{ route('buildings.index') }}" class="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M5.25 21V7.5l7.5-3 7.5 3V21"/>
+                        </svg>
+                        Ekas
+                    </a>
+                    <span class="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">Telpas</span>
+                </div>
             </div>
-            <a href="{{ route('rooms.create') }}" class="crud-btn-primary-inline inline-flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-                </svg>
-                Pievienot telpu
-            </a>
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="{{ route('buildings.create') }}" class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                    </svg>
+                    Pievienot eku
+                </a>
+                <a href="{{ route('rooms.create') }}" class="crud-btn-primary-inline inline-flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                    </svg>
+                    Pievienot telpu
+                </a>
+            </div>
         </div>
 
         @if (session('success'))
