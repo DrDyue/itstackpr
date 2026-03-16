@@ -167,13 +167,17 @@
         </div>
 
         <div class="mb-6 grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.85fr)]">
-            <div class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm" x-data="{ frequency: '{{ old('frequency', $settings->frequency) }}' }">
-                <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
-                    <div>
+            <div class="flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm" x-data="{ frequency: '{{ old('frequency', $settings->frequency) }}' }">
+                <div class="mb-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.95fr)]">
+                    <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
                         <h2 class="text-xl font-semibold text-slate-900">Automatiskais grafiks</h2>
-                        <p class="mt-1 text-sm text-slate-500">Iestati biezhumu un laiku automatiskajai rezerves kopijai.</p>
+                        <p class="mt-2 text-sm text-slate-500">Iestati biezhumu un laiku automatiskajai rezerves kopijai. Visi laiki tiek paraditi Latvijas laika josla.</p>
                     </div>
-                    <div class="grid gap-3 sm:grid-cols-2">
+                    <div class="grid gap-3 sm:grid-cols-3">
+                        <div class="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600 ring-1 ring-slate-200">
+                            <span class="block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Statuss</span>
+                            <strong class="mt-1 block text-slate-900">{{ $frequencyLabel }}</strong>
+                        </div>
                         <div class="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600 ring-1 ring-slate-200">
                             <span class="block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Nakamais starts</span>
                             <strong class="mt-1 block text-slate-900">{{ $formatDateTime($summary['next_run_at'], 'Izslegts') }}</strong>
@@ -185,7 +189,7 @@
                     </div>
                 </div>
 
-                <form method="POST" action="{{ route('backups.settings.update') }}" class="space-y-5">
+                <form method="POST" action="{{ route('backups.settings.update') }}" class="flex h-full flex-col gap-5">
                     @csrf
                     @method('PUT')
 
@@ -232,8 +236,8 @@
                         </label>
                     </div>
 
-                    <div class="flex flex-wrap items-center justify-between gap-3">
-                        <p class="text-sm text-slate-500">Visi laiki tiek paraditi Latvijas laika josla.</p>
+                    <div class="mt-auto flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                        <p class="text-sm text-slate-500">Grafiks izmanto Latvijas laiku un 15 minusu intervalus, lai laiku butu vieglak iestatit precizi.</p>
                         <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75 10.5 18l9-13.5"/>
@@ -329,11 +333,83 @@
                 </label>
                 <label class="block">
                     <span class="user-filter-label">No datuma</span>
-                    <input type="date" name="date_from" value="{{ $filters['date_from'] }}" class="crud-control">
+                    <div class="relative" x-data="backupDatePicker('{{ $filters['date_from'] }}')">
+                        <input type="hidden" name="date_from" x-model="value">
+                        <button type="button" class="crud-control flex w-full items-center justify-between text-left" @click="toggle()">
+                            <span :class="displayValue ? 'text-slate-900' : 'text-slate-400'" x-text="displayValue || 'dd.mm.gggg'"></span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3.75v1.5m7.5-1.5v1.5M3.75 8.25h16.5M4.5 6h15a.75.75 0 0 1 .75.75v12.75a.75.75 0 0 1-.75.75h-15a.75.75 0 0 1-.75-.75V6.75A.75.75 0 0 1 4.5 6Z"/></svg>
+                        </button>
+                        <div x-cloak x-show="open" @click.outside="open = false" class="absolute left-0 top-full z-20 mt-2 w-80 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-xl">
+                            <div class="mb-3 flex items-center justify-between">
+                                <button type="button" class="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50" @click="previousMonth()">&larr;</button>
+                                <div class="text-sm font-semibold text-slate-900" x-text="monthLabel"></div>
+                                <button type="button" class="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50" @click="nextMonth()">&rarr;</button>
+                            </div>
+                            <div class="mb-2 grid grid-cols-7 gap-1 text-center text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                                <template x-for="weekday in weekdays" :key="weekday">
+                                    <span x-text="weekday"></span>
+                                </template>
+                            </div>
+                            <div class="grid grid-cols-7 gap-1">
+                                <template x-for="day in days" :key="day.key">
+                                    <button
+                                        type="button"
+                                        class="flex h-10 items-center justify-center rounded-xl text-sm transition"
+                                        :class="day.isCurrentMonth
+                                            ? (day.isSelected ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100')
+                                            : 'text-slate-300'"
+                                        :disabled="!day.isCurrentMonth"
+                                        @click="select(day.value)"
+                                        x-text="day.label"
+                                    ></button>
+                                </template>
+                            </div>
+                            <div class="mt-3 flex items-center justify-between gap-3">
+                                <button type="button" class="text-sm text-slate-500 hover:text-slate-700" @click="clear()">Notirit datumu</button>
+                                <button type="button" class="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800" @click="open = false">Aizvert</button>
+                            </div>
+                        </div>
+                    </div>
                 </label>
                 <label class="block">
                     <span class="user-filter-label">Lidz datumam</span>
-                    <input type="date" name="date_to" value="{{ $filters['date_to'] }}" class="crud-control">
+                    <div class="relative" x-data="backupDatePicker('{{ $filters['date_to'] }}')">
+                        <input type="hidden" name="date_to" x-model="value">
+                        <button type="button" class="crud-control flex w-full items-center justify-between text-left" @click="toggle()">
+                            <span :class="displayValue ? 'text-slate-900' : 'text-slate-400'" x-text="displayValue || 'dd.mm.gggg'"></span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3.75v1.5m7.5-1.5v1.5M3.75 8.25h16.5M4.5 6h15a.75.75 0 0 1 .75.75v12.75a.75.75 0 0 1-.75.75h-15a.75.75 0 0 1-.75-.75V6.75A.75.75 0 0 1 4.5 6Z"/></svg>
+                        </button>
+                        <div x-cloak x-show="open" @click.outside="open = false" class="absolute left-0 top-full z-20 mt-2 w-80 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-xl">
+                            <div class="mb-3 flex items-center justify-between">
+                                <button type="button" class="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50" @click="previousMonth()">&larr;</button>
+                                <div class="text-sm font-semibold text-slate-900" x-text="monthLabel"></div>
+                                <button type="button" class="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50" @click="nextMonth()">&rarr;</button>
+                            </div>
+                            <div class="mb-2 grid grid-cols-7 gap-1 text-center text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                                <template x-for="weekday in weekdays" :key="weekday">
+                                    <span x-text="weekday"></span>
+                                </template>
+                            </div>
+                            <div class="grid grid-cols-7 gap-1">
+                                <template x-for="day in days" :key="day.key">
+                                    <button
+                                        type="button"
+                                        class="flex h-10 items-center justify-center rounded-xl text-sm transition"
+                                        :class="day.isCurrentMonth
+                                            ? (day.isSelected ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100')
+                                            : 'text-slate-300'"
+                                        :disabled="!day.isCurrentMonth"
+                                        @click="select(day.value)"
+                                        x-text="day.label"
+                                    ></button>
+                                </template>
+                            </div>
+                            <div class="mt-3 flex items-center justify-between gap-3">
+                                <button type="button" class="text-sm text-slate-500 hover:text-slate-700" @click="clear()">Notirit datumu</button>
+                                <button type="button" class="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800" @click="open = false">Aizvert</button>
+                            </div>
+                        </div>
+                    </div>
                 </label>
                 <input type="hidden" name="trigger" value="{{ $filters['trigger'] }}">
                 <div class="flex items-end gap-2">
@@ -433,4 +509,107 @@
             <div class="mt-5">{{ $backups->links() }}</div>
         @endif
     </section>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('backupDatePicker', (initialValue = '') => ({
+                open: false,
+                value: initialValue || '',
+                viewDate: null,
+                weekdays: ['Pr', 'Ot', 'Tr', 'Ce', 'Pk', 'Se', 'Sv'],
+                months: ['Janvaris', 'Februaris', 'Marts', 'Aprilis', 'Maijs', 'Junijs', 'Julijs', 'Augusts', 'Septembris', 'Oktobris', 'Novembris', 'Decembris'],
+                init() {
+                    this.viewDate = this.value ? this.parseDate(this.value) : new Date();
+                },
+                toggle() {
+                    this.open = !this.open;
+                },
+                previousMonth() {
+                    this.viewDate = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() - 1, 1);
+                },
+                nextMonth() {
+                    this.viewDate = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() + 1, 1);
+                },
+                select(value) {
+                    this.value = value;
+                    this.viewDate = this.parseDate(value);
+                    this.open = false;
+                },
+                clear() {
+                    this.value = '';
+                    this.open = false;
+                },
+                parseDate(value) {
+                    const [year, month, day] = value.split('-').map(Number);
+                    return new Date(year, month - 1, day);
+                },
+                formatDate(value) {
+                    if (!value) {
+                        return '';
+                    }
+
+                    const [year, month, day] = value.split('-');
+
+                    return `${day}.${month}.${year}`;
+                },
+                toIso(date) {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+
+                    return `${year}-${month}-${day}`;
+                },
+                get displayValue() {
+                    return this.formatDate(this.value);
+                },
+                get monthLabel() {
+                    return `${this.months[this.viewDate.getMonth()]} ${this.viewDate.getFullYear()}`;
+                },
+                get days() {
+                    const startOfMonth = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth(), 1);
+                    const endOfMonth = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() + 1, 0);
+                    const startWeekday = (startOfMonth.getDay() + 6) % 7;
+                    const days = [];
+
+                    for (let i = startWeekday; i > 0; i--) {
+                        const date = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth(), 1 - i);
+                        days.push({
+                            key: `prev-${this.toIso(date)}`,
+                            label: date.getDate(),
+                            value: this.toIso(date),
+                            isCurrentMonth: false,
+                            isSelected: false,
+                        });
+                    }
+
+                    for (let day = 1; day <= endOfMonth.getDate(); day++) {
+                        const date = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth(), day);
+                        const iso = this.toIso(date);
+
+                        days.push({
+                            key: iso,
+                            label: day,
+                            value: iso,
+                            isCurrentMonth: true,
+                            isSelected: this.value === iso,
+                        });
+                    }
+
+                    while (days.length < 42) {
+                        const offset = days.length - (startWeekday + endOfMonth.getDate()) + 1;
+                        const date = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() + 1, offset);
+                        days.push({
+                            key: `next-${this.toIso(date)}`,
+                            label: date.getDate(),
+                            value: this.toIso(date),
+                            isCurrentMonth: false,
+                            isSelected: false,
+                        });
+                    }
+
+                    return days;
+                },
+            }));
+        });
+    </script>
 </x-app-layout> 
