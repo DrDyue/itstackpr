@@ -51,6 +51,14 @@
                 default => 'Katru dienu',
             }
             : 'Izslegts';
+        $selectedRunAt = old('run_at', substr((string) $settings->run_at, 0, 5));
+        $timeOptions = [];
+
+        for ($hour = 0; $hour < 24; $hour++) {
+            foreach ([0, 15, 30, 45] as $minute) {
+                $timeOptions[] = sprintf('%02d:%02d', $hour, $minute);
+            }
+        }
     @endphp
 
     <section class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -200,7 +208,11 @@
                         </label>
                         <label class="block">
                             <span class="user-filter-label">Laiks</span>
-                            <input type="time" name="run_at" value="{{ old('run_at', substr((string) $settings->run_at, 0, 5)) }}" class="crud-control">
+                            <select name="run_at" class="crud-control">
+                                @foreach ($timeOptions as $timeOption)
+                                    <option value="{{ $timeOption }}" @selected($selectedRunAt === $timeOption)>{{ $timeOption }}</option>
+                                @endforeach
+                            </select>
                         </label>
                         <label class="block" x-show="frequency === 'weekly'" x-cloak>
                             <span class="user-filter-label">Nedelas diena</span>
@@ -232,29 +244,46 @@
                 </form>
             </div>
 
-            <div class="rounded-[1.75rem] border border-slate-200 bg-violet-50 p-6 shadow-sm">
+            <div class="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-6 shadow-sm" x-data="{ fileName: 'Nav atlasitas datnes' }">
                 <div class="mb-5">
                     <h2 class="text-xl font-semibold text-slate-900">Atjaunot no datora faila</h2>
                     <p class="mt-1 text-sm text-slate-500">Augshuplade pilnu datubazes eksportu, saglaba to serveri un uzreiz pievieno backup vesturei.</p>
                 </div>
 
                 <div class="mb-5 space-y-3 text-sm text-slate-600">
-                    <div class="flex items-start gap-3 rounded-2xl bg-white/80 px-4 py-3 ring-1 ring-violet-100"><span class="flex h-7 w-7 items-center justify-center rounded-full bg-violet-100 text-xs font-bold text-violet-700">1</span><span>Izvelies rezerves kopijas failu no datora.</span></div>
-                    <div class="flex items-start gap-3 rounded-2xl bg-white/80 px-4 py-3 ring-1 ring-violet-100"><span class="flex h-7 w-7 items-center justify-center rounded-full bg-violet-100 text-xs font-bold text-violet-700">2</span><span>Fails tiks saglabats serveri un paradisies vesture.</span></div>
-                    <div class="flex items-start gap-3 rounded-2xl bg-white/80 px-4 py-3 ring-1 ring-violet-100"><span class="flex h-7 w-7 items-center justify-center rounded-full bg-violet-100 text-xs font-bold text-violet-700">3</span><span>Sistema uzreiz veiks datubazes atjaunosanu no shi eksporta.</span></div>
+                    <div class="flex items-start gap-3 rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200"><span class="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-700">1</span><span>Izvelies rezerves kopijas failu no datora.</span></div>
+                    <div class="flex items-start gap-3 rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200"><span class="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-700">2</span><span>Fails tiks saglabats serveri un paradisies vesture.</span></div>
+                    <div class="flex items-start gap-3 rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200"><span class="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-700">3</span><span>Sistema uzreiz veiks datubazes atjaunosanu no shi eksporta.</span></div>
                 </div>
 
                 <form method="POST" action="{{ route('backups.upload-restore') }}" enctype="multipart/form-data" class="space-y-4">
                     @csrf
-                    <label class="block rounded-[1.5rem] border border-dashed border-violet-200 bg-white/80 p-4">
+                    <label class="block rounded-[1.5rem] border border-dashed border-slate-300 bg-white p-4">
                         <span class="user-filter-label">Rezerves kopijas fails</span>
-                        <input type="file" name="backup_file" accept=".json,.bak,.backup,.txt" class="crud-control block w-full cursor-pointer file:mr-3 file:rounded-xl file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-800">
+                        <input
+                            x-ref="backupFile"
+                            type="file"
+                            name="backup_file"
+                            accept=".json,.bak,.backup,.txt"
+                            class="sr-only"
+                            @change="fileName = $event.target.files.length ? $event.target.files[0].name : 'Nav atlasitas datnes'"
+                        >
+                        <div class="mt-3 flex flex-wrap items-center gap-3">
+                            <button
+                                type="button"
+                                class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+                                @click="$refs.backupFile.click()"
+                            >
+                                Izveleties datni
+                            </button>
+                            <span class="text-sm text-slate-500" x-text="fileName">Nav atlasitas datnes</span>
+                        </div>
                     </label>
                     <div class="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                         <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.007v.008H12v-.008Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M10.29 3.86 1.82 18a2.25 2.25 0 0 0 1.93 3.375h16.5A2.25 2.25 0 0 0 22.18 18L13.71 3.86a2.25 2.25 0 0 0-3.42 0Z"/></svg>
                         <span>Pirms atjaunosanas parliecinies, ka fails ir pilna un korekta shis sistemas rezerves kopija.</span>
                     </div>
-                    <button type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-700" onclick="return confirm('Atjaunot datubazi no augshupladeta faila?')">
+                    <button type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800" onclick="return confirm('Atjaunot datubazi no augshupladeta faila?')">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V4.5m0 12 4.5-4.5M12 16.5 7.5 12M4.5 19.5h15"/></svg>
                         <span>Augshupladet un atjaunot</span>
                     </button>
