@@ -177,6 +177,26 @@ class RepairController extends Controller
                 ]);
             }
 
+            if ($repair->repair_type === 'external') {
+                if (! filled($repair->vendor_name)) {
+                    return back()->withErrors([
+                        'vendor_name' => 'Arejam remontam pirms pabeigsanas noradi pakalpojuma sniedzeju.',
+                    ]);
+                }
+
+                if (! filled($repair->vendor_contact)) {
+                    return back()->withErrors([
+                        'vendor_contact' => 'Arejam remontam pirms pabeigsanas noradi pakalpojuma sniedzeja kontaktu.',
+                    ]);
+                }
+
+                if (! filled($repair->invoice_number)) {
+                    return back()->withErrors([
+                        'invoice_number' => 'Arejam remontam pirms pabeigsanas noradi rekina numuru.',
+                    ]);
+                }
+            }
+
             $payload['actual_completion'] = now()->toDateString();
         } elseif ($targetStatus !== 'completed' && $repair->status === 'completed') {
             $payload['actual_completion'] = null;

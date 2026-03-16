@@ -572,4 +572,65 @@
             </div>
         </div>
     </section>
+    @once
+        <script>
+            document.addEventListener('alpine:init', () => {
+                if (window.__repairProcessRegistered) {
+                    return;
+                }
+
+                window.__repairProcessRegistered = true;
+
+                const appendHiddenInput = (form, name, value) => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = name;
+                    input.value = value ?? '';
+                    form.appendChild(input);
+                };
+
+                if (!window.submitRepairTransition) {
+                    window.submitRepairTransition = (transitionBaseUrl, csrfToken, repairId, targetStatus, extra = {}) => {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = `${transitionBaseUrl}/${repairId}/transition`;
+                        form.style.display = 'none';
+
+                        appendHiddenInput(form, '_token', csrfToken);
+                        appendHiddenInput(form, 'target_status', targetStatus);
+
+                        Object.entries(extra).forEach(([key, value]) => {
+                            appendHiddenInput(form, key, value);
+                        });
+
+                        document.body.appendChild(form);
+                        form.submit();
+                    };
+                }
+
+                if (!window.repairProcess) {
+                    window.repairProcess = (config) => ({
+                        repairType: config.repairType,
+                        status: config.status,
+                        completeModalOpen: false,
+                        completionForm: {
+                            cost: config.cost ?? '',
+                        },
+                        openCompletionModal() {
+                            this.completionForm.cost = config.cost ?? '';
+                            this.completeModalOpen = true;
+                        },
+                        closeCompletionModal() {
+                            this.completeModalOpen = false;
+                        },
+                        submitCompletion() {
+                            window.submitRepairTransition(config.transitionBaseUrl, config.csrfToken, config.repairId, 'completed', {
+                                cost: this.completionForm.cost,
+                            });
+                        },
+                    });
+                }
+            });
+        </script>
+    @endonce
 </x-app-layout>
