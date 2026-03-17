@@ -24,7 +24,7 @@
         <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
             <div>
                 <h1 class="text-3xl font-semibold tracking-tight text-slate-900">Ierices</h1>
-                <p class="mt-1 text-sm text-slate-500">Parskatama inventara tabula ar atriem filtriem un precizu meklejumu.</p>
+               
             </div>
             <a href="{{ route('devices.create') }}" class="crud-btn-primary-inline inline-flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

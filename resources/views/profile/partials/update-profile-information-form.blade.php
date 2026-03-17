@@ -39,10 +39,6 @@
             </div>
         </div>
 
-        <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-            Konts ir piesaistits darbiniekam ar ID #{{ $employee?->id ?? '-' }}.
-        </div>
-
         <div class="flex items-center gap-4">
             <x-primary-button>Saglabat</x-primary-button>
 
@@ -58,5 +54,4 @@
         </div>
     </form>
 </section>
-
 

@@ -37,13 +37,8 @@
                     <div class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-8">
                         @include('profile.partials.update-password-form')
                     </div>
-
-                    <div class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-8">
-                        @include('profile.partials.delete-user-form')
-                    </div>
                 </div>
             </div>
         </div>
     </section>
 </x-app-layout>
-

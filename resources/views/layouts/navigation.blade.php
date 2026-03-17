@@ -160,9 +160,7 @@
                         </x-dropdown-link>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <x-dropdown-link :href="route('logout')"
-                                onclick="event.preventDefault(); this.closest('form').submit();"
-                                class="text-red-600 hover:bg-red-50">
+                            <button type="submit" class="block w-full px-4 py-2 text-start text-sm font-medium text-red-600 transition duration-150 ease-in-out hover:bg-red-50 focus:bg-red-50 focus:outline-none">
                                 <span class="inline-flex items-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6A2.25 2.25 0 0 0 5.25 5.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15"/>
@@ -170,7 +168,7 @@
                                     </svg>
                                     <span>Izrakstities</span>
                                 </span>
-                            </x-dropdown-link>
+                            </button>
                         </form>
                     </x-slot>
                 </x-dropdown>
@@ -305,7 +303,7 @@
                 </x-responsive-nav-link>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <x-responsive-nav-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();" class="text-red-600">
+                    <button type="submit" class="block w-full whitespace-nowrap ps-3 pe-4 py-3 border-l-4 border-transparent text-start text-base font-medium text-red-600 transition duration-150 ease-in-out hover:bg-red-50 hover:border-red-300 focus:bg-red-50 focus:border-red-300 focus:outline-none">
                         <span class="inline-flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6A2.25 2.25 0 0 0 5.25 5.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15"/>
@@ -313,7 +311,7 @@
                             </svg>
                             <span>Izrakstities</span>
                         </span>
-                    </x-responsive-nav-link>
+                    </button>
                 </form>
             </div>
         </div>
