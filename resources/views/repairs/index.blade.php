@@ -52,7 +52,6 @@
         <div class="flex flex-wrap items-end justify-between gap-4">
             <div>
                 <h1 class="device-page-title">Remontu parvaldiba</h1>
-                <p class="device-page-subtitle">Parskats par iericem, kas gaida remontu, ir procesa vai jau ir pabeigtas.</p>
             </div>
 
             <div class="flex flex-wrap items-center gap-3">

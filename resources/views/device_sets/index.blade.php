@@ -12,7 +12,6 @@
         <div class="mb-6 flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-semibold text-gray-900">Komplekti</h1>
-                <p class="text-sm text-gray-500">Iericu komplektu parvaldiba</p>
             </div>
             <a href="{{ route('device-sets.create') }}" class="crud-btn-primary-inline inline-flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

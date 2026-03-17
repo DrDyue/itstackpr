@@ -65,9 +65,6 @@
         <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
             <div>
                 <h1 class="text-3xl font-semibold tracking-tight text-slate-900">Rezerves kopijas</h1>
-                <p class="mt-2 max-w-3xl text-sm text-slate-600">
-                    Viena vieta manualam kopijam, atjaunosanai un automatiskajam grafikam.
-                </p>
             </div>
             <div class="flex flex-wrap gap-3">
                 <form method="POST" action="{{ route('backups.store') }}">
