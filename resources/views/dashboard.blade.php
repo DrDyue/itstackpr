@@ -326,40 +326,6 @@
                     </div>
                 </div>
 
-                <div class="dash-panel">
-                    <div class="dash-panel-header">
-                        <div class="dash-panel-title-row">
-                            <span class="dash-panel-icon dash-panel-icon-amber">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5M12 3.75v16.5"/>
-                                </svg>
-                            </span>
-                            <div>
-                                <p class="dash-panel-eyebrow">Atrais skats</p>
-                                <h2 class="dash-panel-title">Inventara statuss</h2>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="dash-mini-grid dash-mini-grid-full">
-                        <div class="dash-mini-card">
-                            <span class="dash-mini-label">Bez telpas</span>
-                            <strong>{{ $withoutRoom }}</strong>
-                        </div>
-                        <div class="dash-mini-card">
-                            <span class="dash-mini-label">Rezerve</span>
-                            <strong>{{ $reserveDevices }}</strong>
-                        </div>
-                        <div class="dash-mini-card">
-                            <span class="dash-mini-label">Remonta statuss</span>
-                            <strong>{{ $inRepairDevices }}</strong>
-                        </div>
-                        <div class="dash-mini-card">
-                            <span class="dash-mini-label">Pedejais inventars</span>
-                            <strong>{{ $latestInventoryAt ? \Illuminate\Support\Carbon::parse($latestInventoryAt)->format('d.m') : '-' }}</strong>
-                        </div>
-                    </div>
-                </div>
             </aside>
         </div>
     </section>
