@@ -12,6 +12,7 @@ use App\Models\Room;
 use App\Models\WriteoffRequest;
 use App\Support\DatabaseBackupService;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -27,16 +28,16 @@ class DashboardController extends Controller
         abort_unless($user, 403);
 
         $deviceQuery = Device::query();
-        $repairRequestQuery = RepairRequest::query();
-        $writeoffRequestQuery = WriteoffRequest::query();
-        $transferQuery = DeviceTransfer::query();
+        $repairRequestQuery = Schema::hasTable('repair_requests') ? RepairRequest::query() : null;
+        $writeoffRequestQuery = Schema::hasTable('writeoff_requests') ? WriteoffRequest::query() : null;
+        $transferQuery = Schema::hasTable('device_transfers') ? DeviceTransfer::query() : null;
         $repairQuery = Repair::query();
 
         if (! $user->canManageRequests()) {
             $deviceQuery->where('assigned_user_id', $user->id);
-            $repairRequestQuery->where('responsible_user_id', $user->id);
-            $writeoffRequestQuery->where('responsible_user_id', $user->id);
-            $transferQuery->where(function ($query) use ($user) {
+            $repairRequestQuery?->where('responsible_user_id', $user->id);
+            $writeoffRequestQuery?->where('responsible_user_id', $user->id);
+            $transferQuery?->where(function ($query) use ($user) {
                 $query->where('responsible_user_id', $user->id)
                     ->orWhere('transfer_to_user_id', $user->id);
             });
@@ -133,9 +134,9 @@ class DashboardController extends Controller
             'waitingRepairsCount' => (clone $repairQuery)->where('status', 'waiting')->count(),
             'inProgressRepairsCount' => (clone $repairQuery)->where('status', 'in-progress')->count(),
             'completedRepairsThisMonth' => (clone $repairQuery)->where('status', 'completed')->where('actual_completion', '>=', now()->startOfMonth())->count(),
-            'pendingRepairRequests' => (clone $repairRequestQuery)->where('status', 'pending')->count(),
-            'pendingWriteoffRequests' => (clone $writeoffRequestQuery)->where('status', 'pending')->count(),
-            'pendingTransfers' => (clone $transferQuery)->where('status', 'pending')->count(),
+            'pendingRepairRequests' => $repairRequestQuery ? (clone $repairRequestQuery)->where('status', 'pending')->count() : 0,
+            'pendingWriteoffRequests' => $writeoffRequestQuery ? (clone $writeoffRequestQuery)->where('status', 'pending')->count() : 0,
+            'pendingTransfers' => $transferQuery ? (clone $transferQuery)->where('status', 'pending')->count() : 0,
             'averageRepairCost' => (float) ((clone $repairQuery)->whereNotNull('cost')->avg('cost') ?? 0),
             'latestInventoryAt' => (clone $deviceQuery)->max('created_at'),
             'buildingTree' => $buildingTree,
