@@ -38,7 +38,7 @@
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">Filtri</p>
-                        <h2 class="mt-1 text-lg font-semibold text-slate-900">Atrodi vajadzigo ierici bez liekiem klikskjiem</h2>
+                        <h2 class="mt-1 text-lg font-semibold text-slate-900">Pamata filtri</h2>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 text-sm">
                         <span class="rounded-full bg-white px-3 py-1 font-medium text-slate-700 ring-1 ring-slate-200">
