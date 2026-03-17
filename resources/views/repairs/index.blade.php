@@ -437,16 +437,19 @@
                                             </button>
                                         </form>
 
-                                        <button
-                                            type="button"
-                                            @click="submitCompletion({ id: {{ $repair->id }}, name: @js($device?->name ?: 'Nezinama ierice') })"
-                                            class="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
-                                        >
+                                        <form method="POST" action="{{ route('repairs.transition', $repair) }}" onsubmit="return confirm('Vai tiesam gribat pabeigt remontu?')">
+                                            @csrf
+                                            <input type="hidden" name="target_status" value="completed">
+                                            <button
+                                                type="submit"
+                                                class="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                                            >
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
                                                 </svg>
                                                 Pabeigt
-                                        </button>
+                                            </button>
+                                        </form>
                                     @elseif ($repair->status === 'completed')
                                         <form method="POST" action="{{ route('repairs.transition', $repair) }}">
                                             @csrf
@@ -455,7 +458,7 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5 19.5 4.5M9 4.5h10.5V15"/>
                                                 </svg>
-                                                Atvert atkal
+                                                Novietot atkal uz procesa
                                             </button>
                                         </form>
                                     @endif

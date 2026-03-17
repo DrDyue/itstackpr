@@ -167,12 +167,16 @@
                                 </button>
                             </form>
 
-                            <button type="button" @click="submitCompletion()" class="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700">
+                            <form method="POST" action="{{ route('repairs.transition', $repair) }}" onsubmit="return confirm('Vai tiesam gribat pabeigt remontu?')">
+                                @csrf
+                                <input type="hidden" name="target_status" value="completed">
+                                <button type="submit" class="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
                                     </svg>
                                     Pabeigt remontu
-                            </button>
+                                </button>
+                            </form>
                         @endif
 
                         @if (in_array($repair->status, ['completed', 'cancelled'], true))
@@ -183,12 +187,12 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5 19.5 4.5M9 4.5h10.5V15"/>
                                     </svg>
-                                    Atvert no jauna
+                                    Novietot atkal uz procesa
                                 </button>
                             </form>
                         @endif
 
-                        @if ($repair->status !== 'cancelled')
+                        @if (in_array($repair->status, ['waiting', 'in-progress'], true))
                             <form method="POST" action="{{ route('repairs.transition', $repair) }}">
                                 @csrf
                                 <input type="hidden" name="target_status" value="cancelled">
@@ -325,7 +329,15 @@
                                 :value="old('estimated_completion', optional($repair->estimated_completion)->format('Y-m-d'))"
                                 label="Planotais beigums"
                                 label-class="crud-label flex items-center gap-2"
-                                x-show="status === 'in-progress' || status === 'completed'"
+                                x-show="status === 'in-progress'"
+                                x-cloak
+                            />
+                            <x-localized-date-picker
+                                name="actual_completion"
+                                :value="old('actual_completion', optional($repair->actual_completion)->format('Y-m-d'))"
+                                label="Faktiskais pabeigsanas datums"
+                                label-class="crud-label flex items-center gap-2"
+                                x-show="status === 'completed'"
                                 x-cloak
                             />
                         </div>
@@ -521,13 +533,6 @@
                     window.repairProcess = (config) => ({
                         repairType: config.repairType,
                         status: config.status,
-                        submitCompletion() {
-                            if (!window.confirm('Vai tiesam gribat pabeigt remontu?')) {
-                                return;
-                            }
-
-                            window.submitRepairTransition(config.transitionBaseUrl, config.csrfToken, config.repairId, 'completed');
-                        },
                     });
                 }
             });
