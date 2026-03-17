@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\Employee;
 use App\Models\User;
 use App\Support\AuditTrail;
 use Illuminate\Auth\Events\Registered;
@@ -11,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
@@ -18,44 +18,39 @@ class RegisteredUserController extends Controller
 {
     public function create(): View
     {
-        if (Auth::user()?->role !== 'admin') {
-            abort(403);
-        }
+        $this->requireAdmin();
 
-        $employees = Employee::query()
-            ->where('is_active', true)
-            ->whereDoesntHave('user')
-            ->orderBy('full_name')
-            ->get();
-
-        $roles = ['user', 'admin'];
-
-        return view('auth.register', compact('employees', 'roles'));
+        return view('auth.register', [
+            'roles' => [User::ROLE_ADMIN, User::ROLE_IT_WORKER, User::ROLE_USER],
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
-        if (Auth::user()?->role !== 'admin') {
-            abort(403);
-        }
+        $this->requireAdmin();
 
-        $request->validate([
-            'employee_id' => ['required', 'exists:employees,id', 'unique:users,employee_id'],
+        $validated = $request->validate([
+            'full_name' => ['required', 'string', 'max:100'],
+            'email' => ['required', 'email', 'max:100', 'unique:users,email'],
+            'phone' => ['nullable', 'string', 'max:100'],
+            'job_title' => ['nullable', 'string', 'max:100'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => ['required', 'in:user,admin'],
+            'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_IT_WORKER, User::ROLE_USER])],
         ]);
 
         $user = User::create([
-            'employee_id' => $request->employee_id,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
+            'full_name' => $validated['full_name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?: null,
+            'job_title' => $validated['job_title'] ?: null,
+            'password' => Hash::make($validated['password']),
+            'role' => $validated['role'],
             'is_active' => true,
         ]);
 
         AuditTrail::created(Auth::id(), $user);
-
         event(new Registered($user));
 
-        return redirect(route('users.index'))->with('success', 'Lietotājs veiksmīgi izveidots');
+        return redirect(route('users.index'))->with('success', 'Lietotajs veiksmigi izveidots');
     }
 }

@@ -6,23 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('employee_id')
-                ->unique()
-                ->constrained('employees')
-                ->cascadeOnDelete();
-            $table->string('password', 100);
-            $table->string('role', 255);
+            $table->string('full_name', 100);
+            $table->string('email', 100)->unique();
+            $table->string('phone', 100)->nullable();
+            $table->string('job_title', 100)->nullable();
+            $table->string('password', 255);
+            $table->enum('role', ['admin', 'it_worker', 'user'])->default('user');
             $table->boolean('is_active')->default(true);
-            $table->string('remember_token', 100)->nullable();
+            $table->rememberToken();
             $table->timestamp('last_login')->nullable();
-            $table->timestamp('created_at')->useCurrent();
+            $table->timestamps();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -41,13 +38,10 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('users');
     }
 };

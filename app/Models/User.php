@@ -2,24 +2,26 @@
 
 namespace App\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
-    protected $table = 'users';
-
-    public $timestamps = false;
+    public const ROLE_ADMIN = 'admin';
+    public const ROLE_IT_WORKER = 'it_worker';
+    public const ROLE_USER = 'user';
 
     protected $fillable = [
-        'employee_id',
+        'full_name',
+        'email',
+        'phone',
+        'job_title',
         'password',
         'role',
         'is_active',
-        'last_login',
-        'created_at',
         'remember_token',
+        'last_login',
     ];
 
     protected $hidden = [
@@ -31,40 +33,100 @@ class User extends Authenticatable
     {
         return [
             'is_active' => 'boolean',
-            'password' => 'hashed',
-            'created_at' => 'datetime',
             'last_login' => 'datetime',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+            'password' => 'hashed',
         ];
     }
 
-    // Relations
-    public function employee(): BelongsTo
+    public function scopeActive(Builder $query): Builder
     {
-        return $this->belongsTo(Employee::class);
+        return $query->where('is_active', true);
     }
 
-    public function devices(): HasMany
+    public function createdDevices(): HasMany
     {
         return $this->hasMany(Device::class, 'created_by');
     }
 
-    public function deviceHistories(): HasMany
+    public function assignedDevices(): HasMany
     {
-        return $this->hasMany(DeviceHistory::class, 'changed_by');
+        return $this->hasMany(Device::class, 'assigned_user_id');
     }
 
-    public function repairsReported(): HasMany
+    public function responsibleRooms(): HasMany
     {
-        return $this->hasMany(Repair::class, 'issue_reported_by');
+        return $this->hasMany(Room::class, 'user_id');
     }
 
-    public function repairsAssigned(): HasMany
+    public function reportedRepairs(): HasMany
     {
-        return $this->hasMany(Repair::class, 'assigned_to');
+        return $this->hasMany(Repair::class, 'reported_by_user_id');
+    }
+
+    public function assignedRepairs(): HasMany
+    {
+        return $this->hasMany(Repair::class, 'assigned_to_user_id');
+    }
+
+    public function acceptedRepairs(): HasMany
+    {
+        return $this->hasMany(Repair::class, 'accepted_by_user_id');
+    }
+
+    public function repairRequests(): HasMany
+    {
+        return $this->hasMany(RepairRequest::class, 'responsible_user_id');
+    }
+
+    public function reviewedRepairRequests(): HasMany
+    {
+        return $this->hasMany(RepairRequest::class, 'reviewed_by_user_id');
+    }
+
+    public function writeoffRequests(): HasMany
+    {
+        return $this->hasMany(WriteoffRequest::class, 'responsible_user_id');
+    }
+
+    public function reviewedWriteoffRequests(): HasMany
+    {
+        return $this->hasMany(WriteoffRequest::class, 'reviewed_by_user_id');
+    }
+
+    public function outgoingTransfers(): HasMany
+    {
+        return $this->hasMany(DeviceTransfer::class, 'responsible_user_id');
+    }
+
+    public function incomingTransfers(): HasMany
+    {
+        return $this->hasMany(DeviceTransfer::class, 'transfer_to_user_id');
+    }
+
+    public function reviewedTransfers(): HasMany
+    {
+        return $this->hasMany(DeviceTransfer::class, 'reviewed_by_user_id');
     }
 
     public function auditLogs(): HasMany
     {
         return $this->hasMany(AuditLog::class);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function isItWorker(): bool
+    {
+        return $this->role === self::ROLE_IT_WORKER;
+    }
+
+    public function canManageRequests(): bool
+    {
+        return $this->isAdmin() || $this->isItWorker();
     }
 }

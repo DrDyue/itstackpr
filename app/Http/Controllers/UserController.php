@@ -2,64 +2,33 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Employee;
 use App\Models\User;
 use App\Support\AuditTrail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    private const ROLES = ['admin', 'user'];
+    private const ROLES = [User::ROLE_ADMIN, User::ROLE_IT_WORKER, User::ROLE_USER];
 
     public function index(Request $request)
     {
-        $this->ensureAdminAccess();
+        $this->requireAdmin();
 
         $filters = [
-            'employee' => trim((string) $request->query('employee', '')),
+            'name' => trim((string) $request->query('name', '')),
             'email' => trim((string) $request->query('email', '')),
             'role' => trim((string) $request->query('role', '')),
-            'employee_active' => (string) $request->query('employee_active', ''),
             'is_active' => (string) $request->query('is_active', ''),
         ];
 
-        $allowedSorts = ['created_at', 'last_login'];
-        $sort = $request->query('sort', 'created_at');
-        $direction = $request->query('direction', 'desc');
-
-        if (! in_array($sort, $allowedSorts, true)) {
-            $sort = 'created_at';
-        }
-
-        if (! in_array($direction, ['asc', 'desc'], true)) {
-            $direction = 'desc';
-        }
-
-        $users = User::with('employee')
-            ->when($filters['employee'] !== '', function ($query) use ($filters) {
-                $query->whereHas('employee', function ($employeeQuery) use ($filters) {
-                    $employeeQuery->where('full_name', 'like', '%' . $filters['employee'] . '%');
-                });
-            })
-            ->when($filters['email'] !== '', function ($query) use ($filters) {
-                $query->whereHas('employee', function ($employeeQuery) use ($filters) {
-                    $employeeQuery->where('email', 'like', '%' . $filters['email'] . '%');
-                });
-            })
-            ->when($filters['role'] !== '', function ($query) use ($filters) {
-                $query->where('role', $filters['role']);
-            })
-            ->when($filters['employee_active'] !== '', function ($query) use ($filters) {
-                $query->whereHas('employee', function ($employeeQuery) use ($filters) {
-                    $employeeQuery->where('is_active', $filters['employee_active'] === '1');
-                });
-            })
-            ->when($filters['is_active'] !== '', function ($query) use ($filters) {
-                $query->where('is_active', $filters['is_active'] === '1');
-            })
-            ->orderBy($sort, $direction)
-            ->orderBy('id')
+        $users = User::query()
+            ->when($filters['name'] !== '', fn ($query) => $query->where('full_name', 'like', '%' . $filters['name'] . '%'))
+            ->when($filters['email'] !== '', fn ($query) => $query->where('email', 'like', '%' . $filters['email'] . '%'))
+            ->when($filters['role'] !== '', fn ($query) => $query->where('role', $filters['role']))
+            ->when($filters['is_active'] !== '', fn ($query) => $query->where('is_active', $filters['is_active'] === '1'))
+            ->orderBy('full_name')
             ->paginate(15)
             ->withQueryString();
 
@@ -67,32 +36,26 @@ class UserController extends Controller
             'users' => $users,
             'filters' => $filters,
             'roles' => self::ROLES,
-            'sort' => $sort,
-            'direction' => $direction,
         ]);
     }
 
     public function create()
     {
-        $this->ensureAdminAccess();
+        $this->requireAdmin();
 
         return view('users.create', [
-            'employees' => Employee::query()
-                ->whereDoesntHave('user')
-                ->orderBy('full_name')
-                ->get(),
             'roles' => self::ROLES,
         ]);
     }
 
     public function store(Request $request)
     {
-        $this->ensureAdminAccess();
+        $this->requireAdmin();
 
-        $data = $this->validatedData($request);
-        $data['password'] = bcrypt($data['password']);
+        $validated = $this->validatedData($request);
+        $validated['password'] = Hash::make($validated['password']);
 
-        $user = User::create($data);
+        $user = User::create($validated);
         AuditTrail::created(auth()->id(), $user);
 
         return redirect()->route('users.index')->with('success', 'Lietotajs veiksmigi izveidots');
@@ -100,58 +63,46 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        $this->ensureAdminAccess();
+        $this->requireAdmin();
 
         return view('users.edit', [
             'user' => $user,
-            'employees' => Employee::query()
-                ->where(function ($query) use ($user) {
-                    $query->whereDoesntHave('user')
-                        ->orWhere('id', $user->employee_id);
-                })
-                ->orderBy('full_name')
-                ->get(),
             'roles' => self::ROLES,
         ]);
     }
 
     public function update(Request $request, User $user)
     {
-        $this->ensureAdminAccess();
+        $this->requireAdmin();
 
-        $before = $user->only(['employee_id', 'role', 'is_active']);
-        $data = $this->validatedData($request, $user);
-        $passwordChanged = ! empty($data['password']);
+        $before = $user->only(['full_name', 'email', 'phone', 'job_title', 'role', 'is_active']);
+        $validated = $this->validatedData($request, $user);
 
-        if ($passwordChanged) {
-            $data['password'] = bcrypt($data['password']);
+        if (! filled($validated['password'] ?? null)) {
+            unset($validated['password']);
         } else {
-            unset($data['password']);
+            $validated['password'] = Hash::make($validated['password']);
         }
 
-        $user->update($data);
+        $user->update($validated);
         $after = $user->fresh()->only(array_keys($before));
-        if (array_key_exists('password', $data)) {
-            $before['password'] = '[mainita]';
+
+        if (array_key_exists('password', $validated)) {
+            $before['password'] = '[veca parole]';
             $after['password'] = '[jauna parole]';
         }
+
         AuditTrail::updatedFromState(auth()->id(), $user, $before, $after);
 
-        return redirect()
-            ->route('users.index')
-            ->with('success', $passwordChanged
-                ? 'Lietotajs veiksmigi atjauninats un jauna parole iestatīta.'
-                : 'Lietotajs veiksmigi atjauninats');
+        return redirect()->route('users.index')->with('success', 'Lietotajs veiksmigi atjauninats');
     }
 
     public function destroy(User $user)
     {
-        $this->ensureAdminAccess();
+        $this->requireAdmin();
 
         if (auth()->id() === $user->id) {
-            return redirect()
-                ->route('users.index')
-                ->with('error', 'Nevar dzest savu lietotaja kontu.');
+            return redirect()->route('users.index')->with('error', 'Nevar dzest savu lietotaja kontu.');
         }
 
         AuditTrail::deleted(auth()->id(), $user, severity: AuditTrail::SEVERITY_WARNING);
@@ -160,28 +111,22 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Lietotajs dzests');
     }
 
-    private function ensureAdminAccess(): void
-    {
-        if (auth()->user()?->role !== 'admin') {
-            abort(403);
-        }
-    }
-
     private function validatedData(Request $request, ?User $user = null): array
     {
-        $data = $request->validate([
-            'employee_id' => [
-                'required',
-                'exists:employees,id',
-                Rule::unique('users', 'employee_id')->ignore($user?->id),
-            ],
+        $validated = $request->validate([
+            'full_name' => ['required', 'string', 'max:100'],
+            'email' => ['required', 'email', 'max:100', Rule::unique('users', 'email')->ignore($user?->id)],
+            'phone' => ['nullable', 'string', 'max:100'],
+            'job_title' => ['nullable', 'string', 'max:100'],
             'password' => [$user ? 'nullable' : 'required', 'string', 'min:6', 'confirmed'],
             'role' => ['required', Rule::in(self::ROLES)],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
-        $data['is_active'] = $request->boolean('is_active', true);
+        $validated['phone'] = $validated['phone'] ?: null;
+        $validated['job_title'] = $validated['job_title'] ?: null;
+        $validated['is_active'] = $request->boolean('is_active', true);
 
-        return $data;
+        return $validated;
     }
 }

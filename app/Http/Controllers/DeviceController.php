@@ -4,134 +4,120 @@ namespace App\Http\Controllers;
 
 use App\Models\Building;
 use App\Models\Device;
-use App\Models\DeviceHistory;
 use App\Models\DeviceSet;
 use App\Models\DeviceSetItem;
 use App\Models\DeviceType;
-use App\Models\Employee;
 use App\Models\Room;
+use App\Models\User;
 use App\Support\AuditTrail;
 use App\Support\DeviceAssetManager;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class DeviceController extends Controller
 {
-    private const STATUSES = ['active', 'reserve', 'broken', 'repair', 'retired', 'kitting'];
+    private const STATUSES = ['active', 'reserve', 'broken', 'repair', 'written_off', 'kitting'];
 
     public function index(Request $request)
     {
+        $user = $this->user();
+        abort_unless($user, 403);
+
         $filters = [
             'q' => trim((string) $request->query('q', '')),
             'code' => trim((string) $request->query('code', '')),
             'room' => trim((string) $request->query('room', '')),
             'type' => trim((string) $request->query('type', '')),
+            'status' => trim((string) $request->query('status', '')),
         ];
 
-        $devices = Device::query()
-            ->with(['type', 'building', 'room', 'activeRepair', 'assignedEmployee'])
-            ->when($filters['q'] !== '', function ($query) use ($filters) {
+        $devices = $this->visibleDevicesQuery($user)
+            ->with(['type', 'building', 'room', 'activeRepair', 'assignedUser'])
+            ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
 
-                $query->where(function ($deviceQuery) use ($term) {
+                $query->where(function (Builder $deviceQuery) use ($term) {
                     $deviceQuery->where('name', 'like', "%{$term}%")
                         ->orWhere('serial_number', 'like', "%{$term}%")
                         ->orWhere('manufacturer', 'like', "%{$term}%")
                         ->orWhere('model', 'like', "%{$term}%");
                 });
             })
-            ->when($filters['code'] !== '', function ($query) use ($filters) {
-                $query->where('code', 'like', '%' . $filters['code'] . '%');
-            })
-            ->when($filters['room'] !== '', function ($query) use ($filters) {
+            ->when($filters['code'] !== '', fn (Builder $query) => $query->where('code', 'like', '%' . $filters['code'] . '%'))
+            ->when($filters['room'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['room'];
 
-                $query->whereHas('room', function ($roomQuery) use ($term) {
+                $query->whereHas('room', function (Builder $roomQuery) use ($term) {
                     $roomQuery->where('room_number', 'like', "%{$term}%")
                         ->orWhere('room_name', 'like', "%{$term}%")
                         ->orWhere('department', 'like', "%{$term}%");
                 });
             })
-            ->when($filters['type'] !== '' && ctype_digit($filters['type']), function ($query) use ($filters) {
-                $query->where('device_type_id', (int) $filters['type']);
-            })
+            ->when($filters['type'] !== '' && ctype_digit($filters['type']), fn (Builder $query) => $query->where('device_type_id', (int) $filters['type']))
+            ->when($filters['status'] !== '' && in_array($filters['status'], self::STATUSES, true), fn (Builder $query) => $query->where('status', $filters['status']))
             ->orderByDesc('id')
             ->paginate(20)
             ->withQueryString();
 
-        $types = DeviceType::query()
-            ->withCount('devices')
-            ->orderBy('type_name')
-            ->get();
-
-        $categories = DeviceType::query()
-            ->selectRaw('category, COUNT(*) as total')
-            ->whereNotNull('category')
-            ->where('category', '!=', '')
-            ->groupBy('category')
-            ->orderBy('category')
-            ->pluck('total', 'category');
-
-        $activeFilterCount = collect($filters)
-            ->filter(fn ($value) => $value !== '')
-            ->count();
-
         return view('devices.index', [
             'devices' => $devices,
             'filters' => $filters,
-            'types' => $types,
-            'activeFilterCount' => $activeFilterCount,
+            'types' => DeviceType::query()->orderBy('type_name')->get(),
+            'statuses' => self::STATUSES,
             'statusLabels' => $this->statusLabels(),
-            'categoryOptions' => $categories,
+            'canManageDevices' => $user->canManageRequests(),
         ]);
     }
 
     public function create()
     {
+        $this->requireManager();
+
         return view('devices.create', $this->formData());
     }
 
     public function store(Request $request)
     {
-        $userId = auth()->id();
-        $data = $this->validatedData($request);
-        $data['created_by'] = $userId;
+        $user = $this->requireManager();
 
-        $device = Device::create($data);
+        $device = Device::create(array_merge(
+            $this->validatedData($request),
+            ['created_by' => $user->id]
+        ));
+
         $this->syncUploads($request, $device);
         $this->removeDeviceImage($request, $device);
         $this->removeWarrantyImage($request, $device);
 
-        DeviceHistory::create([
-            'device_id' => $device->id,
-            'action' => 'CREATE',
-            'field_changed' => null,
-            'old_value' => null,
-            'new_value' => 'Ierice veiksmigi pievienota',
-            'changed_by' => $userId,
-        ]);
-
-        $this->writeAudit($userId, 'CREATE', $device, 'Ierice izveidota: ' . $device->name, 'info');
+        AuditTrail::created($user->id, $device);
 
         return redirect()->route('devices.index')->with('success', 'Ierice veiksmigi pievienota');
     }
 
     public function edit(Device $device)
     {
+        $this->requireManager();
+
         return view('devices.edit', array_merge(['device' => $device], $this->formData()));
     }
 
     public function show(Device $device)
     {
+        $this->authorizeView($device);
+
         $device->load([
             'type',
             'building',
             'room.building',
-            'createdBy.employee',
-            'assignedEmployee',
-            'histories.changedBy.employee',
+            'createdBy',
+            'assignedUser',
+            'repairs.assignee',
+            'repairRequests.responsibleUser',
+            'writeoffRequests.responsibleUser',
+            'transfers.responsibleUser',
+            'transfers.transferTo',
             'sets.room.building',
         ]);
 
@@ -141,47 +127,33 @@ class DeviceController extends Controller
             'deviceThumbUrl' => $device->deviceImageThumbUrl(),
             'warrantyImageUrl' => $device->warrantyImageUrl(),
             'statusLabels' => $this->statusLabels(),
+            'canManageDevices' => $this->user()?->canManageRequests() ?? false,
         ]);
     }
 
     public function update(Request $request, Device $device)
     {
-        $userId = auth()->id();
-        $data = $this->validatedData($request, $device);
+        $this->requireManager();
 
         $before = $device->only($this->trackedFields());
 
-        $device->update($data);
+        $device->update($this->validatedData($request, $device));
         $this->syncUploads($request, $device);
         $this->removeDeviceImage($request, $device);
         $this->removeWarrantyImage($request, $device);
 
         $after = $device->fresh()->only(array_keys($before));
-        $changedFields = $this->writeHistoryChanges($device->id, $before, $after, $userId);
-
-        AuditTrail::updatedFromState($userId, $device->fresh(), $before, $after);
+        AuditTrail::updatedFromState(auth()->id(), $device, $before, $after);
 
         return redirect()->route('devices.index')->with('success', 'Ierices dati atjauninati');
     }
 
     public function destroy(Device $device)
     {
-        $userId = auth()->id();
-        $id = $device->id;
-        $label = trim(($device->code ?? '') . ' ' . ($device->name ?? ''));
+        $this->requireManager();
 
-        DeviceHistory::create([
-            'device_id' => $id,
-            'action' => 'DELETE',
-            'field_changed' => null,
-            'old_value' => null,
-            'new_value' => $label,
-            'changed_by' => $userId,
-        ]);
-
-        $this->writeAudit($userId, 'DELETE', $device, 'Ierice dzesta: ' . $label, 'warning');
         $this->deleteDeviceAssets($device);
-
+        AuditTrail::deleted(auth()->id(), $device, severity: AuditTrail::SEVERITY_WARNING);
         $device->delete();
 
         return redirect()->route('devices.index')->with('success', 'Ierice dzesta');
@@ -189,6 +161,8 @@ class DeviceController extends Controller
 
     public function quickUpdate(Request $request, Device $device)
     {
+        $this->requireManager();
+
         $validated = $request->validate([
             'action' => ['required', Rule::in(['status', 'room', 'set'])],
             'target_status' => ['nullable', Rule::in(self::STATUSES)],
@@ -196,15 +170,15 @@ class DeviceController extends Controller
             'target_set_id' => ['nullable', 'exists:device_sets,id'],
         ]);
 
-        $result = $this->performDeviceAction($device, $validated, auth()->id());
+        $result = $this->performDeviceAction($device, $validated);
 
-        return redirect()
-            ->route('devices.show', $device)
-            ->with($result['level'], $result['message']);
+        return redirect()->route('devices.show', $device)->with($result['level'], $result['message']);
     }
 
     public function bulkUpdate(Request $request)
     {
+        $this->requireManager();
+
         $validated = $request->validate([
             'device_ids' => ['required', 'array', 'min:1'],
             'device_ids.*' => ['integer', 'exists:devices,id'],
@@ -214,15 +188,13 @@ class DeviceController extends Controller
             'target_set_id' => ['nullable', 'exists:device_sets,id'],
         ]);
 
-        $devices = Device::query()
-            ->whereIn('id', $validated['device_ids'])
-            ->get();
-
+        $devices = Device::query()->whereIn('id', $validated['device_ids'])->get();
         $processed = 0;
         $messages = [];
 
         foreach ($devices as $device) {
-            $result = $this->performDeviceAction($device, $validated, auth()->id());
+            $result = $this->performDeviceAction($device, $validated);
+
             if ($result['level'] === 'success') {
                 $processed++;
             } else {
@@ -230,17 +202,32 @@ class DeviceController extends Controller
             }
         }
 
-        $flash = $processed > 0
-            ? 'Apstradatas ierices: ' . $processed . '.'
-            : 'Neviena ierice netika apstradata.';
-
+        $flash = $processed > 0 ? 'Apstradatas ierices: ' . $processed . '.' : 'Neviena ierice netika apstradata.';
         if ($messages !== []) {
             $flash .= ' ' . implode(' ', array_slice($messages, 0, 3));
         }
 
-        return redirect()
-            ->route('devices.index')
-            ->with($processed > 0 ? 'success' : 'error', $flash);
+        return redirect()->route('devices.index')->with($processed > 0 ? 'success' : 'error', $flash);
+    }
+
+    private function visibleDevicesQuery(User $user): Builder
+    {
+        return Device::query()->when(
+            ! $user->canManageRequests(),
+            fn (Builder $query) => $query->where('assigned_user_id', $user->id)
+        );
+    }
+
+    private function authorizeView(Device $device): void
+    {
+        $user = $this->user();
+        abort_unless($user, 403);
+
+        if ($user->canManageRequests()) {
+            return;
+        }
+
+        abort_unless((int) $device->assigned_user_id === (int) $user->id, 403);
     }
 
     private function formData(): array
@@ -249,32 +236,24 @@ class DeviceController extends Controller
             'types' => DeviceType::orderBy('type_name')->get(),
             'buildings' => Building::orderBy('building_name')->get(),
             'rooms' => Room::with('building')->orderBy('room_number')->get(),
-            'employees' => Employee::query()->where('is_active', true)->orderBy('full_name')->get(),
+            'users' => User::active()->orderBy('full_name')->get(),
             'statuses' => self::STATUSES,
+            'statusLabels' => $this->statusLabels(),
         ];
     }
 
     private function validatedData(Request $request, ?Device $device = null): array
     {
-        $supportsAssignedEmployee = $this->supportsAssignedEmployeeColumn();
-
         $data = $request->validate(
             [
-                'code' => [
-                    'nullable',
-                    'string',
-                    'max:20',
-                    Rule::unique('devices', 'code')->ignore($device?->id),
-                ],
+                'code' => ['nullable', 'string', 'max:20', Rule::unique('devices', 'code')->ignore($device?->id)],
                 'name' => ['required', 'string', 'max:200'],
                 'device_type_id' => ['required', 'exists:device_types,id'],
                 'model' => ['required', 'string', 'max:100'],
                 'status' => ['required', Rule::in(self::STATUSES)],
                 'building_id' => ['nullable', 'exists:buildings,id'],
                 'room_id' => ['nullable', 'exists:rooms,id'],
-                'assigned_employee_id' => $supportsAssignedEmployee
-                    ? ['nullable', 'exists:employees,id']
-                    : ['nullable'],
+                'assigned_user_id' => ['nullable', 'exists:users,id'],
                 'purchase_date' => ['required', 'date'],
                 'purchase_price' => ['nullable', 'numeric', 'min:0'],
                 'warranty_until' => ['nullable', 'date'],
@@ -283,35 +262,11 @@ class DeviceController extends Controller
                 'notes' => ['nullable', 'string'],
                 'device_image' => ['nullable', 'image', 'max:' . (int) config('devices.max_upload_kb', 5120)],
                 'warranty_image' => ['nullable', 'image', 'max:' . (int) config('devices.max_upload_kb', 5120)],
-            ],
-            [
-                'code.unique' => 'Sads ierices kods jau eksiste. Ludzu noradi citu kodu.',
-                'name.required' => 'Ludzu aizpildi ierices nosaukumu.',
-                'device_type_id.required' => 'Ludzu izvelies ierices tipu.',
-                'model.required' => 'Ludzu aizpildi ierices modeli.',
-                'status.required' => 'Ludzu izvelies ierices statusu.',
-                'purchase_date.required' => 'Ludzu noradi pirkuma datumu.',
-            ],
-            [
-                'code' => 'ierices kods',
-                'name' => 'nosaukums',
-                'device_type_id' => 'ierices tips',
-                'model' => 'modelis',
-                'status' => 'statuss',
-                'purchase_date' => 'pirkuma datums',
             ]
         );
 
-        $nullableFields = ['building_id', 'room_id'];
-
-        if ($supportsAssignedEmployee) {
-            $nullableFields[] = 'assigned_employee_id';
-        }
-
-        foreach ($nullableFields as $field) {
-            if (($data[$field] ?? null) === '') {
-                $data[$field] = null;
-            }
+        foreach (['building_id', 'room_id', 'assigned_user_id'] as $field) {
+            $data[$field] = $data[$field] ?: null;
         }
 
         if (($data['room_id'] ?? null) !== null) {
@@ -338,23 +293,15 @@ class DeviceController extends Controller
             ]);
         }
 
-        if ($supportsAssignedEmployee && ($data['status'] ?? null) === 'retired' && ! empty($data['assigned_employee_id'])) {
+        if (($data['status'] ?? null) === 'written_off' && ! empty($data['assigned_user_id'])) {
             throw ValidationException::withMessages([
-                'assigned_employee_id' => ['Norakstitai iericei nevajag but pieskirtai personai.'],
+                'assigned_user_id' => ['Norakstitai iericei nevajag but pieskirtai personai.'],
             ]);
-        }
-
-        $data['assigned_to'] = $supportsAssignedEmployee && filled($data['assigned_employee_id'] ?? null)
-            ? Employee::query()->whereKey($data['assigned_employee_id'])->value('full_name')
-            : null;
-
-        if (! $supportsAssignedEmployee) {
-            unset($data['assigned_employee_id']);
         }
 
         unset($data['device_image'], $data['warranty_image']);
 
-        $data['warranty_photo_name'] = $device?->warranty_photo_name ?? '';
+        $data['warranty_photo_name'] = $device?->warranty_photo_name;
         $data['device_image_url'] = $device?->device_image_url;
 
         return $data;
@@ -362,56 +309,24 @@ class DeviceController extends Controller
 
     private function trackedFields(): array
     {
-        $fields = [
-            'code', 'name', 'device_type_id', 'model', 'status',
-            'building_id', 'room_id', 'assigned_to', 'purchase_date',
-            'purchase_price', 'warranty_until', 'warranty_photo_name',
-            'serial_number', 'manufacturer', 'notes', 'device_image_url',
+        return [
+            'code',
+            'name',
+            'device_type_id',
+            'model',
+            'status',
+            'building_id',
+            'room_id',
+            'assigned_user_id',
+            'purchase_date',
+            'purchase_price',
+            'warranty_until',
+            'warranty_photo_name',
+            'serial_number',
+            'manufacturer',
+            'notes',
+            'device_image_url',
         ];
-
-        if ($this->supportsAssignedEmployeeColumn()) {
-            array_splice($fields, 7, 0, ['assigned_employee_id']);
-        }
-
-        return $fields;
-    }
-
-    private function writeHistoryChanges(int $deviceId, array $before, array $after, ?int $userId): array
-    {
-        $changedFields = [];
-
-        foreach ($before as $field => $oldValue) {
-            $newValue = $after[$field] ?? null;
-
-            if ((string) $oldValue === (string) $newValue) {
-                continue;
-            }
-
-            $changedFields[] = $field;
-
-            DeviceHistory::create([
-                'device_id' => $deviceId,
-                'action' => 'UPDATE',
-                'field_changed' => $field,
-                'old_value' => $oldValue === null ? null : (string) $oldValue,
-                'new_value' => $newValue === null ? null : (string) $newValue,
-                'changed_by' => $userId,
-            ]);
-        }
-
-        return $changedFields;
-    }
-
-    private function writeAudit(?int $userId, string $action, Device $device, string $description, string $severity): void
-    {
-        AuditTrail::writeForModel($userId, $action, $device, $description, $severity);
-    }
-
-    private function supportsAssignedEmployeeColumn(): bool
-    {
-        static $hasColumn;
-
-        return $hasColumn ??= Schema::hasColumn('devices', 'assigned_employee_id');
     }
 
     private function syncUploads(Request $request, Device $device): void
@@ -482,13 +397,12 @@ class DeviceController extends Controller
     private function statusLabel(string $status): string
     {
         return match ($status) {
-            'active' => 'Aktiva',
             'reserve' => 'Rezerve',
             'broken' => 'Bojata',
             'repair' => 'Remonta',
-            'retired' => 'Norakstita',
+            'written_off' => 'Norakstita',
             'kitting' => 'Komplektacija',
-            default => ucfirst($status),
+            default => 'Aktiva',
         };
     }
 
@@ -499,23 +413,23 @@ class DeviceController extends Controller
             ->all();
     }
 
-    private function performDeviceAction(Device $device, array $data, ?int $userId): array
+    private function performDeviceAction(Device $device, array $data): array
     {
         return match ($data['action']) {
-            'status' => $this->changeDeviceStatus($device, (string) ($data['target_status'] ?? ''), $userId),
-            'room' => $this->moveDevice($device, $data['target_room_id'] ?? null, $userId),
-            'set' => $this->attachDeviceToSet($device, $data['target_set_id'] ?? null, $userId),
+            'status' => $this->changeDeviceStatus($device, (string) ($data['target_status'] ?? '')),
+            'room' => $this->moveDevice($device, $data['target_room_id'] ?? null),
+            'set' => $this->attachDeviceToSet($device, $data['target_set_id'] ?? null),
             default => ['level' => 'error', 'message' => 'Neatbalstita darbiba.'],
         };
     }
 
-    private function changeDeviceStatus(Device $device, string $status, ?int $userId): array
+    private function changeDeviceStatus(Device $device, string $status): array
     {
         if (! in_array($status, self::STATUSES, true)) {
             return ['level' => 'error', 'message' => 'Nav izvelets korekts statuss.'];
         }
 
-        if ($status === 'retired' && $this->supportsAssignedEmployeeColumn() && filled($device->assigned_employee_id)) {
+        if ($status === 'written_off' && filled($device->assigned_user_id)) {
             return ['level' => 'error', 'message' => 'Norakstitu ierici vispirms atsaisti no personas.'];
         }
 
@@ -523,24 +437,14 @@ class DeviceController extends Controller
             return ['level' => 'error', 'message' => 'Statuss jau ir iestatits.'];
         }
 
-        $oldStatus = $device->status;
+        $before = ['status' => $device->status];
         $device->forceFill(['status' => $status])->save();
-
-        DeviceHistory::create([
-            'device_id' => $device->id,
-            'action' => 'STATUS_CHANGE',
-            'field_changed' => 'status',
-            'old_value' => $oldStatus,
-            'new_value' => $status,
-            'changed_by' => $userId,
-        ]);
-
-        $this->writeAudit($userId, 'UPDATE', $device, 'Ierices statuss mainits: ' . $device->name . ' | ' . $this->statusLabel($oldStatus) . ' -> ' . $this->statusLabel($status), 'info');
+        AuditTrail::updatedFromState(auth()->id(), $device, $before, ['status' => $status]);
 
         return ['level' => 'success', 'message' => 'Statuss atjauninats.'];
     }
 
-    private function moveDevice(Device $device, mixed $roomId, ?int $userId): array
+    private function moveDevice(Device $device, mixed $roomId): array
     {
         if (! $roomId) {
             return ['level' => 'error', 'message' => 'Nav izveleta telpa.'];
@@ -555,28 +459,22 @@ class DeviceController extends Controller
             return ['level' => 'error', 'message' => 'Ierice jau atrodas saja telpa.'];
         }
 
-        $oldValue = $device->room?->room_number ?: '-';
+        $before = $device->only(['room_id', 'building_id']);
 
         $device->forceFill([
             'room_id' => $room->id,
             'building_id' => $room->building_id,
         ])->save();
 
-        DeviceHistory::create([
-            'device_id' => $device->id,
-            'action' => 'MOVE',
-            'field_changed' => 'room_id',
-            'old_value' => $oldValue,
-            'new_value' => $room->room_number,
-            'changed_by' => $userId,
+        AuditTrail::updatedFromState(auth()->id(), $device, $before, [
+            'room_id' => $room->id,
+            'building_id' => $room->building_id,
         ]);
-
-        $this->writeAudit($userId, 'UPDATE', $device, 'Ierice parvietota: ' . $device->name . ' -> telpa ' . $room->room_number, 'info');
 
         return ['level' => 'success', 'message' => 'Ierice parvietota uz citu telpu.'];
     }
 
-    private function attachDeviceToSet(Device $device, mixed $setId, ?int $userId): array
+    private function attachDeviceToSet(Device $device, mixed $setId): array
     {
         if (! $setId) {
             return ['level' => 'error', 'message' => 'Nav izveleta komplektacija.'];
@@ -601,20 +499,13 @@ class DeviceController extends Controller
             'device_id' => $device->id,
         ]);
 
+        $before = ['status' => $device->status];
+
         if ($device->status !== 'kitting') {
             $device->forceFill(['status' => 'kitting'])->save();
         }
 
-        DeviceHistory::create([
-            'device_id' => $device->id,
-            'action' => 'SET_ATTACH',
-            'field_changed' => 'device_set_id',
-            'old_value' => null,
-            'new_value' => $set->set_name,
-            'changed_by' => $userId,
-        ]);
-
-        $this->writeAudit($userId, 'UPDATE', $device, 'Ierice pievienota komplektam: ' . $device->name . ' -> ' . $set->set_name, 'info');
+        AuditTrail::updatedFromState(auth()->id(), $device, $before, ['status' => $device->status]);
 
         return ['level' => 'success', 'message' => 'Ierice pievienota komplektacijai.'];
     }

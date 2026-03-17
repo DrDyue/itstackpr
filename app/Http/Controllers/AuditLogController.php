@@ -10,6 +10,8 @@ class AuditLogController extends Controller
 {
     public function index(Request $request)
     {
+        $this->requireAdmin();
+
         $filters = [
             'action' => trim((string) $request->query('action', '')),
             'severity' => trim((string) $request->query('severity', '')),
@@ -20,7 +22,7 @@ class AuditLogController extends Controller
         ];
 
         $logQuery = AuditLog::query()
-            ->with(['user.employee'])
+            ->with(['user'])
             ->when($filters['action'] !== '', fn ($query) => $query->where('action', $filters['action']))
             ->when($filters['severity'] !== '', fn ($query) => $query->where('severity', $filters['severity']))
             ->when($filters['entity_type'] !== '', fn ($query) => $query->where('entity_type', $filters['entity_type']))
@@ -38,9 +40,7 @@ class AuditLogController extends Controller
             ->orderByDesc('timestamp')
             ->orderByDesc('id');
 
-        $logs = (clone $logQuery)
-            ->paginate(50)
-            ->withQueryString();
+        $logs = (clone $logQuery)->paginate(50)->withQueryString();
 
         $summary = [
             'total' => AuditLog::count(),

@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Auth;
 
 use App\Models\User;
-use App\Models\Employee;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -14,19 +13,11 @@ use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
@@ -38,27 +29,22 @@ class LoginRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.required' => 'Lauks "Darbinieka e-pasts" ir obligats.',
-            'email.email' => 'Lauks "Darbinieka e-pasts" nav deriga e-pasta adrese.',
+            'email.required' => 'Lauks "E-pasts" ir obligats.',
+            'email.email' => 'Lauks "E-pasts" nav deriga e-pasta adrese.',
             'password.required' => 'Lauks "Parole" ir obligats.',
         ];
     }
 
-    /**
-     * Attempt to authenticate the request's credentials.
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     */
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
 
-        // Find active employee by email
-        $employee = Employee::where('email', $this->email)
+        $user = User::query()
+            ->where('email', $this->email)
             ->where('is_active', true)
             ->first();
 
-        if (!$employee) {
+        if (! $user || ! Hash::check($this->password, $user->password)) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -66,33 +52,13 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        // Find user by employee_id
-        $user = User::where('employee_id', $employee->id)
-            ->where('is_active', true)
-            ->first();
+        $user->forceFill(['last_login' => now()])->save();
 
-        if (!$user || !Hash::check($this->password, $user->password)) {
-            RateLimiter::hit($this->throttleKey());
-
-            throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
-            ]);
-        }
-
-        // Update last login
-        $user->update(['last_login' => now()]);
-
-        // Login the user
         Auth::login($user, $this->boolean('remember'));
 
         RateLimiter::clear($this->throttleKey());
     }
 
-    /**
-     * Ensure the login request is not rate limited.
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     */
     public function ensureIsNotRateLimited(): void
     {
         if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
@@ -111,11 +77,8 @@ class LoginRequest extends FormRequest
         ]);
     }
 
-    /**
-     * Get the rate limiting throttle key for the request.
-     */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
     }
 }

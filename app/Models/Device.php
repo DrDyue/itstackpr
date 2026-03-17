@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use App\Support\DeviceAssetManager;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Support\DeviceAssetManager;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Device extends Model
 {
@@ -20,8 +20,7 @@ class Device extends Model
         'status',
         'building_id',
         'room_id',
-        'assigned_employee_id',
-        'assigned_to',
+        'assigned_user_id',
         'purchase_date',
         'purchase_price',
         'warranty_until',
@@ -39,10 +38,11 @@ class Device extends Model
             'purchase_date' => 'date',
             'warranty_until' => 'date',
             'purchase_price' => 'decimal:2',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
     }
 
-    // Relations
     public function type(): BelongsTo
     {
         return $this->belongsTo(DeviceType::class, 'device_type_id');
@@ -63,19 +63,14 @@ class Device extends Model
         return $this->belongsTo(Room::class);
     }
 
-    public function assignedEmployee(): BelongsTo
+    public function assignedUser(): BelongsTo
     {
-        return $this->belongsTo(Employee::class, 'assigned_employee_id');
+        return $this->belongsTo(User::class, 'assigned_user_id');
     }
 
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function histories(): HasMany
-    {
-        return $this->hasMany(DeviceHistory::class);
     }
 
     public function repairs(): HasMany
@@ -88,6 +83,21 @@ class Device extends Model
         return $this->hasOne(Repair::class)
             ->whereIn('status', ['waiting', 'in-progress'])
             ->latestOfMany('id');
+    }
+
+    public function repairRequests(): HasMany
+    {
+        return $this->hasMany(RepairRequest::class);
+    }
+
+    public function writeoffRequests(): HasMany
+    {
+        return $this->hasMany(WriteoffRequest::class);
+    }
+
+    public function transfers(): HasMany
+    {
+        return $this->hasMany(DeviceTransfer::class);
     }
 
     public function sets()

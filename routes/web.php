@@ -6,13 +6,14 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
-use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\BuildingController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\DeviceTypeController;
 use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\RepairController;
-use App\Http\Controllers\DeviceHistoryController;
+use App\Http\Controllers\RepairRequestController;
+use App\Http\Controllers\WriteoffRequestController;
+use App\Http\Controllers\DeviceTransferController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DeviceAssetController;
 use App\Http\Controllers\DeviceSetController;
@@ -21,7 +22,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BackupController;
-use App\Http\Controllers\ReportController;
 
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
@@ -52,14 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::prefix('reports')->name('reports.')->group(function () {
-        Route::get('/', [ReportController::class, 'index'])->name('index');
-        Route::get('/devices', [ReportController::class, 'devices'])->name('devices');
-        Route::get('/repairs', [ReportController::class, 'repairs'])->name('repairs');
-        Route::get('/activity', [ReportController::class, 'activity'])->name('activity');
-    });
 
-    Route::resource('employees', EmployeeController::class)->except(['show']);
     Route::resource('buildings', BuildingController::class)->except(['show']);
     Route::resource('rooms', RoomController::class)->except(['show']);
     Route::resource('device-types', DeviceTypeController::class)->except(['show']);
@@ -73,8 +66,18 @@ Route::middleware('auth')->group(function () {
         ->name('device-assets.show');
     Route::post('/repairs/{repair}/transition', [RepairController::class, 'transition'])->name('repairs.transition');
     Route::resource('repairs', RepairController::class)->except(['show']);
-    Route::get('/device-history', [DeviceHistoryController::class, 'index'])->name('device-history.index');
-    Route::get('/devices/{device}/history', [DeviceHistoryController::class, 'device'])->name('devices.history');
+    Route::get('/repair-requests', [RepairRequestController::class, 'index'])->name('repair-requests.index');
+    Route::get('/repair-requests/create', [RepairRequestController::class, 'create'])->name('repair-requests.create');
+    Route::post('/repair-requests', [RepairRequestController::class, 'store'])->name('repair-requests.store');
+    Route::post('/repair-requests/{repairRequest}/review', [RepairRequestController::class, 'review'])->name('repair-requests.review');
+    Route::get('/writeoff-requests', [WriteoffRequestController::class, 'index'])->name('writeoff-requests.index');
+    Route::get('/writeoff-requests/create', [WriteoffRequestController::class, 'create'])->name('writeoff-requests.create');
+    Route::post('/writeoff-requests', [WriteoffRequestController::class, 'store'])->name('writeoff-requests.store');
+    Route::post('/writeoff-requests/{writeoffRequest}/review', [WriteoffRequestController::class, 'review'])->name('writeoff-requests.review');
+    Route::get('/device-transfers', [DeviceTransferController::class, 'index'])->name('device-transfers.index');
+    Route::get('/device-transfers/create', [DeviceTransferController::class, 'create'])->name('device-transfers.create');
+    Route::post('/device-transfers', [DeviceTransferController::class, 'store'])->name('device-transfers.store');
+    Route::post('/device-transfers/{deviceTransfer}/review', [DeviceTransferController::class, 'review'])->name('device-transfers.review');
     Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
     Route::resource('device-sets', DeviceSetController::class)->except(['show']);
     Route::post('/device-sets/{deviceSet}/items', [DeviceSetController::class, 'addItem'])

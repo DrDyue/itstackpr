@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Building;
-use App\Models\Employee;
 use App\Models\Room;
+use App\Models\User;
 use App\Support\AuditTrail;
 use Illuminate\Http\Request;
 
@@ -12,7 +12,9 @@ class RoomController extends Controller
 {
     public function index()
     {
-        $rooms = Room::with(['building', 'employee'])
+        $this->requireManager();
+
+        $rooms = Room::with(['building', 'user'])
             ->orderBy('building_id')
             ->orderBy('floor_number')
             ->orderBy('room_number')
@@ -23,14 +25,18 @@ class RoomController extends Controller
 
     public function create()
     {
+        $this->requireManager();
+
         return view('rooms.create', [
             'buildings' => Building::orderBy('building_name')->get(),
-            'employees' => Employee::orderBy('full_name')->get(),
+            'users' => User::active()->orderBy('full_name')->get(),
         ]);
     }
 
     public function store(Request $request)
     {
+        $this->requireManager();
+
         $room = Room::create($this->validatedData($request));
         AuditTrail::created(auth()->id(), $room);
 
@@ -39,18 +45,23 @@ class RoomController extends Controller
 
     public function edit(Room $room)
     {
+        $this->requireManager();
+
         return view('rooms.edit', [
             'room' => $room,
             'buildings' => Building::orderBy('building_name')->get(),
-            'employees' => Employee::orderBy('full_name')->get(),
+            'users' => User::active()->orderBy('full_name')->get(),
         ]);
     }
 
     public function update(Request $request, Room $room)
     {
-        $before = $room->only(['building_id', 'floor_number', 'room_number', 'room_name', 'employee_id', 'department', 'notes']);
+        $this->requireManager();
+
+        $before = $room->only(['building_id', 'floor_number', 'room_number', 'room_name', 'user_id', 'department', 'notes']);
         $room->update($this->validatedData($request));
         $after = $room->fresh()->only(array_keys($before));
+
         AuditTrail::updatedFromState(auth()->id(), $room, $before, $after);
 
         return redirect()->route('rooms.index')->with('success', 'Telpas dati atjauninati');
@@ -58,6 +69,8 @@ class RoomController extends Controller
 
     public function destroy(Room $room)
     {
+        $this->requireManager();
+
         AuditTrail::deleted(auth()->id(), $room);
         $room->delete();
 
@@ -76,14 +89,15 @@ class RoomController extends Controller
             'floor_number' => ['required', 'integer', 'min:-10', 'max:200'],
             'room_number' => ['required', 'string', 'max:20'],
             'room_name' => ['nullable', 'string', 'max:100'],
-            'employee_id' => ['nullable', 'exists:employees,id'],
+            'user_id' => ['nullable', 'exists:users,id'],
             'department' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:200'],
         ]);
 
-        if (($data['employee_id'] ?? null) === '') {
-            $data['employee_id'] = null;
-        }
+        $data['user_id'] = $data['user_id'] ?: null;
+        $data['room_name'] = $data['room_name'] ?: null;
+        $data['department'] = $data['department'] ?: null;
+        $data['notes'] = $data['notes'] ?: null;
 
         return $data;
     }

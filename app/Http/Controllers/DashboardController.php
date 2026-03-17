@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\AuditLog;
 use App\Models\Building;
 use App\Models\Device;
+use App\Models\DeviceTransfer;
 use App\Models\Repair;
+use App\Models\RepairRequest;
 use App\Models\Room;
+use App\Models\WriteoffRequest;
 use App\Support\DatabaseBackupService;
 use Carbon\CarbonImmutable;
 use Illuminate\View\View;
@@ -20,142 +23,132 @@ class DashboardController extends Controller
 
     public function index(): View
     {
-        try {
-            $totalDevices = Device::count();
-            $activeDevices = Device::where('status', 'active')->count();
-            $reserveDevices = Device::where('status', 'reserve')->count();
-            $brokenDevices = Device::where('status', 'broken')->count();
-            $inRepairDevices = Device::where('status', 'repair')->count();
-            $newThisMonth = Device::where('created_at', '>=', now()->startOfMonth())->count();
-            $withoutRoom = Device::whereNull('room_id')->count();
-            $totalRooms = Room::count();
-            $mappedRooms = Room::has('devices')->count();
-            $activeRepairsCount = Repair::whereIn('status', ['waiting', 'in-progress'])->count();
-            $waitingRepairsCount = Repair::where('status', 'waiting')->count();
-            $inProgressRepairsCount = Repair::where('status', 'in-progress')->count();
-            $completedRepairsThisMonth = Repair::where('status', 'completed')
-                ->where('actual_completion', '>=', now()->startOfMonth())
-                ->count();
-            $averageRepairCost = (float) Repair::whereNotNull('cost')->avg('cost');
-            $latestInventoryAt = Device::max('created_at');
+        $user = $this->user();
+        abort_unless($user, 403);
 
-            $buildings = Building::query()
-                ->withCount(['rooms', 'devices'])
-                ->with([
-                    'rooms' => function ($query) {
-                        $query->with(['employee'])
-                            ->withCount('devices')
-                            ->orderBy('floor_number')
-                            ->orderBy('room_number');
-                    },
-                ])
-                ->orderBy('building_name')
-                ->get();
+        $deviceQuery = Device::query();
+        $repairRequestQuery = RepairRequest::query();
+        $writeoffRequestQuery = WriteoffRequest::query();
+        $transferQuery = DeviceTransfer::query();
+        $repairQuery = Repair::query();
 
-            $buildingTree = $buildings->map(function (Building $building) {
-                $floors = $building->rooms
-                    ->groupBy(fn ($room) => (string) ($room->floor_number ?? 0))
-                    ->sortKeys()
-                    ->map(function ($rooms, $floorKey) {
-                        return [
-                            'floor_label' => ((int) $floorKey) . '. stavs',
-                            'device_count' => (int) $rooms->sum('devices_count'),
-                            'room_count' => $rooms->count(),
-                            'rooms' => $rooms->values(),
-                        ];
-                    })
-                    ->values();
-
-                return [
-                    'building' => $building,
-                    'floor_count' => $floors->count(),
-                    'device_count' => (int) $building->devices_count,
-                    'rooms_count' => (int) $building->rooms_count,
-                    'floors' => $floors,
-                ];
+        if (! $user->canManageRequests()) {
+            $deviceQuery->where('assigned_user_id', $user->id);
+            $repairRequestQuery->where('responsible_user_id', $user->id);
+            $writeoffRequestQuery->where('responsible_user_id', $user->id);
+            $transferQuery->where(function ($query) use ($user) {
+                $query->where('responsible_user_id', $user->id)
+                    ->orWhere('transfer_to_user_id', $user->id);
             });
-
-            $activeRepairs = Repair::with(['device.building', 'device.room', 'assignee.employee'])
-                ->whereIn('status', ['waiting', 'in-progress'])
-                ->orderByRaw("case when status = 'in-progress' then 0 else 1 end")
-                ->orderByDesc('id')
-                ->limit(6)
-                ->get();
-
-            $recentDevices = Device::with(['room', 'building', 'type'])
-                ->latest('created_at')
-                ->limit(4)
-                ->get();
-
-            $recentActivity = AuditLog::with('user.employee')
-                ->latest('timestamp')
-                ->limit(6)
-                ->get();
-
-            $allBackups = $this->backupService->allBackups();
-            $backupSettings = $this->backupService->getSettings();
-            $latestBackup = $allBackups->first();
-            $currentBackup = $allBackups->first(fn ($backup) => $backup->is_current);
-            $nextBackupRun = $this->backupService->nextRunAt($backupSettings, CarbonImmutable::now());
-            $backupSummary = [
-                'count' => $allBackups->count(),
-                'latest' => $latestBackup,
-                'current' => $currentBackup,
-                'enabled' => (bool) $backupSettings->enabled,
-                'next_run_at' => $nextBackupRun,
-            ];
-        } catch (\Throwable $e) {
-            $totalDevices = 0;
-            $activeDevices = 0;
-            $reserveDevices = 0;
-            $brokenDevices = 0;
-            $inRepairDevices = 0;
-            $newThisMonth = 0;
-            $withoutRoom = 0;
-            $totalRooms = 0;
-            $mappedRooms = 0;
-            $activeRepairsCount = 0;
-            $waitingRepairsCount = 0;
-            $inProgressRepairsCount = 0;
-            $completedRepairsThisMonth = 0;
-            $averageRepairCost = 0;
-            $latestInventoryAt = null;
-            $buildings = collect();
-            $buildingTree = collect();
-            $activeRepairs = collect();
-            $recentDevices = collect();
-            $recentActivity = collect();
-            $backupSummary = [
-                'count' => 0,
-                'latest' => null,
-                'current' => null,
-                'enabled' => false,
-                'next_run_at' => null,
-            ];
+            $repairQuery->where(function ($query) use ($user) {
+                $query->where('reported_by_user_id', $user->id)
+                    ->orWhereHas('device', fn ($deviceBuilder) => $deviceBuilder->where('assigned_user_id', $user->id));
+            });
         }
 
-        return view('dashboard', compact(
-            'totalDevices',
-            'activeDevices',
-            'reserveDevices',
-            'brokenDevices',
-            'inRepairDevices',
-            'newThisMonth',
-            'withoutRoom',
-            'totalRooms',
-            'mappedRooms',
-            'activeRepairsCount',
-            'waitingRepairsCount',
-            'inProgressRepairsCount',
-            'completedRepairsThisMonth',
-            'averageRepairCost',
-            'latestInventoryAt',
-            'buildings',
-            'buildingTree',
-            'activeRepairs',
-            'recentDevices',
-            'recentActivity',
-            'backupSummary'
-        ));
+        $totalDevices = (clone $deviceQuery)->count();
+        $activeDevices = (clone $deviceQuery)->where('status', 'active')->count();
+        $reserveDevices = (clone $deviceQuery)->where('status', 'reserve')->count();
+        $brokenDevices = (clone $deviceQuery)->where('status', 'broken')->count();
+        $inRepairDevices = (clone $deviceQuery)->where('status', 'repair')->count();
+        $writtenOffDevices = (clone $deviceQuery)->where('status', 'written_off')->count();
+
+        $activeRepairs = (clone $repairQuery)
+            ->with(['device.building', 'device.room', 'assignee'])
+            ->whereIn('status', ['waiting', 'in-progress'])
+            ->orderByRaw("case when status = 'in-progress' then 0 else 1 end")
+            ->orderByDesc('id')
+            ->limit(6)
+            ->get();
+
+        $recentDevices = (clone $deviceQuery)
+            ->with(['room', 'building', 'type', 'assignedUser'])
+            ->latest('created_at')
+            ->limit(5)
+            ->get();
+
+        $recentActivity = AuditLog::query()
+            ->with('user')
+            ->latest('timestamp')
+            ->limit(8)
+            ->get();
+
+        $buildings = Building::query()
+            ->withCount(['rooms', 'devices'])
+            ->with([
+                'rooms' => function ($query) {
+                    $query->with(['user'])
+                        ->withCount('devices')
+                        ->orderBy('floor_number')
+                        ->orderBy('room_number');
+                },
+            ])
+            ->orderBy('building_name')
+            ->get();
+
+        $buildingTree = $buildings->map(function (Building $building) {
+            $floors = $building->rooms
+                ->groupBy(fn ($room) => (string) ($room->floor_number ?? 0))
+                ->sortKeys()
+                ->map(function ($rooms, $floorKey) {
+                    return [
+                        'floor_label' => ((int) $floorKey) . '. stavs',
+                        'device_count' => (int) $rooms->sum('devices_count'),
+                        'room_count' => $rooms->count(),
+                        'rooms' => $rooms->values(),
+                    ];
+                })
+                ->values();
+
+            return [
+                'building' => $building,
+                'floor_count' => $floors->count(),
+                'device_count' => (int) $building->devices_count,
+                'rooms_count' => (int) $building->rooms_count,
+                'floors' => $floors,
+            ];
+        });
+
+        $allBackups = $user->isAdmin() ? $this->backupService->allBackups() : collect();
+        $backupSettings = $user->isAdmin() ? $this->backupService->getSettings() : null;
+        $backupSummary = [
+            'count' => $allBackups->count(),
+            'latest' => $allBackups->first(),
+            'current' => $allBackups->first(fn ($backup) => $backup->is_current),
+            'enabled' => (bool) ($backupSettings?->enabled ?? false),
+            'next_run_at' => $backupSettings ? $this->backupService->nextRunAt($backupSettings, CarbonImmutable::now()) : null,
+        ];
+
+        return view('dashboard', [
+            'user' => $user,
+            'totalDevices' => $totalDevices,
+            'activeDevices' => $activeDevices,
+            'reserveDevices' => $reserveDevices,
+            'brokenDevices' => $brokenDevices,
+            'inRepairDevices' => $inRepairDevices,
+            'writtenOffDevices' => $writtenOffDevices,
+            'totalRooms' => Room::count(),
+            'mappedRooms' => Room::has('devices')->count(),
+            'activeRepairsCount' => (clone $repairQuery)->whereIn('status', ['waiting', 'in-progress'])->count(),
+            'waitingRepairsCount' => (clone $repairQuery)->where('status', 'waiting')->count(),
+            'inProgressRepairsCount' => (clone $repairQuery)->where('status', 'in-progress')->count(),
+            'completedRepairsThisMonth' => (clone $repairQuery)->where('status', 'completed')->where('actual_completion', '>=', now()->startOfMonth())->count(),
+            'pendingRepairRequests' => (clone $repairRequestQuery)->where('status', 'pending')->count(),
+            'pendingWriteoffRequests' => (clone $writeoffRequestQuery)->where('status', 'pending')->count(),
+            'pendingTransfers' => (clone $transferQuery)->where('status', 'pending')->count(),
+            'averageRepairCost' => (float) ((clone $repairQuery)->whereNotNull('cost')->avg('cost') ?? 0),
+            'latestInventoryAt' => (clone $deviceQuery)->max('created_at'),
+            'buildingTree' => $buildingTree,
+            'activeRepairs' => $activeRepairs,
+            'recentDevices' => $recentDevices,
+            'recentActivity' => $recentActivity,
+            'backupSummary' => $backupSummary,
+            'statusLabels' => [
+                'waiting' => 'Gaida',
+                'in-progress' => 'Procesa',
+                'completed' => 'Pabeigts',
+                'cancelled' => 'Atcelts',
+            ],
+        ]);
     }
 }

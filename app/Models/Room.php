@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Room extends Model
@@ -16,7 +17,7 @@ class Room extends Model
         'floor_number',
         'room_number',
         'room_name',
-        'employee_id',
+        'user_id',
         'department',
         'notes',
         'created_at',
@@ -29,14 +30,14 @@ class Room extends Model
         ];
     }
 
-    public function building()
+    public function building(): BelongsTo
     {
         return $this->belongsTo(Building::class);
     }
 
-    public function employee()
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(User::class);
     }
 
     public function devices(): HasMany

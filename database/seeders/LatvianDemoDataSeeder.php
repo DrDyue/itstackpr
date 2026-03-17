@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -11,297 +12,390 @@ class LatvianDemoDataSeeder extends Seeder
     public function run(): void
     {
         $now = now();
-        $building = DB::table('buildings')->orderBy('id')->first();
 
-        if (! $building) {
-            $this->command?->error('Tabula buildings ir tuksa. Vispirms izveido vismaz vienu eku.');
-            return;
-        }
-
-        DB::transaction(function () use ($building, $now) {
+        DB::transaction(function () use ($now) {
             DB::table('device_set_items')->delete();
+            DB::table('device_transfers')->delete();
+            DB::table('writeoff_requests')->delete();
+            DB::table('repair_requests')->delete();
             DB::table('repairs')->delete();
             DB::table('device_sets')->delete();
             DB::table('devices')->delete();
-            DB::table('users')->delete();
             DB::table('rooms')->delete();
             DB::table('device_types')->delete();
-            DB::table('employees')->delete();
+            DB::table('buildings')->delete();
+            DB::table('audit_log')->delete();
+            DB::table('users')->delete();
 
-            $employees = [
-                ['full_name' => 'Artis Berzins', 'email' => 'artis.berzins@ludzas.lv', 'phone' => '+371 26000001', 'job_title' => 'IT administrators', 'is_active' => 1],
-                ['full_name' => 'Linda Kalnina', 'email' => 'linda.kalnina@ludzas.lv', 'phone' => '+371 26000002', 'job_title' => 'IT specialists', 'is_active' => 1],
-                ['full_name' => 'Janis Ozols', 'email' => 'janis.ozols@ludzas.lv', 'phone' => '+371 26000003', 'job_title' => 'Sistemas inzenieris', 'is_active' => 1],
-                ['full_name' => 'Ilze Strautina', 'email' => 'ilze.strautina@ludzas.lv', 'phone' => '+371 26000004', 'job_title' => 'Lietotaju atbalsts', 'is_active' => 1],
-                ['full_name' => 'Maris Vitols', 'email' => 'maris.vitols@ludzas.lv', 'phone' => '+371 26000005', 'job_title' => 'Tikla administrators', 'is_active' => 1],
-                ['full_name' => 'Kristine Daukste', 'email' => 'kristine.daukste@ludzas.lv', 'phone' => '+371 26000006', 'job_title' => 'Projektu koordinatore', 'is_active' => 1],
-                ['full_name' => 'Edgars Sviklis', 'email' => 'edgars.sviklis@ludzas.lv', 'phone' => '+371 26000007', 'job_title' => 'Iepirkumu specialists', 'is_active' => 1],
-                ['full_name' => 'Agnese Leite', 'email' => 'agnese.leite@ludzas.lv', 'phone' => '+371 26000008', 'job_title' => 'Gramatvede', 'is_active' => 1],
-                ['full_name' => 'Roberts Arbidans', 'email' => 'roberts.arbidans@ludzas.lv', 'phone' => '+371 26000009', 'job_title' => 'Jurists', 'is_active' => 1],
-                ['full_name' => 'Dace Rudzite', 'email' => 'dace.rudzite@ludzas.lv', 'phone' => '+371 26000010', 'job_title' => 'Personala specialists', 'is_active' => 1],
-                ['full_name' => 'Anrijs Krumins', 'email' => 'anrijs.krumins@ludzas.lv', 'phone' => '+371 26000011', 'job_title' => 'Datu analitikis', 'is_active' => 1],
-                ['full_name' => 'Marta Zvirbule', 'email' => 'marta.zvirbule@ludzas.lv', 'phone' => '+371 26000012', 'job_title' => 'Sekretare', 'is_active' => 1],
-                ['full_name' => 'Olafs Gailitis', 'email' => 'olafs.gailitis@ludzas.lv', 'phone' => '+371 26000013', 'job_title' => 'Saimniecibas vaditajs', 'is_active' => 1],
-                ['full_name' => 'Ruta Liepa', 'email' => 'ruta.liepa@ludzas.lv', 'phone' => '+371 26000014', 'job_title' => 'Iestades vaditaja', 'is_active' => 1],
-                ['full_name' => 'Toms Severs', 'email' => 'toms.severs@ludzas.lv', 'phone' => '+371 26000015', 'job_title' => 'Datu ievades operators', 'is_active' => 1],
-                ['full_name' => 'Sintija Cevere', 'email' => 'sintija.cevere@ludzas.lv', 'phone' => '+371 26000016', 'job_title' => 'Arhivare', 'is_active' => 1],
-                ['full_name' => 'Nauris Pauksts', 'email' => 'nauris.pauksts@ludzas.lv', 'phone' => '+371 26000017', 'job_title' => 'Darba aizsardzibas specialists', 'is_active' => 1],
-                ['full_name' => 'Elina Grinberga', 'email' => 'elina.grinberga@ludzas.lv', 'phone' => '+371 26000018', 'job_title' => 'Dokumentu parvalde', 'is_active' => 1],
-                ['full_name' => 'Kaspars Miezis', 'email' => 'kaspars.miezis@ludzas.lv', 'phone' => '+371 26000019', 'job_title' => 'Sistemu operators', 'is_active' => 1],
-                ['full_name' => 'Ieva Spunde', 'email' => 'ieva.spunde@ludzas.lv', 'phone' => '+371 26000020', 'job_title' => 'Lietvedis', 'is_active' => 1],
-                ['full_name' => 'Aivars Pelsis', 'email' => 'aivars.pelsis@ludzas.lv', 'phone' => '+371 26000021', 'job_title' => 'Elektroinzenieris', 'is_active' => 1],
-                ['full_name' => 'Evita Romanova', 'email' => 'evita.romanova@ludzas.lv', 'phone' => '+371 26000022', 'job_title' => 'Komunikaciju specialists', 'is_active' => 1],
-                ['full_name' => 'Rihards Goba', 'email' => 'rihards.goba@ludzas.lv', 'phone' => '+371 26000023', 'job_title' => 'Projekta asistents', 'is_active' => 1],
-                ['full_name' => 'Liga Kresla', 'email' => 'liga.kresla@ludzas.lv', 'phone' => '+371 26000024', 'job_title' => 'Administratore', 'is_active' => 1],
-            ];
+            DB::table('buildings')->insert([
+                [
+                    'building_name' => 'Administracijas eka',
+                    'address' => 'Brivibas iela 1',
+                    'city' => 'Ludza',
+                    'total_floors' => 3,
+                    'notes' => 'Galvenais korpuss',
+                    'created_at' => $now,
+                ],
+                [
+                    'building_name' => 'Tehniskais korpuss',
+                    'address' => 'Darza iela 8',
+                    'city' => 'Ludza',
+                    'total_floors' => 2,
+                    'notes' => 'IT un noliktavas telpas',
+                    'created_at' => $now,
+                ],
+            ]);
 
-            foreach ($employees as &$employee) {
-                $employee['created_at'] = $now;
-            }
-            unset($employee);
-            DB::table('employees')->insert($employees);
-
-            $employeeIds = DB::table('employees')
-                ->pluck('id', 'email')
-                ->all();
-            $employeeIdsByName = DB::table('employees')
-                ->pluck('id', 'full_name')
-                ->all();
+            $buildingIds = DB::table('buildings')->pluck('id', 'building_name')->all();
 
             $users = [
-                ['employee_email' => 'artis.berzins@ludzas.lv', 'role' => 'admin', 'is_active' => 1],
-                ['employee_email' => 'linda.kalnina@ludzas.lv', 'role' => 'user', 'is_active' => 1],
-                ['employee_email' => 'janis.ozols@ludzas.lv', 'role' => 'user', 'is_active' => 1],
-                ['employee_email' => 'ilze.strautina@ludzas.lv', 'role' => 'user', 'is_active' => 1],
-                ['employee_email' => 'maris.vitols@ludzas.lv', 'role' => 'user', 'is_active' => 1],
+                ['full_name' => 'Artis Berzins', 'email' => 'artis.berzins@itstackpr.test', 'phone' => '+37126000001', 'job_title' => 'Sistemas administrators', 'role' => User::ROLE_ADMIN],
+                ['full_name' => 'Linda Kalnina', 'email' => 'linda.kalnina@itstackpr.test', 'phone' => '+37126000002', 'job_title' => 'IT specialists', 'role' => User::ROLE_IT_WORKER],
+                ['full_name' => 'Janis Ozols', 'email' => 'janis.ozols@itstackpr.test', 'phone' => '+37126000003', 'job_title' => 'IT atbalsta inzenieris', 'role' => User::ROLE_IT_WORKER],
+                ['full_name' => 'Ilze Strautina', 'email' => 'ilze.strautina@itstackpr.test', 'phone' => '+37126000004', 'job_title' => 'Projektu koordinatore', 'role' => User::ROLE_USER],
+                ['full_name' => 'Maris Vitols', 'email' => 'maris.vitols@itstackpr.test', 'phone' => '+37126000005', 'job_title' => 'Tikla administrators', 'role' => User::ROLE_IT_WORKER],
+                ['full_name' => 'Kristine Daukste', 'email' => 'kristine.daukste@itstackpr.test', 'phone' => '+37126000006', 'job_title' => 'Finansu analitike', 'role' => User::ROLE_USER],
+                ['full_name' => 'Edgars Sviklis', 'email' => 'edgars.sviklis@itstackpr.test', 'phone' => '+37126000007', 'job_title' => 'Iepirkumu specialists', 'role' => User::ROLE_USER],
+                ['full_name' => 'Agnese Leite', 'email' => 'agnese.leite@itstackpr.test', 'phone' => '+37126000008', 'job_title' => 'Gramatvede', 'role' => User::ROLE_USER],
+                ['full_name' => 'Roberts Arbidans', 'email' => 'roberts.arbidans@itstackpr.test', 'phone' => '+37126000009', 'job_title' => 'Jurists', 'role' => User::ROLE_USER],
+                ['full_name' => 'Dace Rudzite', 'email' => 'dace.rudzite@itstackpr.test', 'phone' => '+37126000010', 'job_title' => 'Personala specialiste', 'role' => User::ROLE_USER],
+                ['full_name' => 'Marta Zvirbule', 'email' => 'marta.zvirbule@itstackpr.test', 'phone' => '+37126000011', 'job_title' => 'Sekretare', 'role' => User::ROLE_USER],
+                ['full_name' => 'Ruta Liepa', 'email' => 'ruta.liepa@itstackpr.test', 'phone' => '+37126000012', 'job_title' => 'Iestades vaditaja', 'role' => User::ROLE_USER],
             ];
 
-            $userRows = [];
-            foreach ($users as $user) {
-                $userRows[] = [
-                    'employee_id' => $employeeIds[$user['employee_email']],
+            $userRows = array_map(function (array $user) use ($now) {
+                return array_merge($user, [
                     'password' => Hash::make('password'),
-                    'role' => $user['role'],
-                    'is_active' => $user['is_active'],
+                    'is_active' => true,
                     'remember_token' => null,
                     'last_login' => null,
                     'created_at' => $now,
-                ];
-            }
-            DB::table('users')->insert($userRows);
+                    'updated_at' => $now,
+                ]);
+            }, $users);
 
-            $userIds = DB::table('users')
-                ->pluck('id', 'employee_id')
-                ->all();
-            $adminUserId = $userIds[$employeeIds['artis.berzins@ludzas.lv']] ?? null;
+            DB::table('users')->insert($userRows);
+            $userIdsByEmail = DB::table('users')->pluck('id', 'email')->all();
+            $userIdsByName = DB::table('users')->pluck('id', 'full_name')->all();
+            $adminUserId = $userIdsByEmail['artis.berzins@itstackpr.test'];
 
             $rooms = [
-                ['floor_number' => 1, 'room_number' => '101', 'room_name' => 'IT mezgls', 'employee_email' => 'artis.berzins@ludzas.lv', 'department' => 'Informacijas tehnologijas', 'notes' => 'Serveru skapji un tikla mezgli'],
-                ['floor_number' => 1, 'room_number' => '102', 'room_name' => 'Atbalsta kabinets', 'employee_email' => 'linda.kalnina@ludzas.lv', 'department' => 'Informacijas tehnologijas', 'notes' => 'Lietotaju atbalsta darba vietas'],
-                ['floor_number' => 1, 'room_number' => '103', 'room_name' => 'Tikla telpa', 'employee_email' => 'maris.vitols@ludzas.lv', 'department' => 'Informacijas tehnologijas', 'notes' => 'Maršrutetaji un komutatori'],
-                ['floor_number' => 1, 'room_number' => '104', 'room_name' => 'Uzskaites kabinets', 'employee_email' => 'agnese.leite@ludzas.lv', 'department' => 'Finansu nodala', 'notes' => 'Darba vietas gramatvedibai'],
-                ['floor_number' => 1, 'room_number' => '105', 'room_name' => 'Klientu pieņemšana', 'employee_email' => 'marta.zvirbule@ludzas.lv', 'department' => 'Administracija', 'notes' => 'Apmekletaju apkalposana'],
-                ['floor_number' => 2, 'room_number' => '201', 'room_name' => 'Vadibas kabinets', 'employee_email' => 'ruta.liepa@ludzas.lv', 'department' => 'Vadiba', 'notes' => 'Iestades vaditajas darba vieta'],
-                ['floor_number' => 2, 'room_number' => '202', 'room_name' => 'Projektu telpa', 'employee_email' => 'kristine.daukste@ludzas.lv', 'department' => 'Attistibas projekti', 'notes' => 'Projektu sanaksmes'],
-                ['floor_number' => 2, 'room_number' => '203', 'room_name' => 'Personala kabinets', 'employee_email' => 'dace.rudzite@ludzas.lv', 'department' => 'Personala nodala', 'notes' => 'Personala dokumenti'],
-                ['floor_number' => 2, 'room_number' => '204', 'room_name' => 'Datu analitika', 'employee_email' => 'anrijs.krumins@ludzas.lv', 'department' => 'Analitikas nodala', 'notes' => 'Atskaites un paneli'],
-                ['floor_number' => 2, 'room_number' => '205', 'room_name' => 'Arhivs', 'employee_email' => 'sintija.cevere@ludzas.lv', 'department' => 'Dokumentu parvalde', 'notes' => 'Arhiva materiali'],
-                ['floor_number' => 3, 'room_number' => '301', 'room_name' => 'Sanaksmju zale', 'employee_email' => 'roberts.arbidans@ludzas.lv', 'department' => 'Juridiska nodala', 'notes' => 'Kopejas sanaksmes'],
-                ['floor_number' => 3, 'room_number' => '302', 'room_name' => 'Rezerves telpa', 'employee_email' => 'olafs.gailitis@ludzas.lv', 'department' => 'Saimniecibas nodala', 'notes' => 'Rezerves aprikojums'],
+                ['building' => 'Administracijas eka', 'floor_number' => 1, 'room_number' => '101', 'room_name' => 'IT mezgls', 'user_name' => 'Artis Berzins', 'department' => 'IT', 'notes' => 'Serveri un tikla mezgli'],
+                ['building' => 'Administracijas eka', 'floor_number' => 1, 'room_number' => '102', 'room_name' => 'Atbalsta kabinets', 'user_name' => 'Linda Kalnina', 'department' => 'IT', 'notes' => 'Ikdienas atbalsta darbi'],
+                ['building' => 'Administracijas eka', 'floor_number' => 2, 'room_number' => '201', 'room_name' => 'Vadibas kabinets', 'user_name' => 'Ruta Liepa', 'department' => 'Vadiba', 'notes' => 'Vadibas darba vieta'],
+                ['building' => 'Administracijas eka', 'floor_number' => 2, 'room_number' => '202', 'room_name' => 'Finansu telpa', 'user_name' => 'Agnese Leite', 'department' => 'Finanses', 'notes' => 'Finansu nodaļa'],
+                ['building' => 'Administracijas eka', 'floor_number' => 3, 'room_number' => '301', 'room_name' => 'Personala kabinets', 'user_name' => 'Dace Rudzite', 'department' => 'Personals', 'notes' => 'Personala dokumenti'],
+                ['building' => 'Tehniskais korpuss', 'floor_number' => 1, 'room_number' => 'T1', 'room_name' => 'Noliktava', 'user_name' => 'Maris Vitols', 'department' => 'IT', 'notes' => 'Rezerves tehnika'],
+                ['building' => 'Tehniskais korpuss', 'floor_number' => 1, 'room_number' => 'T2', 'room_name' => 'Darbnica', 'user_name' => 'Janis Ozols', 'department' => 'IT', 'notes' => 'Diagnostika un remonti'],
+                ['building' => 'Tehniskais korpuss', 'floor_number' => 2, 'room_number' => 'T3', 'room_name' => 'Projektu telpa', 'user_name' => 'Kristine Daukste', 'department' => 'Attistiba', 'notes' => 'Projektu komanda'],
             ];
 
-            $roomRows = [];
-            foreach ($rooms as $room) {
-                $roomRows[] = [
-                    'building_id' => $building->id,
+            DB::table('rooms')->insert(array_map(function (array $room) use ($buildingIds, $userIdsByName, $now) {
+                return [
+                    'building_id' => $buildingIds[$room['building']],
                     'floor_number' => $room['floor_number'],
                     'room_number' => $room['room_number'],
                     'room_name' => $room['room_name'],
-                    'employee_id' => $employeeIds[$room['employee_email']] ?? null,
+                    'user_id' => $userIdsByName[$room['user_name']] ?? null,
                     'department' => $room['department'],
                     'notes' => $room['notes'],
                     'created_at' => $now,
                 ];
-            }
-            DB::table('rooms')->insert($roomRows);
+            }, $rooms));
 
-            $roomIds = DB::table('rooms')
-                ->where('building_id', $building->id)
-                ->pluck('id', 'room_number')
-                ->all();
+            $roomIds = DB::table('rooms')->pluck('id', 'room_number')->all();
 
             $deviceTypes = [
-                ['type_name' => 'Klepjdators', 'category' => 'Datori', 'icon_name' => 'laptop', 'description' => 'Parnesajamie datori', 'expected_lifetime_years' => 4],
-                ['type_name' => 'Stacionarais dators', 'category' => 'Datori', 'icon_name' => 'desktop', 'description' => 'Biroja darba stacijas', 'expected_lifetime_years' => 5],
-                ['type_name' => 'Monitors', 'category' => 'Periferija', 'icon_name' => 'monitor', 'description' => 'Attela monitori', 'expected_lifetime_years' => 6],
-                ['type_name' => 'Printeris', 'category' => 'Periferija', 'icon_name' => 'printer', 'description' => 'Drukas iekartas', 'expected_lifetime_years' => 5],
-                ['type_name' => 'Komutators', 'category' => 'Tikls', 'icon_name' => 'switch', 'description' => 'Tikla komutators', 'expected_lifetime_years' => 7],
-                ['type_name' => 'Marsrutetajs', 'category' => 'Tikls', 'icon_name' => 'router', 'description' => 'Tikla marsrutetajs', 'expected_lifetime_years' => 7],
-                ['type_name' => 'UPS', 'category' => 'Elektroapgade', 'icon_name' => 'ups', 'description' => 'Nepartauktas barosanas avots', 'expected_lifetime_years' => 6],
-                ['type_name' => 'Skeneris', 'category' => 'Periferija', 'icon_name' => 'scanner', 'description' => 'Dokumentu skeneri', 'expected_lifetime_years' => 5],
-            ];
-            foreach ($deviceTypes as &$type) {
-                $type['created_at'] = $now;
-            }
-            unset($type);
-            DB::table('device_types')->insert($deviceTypes);
-
-            $typeIds = DB::table('device_types')->pluck('id', 'type_name')->all();
-
-            $deviceTemplates = [
-                ['prefix' => 'KL', 'name' => 'Klepjdators', 'type' => 'Klepjdators', 'model' => 'Latitude 5520', 'manufacturer' => 'Dell', 'status' => 'active'],
-                ['prefix' => 'ST', 'name' => 'Stacionarais dators', 'type' => 'Stacionarais dators', 'model' => 'OptiPlex 7090', 'manufacturer' => 'Dell', 'status' => 'active'],
-                ['prefix' => 'MN', 'name' => 'Monitors', 'type' => 'Monitors', 'model' => 'P2422H', 'manufacturer' => 'Dell', 'status' => 'active'],
-                ['prefix' => 'PR', 'name' => 'Printeris', 'type' => 'Printeris', 'model' => 'LaserJet Pro 400', 'manufacturer' => 'HP', 'status' => 'reserve'],
-                ['prefix' => 'SW', 'name' => 'Komutators', 'type' => 'Komutators', 'model' => 'CBS250-24T', 'manufacturer' => 'Cisco', 'status' => 'active'],
-                ['prefix' => 'MR', 'name' => 'Marsrutetajs', 'type' => 'Marsrutetajs', 'model' => 'RB4011', 'manufacturer' => 'MikroTik', 'status' => 'active'],
-                ['prefix' => 'UP', 'name' => 'UPS', 'type' => 'UPS', 'model' => 'Smart-UPS 1000', 'manufacturer' => 'APC', 'status' => 'reserve'],
-                ['prefix' => 'SK', 'name' => 'Skeneris', 'type' => 'Skeneris', 'model' => 'ScanJet Pro 3000', 'manufacturer' => 'HP', 'status' => 'active'],
+                ['type_name' => 'Klepjdators', 'category' => 'Datori', 'description' => 'Parnesajami datori', 'expected_lifetime_years' => 4],
+                ['type_name' => 'Stacionarais dators', 'category' => 'Datori', 'description' => 'Darba stacijas', 'expected_lifetime_years' => 5],
+                ['type_name' => 'Monitors', 'category' => 'Periferija', 'description' => 'Attela monitori', 'expected_lifetime_years' => 6],
+                ['type_name' => 'Printeris', 'category' => 'Periferija', 'description' => 'Drukas iekartas', 'expected_lifetime_years' => 5],
+                ['type_name' => 'Komutators', 'category' => 'Tikls', 'description' => 'Tikla komutatori', 'expected_lifetime_years' => 7],
+                ['type_name' => 'UPS', 'category' => 'Elektroapgade', 'description' => 'Barosanas rezerve', 'expected_lifetime_years' => 6],
             ];
 
-            $roomSequence = ['101', '102', '103', '104', '105', '201', '202', '203', '204', '205', '301', '302'];
-            $assignees = [
-                'Artis Berzins', 'Linda Kalnina', 'Janis Ozols', 'Ilze Strautina', 'Maris Vitols',
-                'Kristine Daukste', 'Edgars Sviklis', 'Agnese Leite', 'Roberts Arbidans', 'Dace Rudzite',
-                'Anrijs Krumins', 'Marta Zvirbule', 'Olafs Gailitis', 'Ruta Liepa', 'Toms Severs',
+            DB::table('device_types')->insert(array_map(fn (array $type) => array_merge($type, ['created_at' => $now]), $deviceTypes));
+            $deviceTypeIds = DB::table('device_types')->pluck('id', 'type_name')->all();
+
+            $deviceBlueprints = [
+                ['code' => 'LDZ-0001', 'name' => 'Klepjdators A1', 'type' => 'Klepjdators', 'model' => 'Dell Latitude 5520', 'status' => 'repair', 'room' => '102', 'assigned_to' => 'Ilze Strautina'],
+                ['code' => 'LDZ-0002', 'name' => 'Monitors A1', 'type' => 'Monitors', 'model' => 'Dell P2422H', 'status' => 'active', 'room' => '102', 'assigned_to' => 'Ilze Strautina'],
+                ['code' => 'LDZ-0003', 'name' => 'Stacionarais dators B1', 'type' => 'Stacionarais dators', 'model' => 'Dell OptiPlex 7090', 'status' => 'active', 'room' => '202', 'assigned_to' => 'Agnese Leite'],
+                ['code' => 'LDZ-0004', 'name' => 'Printeris B1', 'type' => 'Printeris', 'model' => 'HP LaserJet Pro 400', 'status' => 'reserve', 'room' => '202', 'assigned_to' => null],
+                ['code' => 'LDZ-0005', 'name' => 'Klepjdators C1', 'type' => 'Klepjdators', 'model' => 'Lenovo ThinkPad T14', 'status' => 'active', 'room' => '201', 'assigned_to' => 'Ruta Liepa'],
+                ['code' => 'LDZ-0006', 'name' => 'Klepjdators C2', 'type' => 'Klepjdators', 'model' => 'HP EliteBook 840', 'status' => 'broken', 'room' => '301', 'assigned_to' => 'Dace Rudzite'],
+                ['code' => 'LDZ-0007', 'name' => 'UPS D1', 'type' => 'UPS', 'model' => 'APC Smart-UPS 1000', 'status' => 'active', 'room' => 'T2', 'assigned_to' => 'Janis Ozols'],
+                ['code' => 'LDZ-0008', 'name' => 'Komutators D1', 'type' => 'Komutators', 'model' => 'Cisco CBS250', 'status' => 'active', 'room' => '101', 'assigned_to' => 'Maris Vitols'],
+                ['code' => 'LDZ-0009', 'name' => 'Monitors E1', 'type' => 'Monitors', 'model' => 'LG 27UL500', 'status' => 'active', 'room' => 'T3', 'assigned_to' => 'Kristine Daukste'],
+                ['code' => 'LDZ-0010', 'name' => 'Klepjdators F1', 'type' => 'Klepjdators', 'model' => 'Dell Latitude 7420', 'status' => 'written_off', 'room' => 'T1', 'assigned_to' => null],
+                ['code' => 'LDZ-0011', 'name' => 'Stacionarais dators G1', 'type' => 'Stacionarais dators', 'model' => 'HP ProDesk 600', 'status' => 'kitting', 'room' => 'T1', 'assigned_to' => null],
+                ['code' => 'LDZ-0012', 'name' => 'Printeris H1', 'type' => 'Printeris', 'model' => 'Brother HL-L5100DN', 'status' => 'active', 'room' => '301', 'assigned_to' => 'Marta Zvirbule'],
             ];
 
-            $devices = [];
-            $index = 1;
-            for ($i = 0; $i < 40; $i++) {
-                $template = $deviceTemplates[$i % count($deviceTemplates)];
-                $roomNumber = $roomSequence[$i % count($roomSequence)];
-                $status = $template['status'];
-                if ($i % 11 === 0) {
-                    $status = 'repair';
-                } elseif ($i % 13 === 0) {
-                    $status = 'broken';
-                } elseif ($i % 17 === 0) {
-                    $status = 'kitting';
-                }
+            DB::table('devices')->insert(array_map(function (array $device) use ($deviceTypeIds, $roomIds, $userIdsByName, $adminUserId, $now) {
+                $roomId = $roomIds[$device['room']] ?? null;
+                $room = DB::table('rooms')->where('id', $roomId)->first();
 
-                $purchaseDate = now()->subDays(rand(200, 1800))->toDateString();
-                $warrantyUntil = now()->addDays(rand(50, 700))->toDateString();
-
-                $devices[] = [
-                    'code' => 'LDZ-' . str_pad((string) $index, 4, '0', STR_PAD_LEFT),
-                    'name' => $template['name'] . ' ' . $index,
-                    'device_type_id' => $typeIds[$template['type']],
-                    'model' => $template['model'],
-                    'status' => $status,
-                    'building_id' => $building->id,
-                    'room_id' => $roomIds[$roomNumber] ?? null,
-                    'assigned_employee_id' => $employeeIdsByName[$assignees[$i % count($assignees)]] ?? null,
-                    'assigned_to' => $assignees[$i % count($assignees)],
-                    'purchase_date' => $purchaseDate,
-                    'purchase_price' => rand(120, 2200) + 0.99,
-                    'warranty_until' => $warrantyUntil,
+                return [
+                    'code' => $device['code'],
+                    'name' => $device['name'],
+                    'device_type_id' => $deviceTypeIds[$device['type']],
+                    'model' => $device['model'],
+                    'status' => $device['status'],
+                    'building_id' => $room->building_id ?? null,
+                    'room_id' => $roomId,
+                    'assigned_user_id' => $device['assigned_to'] ? ($userIdsByName[$device['assigned_to']] ?? null) : null,
+                    'purchase_date' => now()->subDays(rand(180, 1600))->toDateString(),
+                    'purchase_price' => rand(180, 2200) + 0.99,
+                    'warranty_until' => now()->addDays(rand(30, 720))->toDateString(),
                     'warranty_photo_name' => null,
-                    'serial_number' => 'SN-LDZ-' . str_pad((string) $index, 5, '0', STR_PAD_LEFT),
-                    'manufacturer' => $template['manufacturer'],
-                    'notes' => 'Inventarizacijas ierice darba videi',
+                    'serial_number' => 'SN-' . $device['code'],
+                    'manufacturer' => str_contains($device['model'], 'Dell') ? 'Dell' : (str_contains($device['model'], 'HP') ? 'HP' : 'Cisco'),
+                    'notes' => 'Demo ierice jaunajai schemai',
                     'device_image_url' => null,
                     'created_by' => $adminUserId,
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
-                $index++;
-            }
-            DB::table('devices')->insert($devices);
+            }, $deviceBlueprints));
 
-            $deviceIdsByCode = DB::table('devices')->pluck('id', 'code')->all();
-            $allUserIds = array_values(DB::table('users')->pluck('id')->all());
+            $deviceIds = DB::table('devices')->pluck('id', 'code')->all();
 
             $repairs = [
-                ['code' => 'LDZ-0001', 'description' => 'Neiesledzas pec stravas partraukuma', 'status' => 'in-progress', 'repair_type' => 'internal', 'priority' => 'high', 'start' => now()->subDays(8), 'eta' => now()->addDays(3), 'actual' => null, 'cost' => 45.50, 'vendor_name' => null, 'vendor_contact' => null, 'invoice' => null],
-                ['code' => 'LDZ-0008', 'description' => 'Papira padeves kluda', 'status' => 'waiting', 'repair_type' => 'external', 'priority' => 'medium', 'start' => now()->subDays(4), 'eta' => now()->addDays(5), 'actual' => null, 'cost' => 120.00, 'vendor_name' => 'SIA Druka Serviss', 'vendor_contact' => '+371 26660001', 'invoice' => 'INV-2026-041'],
-                ['code' => 'LDZ-0012', 'description' => 'Diska kluda un lena darbiba', 'status' => 'completed', 'repair_type' => 'internal', 'priority' => 'high', 'start' => now()->subDays(15), 'eta' => now()->subDays(10), 'actual' => now()->subDays(11), 'cost' => 80.00, 'vendor_name' => null, 'vendor_contact' => null, 'invoice' => null],
-                ['code' => 'LDZ-0017', 'description' => 'Portu nestabila darbiba', 'status' => 'in-progress', 'repair_type' => 'external', 'priority' => 'critical', 'start' => now()->subDays(3), 'eta' => now()->addDays(4), 'actual' => null, 'cost' => 210.00, 'vendor_name' => 'SIA Tikla Meistars', 'vendor_contact' => '+371 26660002', 'invoice' => 'INV-2026-052'],
-                ['code' => 'LDZ-0022', 'description' => 'Barosanas bloka nomaina', 'status' => 'completed', 'repair_type' => 'internal', 'priority' => 'low', 'start' => now()->subDays(22), 'eta' => now()->subDays(18), 'actual' => now()->subDays(19), 'cost' => 35.00, 'vendor_name' => null, 'vendor_contact' => null, 'invoice' => null],
-                ['code' => 'LDZ-0026', 'description' => 'Bojats ekrans', 'status' => 'waiting', 'repair_type' => 'external', 'priority' => 'high', 'start' => now()->subDays(2), 'eta' => now()->addDays(9), 'actual' => null, 'cost' => 160.00, 'vendor_name' => 'SIA Display Serviss', 'vendor_contact' => '+371 26660003', 'invoice' => 'INV-2026-059'],
-                ['code' => 'LDZ-0031', 'description' => 'Nestabils interneta savienojums', 'status' => 'cancelled', 'repair_type' => 'internal', 'priority' => 'medium', 'start' => now()->subDays(9), 'eta' => null, 'actual' => null, 'cost' => null, 'vendor_name' => null, 'vendor_contact' => null, 'invoice' => null],
-                ['code' => 'LDZ-0036', 'description' => 'Ventilatora troksnis', 'status' => 'in-progress', 'repair_type' => 'internal', 'priority' => 'low', 'start' => now()->subDays(5), 'eta' => now()->addDays(2), 'actual' => null, 'cost' => 25.00, 'vendor_name' => null, 'vendor_contact' => null, 'invoice' => null],
-            ];
-
-            $repairRows = [];
-            foreach ($repairs as $i => $repair) {
-                if (! isset($deviceIdsByCode[$repair['code']])) {
-                    continue;
-                }
-                $reporterId = $allUserIds[$i % count($allUserIds)] ?? null;
-                $assigneeId = $allUserIds[($i + 1) % count($allUserIds)] ?? null;
-
-                $repairRows[] = [
-                    'device_id' => $deviceIdsByCode[$repair['code']],
-                    'description' => $repair['description'],
-                    'status' => $repair['status'],
-                    'repair_type' => $repair['repair_type'],
-                    'priority' => $repair['priority'],
-                    'start_date' => $repair['start']->toDateString(),
-                    'estimated_completion' => $repair['eta'] ? $repair['eta']->toDateString() : null,
-                    'actual_completion' => $repair['actual'] ? $repair['actual']->toDateString() : null,
-                    'cost' => $repair['cost'],
-                    'vendor_name' => $repair['vendor_name'],
-                    'vendor_contact' => $repair['vendor_contact'],
-                    'invoice_number' => $repair['invoice'],
-                    'issue_reported_by' => $reporterId,
-                    'assigned_to' => $assigneeId,
+                [
+                    'device_id' => $deviceIds['LDZ-0001'],
+                    'reported_by_user_id' => $userIdsByName['Ilze Strautina'],
+                    'assigned_to_user_id' => $userIdsByName['Linda Kalnina'],
+                    'accepted_by_user_id' => $adminUserId,
+                    'description' => 'Klepjdators vairs neuzladejas.',
+                    'status' => 'waiting',
+                    'device_status_before_repair' => 'active',
+                    'repair_type' => 'internal',
+                    'priority' => 'high',
+                    'start_date' => now()->subDays(1)->toDateString(),
+                    'estimated_completion' => now()->addDays(2)->toDateString(),
+                    'actual_completion' => null,
+                    'diagnosis' => 'Iespējama barosanas ligzdas problema.',
+                    'resolution_notes' => null,
+                    'cost' => null,
+                    'vendor_name' => null,
+                    'vendor_contact' => null,
+                    'invoice_number' => null,
                     'created_at' => $now,
-                ];
-            }
-            DB::table('repairs')->insert($repairRows);
-
-            $sets = [
-                ['name' => 'Komplekts 1', 'description' => 'Darba vieta sekretarei', 'set_name' => 'Sekretares komplekts', 'set_code' => 'KIT-SEC-01', 'status' => 'active', 'room' => '105', 'assigned_to' => 'Marta Zvirbule', 'notes' => 'Pilns darba komplekts'],
-                ['name' => 'Komplekts 2', 'description' => 'Attalinata darba komplekts', 'set_name' => 'Attalinata darba komplekts', 'set_code' => 'KIT-REM-01', 'status' => 'draft', 'room' => '202', 'assigned_to' => 'Kristine Daukste', 'notes' => 'Sagaida apstiprinajumu'],
-                ['name' => 'Komplekts 3', 'description' => 'Tikla apkalpes komplekts', 'set_name' => 'Tikla servisa komplekts', 'set_code' => 'KIT-NET-01', 'status' => 'active', 'room' => '103', 'assigned_to' => 'Maris Vitols', 'notes' => 'Tikla diagnostikai'],
-                ['name' => 'Komplekts 4', 'description' => 'Rezerves komplekts', 'set_name' => 'Rezerves biroja komplekts', 'set_code' => 'KIT-RES-01', 'status' => 'archived', 'room' => '302', 'assigned_to' => 'Olafs Gailitis', 'notes' => 'Glabasana noliktava'],
+                    'updated_at' => $now,
+                ],
+                [
+                    'device_id' => $deviceIds['LDZ-0006'],
+                    'reported_by_user_id' => $userIdsByName['Dace Rudzite'],
+                    'assigned_to_user_id' => $userIdsByName['Janis Ozols'],
+                    'accepted_by_user_id' => $adminUserId,
+                    'description' => 'Ierice iesledzas, bet disks rada kludas.',
+                    'status' => 'in-progress',
+                    'device_status_before_repair' => 'broken',
+                    'repair_type' => 'external',
+                    'priority' => 'critical',
+                    'start_date' => now()->subDays(4)->toDateString(),
+                    'estimated_completion' => now()->addDays(3)->toDateString(),
+                    'actual_completion' => null,
+                    'diagnosis' => 'Nepieciesama SSD nomaina.',
+                    'resolution_notes' => null,
+                    'cost' => 180.00,
+                    'vendor_name' => 'SIA IT Serviss',
+                    'vendor_contact' => '+37126660001',
+                    'invoice_number' => 'INV-2026-1001',
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ],
+                [
+                    'device_id' => $deviceIds['LDZ-0012'],
+                    'reported_by_user_id' => $userIdsByName['Marta Zvirbule'],
+                    'assigned_to_user_id' => $userIdsByName['Linda Kalnina'],
+                    'accepted_by_user_id' => $adminUserId,
+                    'description' => 'Printeris iesprudina papiru.',
+                    'status' => 'completed',
+                    'device_status_before_repair' => 'active',
+                    'repair_type' => 'internal',
+                    'priority' => 'medium',
+                    'start_date' => now()->subDays(10)->toDateString(),
+                    'estimated_completion' => now()->subDays(8)->toDateString(),
+                    'actual_completion' => now()->subDays(8)->toDateString(),
+                    'diagnosis' => 'Padeves mehanisma tīrīšana.',
+                    'resolution_notes' => 'Iztīrīts un pārbaudīts.',
+                    'cost' => 35.00,
+                    'vendor_name' => null,
+                    'vendor_contact' => null,
+                    'invoice_number' => null,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ],
             ];
+            DB::table('repairs')->insert($repairs);
+            $repairIds = DB::table('repairs')->pluck('id', 'device_id')->all();
 
-            $setRows = [];
-            foreach ($sets as $set) {
-                $setRows[] = [
-                    'name' => $set['name'],
-                    'description' => $set['description'],
-                    'set_name' => $set['set_name'],
-                    'set_code' => $set['set_code'],
-                    'status' => $set['status'],
-                    'room_id' => $roomIds[$set['room']] ?? null,
-                    'assigned_to' => $set['assigned_to'],
-                    'notes' => $set['notes'],
+            DB::table('repair_requests')->insert([
+                [
+                    'device_id' => $deviceIds['LDZ-0001'],
+                    'responsible_user_id' => $userIdsByName['Ilze Strautina'],
+                    'description' => 'Uzlāde nestrādā un dators izslēdzas.',
+                    'status' => 'approved',
+                    'reviewed_by_user_id' => $adminUserId,
+                    'repair_id' => $repairIds[$deviceIds['LDZ-0001']] ?? null,
+                    'review_notes' => 'Apstiprināts un nodots IT nodaļai.',
+                    'created_at' => $now->copy()->subDays(1),
+                    'updated_at' => $now,
+                ],
+                [
+                    'device_id' => $deviceIds['LDZ-0005'],
+                    'responsible_user_id' => $userIdsByName['Ruta Liepa'],
+                    'description' => 'Dators sakarst un strādā lēni.',
+                    'status' => 'pending',
+                    'reviewed_by_user_id' => null,
+                    'repair_id' => null,
+                    'review_notes' => null,
+                    'created_at' => $now->copy()->subHours(6),
+                    'updated_at' => $now->copy()->subHours(6),
+                ],
+                [
+                    'device_id' => $deviceIds['LDZ-0009'],
+                    'responsible_user_id' => $userIdsByName['Kristine Daukste'],
+                    'description' => 'Monitors mirgo, bet pēc pārbaudes strādā korekti.',
+                    'status' => 'denied',
+                    'reviewed_by_user_id' => $userIdsByName['Linda Kalnina'],
+                    'repair_id' => null,
+                    'review_notes' => 'Atkārtotu problēmu neizdevās konstatēt.',
+                    'created_at' => $now->copy()->subDays(3),
+                    'updated_at' => $now->copy()->subDays(2),
+                ],
+            ]);
+
+            DB::table('writeoff_requests')->insert([
+                [
+                    'device_id' => $deviceIds['LDZ-0010'],
+                    'responsible_user_id' => $userIdsByName['Edgars Sviklis'],
+                    'reason' => 'Ierice novecojusi un ekonomiski nelietderiga remontam.',
+                    'status' => 'approved',
+                    'reviewed_by_user_id' => $adminUserId,
+                    'review_notes' => 'Norakstisana apstiprinata.',
+                    'created_at' => $now->copy()->subDays(7),
+                    'updated_at' => $now->copy()->subDays(6),
+                ],
+                [
+                    'device_id' => $deviceIds['LDZ-0003'],
+                    'responsible_user_id' => $userIdsByName['Agnese Leite'],
+                    'reason' => 'Nepietiekama veiktspēja ikdienas darbam.',
+                    'status' => 'pending',
+                    'reviewed_by_user_id' => null,
+                    'review_notes' => null,
+                    'created_at' => $now->copy()->subHours(10),
+                    'updated_at' => $now->copy()->subHours(10),
+                ],
+                [
+                    'device_id' => $deviceIds['LDZ-0008'],
+                    'responsible_user_id' => $userIdsByName['Maris Vitols'],
+                    'reason' => 'Pēc lietotāja domām lēns, bet tehniski darba kartībā.',
+                    'status' => 'denied',
+                    'reviewed_by_user_id' => $userIdsByName['Janis Ozols'],
+                    'review_notes' => 'Nomaiņa šobrīd nav pamatota.',
+                    'created_at' => $now->copy()->subDays(5),
+                    'updated_at' => $now->copy()->subDays(4),
+                ],
+            ]);
+
+            DB::table('device_transfers')->insert([
+                [
+                    'device_id' => $deviceIds['LDZ-0002'],
+                    'responsible_user_id' => $userIdsByName['Ilze Strautina'],
+                    'transfer_to_user_id' => $userIdsByName['Marta Zvirbule'],
+                    'transfer_reason' => 'Monitors nepieciešams sekretāres darba vietai.',
+                    'status' => 'approved',
+                    'reviewed_by_user_id' => $adminUserId,
+                    'review_notes' => 'Ierice pārreģistrēta.',
+                    'created_at' => $now->copy()->subDays(2),
+                    'updated_at' => $now->copy()->subDay(),
+                ],
+                [
+                    'device_id' => $deviceIds['LDZ-0005'],
+                    'responsible_user_id' => $userIdsByName['Ruta Liepa'],
+                    'transfer_to_user_id' => $userIdsByName['Kristine Daukste'],
+                    'transfer_reason' => 'Pagaidu darba vajadzībām projektu komandai.',
+                    'status' => 'pending',
+                    'reviewed_by_user_id' => null,
+                    'review_notes' => null,
+                    'created_at' => $now->copy()->subHours(5),
+                    'updated_at' => $now->copy()->subHours(5),
+                ],
+                [
+                    'device_id' => $deviceIds['LDZ-0007'],
+                    'responsible_user_id' => $userIdsByName['Janis Ozols'],
+                    'transfer_to_user_id' => $userIdsByName['Roberts Arbidans'],
+                    'transfer_reason' => 'Lietotājs pieprasīja UPS juristu kabinetam.',
+                    'status' => 'denied',
+                    'reviewed_by_user_id' => $userIdsByName['Roberts Arbidans'],
+                    'review_notes' => 'Saņēmējam šobrīd nav vajadzības pēc ierīces.',
+                    'created_at' => $now->copy()->subDays(4),
+                    'updated_at' => $now->copy()->subDays(3),
+                ],
+            ]);
+
+            DB::table('devices')
+                ->where('id', $deviceIds['LDZ-0002'])
+                ->update(['assigned_user_id' => $userIdsByName['Marta Zvirbule']]);
+
+            DB::table('device_sets')->insert([
+                [
+                    'name' => 'Darba vieta sekretarei',
+                    'description' => 'Pilns komplekts sekretarei',
+                    'set_name' => 'Sekretares komplekts',
+                    'set_code' => 'KIT-SEC-01',
+                    'status' => 'active',
+                    'room_id' => $roomIds['301'],
+                    'assigned_to' => 'Marta Zvirbule',
+                    'notes' => 'Darba vietas pamata komplekts',
                     'created_by' => $adminUserId,
                     'created_at' => $now,
-                ];
-            }
-            DB::table('device_sets')->insert($setRows);
+                ],
+                [
+                    'name' => 'Rezerves komplekts',
+                    'description' => 'Rezerves tehnikai noliktavā',
+                    'set_name' => 'Rezerves komplekts',
+                    'set_code' => 'KIT-RES-01',
+                    'status' => 'draft',
+                    'room_id' => $roomIds['T1'],
+                    'assigned_to' => 'Maris Vitols',
+                    'notes' => 'Noliktavas komplekts',
+                    'created_by' => $adminUserId,
+                    'created_at' => $now,
+                ],
+            ]);
 
             $setIds = DB::table('device_sets')->pluck('id', 'set_code')->all();
-            $setItems = [
-                ['set_code' => 'KIT-SEC-01', 'device_code' => 'LDZ-0002', 'quantity' => 1, 'role' => 'Pamata dators', 'description' => 'Sekretares darba dators'],
-                ['set_code' => 'KIT-SEC-01', 'device_code' => 'LDZ-0003', 'quantity' => 1, 'role' => 'Displejs', 'description' => 'Darba monitors'],
-                ['set_code' => 'KIT-SEC-01', 'device_code' => 'LDZ-0004', 'quantity' => 1, 'role' => 'Druka', 'description' => 'Biroja printeris'],
-                ['set_code' => 'KIT-REM-01', 'device_code' => 'LDZ-0009', 'quantity' => 1, 'role' => 'Klepjdators', 'description' => 'Attalinatam darbam'],
-                ['set_code' => 'KIT-REM-01', 'device_code' => 'LDZ-0015', 'quantity' => 1, 'role' => 'UPS', 'description' => 'Stabilai barosanai'],
-                ['set_code' => 'KIT-NET-01', 'device_code' => 'LDZ-0013', 'quantity' => 1, 'role' => 'Komutators', 'description' => 'Servisa nomaina'],
-                ['set_code' => 'KIT-NET-01', 'device_code' => 'LDZ-0014', 'quantity' => 1, 'role' => 'Marsrutetajs', 'description' => 'Tikla mezgliem'],
-                ['set_code' => 'KIT-RES-01', 'device_code' => 'LDZ-0028', 'quantity' => 1, 'role' => 'Rezerves dators', 'description' => 'Noliktavas rezerve'],
-            ];
 
-            $itemRows = [];
-            foreach ($setItems as $item) {
-                if (! isset($setIds[$item['set_code']]) || ! isset($deviceIdsByCode[$item['device_code']])) {
-                    continue;
-                }
-                $itemRows[] = [
-                    'device_set_id' => $setIds[$item['set_code']],
-                    'device_id' => $deviceIdsByCode[$item['device_code']],
-                    'quantity' => $item['quantity'],
-                    'role' => $item['role'],
-                    'description' => $item['description'],
+            DB::table('device_set_items')->insert([
+                [
+                    'device_set_id' => $setIds['KIT-SEC-01'],
+                    'device_id' => $deviceIds['LDZ-0002'],
+                    'quantity' => 1,
+                    'role' => 'Monitors',
+                    'description' => 'Sekretares monitors',
                     'created_at' => $now,
-                ];
-            }
-            DB::table('device_set_items')->insert($itemRows);
+                ],
+                [
+                    'device_set_id' => $setIds['KIT-SEC-01'],
+                    'device_id' => $deviceIds['LDZ-0012'],
+                    'quantity' => 1,
+                    'role' => 'Printeris',
+                    'description' => 'Drukas ierice sekretarei',
+                    'created_at' => $now,
+                ],
+                [
+                    'device_set_id' => $setIds['KIT-RES-01'],
+                    'device_id' => $deviceIds['LDZ-0011'],
+                    'quantity' => 1,
+                    'role' => 'Rezerves dators',
+                    'description' => 'Rezerves darba vietas dators',
+                    'created_at' => $now,
+                ],
+            ]);
         });
     }
 }

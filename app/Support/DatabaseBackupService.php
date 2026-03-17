@@ -310,6 +310,7 @@ class DatabaseBackupService
         $driver = $this->connection()->getDriverName();
         $currentTables = $this->listTables()
             ->reject(fn (string $table) => in_array($table, self::EXCLUDED_TABLES, true))
+            ->when($driver === 'sqlite', fn (Collection $tables) => $this->sortTablesForSqliteDrop($tables))
             ->values();
 
         $this->disableForeignKeyChecks($driver);
@@ -439,6 +440,25 @@ class DatabaseBackupService
                 ->value('sql'),
             default => $this->mysqlCreateTableSql($table),
         };
+    }
+
+    private function sortTablesForSqliteDrop(Collection $tables): Collection
+    {
+        return $tables
+            ->map(fn (string $table) => [
+                'name' => $table,
+                'references' => substr_count(strtoupper($this->createTableSql($table)), 'REFERENCES'),
+            ])
+            ->sort(function (array $left, array $right) {
+                $referenceOrder = $right['references'] <=> $left['references'];
+
+                if ($referenceOrder !== 0) {
+                    return $referenceOrder;
+                }
+
+                return strcmp($right['name'], $left['name']);
+            })
+            ->pluck('name');
     }
 
     private function mysqlCreateTableSql(string $table): string
@@ -584,7 +604,7 @@ class DatabaseBackupService
             return 'Sistema';
         }
 
-        return trim((string) ($user?->employee?->full_name ?? 'Manuali'));
+        return trim((string) ($user?->full_name ?? 'Manuali'));
     }
 
     private function resolveBackup(string|Fluent $backup): Fluent

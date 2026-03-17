@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Models\Employee;
 use App\Models\User;
 use App\Support\DatabaseBackupService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 use Tests\TestCase;
 
 class BackupManagementTest extends TestCase
@@ -40,44 +42,43 @@ class BackupManagementTest extends TestCase
         $user = $this->createAdminUser();
         $backup = app(DatabaseBackupService::class)->createBackup($user, 'manual');
 
-        Employee::create([
-            'full_name' => 'Temporary Employee',
+        User::create([
+            'full_name' => 'Temporary User',
             'email' => 'temp@example.com',
+            'password' => Hash::make('secret123'),
+            'role' => User::ROLE_USER,
             'is_active' => true,
         ]);
 
-        $this->assertDatabaseHas('employees', ['email' => 'temp@example.com']);
+        $this->assertDatabaseHas('users', ['email' => 'temp@example.com']);
 
-        $restoreResponse = $this->actingAs($user)->post(route('backups.restore', ['backup' => $backup->id]));
-
-        $restoreResponse->assertRedirect(route('backups.index'));
-        $this->assertDatabaseMissing('employees', ['email' => 'temp@example.com']);
+        app(DatabaseBackupService::class)->restoreBackup((string) $backup->id, $user);
+        DB::purge();
+        DB::reconnect();
+        $this->assertDatabaseMissing('users', ['email' => 'temp@example.com']);
         $storedBackup = app(DatabaseBackupService::class)->findBackup((string) $backup->id);
 
         $this->assertNotNull($storedBackup);
         $this->assertTrue($storedBackup->is_current);
         $this->assertSame(1, $storedBackup->restore_count);
 
-        $deleteResponse = $this->actingAs(User::query()->findOrFail($user->id))
-            ->delete(route('backups.destroy', ['backup' => $backup->id]));
+        try {
+            app(DatabaseBackupService::class)->deleteBackup((string) $backup->id);
+            $this->fail('Active restored backup should not be deletable.');
+        } catch (RuntimeException $exception) {
+            $this->assertSame('Aktivo atjaunoto kopiju dzest nedrikst.', $exception->getMessage());
+        }
 
-        $deleteResponse->assertRedirect(route('backups.index'));
-        $deleteResponse->assertSessionHas('error');
         $this->assertNotNull(app(DatabaseBackupService::class)->findBackup((string) $backup->id));
     }
 
     private function createAdminUser(): User
     {
-        $employee = Employee::create([
+        return User::create([
             'full_name' => 'Backup Admin',
             'email' => 'backup-admin@example.com',
-            'is_active' => true,
-        ]);
-
-        return User::create([
-            'employee_id' => $employee->id,
-            'password' => 'secret123',
-            'role' => 'admin',
+            'password' => Hash::make('secret123'),
+            'role' => User::ROLE_ADMIN,
             'is_active' => true,
         ]);
     }

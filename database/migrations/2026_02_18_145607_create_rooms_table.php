@@ -6,40 +6,27 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-public function up(): void
-{
-    Schema::create('rooms', function (Blueprint $table) {
-        $table->id();
+    public function up(): void
+    {
+        Schema::create('rooms', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('building_id')
+                ->constrained('buildings')
+                ->cascadeOnDelete();
+            $table->integer('floor_number');
+            $table->string('room_number', 20);
+            $table->string('room_name', 100)->nullable();
+            $table->foreignId('user_id')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+            $table->string('department', 100)->nullable();
+            $table->string('notes', 200)->nullable();
+            $table->timestamp('created_at')->nullable()->useCurrent();
+            $table->unique(['building_id', 'room_number']);
+        });
+    }
 
-        $table->foreignId('building_id')
-            ->constrained('buildings')
-            ->cascadeOnDelete();
-
-        $table->integer('floor_number');
-        $table->string('room_number', 20);
-        $table->string('room_name', 100)->nullable();
-
-        // ответственное лицо за кабинет (опционально)
-        $table->foreignId('employee_id')
-            ->nullable()
-            ->constrained('employees')
-            ->nullOnDelete();
-
-        $table->string('department', 100)->nullable();
-        $table->string('notes', 200)->nullable();
-
-        // чтобы в одном здании не было двух одинаковых номеров кабинета
-        $table->unique(['building_id', 'room_number']);
-    });
-}
-
-
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('rooms');

@@ -2,20 +2,13 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Validation\Rule as ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ProfileUpdateRequest extends FormRequest
 {
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
-        $employeeId = $this->user()?->employee_id;
-
         return [
             'full_name' => ['required', 'string', 'max:100'],
             'email' => [
@@ -24,7 +17,7 @@ class ProfileUpdateRequest extends FormRequest
                 'lowercase',
                 'email',
                 'max:100',
-                ValidationRule::unique('employees', 'email')->ignore($employeeId),
+                Rule::unique('users', 'email')->ignore($this->user()?->id),
             ],
             'phone' => ['nullable', 'string', 'max:100'],
             'job_title' => ['nullable', 'string', 'max:100'],
