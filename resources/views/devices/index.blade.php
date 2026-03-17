@@ -143,7 +143,6 @@
                 <div class="flex flex-wrap items-start justify-between gap-4">
                     <div>
                         <h3 class="text-base font-semibold text-slate-900">Iericu saraksts</h3>
-                        <p class="text-sm text-slate-500">Filtri sinhronizejas ar tipu tabulu.</p>
                     </div>
                 </div>
                 @if ($activeFilterCount > 0)
