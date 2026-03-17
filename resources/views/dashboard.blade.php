@@ -3,7 +3,6 @@
         $latestInventoryLabel = $latestInventoryAt
             ? \Illuminate\Support\Carbon::parse($latestInventoryAt)->format('d.m.Y H:i')
             : 'Nav datu';
-        $coveragePercent = $totalRooms > 0 ? round(($mappedRooms / max($totalRooms, 1)) * 100) : 0;
         $backupTone = ($backupSummary['latest'] ?? null) ? 'emerald' : 'slate';
         $buildingCount = $buildingTree->count();
         $floorCount = $buildingTree->sum('floor_count');
@@ -32,10 +31,6 @@
                 <div class="dash-meta-pill dash-meta-pill-sky">
                     <span>Kopa iericu</span>
                     <strong>{{ $totalDevices }}</strong>
-                </div>
-                <div class="dash-meta-pill dash-meta-pill-emerald">
-                    <span>Telpu parklajums</span>
-                    <strong>{{ $coveragePercent }}%</strong>
                 </div>
                 <div class="dash-meta-pill dash-meta-pill-amber">
                     <span>Aktivie remonti</span>
