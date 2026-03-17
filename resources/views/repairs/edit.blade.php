@@ -3,24 +3,6 @@
         $currentBuilding = $repair->device?->building;
         $currentRoom = $repair->device?->room;
         $selectedReporterId = old('issue_reported_by', $repair->reported_employee_id ?? $repair->legacyReporter?->employee_id);
-        $severityClasses = [
-            'info' => 'bg-slate-100 text-slate-700 ring-slate-200',
-            'warning' => 'bg-amber-100 text-amber-800 ring-amber-200',
-            'error' => 'bg-rose-100 text-rose-800 ring-rose-200',
-            'critical' => 'bg-rose-100 text-rose-800 ring-rose-200',
-        ];
-        $actionLabels = [
-            'CREATE' => 'Izveidots',
-            'UPDATE' => 'Atjauninats',
-            'DELETE' => 'Dzests',
-            'VIEW' => 'Skatits',
-        ];
-        $statusDescriptions = [
-            'waiting' => 'Vel nav uzsakta izpilde',
-            'in-progress' => 'Darbs notiek sobrid',
-            'completed' => 'Remonts ir pabeigts',
-            'cancelled' => 'Darbs tika atcelts',
-        ];
         $priorityDescriptions = [
             'low' => 'Var planot bez steigas',
             'medium' => 'Standarta izpildes seciba',
@@ -38,7 +20,6 @@
             repairType: @js(old('repair_type', $repair->repair_type)),
             status: @js(old('status', $repair->status ?? 'waiting')),
             priority: @js(old('priority', $repair->priority ?? 'medium')),
-            cost: @js($repair->cost),
         })"
     >
         <div class="flex flex-wrap items-start justify-between gap-4">
@@ -143,7 +124,7 @@
             </div>
         </div>
 
-        <div class="grid gap-6 {{ $repair->status === 'waiting' ? 'xl:grid-cols-[minmax(0,1.65fr)_320px]' : 'xl:grid-cols-[minmax(0,1.45fr)_360px]' }}">
+        <div class="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_320px]">
             <div class="space-y-6">
                 <div class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
                     <div class="flex flex-wrap items-center justify-between gap-3">
@@ -186,7 +167,7 @@
                                 </button>
                             </form>
 
-                            <button type="button" @click="openCompletionModal()" class="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700">
+                            <button type="button" @click="submitCompletion()" class="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
                                     </svg>
@@ -439,35 +420,6 @@
             </div>
 
             <aside class="space-y-6">
-                @if ($repair->status !== 'waiting')
-                    <div class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
-                        <h2 class="flex items-center gap-2 text-lg font-semibold text-slate-900">
-                            @include('repairs.partials.icon', ['name' => 'document', 'class' => 'h-5 w-5'])
-                            Remonta vesture
-                        </h2>
-                        <p class="mt-1 text-sm text-slate-600">Automatiski ieraksti par visam galvenajam izmainam saistiba ar so remontu.</p>
-
-                        <div class="mt-5 space-y-4">
-                            @forelse ($timeline as $entry)
-                                <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <span class="inline-flex items-center rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 ring-1 ring-slate-200">{{ $actionLabels[$entry->action] ?? $entry->action }}</span>
-                                        <span class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 {{ $severityClasses[$entry->severity] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">{{ \App\Support\AuditTrail::severityLabel($entry->severity) }}</span>
-                                    </div>
-                                    <p class="mt-3 text-sm font-medium text-slate-900">{{ $entry->localized_description }}</p>
-                                    <p class="mt-2 text-xs text-slate-500">
-                                        {{ $entry->timestamp?->format('d.m.Y H:i') ?? '-' }} | {{ $entry->user?->employee?->full_name ?? 'Sistema' }}
-                                    </p>
-                                </div>
-                            @empty
-                                <div class="rounded-3xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
-                                    Vestures ierakstu vel nav.
-                                </div>
-                            @endforelse
-                        </div>
-                    </div>
-                @endif
-
                 <div class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
                     <h2 class="flex items-center gap-2 text-lg font-semibold text-slate-900">
                         @include('repairs.partials.icon', ['name' => 'building', 'class' => 'h-5 w-5'])
@@ -528,52 +480,6 @@
             </aside>
         </div>
 
-        <div
-            x-cloak
-            x-show="completeModalOpen"
-            x-transition.opacity
-            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 py-6"
-        >
-            <div
-                class="w-full max-w-lg rounded-[2rem] border border-slate-200 bg-white p-6 shadow-2xl"
-                @click.outside="closeCompletionModal()"
-            >
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Pabeigt remontu</p>
-                        <h2 class="mt-2 text-2xl font-semibold text-slate-900">{{ $repair->device?->name ?: 'Nezinama ierice' }}</h2>
-                        <p class="mt-2 text-sm text-slate-600">Noradi faktisko beigu datumu un gala izmaksas, lai remonts butu korekti noslegts.</p>
-                    </div>
-                    <button type="button" @click="closeCompletionModal()" class="rounded-2xl bg-slate-100 p-2 text-slate-500 transition hover:bg-slate-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="mt-6 space-y-4">
-                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                        Faktiskais beigu datums tiks aizpildits automatiski ar sodienas datumu.
-                    </div>
-                    <label class="block">
-                        <span class="repair-filter-label">Gala izmaksas (EUR)</span>
-                        <input type="number" step="0.01" min="0" x-model="completionForm.cost" class="crud-control" placeholder="0.00" required>
-                    </label>
-                </div>
-
-                <div class="mt-6 flex flex-wrap justify-end gap-2">
-                    <button type="button" @click="closeCompletionModal()" class="crud-btn-secondary inline-flex items-center gap-2">
-                        Atcelt
-                    </button>
-                    <button type="button" @click="submitCompletion()" class="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
-                        </svg>
-                        Apstiprinat pabeigsanu
-                    </button>
-                </div>
-            </div>
-        </div>
     </section>
     @once
         <script>
@@ -615,21 +521,12 @@
                     window.repairProcess = (config) => ({
                         repairType: config.repairType,
                         status: config.status,
-                        completeModalOpen: false,
-                        completionForm: {
-                            cost: config.cost ?? '',
-                        },
-                        openCompletionModal() {
-                            this.completionForm.cost = config.cost ?? '';
-                            this.completeModalOpen = true;
-                        },
-                        closeCompletionModal() {
-                            this.completeModalOpen = false;
-                        },
                         submitCompletion() {
-                            window.submitRepairTransition(config.transitionBaseUrl, config.csrfToken, config.repairId, 'completed', {
-                                cost: this.completionForm.cost,
-                            });
+                            if (!window.confirm('Vai tiesam gribat pabeigt remontu?')) {
+                                return;
+                            }
+
+                            window.submitRepairTransition(config.transitionBaseUrl, config.csrfToken, config.repairId, 'completed');
                         },
                     });
                 }

@@ -171,12 +171,6 @@ class RepairController extends Controller
         }
 
         if ($targetStatus === 'completed') {
-            if (! array_key_exists('cost', $data) || $data['cost'] === null || $data['cost'] === '') {
-                return back()->withErrors([
-                    'cost' => 'Pabeigtam remontam noradi gala izmaksas.',
-                ]);
-            }
-
             if ($repair->repair_type === 'external') {
                 if (! filled($repair->vendor_name)) {
                     return back()->withErrors([

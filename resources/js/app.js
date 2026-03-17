@@ -145,12 +145,6 @@ const canRepairTransition = (fromStatus, toStatus) => {
 window.repairBoard = (config) => ({
     draggedRepair: null,
     dropTargetStatus: null,
-    completeModalOpen: false,
-    completionForm: {
-        id: null,
-        name: '',
-        cost: '',
-    },
     startDrag(repair, event) {
         if (!repair?.id) {
             return;
@@ -189,7 +183,7 @@ window.repairBoard = (config) => ({
         }
 
         if (targetStatus === 'completed') {
-            this.openCompletionModal(this.draggedRepair);
+            this.submitCompletion(this.draggedRepair);
             this.clearDrag();
             return;
         }
@@ -197,44 +191,31 @@ window.repairBoard = (config) => ({
         this.submitTransition(this.draggedRepair.id, targetStatus);
         this.clearDrag();
     },
-    openCompletionModal(repair) {
-        this.completionForm = {
-            id: repair.id,
-            name: repair.name ?? 'Ierice',
-            cost: repair.cost ?? '',
-        };
-        this.completeModalOpen = true;
-    },
-    closeCompletionModal() {
-        this.completeModalOpen = false;
-    },
     submitTransition(repairId, targetStatus, extra = {}) {
         window.submitRepairTransition(config.transitionBaseUrl, config.csrfToken, repairId, targetStatus, extra);
     },
-    submitCompletion() {
-        this.submitTransition(this.completionForm.id, 'completed', {
-            cost: this.completionForm.cost,
-        });
+    submitCompletion(repair) {
+        if (!repair?.id) {
+            return;
+        }
+
+        const repairName = repair.name ?? 'so remontu';
+        if (!window.confirm(`Vai tiesam gribat pabeigt remontu "${repairName}"?`)) {
+            return;
+        }
+
+        this.submitTransition(repair.id, 'completed');
     },
 });
 
 window.repairProcess = (config) => ({
     repairType: config.repairType,
     status: config.status,
-    completeModalOpen: false,
-    completionForm: {
-        cost: config.cost ?? '',
-    },
-    openCompletionModal() {
-        this.completionForm.cost = config.cost ?? '';
-        this.completeModalOpen = true;
-    },
-    closeCompletionModal() {
-        this.completeModalOpen = false;
-    },
     submitCompletion() {
-        window.submitRepairTransition(config.transitionBaseUrl, config.csrfToken, config.repairId, 'completed', {
-            cost: this.completionForm.cost,
-        });
+        if (!window.confirm('Vai tiesam gribat pabeigt remontu?')) {
+            return;
+        }
+
+        window.submitRepairTransition(config.transitionBaseUrl, config.csrfToken, config.repairId, 'completed');
     },
 });

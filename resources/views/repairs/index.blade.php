@@ -317,7 +317,7 @@
                             <article
                                 class="repair-card-draggable rounded-[1.6rem] border border-white/80 bg-white p-4 shadow-sm ring-1 ring-slate-100 transition duration-200 hover:-translate-y-0.5 hover:shadow-md"
                                 draggable="true"
-                                @dragstart="startDrag({ id: {{ $repair->id }}, status: @js($repair->status), name: @js($device?->name ?: 'Nezinama ierice'), cost: @js($repair->cost) }, $event)"
+                                @dragstart="startDrag({ id: {{ $repair->id }}, status: @js($repair->status), name: @js($device?->name ?: 'Nezinama ierice') }, $event)"
                                 @dragend="clearDrag()"
                                 :class="draggedRepair && draggedRepair.id === {{ $repair->id }} ? 'repair-card-dragging' : ''"
                             >
@@ -439,7 +439,7 @@
 
                                         <button
                                             type="button"
-                                            @click="openCompletionModal({ id: {{ $repair->id }}, name: @js($device?->name ?: 'Nezinama ierice'), cost: @js($repair->cost) })"
+                                            @click="submitCompletion({ id: {{ $repair->id }}, name: @js($device?->name ?: 'Nezinama ierice') })"
                                             class="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
                                         >
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -508,51 +508,5 @@
             </div>
         @endif
 
-        <div
-            x-cloak
-            x-show="completeModalOpen"
-            x-transition.opacity
-            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 py-6"
-        >
-            <div
-                class="w-full max-w-lg rounded-[2rem] border border-slate-200 bg-white p-6 shadow-2xl"
-                @click.outside="closeCompletionModal()"
-            >
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Pabeigt remontu</p>
-                        <h2 class="mt-2 text-2xl font-semibold text-slate-900" x-text="completionForm.name"></h2>
-                        <p class="mt-2 text-sm text-slate-600">Pirms parvietosanas uz pabeigts noradi faktisko beigu datumu un gala izmaksas.</p>
-                    </div>
-                    <button type="button" @click="closeCompletionModal()" class="rounded-2xl bg-slate-100 p-2 text-slate-500 transition hover:bg-slate-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="mt-6 space-y-4">
-                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                        Faktiskais beigu datums tiks aizpildits automatiski ar sodienas datumu.
-                    </div>
-                    <label class="block">
-                        <span class="repair-filter-label">Gala izmaksas (EUR)</span>
-                        <input type="number" step="0.01" min="0" x-model="completionForm.cost" class="crud-control" placeholder="0.00" required>
-                    </label>
-                </div>
-
-                <div class="mt-6 flex flex-wrap justify-end gap-2">
-                    <button type="button" @click="closeCompletionModal()" class="crud-btn-secondary inline-flex items-center gap-2">
-                        Atcelt
-                    </button>
-                    <button type="button" @click="submitCompletion()" class="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
-                        </svg>
-                        Apstiprinat pabeigsanu
-                    </button>
-                </div>
-            </div>
-        </div>
     </section>
 </x-app-layout>
