@@ -47,10 +47,12 @@
                         <div>
                             <label class="crud-label">Jauna parole</label>
                             <input type="password" name="password" class="crud-control">
+                            <p class="mt-2 text-xs text-slate-500">Ja aizpildi so lauku, admin uzliks lietotajam jaunu paroli.</p>
                         </div>
                         <div>
                             <label class="crud-label">Apstiprinat paroli</label>
                             <input type="password" name="password_confirmation" class="crud-control">
+                            <p class="mt-2 text-xs text-slate-500">Atstaj abus paroles laukus tuksus, ja paroli nevajag mainit.</p>
                         </div>
                     </div>
 

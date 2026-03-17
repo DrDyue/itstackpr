@@ -121,8 +121,9 @@ class UserController extends Controller
 
         $before = $user->only(['employee_id', 'role', 'is_active']);
         $data = $this->validatedData($request, $user);
+        $passwordChanged = ! empty($data['password']);
 
-        if (! empty($data['password'])) {
+        if ($passwordChanged) {
             $data['password'] = bcrypt($data['password']);
         } else {
             unset($data['password']);
@@ -136,7 +137,11 @@ class UserController extends Controller
         }
         AuditTrail::updatedFromState(auth()->id(), $user, $before, $after);
 
-        return redirect()->route('users.index')->with('success', 'Lietotajs veiksmigi atjauninats');
+        return redirect()
+            ->route('users.index')
+            ->with('success', $passwordChanged
+                ? 'Lietotajs veiksmigi atjauninats un jauna parole iestatīta.'
+                : 'Lietotajs veiksmigi atjauninats');
     }
 
     public function destroy(User $user)
