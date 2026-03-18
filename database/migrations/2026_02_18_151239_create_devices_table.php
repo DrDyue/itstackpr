@@ -10,19 +10,13 @@ return new class extends Migration
     {
         Schema::create('devices', function (Blueprint $table) {
             $table->id();
-            $table->string('code', 20)->nullable()->unique();
+            $table->string('code', 20)->unique();
             $table->string('name', 200);
             $table->foreignId('device_type_id')
                 ->constrained('device_types')
                 ->cascadeOnDelete();
             $table->string('model', 100);
-            $table->enum('status', [
-                'active',
-                'reserve',
-                'broken',
-                'repair',
-                'written_off',
-            ])->default('active');
+            $table->enum('status', ['active', 'repair', 'writeoff'])->default('active');
             $table->foreignId('building_id')
                 ->nullable()
                 ->constrained('buildings')
@@ -31,11 +25,11 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('rooms')
                 ->nullOnDelete();
-            $table->foreignId('assigned_user_id')
+            $table->foreignId('assigned_to_id')
                 ->nullable()
                 ->constrained('users')
                 ->nullOnDelete();
-            $table->date('purchase_date');
+            $table->date('purchase_date')->nullable();
             $table->decimal('purchase_price', 10, 2)->nullable();
             $table->date('warranty_until')->nullable();
             $table->string('warranty_photo_name', 50)->nullable();

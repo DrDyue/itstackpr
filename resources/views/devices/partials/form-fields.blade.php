@@ -4,8 +4,8 @@
 
 <div class="grid gap-4 md:grid-cols-2">
     <label class="block">
-        <span class="crud-label">Kods</span>
-        <input type="text" name="code" value="{{ old('code', $current?->code) }}" class="crud-control">
+        <span class="crud-label">Kods *</span>
+        <input type="text" name="code" value="{{ old('code', $current?->code) }}" class="crud-control" required>
     </label>
     <label class="block">
         <span class="crud-label">Nosaukums</span>
@@ -33,10 +33,10 @@
     </label>
     <label class="block">
         <span class="crud-label">Pieskirtais lietotajs</span>
-        <select name="assigned_user_id" class="crud-control">
+        <select name="assigned_to_id" class="crud-control">
             <option value="">Nav pieskirts</option>
             @foreach ($users as $assignedUser)
-                <option value="{{ $assignedUser->id }}" @selected(old('assigned_user_id', $current?->assigned_user_id) == $assignedUser->id)>{{ $assignedUser->full_name }}</option>
+                <option value="{{ $assignedUser->id }}" @selected(old('assigned_to_id', $current?->assigned_to_id) == $assignedUser->id)>{{ $assignedUser->full_name }}</option>
             @endforeach
         </select>
     </label>
@@ -60,7 +60,7 @@
     </label>
     <label class="block">
         <span class="crud-label">Iegades datums</span>
-        <input type="date" name="purchase_date" value="{{ old('purchase_date', $current?->purchase_date?->format('Y-m-d')) }}" class="crud-control" required>
+        <input type="date" name="purchase_date" value="{{ old('purchase_date', $current?->purchase_date?->format('Y-m-d')) }}" class="crud-control">
     </label>
     <label class="block">
         <span class="crud-label">Iegades cena</span>

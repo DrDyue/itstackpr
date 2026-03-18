@@ -16,7 +16,7 @@ use Illuminate\Validation\ValidationException;
 
 class DeviceController extends Controller
 {
-    private const STATUSES = ['active', 'reserve', 'broken', 'repair', 'written_off'];
+    private const STATUSES = [Device::STATUS_ACTIVE, Device::STATUS_REPAIR, Device::STATUS_WRITEOFF];
 
     public function index(Request $request)
     {
@@ -32,7 +32,7 @@ class DeviceController extends Controller
         ];
 
         $devices = $this->visibleDevicesQuery($user)
-            ->with(['type', 'building', 'room', 'activeRepair', 'assignedUser'])
+            ->with(['type', 'building', 'room', 'activeRepair', 'assignedTo'])
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
 
@@ -110,7 +110,7 @@ class DeviceController extends Controller
             'building',
             'room.building',
             'createdBy',
-            'assignedUser',
+            'assignedTo',
             'repairs.assignee',
             'repairRequests.responsibleUser',
             'writeoffRequests.responsibleUser',
@@ -155,11 +155,60 @@ class DeviceController extends Controller
         return redirect()->route('devices.index')->with('success', 'Ierice dzesta');
     }
 
+    public function quickUpdate(Request $request, Device $device)
+    {
+        $this->requireManager();
+
+        $validated = $request->validate([
+            'action' => ['required', Rule::in(['status', 'room'])],
+            'target_status' => ['nullable', Rule::in(self::STATUSES)],
+            'target_room_id' => ['nullable', 'exists:rooms,id'],
+        ]);
+
+        $result = $this->performDeviceAction($device, $validated);
+
+        return redirect()->route('devices.show', $device)->with($result['level'], $result['message']);
+    }
+
+    public function bulkUpdate(Request $request)
+    {
+        $this->requireManager();
+
+        $validated = $request->validate([
+            'device_ids' => ['required', 'array', 'min:1'],
+            'device_ids.*' => ['integer', 'exists:devices,id'],
+            'action' => ['required', Rule::in(['status', 'room'])],
+            'target_status' => ['nullable', Rule::in(self::STATUSES)],
+            'target_room_id' => ['nullable', 'exists:rooms,id'],
+        ]);
+
+        $devices = Device::query()->whereIn('id', $validated['device_ids'])->get();
+        $processed = 0;
+        $messages = [];
+
+        foreach ($devices as $device) {
+            $result = $this->performDeviceAction($device, $validated);
+
+            if ($result['level'] === 'success') {
+                $processed++;
+            } else {
+                $messages[] = ($device->code ?: ('ID ' . $device->id)) . ': ' . $result['message'];
+            }
+        }
+
+        $flash = $processed > 0 ? 'Apstradatas ierices: ' . $processed . '.' : 'Neviena ierice netika apstradata.';
+        if ($messages !== []) {
+            $flash .= ' ' . implode(' ', array_slice($messages, 0, 3));
+        }
+
+        return redirect()->route('devices.index')->with($processed > 0 ? 'success' : 'error', $flash);
+    }
+
     private function visibleDevicesQuery(User $user): Builder
     {
         return Device::query()->when(
             ! $user->canManageRequests(),
-            fn (Builder $query) => $query->where('assigned_user_id', $user->id)
+            fn (Builder $query) => $query->where('assigned_to_id', $user->id)
         );
     }
 
@@ -172,7 +221,7 @@ class DeviceController extends Controller
             return;
         }
 
-        abort_unless((int) $device->assigned_user_id === (int) $user->id, 403);
+        abort_unless((int) $device->assigned_to_id === (int) $user->id, 403);
     }
 
     private function formData(): array
@@ -191,15 +240,15 @@ class DeviceController extends Controller
     {
         $data = $request->validate(
             [
-                'code' => ['nullable', 'string', 'max:20', Rule::unique('devices', 'code')->ignore($device?->id)],
+                'code' => ['required', 'string', 'max:20', Rule::unique('devices', 'code')->ignore($device?->id)],
                 'name' => ['required', 'string', 'max:200'],
                 'device_type_id' => ['required', 'exists:device_types,id'],
                 'model' => ['required', 'string', 'max:100'],
                 'status' => ['required', Rule::in(self::STATUSES)],
                 'building_id' => ['nullable', 'exists:buildings,id'],
                 'room_id' => ['nullable', 'exists:rooms,id'],
-                'assigned_user_id' => ['nullable', 'exists:users,id'],
-                'purchase_date' => ['required', 'date'],
+                'assigned_to_id' => ['nullable', 'exists:users,id'],
+                'purchase_date' => ['nullable', 'date'],
                 'purchase_price' => ['nullable', 'numeric', 'min:0'],
                 'warranty_until' => ['nullable', 'date'],
                 'serial_number' => ['nullable', 'string', 'max:100'],
@@ -210,9 +259,11 @@ class DeviceController extends Controller
             ]
         );
 
-        foreach (['building_id', 'room_id', 'assigned_user_id'] as $field) {
+        foreach (['building_id', 'room_id', 'assigned_to_id'] as $field) {
             $data[$field] = $data[$field] ?: null;
         }
+
+        $data['purchase_date'] = $data['purchase_date'] ?: null;
 
         if (($data['room_id'] ?? null) !== null) {
             $room = Room::query()->find($data['room_id']);
@@ -238,9 +289,9 @@ class DeviceController extends Controller
             ]);
         }
 
-        if (($data['status'] ?? null) === 'written_off' && ! empty($data['assigned_user_id'])) {
+        if (($data['status'] ?? null) === Device::STATUS_WRITEOFF && ! empty($data['assigned_to_id'])) {
             throw ValidationException::withMessages([
-                'assigned_user_id' => ['Norakstitai iericei nevajag but pieskirtai personai.'],
+                'assigned_to_id' => ['Norakstitai iericei nevajag but pieskirtai personai.'],
             ]);
         }
 
@@ -262,7 +313,7 @@ class DeviceController extends Controller
             'status',
             'building_id',
             'room_id',
-            'assigned_user_id',
+            'assigned_to_id',
             'purchase_date',
             'purchase_price',
             'warranty_until',
@@ -342,10 +393,8 @@ class DeviceController extends Controller
     private function statusLabel(string $status): string
     {
         return match ($status) {
-            'reserve' => 'Rezerve',
-            'broken' => 'Bojata',
-            'repair' => 'Remonta',
-            'written_off' => 'Norakstita',
+            Device::STATUS_REPAIR => 'Remonta',
+            Device::STATUS_WRITEOFF => 'Norakstita',
             default => 'Aktiva',
         };
     }
@@ -355,5 +404,65 @@ class DeviceController extends Controller
         return collect(self::STATUSES)
             ->mapWithKeys(fn (string $status) => [$status => $this->statusLabel($status)])
             ->all();
+    }
+
+    private function performDeviceAction(Device $device, array $data): array
+    {
+        return match ($data['action']) {
+            'status' => $this->changeDeviceStatus($device, (string) ($data['target_status'] ?? '')),
+            'room' => $this->moveDevice($device, $data['target_room_id'] ?? null),
+            default => ['level' => 'error', 'message' => 'Neatbalstita darbiba.'],
+        };
+    }
+
+    private function changeDeviceStatus(Device $device, string $status): array
+    {
+        if (! in_array($status, self::STATUSES, true)) {
+            return ['level' => 'error', 'message' => 'Nav izvelets korekts statuss.'];
+        }
+
+        if ($status === Device::STATUS_WRITEOFF && filled($device->assigned_to_id)) {
+            return ['level' => 'error', 'message' => 'Norakstitu ierici vispirms atsaisti no personas.'];
+        }
+
+        if ($device->status === $status) {
+            return ['level' => 'error', 'message' => 'Statuss jau ir iestatits.'];
+        }
+
+        $before = ['status' => $device->status];
+        $device->forceFill(['status' => $status])->save();
+        AuditTrail::updatedFromState(auth()->id(), $device, $before, ['status' => $status]);
+
+        return ['level' => 'success', 'message' => 'Statuss atjauninats.'];
+    }
+
+    private function moveDevice(Device $device, mixed $roomId): array
+    {
+        if (! $roomId) {
+            return ['level' => 'error', 'message' => 'Nav izveleta telpa.'];
+        }
+
+        $room = Room::query()->with('building')->find($roomId);
+        if (! $room) {
+            return ['level' => 'error', 'message' => 'Telpa nav atrasta.'];
+        }
+
+        if ((int) $device->room_id === (int) $room->id) {
+            return ['level' => 'error', 'message' => 'Ierice jau atrodas saja telpa.'];
+        }
+
+        $before = $device->only(['room_id', 'building_id']);
+
+        $device->forceFill([
+            'room_id' => $room->id,
+            'building_id' => $room->building_id,
+        ])->save();
+
+        AuditTrail::updatedFromState(auth()->id(), $device, $before, [
+            'room_id' => $room->id,
+            'building_id' => $room->building_id,
+        ]);
+
+        return ['level' => 'success', 'message' => 'Ierice parvietota uz citu telpu.'];
     }
 }

@@ -2,10 +2,15 @@
 
 namespace Database\Seeders;
 
+use App\Models\Device;
+use App\Models\DeviceTransfer;
+use App\Models\RepairRequest;
 use App\Models\User;
+use App\Models\WriteoffRequest;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class LatvianDemoDataSeeder extends Seeder
 {
@@ -47,21 +52,39 @@ class LatvianDemoDataSeeder extends Seeder
             $buildingIds = DB::table('buildings')->pluck('id', 'building_name')->all();
 
             $users = [
-                ['full_name' => 'Artis Berzins', 'email' => 'artis.berzins@itstackpr.test', 'phone' => '+37126000001', 'job_title' => 'Sistemas administrators', 'role' => User::ROLE_ADMIN],
-                ['full_name' => 'Linda Kalnina', 'email' => 'linda.kalnina@itstackpr.test', 'phone' => '+37126000002', 'job_title' => 'IT specialists', 'role' => User::ROLE_IT_WORKER],
-                ['full_name' => 'Janis Ozols', 'email' => 'janis.ozols@itstackpr.test', 'phone' => '+37126000003', 'job_title' => 'IT atbalsta inzenieris', 'role' => User::ROLE_IT_WORKER],
-                ['full_name' => 'Ilze Strautina', 'email' => 'ilze.strautina@itstackpr.test', 'phone' => '+37126000004', 'job_title' => 'Projektu koordinatore', 'role' => User::ROLE_USER],
-                ['full_name' => 'Maris Vitols', 'email' => 'maris.vitols@itstackpr.test', 'phone' => '+37126000005', 'job_title' => 'Tikla administrators', 'role' => User::ROLE_IT_WORKER],
-                ['full_name' => 'Kristine Daukste', 'email' => 'kristine.daukste@itstackpr.test', 'phone' => '+37126000006', 'job_title' => 'Finansu analitike', 'role' => User::ROLE_USER],
-                ['full_name' => 'Edgars Sviklis', 'email' => 'edgars.sviklis@itstackpr.test', 'phone' => '+37126000007', 'job_title' => 'Iepirkumu specialists', 'role' => User::ROLE_USER],
-                ['full_name' => 'Agnese Leite', 'email' => 'agnese.leite@itstackpr.test', 'phone' => '+37126000008', 'job_title' => 'Gramatvede', 'role' => User::ROLE_USER],
-                ['full_name' => 'Roberts Arbidans', 'email' => 'roberts.arbidans@itstackpr.test', 'phone' => '+37126000009', 'job_title' => 'Jurists', 'role' => User::ROLE_USER],
-                ['full_name' => 'Dace Rudzite', 'email' => 'dace.rudzite@itstackpr.test', 'phone' => '+37126000010', 'job_title' => 'Personala specialiste', 'role' => User::ROLE_USER],
-                ['full_name' => 'Marta Zvirbule', 'email' => 'marta.zvirbule@itstackpr.test', 'phone' => '+37126000011', 'job_title' => 'Sekretare', 'role' => User::ROLE_USER],
-                ['full_name' => 'Ruta Liepa', 'email' => 'ruta.liepa@itstackpr.test', 'phone' => '+37126000012', 'job_title' => 'Iestades vaditaja', 'role' => User::ROLE_USER],
+                ['full_name' => 'Artis Berzins', 'email' => 'artis.berzins@ludzas.lv', 'phone' => '+37126000001', 'job_title' => 'Sistemas administrators', 'role' => User::ROLE_ADMIN],
+                ['full_name' => 'Linda Kalnina', 'email' => 'linda.kalnina@ludzas.lv', 'phone' => '+37126000002', 'job_title' => 'IT specialiste', 'role' => User::ROLE_ADMIN],
+                ['full_name' => 'Janis Ozols', 'email' => 'janis.ozols@ludzas.lv', 'phone' => '+37126000003', 'job_title' => 'IT atbalsta inzenieris', 'role' => User::ROLE_ADMIN],
+                ['full_name' => 'Ilze Strautina', 'email' => 'ilze.strautina@ludzas.lv', 'phone' => '+37126000004', 'job_title' => 'Projektu koordinatore', 'role' => User::ROLE_USER],
+                ['full_name' => 'Maris Vitols', 'email' => 'maris.vitols@ludzas.lv', 'phone' => '+37126000005', 'job_title' => 'Tikla administrators', 'role' => User::ROLE_USER],
+                ['full_name' => 'Kristine Daukste', 'email' => 'kristine.daukste@ludzas.lv', 'phone' => '+37126000006', 'job_title' => 'Finansu analitike', 'role' => User::ROLE_USER],
+                ['full_name' => 'Edgars Sviklis', 'email' => 'edgars.sviklis@ludzas.lv', 'phone' => '+37126000007', 'job_title' => 'Iepirkumu specialists', 'role' => User::ROLE_USER],
+                ['full_name' => 'Agnese Leite', 'email' => 'agnese.leite@ludzas.lv', 'phone' => '+37126000008', 'job_title' => 'Gramatvede', 'role' => User::ROLE_USER],
+                ['full_name' => 'Roberts Arbidans', 'email' => 'roberts.arbidans@ludzas.lv', 'phone' => '+37126000009', 'job_title' => 'Jurists', 'role' => User::ROLE_USER],
+                ['full_name' => 'Dace Rudzite', 'email' => 'dace.rudzite@ludzas.lv', 'phone' => '+37126000010', 'job_title' => 'Personala specialiste', 'role' => User::ROLE_USER],
+                ['full_name' => 'Marta Zvirbule', 'email' => 'marta.zvirbule@ludzas.lv', 'phone' => '+37126000011', 'job_title' => 'Sekretare', 'role' => User::ROLE_USER],
+                ['full_name' => 'Ruta Liepa', 'email' => 'ruta.liepa@ludzas.lv', 'phone' => '+37126000012', 'job_title' => 'Iestades vaditaja', 'role' => User::ROLE_USER],
+                ['full_name' => 'Liga Jansone', 'email' => 'liga.jansone@ludzas.lv', 'phone' => '+37126000013', 'job_title' => 'Lietvede', 'role' => User::ROLE_USER],
+                ['full_name' => 'Andris Berzins', 'email' => 'andris.berzins@ludzas.lv', 'phone' => '+37126000014', 'job_title' => 'Saimniecibas parsvaldnieks', 'role' => User::ROLE_USER],
+                ['full_name' => 'Elina Krumina', 'email' => 'elina.krumina@ludzas.lv', 'phone' => '+37126000015', 'job_title' => 'Projektu asistente', 'role' => User::ROLE_USER],
+                ['full_name' => 'Guntis Vilks', 'email' => 'guntis.vilks@ludzas.lv', 'phone' => '+37126000016', 'job_title' => 'Autovaditajs', 'role' => User::ROLE_USER],
+                ['full_name' => 'Inese Priede', 'email' => 'inese.priede@ludzas.lv', 'phone' => '+37126000017', 'job_title' => 'Jurista palidze', 'role' => User::ROLE_USER],
+                ['full_name' => 'Oskars Balevics', 'email' => 'oskars.balevics@ludzas.lv', 'phone' => '+37126000018', 'job_title' => 'Iepirkumu koordinators', 'role' => User::ROLE_USER],
+                ['full_name' => 'Sanita Miezite', 'email' => 'sanita.miezite@ludzas.lv', 'phone' => '+37126000019', 'job_title' => 'Klientu apkalposanas specialiste', 'role' => User::ROLE_USER],
+                ['full_name' => 'Kaspars Liekis', 'email' => 'kaspars.liekis@ludzas.lv', 'phone' => '+37126000020', 'job_title' => 'Tehniskais darbinieks', 'role' => User::ROLE_USER],
+                ['full_name' => 'Evija Ozolina', 'email' => 'evija.ozolina@ludzas.lv', 'phone' => '+37126000021', 'job_title' => 'Biroja vaditaja', 'role' => User::ROLE_USER],
+                ['full_name' => 'Toms Karklins', 'email' => 'toms.karklins@ludzas.lv', 'phone' => '+37126000022', 'job_title' => 'Komunikacijas specialists', 'role' => User::ROLE_USER],
+                ['full_name' => 'Laura Vasile', 'email' => 'laura.vasile@ludzas.lv', 'phone' => '+37126000023', 'job_title' => 'Datu ievades operatore', 'role' => User::ROLE_USER],
+                ['full_name' => 'Rihards Sprogis', 'email' => 'rihards.sprogis@ludzas.lv', 'phone' => '+37126000024', 'job_title' => 'Arhivars', 'role' => User::ROLE_USER],
+                ['full_name' => 'Zane Paberde', 'email' => 'zane.paberde@ludzas.lv', 'phone' => '+37126000025', 'job_title' => 'Vaditaja asistente', 'role' => User::ROLE_USER],
+                ['full_name' => 'Normunds Keiss', 'email' => 'normunds.keiss@ludzas.lv', 'phone' => '+37126000026', 'job_title' => 'Saimniecibas specialists', 'role' => User::ROLE_USER],
+                ['full_name' => 'Ieva Rubene', 'email' => 'ieva.rubene@ludzas.lv', 'phone' => '+37126000027', 'job_title' => 'Finansu asistente', 'role' => User::ROLE_USER],
+                ['full_name' => 'Miks Upitis', 'email' => 'miks.upitis@ludzas.lv', 'phone' => '+37126000028', 'job_title' => 'Dokumentu parzinis', 'role' => User::ROLE_USER],
+                ['full_name' => 'Una Eglite', 'email' => 'una.eglite@ludzas.lv', 'phone' => '+37126000029', 'job_title' => 'Lietvede', 'role' => User::ROLE_USER],
+                ['full_name' => 'Viktorija Zeile', 'email' => 'viktorija.zeile@ludzas.lv', 'phone' => '+37126000030', 'job_title' => 'Administratore', 'role' => User::ROLE_USER],
             ];
 
-            $userRows = array_map(function (array $user) use ($now) {
+            DB::table('users')->insert(array_map(function (array $user) use ($now) {
                 return array_merge($user, [
                     'password' => Hash::make('password'),
                     'is_active' => true,
@@ -70,13 +93,11 @@ class LatvianDemoDataSeeder extends Seeder
                     'created_at' => $now,
                     'updated_at' => $now,
                 ]);
-            }, $users);
-
-            DB::table('users')->insert($userRows);
+            }, $users));
 
             $userIdsByEmail = DB::table('users')->pluck('id', 'email')->all();
             $userIdsByName = DB::table('users')->pluck('id', 'full_name')->all();
-            $adminUserId = $userIdsByEmail['artis.berzins@itstackpr.test'];
+            $adminUserId = $userIdsByEmail['artis.berzins@ludzas.lv'];
 
             $rooms = [
                 ['building' => 'Administracijas eka', 'floor_number' => 1, 'room_number' => '101', 'room_name' => 'IT mezgls', 'user_name' => 'Artis Berzins', 'department' => 'IT', 'notes' => 'Serveri un tikla mezgli'],
@@ -121,18 +142,18 @@ class LatvianDemoDataSeeder extends Seeder
             $deviceTypeIds = DB::table('device_types')->pluck('id', 'type_name')->all();
 
             $deviceBlueprints = [
-                ['code' => 'LDZ-0001', 'name' => 'Klepjdators A1', 'type' => 'Klepjdators', 'model' => 'Dell Latitude 5520', 'status' => 'repair', 'room' => '102', 'assigned_to' => 'Ilze Strautina'],
-                ['code' => 'LDZ-0002', 'name' => 'Monitors A1', 'type' => 'Monitors', 'model' => 'Dell P2422H', 'status' => 'active', 'room' => '102', 'assigned_to' => 'Ilze Strautina'],
-                ['code' => 'LDZ-0003', 'name' => 'Stacionarais dators B1', 'type' => 'Stacionarais dators', 'model' => 'Dell OptiPlex 7090', 'status' => 'active', 'room' => '202', 'assigned_to' => 'Agnese Leite'],
-                ['code' => 'LDZ-0004', 'name' => 'Printeris B1', 'type' => 'Printeris', 'model' => 'HP LaserJet Pro 400', 'status' => 'reserve', 'room' => '202', 'assigned_to' => null],
-                ['code' => 'LDZ-0005', 'name' => 'Klepjdators C1', 'type' => 'Klepjdators', 'model' => 'Lenovo ThinkPad T14', 'status' => 'active', 'room' => '201', 'assigned_to' => 'Ruta Liepa'],
-                ['code' => 'LDZ-0006', 'name' => 'Klepjdators C2', 'type' => 'Klepjdators', 'model' => 'HP EliteBook 840', 'status' => 'broken', 'room' => '301', 'assigned_to' => 'Dace Rudzite'],
-                ['code' => 'LDZ-0007', 'name' => 'UPS D1', 'type' => 'UPS', 'model' => 'APC Smart-UPS 1000', 'status' => 'active', 'room' => 'T2', 'assigned_to' => 'Janis Ozols'],
-                ['code' => 'LDZ-0008', 'name' => 'Komutators D1', 'type' => 'Komutators', 'model' => 'Cisco CBS250', 'status' => 'active', 'room' => '101', 'assigned_to' => 'Maris Vitols'],
-                ['code' => 'LDZ-0009', 'name' => 'Monitors E1', 'type' => 'Monitors', 'model' => 'LG 27UL500', 'status' => 'active', 'room' => 'T3', 'assigned_to' => 'Kristine Daukste'],
-                ['code' => 'LDZ-0010', 'name' => 'Klepjdators F1', 'type' => 'Klepjdators', 'model' => 'Dell Latitude 7420', 'status' => 'written_off', 'room' => 'T1', 'assigned_to' => null],
-                ['code' => 'LDZ-0011', 'name' => 'Stacionarais dators G1', 'type' => 'Stacionarais dators', 'model' => 'HP ProDesk 600', 'status' => 'reserve', 'room' => 'T1', 'assigned_to' => null],
-                ['code' => 'LDZ-0012', 'name' => 'Printeris H1', 'type' => 'Printeris', 'model' => 'Brother HL-L5100DN', 'status' => 'active', 'room' => '301', 'assigned_to' => 'Marta Zvirbule'],
+                ['code' => 'LDZ-0001', 'name' => 'Klepjdators A1', 'type' => 'Klepjdators', 'model' => 'Dell Latitude 5520', 'status' => Device::STATUS_REPAIR, 'room' => '102', 'assigned_to' => 'Ilze Strautina'],
+                ['code' => 'LDZ-0002', 'name' => 'Monitors A1', 'type' => 'Monitors', 'model' => 'Dell P2422H', 'status' => Device::STATUS_ACTIVE, 'room' => '102', 'assigned_to' => 'Ilze Strautina'],
+                ['code' => 'LDZ-0003', 'name' => 'Stacionarais dators B1', 'type' => 'Stacionarais dators', 'model' => 'Dell OptiPlex 7090', 'status' => Device::STATUS_ACTIVE, 'room' => '202', 'assigned_to' => 'Agnese Leite'],
+                ['code' => 'LDZ-0004', 'name' => 'Printeris B1', 'type' => 'Printeris', 'model' => 'HP LaserJet Pro 400', 'status' => Device::STATUS_ACTIVE, 'room' => '202', 'assigned_to' => null],
+                ['code' => 'LDZ-0005', 'name' => 'Klepjdators C1', 'type' => 'Klepjdators', 'model' => 'Lenovo ThinkPad T14', 'status' => Device::STATUS_ACTIVE, 'room' => '201', 'assigned_to' => 'Ruta Liepa'],
+                ['code' => 'LDZ-0006', 'name' => 'Klepjdators C2', 'type' => 'Klepjdators', 'model' => 'HP EliteBook 840', 'status' => Device::STATUS_REPAIR, 'room' => '301', 'assigned_to' => 'Dace Rudzite'],
+                ['code' => 'LDZ-0007', 'name' => 'UPS D1', 'type' => 'UPS', 'model' => 'APC Smart-UPS 1000', 'status' => Device::STATUS_ACTIVE, 'room' => 'T2', 'assigned_to' => 'Janis Ozols'],
+                ['code' => 'LDZ-0008', 'name' => 'Komutators D1', 'type' => 'Komutators', 'model' => 'Cisco CBS250', 'status' => Device::STATUS_ACTIVE, 'room' => '101', 'assigned_to' => 'Maris Vitols'],
+                ['code' => 'LDZ-0009', 'name' => 'Monitors E1', 'type' => 'Monitors', 'model' => 'LG 27UL500', 'status' => Device::STATUS_ACTIVE, 'room' => 'T3', 'assigned_to' => 'Kristine Daukste'],
+                ['code' => 'LDZ-0010', 'name' => 'Klepjdators F1', 'type' => 'Klepjdators', 'model' => 'Dell Latitude 7420', 'status' => Device::STATUS_WRITEOFF, 'room' => 'T1', 'assigned_to' => null],
+                ['code' => 'LDZ-0011', 'name' => 'Stacionarais dators G1', 'type' => 'Stacionarais dators', 'model' => 'HP ProDesk 600', 'status' => Device::STATUS_ACTIVE, 'room' => 'T1', 'assigned_to' => null],
+                ['code' => 'LDZ-0012', 'name' => 'Printeris H1', 'type' => 'Printeris', 'model' => 'Brother HL-L5100DN', 'status' => Device::STATUS_ACTIVE, 'room' => '301', 'assigned_to' => 'Marta Zvirbule'],
             ];
 
             DB::table('devices')->insert(array_map(function (array $device) use ($deviceTypeIds, $roomIds, $userIdsByName, $adminUserId, $now) {
@@ -147,7 +168,7 @@ class LatvianDemoDataSeeder extends Seeder
                     'status' => $device['status'],
                     'building_id' => $room->building_id ?? null,
                     'room_id' => $roomId,
-                    'assigned_user_id' => $device['assigned_to'] ? ($userIdsByName[$device['assigned_to']] ?? null) : null,
+                    'assigned_to_id' => $device['assigned_to'] ? ($userIdsByName[$device['assigned_to']] ?? null) : null,
                     'purchase_date' => now()->subDays(rand(180, 1600))->toDateString(),
                     'purchase_price' => rand(180, 2200) + 0.99,
                     'warranty_until' => now()->addDays(rand(30, 720))->toDateString(),
@@ -155,7 +176,9 @@ class LatvianDemoDataSeeder extends Seeder
                     'serial_number' => 'SN-' . $device['code'],
                     'manufacturer' => str_contains($device['model'], 'Dell')
                         ? 'Dell'
-                        : (str_contains($device['model'], 'HP') ? 'HP' : 'Cisco'),
+                        : (str_contains($device['model'], 'HP')
+                            ? 'HP'
+                            : (str_contains($device['model'], 'Cisco') ? 'Cisco' : 'APC')),
                     'notes' => 'Demo ierice jaunajai schemai',
                     'device_image_url' => null,
                     'created_by' => $adminUserId,
@@ -169,67 +192,55 @@ class LatvianDemoDataSeeder extends Seeder
             DB::table('repairs')->insert([
                 [
                     'device_id' => $deviceIds['LDZ-0001'],
-                    'reported_by_user_id' => $userIdsByName['Ilze Strautina'],
-                    'assigned_to_user_id' => $userIdsByName['Linda Kalnina'],
-                    'accepted_by_user_id' => $adminUserId,
+                    'issue_reported_by' => $userIdsByName['Ilze Strautina'],
+                    'accepted_by' => $adminUserId,
                     'description' => 'Klepjdators vairs neuzladejas.',
                     'status' => 'waiting',
-                    'device_status_before_repair' => 'active',
                     'repair_type' => 'internal',
                     'priority' => 'high',
                     'start_date' => now()->subDays(1)->toDateString(),
-                    'estimated_completion' => now()->addDays(2)->toDateString(),
-                    'actual_completion' => null,
-                    'diagnosis' => 'Iespejama barosanas ligzdas problema.',
-                    'resolution_notes' => null,
+                    'end_date' => null,
                     'cost' => null,
                     'vendor_name' => null,
                     'vendor_contact' => null,
                     'invoice_number' => null,
+                    'request_id' => null,
                     'created_at' => $now,
                     'updated_at' => $now,
                 ],
                 [
                     'device_id' => $deviceIds['LDZ-0006'],
-                    'reported_by_user_id' => $userIdsByName['Dace Rudzite'],
-                    'assigned_to_user_id' => $userIdsByName['Janis Ozols'],
-                    'accepted_by_user_id' => $adminUserId,
+                    'issue_reported_by' => $userIdsByName['Dace Rudzite'],
+                    'accepted_by' => $adminUserId,
                     'description' => 'Ierice iesledzas, bet disks rada kludas.',
                     'status' => 'in-progress',
-                    'device_status_before_repair' => 'broken',
                     'repair_type' => 'external',
                     'priority' => 'critical',
                     'start_date' => now()->subDays(4)->toDateString(),
-                    'estimated_completion' => now()->addDays(3)->toDateString(),
-                    'actual_completion' => null,
-                    'diagnosis' => 'Nepieciesama SSD nomaina.',
-                    'resolution_notes' => null,
+                    'end_date' => null,
                     'cost' => 180.00,
                     'vendor_name' => 'SIA IT Serviss',
                     'vendor_contact' => '+37126660001',
                     'invoice_number' => 'INV-2026-1001',
+                    'request_id' => null,
                     'created_at' => $now,
                     'updated_at' => $now,
                 ],
                 [
                     'device_id' => $deviceIds['LDZ-0012'],
-                    'reported_by_user_id' => $userIdsByName['Marta Zvirbule'],
-                    'assigned_to_user_id' => $userIdsByName['Linda Kalnina'],
-                    'accepted_by_user_id' => $adminUserId,
+                    'issue_reported_by' => $userIdsByName['Marta Zvirbule'],
+                    'accepted_by' => $adminUserId,
                     'description' => 'Printeris iesprudina papiru.',
                     'status' => 'completed',
-                    'device_status_before_repair' => 'active',
                     'repair_type' => 'internal',
                     'priority' => 'medium',
                     'start_date' => now()->subDays(10)->toDateString(),
-                    'estimated_completion' => now()->subDays(8)->toDateString(),
-                    'actual_completion' => now()->subDays(8)->toDateString(),
-                    'diagnosis' => 'Padeves mehanisma tirisana.',
-                    'resolution_notes' => 'Iztirits un parbaudits.',
+                    'end_date' => now()->subDays(8)->toDateString(),
                     'cost' => 35.00,
                     'vendor_name' => null,
                     'vendor_contact' => null,
                     'invoice_number' => null,
+                    'request_id' => null,
                     'created_at' => $now,
                     'updated_at' => $now,
                 ],
@@ -242,7 +253,7 @@ class LatvianDemoDataSeeder extends Seeder
                     'device_id' => $deviceIds['LDZ-0001'],
                     'responsible_user_id' => $userIdsByName['Ilze Strautina'],
                     'description' => 'Uzlade nestrada un dators izsledzas.',
-                    'status' => 'approved',
+                    'status' => RepairRequest::STATUS_APPROVED,
                     'reviewed_by_user_id' => $adminUserId,
                     'repair_id' => $repairIds[$deviceIds['LDZ-0001']] ?? null,
                     'review_notes' => 'Apstiprinats un nodots IT nodalai.',
@@ -253,7 +264,7 @@ class LatvianDemoDataSeeder extends Seeder
                     'device_id' => $deviceIds['LDZ-0005'],
                     'responsible_user_id' => $userIdsByName['Ruta Liepa'],
                     'description' => 'Dators sakarst un strada leni.',
-                    'status' => 'pending',
+                    'status' => RepairRequest::STATUS_SUBMITTED,
                     'reviewed_by_user_id' => null,
                     'repair_id' => null,
                     'review_notes' => null,
@@ -264,7 +275,7 @@ class LatvianDemoDataSeeder extends Seeder
                     'device_id' => $deviceIds['LDZ-0009'],
                     'responsible_user_id' => $userIdsByName['Kristine Daukste'],
                     'description' => 'Monitors mirgo, bet pec parbaudes strada korekti.',
-                    'status' => 'denied',
+                    'status' => RepairRequest::STATUS_REJECTED,
                     'reviewed_by_user_id' => $userIdsByName['Linda Kalnina'],
                     'repair_id' => null,
                     'review_notes' => 'Atkartotu problemu neizdevas konstatet.',
@@ -278,7 +289,7 @@ class LatvianDemoDataSeeder extends Seeder
                     'device_id' => $deviceIds['LDZ-0010'],
                     'responsible_user_id' => $userIdsByName['Edgars Sviklis'],
                     'reason' => 'Ierice novecojusi un ekonomiski nelietderiga remontam.',
-                    'status' => 'approved',
+                    'status' => WriteoffRequest::STATUS_APPROVED,
                     'reviewed_by_user_id' => $adminUserId,
                     'review_notes' => 'Norakstisana apstiprinata.',
                     'created_at' => $now->copy()->subDays(7),
@@ -288,7 +299,7 @@ class LatvianDemoDataSeeder extends Seeder
                     'device_id' => $deviceIds['LDZ-0003'],
                     'responsible_user_id' => $userIdsByName['Agnese Leite'],
                     'reason' => 'Nepietiekama veiktspeja ikdienas darbam.',
-                    'status' => 'pending',
+                    'status' => WriteoffRequest::STATUS_SUBMITTED,
                     'reviewed_by_user_id' => null,
                     'review_notes' => null,
                     'created_at' => $now->copy()->subHours(10),
@@ -298,7 +309,7 @@ class LatvianDemoDataSeeder extends Seeder
                     'device_id' => $deviceIds['LDZ-0008'],
                     'responsible_user_id' => $userIdsByName['Maris Vitols'],
                     'reason' => 'Pec lietotaja domam lens, bet tehniski darba kartiba.',
-                    'status' => 'denied',
+                    'status' => WriteoffRequest::STATUS_REJECTED,
                     'reviewed_by_user_id' => $userIdsByName['Janis Ozols'],
                     'review_notes' => 'Nomaina sobrid nav pamatota.',
                     'created_at' => $now->copy()->subDays(5),
@@ -310,10 +321,10 @@ class LatvianDemoDataSeeder extends Seeder
                 [
                     'device_id' => $deviceIds['LDZ-0002'],
                     'responsible_user_id' => $userIdsByName['Ilze Strautina'],
-                    'transfer_to_user_id' => $userIdsByName['Marta Zvirbule'],
+                    'transfered_to_id' => $userIdsByName['Marta Zvirbule'],
                     'transfer_reason' => 'Monitors nepieciesams sekretarei darba vietai.',
-                    'status' => 'approved',
-                    'reviewed_by_user_id' => $adminUserId,
+                    'status' => DeviceTransfer::STATUS_APPROVED,
+                    'reviewed_by_user_id' => $userIdsByName['Marta Zvirbule'],
                     'review_notes' => 'Ierice parregistreta.',
                     'created_at' => $now->copy()->subDays(2),
                     'updated_at' => $now->copy()->subDay(),
@@ -321,9 +332,9 @@ class LatvianDemoDataSeeder extends Seeder
                 [
                     'device_id' => $deviceIds['LDZ-0005'],
                     'responsible_user_id' => $userIdsByName['Ruta Liepa'],
-                    'transfer_to_user_id' => $userIdsByName['Kristine Daukste'],
+                    'transfered_to_id' => $userIdsByName['Kristine Daukste'],
                     'transfer_reason' => 'Pagaidu darba vajadzibam projektu komandai.',
-                    'status' => 'pending',
+                    'status' => DeviceTransfer::STATUS_SUBMITTED,
                     'reviewed_by_user_id' => null,
                     'review_notes' => null,
                     'created_at' => $now->copy()->subHours(5),
@@ -332,9 +343,9 @@ class LatvianDemoDataSeeder extends Seeder
                 [
                     'device_id' => $deviceIds['LDZ-0007'],
                     'responsible_user_id' => $userIdsByName['Janis Ozols'],
-                    'transfer_to_user_id' => $userIdsByName['Roberts Arbidans'],
+                    'transfered_to_id' => $userIdsByName['Roberts Arbidans'],
                     'transfer_reason' => 'Lietotajs pieprasija UPS juristu kabinetam.',
-                    'status' => 'denied',
+                    'status' => DeviceTransfer::STATUS_REJECTED,
                     'reviewed_by_user_id' => $userIdsByName['Roberts Arbidans'],
                     'review_notes' => 'Sanemejam sobrid nav vajadzibas pec ierices.',
                     'created_at' => $now->copy()->subDays(4),
@@ -344,7 +355,94 @@ class LatvianDemoDataSeeder extends Seeder
 
             DB::table('devices')
                 ->where('id', $deviceIds['LDZ-0002'])
-                ->update(['assigned_user_id' => $userIdsByName['Marta Zvirbule']]);
+                ->update(['assigned_to_id' => $userIdsByName['Marta Zvirbule']]);
+
+            if (Schema::hasColumn('repairs', 'request_id')) {
+                $approvedRequestId = DB::table('repair_requests')
+                    ->where('device_id', $deviceIds['LDZ-0001'])
+                    ->value('id');
+
+                if ($approvedRequestId) {
+                    DB::table('repairs')
+                        ->where('id', $repairIds[$deviceIds['LDZ-0001']] ?? null)
+                        ->update(['request_id' => $approvedRequestId]);
+                }
+            }
+
+            DB::table('audit_log')->insert([
+                [
+                    'timestamp' => $now->copy()->subDays(7),
+                    'user_id' => $adminUserId,
+                    'action' => 'CREATE',
+                    'entity_type' => 'Device',
+                    'entity_id' => $deviceIds['LDZ-0001'],
+                    'description' => 'Ierice izveidota: [LDZ-0001] Klepjdators A1',
+                    'severity' => 'info',
+                ],
+                [
+                    'timestamp' => $now->copy()->subDays(6),
+                    'user_id' => $adminUserId,
+                    'action' => 'CREATE',
+                    'entity_type' => 'RepairRequest',
+                    'entity_id' => DB::table('repair_requests')->where('device_id', $deviceIds['LDZ-0001'])->value('id'),
+                    'description' => 'Remonta pieteikums izveidots: Klepjdators A1',
+                    'severity' => 'info',
+                ],
+                [
+                    'timestamp' => $now->copy()->subDays(6)->addHour(),
+                    'user_id' => $adminUserId,
+                    'action' => 'UPDATE',
+                    'entity_type' => 'RepairRequest',
+                    'entity_id' => DB::table('repair_requests')->where('device_id', $deviceIds['LDZ-0001'])->value('id'),
+                    'description' => 'Remonta pieteikums atjauninats: Klepjdators A1 | detalas: statuss: Iesniegts -> Apstiprinats',
+                    'severity' => 'info',
+                ],
+                [
+                    'timestamp' => $now->copy()->subDays(5),
+                    'user_id' => $adminUserId,
+                    'action' => 'CREATE',
+                    'entity_type' => 'Repair',
+                    'entity_id' => $repairIds[$deviceIds['LDZ-0001']] ?? null,
+                    'description' => 'Remonts izveidots: Klepjdators A1',
+                    'severity' => 'warning',
+                ],
+                [
+                    'timestamp' => $now->copy()->subDays(4),
+                    'user_id' => $userIdsByName['Marta Zvirbule'],
+                    'action' => 'LOGIN',
+                    'entity_type' => 'User',
+                    'entity_id' => $userIdsByName['Marta Zvirbule'],
+                    'description' => 'Lietotajs piesledzas: Marta Zvirbule',
+                    'severity' => 'info',
+                ],
+                [
+                    'timestamp' => $now->copy()->subDays(3),
+                    'user_id' => $userIdsByName['Marta Zvirbule'],
+                    'action' => 'UPDATE',
+                    'entity_type' => 'DeviceTransfer',
+                    'entity_id' => DB::table('device_transfers')->where('device_id', $deviceIds['LDZ-0002'])->value('id'),
+                    'description' => 'Ierices parsutisana atjauninata: Monitors A1 | detalas: statuss: Iesniegts -> Apstiprinats',
+                    'severity' => 'info',
+                ],
+                [
+                    'timestamp' => $now->copy()->subDays(2),
+                    'user_id' => $adminUserId,
+                    'action' => 'VIEW',
+                    'entity_type' => 'AuditLog',
+                    'entity_id' => null,
+                    'description' => 'Apskatits audita zurnals',
+                    'severity' => 'info',
+                ],
+                [
+                    'timestamp' => $now->copy()->subDay(),
+                    'user_id' => $adminUserId,
+                    'action' => 'UPDATE',
+                    'entity_type' => 'WriteoffRequest',
+                    'entity_id' => DB::table('writeoff_requests')->where('device_id', $deviceIds['LDZ-0010'])->value('id'),
+                    'description' => 'Norakstisanas pieteikums atjauninats: Klepjdators F1 | detalas: statuss: Iesniegts -> Apstiprinats',
+                    'severity' => 'warning',
+                ],
+            ]);
         });
     }
 }

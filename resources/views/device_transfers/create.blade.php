@@ -20,9 +20,9 @@
             </label>
             <label class="block">
                 <span class="crud-label">Kam nodot</span>
-                <select name="transfer_to_user_id" class="crud-control" required>
+                <select name="transfered_to_id" class="crud-control" required>
                     @foreach ($users as $transferUser)
-                        <option value="{{ $transferUser->id }}" @selected(old('transfer_to_user_id') == $transferUser->id)>{{ $transferUser->full_name }}</option>
+                        <option value="{{ $transferUser->id }}" @selected(old('transfered_to_id') == $transferUser->id)>{{ $transferUser->full_name }}</option>
                     @endforeach
                 </select>
             </label>

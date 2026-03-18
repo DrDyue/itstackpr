@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>IT Inventāra uzskaites sistēma</title>
+        <title>IT Inventara uzskaites sistema</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/cssfamily=figtree:400,500,600&display=swap" rel="stylesheet" />
@@ -20,11 +20,11 @@
                         <a href="/" class="auth-logo-link">
                             <x-application-logo />
                         </a>
-                        <h1>IT Inventāra uzskaites sistēma</h1>
+                        <h1>IT Inventara uzskaites sistema</h1>
                         <p>
-                            @if(request()->routeIs('login'))
+                            @if (request()->routeIs('login'))
                                 Laipni ludzam atpakal
-                            @elseif(request()->routeIs('register'))
+                            @elseif (request()->routeIs('register'))
                                 Izveidojiet darbinieka kontu
                             @else
                                 Atiestatiet savu paroli
@@ -35,11 +35,11 @@
                     <div class="auth-card">
                         <div class="auth-card-header">
                             <h2>
-                                @if(request()->routeIs('login'))
+                                @if (request()->routeIs('login'))
                                     Pierakstisanas
-                                @elseif(request()->routeIs('register'))
+                                @elseif (request()->routeIs('register'))
                                     Registracija
-                                @elseif(request()->routeIs('password.reset'))
+                                @elseif (request()->routeIs('password.reset'))
                                     Atiestatit paroli
                                 @else
                                     Aizmirsta parole
@@ -52,29 +52,26 @@
                         </div>
 
                         <div class="auth-footer">
-                            <p>IT Inventāra uzskaites sistēma 2026</p>
+                            <p>IT Inventara uzskaites sistema 2026</p>
                         </div>
                     </div>
 
-                    <div class="auth-info">
-                        <p>
-                            @if(request()->routeIs('login'))
-                                Demo: artis.berzins@ludzas.lv | Parole: password
-                            @else
-                                Jaunu lietotaju izveido administrators.
-                            @endif
-                        </p>
+                    <div class="auth-info space-y-1">
+                        @if (request()->routeIs('login'))
+                            <p>Demo admin: artis.berzins@ludzas.lv | Parole: password</p>
+                            <p>Demo user: ilze.strautina@ludzas.lv | Parole: password</p>
+                        @else
+                            <p>Jaunu lietotaju izveido administrators.</p>
+                        @endif
                     </div>
                 </div>
             </div>
-    
+
             <div class="auth-right">
                 <div class="auth-right-content">
-                    <h2>IT Inventāra sistēma</h2>
+                    <h2>IT Inventara sistema</h2>
                 </div>
             </div>
         </div>
     </body>
 </html>
-
-

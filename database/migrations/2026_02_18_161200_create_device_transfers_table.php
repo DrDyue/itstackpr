@@ -16,11 +16,11 @@ return new class extends Migration
             $table->foreignId('responsible_user_id')
                 ->constrained('users')
                 ->cascadeOnDelete();
-            $table->foreignId('transfer_to_user_id')
+            $table->foreignId('transfered_to_id')
                 ->constrained('users')
                 ->cascadeOnDelete();
             $table->text('transfer_reason');
-            $table->enum('status', ['pending', 'approved', 'denied'])->default('pending');
+            $table->enum('status', ['submitted', 'approved', 'rejected'])->default('submitted');
             $table->foreignId('reviewed_by_user_id')
                 ->nullable()
                 ->constrained('users')

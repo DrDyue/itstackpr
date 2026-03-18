@@ -9,6 +9,7 @@
                 type="email"
                 name="email"
                 placeholder="artis.berzins@ludzas.lv"
+                :value="old('email')"
                 required
                 autofocus
                 autocomplete="username"
@@ -52,9 +53,12 @@
                 </a>
             </div>
         @endif
+
+        <div class="mt-6 space-y-2 text-sm text-slate-500">
+            <p>Demo admin: artis.berzins@ludzas.lv | Parole: password</p>
+            <p>Demo user: ilze.strautina@ludzas.lv | Parole: password</p>
+        </div>
     </form>
 </x-guest-layout>
-
-
 
 

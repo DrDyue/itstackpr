@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -25,13 +26,13 @@ class DeviceTransferController extends Controller
 
         $transfers = DeviceTransfer::query()
             ->with(['device', 'responsibleUser', 'transferTo', 'reviewedBy'])
-            ->when(! $user->canManageRequests(), function (Builder $query) use ($user) {
+            ->when(! $user->isAdmin(), function (Builder $query) use ($user) {
                 $query->where(function (Builder $builder) use ($user) {
                     $builder->where('responsible_user_id', $user->id)
-                        ->orWhere('transfer_to_user_id', $user->id);
+                        ->orWhere('transfered_to_id', $user->id);
                 });
             })
-            ->when($filters['status'] !== '' && in_array($filters['status'], ['pending', 'approved', 'denied'], true), fn (Builder $query) => $query->where('status', $filters['status']))
+            ->when($filters['status'] !== '' && in_array($filters['status'], [DeviceTransfer::STATUS_SUBMITTED, DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED], true), fn (Builder $query) => $query->where('status', $filters['status']))
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
 
@@ -49,8 +50,8 @@ class DeviceTransferController extends Controller
         return view('device_transfers.index', [
             'transfers' => $transfers,
             'filters' => $filters,
-            'statuses' => ['pending', 'approved', 'denied'],
-            'canReview' => $user->canManageRequests(),
+            'statuses' => [DeviceTransfer::STATUS_SUBMITTED, DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED],
+            'isAdmin' => $user->isAdmin(),
         ]);
     }
 
@@ -72,7 +73,7 @@ class DeviceTransferController extends Controller
 
         $validated = $request->validate([
             'device_id' => ['required', 'exists:devices,id'],
-            'transfer_to_user_id' => ['required', 'exists:users,id', Rule::notIn([$user->id])],
+            'transfered_to_id' => ['required', 'exists:users,id', Rule::notIn([$user->id])],
             'transfer_reason' => ['required', 'string'],
         ]);
 
@@ -83,7 +84,7 @@ class DeviceTransferController extends Controller
             ]);
         }
 
-        if (DeviceTransfer::query()->where('device_id', $device->id)->where('status', 'pending')->exists()) {
+        if (DeviceTransfer::query()->where('device_id', $device->id)->where('status', DeviceTransfer::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
                 'device_id' => ['Sai iericei jau ir gaidoss parsutisanas pieteikums.'],
             ]);
@@ -92,9 +93,9 @@ class DeviceTransferController extends Controller
         $transfer = DeviceTransfer::create([
             'device_id' => $device->id,
             'responsible_user_id' => $user->id,
-            'transfer_to_user_id' => $validated['transfer_to_user_id'],
+            'transfered_to_id' => $validated['transfered_to_id'],
             'transfer_reason' => $validated['transfer_reason'],
-            'status' => 'pending',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
         ]);
 
         AuditTrail::created($user->id, $transfer);
@@ -107,31 +108,43 @@ class DeviceTransferController extends Controller
         $reviewer = $this->user();
         abort_unless($reviewer, 403);
 
-        $canReview = $reviewer->canManageRequests() || (int) $deviceTransfer->transfer_to_user_id === (int) $reviewer->id;
+        $canReview = (int) $deviceTransfer->transfered_to_id === (int) $reviewer->id;
         abort_unless($canReview, 403);
 
-        if ($deviceTransfer->status !== 'pending') {
+        if ($deviceTransfer->status !== DeviceTransfer::STATUS_SUBMITTED) {
             return back()->with('error', 'Sis pieteikums jau ir izskatits.');
         }
 
         $validated = $request->validate([
-            'status' => ['required', Rule::in(['approved', 'denied'])],
+            'status' => ['required', Rule::in([DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED])],
             'review_notes' => ['nullable', 'string'],
         ]);
 
         $before = $deviceTransfer->only(['status', 'reviewed_by_user_id', 'review_notes']);
 
-        $deviceTransfer->update([
-            'status' => $validated['status'],
-            'reviewed_by_user_id' => $reviewer->id,
-            'review_notes' => $validated['review_notes'] ?: null,
-        ]);
+        DB::transaction(function () use ($validated, $deviceTransfer, $reviewer) {
+            $deviceTransfer->update([
+                'status' => $validated['status'],
+                'reviewed_by_user_id' => $reviewer->id,
+                'review_notes' => $validated['review_notes'] ?: null,
+            ]);
 
-        if ($validated['status'] === 'approved') {
-            $deviceTransfer->device?->forceFill([
-                'assigned_user_id' => $deviceTransfer->transfer_to_user_id,
+            if ($validated['status'] !== 'approved') {
+                return;
+            }
+
+            $device = $deviceTransfer->device()->lockForUpdate()->first();
+
+            if (! $device || $device->status !== Device::STATUS_ACTIVE) {
+                throw ValidationException::withMessages([
+                    'status' => ['Ierici nevar nodot, jo tas statuss kops pieteikuma izveides ir mainijies.'],
+                ]);
+            }
+
+            $device->forceFill([
+                'assigned_to_id' => $deviceTransfer->transfered_to_id,
             ])->save();
-        }
+        });
 
         $after = $deviceTransfer->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState($reviewer->id, $deviceTransfer, $before, $after);
@@ -142,8 +155,8 @@ class DeviceTransferController extends Controller
     private function availableDevicesForUser(User $user): Builder
     {
         return Device::query()
-            ->where('assigned_user_id', $user->id)
-            ->whereNotIn('status', ['written_off', 'repair'])
+            ->where('assigned_to_id', $user->id)
+            ->where('status', Device::STATUS_ACTIVE)
             ->with(['type', 'building', 'room'])
             ->orderBy('name');
     }

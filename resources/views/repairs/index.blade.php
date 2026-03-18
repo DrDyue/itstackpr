@@ -60,7 +60,7 @@
                         <th class="px-4 py-3">Apraksts</th>
                         <th class="px-4 py-3">Statuss</th>
                         <th class="px-4 py-3">Prioritate</th>
-                        <th class="px-4 py-3">Pieskirts</th>
+                        <th class="px-4 py-3">Apstiprinaja</th>
                         <th class="px-4 py-3">Darbibas</th>
                     </tr>
                 </thead>
@@ -74,7 +74,7 @@
                             <td class="px-4 py-3 text-slate-600">{{ $repair->description }}</td>
                             <td class="px-4 py-3">{{ $statusLabels[$repair->status] ?? $repair->status }}</td>
                             <td class="px-4 py-3">{{ $priorityLabels[$repair->priority] ?? $repair->priority }}</td>
-                            <td class="px-4 py-3">{{ $repair->assignee?->full_name ?: '-' }}</td>
+                            <td class="px-4 py-3">{{ $repair->acceptedBy?->full_name ?: '-' }}</td>
                             <td class="px-4 py-3">
                                 @if ($canManageRepairs)
                                     <a href="{{ route('repairs.edit', $repair) }}" class="crud-btn-secondary">Rediget</a>

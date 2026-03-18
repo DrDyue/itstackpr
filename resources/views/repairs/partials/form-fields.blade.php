@@ -13,10 +13,10 @@
     </label>
     <label class="block">
         <span class="crud-label">Pieteicejs</span>
-        <select name="reported_by_user_id" class="crud-control">
+        <select name="issue_reported_by" class="crud-control">
             <option value="">Nav noradits</option>
             @foreach ($users as $repairUser)
-                <option value="{{ $repairUser->id }}" @selected(old('reported_by_user_id', $currentRepair?->reported_by_user_id ?? $defaultReporterId ?? null) == $repairUser->id)>{{ $repairUser->full_name }}</option>
+                <option value="{{ $repairUser->id }}" @selected(old('issue_reported_by', $currentRepair?->issue_reported_by ?? $defaultReporterId ?? null) == $repairUser->id)>{{ $repairUser->full_name }}</option>
             @endforeach
         </select>
     </label>
@@ -49,37 +49,16 @@
         </select>
     </label>
     <label class="block">
-        <span class="crud-label">Pieskirtais lietotajs</span>
-        <select name="assigned_to_user_id" class="crud-control">
-            <option value="">Nav pieskirts</option>
-            @foreach ($users as $repairUser)
-                <option value="{{ $repairUser->id }}" @selected(old('assigned_to_user_id', $currentRepair?->assigned_to_user_id) == $repairUser->id)>{{ $repairUser->full_name }}</option>
-            @endforeach
-        </select>
-    </label>
-    <label class="block">
         <span class="crud-label">Sakuma datums</span>
         <input type="date" name="start_date" value="{{ old('start_date', $currentRepair?->start_date?->format('Y-m-d')) }}" class="crud-control">
     </label>
     <label class="block">
-        <span class="crud-label">Planotais beigu datums</span>
-        <input type="date" name="estimated_completion" value="{{ old('estimated_completion', $currentRepair?->estimated_completion?->format('Y-m-d')) }}" class="crud-control">
-    </label>
-    <label class="block">
-        <span class="crud-label">Faktiskais beigu datums</span>
-        <input type="date" name="actual_completion" value="{{ old('actual_completion', $currentRepair?->actual_completion?->format('Y-m-d')) }}" class="crud-control">
+        <span class="crud-label">Beigu datums</span>
+        <input type="date" name="end_date" value="{{ old('end_date', $currentRepair?->end_date?->format('Y-m-d')) }}" class="crud-control">
     </label>
     <label class="block">
         <span class="crud-label">Izmaksas</span>
         <input type="number" step="0.01" name="cost" value="{{ old('cost', $currentRepair?->cost) }}" class="crud-control">
-    </label>
-    <label class="block md:col-span-2">
-        <span class="crud-label">Diagnostika</span>
-        <textarea name="diagnosis" rows="3" class="crud-control">{{ old('diagnosis', $currentRepair?->diagnosis) }}</textarea>
-    </label>
-    <label class="block md:col-span-2">
-        <span class="crud-label">Atrisinajuma piezimes</span>
-        <textarea name="resolution_notes" rows="3" class="crud-control">{{ old('resolution_notes', $currentRepair?->resolution_notes) }}</textarea>
     </label>
     <label class="block">
         <span class="crud-label">Pakalpojuma sniedzejs</span>

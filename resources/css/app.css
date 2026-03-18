@@ -658,41 +658,9 @@ tbody td {
     margin-bottom: 20px;
 }
 
-.verification-success-banner {
-    background-color: #f0fdf4;
-    color: #15803d;
-    padding: 12px 14px;
-    border-radius: 8px;
-    border: 1px solid #bbf7d0;
-    margin-bottom: 16px;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.verification-actions {
-    display: flex;
-    gap: 16px;
-    margin-top: 24px;
-    justify-content: space-between;
-}
-
-.btn-auto {
-    width: auto;
-}
-
 .btn-auto-inline {
     width: auto;
     display: inline-block;
-}
-
-.btn-link-plain {
-    background: none;
-    border: none;
-    color: #0071e3;
-    text-decoration: underline;
-    cursor: pointer;
-    font-size: 14px;
-    padding: 12px 0;
 }
 
 .form-actions-end {
@@ -705,19 +673,6 @@ tbody td {
     margin-top: 16px;
     padding-top: 16px;
     border-top: 1px solid #d5d5d7;
-}
-
-.auth-muted-text {
-    color: #555;
-}
-
-.guest-main-card {
-    padding: 20px;
-    max-width: 400px;
-    margin: 40px auto;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 /* CRUD shared classes */

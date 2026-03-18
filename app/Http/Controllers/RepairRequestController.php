@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -25,9 +26,9 @@ class RepairRequestController extends Controller
         ];
 
         $requests = RepairRequest::query()
-            ->with(['device.assignedUser', 'responsibleUser', 'reviewedBy', 'repair'])
+            ->with(['device.assignedTo', 'responsibleUser', 'reviewedBy', 'repair'])
             ->when(! $user->canManageRequests(), fn (Builder $query) => $query->where('responsible_user_id', $user->id))
-            ->when($filters['status'] !== '' && in_array($filters['status'], ['pending', 'approved', 'denied'], true), fn (Builder $query) => $query->where('status', $filters['status']))
+            ->when($filters['status'] !== '' && in_array($filters['status'], [RepairRequest::STATUS_SUBMITTED, RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED], true), fn (Builder $query) => $query->where('status', $filters['status']))
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
 
@@ -44,12 +45,8 @@ class RepairRequestController extends Controller
         return view('repair_requests.index', [
             'requests' => $requests,
             'filters' => $filters,
-            'statuses' => ['pending', 'approved', 'denied'],
+            'statuses' => [RepairRequest::STATUS_SUBMITTED, RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED],
             'canReview' => $user->canManageRequests(),
-            'reviewUsers' => User::active()
-                ->whereIn('role', [User::ROLE_ADMIN, User::ROLE_IT_WORKER])
-                ->orderBy('full_name')
-                ->get(),
         ]);
     }
 
@@ -80,7 +77,7 @@ class RepairRequestController extends Controller
             ]);
         }
 
-        if (RepairRequest::query()->where('device_id', $device->id)->where('status', 'pending')->exists()) {
+        if (RepairRequest::query()->where('device_id', $device->id)->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
                 'device_id' => ['Sai iericei jau ir gaidoss remonta pieteikums.'],
             ]);
@@ -90,7 +87,7 @@ class RepairRequestController extends Controller
             'device_id' => $device->id,
             'responsible_user_id' => $user->id,
             'description' => $validated['description'],
-            'status' => 'pending',
+            'status' => RepairRequest::STATUS_SUBMITTED,
         ]);
 
         AuditTrail::created($user->id, $repairRequest);
@@ -102,20 +99,19 @@ class RepairRequestController extends Controller
     {
         $manager = $this->requireManager();
 
-        if ($repairRequest->status !== 'pending') {
+        if ($repairRequest->status !== RepairRequest::STATUS_SUBMITTED) {
             return back()->with('error', 'Sis pieteikums jau ir izskatits.');
         }
 
         $validated = $request->validate([
-            'status' => ['required', Rule::in(['approved', 'denied'])],
+            'status' => ['required', Rule::in([RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED])],
             'review_notes' => ['nullable', 'string'],
-            'assigned_to_user_id' => ['nullable', 'exists:users,id'],
             'repair_type' => ['nullable', Rule::in(['internal', 'external'])],
             'priority' => ['nullable', Rule::in(['low', 'medium', 'high', 'critical'])],
         ]);
 
         $repairRequest->loadMissing(['device', 'responsibleUser']);
-        $before = $repairRequest->only(['status', 'reviewed_by_user_id', 'repair_id', 'review_notes']);
+        $before = $repairRequest->only(['status', 'reviewed_by_user_id', 'review_notes']);
 
         $payload = [
             'status' => $validated['status'],
@@ -123,24 +119,37 @@ class RepairRequestController extends Controller
             'review_notes' => $validated['review_notes'] ?: null,
         ];
 
-        if ($validated['status'] === 'approved') {
-            $repair = Repair::create([
-                'device_id' => $repairRequest->device_id,
-                'reported_by_user_id' => $repairRequest->responsible_user_id,
-                'assigned_to_user_id' => $validated['assigned_to_user_id'] ?: $manager->id,
-                'accepted_by_user_id' => $manager->id,
-                'description' => $repairRequest->description,
-                'status' => 'waiting',
-                'device_status_before_repair' => $this->normalizeRepairRestoreStatus($repairRequest->device?->status),
-                'repair_type' => $validated['repair_type'] ?: 'internal',
-                'priority' => $validated['priority'] ?: 'medium',
-            ]);
+        DB::transaction(function () use ($validated, $repairRequest, $manager, &$payload) {
+            if ($validated['status'] === 'approved') {
+                $device = $repairRequest->device()->lockForUpdate()->first();
 
-            $repairRequest->device?->forceFill(['status' => 'repair'])->save();
-            $payload['repair_id'] = $repair->id;
-        }
+                if (! $device || $device->status === Device::STATUS_WRITEOFF) {
+                    throw ValidationException::withMessages([
+                        'status' => ['Pieteikumu nevar apstiprinat, jo ierice vairs nav pieejama remontam.'],
+                    ]);
+                }
 
-        $repairRequest->update($payload);
+                $repair = Repair::create([
+                    'device_id' => $repairRequest->device_id,
+                    'issue_reported_by' => $repairRequest->responsible_user_id,
+                    'accepted_by' => $manager->id,
+                    'description' => $repairRequest->description,
+                    'status' => 'waiting',
+                    'repair_type' => $validated['repair_type'] ?: 'internal',
+                    'priority' => $validated['priority'] ?: 'medium',
+                    'request_id' => $repairRequest->id,
+                ]);
+
+                $device->forceFill(['status' => 'repair'])->save();
+
+                if (array_key_exists('repair_id', $repairRequest->getAttributes())) {
+                    $payload['repair_id'] = $repair->id;
+                }
+            }
+
+            $repairRequest->update($payload);
+        });
+
         $after = $repairRequest->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState($manager->id, $repairRequest, $before, $after);
 
@@ -150,14 +159,9 @@ class RepairRequestController extends Controller
     private function availableDevicesForUser(User $user): Builder
     {
         return Device::query()
-            ->where('assigned_user_id', $user->id)
-            ->whereNotIn('status', ['written_off', 'repair'])
+            ->where('assigned_to_id', $user->id)
+            ->where('status', Device::STATUS_ACTIVE)
             ->with(['type', 'building', 'room'])
             ->orderBy('name');
-    }
-
-    private function normalizeRepairRestoreStatus(?string $status): string
-    {
-        return in_array($status, ['active', 'reserve', 'broken'], true) ? $status : 'active';
     }
 }

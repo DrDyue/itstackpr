@@ -27,26 +27,26 @@ class DashboardController extends Controller
         $repairQuery = Repair::query();
 
         if (! $user->canManageRequests()) {
-            $deviceQuery->where('assigned_user_id', $user->id);
+            $deviceQuery->where('assigned_to_id', $user->id);
             $repairRequestQuery?->where('responsible_user_id', $user->id);
             $writeoffRequestQuery?->where('responsible_user_id', $user->id);
             $transferQuery?->where(function ($query) use ($user) {
                 $query->where('responsible_user_id', $user->id)
-                    ->orWhere('transfer_to_user_id', $user->id);
+                    ->orWhere('transfered_to_id', $user->id);
             });
             $repairQuery->where(function ($query) use ($user) {
-                $query->where('reported_by_user_id', $user->id)
-                    ->orWhereHas('device', fn ($deviceBuilder) => $deviceBuilder->where('assigned_user_id', $user->id));
+                $query->where('issue_reported_by', $user->id)
+                    ->orWhereHas('device', fn ($deviceBuilder) => $deviceBuilder->where('assigned_to_id', $user->id));
             });
         }
 
         $totalDevices = (clone $deviceQuery)->count();
-        $activeDevices = (clone $deviceQuery)->where('status', 'active')->count();
-        $brokenDevices = (clone $deviceQuery)->where('status', 'broken')->count();
-        $inRepairDevices = (clone $deviceQuery)->where('status', 'repair')->count();
+        $activeDevices = (clone $deviceQuery)->where('status', Device::STATUS_ACTIVE)->count();
+        $inRepairDevices = (clone $deviceQuery)->where('status', Device::STATUS_REPAIR)->count();
+        $writtenOffDevices = (clone $deviceQuery)->where('status', Device::STATUS_WRITEOFF)->count();
 
         $activeRepairs = (clone $repairQuery)
-            ->with(['device.building', 'device.room', 'assignee'])
+            ->with(['device.building', 'device.room', 'acceptedBy'])
             ->whereIn('status', ['waiting', 'in-progress'])
             ->orderByRaw("case when status = 'in-progress' then 0 else 1 end")
             ->orderByDesc('id')
@@ -54,7 +54,7 @@ class DashboardController extends Controller
             ->get();
 
         $recentDevices = (clone $deviceQuery)
-            ->with(['room', 'building', 'type', 'assignedUser'])
+            ->with(['room', 'building', 'type', 'assignedTo'])
             ->latest('created_at')
             ->limit(5)
             ->get();
@@ -105,13 +105,19 @@ class DashboardController extends Controller
             'user' => $user,
             'totalDevices' => $totalDevices,
             'activeDevices' => $activeDevices,
-            'brokenDevices' => $brokenDevices,
+            'writtenOffDevices' => $writtenOffDevices,
             'inRepairDevices' => $inRepairDevices,
             'totalRooms' => Room::count(),
             'mappedRooms' => Room::has('devices')->count(),
-            'pendingRepairRequests' => $repairRequestQuery ? (clone $repairRequestQuery)->where('status', 'pending')->count() : 0,
-            'pendingWriteoffRequests' => $writeoffRequestQuery ? (clone $writeoffRequestQuery)->where('status', 'pending')->count() : 0,
-            'pendingTransfers' => $transferQuery ? (clone $transferQuery)->where('status', 'pending')->count() : 0,
+            'activeRepairsCount' => (clone $repairQuery)->whereIn('status', ['waiting', 'in-progress'])->count(),
+            'waitingRepairsCount' => (clone $repairQuery)->where('status', 'waiting')->count(),
+            'inProgressRepairsCount' => (clone $repairQuery)->where('status', 'in-progress')->count(),
+            'completedRepairsThisMonth' => (clone $repairQuery)->where('status', 'completed')->where('end_date', '>=', now()->startOfMonth())->count(),
+            'pendingRepairRequests' => $repairRequestQuery ? (clone $repairRequestQuery)->where('status', RepairRequest::STATUS_SUBMITTED)->count() : 0,
+            'pendingWriteoffRequests' => $writeoffRequestQuery ? (clone $writeoffRequestQuery)->where('status', WriteoffRequest::STATUS_SUBMITTED)->count() : 0,
+            'pendingTransfers' => $transferQuery ? (clone $transferQuery)->where('status', DeviceTransfer::STATUS_SUBMITTED)->count() : 0,
+            'averageRepairCost' => (float) ((clone $repairQuery)->whereNotNull('cost')->avg('cost') ?? 0),
+            'latestInventoryAt' => (clone $deviceQuery)->max('created_at'),
             'buildingTree' => $buildingTree,
             'activeRepairs' => $activeRepairs,
             'recentDevices' => $recentDevices,

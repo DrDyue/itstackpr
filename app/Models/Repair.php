@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Repair extends Model
 {
@@ -12,31 +11,26 @@ class Repair extends Model
 
     protected $fillable = [
         'device_id',
-        'reported_by_user_id',
-        'assigned_to_user_id',
-        'accepted_by_user_id',
         'description',
         'status',
-        'device_status_before_repair',
         'repair_type',
         'priority',
         'start_date',
-        'estimated_completion',
-        'actual_completion',
-        'diagnosis',
-        'resolution_notes',
+        'end_date',
         'cost',
         'vendor_name',
         'vendor_contact',
         'invoice_number',
+        'issue_reported_by',
+        'accepted_by',
+        'request_id',
     ];
 
     protected function casts(): array
     {
         return [
             'start_date' => 'date',
-            'estimated_completion' => 'date',
-            'actual_completion' => 'date',
+            'end_date' => 'date',
             'cost' => 'decimal:2',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
@@ -50,21 +44,54 @@ class Repair extends Model
 
     public function reporter(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'reported_by_user_id');
+        return $this->belongsTo(User::class, 'issue_reported_by');
     }
 
     public function assignee(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'assigned_to_user_id');
+        return $this->belongsTo(User::class, 'accepted_by');
     }
 
     public function acceptedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'accepted_by_user_id');
+        return $this->belongsTo(User::class, 'accepted_by');
     }
 
-    public function request(): HasOne
+    public function request(): BelongsTo
     {
-        return $this->hasOne(RepairRequest::class, 'repair_id');
+        return $this->belongsTo(RepairRequest::class, 'request_id');
+    }
+
+    public function getReportedByUserIdAttribute(): mixed
+    {
+        return $this->attributes['issue_reported_by'] ?? $this->attributes['reported_by_user_id'] ?? null;
+    }
+
+    public function setReportedByUserIdAttribute(mixed $value): void
+    {
+        $this->attributes['issue_reported_by'] = $value;
+        $this->attributes['reported_by_user_id'] = $value;
+    }
+
+    public function getAcceptedByUserIdAttribute(): mixed
+    {
+        return $this->attributes['accepted_by'] ?? $this->attributes['accepted_by_user_id'] ?? null;
+    }
+
+    public function setAcceptedByUserIdAttribute(mixed $value): void
+    {
+        $this->attributes['accepted_by'] = $value;
+        $this->attributes['accepted_by_user_id'] = $value;
+    }
+
+    public function getActualCompletionAttribute(): mixed
+    {
+        return $this->attributes['end_date'] ?? $this->attributes['actual_completion'] ?? null;
+    }
+
+    public function setActualCompletionAttribute(mixed $value): void
+    {
+        $this->attributes['end_date'] = $value;
+        $this->attributes['actual_completion'] = $value;
     }
 }

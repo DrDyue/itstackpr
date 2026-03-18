@@ -16,7 +16,6 @@ class RepairController extends Controller
     private const STATUSES = ['waiting', 'in-progress', 'completed', 'cancelled'];
     private const TYPES = ['internal', 'external'];
     private const PRIORITIES = ['low', 'medium', 'high', 'critical'];
-    private const RESTORABLE_DEVICE_STATUSES = ['active', 'reserve', 'broken'];
 
     public function index(Request $request)
     {
@@ -31,7 +30,7 @@ class RepairController extends Controller
         ];
 
         $repairs = $this->visibleRepairsQuery($user)
-            ->with(['device.building', 'device.room', 'reporter', 'assignee', 'acceptedBy', 'request'])
+            ->with(['device.building', 'device.room', 'reporter', 'acceptedBy', 'request'])
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
 
@@ -79,12 +78,10 @@ class RepairController extends Controller
     {
         $manager = $this->requireManager();
         $validated = $this->validatedData($request);
-        $device = Device::query()->findOrFail($validated['device_id']);
-        $validated['device_status_before_repair'] = $this->normalizeDeviceStatusForRestore($device->status);
-        $validated['accepted_by_user_id'] = $manager->id;
+        $validated['accepted_by'] = $manager->id;
 
         $repair = Repair::create($validated);
-        $repair->load(['device', 'reporter', 'assignee', 'acceptedBy']);
+        $repair->load(['device', 'reporter', 'acceptedBy']);
 
         $this->syncDeviceStatus($repair);
         AuditTrail::created($manager->id, $repair);
@@ -95,7 +92,7 @@ class RepairController extends Controller
     public function edit(Repair $repair)
     {
         $this->requireManager();
-        $repair->load(['device', 'reporter', 'assignee', 'acceptedBy']);
+        $repair->load(['device', 'reporter', 'acceptedBy']);
 
         return view('repairs.edit', array_merge([
             'repair' => $repair,
@@ -108,26 +105,23 @@ class RepairController extends Controller
 
         $before = $repair->only([
             'device_id',
-            'reported_by_user_id',
-            'assigned_to_user_id',
-            'accepted_by_user_id',
+            'issue_reported_by',
+            'accepted_by',
             'description',
             'status',
             'repair_type',
             'priority',
             'start_date',
-            'estimated_completion',
-            'actual_completion',
-            'diagnosis',
-            'resolution_notes',
+            'end_date',
             'cost',
             'vendor_name',
             'vendor_contact',
             'invoice_number',
+            'request_id',
         ]);
 
         $repair->update($this->validatedData($request, $repair));
-        $repair->load(['device', 'reporter', 'assignee', 'acceptedBy']);
+        $repair->load(['device', 'reporter', 'acceptedBy']);
         $this->syncDeviceStatus($repair, $before['status'] ?? null);
 
         $after = $repair->fresh()->only(array_keys($before));
@@ -143,7 +137,7 @@ class RepairController extends Controller
         $previousStatus = $repair->status;
         AuditTrail::deleted(auth()->id(), $repair);
         $repair->delete();
-        $this->restoreDeviceAfterRepairRemoval($repair->device_id, $previousStatus, $repair->device_status_before_repair);
+        $this->restoreDeviceAfterRepairRemoval($repair->device_id, $previousStatus, null);
 
         return redirect()->route('repairs.index')->with('success', 'Remonts dzests');
     }
@@ -154,22 +148,12 @@ class RepairController extends Controller
 
         $validated = $request->validate([
             'target_status' => ['required', Rule::in(self::STATUSES)],
-            'assigned_to_user_id' => ['nullable', 'exists:users,id'],
-            'estimated_completion' => ['nullable', 'date'],
-            'actual_completion' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date'],
             'cost' => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        $before = $repair->only(['status', 'assigned_to_user_id', 'estimated_completion', 'actual_completion', 'cost']);
+        $before = $repair->only(['status', 'end_date', 'cost']);
         $payload = ['status' => $validated['target_status']];
-
-        if (filled($validated['assigned_to_user_id'] ?? null)) {
-            $payload['assigned_to_user_id'] = $validated['assigned_to_user_id'];
-        }
-
-        if (filled($validated['estimated_completion'] ?? null)) {
-            $payload['estimated_completion'] = $validated['estimated_completion'];
-        }
 
         if (array_key_exists('cost', $validated) && $validated['cost'] !== null && $validated['cost'] !== '') {
             $payload['cost'] = $validated['cost'];
@@ -180,9 +164,9 @@ class RepairController extends Controller
         }
 
         if ($validated['target_status'] === 'completed') {
-            $payload['actual_completion'] = $validated['actual_completion'] ?? now()->toDateString();
-        } elseif (array_key_exists('actual_completion', $validated)) {
-            $payload['actual_completion'] = $validated['actual_completion'] ?: null;
+            $payload['end_date'] = $validated['end_date'] ?? now()->toDateString();
+        } elseif (array_key_exists('end_date', $validated)) {
+            $payload['end_date'] = $validated['end_date'] ?: null;
         }
 
         $repair->update($payload);
@@ -209,8 +193,8 @@ class RepairController extends Controller
     {
         return Repair::query()->when(! $user->canManageRequests(), function (Builder $query) use ($user) {
             $query->where(function (Builder $builder) use ($user) {
-                $builder->where('reported_by_user_id', $user->id)
-                    ->orWhereHas('device', fn (Builder $deviceQuery) => $deviceQuery->where('assigned_user_id', $user->id));
+                $builder->where('issue_reported_by', $user->id)
+                    ->orWhereHas('device', fn (Builder $deviceQuery) => $deviceQuery->where('assigned_to_id', $user->id));
             });
         });
     }
@@ -219,8 +203,8 @@ class RepairController extends Controller
     {
         return [
             'devices' => Device::query()
-                ->with(['assignedUser', 'building', 'room', 'type'])
-                ->where('status', '!=', 'written_off')
+                ->with(['assignedTo', 'building', 'room', 'type'])
+                ->where('status', '!=', Device::STATUS_WRITEOFF)
                 ->when($repair?->device_id, fn (Builder $query) => $query->orWhere('id', $repair->device_id))
                 ->orderBy('name')
                 ->get(),
@@ -238,47 +222,41 @@ class RepairController extends Controller
     {
         $validated = $request->validate([
             'device_id' => ['required', 'exists:devices,id'],
-            'reported_by_user_id' => ['nullable', 'exists:users,id'],
-            'assigned_to_user_id' => ['nullable', 'exists:users,id'],
+            'issue_reported_by' => ['nullable', 'exists:users,id'],
             'description' => ['required', 'string'],
             'status' => ['nullable', Rule::in(self::STATUSES)],
             'repair_type' => ['required', Rule::in(self::TYPES)],
             'priority' => ['nullable', Rule::in(self::PRIORITIES)],
             'start_date' => ['nullable', 'date'],
-            'estimated_completion' => ['nullable', 'date'],
-            'actual_completion' => ['nullable', 'date'],
-            'diagnosis' => ['nullable', 'string'],
-            'resolution_notes' => ['nullable', 'string'],
+            'end_date' => ['nullable', 'date'],
             'cost' => ['nullable', 'numeric', 'min:0'],
             'vendor_name' => ['nullable', 'string', 'max:100'],
             'vendor_contact' => ['nullable', 'string', 'max:100'],
             'invoice_number' => ['nullable', 'string', 'max:50'],
+            'request_id' => ['nullable', 'exists:repair_requests,id'],
         ]);
 
         foreach ([
-            'reported_by_user_id',
-            'assigned_to_user_id',
+            'issue_reported_by',
             'status',
             'priority',
             'start_date',
-            'estimated_completion',
-            'actual_completion',
-            'diagnosis',
-            'resolution_notes',
+            'end_date',
             'vendor_name',
             'vendor_contact',
             'invoice_number',
+            'request_id',
         ] as $field) {
             $validated[$field] = $validated[$field] ?: null;
         }
 
         $validated['status'] = $validated['status'] ?? ($repair?->status ?? 'waiting');
         $validated['priority'] = $validated['priority'] ?? ($repair?->priority ?? 'medium');
-        $validated['reported_by_user_id'] = $validated['reported_by_user_id'] ?? $this->user()?->id;
-        $validated['assigned_to_user_id'] = $validated['assigned_to_user_id'] ?? $repair?->assigned_to_user_id;
+        $validated['issue_reported_by'] = $validated['issue_reported_by'] ?? $repair?->issue_reported_by ?? $this->user()?->id;
+        $validated['accepted_by'] = $repair?->accepted_by ?? $this->user()?->id;
 
         $device = Device::query()->find($validated['device_id']);
-        if ($device && $device->status === 'written_off' && (! $repair || (int) $repair->device_id !== (int) $device->id)) {
+        if ($device && $device->status === Device::STATUS_WRITEOFF && (! $repair || (int) $repair->device_id !== (int) $device->id)) {
             throw ValidationException::withMessages([
                 'device_id' => ['So ierici nevar nodot remonta, jo ta ir norakstita.'],
             ]);
@@ -303,27 +281,17 @@ class RepairController extends Controller
         }
 
         if (
-            filled($validated['estimated_completion'])
+            filled($validated['end_date'])
             && filled($validated['start_date'])
-            && strtotime((string) $validated['estimated_completion']) < strtotime((string) $validated['start_date'])
+            && strtotime((string) $validated['end_date']) < strtotime((string) $validated['start_date'])
         ) {
             throw ValidationException::withMessages([
-                'estimated_completion' => ['Planotais beigums nevar but agraks par sakuma datumu.'],
+                'end_date' => ['Beigu datums nevar but agraks par sakuma datumu.'],
             ]);
         }
 
-        if (
-            filled($validated['actual_completion'])
-            && filled($validated['start_date'])
-            && strtotime((string) $validated['actual_completion']) < strtotime((string) $validated['start_date'])
-        ) {
-            throw ValidationException::withMessages([
-                'actual_completion' => ['Faktiskais beigums nevar but agraks par sakuma datumu.'],
-            ]);
-        }
-
-        if ($validated['status'] === 'completed' && ! filled($validated['actual_completion'])) {
-            $validated['actual_completion'] = now()->toDateString();
+        if ($validated['status'] === 'completed' && ! filled($validated['end_date'])) {
+            $validated['end_date'] = now()->toDateString();
         }
 
         return $validated;
@@ -352,10 +320,9 @@ class RepairController extends Controller
         }
 
         if (($previousRepairStatus === 'waiting' || $previousRepairStatus === 'in-progress' || $device->status === 'repair') && ! $hasOtherActiveRepairs) {
-            $targetStatus = $this->normalizeDeviceStatusForRestore($repair->device_status_before_repair);
             $before = ['status' => $device->status];
-            $device->forceFill(['status' => $targetStatus])->save();
-            AuditTrail::updatedFromState(auth()->id(), $device, $before, ['status' => $targetStatus]);
+            $device->forceFill(['status' => Device::STATUS_ACTIVE])->save();
+            AuditTrail::updatedFromState(auth()->id(), $device, $before, ['status' => Device::STATUS_ACTIVE]);
         }
     }
 
@@ -372,15 +339,8 @@ class RepairController extends Controller
         }
 
         if ($previousRepairStatus === 'waiting' || $previousRepairStatus === 'in-progress' || $device->status === 'repair') {
-            $device->forceFill([
-                'status' => $this->normalizeDeviceStatusForRestore($restoreStatus),
-            ])->save();
+            $device->forceFill(['status' => Device::STATUS_ACTIVE])->save();
         }
-    }
-
-    private function normalizeDeviceStatusForRestore(?string $status): string
-    {
-        return in_array($status, self::RESTORABLE_DEVICE_STATUSES, true) ? $status : 'active';
     }
 
     private function statusLabels(): array

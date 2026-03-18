@@ -45,17 +45,8 @@
                     </select>
                 </label>
                 <label class="block">
-                    <span class="crud-label">Pieskirt lietotajam</span>
-                    <select name="assigned_to_user_id" class="crud-control">
-                        <option value="">Bez izmainam</option>
-                        @foreach ($users as $repairUser)
-                            <option value="{{ $repairUser->id }}">{{ $repairUser->full_name }}</option>
-                        @endforeach
-                    </select>
-                </label>
-                <label class="block">
-                    <span class="crud-label">Planotais beigu datums</span>
-                    <input type="date" name="estimated_completion" class="crud-control">
+                    <span class="crud-label">Beigu datums</span>
+                    <input type="date" name="end_date" class="crud-control">
                 </label>
                 <label class="block">
                     <span class="crud-label">Izmaksas</span>

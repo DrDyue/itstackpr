@@ -165,8 +165,6 @@ class AuditTrail
             'RepairRequest' => trim((string) (($model->device?->name ?? 'Ierice') . ' | ' . Str::limit((string) ($model->description ?? 'Remonta pieteikums #' . $model->getKey()), 70))),
             'WriteoffRequest' => trim((string) (($model->device?->name ?? 'Ierice') . ' | ' . Str::limit((string) ($model->reason ?? 'Norakstisanas pieteikums #' . $model->getKey()), 70))),
             'DeviceTransfer' => trim((string) (($model->device?->name ?? 'Ierice') . ' | ' . Str::limit((string) ($model->transfer_reason ?? 'Parsutisanas pieteikums #' . $model->getKey()), 70))),
-            'DeviceSet' => (string) ($model->set_name ?? $model->name ?? ('Komplekts #' . $model->getKey())),
-            'DeviceSetItem' => trim((string) (($model->deviceSet?->set_name ?? 'Komplekts #' . ($model->device_set_id ?? $model->getKey())) . ' | ' . ($model->device?->name ?? 'Ierice #' . ($model->device_id ?? '')))),
             default => self::entityLabel(class_basename($model)) . ' #' . $model->getKey(),
         };
     }
@@ -201,8 +199,6 @@ class AuditTrail
             'repair_request' => 'Remonta pieteikums',
             'writeoff_request' => 'Norakstisanas pieteikums',
             'device_transfer' => 'Ierices parsutisana',
-            'device_set' => 'Komplekts',
-            'device_set_item' => 'Komplekta ieraksts',
             'database_backup' => 'Datubazes kopija',
             'backup_setting' => 'Kopiju iestatijumi',
             default => Str::headline((string) $entityType),
@@ -280,10 +276,6 @@ class AuditTrail
 
         if (preg_match('/^Device moved: (?<label>.+?) -> room (?<room>.+)$/i', $text, $matches)) {
             return 'Ierice parvietota: ' . $matches['label'] . ' -> telpa ' . trim($matches['room']);
-        }
-
-        if (preg_match('/^Device added to set: (?<label>.+?) -> (?<set>.+)$/i', $text, $matches)) {
-            return 'Ierice pievienota komplektam: ' . $matches['label'] . ' -> ' . trim($matches['set']);
         }
 
         if (preg_match('/^(?<entity>.+?) updated: (?<label>.+?) \| details: (?<details>.+)$/i', $text, $matches)) {
@@ -510,22 +502,21 @@ class AuditTrail
             'repair_type' => 'remonta tips',
             'priority' => 'prioritate',
             'start_date' => 'sakuma datums',
-            'estimated_completion' => 'planotais beigums',
-            'actual_completion' => 'faktiskais beigums',
+            'end_date' => 'beigu datums',
             'cost' => 'izmaksas',
             'vendor_name' => 'pakalpojuma sniedzejs',
             'vendor_contact' => 'kontakts',
             'invoice_number' => 'rekina numurs',
-            'reported_by_user_id' => 'pieteicejs',
-            'assigned_to_user_id' => 'pieskirtais lietotajs',
-            'accepted_by_user_id' => 'apstiprinatajs',
+            'issue_reported_by' => 'pieteicejs',
+            'accepted_by' => 'apstiprinatajs',
             'responsible_user_id' => 'atbildigais lietotajs',
             'reviewed_by_user_id' => 'izskatija',
             'repair_id' => 'izveidotais remonts',
-            'transfer_to_user_id' => 'saemejs',
+            'request_id' => 'saiste ar pieteikumu',
+            'transfered_to_id' => 'saemejs',
             'transfer_reason' => 'nodosanas iemesls',
             'review_notes' => 'izskatisanas piezimes',
-            'assigned_user_id' => 'pieskirtais lietotajs',
+            'assigned_to_id' => 'pieskirtais lietotajs',
             'building_id' => 'eka',
             'room_id' => 'telpa',
             'purchase_date' => 'iegades datums',
@@ -538,8 +529,6 @@ class AuditTrail
             'device_image_url' => 'ierices attels',
             'category' => 'kategorija',
             'expected_lifetime_years' => 'paredzamais lietosanas ilgums',
-            'quantity' => 'daudzums',
-            'role' => 'loma',
             default => str_replace('_', ' ', Str::lower($field)),
         };
     }
@@ -550,14 +539,11 @@ class AuditTrail
 
         $map = [
             'active' => 'Aktiva',
-            'reserve' => 'Rezerve',
-            'broken' => 'Bojata',
             'repair' => 'Remonta',
-            'written_off' => 'Norakstita',
-            'kitting' => 'Komplektacija',
-            'pending' => 'Pieteikts',
+            'writeoff' => 'Norakstita',
+            'submitted' => 'Iesniegts',
             'approved' => 'Apstiprinats',
-            'denied' => 'Noraidits',
+            'rejected' => 'Noraidits',
             'waiting' => 'Gaida',
             'in-progress' => 'Procesa',
             'completed' => 'Pabeigts',

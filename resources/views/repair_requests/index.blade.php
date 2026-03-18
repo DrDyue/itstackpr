@@ -3,7 +3,7 @@
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
                 <h1 class="text-3xl font-semibold text-slate-900">Remonta pieteikumi</h1>
-                <p class="mt-2 text-sm text-slate-600">{{ $canReview ? 'Visi lietotāju remonta pieteikumi.' : 'Tavi remonta pieteikumi.' }}</p>
+                <p class="mt-2 text-sm text-slate-600">{{ $canReview ? 'Visi lietotaju remonta pieteikumi.' : 'Tavi remonta pieteikumi.' }}</p>
             </div>
             <a href="{{ route('repair-requests.create') }}" class="crud-btn-primary">Jauns pieteikums</a>
         </div>
@@ -47,25 +47,16 @@
                     </div>
                     <div class="mt-3 text-sm text-slate-600">{{ $request->description }}</div>
                     @if ($request->review_notes)
-                        <div class="mt-3 text-sm text-slate-500">Piezīmes: {{ $request->review_notes }}</div>
+                        <div class="mt-3 text-sm text-slate-500">Piezimes: {{ $request->review_notes }}</div>
                     @endif
-                    @if ($canReview && $request->status === 'pending')
-                        <form method="POST" action="{{ route('repair-requests.review', $request) }}" class="mt-4 grid gap-4 rounded-xl bg-slate-50 p-4 md:grid-cols-5">
+                    @if ($canReview && $request->status === 'submitted')
+                        <form method="POST" action="{{ route('repair-requests.review', $request) }}" class="mt-4 grid gap-4 rounded-xl bg-slate-50 p-4 md:grid-cols-4">
                             @csrf
                             <label class="block">
                                 <span class="crud-label">Lemums</span>
                                 <select name="status" class="crud-control">
                                     <option value="approved">Apstiprinat</option>
-                                    <option value="denied">Noraidit</option>
-                                </select>
-                            </label>
-                            <label class="block">
-                                <span class="crud-label">Pieskirt IT darbiniekam</span>
-                                <select name="assigned_to_user_id" class="crud-control">
-                                    <option value="">Automatiski man</option>
-                                    @foreach ($reviewUsers as $reviewUser)
-                                        <option value="{{ $reviewUser->id }}">{{ $reviewUser->full_name }}</option>
-                                    @endforeach
+                                    <option value="rejected">Noraidit</option>
                                 </select>
                             </label>
                             <label class="block">
@@ -84,18 +75,18 @@
                                     <option value="critical">Kritiska</option>
                                 </select>
                             </label>
-                            <label class="block md:col-span-5">
+                            <label class="block md:col-span-4">
                                 <span class="crud-label">Piezimes</span>
                                 <textarea name="review_notes" rows="3" class="crud-control"></textarea>
                             </label>
-                            <div class="md:col-span-5">
+                            <div class="md:col-span-4">
                                 <button type="submit" class="crud-btn-primary">Saglabat lemumu</button>
                             </div>
                         </form>
                     @endif
                 </div>
             @empty
-                <div class="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500 shadow-sm">Pieteikumu vēl nav.</div>
+                <div class="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500 shadow-sm">Pieteikumu vel nav.</div>
             @endforelse
         </div>
 

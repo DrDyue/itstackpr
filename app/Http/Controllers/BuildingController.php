@@ -12,6 +12,8 @@ class BuildingController extends Controller
 
     public function index()
     {
+        $this->requireManager();
+
         $buildings = Building::orderBy('building_name')->get();
 
         return view('buildings.index', compact('buildings'));
@@ -19,11 +21,15 @@ class BuildingController extends Controller
 
     public function create()
     {
+        $this->requireManager();
+
         return view('buildings.create');
     }
 
     public function store(Request $request)
     {
+        $this->requireManager();
+
         $building = Building::create($this->validatedData($request));
         AuditTrail::created(auth()->id(), $building);
 
@@ -32,11 +38,15 @@ class BuildingController extends Controller
 
     public function edit(Building $building)
     {
+        $this->requireManager();
+
         return view('buildings.edit', compact('building'));
     }
 
     public function update(Request $request, Building $building)
     {
+        $this->requireManager();
+
         $before = $building->only(['building_name', 'address', 'city', 'total_floors', 'notes']);
         $building->update($this->validatedData($request));
         $after = $building->fresh()->only(array_keys($before));
@@ -47,6 +57,8 @@ class BuildingController extends Controller
 
     public function destroy(Building $building)
     {
+        $this->requireManager();
+
         AuditTrail::deleted(auth()->id(), $building);
         $building->delete();
 
@@ -55,6 +67,8 @@ class BuildingController extends Controller
 
     public function show(Building $building)
     {
+        $this->requireManager();
+
         return redirect()->route('buildings.index');
     }
 
