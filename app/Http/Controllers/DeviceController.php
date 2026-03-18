@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Support\AuditTrail;
 use App\Support\DeviceAssetManager;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -27,23 +28,33 @@ class DeviceController extends Controller
             'q' => trim((string) $request->query('q', '')),
             'code' => trim((string) $request->query('code', '')),
             'floor' => trim((string) $request->query('floor', '')),
-            'room' => trim((string) $request->query('room', '')),
             'room_id' => trim((string) $request->query('room_id', '')),
             'type' => trim((string) $request->query('type', '')),
             'status' => trim((string) $request->query('status', '')),
         ];
 
+        $summaryQuery = $this->visibleDevicesQuery($user);
+        $accessibleRooms = $this->accessibleRooms($user);
         $selectedRoom = null;
         if (ctype_digit($filters['room_id'])) {
-            $selectedRoom = Room::query()->with('building')->find((int) $filters['room_id']);
-
-            if ($selectedRoom && $filters['room'] === '') {
-                $filters['room'] = $selectedRoom->room_number . ($selectedRoom->room_name ? ' - ' . $selectedRoom->room_name : '');
-            }
+            $selectedRoom = $accessibleRooms->firstWhere('id', (int) $filters['room_id']);
         }
 
+        if ($selectedRoom) {
+            $filters['floor'] = (string) $selectedRoom->floor_number;
+        }
+
+        $maxFloor = (int) ($accessibleRooms->max('floor_number') ?? 0);
+        $floorOptions = $maxFloor > 0 ? range(1, $maxFloor) : [];
+        $roomOptions = $accessibleRooms
+            ->when(
+                $filters['floor'] !== '' && ctype_digit($filters['floor']),
+                fn (Collection $rooms) => $rooms->filter(fn (Room $room) => (int) $room->floor_number === (int) $filters['floor'])
+            )
+            ->values();
+
         $devices = $this->visibleDevicesQuery($user)
-            ->with(['type', 'building', 'room', 'activeRepair', 'assignedTo'])
+            ->with(['type', 'building', 'room.building', 'activeRepair', 'assignedTo', 'createdBy'])
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
 
@@ -59,15 +70,6 @@ class DeviceController extends Controller
                 $query->whereHas('room', fn (Builder $roomQuery) => $roomQuery->where('floor_number', (int) $filters['floor']));
             })
             ->when($selectedRoom instanceof Room, fn (Builder $query) => $query->where('room_id', $selectedRoom->id))
-            ->when(! ($selectedRoom instanceof Room) && $filters['room'] !== '', function (Builder $query) use ($filters) {
-                $term = $filters['room'];
-
-                $query->whereHas('room', function (Builder $roomQuery) use ($term) {
-                    $roomQuery->where('room_number', 'like', "%{$term}%")
-                        ->orWhere('room_name', 'like', "%{$term}%")
-                        ->orWhere('department', 'like', "%{$term}%");
-                });
-            })
             ->when($filters['type'] !== '' && ctype_digit($filters['type']), fn (Builder $query) => $query->where('device_type_id', (int) $filters['type']))
             ->when($filters['status'] !== '' && in_array($filters['status'], self::STATUSES, true), fn (Builder $query) => $query->where('status', $filters['status']))
             ->orderByDesc('id')
@@ -77,6 +79,14 @@ class DeviceController extends Controller
         return view('devices.index', [
             'devices' => $devices,
             'filters' => $filters,
+            'deviceSummary' => [
+                'total' => (clone $summaryQuery)->count(),
+                'active' => (clone $summaryQuery)->where('status', Device::STATUS_ACTIVE)->count(),
+                'repair' => (clone $summaryQuery)->where('status', Device::STATUS_REPAIR)->count(),
+                'writeoff' => (clone $summaryQuery)->where('status', Device::STATUS_WRITEOFF)->count(),
+            ],
+            'floorOptions' => $floorOptions,
+            'roomOptions' => $roomOptions,
             'selectedRoom' => $selectedRoom,
             'types' => DeviceType::query()->orderBy('type_name')->get(),
             'statuses' => self::STATUSES,
@@ -187,7 +197,7 @@ class DeviceController extends Controller
 
         $result = $this->performDeviceAction($device, $validated);
 
-        return redirect()->route('devices.show', $device)->with($result['level'], $result['message']);
+        return back()->with($result['level'], $result['message']);
     }
 
     public function bulkUpdate(Request $request)
@@ -235,6 +245,20 @@ class DeviceController extends Controller
             ! $user->canManageRequests(),
             fn (Builder $query) => $query->where('assigned_to_id', $user->id)
         );
+    }
+
+    private function accessibleRooms(User $user): Collection
+    {
+        return Room::query()
+            ->with('building')
+            ->whereHas('devices', function (Builder $query) use ($user) {
+                if (! $user->canManageRequests()) {
+                    $query->where('assigned_to_id', $user->id);
+                }
+            })
+            ->orderBy('floor_number')
+            ->orderBy('room_number')
+            ->get();
     }
 
     private function authorizeView(Device $device): void
@@ -422,17 +446,33 @@ class DeviceController extends Controller
             return ['level' => 'error', 'message' => 'Nav izvelets korekts statuss.'];
         }
 
-        if ($status === Device::STATUS_WRITEOFF && filled($device->assigned_to_id)) {
-            return ['level' => 'error', 'message' => 'Norakstitu ierici vispirms atsaisti no personas.'];
+        if ($status === Device::STATUS_REPAIR && $device->status === Device::STATUS_WRITEOFF) {
+            return ['level' => 'error', 'message' => 'Norakstitu ierici nevar nodot remonta.'];
+        }
+
+        if ($status === Device::STATUS_WRITEOFF && ($device->status === Device::STATUS_REPAIR || $device->activeRepair()->exists())) {
+            return ['level' => 'error', 'message' => 'Ierici nevar norakstit, kamer tai ir aktivs remonta process.'];
         }
 
         if ($device->status === $status) {
             return ['level' => 'error', 'message' => 'Statuss jau ir iestatits.'];
         }
 
-        $before = ['status' => $device->status];
-        $device->forceFill(['status' => $status])->save();
-        AuditTrail::updatedFromState(auth()->id(), $device, $before, ['status' => $status]);
+        $before = [
+            'status' => $device->status,
+            'assigned_to_id' => $device->assigned_to_id,
+        ];
+
+        $payload = ['status' => $status];
+        if ($status === Device::STATUS_WRITEOFF) {
+            $payload['assigned_to_id'] = null;
+        }
+
+        $device->forceFill($payload)->save();
+        AuditTrail::updatedFromState(auth()->id(), $device, $before, [
+            'status' => $device->status,
+            'assigned_to_id' => $device->assigned_to_id,
+        ]);
 
         return ['level' => 'success', 'message' => 'Statuss atjauninats.'];
     }

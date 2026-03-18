@@ -2173,6 +2173,38 @@ tbody td {
     @apply flex flex-wrap items-center gap-3;
 }
 
+.inventory-summary-strip {
+    @apply mt-5 flex flex-wrap gap-3;
+}
+
+.inventory-summary-card {
+    @apply min-w-[120px] rounded-2xl border px-4 py-3 shadow-sm;
+}
+
+.inventory-summary-card-slate {
+    @apply border-slate-200 bg-white;
+}
+
+.inventory-summary-card-emerald {
+    @apply border-emerald-200 bg-emerald-50;
+}
+
+.inventory-summary-card-amber {
+    @apply border-amber-200 bg-amber-50;
+}
+
+.inventory-summary-card-rose {
+    @apply border-rose-200 bg-rose-50;
+}
+
+.inventory-summary-label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500;
+}
+
+.inventory-summary-value {
+    @apply mt-2 text-2xl font-semibold text-slate-900;
+}
+
 .dashboard-action-badge {
     @apply inline-flex min-w-7 items-center justify-center rounded-full bg-white/90 px-2 py-0.5 text-xs font-bold text-slate-900 ring-1 ring-black/5;
 }
@@ -2195,6 +2227,50 @@ tbody td {
 
 .toolbar-actions {
     @apply flex flex-wrap items-end gap-3;
+}
+
+.quick-status-filters {
+    @apply flex flex-wrap gap-3;
+}
+
+.quick-status-filter {
+    @apply inline-flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-semibold shadow-sm transition;
+}
+
+.quick-status-filter-active {
+    @apply ring-2 ring-offset-2;
+}
+
+.quick-status-filter-slate {
+    @apply border-slate-200 bg-white text-slate-700 hover:bg-slate-50;
+}
+
+.quick-status-filter-slate.quick-status-filter-active {
+    @apply ring-slate-200;
+}
+
+.quick-status-filter-emerald {
+    @apply border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100;
+}
+
+.quick-status-filter-emerald.quick-status-filter-active {
+    @apply ring-emerald-200;
+}
+
+.quick-status-filter-amber {
+    @apply border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100;
+}
+
+.quick-status-filter-amber.quick-status-filter-active {
+    @apply ring-amber-200;
+}
+
+.quick-status-filter-rose {
+    @apply border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100;
+}
+
+.quick-status-filter-rose.quick-status-filter-active {
+    @apply ring-rose-200;
 }
 
 .filter-summary {
@@ -2336,6 +2412,42 @@ tbody td {
 
 .btn-reject {
     @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 shadow-sm transition hover:bg-rose-100;
+}
+
+.table-action-menu {
+    @apply relative inline-block;
+}
+
+.table-action-summary {
+    @apply inline-flex cursor-pointer list-none items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50;
+}
+
+.table-action-summary::-webkit-details-marker {
+    display: none;
+}
+
+.table-action-list {
+    @apply absolute right-0 z-20 mt-2 w-52 space-y-1 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl;
+}
+
+.table-action-item {
+    @apply flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100;
+}
+
+.table-action-item-amber {
+    @apply text-amber-700 hover:bg-amber-50;
+}
+
+.table-action-button {
+    @apply flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.table-action-button-amber {
+    @apply text-amber-700 hover:bg-amber-50;
+}
+
+.table-action-button-rose {
+    @apply text-rose-700 hover:bg-rose-50;
 }
 
 /* Auth enhancements */

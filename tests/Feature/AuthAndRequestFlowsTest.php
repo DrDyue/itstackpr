@@ -135,6 +135,45 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_manager_can_send_device_to_repair_from_devices_table_action(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-repair-action@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-QUICK-REPAIR');
+
+        $this->actingAs($admin)
+            ->from(route('devices.index'))
+            ->post(route('devices.quick-update', $device), [
+                'action' => 'status',
+                'target_status' => Device::STATUS_REPAIR,
+            ])
+            ->assertRedirect(route('devices.index'));
+
+        $this->assertDatabaseHas('devices', [
+            'id' => $device->id,
+            'status' => Device::STATUS_REPAIR,
+        ]);
+    }
+
+    public function test_manager_can_writeoff_device_from_devices_table_action(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-writeoff-action@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-QUICK-WRITEOFF');
+
+        $this->actingAs($admin)
+            ->from(route('devices.index'))
+            ->post(route('devices.quick-update', $device), [
+                'action' => 'status',
+                'target_status' => Device::STATUS_WRITEOFF,
+            ])
+            ->assertRedirect(route('devices.index'));
+
+        $this->assertDatabaseHas('devices', [
+            'id' => $device->id,
+            'status' => Device::STATUS_WRITEOFF,
+            'assigned_to_id' => null,
+        ]);
+    }
+
     public function test_user_can_submit_repair_request_for_own_device(): void
     {
         $user = $this->createUser(role: User::ROLE_USER, email: 'user1@example.com');

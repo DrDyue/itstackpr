@@ -47,6 +47,7 @@ Route::middleware(['auth', 'manager'])->group(function () {
     Route::resource('buildings', BuildingController::class)->except(['show']);
     Route::resource('rooms', RoomController::class)->except(['show']);
     Route::resource('device-types', DeviceTypeController::class)->except(['show']);
+    Route::post('/devices/{device}/quick-update', [DeviceController::class, 'quickUpdate'])->name('devices.quick-update');
     Route::resource('devices', DeviceController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
     Route::post('/repairs/{repair}/transition', [RepairController::class, 'transition'])->name('repairs.transition');
     Route::resource('repairs', RepairController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
