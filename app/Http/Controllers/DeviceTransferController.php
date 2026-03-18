@@ -9,7 +9,6 @@ use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -30,6 +29,7 @@ class DeviceTransferController extends Controller
                 'transfers' => $this->emptyPaginator(),
                 'filters' => $filters,
                 'statuses' => [DeviceTransfer::STATUS_SUBMITTED, DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED],
+                'statusLabels' => $this->requestStatusLabels(),
                 'isAdmin' => $user->isAdmin(),
                 'featureMessage' => 'Tabula device_transfers sobrid nav pieejama.',
             ]);
@@ -62,6 +62,7 @@ class DeviceTransferController extends Controller
             'transfers' => $transfers,
             'filters' => $filters,
             'statuses' => [DeviceTransfer::STATUS_SUBMITTED, DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED],
+            'statusLabels' => $this->requestStatusLabels(),
             'isAdmin' => $user->isAdmin(),
         ]);
     }
@@ -76,12 +77,14 @@ class DeviceTransferController extends Controller
                 'devices' => collect(),
                 'users' => collect(),
                 'featureMessage' => 'Tabula device_transfers sobrid nav pieejama.',
+                'isAdmin' => $user->isAdmin(),
             ]);
         }
 
         return view('device_transfers.create', [
             'devices' => $this->availableDevicesForUser($user)->get(),
             'users' => User::active()->whereKeyNot($user->id)->orderBy('full_name')->get(),
+            'isAdmin' => $user->isAdmin(),
         ]);
     }
 
@@ -94,16 +97,35 @@ class DeviceTransferController extends Controller
             return redirect()->route('device-transfers.index')->with('error', 'Iericu parsutisanas pieteikumus sobrid nevar saglabat, jo tabula device_transfers nav pieejama.');
         }
 
-        $validated = $request->validate([
+        $validated = $this->validateInput($request, [
             'device_id' => ['required', 'exists:devices,id'],
             'transfered_to_id' => ['required', 'exists:users,id', Rule::notIn([$user->id])],
             'transfer_reason' => ['required', 'string'],
+        ], [
+            'device_id.required' => 'Izvelies ierici, kuru velies nodot.',
+            'transfered_to_id.required' => 'Izvelies sanemeju.',
+            'transfer_reason.required' => 'Apraksti parsutisanas iemeslu.',
         ]);
 
         $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
         if (! $device) {
             throw ValidationException::withMessages([
-                'device_id' => ['Vari pieteikt nodosanu tikai savai piesaistitai iericei.'],
+                'device_id' => [$user->isAdmin()
+                    ? 'Admins var pieteikt parsutisanu tikai aktivai un pieskirtai iericei.'
+                    : 'Vari pieteikt nodosanu tikai savai piesaistitai iericei.'],
+            ]);
+        }
+
+        $ownerId = $this->transferOwnerId($user, $device);
+        if (! $ownerId) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Izveletajai iericei nav pieskirta atbildiga persona.'],
+            ]);
+        }
+
+        if ((int) $validated['transfered_to_id'] === (int) $ownerId) {
+            throw ValidationException::withMessages([
+                'transfered_to_id' => ['Sanemejs nevar but tas pats lietotajs, kam ierice jau ir pieskirta.'],
             ]);
         }
 
@@ -115,7 +137,7 @@ class DeviceTransferController extends Controller
 
         $transfer = DeviceTransfer::create([
             'device_id' => $device->id,
-            'responsible_user_id' => $user->id,
+            'responsible_user_id' => $ownerId,
             'transfered_to_id' => $validated['transfered_to_id'],
             'transfer_reason' => $validated['transfer_reason'],
             'status' => DeviceTransfer::STATUS_SUBMITTED,
@@ -142,9 +164,11 @@ class DeviceTransferController extends Controller
             return back()->with('error', 'Sis pieteikums jau ir izskatits.');
         }
 
-        $validated = $request->validate([
+        $validated = $this->validateInput($request, [
             'status' => ['required', Rule::in([DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED])],
             'review_notes' => ['nullable', 'string'],
+        ], [
+            'status.required' => 'Izvelies lemumu parsutisanas pieteikumam.',
         ]);
 
         $before = $deviceTransfer->only(['status', 'reviewed_by_user_id', 'review_notes']);
@@ -182,9 +206,19 @@ class DeviceTransferController extends Controller
     private function availableDevicesForUser(User $user): Builder
     {
         return Device::query()
-            ->where('assigned_to_id', $user->id)
+            ->when($user->isAdmin(), fn (Builder $query) => $query->whereNotNull('assigned_to_id'))
+            ->when(! $user->isAdmin(), fn (Builder $query) => $query->where('assigned_to_id', $user->id))
             ->where('status', Device::STATUS_ACTIVE)
-            ->with(['type', 'building', 'room'])
+            ->with(['type', 'building', 'room', 'assignedTo'])
             ->orderBy('name');
+    }
+
+    private function transferOwnerId(User $actor, Device $device): ?int
+    {
+        if ($actor->isAdmin()) {
+            return $device->assigned_to_id ? (int) $device->assigned_to_id : null;
+        }
+
+        return $actor->id;
     }
 }

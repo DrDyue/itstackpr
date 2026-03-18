@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Device;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -11,6 +12,8 @@ class DeviceAssetController extends Controller
 {
     public function show(string $path)
     {
+        abort_unless($this->canViewStoredAsset($path), 404);
+
         $disk = Storage::disk((string) config('devices.asset_disk', 'public'));
 
         abort_unless($disk->exists($path), 404);
@@ -23,6 +26,7 @@ class DeviceAssetController extends Controller
         $url = (string) $request->query('url', '');
 
         abort_unless($this->isAllowedRemoteUrl($url), 404);
+        abort_unless($this->canViewRemoteAsset($url), 404);
 
         $response = Http::timeout(12)
             ->retry(1, 250)
@@ -72,5 +76,45 @@ class DeviceAssetController extends Controller
         }
 
         return true;
+    }
+
+    private function canViewStoredAsset(string $path): bool
+    {
+        $user = $this->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        $device = $this->findDeviceByAssetPath($path);
+
+        return $device !== null && $user->canViewDevice($device);
+    }
+
+    private function canViewRemoteAsset(string $url): bool
+    {
+        $user = $this->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        $device = Device::query()
+            ->where('device_image_url', $url)
+            ->first();
+
+        return $device !== null && $user->canViewDevice($device);
+    }
+
+    private function findDeviceByAssetPath(string $path): ?Device
+    {
+        $basename = strtolower(basename($path));
+
+        return Device::query()
+            ->where(function ($query) use ($path, $basename) {
+                $query->where('device_image_url', $path)
+                    ->orWhereRaw('LOWER(device_image_url) LIKE ?', ['%/' . $basename]);
+            })
+            ->first();
     }
 }

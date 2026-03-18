@@ -18,11 +18,6 @@ class DeviceAssetManager
         return $this->storeImage($file, (string) config('devices.device_image_dir', 'd'), $previousPath, true);
     }
 
-    public function storeWarrantyImage(UploadedFile $file, ?string $previousPath = null): string
-    {
-        return $this->storeImage($file, (string) config('devices.warranty_image_dir', 'w'), $previousPath, true);
-    }
-
     public function storeDeviceImageContents(string $contents, ?string $extension = null, ?string $previousPath = null): string
     {
         return $this->storeImageContents(

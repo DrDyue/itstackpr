@@ -83,7 +83,6 @@ class RuntimeSchemaBootstrapper
                 $table->string('type_name', 30)->nullable();
                 $table->string('category', 50)->nullable();
                 $table->text('description')->nullable();
-                $table->integer('expected_lifetime_years')->nullable();
                 $table->timestamp('created_at')->nullable();
             });
         }
@@ -91,7 +90,6 @@ class RuntimeSchemaBootstrapper
         $this->addColumnIfMissing('device_types', 'type_name', fn (Blueprint $table) => $table->string('type_name', 30)->nullable());
         $this->addColumnIfMissing('device_types', 'category', fn (Blueprint $table) => $table->string('category', 50)->nullable());
         $this->addColumnIfMissing('device_types', 'description', fn (Blueprint $table) => $table->text('description')->nullable());
-        $this->addColumnIfMissing('device_types', 'expected_lifetime_years', fn (Blueprint $table) => $table->integer('expected_lifetime_years')->nullable());
         $this->addColumnIfMissing('device_types', 'created_at', fn (Blueprint $table) => $table->timestamp('created_at')->nullable());
     }
 
@@ -111,7 +109,6 @@ class RuntimeSchemaBootstrapper
                 $table->date('purchase_date')->nullable();
                 $table->decimal('purchase_price', 10, 2)->nullable();
                 $table->date('warranty_until')->nullable();
-                $table->string('warranty_photo_name', 100)->nullable();
                 $table->string('serial_number', 100)->nullable();
                 $table->string('manufacturer', 100)->nullable();
                 $table->text('notes')->nullable();
@@ -133,7 +130,6 @@ class RuntimeSchemaBootstrapper
         $this->addColumnIfMissing('devices', 'purchase_date', fn (Blueprint $table) => $table->date('purchase_date')->nullable());
         $this->addColumnIfMissing('devices', 'purchase_price', fn (Blueprint $table) => $table->decimal('purchase_price', 10, 2)->nullable());
         $this->addColumnIfMissing('devices', 'warranty_until', fn (Blueprint $table) => $table->date('warranty_until')->nullable());
-        $this->addColumnIfMissing('devices', 'warranty_photo_name', fn (Blueprint $table) => $table->string('warranty_photo_name', 100)->nullable());
         $this->addColumnIfMissing('devices', 'serial_number', fn (Blueprint $table) => $table->string('serial_number', 100)->nullable());
         $this->addColumnIfMissing('devices', 'manufacturer', fn (Blueprint $table) => $table->string('manufacturer', 100)->nullable());
         $this->addColumnIfMissing('devices', 'notes', fn (Blueprint $table) => $table->text('notes')->nullable());

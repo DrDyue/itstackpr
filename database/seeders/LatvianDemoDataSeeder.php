@@ -126,12 +126,12 @@ class LatvianDemoDataSeeder extends Seeder
             $roomIds = DB::table('rooms')->pluck('id', 'room_number')->all();
 
             $deviceTypes = [
-                ['type_name' => 'Klepjdators', 'category' => 'Datori', 'description' => 'Parnesajami datori', 'expected_lifetime_years' => 4],
-                ['type_name' => 'Stacionarais dators', 'category' => 'Datori', 'description' => 'Darba stacijas', 'expected_lifetime_years' => 5],
-                ['type_name' => 'Monitors', 'category' => 'Periferija', 'description' => 'Attela monitori', 'expected_lifetime_years' => 6],
-                ['type_name' => 'Printeris', 'category' => 'Periferija', 'description' => 'Drukas iekartas', 'expected_lifetime_years' => 5],
-                ['type_name' => 'Komutators', 'category' => 'Tikls', 'description' => 'Tikla komutatori', 'expected_lifetime_years' => 7],
-                ['type_name' => 'UPS', 'category' => 'Elektroapgade', 'description' => 'Barosanas rezerve', 'expected_lifetime_years' => 6],
+                ['type_name' => 'Klepjdators', 'category' => 'Datori', 'description' => 'Parnesajami datori'],
+                ['type_name' => 'Stacionarais dators', 'category' => 'Datori', 'description' => 'Darba stacijas'],
+                ['type_name' => 'Monitors', 'category' => 'Periferija', 'description' => 'Attela monitori'],
+                ['type_name' => 'Printeris', 'category' => 'Periferija', 'description' => 'Drukas iekartas'],
+                ['type_name' => 'Komutators', 'category' => 'Tikls', 'description' => 'Tikla komutatori'],
+                ['type_name' => 'UPS', 'category' => 'Elektroapgade', 'description' => 'Barosanas rezerve'],
             ];
 
             DB::table('device_types')->insert(array_map(
@@ -172,7 +172,6 @@ class LatvianDemoDataSeeder extends Seeder
                     'purchase_date' => now()->subDays(rand(180, 1600))->toDateString(),
                     'purchase_price' => rand(180, 2200) + 0.99,
                     'warranty_until' => now()->addDays(rand(30, 720))->toDateString(),
-                    'warranty_photo_name' => null,
                     'serial_number' => 'SN-' . $device['code'],
                     'manufacturer' => str_contains($device['model'], 'Dell')
                         ? 'Dell'

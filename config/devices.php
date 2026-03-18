@@ -3,7 +3,6 @@
 return [
     'asset_disk' => env('DEVICE_ASSET_DISK', 'public'),
     'device_image_dir' => 'devices/images',
-    'warranty_image_dir' => 'devices/warranty',
     'thumbnail_dir' => 'devices/thumbs',
     'max_dimension' => 1800,
     'thumbnail_dimension' => 480,

@@ -89,7 +89,7 @@
                             <div class="surface-card-muted">
                                 <div class="flex flex-wrap items-center justify-between gap-2">
                                     <div class="font-semibold text-slate-900">{{ $repair->device?->name ?? 'Ierice' }}</div>
-                                    <span class="status-pill status-pill-warning">{{ $statusLabels[$repair->status] ?? $repair->status }}</span>
+                                    <x-status-pill context="repair" :value="$repair->status" :label="$statusLabels[$repair->status] ?? null" />
                                 </div>
                                 <div class="mt-2 text-sm text-slate-600">{{ $repair->description }}</div>
                                 <div class="mt-2 text-sm text-slate-500">
@@ -125,7 +125,7 @@
                                         <td class="px-3 py-2">
                                             <a href="{{ route('devices.show', $device) }}" class="font-medium text-slate-900 hover:text-blue-700">{{ $device->name }}</a>
                                         </td>
-                                        <td class="px-3 py-2">{{ $device->status }}</td>
+                                        <td class="px-3 py-2"><x-status-pill context="device" :value="$device->status" /></td>
                                         <td class="px-3 py-2">{{ $device->assignedTo?->full_name ?: '-' }}</td>
                                     </tr>
                                 @empty

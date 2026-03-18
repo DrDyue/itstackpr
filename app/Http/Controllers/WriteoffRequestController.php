@@ -9,7 +9,6 @@ use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -30,6 +29,7 @@ class WriteoffRequestController extends Controller
                 'requests' => $this->emptyPaginator(),
                 'filters' => $filters,
                 'statuses' => [WriteoffRequest::STATUS_SUBMITTED, WriteoffRequest::STATUS_APPROVED, WriteoffRequest::STATUS_REJECTED],
+                'statusLabels' => $this->requestStatusLabels(),
                 'canReview' => $user->canManageRequests(),
                 'featureMessage' => 'Tabula writeoff_requests sobrid nav pieejama.',
             ]);
@@ -55,6 +55,7 @@ class WriteoffRequestController extends Controller
             'requests' => $requests,
             'filters' => $filters,
             'statuses' => [WriteoffRequest::STATUS_SUBMITTED, WriteoffRequest::STATUS_APPROVED, WriteoffRequest::STATUS_REJECTED],
+            'statusLabels' => $this->requestStatusLabels(),
             'canReview' => $user->canManageRequests(),
         ]);
     }
@@ -85,9 +86,12 @@ class WriteoffRequestController extends Controller
             return redirect()->route('writeoff-requests.index')->with('error', 'Norakstisanas pieteikumus sobrid nevar saglabat, jo tabula writeoff_requests nav pieejama.');
         }
 
-        $validated = $request->validate([
+        $validated = $this->validateInput($request, [
             'device_id' => ['required', 'exists:devices,id'],
             'reason' => ['required', 'string'],
+        ], [
+            'device_id.required' => 'Izvelies ierici, kuru velies norakstit.',
+            'reason.required' => 'Apraksti norakstisanas iemeslu.',
         ]);
 
         $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
@@ -127,9 +131,11 @@ class WriteoffRequestController extends Controller
             return back()->with('error', 'Sis pieteikums jau ir izskatits.');
         }
 
-        $validated = $request->validate([
+        $validated = $this->validateInput($request, [
             'status' => ['required', Rule::in([WriteoffRequest::STATUS_APPROVED, WriteoffRequest::STATUS_REJECTED])],
             'review_notes' => ['nullable', 'string'],
+        ], [
+            'status.required' => 'Izvelies lemumu norakstisanas pieteikumam.',
         ]);
 
         $before = $writeoffRequest->only(['status', 'reviewed_by_user_id', 'review_notes']);

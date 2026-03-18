@@ -82,18 +82,10 @@
         <span class="crud-label">Ierices attels</span>
         <input type="file" name="device_image" class="crud-control">
     </label>
-    <label class="block">
-        <span class="crud-label">Garantijas attels</span>
-        <input type="file" name="warranty_image" class="crud-control">
-    </label>
     @if ($current)
         <label class="inline-flex items-center gap-3">
             <input type="checkbox" name="remove_device_image" value="1" class="rounded border-gray-300 text-blue-600">
-            <span class="text-sm text-slate-700">Noņemt ierīces attēlu</span>
-        </label>
-        <label class="inline-flex items-center gap-3">
-            <input type="checkbox" name="remove_warranty_image" value="1" class="rounded border-gray-300 text-blue-600">
-            <span class="text-sm text-slate-700">Noņemt garantijas attēlu</span>
+            <span class="text-sm text-slate-700">Nonemt ierices attelu</span>
         </label>
     @endif
     <label class="block md:col-span-2">

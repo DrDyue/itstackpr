@@ -68,7 +68,6 @@ class DeviceTypeController extends Controller
             'type_name' => ['required', 'string', 'max:30', 'unique:device_types,type_name'],
             'category' => ['required', 'string', 'max:50'],
             'description' => ['nullable', 'string'],
-            'expected_lifetime_years' => ['nullable', 'integer', 'min:0', 'max:100'],
         ]);
 
         $deviceType = DeviceType::create($data);
@@ -92,10 +91,9 @@ class DeviceTypeController extends Controller
             'type_name' => ['required', 'string', 'max:30', 'unique:device_types,type_name,' . $deviceType->id],
             'category' => ['required', 'string', 'max:50'],
             'description' => ['nullable', 'string'],
-            'expected_lifetime_years' => ['nullable', 'integer', 'min:0', 'max:100'],
         ]);
 
-        $before = $deviceType->only(['type_name', 'category', 'description', 'expected_lifetime_years']);
+        $before = $deviceType->only(['type_name', 'category', 'description']);
         $deviceType->update($data);
         $after = $deviceType->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState(auth()->id(), $deviceType, $before, $after);

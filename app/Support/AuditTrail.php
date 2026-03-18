@@ -522,13 +522,11 @@ class AuditTrail
             'purchase_date' => 'iegades datums',
             'purchase_price' => 'iegades cena',
             'warranty_until' => 'garantija lidz',
-            'warranty_photo_name' => 'garantijas foto',
             'serial_number' => 'serijas numurs',
             'manufacturer' => 'razotajs',
             'notes' => 'piezimes',
             'device_image_url' => 'ierices attels',
             'category' => 'kategorija',
-            'expected_lifetime_years' => 'paredzamais lietosanas ilgums',
             default => str_replace('_', ' ', Str::lower($field)),
         };
     }

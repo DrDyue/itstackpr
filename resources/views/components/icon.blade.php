@@ -189,6 +189,12 @@
         </svg>
         @break
 
+    @case('exclamation-triangle')
+        <svg xmlns="http://www.w3.org/2000/svg" {{ $attributes->class($size) }} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12v-.008Zm8.625 2.228L13.81 4.26a2.062 2.062 0 0 0-3.62 0L3.375 18.732A2.062 2.062 0 0 0 5.186 21.75h13.628a2.062 2.062 0 0 0 1.811-3.018Z" />
+        </svg>
+        @break
+
     @case('stats')
         <svg xmlns="http://www.w3.org/2000/svg" {{ $attributes->class($size) }} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v18m16.5-9-4.5-4.5-4.5 4.5-3-3L3.75 12" />

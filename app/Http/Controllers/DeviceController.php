@@ -87,7 +87,6 @@ class DeviceController extends Controller
 
         $this->syncUploads($request, $device);
         $this->removeDeviceImage($request, $device);
-        $this->removeWarrantyImage($request, $device);
 
         AuditTrail::created($user->id, $device);
 
@@ -113,15 +112,17 @@ class DeviceController extends Controller
             'assignedTo',
             'repairs.assignee',
             'repairRequests.responsibleUser',
+            'repairRequests.reviewedBy',
             'writeoffRequests.responsibleUser',
+            'writeoffRequests.reviewedBy',
             'transfers.responsibleUser',
             'transfers.transferTo',
+            'transfers.reviewedBy',
         ]);
 
         return view('devices.show', [
             'device' => $device,
             'deviceImageUrl' => $device->deviceImageUrl(),
-            'warrantyImageUrl' => $device->warrantyImageUrl(),
             'statusLabels' => $this->statusLabels(),
             'canManageDevices' => $this->user()?->canManageRequests() ?? false,
         ]);
@@ -136,7 +137,6 @@ class DeviceController extends Controller
         $device->update($this->validatedData($request, $device));
         $this->syncUploads($request, $device);
         $this->removeDeviceImage($request, $device);
-        $this->removeWarrantyImage($request, $device);
 
         $after = $device->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState(auth()->id(), $device, $before, $after);
@@ -159,10 +159,14 @@ class DeviceController extends Controller
     {
         $this->requireManager();
 
-        $validated = $request->validate([
+        $validated = $this->validateInput($request, [
             'action' => ['required', Rule::in(['status', 'room'])],
-            'target_status' => ['nullable', Rule::in(self::STATUSES)],
-            'target_room_id' => ['nullable', 'exists:rooms,id'],
+            'target_status' => [Rule::requiredIf(fn () => $request->input('action') === 'status'), Rule::in(self::STATUSES)],
+            'target_room_id' => [Rule::requiredIf(fn () => $request->input('action') === 'room'), 'exists:rooms,id'],
+        ], [
+            'action.required' => 'Izvelies darbibu, ko veikt ar ierici.',
+            'target_status.required' => 'Izvelies jauno ierices statusu.',
+            'target_room_id.required' => 'Izvelies telpu, uz kuru parvietot ierici.',
         ]);
 
         $result = $this->performDeviceAction($device, $validated);
@@ -174,12 +178,17 @@ class DeviceController extends Controller
     {
         $this->requireManager();
 
-        $validated = $request->validate([
+        $validated = $this->validateInput($request, [
             'device_ids' => ['required', 'array', 'min:1'],
             'device_ids.*' => ['integer', 'exists:devices,id'],
             'action' => ['required', Rule::in(['status', 'room'])],
-            'target_status' => ['nullable', Rule::in(self::STATUSES)],
-            'target_room_id' => ['nullable', 'exists:rooms,id'],
+            'target_status' => [Rule::requiredIf(fn () => $request->input('action') === 'status'), Rule::in(self::STATUSES)],
+            'target_room_id' => [Rule::requiredIf(fn () => $request->input('action') === 'room'), 'exists:rooms,id'],
+        ], [
+            'device_ids.required' => 'Izvelies vismaz vienu ierici.',
+            'device_ids.min' => 'Izvelies vismaz vienu ierici.',
+            'target_status.required' => 'Masveida statusa mainai izvelies jauno statusu.',
+            'target_room_id.required' => 'Masveida parvietosanai izvelies telpu.',
         ]);
 
         $devices = Device::query()->whereIn('id', $validated['device_ids'])->get();
@@ -216,12 +225,7 @@ class DeviceController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
-
-        if ($user->canManageRequests()) {
-            return;
-        }
-
-        abort_unless((int) $device->assigned_to_id === (int) $user->id, 403);
+        abort_unless($user->canViewDevice($device), 403);
     }
 
     private function formData(): array
@@ -238,7 +242,8 @@ class DeviceController extends Controller
 
     private function validatedData(Request $request, ?Device $device = null): array
     {
-        $data = $request->validate(
+        $data = $this->validateInput(
+            $request,
             [
                 'code' => ['required', 'string', 'max:20', Rule::unique('devices', 'code')->ignore($device?->id)],
                 'name' => ['required', 'string', 'max:200'],
@@ -255,7 +260,14 @@ class DeviceController extends Controller
                 'manufacturer' => ['nullable', 'string', 'max:100'],
                 'notes' => ['nullable', 'string'],
                 'device_image' => ['nullable', 'image', 'max:' . (int) config('devices.max_upload_kb', 5120)],
-                'warranty_image' => ['nullable', 'image', 'max:' . (int) config('devices.max_upload_kb', 5120)],
+            ],
+            [
+                'code.required' => 'Noradi ierices kodu.',
+                'name.required' => 'Noradi ierices nosaukumu.',
+                'device_type_id.required' => 'Izvelies ierices tipu.',
+                'model.required' => 'Noradi ierices modeli.',
+                'status.required' => 'Izvelies ierices statusu.',
+                'purchase_price.min' => 'Iegades cenai jabut 0 vai lielakai.',
             ]
         );
 
@@ -295,9 +307,8 @@ class DeviceController extends Controller
             ]);
         }
 
-        unset($data['device_image'], $data['warranty_image']);
+        unset($data['device_image']);
 
-        $data['warranty_photo_name'] = $device?->warranty_photo_name;
         $data['device_image_url'] = $device?->device_image_url;
 
         return $data;
@@ -317,7 +328,6 @@ class DeviceController extends Controller
             'purchase_date',
             'purchase_price',
             'warranty_until',
-            'warranty_photo_name',
             'serial_number',
             'manufacturer',
             'notes',
@@ -334,13 +344,6 @@ class DeviceController extends Controller
             $updates['device_image_url'] = $assetManager->storeDeviceImage(
                 $request->file('device_image'),
                 $device->device_image_url
-            );
-        }
-
-        if ($request->hasFile('warranty_image')) {
-            $updates['warranty_photo_name'] = $assetManager->storeWarrantyImage(
-                $request->file('warranty_image'),
-                $device->warranty_photo_name
             );
         }
 
@@ -365,29 +368,11 @@ class DeviceController extends Controller
         $device->forceFill(['device_image_url' => null])->save();
     }
 
-    private function removeWarrantyImage(Request $request, Device $device): void
-    {
-        if ($request->hasFile('warranty_image')) {
-            return;
-        }
-
-        if (! $request->boolean('remove_warranty_image') || ! filled($device->warranty_photo_name)) {
-            return;
-        }
-
-        $assetManager = app(DeviceAssetManager::class);
-        $assetManager->delete($device->warranty_photo_name);
-        $assetManager->delete($assetManager->thumbnailPath($device->warranty_photo_name));
-        $device->forceFill(['warranty_photo_name' => null])->save();
-    }
-
     private function deleteDeviceAssets(Device $device): void
     {
         $assetManager = app(DeviceAssetManager::class);
         $assetManager->delete($device->device_image_url);
         $assetManager->delete($assetManager->thumbnailPath($device->device_image_url));
-        $assetManager->delete($device->warranty_photo_name);
-        $assetManager->delete($assetManager->thumbnailPath($device->warranty_photo_name));
     }
 
     private function statusLabel(string $status): string

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Device;
 use App\Models\DeviceTransfer;
+use App\Models\AuditLog;
 use App\Models\RepairRequest;
 use App\Models\User;
 use App\Models\WriteoffRequest;
@@ -11,6 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AuthAndRequestFlowsTest extends TestCase
@@ -70,6 +72,38 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->actingAs($user)
             ->get(route('users.index'))
             ->assertForbidden();
+    }
+
+    public function test_regular_user_cannot_open_manager_routes(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'manager-blocked@example.com');
+
+        foreach ([
+            route('buildings.index'),
+            route('rooms.index'),
+            route('device-types.index'),
+            route('devices.create'),
+            route('repairs.create'),
+        ] as $url) {
+            $this->actingAs($user)
+                ->get($url)
+                ->assertForbidden();
+        }
+    }
+
+    public function test_regular_user_cannot_open_admin_only_routes(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'admin-blocked@example.com');
+
+        foreach ([
+            route('register'),
+            route('audit-log.index'),
+            route('users.create'),
+        ] as $url) {
+            $this->actingAs($user)
+                ->get($url)
+                ->assertForbidden();
+        }
     }
 
     public function test_user_can_submit_repair_request_for_own_device(): void
@@ -191,6 +225,107 @@ class AuthAndRequestFlowsTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_create_transfer_request_for_any_active_assigned_device(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'admin-transfer-create@example.com');
+        $sender = $this->createUser(role: User::ROLE_USER, email: 'transfer-owner@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'transfer-recipient@example.com');
+        $device = $this->createDevice($sender->id, Device::STATUS_ACTIVE, 'DEV-ADMIN-TRANSFER');
+
+        $response = $this->actingAs($admin)->post(route('device-transfers.store'), [
+            'device_id' => $device->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Admins sakarto ierices parsutisanu.',
+        ]);
+
+        $response->assertRedirect(route('device-transfers.index'));
+        $this->assertDatabaseHas('device_transfers', [
+            'device_id' => $device->id,
+            'responsible_user_id' => $sender->id,
+            'transfered_to_id' => $recipient->id,
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+        ]);
+    }
+
+    public function test_admin_cannot_review_transfer_if_admin_is_not_recipient(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'admin-transfer-review@example.com');
+        $sender = $this->createUser(role: User::ROLE_USER, email: 'transfer-sender@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'transfer-target@example.com');
+        $device = $this->createDevice($sender->id, Device::STATUS_ACTIVE, 'DEV-005');
+
+        $transferId = DB::table('device_transfers')->insertGetId([
+            'device_id' => $device->id,
+            'responsible_user_id' => $sender->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Parsutit citam lietotajam.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('device-transfers.review', $transferId), [
+                'status' => DeviceTransfer::STATUS_APPROVED,
+                'review_notes' => 'Admins nevar apstiprinat svesu parsutisanu.',
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_admin_can_see_full_request_history_on_all_request_pages(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'admin-history@example.com');
+        $user = $this->createUser(role: User::ROLE_USER, email: 'history-user@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'history-recipient@example.com');
+
+        $repairDevice = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-006');
+        $writeoffDevice = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-007');
+        $transferDevice = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-008');
+
+        DB::table('repair_requests')->insert([
+            'device_id' => $repairDevice->id,
+            'responsible_user_id' => $user->id,
+            'description' => 'Remonta vesture adminam.',
+            'status' => RepairRequest::STATUS_SUBMITTED,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('writeoff_requests')->insert([
+            'device_id' => $writeoffDevice->id,
+            'responsible_user_id' => $user->id,
+            'reason' => 'Norakstisanas vesture adminam.',
+            'status' => WriteoffRequest::STATUS_SUBMITTED,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('device_transfers')->insert([
+            'device_id' => $transferDevice->id,
+            'responsible_user_id' => $user->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Parsutisanas vesture adminam.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('repair-requests.index'))
+            ->assertOk()
+            ->assertSee('Remonta vesture adminam.');
+
+        $this->actingAs($admin)
+            ->get(route('writeoff-requests.index'))
+            ->assertOk()
+            ->assertSee('Norakstisanas vesture adminam.');
+
+        $this->actingAs($admin)
+            ->get(route('device-transfers.index'))
+            ->assertOk()
+            ->assertSee('Parsutisanas vesture adminam.');
+    }
+
     public function test_missing_writeoff_requests_table_is_bootstrapped_on_demand(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'admin-writeoff@example.com');
@@ -241,6 +376,78 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertOk();
 
         $this->assertTrue(Schema::hasTable('audit_log'));
+    }
+
+    public function test_regular_user_cannot_view_foreign_device_asset(): void
+    {
+        Storage::fake('public');
+
+        $owner = $this->createUser(role: User::ROLE_USER, email: 'asset-owner@example.com');
+        $intruder = $this->createUser(role: User::ROLE_USER, email: 'asset-intruder@example.com');
+        $device = $this->createDevice($owner->id, Device::STATUS_ACTIVE, 'DEV-ASSET');
+        $path = 'devices/images/foreign-device-image.jpg';
+
+        Storage::disk('public')->put($path, 'fake-image-contents');
+        $device->update(['device_image_url' => $path]);
+
+        $this->actingAs($intruder)
+            ->get(route('device-assets.show', ['path' => $path]))
+            ->assertNotFound();
+
+        $this->actingAs($owner)
+            ->get(route('device-assets.show', ['path' => $path]))
+            ->assertOk();
+    }
+
+    public function test_regular_user_cannot_preview_remote_asset_for_foreign_device(): void
+    {
+        $owner = $this->createUser(role: User::ROLE_USER, email: 'remote-owner@example.com');
+        $intruder = $this->createUser(role: User::ROLE_USER, email: 'remote-intruder@example.com');
+        $device = $this->createDevice($owner->id, Device::STATUS_ACTIVE, 'DEV-REMOTE');
+
+        $device->update([
+            'device_image_url' => 'https://example.com/private-device-image.png',
+        ]);
+
+        $this->actingAs($intruder)
+            ->get(route('device-assets.remote-preview', ['url' => 'https://example.com/private-device-image.png']))
+            ->assertNotFound();
+    }
+
+    public function test_regular_user_dashboard_shows_only_own_activity_and_scope(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'dashboard-own@example.com');
+        $otherUser = $this->createUser(role: User::ROLE_ADMIN, email: 'dashboard-other@example.com');
+
+        $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-DASH-OWN');
+        $this->createDevice($otherUser->id, Device::STATUS_ACTIVE, 'DEV-DASH-OTHER');
+
+        AuditLog::create([
+            'timestamp' => now(),
+            'user_id' => $user->id,
+            'action' => 'VIEW',
+            'entity_type' => 'device',
+            'entity_id' => 1,
+            'description' => 'Mana personiga darbiba',
+            'severity' => 'info',
+        ]);
+
+        AuditLog::create([
+            'timestamp' => now(),
+            'user_id' => $otherUser->id,
+            'action' => 'DELETE',
+            'entity_type' => 'device',
+            'entity_id' => 2,
+            'description' => 'Svesa admina darbiba',
+            'severity' => 'warning',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Mana personiga darbiba')
+            ->assertDontSee('Svesa admina darbiba')
+            ->assertSee('No 1 telpam');
     }
 
     private function createUser(string $role, ?string $email = null): User

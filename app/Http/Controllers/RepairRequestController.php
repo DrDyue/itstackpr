@@ -10,7 +10,6 @@ use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -31,6 +30,7 @@ class RepairRequestController extends Controller
                 'requests' => $this->emptyPaginator(),
                 'filters' => $filters,
                 'statuses' => [RepairRequest::STATUS_SUBMITTED, RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED],
+                'statusLabels' => $this->requestStatusLabels(),
                 'canReview' => $user->canManageRequests(),
                 'featureMessage' => 'Tabula repair_requests sobrid nav pieejama.',
             ]);
@@ -57,6 +57,7 @@ class RepairRequestController extends Controller
             'requests' => $requests,
             'filters' => $filters,
             'statuses' => [RepairRequest::STATUS_SUBMITTED, RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED],
+            'statusLabels' => $this->requestStatusLabels(),
             'canReview' => $user->canManageRequests(),
         ]);
     }
@@ -87,9 +88,12 @@ class RepairRequestController extends Controller
             return redirect()->route('repair-requests.index')->with('error', 'Remonta pieteikumus sobrid nevar saglabat, jo tabula repair_requests nav pieejama.');
         }
 
-        $validated = $request->validate([
+        $validated = $this->validateInput($request, [
             'device_id' => ['required', 'exists:devices,id'],
             'description' => ['required', 'string'],
+        ], [
+            'device_id.required' => 'Izvelies ierici, kurai piesaki remontu.',
+            'description.required' => 'Apraksti remonta problemu.',
         ]);
 
         $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
@@ -129,11 +133,13 @@ class RepairRequestController extends Controller
             return back()->with('error', 'Sis pieteikums jau ir izskatits.');
         }
 
-        $validated = $request->validate([
+        $validated = $this->validateInput($request, [
             'status' => ['required', Rule::in([RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED])],
             'review_notes' => ['nullable', 'string'],
             'repair_type' => ['nullable', Rule::in(['internal', 'external'])],
             'priority' => ['nullable', Rule::in(['low', 'medium', 'high', 'critical'])],
+        ], [
+            'status.required' => 'Izvelies lemumu remonta pieteikumam.',
         ]);
 
         $repairRequest->loadMissing(['device', 'responsibleUser']);

@@ -136,10 +136,10 @@
                                     <div class="type-inline-meta"><strong>Kategorija:</strong> {{ $type->category }}</div>
                                 </div>
                                 <div class="type-metric">
-                                    <div class="type-inline-meta"><strong>Kalposanas ilgums:</strong> {{ $type->expected_lifetime_years ? $type->expected_lifetime_years . ' gadi' : 'Nav noradits' }}</div>
+                                    <div class="type-inline-meta"><strong>Izveidots:</strong> {{ $type->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
                                 </div>
                                 <div class="type-metric">
-                                    <div class="type-inline-meta"><strong>Izveidots:</strong> {{ $type->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
+                                    <div class="type-inline-meta"><strong>Ierices:</strong> {{ $type->devices_count }}</div>
                                 </div>
                             </div>
                         </div>

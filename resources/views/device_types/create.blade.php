@@ -48,16 +48,6 @@
             </div>
 
             <div class="space-y-4">
-                <div class="type-form-card">
-                    <div class="type-form-section-head">
-                        <div class="device-form-section-name">Papildinformacija</div>
-                    </div>
-                    <div class="mt-4">
-                        <label class="crud-label">Paredzamais kalposanas ilgums, gadi</label>
-                        <input type="number" name="expected_lifetime_years" value="{{ old('expected_lifetime_years', 5) }}" min="0" class="crud-control">
-                    </div>
-                </div>
-
                 <div class="type-form-actions">
                     <div class="type-form-section-head">
                         <div class="device-form-section-name">Darbibas</div>

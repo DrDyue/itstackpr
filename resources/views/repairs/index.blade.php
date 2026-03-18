@@ -21,7 +21,7 @@
         <form method="GET" action="{{ route('repairs.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-4">
             <label class="block">
                 <span class="crud-label">Meklet</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control">
+                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Ierice, apraksts, pakalpojuma sniedzejs...">
             </label>
             <label class="block">
                 <span class="crud-label">Statuss</span>
@@ -56,8 +56,24 @@
             </div>
         </form>
 
+        <x-active-filters
+            :items="[
+                ['label' => 'Meklet', 'value' => $filters['q']],
+                ['label' => 'Statuss', 'value' => $filters['status'] !== '' ? ($statusLabels[$filters['status']] ?? $filters['status']) : null],
+                ['label' => 'Prioritate', 'value' => $filters['priority'] !== '' ? ($priorityLabels[$filters['priority']] ?? $filters['priority']) : null],
+                ['label' => 'Tips', 'value' => $filters['repair_type'] !== '' ? ($typeLabels[$filters['repair_type']] ?? $filters['repair_type']) : null],
+            ]"
+            :clear-url="route('repairs.index')"
+        />
+
         @if (session('success'))
             <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
+        @endif
+        @if (session('error'))
+            <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
+        @endif
+        @if (! empty($featureMessage))
+            <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
         @endif
 
         <div class="overflow-x-auto rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
@@ -68,7 +84,8 @@
                         <th class="px-4 py-3">Apraksts</th>
                         <th class="px-4 py-3">Statuss</th>
                         <th class="px-4 py-3">Prioritate</th>
-                        <th class="px-4 py-3">Apstiprinaja</th>
+                        <th class="px-4 py-3">Pieteicejs / apstiprinaja</th>
+                        <th class="px-4 py-3">Termini</th>
                         <th class="px-4 py-3">Darbibas</th>
                     </tr>
                 </thead>
@@ -78,11 +95,33 @@
                             <td class="px-4 py-3">
                                 <div class="font-medium text-slate-900">{{ $repair->device?->name ?: '-' }}</div>
                                 <div class="text-xs text-slate-500">{{ $repair->device?->code ?: '-' }}</div>
+                                <div class="text-xs text-slate-500">{{ $repair->device?->building?->building_name ?: '-' }} / {{ $repair->device?->room?->room_number ?: '-' }}</div>
                             </td>
-                            <td class="px-4 py-3 text-slate-600">{{ $repair->description }}</td>
-                            <td class="px-4 py-3"><span class="status-pill {{ $repair->status === 'completed' ? 'status-pill-success' : ($repair->status === 'cancelled' ? 'status-pill-danger' : 'status-pill-warning') }}">{{ $statusLabels[$repair->status] ?? $repair->status }}</span></td>
-                            <td class="px-4 py-3"><span class="status-pill {{ $repair->priority === 'critical' ? 'status-pill-danger' : ($repair->priority === 'high' ? 'status-pill-warning' : 'status-pill-neutral') }}">{{ $priorityLabels[$repair->priority] ?? $repair->priority }}</span></td>
-                            <td class="px-4 py-3">{{ $repair->acceptedBy?->full_name ?: '-' }}</td>
+                            <td class="px-4 py-3 text-slate-600">
+                                <div>{{ $repair->description }}</div>
+                                <div class="mt-1 text-xs text-slate-500">
+                                    <span>Tips: {{ $typeLabels[$repair->repair_type] ?? $repair->repair_type }}</span>
+                                    @if ($repair->request_id)
+                                        <span> | Pieteikums #{{ $repair->request_id }}</span>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div><x-status-pill context="repair" :value="$repair->status" :label="$statusLabels[$repair->status] ?? null" /></div>
+                                <div class="mt-2"><x-status-pill context="repair-type" :value="$repair->repair_type" :label="$typeLabels[$repair->repair_type] ?? null" /></div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div><x-status-pill context="priority" :value="$repair->priority" :label="$priorityLabels[$repair->priority] ?? null" /></div>
+                                <div class="mt-2 text-xs text-slate-500">Izmaksas: {{ $repair->cost !== null ? number_format((float) $repair->cost, 2, '.', ' ') . ' EUR' : '-' }}</div>
+                            </td>
+                            <td class="px-4 py-3 text-slate-600">
+                                <div>Pieteica: {{ $repair->reporter?->full_name ?: '-' }}</div>
+                                <div class="mt-1">Apstiprinaja: {{ $repair->acceptedBy?->full_name ?: '-' }}</div>
+                            </td>
+                            <td class="px-4 py-3 text-slate-600">
+                                <div>Sakums: {{ $repair->start_date?->format('d.m.Y') ?: '-' }}</div>
+                                <div class="mt-1">Beigas: {{ $repair->end_date?->format('d.m.Y') ?: '-' }}</div>
+                            </td>
                             <td class="px-4 py-3">
                                 @if ($canManageRepairs)
                                     <a href="{{ route('repairs.edit', $repair) }}" class="btn-edit"><x-icon name="edit" size="h-4 w-4" /><span>Rediget</span></a>
@@ -93,7 +132,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-8 text-center text-slate-500">Remonti nav atrasti.</td>
+                            <td colspan="7" class="px-4 py-8 text-center text-slate-500">Remonti nav atrasti.</td>
                         </tr>
                     @endforelse
                 </tbody>

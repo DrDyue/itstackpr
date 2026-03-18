@@ -13,7 +13,7 @@
                         </div>
                         <div>
                             <h1 class="page-title">Remonta pieteikumi</h1>
-                            <p class="page-subtitle">{{ $canReview ? 'Visi lietotaju remonta pieteikumi.' : 'Tavi remonta pieteikumi.' }}</p>
+                            <p class="page-subtitle">{{ $canReview ? 'Visi lietotaju remonta pieteikumi. Admins apstiprina vai noraida katru iesniegumu.' : 'Tavi remonta pieteikumi.' }}</p>
                         </div>
                     </div>
                 </div>
@@ -27,14 +27,14 @@
         <form method="GET" action="{{ route('repair-requests.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-3">
             <label class="block">
                 <span class="crud-label">Meklet</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control">
+                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Ierice, kods, pieteicejs...">
             </label>
             <label class="block">
                 <span class="crud-label">Statuss</span>
                 <select name="status" class="crud-control">
                     <option value="">Visi</option>
                     @foreach ($statuses as $status)
-                        <option value="{{ $status }}" @selected($filters['status'] === $status)>{{ $status }}</option>
+                        <option value="{{ $status }}" @selected($filters['status'] === $status)>{{ $statusLabels[$status] ?? $status }}</option>
                     @endforeach
                 </select>
             </label>
@@ -50,11 +50,22 @@
             </div>
         </form>
 
+        <x-active-filters
+            :items="[
+                ['label' => 'Meklet', 'value' => $filters['q']],
+                ['label' => 'Statuss', 'value' => $filters['status'] !== '' ? ($statusLabels[$filters['status']] ?? $filters['status']) : null],
+            ]"
+            :clear-url="route('repair-requests.index')"
+        />
+
         @if (session('success'))
             <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
         @endif
         @if (session('error'))
             <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
+        @endif
+        @if (! empty($featureMessage))
+            <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
         @endif
 
         <div class="space-y-4">
@@ -65,9 +76,18 @@
                             <div class="text-lg font-semibold text-slate-900">{{ $request->device?->name ?: '-' }}</div>
                             <div class="mt-1 text-sm text-slate-500">{{ $request->responsibleUser?->full_name ?: '-' }} | {{ $request->created_at?->format('d.m.Y H:i') }}</div>
                         </div>
-                        <span class="status-pill {{ $request->status === 'approved' ? 'status-pill-success' : ($request->status === 'rejected' ? 'status-pill-danger' : 'status-pill-info') }}">{{ $request->status }}</span>
+                        <x-status-pill context="request" :value="$request->status" :label="$statusLabels[$request->status] ?? null" />
                     </div>
                     <div class="mt-3 text-sm text-slate-600">{{ $request->description }}</div>
+                    <div class="mt-3 flex flex-wrap gap-3 text-xs text-slate-500">
+                        <span>Ierices kods: {{ $request->device?->code ?: '-' }}</span>
+                        @if ($request->reviewedBy)
+                            <span>Izskatija: {{ $request->reviewedBy->full_name }}</span>
+                        @endif
+                        @if ($request->repair)
+                            <span>Izveidots remonts #{{ $request->repair->id }}</span>
+                        @endif
+                    </div>
                     @if ($request->review_notes)
                         <div class="mt-3 text-sm text-slate-500">Piezimes: {{ $request->review_notes }}</div>
                     @endif

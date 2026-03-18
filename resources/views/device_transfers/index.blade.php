@@ -8,13 +8,51 @@
                         <div class="page-title-icon page-title-icon-emerald"><x-icon name="transfer" size="h-7 w-7" /></div>
                         <div>
                             <h1 class="page-title">Iericu parsutisanas</h1>
-                            <p class="page-subtitle">{{ $isAdmin ? 'Visi parsutisanas pieteikumi.' : 'Tavi nosutitie un sanemtie parsutisanas pieteikumi.' }}</p>
+                            <p class="page-subtitle">{{ $isAdmin ? 'Visi parsutisanas pieteikumi. Lemumu par apstiprinasanu pienem noraditais sanemejs.' : 'Tavi nosutitie un sanemtie parsutisanas pieteikumi.' }}</p>
                         </div>
                     </div>
                 </div>
                 <a href="{{ route('device-transfers.create') }}" class="btn-create"><x-icon name="plus" size="h-4 w-4" /><span>Jauns pieteikums</span></a>
             </div>
         </div>
+
+        <form method="GET" action="{{ route('device-transfers.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-3">
+            <label class="block">
+                <span class="crud-label">Meklet</span>
+                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Ierice, pieteicejs, sanemejs...">
+            </label>
+            <label class="block">
+                <span class="crud-label">Statuss</span>
+                <select name="status" class="crud-control">
+                    <option value="">Visi</option>
+                    @foreach ($statuses as $status)
+                        <option value="{{ $status }}" @selected($filters['status'] === $status)>{{ $statusLabels[$status] ?? $status }}</option>
+                    @endforeach
+                </select>
+            </label>
+            <div class="toolbar-actions">
+                <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklet</span></button>
+                <a href="{{ route('device-transfers.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notirit</span></a>
+            </div>
+        </form>
+
+        <x-active-filters
+            :items="[
+                ['label' => 'Meklet', 'value' => $filters['q']],
+                ['label' => 'Statuss', 'value' => $filters['status'] !== '' ? ($statusLabels[$filters['status']] ?? $filters['status']) : null],
+            ]"
+            :clear-url="route('device-transfers.index')"
+        />
+
+        @if (session('success'))
+            <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
+        @endif
+        @if (session('error'))
+            <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
+        @endif
+        @if (! empty($featureMessage))
+            <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
+        @endif
 
         <div class="space-y-4">
             @forelse ($transfers as $transfer)
@@ -24,9 +62,16 @@
                             <div class="text-lg font-semibold text-slate-900">{{ $transfer->device?->name ?: '-' }}</div>
                             <div class="mt-1 text-sm text-slate-500">{{ $transfer->responsibleUser?->full_name ?: '-' }} -> {{ $transfer->transferTo?->full_name ?: '-' }}</div>
                         </div>
-                        <span class="status-pill {{ $transfer->status === 'approved' ? 'status-pill-success' : ($transfer->status === 'rejected' ? 'status-pill-danger' : 'status-pill-violet') }}">{{ $transfer->status }}</span>
+                        <x-status-pill context="request" :value="$transfer->status" :label="$statusLabels[$transfer->status] ?? null" />
                     </div>
                     <div class="mt-3 text-sm text-slate-600">{{ $transfer->transfer_reason }}</div>
+                    <div class="mt-3 flex flex-wrap gap-3 text-xs text-slate-500">
+                        <span>Ierices kods: {{ $transfer->device?->code ?: '-' }}</span>
+                        <span>Izveidots: {{ $transfer->created_at?->format('d.m.Y H:i') ?: '-' }}</span>
+                        @if ($transfer->reviewedBy)
+                            <span>Izskatija: {{ $transfer->reviewedBy->full_name }}</span>
+                        @endif
+                    </div>
                     @if ($transfer->review_notes)
                         <div class="mt-2 text-sm text-slate-500">Piezimes: {{ $transfer->review_notes }}</div>
                     @endif

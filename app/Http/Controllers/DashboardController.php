@@ -61,6 +61,16 @@ class DashboardController extends Controller
                 ->get()
             : collect();
 
+        $roomsQuery = null;
+
+        if ($hasRooms) {
+            $roomsQuery = Room::query();
+
+            if (! $user->canManageRequests()) {
+                $roomsQuery->whereHas('devices', fn ($query) => $query->where('assigned_to_id', $user->id));
+            }
+        }
+
         $recentDevices = $deviceQuery
             ? (clone $deviceQuery)
                 ->with(['room', 'building', 'type', 'assignedTo'])
@@ -70,14 +80,17 @@ class DashboardController extends Controller
             : collect();
 
         $recentActivity = $hasAuditLog
-            ? AuditLog::query()
-                ->with('user')
+            ? tap(AuditLog::query()->with('user'), function ($query) use ($user) {
+                if (! $user->canManageRequests()) {
+                    $query->where('user_id', $user->id);
+                }
+            })
                 ->latest('timestamp')
                 ->limit(8)
                 ->get()
             : collect();
 
-        $buildings = $hasBuildings && $hasRooms && $hasDevices
+        $buildings = $user->canManageRequests() && $hasBuildings && $hasRooms && $hasDevices
             ? Building::query()
                 ->withCount(['rooms', 'devices'])
                 ->with([
@@ -121,8 +134,8 @@ class DashboardController extends Controller
             'activeDevices' => $activeDevices,
             'writtenOffDevices' => $writtenOffDevices,
             'inRepairDevices' => $inRepairDevices,
-            'totalRooms' => $hasRooms ? Room::count() : 0,
-            'mappedRooms' => $hasRooms && $hasDevices ? Room::has('devices')->count() : 0,
+            'totalRooms' => $roomsQuery ? (clone $roomsQuery)->count() : 0,
+            'mappedRooms' => $roomsQuery ? (clone $roomsQuery)->has('devices')->count() : 0,
             'activeRepairsCount' => $repairQuery ? (clone $repairQuery)->whereIn('status', ['waiting', 'in-progress'])->count() : 0,
             'waitingRepairsCount' => $repairQuery ? (clone $repairQuery)->where('status', 'waiting')->count() : 0,
             'inProgressRepairsCount' => $repairQuery ? (clone $repairQuery)->where('status', 'in-progress')->count() : 0,

@@ -51,7 +51,7 @@
                     <span class="crud-label">Loma</span>
                     <select name="role" class="crud-control" required>
                         @foreach ($roles as $role)
-                            <option value="{{ $role }}" @selected(old('role', $user->role) === $role)>{{ $role }}</option>
+                            <option value="{{ $role }}" @selected(old('role', $user->role) === $role)>{{ $roleLabels[$role] ?? $role }}</option>
                         @endforeach
                     </select>
                 </label>

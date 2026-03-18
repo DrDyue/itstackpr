@@ -35,14 +35,28 @@ Route::middleware('guest')->group(function () {
         ->name('password.store');
 });
 
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('register', [RegisteredUserController::class, 'create'])
+        ->name('register');
+    Route::post('register', [RegisteredUserController::class, 'store']);
+    Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
+    Route::resource('users', UserController::class)->except(['show']);
+});
+
+Route::middleware(['auth', 'manager'])->group(function () {
+    Route::resource('buildings', BuildingController::class)->except(['show']);
+    Route::resource('rooms', RoomController::class)->except(['show']);
+    Route::resource('device-types', DeviceTypeController::class)->except(['show']);
+    Route::resource('devices', DeviceController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
+    Route::post('/repairs/{repair}/transition', [RepairController::class, 'transition'])->name('repairs.transition');
+    Route::resource('repairs', RepairController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
+});
+
 Route::middleware('auth')->group(function () {
     Route::put('password', [PasswordController::class, 'update'])
         ->name('password.update');
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
-    Route::get('register', [RegisteredUserController::class, 'create'])
-        ->name('register');
-    Route::post('register', [RegisteredUserController::class, 'store']);
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -50,17 +64,13 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::resource('buildings', BuildingController::class)->except(['show']);
-    Route::resource('rooms', RoomController::class)->except(['show']);
-    Route::resource('device-types', DeviceTypeController::class)->except(['show']);
-    Route::resource('devices', DeviceController::class);
+    Route::resource('devices', DeviceController::class)->only(['index', 'show']);
     Route::get('/device-assets/remote-preview', [DeviceAssetController::class, 'remotePreview'])
         ->name('device-assets.remote-preview');
     Route::get('/device-assets/{path}', [DeviceAssetController::class, 'show'])
         ->where('path', '.*')
         ->name('device-assets.show');
-    Route::post('/repairs/{repair}/transition', [RepairController::class, 'transition'])->name('repairs.transition');
-    Route::resource('repairs', RepairController::class)->except(['show']);
+    Route::resource('repairs', RepairController::class)->only(['index']);
     Route::get('/repair-requests', [RepairRequestController::class, 'index'])->name('repair-requests.index');
     Route::get('/repair-requests/create', [RepairRequestController::class, 'create'])->name('repair-requests.create');
     Route::post('/repair-requests', [RepairRequestController::class, 'store'])->name('repair-requests.store');
@@ -73,8 +83,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/device-transfers/create', [DeviceTransferController::class, 'create'])->name('device-transfers.create');
     Route::post('/device-transfers', [DeviceTransferController::class, 'store'])->name('device-transfers.store');
     Route::post('/device-transfers/{deviceTransfer}/review', [DeviceTransferController::class, 'review'])->name('device-transfers.review');
-    Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
-    Route::resource('users', UserController::class)->except(['show']);
 });
 
 Route::get('/', function () {

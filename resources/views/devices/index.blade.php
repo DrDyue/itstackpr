@@ -31,7 +31,7 @@
         <form method="GET" action="{{ route('devices.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-5">
             <label class="block">
                 <span class="crud-label">Meklet</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control">
+                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, razotajs...">
             </label>
             <label class="block">
                 <span class="crud-label">Kods</span>
@@ -71,6 +71,17 @@
             </div>
         </form>
 
+        <x-active-filters
+            :items="[
+                ['label' => 'Meklet', 'value' => $filters['q']],
+                ['label' => 'Kods', 'value' => $filters['code']],
+                ['label' => 'Telpa', 'value' => $filters['room']],
+                ['label' => 'Tips', 'value' => $filters['type'] !== '' && ctype_digit($filters['type']) ? optional($types->firstWhere('id', (int) $filters['type']))->type_name : null],
+                ['label' => 'Statuss', 'value' => $filters['status'] !== '' ? ($statusLabels[$filters['status']] ?? $filters['status']) : null],
+            ]"
+            :clear-url="route('devices.index')"
+        />
+
         @if (session('success'))
             <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
         @endif
@@ -100,9 +111,7 @@
                             </td>
                             <td class="px-4 py-3">{{ $device->type?->type_name ?: '-' }}</td>
                             <td class="px-4 py-3">
-                                <span class="status-pill {{ $device->status === 'active' ? 'status-pill-success' : ($device->status === 'repair' ? 'status-pill-warning' : 'status-pill-danger') }}">
-                                    {{ $statusLabels[$device->status] ?? $device->status }}
-                                </span>
+                                <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
                             </td>
                             <td class="px-4 py-3">{{ $device->assignedTo?->full_name ?: '-' }}</td>
                             <td class="px-4 py-3">

@@ -17,17 +17,33 @@ class UserController extends Controller
         $this->requireAdmin();
 
         $filters = [
-            'name' => trim((string) $request->query('name', '')),
-            'email' => trim((string) $request->query('email', '')),
+            'q' => trim((string) $request->query('q', '')),
             'role' => trim((string) $request->query('role', '')),
             'is_active' => (string) $request->query('is_active', ''),
+            'last_login' => trim((string) $request->query('last_login', '')),
         ];
 
+        $legacyName = trim((string) $request->query('name', ''));
+        $legacyEmail = trim((string) $request->query('email', ''));
+
         $users = User::query()
-            ->when($filters['name'] !== '', fn ($query) => $query->where('full_name', 'like', '%' . $filters['name'] . '%'))
-            ->when($filters['email'] !== '', fn ($query) => $query->where('email', 'like', '%' . $filters['email'] . '%'))
+            ->when($filters['q'] !== '', function ($query) use ($filters) {
+                $term = $filters['q'];
+
+                $query->where(function ($searchQuery) use ($term) {
+                    $searchQuery->where('full_name', 'like', '%' . $term . '%')
+                        ->orWhere('email', 'like', '%' . $term . '%')
+                        ->orWhere('phone', 'like', '%' . $term . '%')
+                        ->orWhere('job_title', 'like', '%' . $term . '%');
+                });
+            })
+            ->when($legacyName !== '', fn ($query) => $query->where('full_name', 'like', '%' . $legacyName . '%'))
+            ->when($legacyEmail !== '', fn ($query) => $query->where('email', 'like', '%' . $legacyEmail . '%'))
             ->when($filters['role'] !== '', fn ($query) => $query->where('role', $filters['role']))
             ->when($filters['is_active'] !== '', fn ($query) => $query->where('is_active', $filters['is_active'] === '1'))
+            ->when($filters['last_login'] === 'today', fn ($query) => $query->whereDate('last_login', today()))
+            ->when($filters['last_login'] === 'recent', fn ($query) => $query->where('last_login', '>=', now()->subDays(7)))
+            ->when($filters['last_login'] === 'never', fn ($query) => $query->whereNull('last_login'))
             ->orderBy('full_name')
             ->paginate(15)
             ->withQueryString();
@@ -36,6 +52,7 @@ class UserController extends Controller
             'users' => $users,
             'filters' => $filters,
             'roles' => self::ROLES,
+            'roleLabels' => $this->roleLabels(),
         ]);
     }
 
@@ -45,6 +62,7 @@ class UserController extends Controller
 
         return view('users.create', [
             'roles' => self::ROLES,
+            'roleLabels' => $this->roleLabels(),
         ]);
     }
 
@@ -68,6 +86,7 @@ class UserController extends Controller
         return view('users.edit', [
             'user' => $user,
             'roles' => self::ROLES,
+            'roleLabels' => $this->roleLabels(),
         ]);
     }
 
@@ -113,7 +132,7 @@ class UserController extends Controller
 
     private function validatedData(Request $request, ?User $user = null): array
     {
-        $validated = $request->validate([
+        $validated = $this->validateInput($request, [
             'full_name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:100', Rule::unique('users', 'email')->ignore($user?->id)],
             'phone' => ['nullable', 'string', 'max:100'],
@@ -121,6 +140,11 @@ class UserController extends Controller
             'password' => [$user ? 'nullable' : 'required', 'string', 'min:6', 'confirmed'],
             'role' => ['required', Rule::in(self::ROLES)],
             'is_active' => ['nullable', 'boolean'],
+        ], [
+            'full_name.required' => 'Noradi lietotaja vardu un uzvardu.',
+            'email.required' => 'Noradi lietotaja e-pastu.',
+            'password.required' => 'Jaunam lietotajam parole ir obligata.',
+            'password.min' => 'Parolei jabut vismaz :min simbolus garai.',
         ]);
 
         $validated['phone'] = $validated['phone'] ?: null;
@@ -128,5 +152,13 @@ class UserController extends Controller
         $validated['is_active'] = $request->boolean('is_active', true);
 
         return $validated;
+    }
+
+    private function roleLabels(): array
+    {
+        return [
+            User::ROLE_ADMIN => 'Admins',
+            User::ROLE_USER => 'Darbinieks',
+        ];
     }
 }

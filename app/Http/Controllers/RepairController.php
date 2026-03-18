@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -192,10 +191,12 @@ class RepairController extends Controller
             return back()->with('error', 'Tabula repairs sobrid nav pieejama.');
         }
 
-        $validated = $request->validate([
+        $validated = $this->validateInput($request, [
             'target_status' => ['required', Rule::in(self::STATUSES)],
             'end_date' => ['nullable', 'date'],
             'cost' => ['nullable', 'numeric', 'min:0'],
+        ], [
+            'target_status.required' => 'Izvelies jauno remonta statusu.',
         ]);
 
         $before = $repair->only(['status', 'end_date', 'cost']);
@@ -266,7 +267,7 @@ class RepairController extends Controller
 
     private function validatedData(Request $request, ?Repair $repair = null): array
     {
-        $validated = $request->validate([
+        $validated = $this->validateInput($request, [
             'device_id' => ['required', 'exists:devices,id'],
             'issue_reported_by' => ['nullable', 'exists:users,id'],
             'description' => ['required', 'string'],
@@ -280,6 +281,10 @@ class RepairController extends Controller
             'vendor_contact' => ['nullable', 'string', 'max:100'],
             'invoice_number' => ['nullable', 'string', 'max:50'],
             'request_id' => ['nullable', 'exists:repair_requests,id'],
+        ], [
+            'device_id.required' => 'Izvelies ierici remonta ierakstam.',
+            'description.required' => 'Apraksti remonta darbu vai problemu.',
+            'repair_type.required' => 'Izvelies remonta tipu.',
         ]);
 
         foreach ([

@@ -13,7 +13,6 @@ class DeviceType extends Model
         'type_name',
         'category',
         'description',
-        'expected_lifetime_years',
     ];
 
     protected function casts(): array

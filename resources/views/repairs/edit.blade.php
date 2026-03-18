@@ -30,6 +30,11 @@
             <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
         @endif
 
+        <div class="surface-card-muted text-sm text-slate-600">
+            <div><strong class="text-slate-900">Ierice:</strong> {{ $repair->device?->name ?: '-' }} ({{ $repair->device?->code ?: 'bez koda' }})</div>
+            <div class="mt-1"><strong class="text-slate-900">Saistitais pieteikums:</strong> {{ $repair->request_id ? '#' . $repair->request_id : 'Nav piesaistits' }}</div>
+        </div>
+
         <form method="POST" action="{{ route('repairs.update', $repair) }}" class="surface-card space-y-6 p-6">
             @csrf
             @method('PUT')

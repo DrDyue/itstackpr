@@ -19,8 +19,49 @@
             </div>
         </div>
 
+        <form method="GET" action="{{ route('buildings.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-3">
+            <label class="block">
+                <span class="crud-label">Meklet</span>
+                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, adrese vai piezimes...">
+            </label>
+            <label class="block">
+                <span class="crud-label">Pilseta</span>
+                <select name="city" class="crud-control">
+                    <option value="">Visas</option>
+                    @foreach ($cities as $city)
+                        <option value="{{ $city }}" @selected($filters['city'] === $city)>{{ $city }}</option>
+                    @endforeach
+                </select>
+            </label>
+            <label class="block">
+                <span class="crud-label">Saturs</span>
+                <select name="scope" class="crud-control">
+                    <option value="">Viss</option>
+                    <option value="with_rooms" @selected($filters['scope'] === 'with_rooms')>Ar telpam</option>
+                    <option value="with_devices" @selected($filters['scope'] === 'with_devices')>Ar iericem</option>
+                    <option value="empty" @selected($filters['scope'] === 'empty')>Tuksa eka</option>
+                </select>
+            </label>
+            <div class="toolbar-actions md:col-span-3">
+                <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklet</span></button>
+                <a href="{{ route('buildings.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notirit</span></a>
+            </div>
+        </form>
+
+        <x-active-filters
+            :items="[
+                ['label' => 'Meklet', 'value' => $filters['q']],
+                ['label' => 'Pilseta', 'value' => $filters['city']],
+                ['label' => 'Saturs', 'value' => $filters['scope'] === 'with_rooms' ? 'Ar telpam' : ($filters['scope'] === 'with_devices' ? 'Ar iericem' : ($filters['scope'] === 'empty' ? 'Tuksa eka' : null))],
+            ]"
+            :clear-url="route('buildings.index')"
+        />
+
         @if (session('success'))
             <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
+        @endif
+        @if (session('error'))
+            <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
         @endif
 
         <div class="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
@@ -30,9 +71,11 @@
                         <tr>
                             <th class="px-4 py-3 text-left">ID</th>
                             <th class="px-4 py-3 text-left">Nosaukums</th>
+                            <th class="px-4 py-3 text-left">Resursi</th>
                             <th class="px-4 py-3 text-left">Pilseta</th>
                             <th class="px-4 py-3 text-left">Adrese</th>
                             <th class="px-4 py-3 text-left">Stavu skaits</th>
+                            <th class="px-4 py-3 text-left">Piezimes</th>
                             <th class="px-4 py-3 text-left">Izveidots</th>
                             <th class="px-4 py-3 text-left">Darbibas</th>
                         </tr>
@@ -42,9 +85,14 @@
                             <tr class="hover:bg-slate-50">
                                 <td class="px-4 py-3">{{ $building->id }}</td>
                                 <td class="px-4 py-3 font-medium text-slate-900">{{ $building->building_name }}</td>
+                                <td class="px-4 py-3 text-slate-600">
+                                    <div>Telpas: {{ $building->rooms_count }}</div>
+                                    <div>Ierices: {{ $building->devices_count }}</div>
+                                </td>
                                 <td class="px-4 py-3">{{ $building->city ?: '-' }}</td>
                                 <td class="px-4 py-3">{{ $building->address ?: '-' }}</td>
                                 <td class="px-4 py-3">{{ $building->total_floors ?? '-' }}</td>
+                                <td class="px-4 py-3 text-slate-600">{{ $building->notes ?: '-' }}</td>
                                 <td class="px-4 py-3">{{ $building->created_at?->format('d.m.Y H:i') ?: '-' }}</td>
                                 <td class="px-4 py-3">
                                     <div class="flex flex-wrap items-center gap-2">
@@ -59,13 +107,15 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-4 py-8 text-center text-slate-500">Ekas vel nav pievienotas.</td>
+                                <td colspan="9" class="px-4 py-8 text-center text-slate-500">Ekas vel nav pievienotas.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
+
+        {{ $buildings->links() }}
     </section>
 </x-app-layout>
 

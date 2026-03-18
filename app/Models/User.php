@@ -129,4 +129,10 @@ class User extends Authenticatable
     {
         return $this->isAdmin();
     }
+
+    public function canViewDevice(Device $device): bool
+    {
+        return $this->canManageRequests()
+            || ((int) $device->assigned_to_id === (int) $this->id);
+    }
 }

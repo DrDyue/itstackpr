@@ -39,14 +39,17 @@
                     <span>Pamata informacija</span>
                 </h2>
                 <div class="mt-4 grid gap-4 text-sm md:grid-cols-2">
-                    <div><span class="font-medium text-slate-900">Statuss:</span> <span class="status-pill {{ $device->status === 'active' ? 'status-pill-success' : ($device->status === 'repair' ? 'status-pill-warning' : 'status-pill-danger') }}">{{ $statusLabels[$device->status] ?? $device->status }}</span></div>
+                    <div><span class="font-medium text-slate-900">Statuss:</span> <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" class="ml-2" /></div>
                     <div><span class="font-medium text-slate-900">Tips:</span> {{ $device->type?->type_name ?: '-' }}</div>
                     <div><span class="font-medium text-slate-900">Pieskirta:</span> {{ $device->assignedTo?->full_name ?: '-' }}</div>
                     <div><span class="font-medium text-slate-900">Eka / telpa:</span> {{ $device->building?->building_name ?: '-' }} / {{ $device->room?->room_number ?: '-' }}</div>
                     <div><span class="font-medium text-slate-900">Serijas numurs:</span> {{ $device->serial_number ?: '-' }}</div>
                     <div><span class="font-medium text-slate-900">Razotajs:</span> {{ $device->manufacturer ?: '-' }}</div>
                     <div><span class="font-medium text-slate-900">Iegades datums:</span> {{ $device->purchase_date?->format('d.m.Y') ?: '-' }}</div>
+                    <div><span class="font-medium text-slate-900">Iegades cena:</span> {{ $device->purchase_price !== null ? number_format((float) $device->purchase_price, 2, '.', ' ') . ' EUR' : '-' }}</div>
                     <div><span class="font-medium text-slate-900">Garantija lidz:</span> {{ $device->warranty_until?->format('d.m.Y') ?: '-' }}</div>
+                    <div><span class="font-medium text-slate-900">Izveidoja:</span> {{ $device->createdBy?->full_name ?: '-' }}</div>
+                    <div><span class="font-medium text-slate-900">Izveidots:</span> {{ $device->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
                     <div class="md:col-span-2"><span class="font-medium text-slate-900">Piezimes:</span> {{ $device->notes ?: '-' }}</div>
                 </div>
             </section>
@@ -65,14 +68,6 @@
                             <div class="mt-2 rounded-xl border border-dashed border-slate-300 px-4 py-8 text-sm text-slate-500">Nav pievienots</div>
                         @endif
                     </div>
-                    <div>
-                        <div class="text-sm font-medium text-slate-700">Garantijas attels</div>
-                        @if ($warrantyImageUrl)
-                            <img src="{{ $warrantyImageUrl }}" alt="Warranty" class="mt-2 max-h-56 rounded-xl border border-slate-200">
-                        @else
-                            <div class="mt-2 rounded-xl border border-dashed border-slate-300 px-4 py-8 text-sm text-slate-500">Nav pievienots</div>
-                        @endif
-                    </div>
                 </div>
             </section>
         </div>
@@ -87,8 +82,19 @@
                     @forelse ($device->repairRequests as $request)
                         <div class="surface-card-muted">
                             <div class="font-medium text-slate-900">{{ $request->responsibleUser?->full_name ?: '-' }}</div>
+                            <div class="mt-1 text-xs text-slate-500">{{ $request->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
                             <div class="mt-1 text-slate-600">{{ $request->description }}</div>
-                            <div class="mt-2"><span class="status-pill status-pill-info">{{ $request->status }}</span></div>
+                            <div class="mt-2"><x-status-pill context="request" :value="$request->status" /></div>
+                            @if ($request->reviewedBy || $request->review_notes)
+                                <div class="mt-2 text-xs text-slate-500">
+                                    @if ($request->reviewedBy)
+                                        <div>Izskatija: {{ $request->reviewedBy->full_name }}</div>
+                                    @endif
+                                    @if ($request->review_notes)
+                                        <div>Piezimes: {{ $request->review_notes }}</div>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     @empty
                         <p class="text-slate-500">Nav pieteikumu.</p>
@@ -105,8 +111,19 @@
                     @forelse ($device->writeoffRequests as $request)
                         <div class="surface-card-muted">
                             <div class="font-medium text-slate-900">{{ $request->responsibleUser?->full_name ?: '-' }}</div>
+                            <div class="mt-1 text-xs text-slate-500">{{ $request->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
                             <div class="mt-1 text-slate-600">{{ $request->reason }}</div>
-                            <div class="mt-2"><span class="status-pill status-pill-danger">{{ $request->status }}</span></div>
+                            <div class="mt-2"><x-status-pill context="request" :value="$request->status" /></div>
+                            @if ($request->reviewedBy || $request->review_notes)
+                                <div class="mt-2 text-xs text-slate-500">
+                                    @if ($request->reviewedBy)
+                                        <div>Izskatija: {{ $request->reviewedBy->full_name }}</div>
+                                    @endif
+                                    @if ($request->review_notes)
+                                        <div>Piezimes: {{ $request->review_notes }}</div>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     @empty
                         <p class="text-slate-500">Nav pieteikumu.</p>
@@ -123,8 +140,19 @@
                     @forelse ($device->transfers as $transfer)
                         <div class="surface-card-muted">
                             <div class="font-medium text-slate-900">{{ $transfer->responsibleUser?->full_name ?: '-' }} -> {{ $transfer->transferTo?->full_name ?: '-' }}</div>
+                            <div class="mt-1 text-xs text-slate-500">{{ $transfer->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
                             <div class="mt-1 text-slate-600">{{ $transfer->transfer_reason }}</div>
-                            <div class="mt-2"><span class="status-pill status-pill-violet">{{ $transfer->status }}</span></div>
+                            <div class="mt-2"><x-status-pill context="request" :value="$transfer->status" /></div>
+                            @if ($transfer->reviewedBy || $transfer->review_notes)
+                                <div class="mt-2 text-xs text-slate-500">
+                                    @if ($transfer->reviewedBy)
+                                        <div>Izskatija: {{ $transfer->reviewedBy->full_name }}</div>
+                                    @endif
+                                    @if ($transfer->review_notes)
+                                        <div>Piezimes: {{ $transfer->review_notes }}</div>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     @empty
                         <p class="text-slate-500">Nav parsutisanas ierakstu.</p>

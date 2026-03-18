@@ -7,7 +7,7 @@
         <span class="crud-label">Ierice</span>
         <select name="device_id" class="crud-control" required>
             @foreach ($devices as $device)
-                <option value="{{ $device->id }}" @selected(old('device_id', $currentRepair?->device_id ?? $preselectedDeviceId ?? null) == $device->id)>{{ $device->name }} ({{ $device->code ?: 'bez koda' }})</option>
+                <option value="{{ $device->id }}" @selected(old('device_id', $currentRepair?->device_id ?? $preselectedDeviceId ?? null) == $device->id)>{{ $device->name }} ({{ $device->code ?: 'bez koda' }}){{ $device->assignedTo ? ' | ' . $device->assignedTo->full_name : '' }}{{ $device->room ? ' | telpa ' . $device->room->room_number : '' }}</option>
             @endforeach
         </select>
     </label>
@@ -72,4 +72,9 @@
         <span class="crud-label">Rekina numurs</span>
         <input type="text" name="invoice_number" value="{{ old('invoice_number', $currentRepair?->invoice_number) }}" class="crud-control">
     </label>
+    @if ($currentRepair?->request_id)
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 md:col-span-2">
+            Saistitais remonta pieteikums: #{{ $currentRepair->request_id }}
+        </div>
+    @endif
 </div>

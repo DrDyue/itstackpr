@@ -28,6 +28,18 @@
             </div>
         </form>
 
+        <x-active-filters
+            :items="[
+                ['label' => 'Meklet', 'value' => $filters['q']],
+                ['label' => 'Action', 'value' => $filters['action']],
+                ['label' => 'Severity', 'value' => $filters['severity']],
+                ['label' => 'Entity', 'value' => $filters['entity_type']],
+                ['label' => 'No', 'value' => $filters['date_from']],
+                ['label' => 'Lidz', 'value' => $filters['date_to']],
+            ]"
+            :clear-url="route('audit-log.index')"
+        />
+
         <div class="grid gap-4 md:grid-cols-4">
             <div class="metric-card metric-card-soft-sky">
                 <div class="metric-head"><div class="metric-icon"><x-icon name="audit" size="h-5 w-5" /></div><div class="metric-label">Kopa</div></div>
@@ -67,7 +79,7 @@
                             <td class="px-4 py-3">{{ $log->action }}</td>
                             <td class="px-4 py-3">{{ $log->entity_type }}</td>
                             <td class="px-4 py-3">
-                                <span class="status-pill {{ $log->severity === 'critical' ? 'status-pill-danger' : ($log->severity === 'error' ? 'status-pill-warning' : 'status-pill-neutral') }}">{{ $log->severity }}</span>
+                                <x-status-pill context="severity" :value="$log->severity" />
                             </td>
                             <td class="px-4 py-3 text-slate-600">{{ $log->localized_description }}</td>
                         </tr>

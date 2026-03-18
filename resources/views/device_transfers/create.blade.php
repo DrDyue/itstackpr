@@ -8,7 +8,7 @@
                         <div class="page-title-icon page-title-icon-emerald"><x-icon name="transfer" size="h-7 w-7" /></div>
                         <div>
                             <h1 class="page-title">Jauna ierices parsutisana</h1>
-                            <p class="page-subtitle">Izvelies savu ierici un sanemeju.</p>
+                            <p class="page-subtitle">{{ ($isAdmin ?? false) ? 'Admins var izveidot parsutisanu jebkurai aktivai un pieskirtai iericei. Apstiprina sanemejs.' : 'Izvelies savu ierici un sanemeju.' }}</p>
                         </div>
                     </div>
                 </div>
@@ -16,13 +16,17 @@
             </div>
         </div>
 
+        @if (! empty($featureMessage))
+            <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
+        @endif
+
         <form method="POST" action="{{ route('device-transfers.store') }}" class="surface-card space-y-6 p-6">
             @csrf
             <label class="block">
                 <span class="crud-label">Ierice</span>
                 <select name="device_id" class="crud-control" required>
                     @foreach ($devices as $device)
-                        <option value="{{ $device->id }}" @selected(old('device_id') == $device->id)>{{ $device->name }} ({{ $device->code ?: 'bez koda' }})</option>
+                        <option value="{{ $device->id }}" @selected(old('device_id') == $device->id)>{{ $device->name }} ({{ $device->code ?: 'bez koda' }}){{ $device->assignedTo ? ' | Paslaik: ' . $device->assignedTo->full_name : '' }}</option>
                     @endforeach
                 </select>
             </label>

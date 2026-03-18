@@ -18,19 +18,15 @@
 
         <form method="GET" action="{{ route('users.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-4">
             <label class="block">
-                <span class="crud-label">Vards</span>
-                <input type="text" name="name" value="{{ $filters['name'] }}" class="crud-control">
-            </label>
-            <label class="block">
-                <span class="crud-label">E-pasts</span>
-                <input type="text" name="email" value="{{ $filters['email'] }}" class="crud-control">
+                <span class="crud-label">Meklet</span>
+                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Vards, e-pasts, talrunis, amats...">
             </label>
             <label class="block">
                 <span class="crud-label">Loma</span>
                 <select name="role" class="crud-control">
                     <option value="">Visas</option>
                     @foreach ($roles as $role)
-                        <option value="{{ $role }}" @selected($filters['role'] === $role)>{{ $role }}</option>
+                        <option value="{{ $role }}" @selected($filters['role'] === $role)>{{ $roleLabels[$role] ?? $role }}</option>
                     @endforeach
                 </select>
             </label>
@@ -42,11 +38,30 @@
                     <option value="0" @selected($filters['is_active'] === '0')>Neaktivi</option>
                 </select>
             </label>
+            <label class="block">
+                <span class="crud-label">Pedeja pieslegsanas</span>
+                <select name="last_login" class="crud-control">
+                    <option value="">Visas</option>
+                    <option value="today" @selected($filters['last_login'] === 'today')>Sodien</option>
+                    <option value="recent" @selected($filters['last_login'] === 'recent')>Pedejas 7 dienas</option>
+                    <option value="never" @selected($filters['last_login'] === 'never')>Nav piesledzies</option>
+                </select>
+            </label>
             <div class="toolbar-actions md:col-span-4">
                 <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklet</span></button>
                 <a href="{{ route('users.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notirit</span></a>
             </div>
         </form>
+
+        <x-active-filters
+            :items="[
+                ['label' => 'Meklet', 'value' => $filters['q']],
+                ['label' => 'Loma', 'value' => $filters['role'] !== '' ? ($roleLabels[$filters['role']] ?? $filters['role']) : null],
+                ['label' => 'Statuss', 'value' => $filters['is_active'] === '1' ? 'Aktivs' : ($filters['is_active'] === '0' ? 'Neaktivs' : null)],
+                ['label' => 'Pedeja pieslegsanas', 'value' => $filters['last_login'] === 'today' ? 'Sodien' : ($filters['last_login'] === 'recent' ? 'Pedejas 7 dienas' : ($filters['last_login'] === 'never' ? 'Nav piesledzies' : null))],
+            ]"
+            :clear-url="route('users.index')"
+        />
 
         @if (session('success'))
             <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
@@ -61,9 +76,11 @@
                     <tr>
                         <th class="px-4 py-3">Vards</th>
                         <th class="px-4 py-3">E-pasts</th>
+                        <th class="px-4 py-3">Talrunis</th>
                         <th class="px-4 py-3">Loma</th>
                         <th class="px-4 py-3">Amats</th>
                         <th class="px-4 py-3">Statuss</th>
+                        <th class="px-4 py-3">Pedeja pieslegsanas</th>
                         <th class="px-4 py-3">Darbibas</th>
                     </tr>
                 </thead>
@@ -72,13 +89,13 @@
                         <tr class="border-t border-slate-100">
                             <td class="px-4 py-3 font-medium text-slate-900">{{ $managedUser->full_name }}</td>
                             <td class="px-4 py-3 text-slate-600">{{ $managedUser->email }}</td>
-                            <td class="px-4 py-3 text-slate-600">{{ $managedUser->role }}</td>
+                            <td class="px-4 py-3 text-slate-600">{{ $managedUser->phone ?: '-' }}</td>
+                            <td class="px-4 py-3 text-slate-600">{{ $roleLabels[$managedUser->role] ?? $managedUser->role }}</td>
                             <td class="px-4 py-3 text-slate-600">{{ $managedUser->job_title ?: '-' }}</td>
                             <td class="px-4 py-3">
-                                <span class="status-pill {{ $managedUser->is_active ? 'status-pill-success' : 'status-pill-danger' }}">
-                                    {{ $managedUser->is_active ? 'Aktivs' : 'Neaktivs' }}
-                                </span>
+                                <x-status-pill context="user-active" :value="$managedUser->is_active" />
                             </td>
+                            <td class="px-4 py-3 text-slate-600">{{ $managedUser->last_login?->format('d.m.Y H:i') ?: '-' }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex flex-wrap gap-2">
                                     <a href="{{ route('users.edit', $managedUser) }}" class="btn-edit"><x-icon name="edit" size="h-4 w-4" /><span>Rediget</span></a>
@@ -92,7 +109,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-8 text-center text-slate-500">Lietotaji vel nav pievienoti.</td>
+                            <td colspan="8" class="px-4 py-8 text-center text-slate-500">Lietotaji vel nav pievienoti.</td>
                         </tr>
                     @endforelse
                 </tbody>

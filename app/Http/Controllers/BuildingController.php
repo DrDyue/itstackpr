@@ -4,19 +4,52 @@ namespace App\Http\Controllers;
 
 use App\Models\Building;
 use App\Support\AuditTrail;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class BuildingController extends Controller
 {
     private const NOTES_DEFAULT = '';
 
-    public function index()
+    public function index(Request $request)
     {
         $this->requireManager();
 
-        $buildings = Building::orderBy('building_name')->get();
+        $filters = [
+            'q' => trim((string) $request->query('q', '')),
+            'city' => trim((string) $request->query('city', '')),
+            'scope' => trim((string) $request->query('scope', '')),
+        ];
 
-        return view('buildings.index', compact('buildings'));
+        $buildings = Building::query()
+            ->withCount(['rooms', 'devices'])
+            ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
+                $term = $filters['q'];
+
+                $query->where(function (Builder $searchQuery) use ($term) {
+                    $searchQuery->where('building_name', 'like', "%{$term}%")
+                        ->orWhere('address', 'like', "%{$term}%")
+                        ->orWhere('notes', 'like', "%{$term}%");
+                });
+            })
+            ->when($filters['city'] !== '', fn (Builder $query) => $query->where('city', $filters['city']))
+            ->when($filters['scope'] === 'with_rooms', fn (Builder $query) => $query->whereHas('rooms'))
+            ->when($filters['scope'] === 'with_devices', fn (Builder $query) => $query->whereHas('devices'))
+            ->when($filters['scope'] === 'empty', fn (Builder $query) => $query->doesntHave('rooms')->doesntHave('devices'))
+            ->orderBy('building_name')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('buildings.index', [
+            'buildings' => $buildings,
+            'filters' => $filters,
+            'cities' => Building::query()
+                ->whereNotNull('city')
+                ->where('city', '!=', '')
+                ->distinct()
+                ->orderBy('city')
+                ->pluck('city'),
+        ]);
     }
 
     public function create()
@@ -74,12 +107,14 @@ class BuildingController extends Controller
 
     private function validatedData(Request $request): array
     {
-        $data = $request->validate([
+        $data = $this->validateInput($request, [
             'building_name' => ['required', 'string', 'max:100'],
             'address' => ['nullable', 'string', 'max:200'],
             'city' => ['nullable', 'string', 'max:100'],
             'total_floors' => ['nullable', 'integer', 'min:0', 'max:200'],
             'notes' => ['nullable', 'string', 'max:200'],
+        ], [
+            'building_name.required' => 'Noradi ekas nosaukumu.',
         ]);
 
         $data['notes'] = $data['notes'] ?? self::NOTES_DEFAULT;
