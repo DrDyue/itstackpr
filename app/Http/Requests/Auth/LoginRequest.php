@@ -7,6 +7,7 @@ use Illuminate\Auth\Events\Lockout;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -62,7 +63,7 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        $user->forceFill(['last_login' => now()])->save();
+        $this->touchLastLogin($user);
 
         Auth::login($user, $this->boolean('remember'));
 
@@ -90,5 +91,33 @@ class LoginRequest extends FormRequest
     public function throttleKey(): string
     {
         return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
+    }
+
+    private function touchLastLogin(User $user): void
+    {
+        if (! $this->hasLastLoginColumn($user)) {
+            return;
+        }
+
+        try {
+            DB::table($user->getTable())
+                ->where('id', $user->getKey())
+                ->update(['last_login' => now()]);
+        } catch (QueryException $e) {
+            Log::warning('Unable to update last_login during login: ' . $e->getMessage());
+        }
+    }
+
+    private function hasLastLoginColumn(User $user): bool
+    {
+        try {
+            return DB::connection($user->getConnectionName())
+                ->getSchemaBuilder()
+                ->hasColumn($user->getTable(), 'last_login');
+        } catch (\Throwable $e) {
+            Log::warning('Unable to inspect users schema during login: ' . $e->getMessage());
+
+            return false;
+        }
     }
 }
