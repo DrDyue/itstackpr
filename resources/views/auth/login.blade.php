@@ -2,6 +2,12 @@
     <form method="POST" action="{{ route('login') }}">
         @csrf
 
+        @if (! empty($authSetupMessage))
+            <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                {{ $authSetupMessage }}
+            </div>
+        @endif
+
         <div class="form-group">
             <x-input-label for="email">Darbinieka e-pasts</x-input-label>
             <x-text-input
@@ -60,5 +66,4 @@
         </div>
     </form>
 </x-guest-layout>
-
 

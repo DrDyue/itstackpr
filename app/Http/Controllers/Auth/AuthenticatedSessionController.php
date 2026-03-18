@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Support\AuthBootstrapper;
 use App\Support\AuditTrail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,9 +16,13 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      */
-    public function create(): View
+    public function create(AuthBootstrapper $bootstrapper): View
     {
-        return view('auth.login');
+        $bootstrapStatus = $bootstrapper->prepareLoginScreen();
+
+        return view('auth.login', [
+            'authSetupMessage' => $bootstrapStatus['message'] ?? null,
+        ]);
     }
 
     /**

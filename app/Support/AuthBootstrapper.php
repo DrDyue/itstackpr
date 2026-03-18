@@ -1,0 +1,319 @@
+<?php
+
+namespace App\Support;
+
+use App\Models\User;
+use Illuminate\Database\QueryException;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use Throwable;
+
+class AuthBootstrapper
+{
+    private const DEMO_PASSWORD = 'password';
+
+    private const DEMO_ACCOUNTS = [
+        'artis.berzins@ludzas.lv' => [
+            'full_name' => 'Artis Berzins',
+            'phone' => '+37126000001',
+            'job_title' => 'Sistemas administrators',
+            'role' => User::ROLE_ADMIN,
+        ],
+        'ilze.strautina@ludzas.lv' => [
+            'full_name' => 'Ilze Strautina',
+            'phone' => '+37126000004',
+            'job_title' => 'Projektu koordinatore',
+            'role' => User::ROLE_USER,
+        ],
+    ];
+
+    public function prepareLoginScreen(): array
+    {
+        return $this->bootstrap(alwaysEnsureDemoUsers: true);
+    }
+
+    public function prepareAuthentication(string $email, string $password): array
+    {
+        return $this->bootstrap(
+            alwaysEnsureDemoUsers: false,
+            requestedEmail: $email,
+            requestedPassword: $password
+        );
+    }
+
+    private function bootstrap(bool $alwaysEnsureDemoUsers, string $requestedEmail = '', string $requestedPassword = ''): array
+    {
+        try {
+            if (! Schema::hasTable('users')) {
+                return [
+                    'ready' => false,
+                    'message' => 'Datubaze nav gatava autentifikacijai: tabula users nav atrasta.',
+                ];
+            }
+
+            $this->ensureUsersSchema();
+            $this->backfillLegacyUserData();
+            $this->normalizeLegacyRoles();
+
+            if ($alwaysEnsureDemoUsers || $this->isDemoLoginAttempt($requestedEmail, $requestedPassword)) {
+                $this->ensureDemoUsers();
+            }
+        } catch (Throwable $e) {
+            Log::error('Auth bootstrap failed: ' . $e->getMessage());
+        }
+
+        $ready = $this->hasUsersColumn('email') && $this->hasUsersColumn('password');
+
+        return [
+            'ready' => $ready,
+            'message' => $ready
+                ? null
+                : 'Autentifikacija nav pieejama, jo users tabula nav pilniba sinhronizeta ar aplikaciju.',
+        ];
+    }
+
+    private function ensureUsersSchema(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            if (! Schema::hasColumn('users', 'full_name')) {
+                $table->string('full_name', 100)->nullable();
+            }
+
+            if (! Schema::hasColumn('users', 'email')) {
+                $table->string('email', 100)->nullable();
+            }
+
+            if (! Schema::hasColumn('users', 'phone')) {
+                $table->string('phone', 100)->nullable();
+            }
+
+            if (! Schema::hasColumn('users', 'job_title')) {
+                $table->string('job_title', 100)->nullable();
+            }
+
+            if (! Schema::hasColumn('users', 'password')) {
+                $table->string('password', 255)->nullable();
+            }
+
+            if (! Schema::hasColumn('users', 'role')) {
+                $table->string('role', 30)->nullable();
+            }
+
+            if (! Schema::hasColumn('users', 'is_active')) {
+                $table->boolean('is_active')->default(true);
+            }
+
+            if (! Schema::hasColumn('users', 'remember_token')) {
+                $table->string('remember_token', 100)->nullable();
+            }
+
+            if (! Schema::hasColumn('users', 'last_login')) {
+                $table->timestamp('last_login')->nullable();
+            }
+
+            if (! Schema::hasColumn('users', 'created_at')) {
+                $table->timestamp('created_at')->nullable();
+            }
+
+            if (! Schema::hasColumn('users', 'updated_at')) {
+                $table->timestamp('updated_at')->nullable();
+            }
+        });
+    }
+
+    private function backfillLegacyUserData(): void
+    {
+        if ($this->hasUsersColumn('name') && $this->hasUsersColumn('full_name')) {
+            DB::table('users')
+                ->where(function ($query) {
+                    $query->whereNull('full_name')->orWhere('full_name', '');
+                })
+                ->update(['full_name' => DB::raw('name')]);
+        }
+
+        if (
+            ! Schema::hasTable('employees')
+            || ! $this->hasUsersColumn('employee_id')
+            || ! $this->hasUsersColumn('full_name')
+            || ! $this->hasUsersColumn('email')
+        ) {
+            return;
+        }
+
+        $employees = DB::table('employees')->get()->keyBy('id');
+        $users = DB::table('users')
+            ->select(['id', 'employee_id', 'full_name', 'email', 'phone', 'job_title', 'is_active', 'created_at', 'updated_at'])
+            ->whereNotNull('employee_id')
+            ->get();
+
+        foreach ($users as $user) {
+            $employee = $employees->get($user->employee_id);
+
+            if (! $employee) {
+                continue;
+            }
+
+            $payload = [];
+
+            if (($user->full_name === null || $user->full_name === '') && isset($employee->full_name)) {
+                $payload['full_name'] = $employee->full_name;
+            }
+
+            if (($user->email === null || $user->email === '') && isset($employee->email)) {
+                $payload['email'] = $employee->email;
+            }
+
+            if ($this->hasUsersColumn('phone') && empty($user->phone) && isset($employee->phone)) {
+                $payload['phone'] = $employee->phone;
+            }
+
+            if ($this->hasUsersColumn('job_title') && empty($user->job_title) && isset($employee->job_title)) {
+                $payload['job_title'] = $employee->job_title;
+            }
+
+            if ($this->hasUsersColumn('is_active') && isset($employee->is_active)) {
+                $payload['is_active'] = (bool) $employee->is_active;
+            }
+
+            if ($this->hasUsersColumn('updated_at') && empty($user->updated_at)) {
+                $payload['updated_at'] = $employee->created_at ?? now();
+            }
+
+            if ($payload !== []) {
+                DB::table('users')->where('id', $user->id)->update($payload);
+            }
+        }
+    }
+
+    private function normalizeLegacyRoles(): void
+    {
+        if (! $this->hasUsersColumn('role')) {
+            return;
+        }
+
+        try {
+            DB::table('users')
+                ->whereNull('role')
+                ->update(['role' => User::ROLE_USER]);
+        } catch (QueryException $e) {
+            Log::warning('Unable to normalize null user roles: ' . $e->getMessage());
+        }
+    }
+
+    private function ensureDemoUsers(): void
+    {
+        foreach (self::DEMO_ACCOUNTS as $email => $account) {
+            $this->upsertDemoUser($email, $account);
+        }
+    }
+
+    private function upsertDemoUser(string $email, array $account): void
+    {
+        if (! $this->hasUsersColumn('email') || ! $this->hasUsersColumn('password')) {
+            return;
+        }
+
+        $payload = [
+            'email' => $email,
+            'password' => Hash::make(self::DEMO_PASSWORD),
+        ];
+
+        if ($this->hasUsersColumn('full_name')) {
+            $payload['full_name'] = $account['full_name'];
+        }
+
+        if ($this->hasUsersColumn('phone')) {
+            $payload['phone'] = $account['phone'];
+        }
+
+        if ($this->hasUsersColumn('job_title')) {
+            $payload['job_title'] = $account['job_title'];
+        }
+
+        if ($this->hasUsersColumn('is_active')) {
+            $payload['is_active'] = true;
+        }
+
+        if ($this->hasUsersColumn('remember_token')) {
+            $payload['remember_token'] = null;
+        }
+
+        if ($this->hasUsersColumn('last_login')) {
+            $payload['last_login'] = null;
+        }
+
+        if ($this->hasUsersColumn('created_at')) {
+            $payload['created_at'] = now();
+        }
+
+        if ($this->hasUsersColumn('updated_at')) {
+            $payload['updated_at'] = now();
+        }
+
+        try {
+            DB::table('users')->updateOrInsert(['email' => $email], $payload);
+        } catch (QueryException $e) {
+            Log::warning('Demo user full upsert failed, retrying with minimal payload: ' . $e->getMessage());
+
+            $minimalPayload = [
+                'email' => $email,
+                'password' => Hash::make(self::DEMO_PASSWORD),
+            ];
+
+            if ($this->hasUsersColumn('created_at')) {
+                $minimalPayload['created_at'] = now();
+            }
+
+            if ($this->hasUsersColumn('updated_at')) {
+                $minimalPayload['updated_at'] = now();
+            }
+
+            DB::table('users')->updateOrInsert(['email' => $email], $minimalPayload);
+        }
+
+        $this->applyBestRoleValue($email, $account['role']);
+    }
+
+    private function applyBestRoleValue(string $email, string $desiredRole): void
+    {
+        if (! $this->hasUsersColumn('role') || ! $this->hasUsersColumn('email')) {
+            return;
+        }
+
+        $candidates = match ($desiredRole) {
+            User::ROLE_ADMIN => [User::ROLE_ADMIN, User::ROLE_IT_WORKER],
+            default => [User::ROLE_USER],
+        };
+
+        foreach ($candidates as $candidate) {
+            try {
+                DB::table('users')
+                    ->where('email', $email)
+                    ->update(['role' => $candidate]);
+
+                return;
+            } catch (QueryException $e) {
+                Log::warning("Unable to set demo role '{$candidate}' for {$email}: " . $e->getMessage());
+            }
+        }
+    }
+
+    private function isDemoLoginAttempt(string $email, string $password): bool
+    {
+        return $password === self::DEMO_PASSWORD && array_key_exists($email, self::DEMO_ACCOUNTS);
+    }
+
+    private function hasUsersColumn(string $column): bool
+    {
+        try {
+            return Schema::hasColumn('users', $column);
+        } catch (Throwable $e) {
+            Log::warning('Unable to inspect users table column ' . $column . ': ' . $e->getMessage());
+
+            return false;
+        }
+    }
+}

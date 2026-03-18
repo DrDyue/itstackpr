@@ -16,6 +16,20 @@ class AuthAndRequestFlowsTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_login_screen_bootstraps_demo_accounts(): void
+    {
+        $this->get(route('login'))
+            ->assertOk();
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'artis.berzins@ludzas.lv',
+        ]);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'ilze.strautina@ludzas.lv',
+        ]);
+    }
+
     public function test_demo_login_creates_or_repairs_demo_admin_account(): void
     {
         $response = $this->post(route('login'), [

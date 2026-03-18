@@ -2,6 +2,15 @@
 
 use Illuminate\Support\Str;
 
+$sessionPath = storage_path('framework/sessions');
+$configuredSessionDriver = env('SESSION_DRIVER');
+
+if (! is_string($configuredSessionDriver) || trim($configuredSessionDriver) === '') {
+    $configuredSessionDriver = is_dir($sessionPath) && is_writable($sessionPath) ? 'file' : 'cookie';
+} elseif ($configuredSessionDriver === 'file' && (! is_dir($sessionPath) || ! is_writable($sessionPath))) {
+    $configuredSessionDriver = 'cookie';
+}
+
 return [
 
     /*
@@ -18,7 +27,7 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'file'),
+    'driver' => $configuredSessionDriver,
 
     /*
     |--------------------------------------------------------------------------

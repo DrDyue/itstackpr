@@ -9,6 +9,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 class User extends Authenticatable
 {
     public const ROLE_ADMIN = 'admin';
+    public const ROLE_IT_WORKER = 'it_worker';
     public const ROLE_USER = 'user';
 
     protected $fillable = [
@@ -116,7 +117,7 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role === self::ROLE_ADMIN;
+        return in_array($this->role, [self::ROLE_ADMIN, self::ROLE_IT_WORKER], true);
     }
 
     public function isItWorker(): bool
