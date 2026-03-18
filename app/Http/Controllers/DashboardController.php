@@ -47,7 +47,7 @@ class DashboardController extends Controller
 
         $activeRepairs = $repairQuery
             ? (clone $repairQuery)
-                ->with(['device.building', 'device.room', 'acceptedBy', 'reporter'])
+                ->with(['device.building', 'device.room', 'acceptedBy', 'executor'])
                 ->whereIn('status', ['waiting', 'in-progress'])
                 ->orderByRaw("case when status = 'in-progress' then 0 else 1 end")
                 ->orderByDesc('id')

@@ -1374,6 +1374,10 @@ tbody td {
     @apply border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100;
 }
 
+.repair-action-back {
+    @apply border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100;
+}
+
 .repair-action-complete {
     @apply border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100;
 }

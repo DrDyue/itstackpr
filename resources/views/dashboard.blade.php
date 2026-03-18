@@ -195,7 +195,7 @@
                                     </div>
                                     <div class="mt-2 text-sm text-slate-600">{{ $repair->description }}</div>
                                     <div class="mt-2 text-sm text-slate-500">
-                                        Pieteica: {{ $repair->reporter?->full_name ?? '-' }}
+                                        Izpilda: {{ $repair->executor?->full_name ?? '-' }}
                                         | Apstiprinaja: {{ $repair->acceptedBy?->full_name ?? '-' }}
                                     </div>
                                 </div>

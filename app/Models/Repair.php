@@ -47,6 +47,11 @@ class Repair extends Model
         return $this->belongsTo(User::class, 'issue_reported_by');
     }
 
+    public function executor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'issue_reported_by');
+    }
+
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'accepted_by');

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Device;
 use App\Models\DeviceTransfer;
 use App\Models\AuditLog;
+use App\Models\Repair;
 use App\Models\RepairRequest;
 use App\Models\User;
 use App\Models\WriteoffRequest;
@@ -267,6 +268,86 @@ class AuthAndRequestFlowsTest extends TestCase
             'id' => $device->id,
             'status' => Device::STATUS_REPAIR,
         ]);
+    }
+
+    public function test_repair_transition_to_in_progress_sets_start_date_automatically(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'repair-start-date@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-REPAIR-START');
+
+        $repair = Repair::create([
+            'device_id' => $device->id,
+            'description' => 'Gaida remonta uzsaksanu.',
+            'status' => 'waiting',
+            'repair_type' => 'internal',
+            'priority' => 'medium',
+            'accepted_by' => $admin->id,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('repairs.transition', $repair), [
+                'target_status' => 'in-progress',
+            ])
+            ->assertRedirect();
+
+        $repair->refresh();
+        $this->assertSame('in-progress', $repair->status);
+        $this->assertSame(now()->toDateString(), $repair->start_date?->toDateString());
+        $this->assertNull($repair->end_date);
+    }
+
+    public function test_repair_transition_back_to_waiting_clears_dates(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'repair-back-waiting@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-REPAIR-BACK');
+
+        $repair = Repair::create([
+            'device_id' => $device->id,
+            'description' => 'Atgriezt uz gaidisanu.',
+            'status' => 'in-progress',
+            'repair_type' => 'internal',
+            'priority' => 'medium',
+            'accepted_by' => $admin->id,
+            'start_date' => now()->subDay()->toDateString(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('repairs.transition', $repair), [
+                'target_status' => 'waiting',
+            ])
+            ->assertRedirect();
+
+        $repair->refresh();
+        $this->assertSame('waiting', $repair->status);
+        $this->assertNull($repair->start_date);
+        $this->assertNull($repair->end_date);
+    }
+
+    public function test_completed_repair_can_be_returned_to_in_progress_and_end_date_is_cleared(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'repair-reopen@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-REPAIR-REOPEN');
+
+        $repair = Repair::create([
+            'device_id' => $device->id,
+            'description' => 'Atgriezt atpakal procesa.',
+            'status' => 'completed',
+            'repair_type' => 'external',
+            'priority' => 'medium',
+            'accepted_by' => $admin->id,
+            'start_date' => now()->subDays(3)->toDateString(),
+            'end_date' => now()->subDay()->toDateString(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('repairs.transition', $repair), [
+                'target_status' => 'in-progress',
+            ])
+            ->assertRedirect();
+
+        $repair->refresh();
+        $this->assertSame('in-progress', $repair->status);
+        $this->assertNull($repair->end_date);
     }
 
     public function test_admin_approving_writeoff_request_marks_device_as_writeoff(): void

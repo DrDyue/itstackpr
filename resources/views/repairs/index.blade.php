@@ -44,7 +44,7 @@
         <form method="GET" action="{{ route('repairs.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-4">
             <label class="block md:col-span-2">
                 <span class="crud-label">Meklet</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Ierice, kods, apraksts, pieteicejs...">
+                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Ierice, kods, apraksts, izpilditajs...">
             </label>
             <label class="block">
                 <span class="crud-label">Prioritate</span>
@@ -181,8 +181,8 @@
 
                                 <dl class="repair-board-meta-grid">
                                     <div>
-                                        <dt>Pieteicejs</dt>
-                                        <dd>{{ $repair->reporter?->full_name ?: 'Nav noradits' }}</dd>
+                                        <dt>Izpilditajs</dt>
+                                        <dd>{{ $repair->executor?->full_name ?: 'Nav noradits' }}</dd>
                                     </div>
                                     <div>
                                         <dt>Apstiprinaja</dt>
@@ -220,9 +220,20 @@
                                     @endif
 
                                     @if ($canManageRepairs && $repair->status === 'in-progress')
+                                        <button type="button" class="repair-action repair-action-back" @click="submitTransition({{ $repair->id }}, 'waiting')">
+                                            <x-icon name="back" size="h-4 w-4" />
+                                            <span>Atpakal gaida</span>
+                                        </button>
                                         <button type="button" class="repair-action repair-action-complete" @click="submitCompletion({ id: {{ $repair->id }}, name: @js($repair->device?->name ?: ('Remonts #' . $repair->id)) })">
                                             <x-icon name="check-circle" size="h-4 w-4" />
                                             <span>Pabeigt</span>
+                                        </button>
+                                    @endif
+
+                                    @if ($canManageRepairs && in_array($repair->status, ['completed', 'cancelled'], true))
+                                        <button type="button" class="repair-action repair-action-back" @click="submitTransition({{ $repair->id }}, 'in-progress')">
+                                            <x-icon name="back" size="h-4 w-4" />
+                                            <span>Atpakal procesa</span>
                                         </button>
                                     @endif
                                 </div>

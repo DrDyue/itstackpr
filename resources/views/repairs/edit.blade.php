@@ -8,7 +8,7 @@
                         <div class="page-title-icon page-title-icon-amber"><x-icon name="repair" size="h-7 w-7" /></div>
                         <div>
                             <h1 class="page-title">Rediget remontu</h1>
-                            <p class="page-subtitle">Atjauno remonta darbu un statusu.</p>
+                            <p class="page-subtitle">Atjauno remonta informaciju, bet statusu maini no remonta kolonnam.</p>
                         </div>
                     </div>
                 </div>
@@ -43,33 +43,6 @@
                 <button type="submit" class="btn-edit"><x-icon name="save" size="h-4 w-4" /><span>Saglabat</span></button>
                 <a href="{{ route('repairs.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Atcelt</span></a>
             </div>
-        </form>
-
-        <form method="POST" action="{{ route('repairs.transition', $repair) }}" class="surface-card space-y-4 p-6">
-            @csrf
-            <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
-                <x-icon name="stats" size="h-5 w-5" class="text-sky-600" />
-                <span>Atra statusa maina</span>
-            </h2>
-            <div class="grid gap-4 md:grid-cols-4">
-                <label class="block">
-                    <span class="crud-label">Jaunais statuss</span>
-                    <select name="target_status" class="crud-control">
-                        @foreach ($statuses as $status)
-                            <option value="{{ $status }}">{{ $statusLabels[$status] }}</option>
-                        @endforeach
-                    </select>
-                </label>
-                <label class="block">
-                    <span class="crud-label">Beigu datums</span>
-                    <input type="date" name="end_date" class="crud-control">
-                </label>
-                <label class="block">
-                    <span class="crud-label">Izmaksas</span>
-                    <input type="number" step="0.01" name="cost" class="crud-control">
-                </label>
-            </div>
-            <button type="submit" class="btn-submit"><x-icon name="save" size="h-4 w-4" /><span>Mainit statusu</span></button>
         </form>
 
         <form method="POST" action="{{ route('repairs.destroy', $repair) }}" onsubmit="return confirm('Dzest so remonta ierakstu?')" class="surface-card border-rose-200 p-6">

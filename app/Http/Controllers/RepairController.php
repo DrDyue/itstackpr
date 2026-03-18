@@ -50,7 +50,7 @@ class RepairController extends Controller
         }
 
         $repairs = $this->visibleRepairsQuery($user)
-            ->with(['device.building', 'device.room', 'reporter', 'acceptedBy', 'request'])
+            ->with(['device.building', 'device.room', 'executor', 'acceptedBy', 'request'])
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
 
@@ -98,14 +98,14 @@ class RepairController extends Controller
         if (! $this->featureTableExists('repairs')) {
             return view('repairs.create', array_merge($this->formData(), [
                 'preselectedDeviceId' => $request->query('device_id'),
-                'defaultReporterId' => $this->user()?->id,
+                'defaultExecutorId' => null,
                 'featureMessage' => 'Tabula repairs sobrid nav pieejama.',
             ]));
         }
 
         return view('repairs.create', array_merge($this->formData(), [
             'preselectedDeviceId' => $request->query('device_id'),
-            'defaultReporterId' => $this->user()?->id,
+            'defaultExecutorId' => null,
         ]));
     }
 
@@ -121,7 +121,7 @@ class RepairController extends Controller
         $validated['accepted_by'] = $manager->id;
 
         $repair = Repair::create($validated);
-        $repair->load(['device', 'reporter', 'acceptedBy']);
+        $repair->load(['device', 'executor', 'acceptedBy']);
 
         $this->syncDeviceStatus($repair);
         AuditTrail::created($manager->id, $repair);
@@ -137,7 +137,7 @@ class RepairController extends Controller
             return redirect()->route('repairs.index')->with('error', 'Tabula repairs sobrid nav pieejama.');
         }
 
-        $repair->load(['device', 'reporter', 'acceptedBy']);
+        $repair->load(['device', 'executor', 'acceptedBy']);
 
         return view('repairs.edit', array_merge([
             'repair' => $repair,
@@ -170,7 +170,7 @@ class RepairController extends Controller
         ]);
 
         $repair->update($this->validatedData($request, $repair));
-        $repair->load(['device', 'reporter', 'acceptedBy']);
+        $repair->load(['device', 'executor', 'acceptedBy']);
         $this->syncDeviceStatus($repair, $before['status'] ?? null);
 
         $after = $repair->fresh()->only(array_keys($before));
@@ -205,27 +205,34 @@ class RepairController extends Controller
 
         $validated = $this->validateInput($request, [
             'target_status' => ['required', Rule::in(self::STATUSES)],
-            'end_date' => ['nullable', 'date'],
             'cost' => ['nullable', 'numeric', 'min:0'],
         ], [
             'target_status.required' => 'Izvelies jauno remonta statusu.',
         ]);
 
-        $before = $repair->only(['status', 'end_date', 'cost']);
+        $before = $repair->only([
+            'status',
+            'start_date',
+            'end_date',
+            'cost',
+            'vendor_name',
+            'vendor_contact',
+            'invoice_number',
+        ]);
         $payload = ['status' => $validated['target_status']];
 
         if (array_key_exists('cost', $validated) && $validated['cost'] !== null && $validated['cost'] !== '') {
             $payload['cost'] = $validated['cost'];
         }
 
-        if ($validated['target_status'] === 'in-progress' && ! filled($repair->start_date)) {
-            $payload['start_date'] = now()->toDateString();
-        }
-
-        if ($validated['target_status'] === 'completed') {
-            $payload['end_date'] = $validated['end_date'] ?? now()->toDateString();
-        } elseif (array_key_exists('end_date', $validated)) {
-            $payload['end_date'] = $validated['end_date'] ?: null;
+        if ($validated['target_status'] === 'waiting') {
+            $payload['start_date'] = null;
+            $payload['end_date'] = null;
+        } elseif ($validated['target_status'] === 'in-progress') {
+            $payload['start_date'] = filled($repair->start_date) ? $repair->start_date->toDateString() : now()->toDateString();
+            $payload['end_date'] = null;
+        } elseif ($validated['target_status'] === 'completed') {
+            $payload['end_date'] = now()->toDateString();
         }
 
         $repair->update($payload);
@@ -283,11 +290,8 @@ class RepairController extends Controller
             'device_id' => ['required', 'exists:devices,id'],
             'issue_reported_by' => ['nullable', 'exists:users,id'],
             'description' => ['required', 'string'],
-            'status' => ['nullable', Rule::in(self::STATUSES)],
             'repair_type' => ['required', Rule::in(self::TYPES)],
             'priority' => ['nullable', Rule::in(self::PRIORITIES)],
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date'],
             'cost' => ['nullable', 'numeric', 'min:0'],
             'vendor_name' => ['nullable', 'string', 'max:100'],
             'vendor_contact' => ['nullable', 'string', 'max:100'],
@@ -301,10 +305,7 @@ class RepairController extends Controller
 
         foreach ([
             'issue_reported_by',
-            'status',
             'priority',
-            'start_date',
-            'end_date',
             'vendor_name',
             'vendor_contact',
             'invoice_number',
@@ -313,11 +314,13 @@ class RepairController extends Controller
             $validated[$field] = $validated[$field] ?: null;
         }
 
-        $validated['status'] = $validated['status'] ?? ($repair?->status ?? 'waiting');
+        $validated['status'] = $repair?->status ?? 'waiting';
         $validated['priority'] = $validated['priority'] ?? ($repair?->priority ?? 'medium');
-        $validated['issue_reported_by'] = $validated['issue_reported_by'] ?? $repair?->issue_reported_by ?? $this->user()?->id;
+        $validated['issue_reported_by'] = $validated['issue_reported_by'] ?? $repair?->issue_reported_by ?? null;
         $validated['accepted_by'] = $repair?->accepted_by ?? $this->user()?->id;
         $validated['request_id'] = $validated['request_id'] ?? $repair?->request_id ?? null;
+        $validated['start_date'] = $repair?->start_date?->toDateString();
+        $validated['end_date'] = $repair?->end_date?->toDateString();
 
         $device = Device::query()->find($validated['device_id']);
         if ($device && $device->status === Device::STATUS_WRITEOFF && (! $repair || (int) $repair->device_id !== (int) $device->id)) {
@@ -351,30 +354,24 @@ class RepairController extends Controller
             $validated['invoice_number'] = null;
         }
 
-        if ($validated['repair_type'] === 'external' && ! filled($validated['vendor_name'])) {
+        $isExternalInProcess = $validated['repair_type'] === 'external' && (($repair?->status ?? $validated['status']) === 'in-progress');
+
+        if ($validated['repair_type'] === 'external' && ! $isExternalInProcess) {
+            $validated['vendor_name'] = null;
+            $validated['vendor_contact'] = null;
+            $validated['invoice_number'] = null;
+        }
+
+        if ($isExternalInProcess && ! filled($validated['vendor_name'])) {
             throw ValidationException::withMessages([
                 'vendor_name' => ['Arejam remontam noradi pakalpojuma sniedzeju.'],
             ]);
         }
 
-        if ($validated['repair_type'] === 'external' && ! filled($validated['vendor_contact'])) {
+        if ($isExternalInProcess && ! filled($validated['vendor_contact'])) {
             throw ValidationException::withMessages([
                 'vendor_contact' => ['Arejam remontam noradi pakalpojuma sniedzeja kontaktu.'],
             ]);
-        }
-
-        if (
-            filled($validated['end_date'])
-            && filled($validated['start_date'])
-            && strtotime((string) $validated['end_date']) < strtotime((string) $validated['start_date'])
-        ) {
-            throw ValidationException::withMessages([
-                'end_date' => ['Beigu datums nevar but agraks par sakuma datumu.'],
-            ]);
-        }
-
-        if ($validated['status'] === 'completed' && ! filled($validated['end_date'])) {
-            $validated['end_date'] = now()->toDateString();
         }
 
         return $validated;
