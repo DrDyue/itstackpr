@@ -270,22 +270,22 @@
                                 <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
                             </td>
                             <td class="px-4 py-4">
-                                <details class="table-action-menu">
-                                    <summary class="table-action-summary">
+                                <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">
+                                    <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
                                         <span>Darbibas</span>
                                         <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                         </svg>
-                                    </summary>
+                                    </button>
 
-                                    <div class="table-action-list">
-                                        <a href="{{ route('devices.show', $device) }}" class="table-action-item">
+                                    <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
+                                        <a href="{{ route('devices.show', $device) }}" class="table-action-item" @click="open = false">
                                             <x-icon name="view" size="h-4 w-4" />
                                             <span>Skatit</span>
                                         </a>
 
                                         @if ($canManageDevices)
-                                            <a href="{{ route('devices.edit', $device) }}" class="table-action-item table-action-item-amber">
+                                            <a href="{{ route('devices.edit', $device) }}" class="table-action-item table-action-item-amber" @click="open = false">
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Rediget</span>
                                             </a>
@@ -295,7 +295,12 @@
                                                     @csrf
                                                     <input type="hidden" name="action" value="status">
                                                     <input type="hidden" name="target_status" value="writeoff">
-                                                    <button type="submit" class="table-action-button table-action-button-rose">
+                                                    <button
+                                                        type="submit"
+                                                        class="table-action-button table-action-button-rose"
+                                                        formmethod="POST"
+                                                        onclick="return confirm('Vai tiesam norakstit so ierici? Pec norakstisanas ta vairs nebus pieskirta lietotajam vai telpai.')"
+                                                    >
                                                         <x-icon name="writeoff" size="h-4 w-4" />
                                                         <span>Norakstit</span>
                                                     </button>
@@ -305,7 +310,7 @@
                                                     @csrf
                                                     <input type="hidden" name="action" value="status">
                                                     <input type="hidden" name="target_status" value="repair">
-                                                    <button type="submit" class="table-action-button table-action-button-amber">
+                                                    <button type="submit" class="table-action-button table-action-button-amber" formmethod="POST">
                                                         <x-icon name="repair" size="h-4 w-4" />
                                                         <span>Atdot remonta</span>
                                                     </button>
@@ -313,7 +318,7 @@
                                             @endif
                                         @endif
                                     </div>
-                                </details>
+                                </div>
                             </td>
                         </tr>
                     @empty

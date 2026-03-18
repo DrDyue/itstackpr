@@ -296,7 +296,9 @@ class DeviceController extends Controller
     {
         return Device::query()->when(
             ! $user->canManageRequests(),
-            fn (Builder $query) => $query->where('assigned_to_id', $user->id)
+            fn (Builder $query) => $query
+                ->where('assigned_to_id', $user->id)
+                ->where('status', '!=', Device::STATUS_WRITEOFF)
         );
     }
 
@@ -305,6 +307,8 @@ class DeviceController extends Controller
         return Room::query()
             ->with('building')
             ->whereHas('devices', function (Builder $query) use ($user) {
+                $query->where('status', '!=', Device::STATUS_WRITEOFF);
+
                 if (! $user->canManageRequests()) {
                     $query->where('assigned_to_id', $user->id);
                 }

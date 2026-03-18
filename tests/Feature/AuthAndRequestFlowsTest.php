@@ -171,7 +171,37 @@ class AuthAndRequestFlowsTest extends TestCase
             'id' => $device->id,
             'status' => Device::STATUS_WRITEOFF,
             'assigned_to_id' => null,
+            'building_id' => null,
+            'room_id' => null,
         ]);
+    }
+
+    public function test_get_quick_update_route_redirects_instead_of_throwing_method_not_allowed(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'quick-update-get@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-QUICK-GET');
+
+        $this->actingAs($admin)
+            ->get(route('devices.quick-update.redirect', $device))
+            ->assertRedirect(route('devices.show', $device));
+    }
+
+    public function test_written_off_device_does_not_show_in_regular_user_inventory_even_if_legacy_assignment_remains(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'writtenoff-hidden@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_WRITEOFF, 'DEV-HIDDEN-WRITEOFF');
+
+        DB::table('devices')
+            ->where('id', $device->id)
+            ->update([
+                'assigned_to_id' => $user->id,
+            ]);
+
+        $this->actingAs($user)
+            ->get(route('devices.index'))
+            ->assertOk()
+            ->assertSee('Ierices nav atrastas.')
+            ->assertDontSee(route('devices.show', $device), false);
     }
 
     public function test_user_can_submit_repair_request_for_own_device(): void
