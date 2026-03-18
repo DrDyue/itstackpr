@@ -16,12 +16,9 @@ use App\Http\Controllers\WriteoffRequestController;
 use App\Http\Controllers\DeviceTransferController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DeviceAssetController;
-use App\Http\Controllers\DeviceSetController;
-use App\Http\Controllers\DeviceSetItemController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\BackupController;
 
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
@@ -56,8 +53,6 @@ Route::middleware('auth')->group(function () {
     Route::resource('buildings', BuildingController::class)->except(['show']);
     Route::resource('rooms', RoomController::class)->except(['show']);
     Route::resource('device-types', DeviceTypeController::class)->except(['show']);
-    Route::post('/devices/bulk-update', [DeviceController::class, 'bulkUpdate'])->name('devices.bulk-update');
-    Route::post('/devices/{device}/quick-update', [DeviceController::class, 'quickUpdate'])->name('devices.quick-update');
     Route::resource('devices', DeviceController::class);
     Route::get('/device-assets/remote-preview', [DeviceAssetController::class, 'remotePreview'])
         ->name('device-assets.remote-preview');
@@ -79,20 +74,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/device-transfers', [DeviceTransferController::class, 'store'])->name('device-transfers.store');
     Route::post('/device-transfers/{deviceTransfer}/review', [DeviceTransferController::class, 'review'])->name('device-transfers.review');
     Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
-    Route::resource('device-sets', DeviceSetController::class)->except(['show']);
-    Route::post('/device-sets/{deviceSet}/items', [DeviceSetController::class, 'addItem'])
-        ->name('device-sets.items.add');
-    Route::delete('/device-sets/{deviceSet}/items/{item}', [DeviceSetController::class, 'deleteItem'])
-        ->name('device-sets.items.delete');
-    Route::resource('device-set-items', DeviceSetItemController::class)->except(['show']);
     Route::resource('users', UserController::class)->except(['show']);
-    Route::get('/backups', [BackupController::class, 'index'])->name('backups.index');
-    Route::post('/backups/manual', [BackupController::class, 'store'])->name('backups.store');
-    Route::put('/backups/settings', [BackupController::class, 'updateSettings'])->name('backups.settings.update');
-    Route::post('/backups/upload-restore', [BackupController::class, 'uploadAndRestore'])->name('backups.upload-restore');
-    Route::get('/backups/{backup}/download', [BackupController::class, 'download'])->name('backups.download');
-    Route::post('/backups/{backup}/restore', [BackupController::class, 'restore'])->name('backups.restore');
-    Route::delete('/backups/{backup}', [BackupController::class, 'destroy'])->name('backups.destroy');
 });
 
 Route::get('/', function () {

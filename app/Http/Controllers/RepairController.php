@@ -16,7 +16,7 @@ class RepairController extends Controller
     private const STATUSES = ['waiting', 'in-progress', 'completed', 'cancelled'];
     private const TYPES = ['internal', 'external'];
     private const PRIORITIES = ['low', 'medium', 'high', 'critical'];
-    private const RESTORABLE_DEVICE_STATUSES = ['active', 'reserve', 'broken', 'kitting'];
+    private const RESTORABLE_DEVICE_STATUSES = ['active', 'reserve', 'broken'];
 
     public function index(Request $request)
     {

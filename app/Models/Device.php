@@ -48,11 +48,6 @@ class Device extends Model
         return $this->belongsTo(DeviceType::class, 'device_type_id');
     }
 
-    public function device_type(): BelongsTo
-    {
-        return $this->type();
-    }
-
     public function building(): BelongsTo
     {
         return $this->belongsTo(Building::class);
@@ -100,17 +95,6 @@ class Device extends Model
         return $this->hasMany(DeviceTransfer::class);
     }
 
-    public function sets()
-    {
-        return $this->belongsToMany(DeviceSet::class, 'device_set_items')
-            ->withPivot(['quantity', 'role', 'description']);
-    }
-
-    public function deviceSetItems(): HasMany
-    {
-        return $this->hasMany(DeviceSetItem::class);
-    }
-
     public function deviceImageUrl(): ?string
     {
         return app(DeviceAssetManager::class)->url($this->device_image_url);
@@ -119,15 +103,5 @@ class Device extends Model
     public function warrantyImageUrl(): ?string
     {
         return app(DeviceAssetManager::class)->url($this->warranty_photo_name);
-    }
-
-    public function deviceImageThumbUrl(): ?string
-    {
-        return app(DeviceAssetManager::class)->thumbUrl($this->device_image_url);
-    }
-
-    public function warrantyImageThumbUrl(): ?string
-    {
-        return app(DeviceAssetManager::class)->thumbUrl($this->warranty_photo_name);
     }
 }

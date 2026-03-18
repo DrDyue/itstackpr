@@ -14,12 +14,10 @@ class LatvianDemoDataSeeder extends Seeder
         $now = now();
 
         DB::transaction(function () use ($now) {
-            DB::table('device_set_items')->delete();
             DB::table('device_transfers')->delete();
             DB::table('writeoff_requests')->delete();
             DB::table('repair_requests')->delete();
             DB::table('repairs')->delete();
-            DB::table('device_sets')->delete();
             DB::table('devices')->delete();
             DB::table('rooms')->delete();
             DB::table('device_types')->delete();
@@ -75,6 +73,7 @@ class LatvianDemoDataSeeder extends Seeder
             }, $users);
 
             DB::table('users')->insert($userRows);
+
             $userIdsByEmail = DB::table('users')->pluck('id', 'email')->all();
             $userIdsByName = DB::table('users')->pluck('id', 'full_name')->all();
             $adminUserId = $userIdsByEmail['artis.berzins@itstackpr.test'];
@@ -83,7 +82,7 @@ class LatvianDemoDataSeeder extends Seeder
                 ['building' => 'Administracijas eka', 'floor_number' => 1, 'room_number' => '101', 'room_name' => 'IT mezgls', 'user_name' => 'Artis Berzins', 'department' => 'IT', 'notes' => 'Serveri un tikla mezgli'],
                 ['building' => 'Administracijas eka', 'floor_number' => 1, 'room_number' => '102', 'room_name' => 'Atbalsta kabinets', 'user_name' => 'Linda Kalnina', 'department' => 'IT', 'notes' => 'Ikdienas atbalsta darbi'],
                 ['building' => 'Administracijas eka', 'floor_number' => 2, 'room_number' => '201', 'room_name' => 'Vadibas kabinets', 'user_name' => 'Ruta Liepa', 'department' => 'Vadiba', 'notes' => 'Vadibas darba vieta'],
-                ['building' => 'Administracijas eka', 'floor_number' => 2, 'room_number' => '202', 'room_name' => 'Finansu telpa', 'user_name' => 'Agnese Leite', 'department' => 'Finanses', 'notes' => 'Finansu nodaļa'],
+                ['building' => 'Administracijas eka', 'floor_number' => 2, 'room_number' => '202', 'room_name' => 'Finansu telpa', 'user_name' => 'Agnese Leite', 'department' => 'Finanses', 'notes' => 'Finansu nodala'],
                 ['building' => 'Administracijas eka', 'floor_number' => 3, 'room_number' => '301', 'room_name' => 'Personala kabinets', 'user_name' => 'Dace Rudzite', 'department' => 'Personals', 'notes' => 'Personala dokumenti'],
                 ['building' => 'Tehniskais korpuss', 'floor_number' => 1, 'room_number' => 'T1', 'room_name' => 'Noliktava', 'user_name' => 'Maris Vitols', 'department' => 'IT', 'notes' => 'Rezerves tehnika'],
                 ['building' => 'Tehniskais korpuss', 'floor_number' => 1, 'room_number' => 'T2', 'room_name' => 'Darbnica', 'user_name' => 'Janis Ozols', 'department' => 'IT', 'notes' => 'Diagnostika un remonti'],
@@ -114,7 +113,11 @@ class LatvianDemoDataSeeder extends Seeder
                 ['type_name' => 'UPS', 'category' => 'Elektroapgade', 'description' => 'Barosanas rezerve', 'expected_lifetime_years' => 6],
             ];
 
-            DB::table('device_types')->insert(array_map(fn (array $type) => array_merge($type, ['created_at' => $now]), $deviceTypes));
+            DB::table('device_types')->insert(array_map(
+                fn (array $type) => array_merge($type, ['created_at' => $now]),
+                $deviceTypes
+            ));
+
             $deviceTypeIds = DB::table('device_types')->pluck('id', 'type_name')->all();
 
             $deviceBlueprints = [
@@ -128,7 +131,7 @@ class LatvianDemoDataSeeder extends Seeder
                 ['code' => 'LDZ-0008', 'name' => 'Komutators D1', 'type' => 'Komutators', 'model' => 'Cisco CBS250', 'status' => 'active', 'room' => '101', 'assigned_to' => 'Maris Vitols'],
                 ['code' => 'LDZ-0009', 'name' => 'Monitors E1', 'type' => 'Monitors', 'model' => 'LG 27UL500', 'status' => 'active', 'room' => 'T3', 'assigned_to' => 'Kristine Daukste'],
                 ['code' => 'LDZ-0010', 'name' => 'Klepjdators F1', 'type' => 'Klepjdators', 'model' => 'Dell Latitude 7420', 'status' => 'written_off', 'room' => 'T1', 'assigned_to' => null],
-                ['code' => 'LDZ-0011', 'name' => 'Stacionarais dators G1', 'type' => 'Stacionarais dators', 'model' => 'HP ProDesk 600', 'status' => 'kitting', 'room' => 'T1', 'assigned_to' => null],
+                ['code' => 'LDZ-0011', 'name' => 'Stacionarais dators G1', 'type' => 'Stacionarais dators', 'model' => 'HP ProDesk 600', 'status' => 'reserve', 'room' => 'T1', 'assigned_to' => null],
                 ['code' => 'LDZ-0012', 'name' => 'Printeris H1', 'type' => 'Printeris', 'model' => 'Brother HL-L5100DN', 'status' => 'active', 'room' => '301', 'assigned_to' => 'Marta Zvirbule'],
             ];
 
@@ -150,7 +153,9 @@ class LatvianDemoDataSeeder extends Seeder
                     'warranty_until' => now()->addDays(rand(30, 720))->toDateString(),
                     'warranty_photo_name' => null,
                     'serial_number' => 'SN-' . $device['code'],
-                    'manufacturer' => str_contains($device['model'], 'Dell') ? 'Dell' : (str_contains($device['model'], 'HP') ? 'HP' : 'Cisco'),
+                    'manufacturer' => str_contains($device['model'], 'Dell')
+                        ? 'Dell'
+                        : (str_contains($device['model'], 'HP') ? 'HP' : 'Cisco'),
                     'notes' => 'Demo ierice jaunajai schemai',
                     'device_image_url' => null,
                     'created_by' => $adminUserId,
@@ -161,7 +166,7 @@ class LatvianDemoDataSeeder extends Seeder
 
             $deviceIds = DB::table('devices')->pluck('id', 'code')->all();
 
-            $repairs = [
+            DB::table('repairs')->insert([
                 [
                     'device_id' => $deviceIds['LDZ-0001'],
                     'reported_by_user_id' => $userIdsByName['Ilze Strautina'],
@@ -175,7 +180,7 @@ class LatvianDemoDataSeeder extends Seeder
                     'start_date' => now()->subDays(1)->toDateString(),
                     'estimated_completion' => now()->addDays(2)->toDateString(),
                     'actual_completion' => null,
-                    'diagnosis' => 'Iespējama barosanas ligzdas problema.',
+                    'diagnosis' => 'Iespejama barosanas ligzdas problema.',
                     'resolution_notes' => null,
                     'cost' => null,
                     'vendor_name' => null,
@@ -219,8 +224,8 @@ class LatvianDemoDataSeeder extends Seeder
                     'start_date' => now()->subDays(10)->toDateString(),
                     'estimated_completion' => now()->subDays(8)->toDateString(),
                     'actual_completion' => now()->subDays(8)->toDateString(),
-                    'diagnosis' => 'Padeves mehanisma tīrīšana.',
-                    'resolution_notes' => 'Iztīrīts un pārbaudīts.',
+                    'diagnosis' => 'Padeves mehanisma tirisana.',
+                    'resolution_notes' => 'Iztirits un parbaudits.',
                     'cost' => 35.00,
                     'vendor_name' => null,
                     'vendor_contact' => null,
@@ -228,26 +233,26 @@ class LatvianDemoDataSeeder extends Seeder
                     'created_at' => $now,
                     'updated_at' => $now,
                 ],
-            ];
-            DB::table('repairs')->insert($repairs);
+            ]);
+
             $repairIds = DB::table('repairs')->pluck('id', 'device_id')->all();
 
             DB::table('repair_requests')->insert([
                 [
                     'device_id' => $deviceIds['LDZ-0001'],
                     'responsible_user_id' => $userIdsByName['Ilze Strautina'],
-                    'description' => 'Uzlāde nestrādā un dators izslēdzas.',
+                    'description' => 'Uzlade nestrada un dators izsledzas.',
                     'status' => 'approved',
                     'reviewed_by_user_id' => $adminUserId,
                     'repair_id' => $repairIds[$deviceIds['LDZ-0001']] ?? null,
-                    'review_notes' => 'Apstiprināts un nodots IT nodaļai.',
+                    'review_notes' => 'Apstiprinats un nodots IT nodalai.',
                     'created_at' => $now->copy()->subDays(1),
                     'updated_at' => $now,
                 ],
                 [
                     'device_id' => $deviceIds['LDZ-0005'],
                     'responsible_user_id' => $userIdsByName['Ruta Liepa'],
-                    'description' => 'Dators sakarst un strādā lēni.',
+                    'description' => 'Dators sakarst un strada leni.',
                     'status' => 'pending',
                     'reviewed_by_user_id' => null,
                     'repair_id' => null,
@@ -258,11 +263,11 @@ class LatvianDemoDataSeeder extends Seeder
                 [
                     'device_id' => $deviceIds['LDZ-0009'],
                     'responsible_user_id' => $userIdsByName['Kristine Daukste'],
-                    'description' => 'Monitors mirgo, bet pēc pārbaudes strādā korekti.',
+                    'description' => 'Monitors mirgo, bet pec parbaudes strada korekti.',
                     'status' => 'denied',
                     'reviewed_by_user_id' => $userIdsByName['Linda Kalnina'],
                     'repair_id' => null,
-                    'review_notes' => 'Atkārtotu problēmu neizdevās konstatēt.',
+                    'review_notes' => 'Atkartotu problemu neizdevas konstatet.',
                     'created_at' => $now->copy()->subDays(3),
                     'updated_at' => $now->copy()->subDays(2),
                 ],
@@ -282,7 +287,7 @@ class LatvianDemoDataSeeder extends Seeder
                 [
                     'device_id' => $deviceIds['LDZ-0003'],
                     'responsible_user_id' => $userIdsByName['Agnese Leite'],
-                    'reason' => 'Nepietiekama veiktspēja ikdienas darbam.',
+                    'reason' => 'Nepietiekama veiktspeja ikdienas darbam.',
                     'status' => 'pending',
                     'reviewed_by_user_id' => null,
                     'review_notes' => null,
@@ -292,10 +297,10 @@ class LatvianDemoDataSeeder extends Seeder
                 [
                     'device_id' => $deviceIds['LDZ-0008'],
                     'responsible_user_id' => $userIdsByName['Maris Vitols'],
-                    'reason' => 'Pēc lietotāja domām lēns, bet tehniski darba kartībā.',
+                    'reason' => 'Pec lietotaja domam lens, bet tehniski darba kartiba.',
                     'status' => 'denied',
                     'reviewed_by_user_id' => $userIdsByName['Janis Ozols'],
-                    'review_notes' => 'Nomaiņa šobrīd nav pamatota.',
+                    'review_notes' => 'Nomaina sobrid nav pamatota.',
                     'created_at' => $now->copy()->subDays(5),
                     'updated_at' => $now->copy()->subDays(4),
                 ],
@@ -306,10 +311,10 @@ class LatvianDemoDataSeeder extends Seeder
                     'device_id' => $deviceIds['LDZ-0002'],
                     'responsible_user_id' => $userIdsByName['Ilze Strautina'],
                     'transfer_to_user_id' => $userIdsByName['Marta Zvirbule'],
-                    'transfer_reason' => 'Monitors nepieciešams sekretāres darba vietai.',
+                    'transfer_reason' => 'Monitors nepieciesams sekretarei darba vietai.',
                     'status' => 'approved',
                     'reviewed_by_user_id' => $adminUserId,
-                    'review_notes' => 'Ierice pārreģistrēta.',
+                    'review_notes' => 'Ierice parregistreta.',
                     'created_at' => $now->copy()->subDays(2),
                     'updated_at' => $now->copy()->subDay(),
                 ],
@@ -317,7 +322,7 @@ class LatvianDemoDataSeeder extends Seeder
                     'device_id' => $deviceIds['LDZ-0005'],
                     'responsible_user_id' => $userIdsByName['Ruta Liepa'],
                     'transfer_to_user_id' => $userIdsByName['Kristine Daukste'],
-                    'transfer_reason' => 'Pagaidu darba vajadzībām projektu komandai.',
+                    'transfer_reason' => 'Pagaidu darba vajadzibam projektu komandai.',
                     'status' => 'pending',
                     'reviewed_by_user_id' => null,
                     'review_notes' => null,
@@ -328,10 +333,10 @@ class LatvianDemoDataSeeder extends Seeder
                     'device_id' => $deviceIds['LDZ-0007'],
                     'responsible_user_id' => $userIdsByName['Janis Ozols'],
                     'transfer_to_user_id' => $userIdsByName['Roberts Arbidans'],
-                    'transfer_reason' => 'Lietotājs pieprasīja UPS juristu kabinetam.',
+                    'transfer_reason' => 'Lietotajs pieprasija UPS juristu kabinetam.',
                     'status' => 'denied',
                     'reviewed_by_user_id' => $userIdsByName['Roberts Arbidans'],
-                    'review_notes' => 'Saņēmējam šobrīd nav vajadzības pēc ierīces.',
+                    'review_notes' => 'Sanemejam sobrid nav vajadzibas pec ierices.',
                     'created_at' => $now->copy()->subDays(4),
                     'updated_at' => $now->copy()->subDays(3),
                 ],
@@ -340,62 +345,6 @@ class LatvianDemoDataSeeder extends Seeder
             DB::table('devices')
                 ->where('id', $deviceIds['LDZ-0002'])
                 ->update(['assigned_user_id' => $userIdsByName['Marta Zvirbule']]);
-
-            DB::table('device_sets')->insert([
-                [
-                    'name' => 'Darba vieta sekretarei',
-                    'description' => 'Pilns komplekts sekretarei',
-                    'set_name' => 'Sekretares komplekts',
-                    'set_code' => 'KIT-SEC-01',
-                    'status' => 'active',
-                    'room_id' => $roomIds['301'],
-                    'assigned_to' => 'Marta Zvirbule',
-                    'notes' => 'Darba vietas pamata komplekts',
-                    'created_by' => $adminUserId,
-                    'created_at' => $now,
-                ],
-                [
-                    'name' => 'Rezerves komplekts',
-                    'description' => 'Rezerves tehnikai noliktavā',
-                    'set_name' => 'Rezerves komplekts',
-                    'set_code' => 'KIT-RES-01',
-                    'status' => 'draft',
-                    'room_id' => $roomIds['T1'],
-                    'assigned_to' => 'Maris Vitols',
-                    'notes' => 'Noliktavas komplekts',
-                    'created_by' => $adminUserId,
-                    'created_at' => $now,
-                ],
-            ]);
-
-            $setIds = DB::table('device_sets')->pluck('id', 'set_code')->all();
-
-            DB::table('device_set_items')->insert([
-                [
-                    'device_set_id' => $setIds['KIT-SEC-01'],
-                    'device_id' => $deviceIds['LDZ-0002'],
-                    'quantity' => 1,
-                    'role' => 'Monitors',
-                    'description' => 'Sekretares monitors',
-                    'created_at' => $now,
-                ],
-                [
-                    'device_set_id' => $setIds['KIT-SEC-01'],
-                    'device_id' => $deviceIds['LDZ-0012'],
-                    'quantity' => 1,
-                    'role' => 'Printeris',
-                    'description' => 'Drukas ierice sekretarei',
-                    'created_at' => $now,
-                ],
-                [
-                    'device_set_id' => $setIds['KIT-RES-01'],
-                    'device_id' => $deviceIds['LDZ-0011'],
-                    'quantity' => 1,
-                    'role' => 'Rezerves dators',
-                    'description' => 'Rezerves darba vietas dators',
-                    'created_at' => $now,
-                ],
-            ]);
         });
     }
 }

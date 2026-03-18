@@ -22,7 +22,6 @@ return new class extends Migration
                 'broken',
                 'repair',
                 'written_off',
-                'kitting',
             ])->default('active');
             $table->foreignId('building_id')
                 ->nullable()

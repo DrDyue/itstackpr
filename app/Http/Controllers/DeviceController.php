@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Building;
 use App\Models\Device;
-use App\Models\DeviceSet;
-use App\Models\DeviceSetItem;
 use App\Models\DeviceType;
 use App\Models\Room;
 use App\Models\User;
@@ -18,7 +16,7 @@ use Illuminate\Validation\ValidationException;
 
 class DeviceController extends Controller
 {
-    private const STATUSES = ['active', 'reserve', 'broken', 'repair', 'written_off', 'kitting'];
+    private const STATUSES = ['active', 'reserve', 'broken', 'repair', 'written_off'];
 
     public function index(Request $request)
     {
@@ -118,13 +116,11 @@ class DeviceController extends Controller
             'writeoffRequests.responsibleUser',
             'transfers.responsibleUser',
             'transfers.transferTo',
-            'sets.room.building',
         ]);
 
         return view('devices.show', [
             'device' => $device,
             'deviceImageUrl' => $device->deviceImageUrl(),
-            'deviceThumbUrl' => $device->deviceImageThumbUrl(),
             'warrantyImageUrl' => $device->warrantyImageUrl(),
             'statusLabels' => $this->statusLabels(),
             'canManageDevices' => $this->user()?->canManageRequests() ?? false,
@@ -157,57 +153,6 @@ class DeviceController extends Controller
         $device->delete();
 
         return redirect()->route('devices.index')->with('success', 'Ierice dzesta');
-    }
-
-    public function quickUpdate(Request $request, Device $device)
-    {
-        $this->requireManager();
-
-        $validated = $request->validate([
-            'action' => ['required', Rule::in(['status', 'room', 'set'])],
-            'target_status' => ['nullable', Rule::in(self::STATUSES)],
-            'target_room_id' => ['nullable', 'exists:rooms,id'],
-            'target_set_id' => ['nullable', 'exists:device_sets,id'],
-        ]);
-
-        $result = $this->performDeviceAction($device, $validated);
-
-        return redirect()->route('devices.show', $device)->with($result['level'], $result['message']);
-    }
-
-    public function bulkUpdate(Request $request)
-    {
-        $this->requireManager();
-
-        $validated = $request->validate([
-            'device_ids' => ['required', 'array', 'min:1'],
-            'device_ids.*' => ['integer', 'exists:devices,id'],
-            'action' => ['required', Rule::in(['status', 'room', 'set'])],
-            'target_status' => ['nullable', Rule::in(self::STATUSES)],
-            'target_room_id' => ['nullable', 'exists:rooms,id'],
-            'target_set_id' => ['nullable', 'exists:device_sets,id'],
-        ]);
-
-        $devices = Device::query()->whereIn('id', $validated['device_ids'])->get();
-        $processed = 0;
-        $messages = [];
-
-        foreach ($devices as $device) {
-            $result = $this->performDeviceAction($device, $validated);
-
-            if ($result['level'] === 'success') {
-                $processed++;
-            } else {
-                $messages[] = ($device->code ?: ('ID ' . $device->id)) . ': ' . $result['message'];
-            }
-        }
-
-        $flash = $processed > 0 ? 'Apstradatas ierices: ' . $processed . '.' : 'Neviena ierice netika apstradata.';
-        if ($messages !== []) {
-            $flash .= ' ' . implode(' ', array_slice($messages, 0, 3));
-        }
-
-        return redirect()->route('devices.index')->with($processed > 0 ? 'success' : 'error', $flash);
     }
 
     private function visibleDevicesQuery(User $user): Builder
@@ -401,7 +346,6 @@ class DeviceController extends Controller
             'broken' => 'Bojata',
             'repair' => 'Remonta',
             'written_off' => 'Norakstita',
-            'kitting' => 'Komplektacija',
             default => 'Aktiva',
         };
     }
@@ -411,102 +355,5 @@ class DeviceController extends Controller
         return collect(self::STATUSES)
             ->mapWithKeys(fn (string $status) => [$status => $this->statusLabel($status)])
             ->all();
-    }
-
-    private function performDeviceAction(Device $device, array $data): array
-    {
-        return match ($data['action']) {
-            'status' => $this->changeDeviceStatus($device, (string) ($data['target_status'] ?? '')),
-            'room' => $this->moveDevice($device, $data['target_room_id'] ?? null),
-            'set' => $this->attachDeviceToSet($device, $data['target_set_id'] ?? null),
-            default => ['level' => 'error', 'message' => 'Neatbalstita darbiba.'],
-        };
-    }
-
-    private function changeDeviceStatus(Device $device, string $status): array
-    {
-        if (! in_array($status, self::STATUSES, true)) {
-            return ['level' => 'error', 'message' => 'Nav izvelets korekts statuss.'];
-        }
-
-        if ($status === 'written_off' && filled($device->assigned_user_id)) {
-            return ['level' => 'error', 'message' => 'Norakstitu ierici vispirms atsaisti no personas.'];
-        }
-
-        if ($device->status === $status) {
-            return ['level' => 'error', 'message' => 'Statuss jau ir iestatits.'];
-        }
-
-        $before = ['status' => $device->status];
-        $device->forceFill(['status' => $status])->save();
-        AuditTrail::updatedFromState(auth()->id(), $device, $before, ['status' => $status]);
-
-        return ['level' => 'success', 'message' => 'Statuss atjauninats.'];
-    }
-
-    private function moveDevice(Device $device, mixed $roomId): array
-    {
-        if (! $roomId) {
-            return ['level' => 'error', 'message' => 'Nav izveleta telpa.'];
-        }
-
-        $room = Room::query()->with('building')->find($roomId);
-        if (! $room) {
-            return ['level' => 'error', 'message' => 'Telpa nav atrasta.'];
-        }
-
-        if ((int) $device->room_id === (int) $room->id) {
-            return ['level' => 'error', 'message' => 'Ierice jau atrodas saja telpa.'];
-        }
-
-        $before = $device->only(['room_id', 'building_id']);
-
-        $device->forceFill([
-            'room_id' => $room->id,
-            'building_id' => $room->building_id,
-        ])->save();
-
-        AuditTrail::updatedFromState(auth()->id(), $device, $before, [
-            'room_id' => $room->id,
-            'building_id' => $room->building_id,
-        ]);
-
-        return ['level' => 'success', 'message' => 'Ierice parvietota uz citu telpu.'];
-    }
-
-    private function attachDeviceToSet(Device $device, mixed $setId): array
-    {
-        if (! $setId) {
-            return ['level' => 'error', 'message' => 'Nav izveleta komplektacija.'];
-        }
-
-        $set = DeviceSet::query()->find($setId);
-        if (! $set) {
-            return ['level' => 'error', 'message' => 'Komplektacija nav atrasta.'];
-        }
-
-        $existing = DeviceSetItem::query()
-            ->where('device_set_id', $set->id)
-            ->where('device_id', $device->id)
-            ->first();
-
-        if ($existing) {
-            return ['level' => 'error', 'message' => 'Ierice jau ir saja komplektacija.'];
-        }
-
-        DeviceSetItem::create([
-            'device_set_id' => $set->id,
-            'device_id' => $device->id,
-        ]);
-
-        $before = ['status' => $device->status];
-
-        if ($device->status !== 'kitting') {
-            $device->forceFill(['status' => 'kitting'])->save();
-        }
-
-        AuditTrail::updatedFromState(auth()->id(), $device, $before, ['status' => $device->status]);
-
-        return ['level' => 'success', 'message' => 'Ierice pievienota komplektacijai.'];
     }
 }

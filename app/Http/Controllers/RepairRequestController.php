@@ -158,6 +158,6 @@ class RepairRequestController extends Controller
 
     private function normalizeRepairRestoreStatus(?string $status): string
     {
-        return in_array($status, ['active', 'reserve', 'broken', 'kitting'], true) ? $status : 'active';
+        return in_array($status, ['active', 'reserve', 'broken'], true) ? $status : 'active';
     }
 }

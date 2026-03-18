@@ -10,18 +10,11 @@ use App\Models\Repair;
 use App\Models\RepairRequest;
 use App\Models\Room;
 use App\Models\WriteoffRequest;
-use App\Support\DatabaseBackupService;
-use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function __construct(
-        private readonly DatabaseBackupService $backupService
-    ) {
-    }
-
     public function index(): View
     {
         $user = $this->user();
@@ -49,10 +42,8 @@ class DashboardController extends Controller
 
         $totalDevices = (clone $deviceQuery)->count();
         $activeDevices = (clone $deviceQuery)->where('status', 'active')->count();
-        $reserveDevices = (clone $deviceQuery)->where('status', 'reserve')->count();
         $brokenDevices = (clone $deviceQuery)->where('status', 'broken')->count();
         $inRepairDevices = (clone $deviceQuery)->where('status', 'repair')->count();
-        $writtenOffDevices = (clone $deviceQuery)->where('status', 'written_off')->count();
 
         $activeRepairs = (clone $repairQuery)
             ->with(['device.building', 'device.room', 'assignee'])
@@ -110,40 +101,21 @@ class DashboardController extends Controller
             ];
         });
 
-        $allBackups = $user->isAdmin() ? $this->backupService->allBackups() : collect();
-        $backupSettings = $user->isAdmin() ? $this->backupService->getSettings() : null;
-        $backupSummary = [
-            'count' => $allBackups->count(),
-            'latest' => $allBackups->first(),
-            'current' => $allBackups->first(fn ($backup) => $backup->is_current),
-            'enabled' => (bool) ($backupSettings?->enabled ?? false),
-            'next_run_at' => $backupSettings ? $this->backupService->nextRunAt($backupSettings, CarbonImmutable::now()) : null,
-        ];
-
         return view('dashboard', [
             'user' => $user,
             'totalDevices' => $totalDevices,
             'activeDevices' => $activeDevices,
-            'reserveDevices' => $reserveDevices,
             'brokenDevices' => $brokenDevices,
             'inRepairDevices' => $inRepairDevices,
-            'writtenOffDevices' => $writtenOffDevices,
             'totalRooms' => Room::count(),
             'mappedRooms' => Room::has('devices')->count(),
-            'activeRepairsCount' => (clone $repairQuery)->whereIn('status', ['waiting', 'in-progress'])->count(),
-            'waitingRepairsCount' => (clone $repairQuery)->where('status', 'waiting')->count(),
-            'inProgressRepairsCount' => (clone $repairQuery)->where('status', 'in-progress')->count(),
-            'completedRepairsThisMonth' => (clone $repairQuery)->where('status', 'completed')->where('actual_completion', '>=', now()->startOfMonth())->count(),
             'pendingRepairRequests' => $repairRequestQuery ? (clone $repairRequestQuery)->where('status', 'pending')->count() : 0,
             'pendingWriteoffRequests' => $writeoffRequestQuery ? (clone $writeoffRequestQuery)->where('status', 'pending')->count() : 0,
             'pendingTransfers' => $transferQuery ? (clone $transferQuery)->where('status', 'pending')->count() : 0,
-            'averageRepairCost' => (float) ((clone $repairQuery)->whereNotNull('cost')->avg('cost') ?? 0),
-            'latestInventoryAt' => (clone $deviceQuery)->max('created_at'),
             'buildingTree' => $buildingTree,
             'activeRepairs' => $activeRepairs,
             'recentDevices' => $recentDevices,
             'recentActivity' => $recentActivity,
-            'backupSummary' => $backupSummary,
             'statusLabels' => [
                 'waiting' => 'Gaida',
                 'in-progress' => 'Procesa',
