@@ -130,7 +130,7 @@ const registerAlpineData = () => {
         startY: 0,
         startScrollTop: 0,
         dragStartIndex: 0,
-        scrubStepPx: 36,
+        scrubStepPx: 50,
         init() {
             if (this.selected && !this.query) {
                 const current = this.options.find((option) => option.value === this.selected);
@@ -168,6 +168,14 @@ const registerAlpineData = () => {
             this.$nextTick(() => {
                 this.$refs.input?.select();
             });
+        },
+        handleTriggerClick() {
+            if (this.suppressClick) {
+                this.suppressClick = false;
+                return;
+            }
+
+            this.openPanel();
         },
         closePanelOnly() {
             this.open = false;
@@ -388,7 +396,9 @@ const registerAlpineData = () => {
         finishScrub() {
             if (this.dragging && this.filteredOptions[this.highlightedIndex]) {
                 this.choose(this.filteredOptions[this.highlightedIndex], true);
-                this.suppressClick = false;
+                window.setTimeout(() => {
+                    this.suppressClick = false;
+                }, 80);
                 return;
             }
 
