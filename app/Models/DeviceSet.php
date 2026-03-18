@@ -11,6 +11,8 @@ class DeviceSet extends Model
     protected $table = 'device_sets';
 
     protected $fillable = [
+        'name',
+        'description',
         'set_name',
         'set_code',
         'status',

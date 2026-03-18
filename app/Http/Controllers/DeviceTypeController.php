@@ -10,6 +10,8 @@ class DeviceTypeController extends Controller
 {
     public function index(Request $request)
     {
+        $this->requireManager();
+
         $filters = [
             'q' => trim((string) $request->query('q', '')),
             'category' => trim((string) $request->query('category', '')),
@@ -53,11 +55,15 @@ class DeviceTypeController extends Controller
 
     public function create()
     {
+        $this->requireManager();
+
         return view('device_types.create');
     }
 
     public function store(Request $request)
     {
+        $this->requireManager();
+
         $data = $request->validate([
             'type_name' => ['required', 'string', 'max:30', 'unique:device_types,type_name'],
             'category' => ['required', 'string', 'max:50'],
@@ -73,11 +79,15 @@ class DeviceTypeController extends Controller
 
     public function edit(DeviceType $deviceType)
     {
+        $this->requireManager();
+
         return view('device_types.edit', ['type' => $deviceType]);
     }
 
     public function update(Request $request, DeviceType $deviceType)
     {
+        $this->requireManager();
+
         $data = $request->validate([
             'type_name' => ['required', 'string', 'max:30', 'unique:device_types,type_name,' . $deviceType->id],
             'category' => ['required', 'string', 'max:50'],
@@ -95,6 +105,8 @@ class DeviceTypeController extends Controller
 
     public function destroy(DeviceType $deviceType)
     {
+        $this->requireManager();
+
         AuditTrail::deleted(auth()->id(), $deviceType);
         $deviceType->delete();
         return redirect()->route('device-types.index')->with('success', 'Ierices tips dzests');
@@ -102,6 +114,8 @@ class DeviceTypeController extends Controller
 
     public function show(DeviceType $deviceType)
     {
+        $this->requireManager();
+
         return redirect()->route('device-types.index');
     }
 }

@@ -7,6 +7,7 @@ use App\Models\Room;
 use App\Models\User;
 use App\Support\AuditTrail;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class RoomController extends Controller
 {
@@ -59,7 +60,7 @@ class RoomController extends Controller
         $this->requireManager();
 
         $before = $room->only(['building_id', 'floor_number', 'room_number', 'room_name', 'user_id', 'department', 'notes']);
-        $room->update($this->validatedData($request));
+        $room->update($this->validatedData($request, $room));
         $after = $room->fresh()->only(array_keys($before));
 
         AuditTrail::updatedFromState(auth()->id(), $room, $before, $after);
@@ -82,12 +83,19 @@ class RoomController extends Controller
         return redirect()->route('rooms.index');
     }
 
-    private function validatedData(Request $request): array
+    private function validatedData(Request $request, ?Room $room = null): array
     {
         $data = $request->validate([
             'building_id' => ['required', 'exists:buildings,id'],
             'floor_number' => ['required', 'integer', 'min:-10', 'max:200'],
-            'room_number' => ['required', 'string', 'max:20'],
+            'room_number' => [
+                'required',
+                'string',
+                'max:20',
+                Rule::unique('rooms', 'room_number')
+                    ->where(fn ($query) => $query->where('building_id', $request->input('building_id')))
+                    ->ignore($room?->id),
+            ],
             'room_name' => ['nullable', 'string', 'max:100'],
             'user_id' => ['nullable', 'exists:users,id'],
             'department' => ['nullable', 'string', 'max:100'],

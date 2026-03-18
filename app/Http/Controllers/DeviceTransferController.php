@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -121,17 +122,29 @@ class DeviceTransferController extends Controller
 
         $before = $deviceTransfer->only(['status', 'reviewed_by_user_id', 'review_notes']);
 
-        $deviceTransfer->update([
-            'status' => $validated['status'],
-            'reviewed_by_user_id' => $reviewer->id,
-            'review_notes' => $validated['review_notes'] ?: null,
-        ]);
+        DB::transaction(function () use ($validated, $deviceTransfer, $reviewer) {
+            $deviceTransfer->update([
+                'status' => $validated['status'],
+                'reviewed_by_user_id' => $reviewer->id,
+                'review_notes' => $validated['review_notes'] ?: null,
+            ]);
 
-        if ($validated['status'] === 'approved') {
-            $deviceTransfer->device?->forceFill([
+            if ($validated['status'] !== 'approved') {
+                return;
+            }
+
+            $device = $deviceTransfer->device()->lockForUpdate()->first();
+
+            if (! $device || in_array($device->status, ['written_off', 'repair'], true)) {
+                throw ValidationException::withMessages([
+                    'status' => ['Ierici nevar nodot, jo tas statuss kops pieteikuma izveides ir mainijies.'],
+                ]);
+            }
+
+            $device->forceFill([
                 'assigned_user_id' => $deviceTransfer->transfer_to_user_id,
             ])->save();
-        }
+        });
 
         $after = $deviceTransfer->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState($reviewer->id, $deviceTransfer, $before, $after);

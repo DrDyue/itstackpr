@@ -13,6 +13,8 @@ class DeviceSetItemController extends Controller
 {
     public function index(Request $request)
     {
+        $this->requireManager();
+
         $deviceSetId = $request->query('device_set_id');
 
         $items = DeviceSetItem::with(['deviceSet', 'device'])
@@ -25,6 +27,8 @@ class DeviceSetItemController extends Controller
 
     public function create(Request $request)
     {
+        $this->requireManager();
+
         $selectedDeviceSetId = $request->query('device_set_id');
 
         return view('device_set_items.create', [
@@ -36,6 +40,8 @@ class DeviceSetItemController extends Controller
 
     public function store(Request $request)
     {
+        $this->requireManager();
+
         $item = DeviceSetItem::create($this->validatedData($request));
         AuditTrail::created(auth()->id(), $item);
 
@@ -44,6 +50,8 @@ class DeviceSetItemController extends Controller
 
     public function edit(DeviceSetItem $deviceSetItem)
     {
+        $this->requireManager();
+
         return view('device_set_items.edit', [
             'deviceSetItem' => $deviceSetItem,
             'deviceSets' => DeviceSet::orderBy('set_name')->get(),
@@ -53,6 +61,8 @@ class DeviceSetItemController extends Controller
 
     public function update(Request $request, DeviceSetItem $deviceSetItem)
     {
+        $this->requireManager();
+
         $before = $deviceSetItem->only(['device_set_id', 'device_id', 'quantity', 'role', 'description']);
         $deviceSetItem->update($this->validatedData($request, $deviceSetItem));
         $after = $deviceSetItem->fresh()->only(array_keys($before));
@@ -63,6 +73,8 @@ class DeviceSetItemController extends Controller
 
     public function destroy(DeviceSetItem $deviceSetItem)
     {
+        $this->requireManager();
+
         AuditTrail::deleted(auth()->id(), $deviceSetItem);
         $deviceSetItem->delete();
 

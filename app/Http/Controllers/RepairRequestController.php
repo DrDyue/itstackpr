@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -123,24 +124,35 @@ class RepairRequestController extends Controller
             'review_notes' => $validated['review_notes'] ?: null,
         ];
 
-        if ($validated['status'] === 'approved') {
-            $repair = Repair::create([
-                'device_id' => $repairRequest->device_id,
-                'reported_by_user_id' => $repairRequest->responsible_user_id,
-                'assigned_to_user_id' => $validated['assigned_to_user_id'] ?: $manager->id,
-                'accepted_by_user_id' => $manager->id,
-                'description' => $repairRequest->description,
-                'status' => 'waiting',
-                'device_status_before_repair' => $this->normalizeRepairRestoreStatus($repairRequest->device?->status),
-                'repair_type' => $validated['repair_type'] ?: 'internal',
-                'priority' => $validated['priority'] ?: 'medium',
-            ]);
+        DB::transaction(function () use ($validated, $repairRequest, $manager, &$payload) {
+            if ($validated['status'] === 'approved') {
+                $device = $repairRequest->device()->lockForUpdate()->first();
 
-            $repairRequest->device?->forceFill(['status' => 'repair'])->save();
-            $payload['repair_id'] = $repair->id;
-        }
+                if (! $device || $device->status === 'written_off') {
+                    throw ValidationException::withMessages([
+                        'status' => ['Pieteikumu nevar apstiprinat, jo ierice vairs nav pieejama remontam.'],
+                    ]);
+                }
 
-        $repairRequest->update($payload);
+                $repair = Repair::create([
+                    'device_id' => $repairRequest->device_id,
+                    'reported_by_user_id' => $repairRequest->responsible_user_id,
+                    'assigned_to_user_id' => $validated['assigned_to_user_id'] ?: $manager->id,
+                    'accepted_by_user_id' => $manager->id,
+                    'description' => $repairRequest->description,
+                    'status' => 'waiting',
+                    'device_status_before_repair' => $this->normalizeRepairRestoreStatus($device->status),
+                    'repair_type' => $validated['repair_type'] ?: 'internal',
+                    'priority' => $validated['priority'] ?: 'medium',
+                ]);
+
+                $device->forceFill(['status' => 'repair'])->save();
+                $payload['repair_id'] = $repair->id;
+            }
+
+            $repairRequest->update($payload);
+        });
+
         $after = $repairRequest->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState($manager->id, $repairRequest, $before, $after);
 
