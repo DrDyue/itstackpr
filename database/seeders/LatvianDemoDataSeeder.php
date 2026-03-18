@@ -49,7 +49,7 @@ class LatvianDemoDataSeeder extends Seeder
             $buildingIds = DB::table('buildings')->pluck('id', 'building_name')->all();
 
             $users = [
-                ['full_name' => 'Artis Berzins', 'email' => 'artis.berzins@itstackpr.test', 'phone' => '+37126000001', 'job_title' => 'Sistemas administrators', 'role' => User::ROLE_ADMIN],
+                ['full_name' => 'Artis Berzins', 'email' => 'artis.berzins@ludzas.lv', 'phone' => '+37126000001', 'job_title' => 'Sistemas administrators', 'role' => User::ROLE_ADMIN],
                 ['full_name' => 'Linda Kalnina', 'email' => 'linda.kalnina@itstackpr.test', 'phone' => '+37126000002', 'job_title' => 'IT specialists', 'role' => User::ROLE_IT_WORKER],
                 ['full_name' => 'Janis Ozols', 'email' => 'janis.ozols@itstackpr.test', 'phone' => '+37126000003', 'job_title' => 'IT atbalsta inzenieris', 'role' => User::ROLE_IT_WORKER],
                 ['full_name' => 'Ilze Strautina', 'email' => 'ilze.strautina@itstackpr.test', 'phone' => '+37126000004', 'job_title' => 'Projektu koordinatore', 'role' => User::ROLE_USER],
@@ -77,7 +77,7 @@ class LatvianDemoDataSeeder extends Seeder
             DB::table('users')->insert($userRows);
             $userIdsByEmail = DB::table('users')->pluck('id', 'email')->all();
             $userIdsByName = DB::table('users')->pluck('id', 'full_name')->all();
-            $adminUserId = $userIdsByEmail['artis.berzins@itstackpr.test'];
+            $adminUserId = $userIdsByEmail['artis.berzins@ludzas.lv'];
 
             $rooms = [
                 ['building' => 'Administracijas eka', 'floor_number' => 1, 'room_number' => '101', 'room_name' => 'IT mezgls', 'user_name' => 'Artis Berzins', 'department' => 'IT', 'notes' => 'Serveri un tikla mezgli'],
