@@ -9,6 +9,7 @@ use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -23,6 +24,16 @@ class WriteoffRequestController extends Controller
             'status' => trim((string) $request->query('status', '')),
             'q' => trim((string) $request->query('q', '')),
         ];
+
+        if (! $this->featureTableExists('writeoff_requests')) {
+            return view('writeoff_requests.index', [
+                'requests' => $this->emptyPaginator(),
+                'filters' => $filters,
+                'statuses' => [WriteoffRequest::STATUS_SUBMITTED, WriteoffRequest::STATUS_APPROVED, WriteoffRequest::STATUS_REJECTED],
+                'canReview' => $user->canManageRequests(),
+                'featureMessage' => 'Tabula writeoff_requests sobrid nav pieejama.',
+            ]);
+        }
 
         $requests = WriteoffRequest::query()
             ->with(['device.assignedTo', 'responsibleUser', 'reviewedBy'])
@@ -53,6 +64,13 @@ class WriteoffRequestController extends Controller
         $user = $this->user();
         abort_unless($user, 403);
 
+        if (! $this->featureTableExists('writeoff_requests')) {
+            return view('writeoff_requests.create', [
+                'devices' => collect(),
+                'featureMessage' => 'Tabula writeoff_requests sobrid nav pieejama.',
+            ]);
+        }
+
         return view('writeoff_requests.create', [
             'devices' => $this->availableDevicesForUser($user)->get(),
         ]);
@@ -62,6 +80,10 @@ class WriteoffRequestController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+
+        if (! $this->featureTableExists('writeoff_requests')) {
+            return redirect()->route('writeoff-requests.index')->with('error', 'Norakstisanas pieteikumus sobrid nevar saglabat, jo tabula writeoff_requests nav pieejama.');
+        }
 
         $validated = $request->validate([
             'device_id' => ['required', 'exists:devices,id'],
@@ -96,6 +118,10 @@ class WriteoffRequestController extends Controller
     public function review(Request $request, WriteoffRequest $writeoffRequest)
     {
         $manager = $this->requireManager();
+
+        if (! $this->featureTableExists('writeoff_requests')) {
+            return back()->with('error', 'Norakstisanas pieteikumu tabula sobrid nav pieejama.');
+        }
 
         if ($writeoffRequest->status !== WriteoffRequest::STATUS_SUBMITTED) {
             return back()->with('error', 'Sis pieteikums jau ir izskatits.');

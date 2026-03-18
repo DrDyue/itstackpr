@@ -10,6 +10,7 @@ use App\Models\WriteoffRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class AuthAndRequestFlowsTest extends TestCase
@@ -188,6 +189,58 @@ class AuthAndRequestFlowsTest extends TestCase
             'id' => $device->id,
             'assigned_to_id' => $recipient->id,
         ]);
+    }
+
+    public function test_missing_writeoff_requests_table_is_bootstrapped_on_demand(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'admin-writeoff@example.com');
+
+        Schema::dropIfExists('writeoff_requests');
+
+        $this->actingAs($admin)
+            ->get(route('writeoff-requests.index'))
+            ->assertOk();
+
+        $this->assertTrue(Schema::hasTable('writeoff_requests'));
+    }
+
+    public function test_missing_device_transfers_table_is_bootstrapped_on_demand(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'admin-transfer@example.com');
+
+        Schema::dropIfExists('device_transfers');
+
+        $this->actingAs($admin)
+            ->get(route('device-transfers.index'))
+            ->assertOk();
+
+        $this->assertTrue(Schema::hasTable('device_transfers'));
+    }
+
+    public function test_missing_repair_requests_table_is_bootstrapped_on_demand(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'admin-repair-request@example.com');
+
+        Schema::dropIfExists('repair_requests');
+
+        $this->actingAs($admin)
+            ->get(route('repair-requests.index'))
+            ->assertOk();
+
+        $this->assertTrue(Schema::hasTable('repair_requests'));
+    }
+
+    public function test_missing_audit_log_table_does_not_break_dashboard(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'admin-dashboard@example.com');
+
+        Schema::dropIfExists('audit_log');
+
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertOk();
+
+        $this->assertTrue(Schema::hasTable('audit_log'));
     }
 
     private function createUser(string $role, ?string $email = null): User

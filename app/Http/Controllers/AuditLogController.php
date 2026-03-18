@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AuditLog;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class AuditLogController extends Controller
 {
@@ -20,6 +21,23 @@ class AuditLogController extends Controller
             'date_to' => trim((string) $request->query('date_to', '')),
             'q' => trim((string) $request->query('q', '')),
         ];
+
+        if (! $this->featureTableExists('audit_log')) {
+            return view('audit_log.index', [
+                'logs' => $this->emptyPaginator(50),
+                'filters' => $filters,
+                'summary' => [
+                    'total' => 0,
+                    'filtered' => 0,
+                    'today' => 0,
+                    'critical' => 0,
+                    'active_users' => 0,
+                    'latest' => null,
+                ],
+                'entityTypes' => collect(),
+                'featureMessage' => 'Tabula audit_log sobrid nav pieejama.',
+            ]);
+        }
 
         $logQuery = AuditLog::query()
             ->with(['user'])

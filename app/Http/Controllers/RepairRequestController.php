@@ -10,6 +10,7 @@ use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -24,6 +25,16 @@ class RepairRequestController extends Controller
             'status' => trim((string) $request->query('status', '')),
             'q' => trim((string) $request->query('q', '')),
         ];
+
+        if (! $this->featureTableExists('repair_requests')) {
+            return view('repair_requests.index', [
+                'requests' => $this->emptyPaginator(),
+                'filters' => $filters,
+                'statuses' => [RepairRequest::STATUS_SUBMITTED, RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED],
+                'canReview' => $user->canManageRequests(),
+                'featureMessage' => 'Tabula repair_requests sobrid nav pieejama.',
+            ]);
+        }
 
         $requests = RepairRequest::query()
             ->with(['device.assignedTo', 'responsibleUser', 'reviewedBy', 'repair'])
@@ -55,6 +66,13 @@ class RepairRequestController extends Controller
         $user = $this->user();
         abort_unless($user, 403);
 
+        if (! $this->featureTableExists('repair_requests')) {
+            return view('repair_requests.create', [
+                'devices' => collect(),
+                'featureMessage' => 'Tabula repair_requests sobrid nav pieejama.',
+            ]);
+        }
+
         return view('repair_requests.create', [
             'devices' => $this->availableDevicesForUser($user)->get(),
         ]);
@@ -64,6 +82,10 @@ class RepairRequestController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+
+        if (! $this->featureTableExists('repair_requests')) {
+            return redirect()->route('repair-requests.index')->with('error', 'Remonta pieteikumus sobrid nevar saglabat, jo tabula repair_requests nav pieejama.');
+        }
 
         $validated = $request->validate([
             'device_id' => ['required', 'exists:devices,id'],
@@ -98,6 +120,10 @@ class RepairRequestController extends Controller
     public function review(Request $request, RepairRequest $repairRequest)
     {
         $manager = $this->requireManager();
+
+        if (! $this->featureTableExists('repair_requests')) {
+            return back()->with('error', 'Remonta pieteikumu tabula sobrid nav pieejama.');
+        }
 
         if ($repairRequest->status !== RepairRequest::STATUS_SUBMITTED) {
             return back()->with('error', 'Sis pieteikums jau ir izskatits.');

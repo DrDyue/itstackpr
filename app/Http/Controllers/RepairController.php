@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -28,6 +29,21 @@ class RepairController extends Controller
             'priority' => trim((string) $request->query('priority', '')),
             'repair_type' => trim((string) $request->query('repair_type', '')),
         ];
+
+        if (! $this->featureTableExists('repairs')) {
+            return view('repairs.index', [
+                'repairs' => $this->emptyPaginator(),
+                'filters' => $filters,
+                'statuses' => self::STATUSES,
+                'repairTypes' => self::TYPES,
+                'priorities' => self::PRIORITIES,
+                'statusLabels' => $this->statusLabels(),
+                'priorityLabels' => $this->priorityLabels(),
+                'typeLabels' => $this->typeLabels(),
+                'canManageRepairs' => $user->canManageRequests(),
+                'featureMessage' => 'Tabula repairs sobrid nav pieejama.',
+            ]);
+        }
 
         $repairs = $this->visibleRepairsQuery($user)
             ->with(['device.building', 'device.room', 'reporter', 'acceptedBy', 'request'])
@@ -68,6 +84,14 @@ class RepairController extends Controller
     {
         $this->requireManager();
 
+        if (! $this->featureTableExists('repairs')) {
+            return view('repairs.create', array_merge($this->formData(), [
+                'preselectedDeviceId' => $request->query('device_id'),
+                'defaultReporterId' => $this->user()?->id,
+                'featureMessage' => 'Tabula repairs sobrid nav pieejama.',
+            ]));
+        }
+
         return view('repairs.create', array_merge($this->formData(), [
             'preselectedDeviceId' => $request->query('device_id'),
             'defaultReporterId' => $this->user()?->id,
@@ -77,6 +101,11 @@ class RepairController extends Controller
     public function store(Request $request)
     {
         $manager = $this->requireManager();
+
+        if (! $this->featureTableExists('repairs')) {
+            return redirect()->route('repairs.index')->with('error', 'Remontus sobrid nevar saglabat, jo tabula repairs nav pieejama.');
+        }
+
         $validated = $this->validatedData($request);
         $validated['accepted_by'] = $manager->id;
 
@@ -92,6 +121,11 @@ class RepairController extends Controller
     public function edit(Repair $repair)
     {
         $this->requireManager();
+
+        if (! $this->featureTableExists('repairs')) {
+            return redirect()->route('repairs.index')->with('error', 'Tabula repairs sobrid nav pieejama.');
+        }
+
         $repair->load(['device', 'reporter', 'acceptedBy']);
 
         return view('repairs.edit', array_merge([
@@ -102,6 +136,10 @@ class RepairController extends Controller
     public function update(Request $request, Repair $repair)
     {
         $this->requireManager();
+
+        if (! $this->featureTableExists('repairs')) {
+            return redirect()->route('repairs.index')->with('error', 'Tabula repairs sobrid nav pieejama.');
+        }
 
         $before = $repair->only([
             'device_id',
@@ -134,6 +172,10 @@ class RepairController extends Controller
     {
         $this->requireManager();
 
+        if (! $this->featureTableExists('repairs')) {
+            return redirect()->route('repairs.index')->with('error', 'Tabula repairs sobrid nav pieejama.');
+        }
+
         $previousStatus = $repair->status;
         AuditTrail::deleted(auth()->id(), $repair);
         $repair->delete();
@@ -145,6 +187,10 @@ class RepairController extends Controller
     public function transition(Request $request, Repair $repair)
     {
         $this->requireManager();
+
+        if (! $this->featureTableExists('repairs')) {
+            return back()->with('error', 'Tabula repairs sobrid nav pieejama.');
+        }
 
         $validated = $request->validate([
             'target_status' => ['required', Rule::in(self::STATUSES)],

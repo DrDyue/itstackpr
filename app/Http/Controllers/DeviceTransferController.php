@@ -9,6 +9,7 @@ use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -23,6 +24,16 @@ class DeviceTransferController extends Controller
             'status' => trim((string) $request->query('status', '')),
             'q' => trim((string) $request->query('q', '')),
         ];
+
+        if (! $this->featureTableExists('device_transfers')) {
+            return view('device_transfers.index', [
+                'transfers' => $this->emptyPaginator(),
+                'filters' => $filters,
+                'statuses' => [DeviceTransfer::STATUS_SUBMITTED, DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED],
+                'isAdmin' => $user->isAdmin(),
+                'featureMessage' => 'Tabula device_transfers sobrid nav pieejama.',
+            ]);
+        }
 
         $transfers = DeviceTransfer::query()
             ->with(['device', 'responsibleUser', 'transferTo', 'reviewedBy'])
@@ -60,6 +71,14 @@ class DeviceTransferController extends Controller
         $user = $this->user();
         abort_unless($user, 403);
 
+        if (! $this->featureTableExists('device_transfers')) {
+            return view('device_transfers.create', [
+                'devices' => collect(),
+                'users' => collect(),
+                'featureMessage' => 'Tabula device_transfers sobrid nav pieejama.',
+            ]);
+        }
+
         return view('device_transfers.create', [
             'devices' => $this->availableDevicesForUser($user)->get(),
             'users' => User::active()->whereKeyNot($user->id)->orderBy('full_name')->get(),
@@ -70,6 +89,10 @@ class DeviceTransferController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+
+        if (! $this->featureTableExists('device_transfers')) {
+            return redirect()->route('device-transfers.index')->with('error', 'Iericu parsutisanas pieteikumus sobrid nevar saglabat, jo tabula device_transfers nav pieejama.');
+        }
 
         $validated = $request->validate([
             'device_id' => ['required', 'exists:devices,id'],
@@ -107,6 +130,10 @@ class DeviceTransferController extends Controller
     {
         $reviewer = $this->user();
         abort_unless($reviewer, 403);
+
+        if (! $this->featureTableExists('device_transfers')) {
+            return back()->with('error', 'Iericu parsutisanas pieteikumu tabula sobrid nav pieejama.');
+        }
 
         $canReview = (int) $deviceTransfer->transfered_to_id === (int) $reviewer->id;
         abort_unless($canReview, 403);
