@@ -415,6 +415,81 @@ class LatvianDemoDataSeeder extends Seeder
                     'created_at' => $now,
                 ],
             ]);
+
+            DB::table('audit_log')->insert([
+                [
+                    'timestamp' => $now->copy()->subDays(7),
+                    'user_id' => $adminUserId,
+                    'action' => 'CREATE',
+                    'entity_type' => 'Device',
+                    'entity_id' => $deviceIds['LDZ-0001'],
+                    'description' => 'Ierice izveidota: [LDZ-0001] Klepjdators A1',
+                    'severity' => 'info',
+                ],
+                [
+                    'timestamp' => $now->copy()->subDays(6),
+                    'user_id' => $adminUserId,
+                    'action' => 'CREATE',
+                    'entity_type' => 'RepairRequest',
+                    'entity_id' => DB::table('repair_requests')->where('device_id', $deviceIds['LDZ-0001'])->value('id'),
+                    'description' => 'Remonta pieteikums izveidots: Klepjdators A1',
+                    'severity' => 'info',
+                ],
+                [
+                    'timestamp' => $now->copy()->subDays(6)->addHour(),
+                    'user_id' => $adminUserId,
+                    'action' => 'UPDATE',
+                    'entity_type' => 'RepairRequest',
+                    'entity_id' => DB::table('repair_requests')->where('device_id', $deviceIds['LDZ-0001'])->value('id'),
+                    'description' => 'Remonta pieteikums atjauninats: Klepjdators A1 | detalas: statuss: Iesniegts -> Apstiprinats',
+                    'severity' => 'info',
+                ],
+                [
+                    'timestamp' => $now->copy()->subDays(5),
+                    'user_id' => $adminUserId,
+                    'action' => 'CREATE',
+                    'entity_type' => 'Repair',
+                    'entity_id' => $repairIds[$deviceIds['LDZ-0001']] ?? null,
+                    'description' => 'Remonts izveidots: Klepjdators A1',
+                    'severity' => 'warning',
+                ],
+                [
+                    'timestamp' => $now->copy()->subDays(4),
+                    'user_id' => $userIdsByName['Marta Zvirbule'],
+                    'action' => 'LOGIN',
+                    'entity_type' => 'User',
+                    'entity_id' => $userIdsByName['Marta Zvirbule'],
+                    'description' => 'Lietotajs piesledzas: Marta Zvirbule',
+                    'severity' => 'info',
+                ],
+                [
+                    'timestamp' => $now->copy()->subDays(3),
+                    'user_id' => $userIdsByName['Marta Zvirbule'],
+                    'action' => 'UPDATE',
+                    'entity_type' => 'DeviceTransfer',
+                    'entity_id' => DB::table('device_transfers')->where('device_id', $deviceIds['LDZ-0002'])->value('id'),
+                    'description' => 'Ierices parsutisana atjauninata: Monitors A1 | detalas: statuss: Iesniegts -> Apstiprinats',
+                    'severity' => 'info',
+                ],
+                [
+                    'timestamp' => $now->copy()->subDays(2),
+                    'user_id' => $adminUserId,
+                    'action' => 'VIEW',
+                    'entity_type' => 'AuditLog',
+                    'entity_id' => null,
+                    'description' => 'Apskatits audita zurnals',
+                    'severity' => 'info',
+                ],
+                [
+                    'timestamp' => $now->copy()->subDay(),
+                    'user_id' => $adminUserId,
+                    'action' => 'UPDATE',
+                    'entity_type' => 'WriteoffRequest',
+                    'entity_id' => DB::table('writeoff_requests')->where('device_id', $deviceIds['LDZ-0010'])->value('id'),
+                    'description' => 'Norakstisanas pieteikums atjauninats: Klepjdators F1 | detalas: statuss: Iesniegts -> Apstiprinats',
+                    'severity' => 'warning',
+                ],
+            ]);
         });
     }
 }
