@@ -55,7 +55,7 @@
             type="text"
             name="{{ $queryName }}"
             x-model="query"
-            class="crud-control pr-12"
+            class="crud-control pr-14"
             :class="open ? 'border-sky-300 ring-2 ring-sky-100 bg-white' : ''"
             placeholder="{{ $placeholder }}"
             autocomplete="off"
@@ -67,7 +67,15 @@
             @keydown.enter.prevent="commit()"
         >
 
-        <button type="button" class="searchable-select-toggle" @click="togglePanel()">
+        <button
+            type="button"
+            class="searchable-select-toggle"
+            :class="pointerMode === 'scrub' ? 'searchable-select-toggle-active' : ''"
+            title="Turi un velc uz augsu vai leju, lai atri izveletos vertibu"
+            @mousedown.left.prevent.stop="beginScrub($event)"
+            @keydown.enter.prevent="togglePanel()"
+            @keydown.space.prevent="togglePanel()"
+        >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
             </svg>

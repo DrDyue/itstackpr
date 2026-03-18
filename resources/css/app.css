@@ -2226,11 +2226,11 @@ tbody td {
 }
 
 .toolbar-actions {
-    @apply flex flex-wrap items-end gap-3;
+    @apply flex flex-wrap items-center gap-3 md:justify-end;
 }
 
 .filter-toolbar-footer {
-    @apply flex flex-col gap-4 border-t border-slate-200 pt-4 xl:flex-row xl:items-center xl:justify-between;
+    @apply flex flex-col gap-4 border-t border-slate-200 pt-4 md:flex-row md:items-center md:justify-between;
 }
 
 .searchable-select {
@@ -2238,11 +2238,15 @@ tbody td {
 }
 
 .searchable-select-toggle {
-    @apply absolute inset-y-0 right-0 inline-flex w-11 items-center justify-center text-slate-400 transition hover:text-slate-700;
+    @apply absolute right-2 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-500 shadow-sm transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700 active:scale-[0.98] cursor-ns-resize;
+}
+
+.searchable-select-toggle-active {
+    @apply border-sky-300 bg-sky-50 text-sky-700 ring-2 ring-sky-100;
 }
 
 .searchable-select-panel {
-    @apply absolute z-30 mt-2 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl ring-1 ring-slate-100;
+    @apply absolute z-30 mt-2.5 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl ring-1 ring-slate-100;
 }
 
 .searchable-select-list {

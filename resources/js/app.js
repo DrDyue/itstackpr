@@ -123,10 +123,14 @@ const registerAlpineData = () => {
         emptyMessage,
         highlightedIndex: 0,
         pointerActive: false,
+        pointerMode: null,
+        wasOpenBeforePointer: false,
         dragging: false,
         suppressClick: false,
         startY: 0,
         startScrollTop: 0,
+        dragStartIndex: 0,
+        scrubStepPx: 36,
         init() {
             if (this.selected && !this.query) {
                 const current = this.options.find((option) => option.value === this.selected);
@@ -151,14 +155,13 @@ const registerAlpineData = () => {
         togglePanel() {
             this.open = !this.open;
             if (this.open) {
+                this.showAllOptions = true;
                 this.preparePanel();
+            } else {
+                this.resetPointerState();
             }
         },
         openPanel() {
-            if (this.open) {
-                return;
-            }
-
             this.open = true;
             this.showAllOptions = true;
             this.preparePanel();
@@ -166,17 +169,27 @@ const registerAlpineData = () => {
                 this.$refs.input?.select();
             });
         },
-        close() {
+        closePanelOnly() {
             this.open = false;
             this.showAllOptions = false;
-            this.stopPointer();
+        },
+        resetPointerState() {
+            this.pointerActive = false;
+            this.pointerMode = null;
+            this.dragging = false;
+            this.suppressClick = false;
+            this.wasOpenBeforePointer = false;
+        },
+        close() {
+            this.closePanelOnly();
+            this.resetPointerState();
         },
         clearSelection() {
             this.selected = '';
             this.query = '';
             this.highlightedIndex = 0;
             this.dispatchUpdate();
-            this.close();
+            this.closePanelOnly();
         },
         preparePanel() {
             const selectedIndex = this.filteredOptions.findIndex((option) => option.value === this.selected);
@@ -190,6 +203,22 @@ const registerAlpineData = () => {
             const exact = this.options.find((option) => option.label.toLowerCase() === normalized);
             this.selected = exact ? exact.value : '';
             this.highlightedIndex = 0;
+        },
+        beginScrub(event) {
+            if (event.button !== 0) {
+                return;
+            }
+
+            this.wasOpenBeforePointer = this.open;
+            this.pointerActive = true;
+            this.pointerMode = 'scrub';
+            this.dragging = false;
+            this.suppressClick = false;
+            this.startY = event.clientY;
+            this.showAllOptions = true;
+            this.open = true;
+            this.preparePanel();
+            this.dragStartIndex = this.highlightedIndex;
         },
         move(direction) {
             if (!this.open) {
@@ -220,7 +249,7 @@ const registerAlpineData = () => {
             this.selected = option.value;
             this.query = option.label;
             this.dispatchUpdate();
-            this.open = false;
+            this.closePanelOnly();
         },
         dispatchUpdate() {
             if (!this.identifier) {
@@ -271,6 +300,7 @@ const registerAlpineData = () => {
             }
 
             this.pointerActive = true;
+            this.pointerMode = 'panel';
             this.dragging = false;
             this.startY = event.clientY;
             this.startScrollTop = this.$refs.panel.scrollTop;
@@ -280,16 +310,23 @@ const registerAlpineData = () => {
                 return;
             }
 
-            const delta = event.clientY - this.startY;
-
-            if (Math.abs(delta) > 3) {
-                this.dragging = true;
-                this.suppressClick = true;
+            if (this.pointerMode === 'scrub') {
+                this.handleScrubMove(event);
+                return;
             }
 
-            if (this.dragging) {
-                this.$refs.panel.scrollTop = this.startScrollTop - delta;
-                this.syncHighlightFromPointer(event);
+            if (this.pointerMode === 'panel') {
+                const delta = event.clientY - this.startY;
+
+                if (Math.abs(delta) > 3) {
+                    this.dragging = true;
+                    this.suppressClick = true;
+                }
+
+                if (this.dragging) {
+                    this.$refs.panel.scrollTop = this.startScrollTop - delta;
+                    this.syncHighlightFromPointer(event);
+                }
             }
         },
         stopPointer() {
@@ -297,18 +334,23 @@ const registerAlpineData = () => {
                 return;
             }
 
+            if (this.pointerMode === 'scrub') {
+                this.finishScrub();
+            } else if (this.pointerMode === 'panel') {
+                if (this.suppressClick && this.filteredOptions[this.highlightedIndex]) {
+                    this.choose(this.filteredOptions[this.highlightedIndex], true);
+                }
+
+                if (this.suppressClick) {
+                    window.setTimeout(() => {
+                        this.suppressClick = false;
+                    }, 80);
+                }
+            }
+
             this.pointerActive = false;
+            this.pointerMode = null;
             this.dragging = false;
-
-            if (this.suppressClick && this.filteredOptions[this.highlightedIndex]) {
-                this.choose(this.filteredOptions[this.highlightedIndex], true);
-            }
-
-            if (this.suppressClick) {
-                window.setTimeout(() => {
-                    this.suppressClick = false;
-                }, 80);
-            }
         },
         syncHighlightFromPointer(event) {
             const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('.searchable-select-option');
@@ -320,6 +362,44 @@ const registerAlpineData = () => {
             if (!Number.isNaN(nextIndex) && nextIndex >= 0) {
                 this.highlightedIndex = nextIndex;
             }
+        },
+        handleScrubMove(event) {
+            if (this.filteredOptions.length === 0) {
+                return;
+            }
+
+            const delta = event.clientY - this.startY;
+
+            if (Math.abs(delta) > 3) {
+                this.dragging = true;
+                this.suppressClick = true;
+            }
+
+            const offset = Math.trunc(delta / this.scrubStepPx);
+            const maxIndex = Math.max(0, this.filteredOptions.length - 1);
+            const nextIndex = Math.min(maxIndex, Math.max(0, this.dragStartIndex + offset));
+
+            if (nextIndex !== this.highlightedIndex) {
+                this.highlightedIndex = nextIndex;
+                this.query = this.filteredOptions[nextIndex]?.label ?? this.query;
+                this.scrollToHighlighted();
+            }
+        },
+        finishScrub() {
+            if (this.dragging && this.filteredOptions[this.highlightedIndex]) {
+                this.choose(this.filteredOptions[this.highlightedIndex], true);
+                this.suppressClick = false;
+                return;
+            }
+
+            if (this.wasOpenBeforePointer) {
+                this.closePanelOnly();
+                return;
+            }
+
+            this.open = true;
+            this.showAllOptions = true;
+            this.preparePanel();
         },
     }));
 };
