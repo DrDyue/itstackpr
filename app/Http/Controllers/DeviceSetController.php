@@ -116,13 +116,7 @@ class DeviceSetController extends Controller
                 ]);
             }
 
-            $device = Device::query()->find($data['device_id']);
-
-            if ($device && $device->status !== 'kitting') {
-                $device->forceFill(['status' => 'kitting'])->save();
-            }
-
-            return $device;
+            return Device::query()->find($data['device_id']);
         });
 
         $this->writeAudit(

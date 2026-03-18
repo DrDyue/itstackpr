@@ -33,10 +33,10 @@
     </label>
     <label class="block">
         <span class="crud-label">Pieskirtais lietotajs</span>
-        <select name="assigned_user_id" class="crud-control">
+        <select name="assigned_to_id" class="crud-control">
             <option value="">Nav pieskirts</option>
             @foreach ($users as $assignedUser)
-                <option value="{{ $assignedUser->id }}" @selected(old('assigned_user_id', $current?->assigned_user_id) == $assignedUser->id)>{{ $assignedUser->full_name }}</option>
+                <option value="{{ $assignedUser->id }}" @selected(old('assigned_to_id', $current?->assigned_to_id) == $assignedUser->id)>{{ $assignedUser->full_name }}</option>
             @endforeach
         </select>
     </label>

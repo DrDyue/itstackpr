@@ -25,9 +25,9 @@ class WriteoffRequestController extends Controller
         ];
 
         $requests = WriteoffRequest::query()
-            ->with(['device.assignedUser', 'responsibleUser', 'reviewedBy'])
+            ->with(['device.assignedTo', 'responsibleUser', 'reviewedBy'])
             ->when(! $user->canManageRequests(), fn (Builder $query) => $query->where('responsible_user_id', $user->id))
-            ->when($filters['status'] !== '' && in_array($filters['status'], ['pending', 'approved', 'denied'], true), fn (Builder $query) => $query->where('status', $filters['status']))
+            ->when($filters['status'] !== '' && in_array($filters['status'], [WriteoffRequest::STATUS_SUBMITTED, WriteoffRequest::STATUS_APPROVED, WriteoffRequest::STATUS_REJECTED], true), fn (Builder $query) => $query->where('status', $filters['status']))
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
 
@@ -43,7 +43,7 @@ class WriteoffRequestController extends Controller
         return view('writeoff_requests.index', [
             'requests' => $requests,
             'filters' => $filters,
-            'statuses' => ['pending', 'approved', 'denied'],
+            'statuses' => [WriteoffRequest::STATUS_SUBMITTED, WriteoffRequest::STATUS_APPROVED, WriteoffRequest::STATUS_REJECTED],
             'canReview' => $user->canManageRequests(),
         ]);
     }
@@ -75,7 +75,7 @@ class WriteoffRequestController extends Controller
             ]);
         }
 
-        if (WriteoffRequest::query()->where('device_id', $device->id)->where('status', 'pending')->exists()) {
+        if (WriteoffRequest::query()->where('device_id', $device->id)->where('status', WriteoffRequest::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
                 'device_id' => ['Sai iericei jau ir gaidoss norakstisanas pieteikums.'],
             ]);
@@ -85,7 +85,7 @@ class WriteoffRequestController extends Controller
             'device_id' => $device->id,
             'responsible_user_id' => $user->id,
             'reason' => $validated['reason'],
-            'status' => 'pending',
+            'status' => WriteoffRequest::STATUS_SUBMITTED,
         ]);
 
         AuditTrail::created($user->id, $writeoffRequest);
@@ -97,12 +97,12 @@ class WriteoffRequestController extends Controller
     {
         $manager = $this->requireManager();
 
-        if ($writeoffRequest->status !== 'pending') {
+        if ($writeoffRequest->status !== WriteoffRequest::STATUS_SUBMITTED) {
             return back()->with('error', 'Sis pieteikums jau ir izskatits.');
         }
 
         $validated = $request->validate([
-            'status' => ['required', Rule::in(['approved', 'denied'])],
+            'status' => ['required', Rule::in([WriteoffRequest::STATUS_APPROVED, WriteoffRequest::STATUS_REJECTED])],
             'review_notes' => ['nullable', 'string'],
         ]);
 
@@ -128,8 +128,8 @@ class WriteoffRequestController extends Controller
             }
 
             $device->forceFill([
-                'status' => 'written_off',
-                'assigned_user_id' => null,
+                'status' => Device::STATUS_WRITEOFF,
+                'assigned_to_id' => null,
             ])->save();
         });
 
@@ -142,8 +142,8 @@ class WriteoffRequestController extends Controller
     private function availableDevicesForUser(User $user): Builder
     {
         return Device::query()
-            ->where('assigned_user_id', $user->id)
-            ->whereNotIn('status', ['written_off'])
+            ->where('assigned_to_id', $user->id)
+            ->where('status', Device::STATUS_ACTIVE)
             ->with(['type', 'building', 'room'])
             ->orderBy('name');
     }

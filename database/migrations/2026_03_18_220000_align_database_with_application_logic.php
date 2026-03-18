@@ -27,7 +27,8 @@ return new class extends Migration
     private function alignUsers(string $driver): void
     {
         if ($driver === 'mysql' && Schema::hasColumn('users', 'role')) {
-            DB::statement("ALTER TABLE users MODIFY role ENUM('admin', 'it_worker', 'user') NOT NULL DEFAULT 'user'");
+            DB::table('users')->where('role', 'it_worker')->update(['role' => 'admin']);
+            DB::statement("ALTER TABLE users MODIFY role ENUM('admin', 'user') NOT NULL DEFAULT 'user'");
         }
     }
 
@@ -126,13 +127,14 @@ return new class extends Migration
         });
 
         if ($driver === 'mysql' && Schema::hasColumn('repair_requests', 'status')) {
-            DB::statement("ALTER TABLE repair_requests MODIFY status ENUM('submitted', 'pending', 'approved', 'denied', 'indicated') NOT NULL DEFAULT 'pending'");
-            DB::table('repair_requests')->where('status', 'submitted')->update(['status' => 'pending']);
-            DB::table('repair_requests')->where('status', 'indicated')->update(['status' => 'denied']);
-            DB::statement("ALTER TABLE repair_requests MODIFY status ENUM('pending', 'approved', 'denied') NOT NULL DEFAULT 'pending'");
+            DB::statement("ALTER TABLE repair_requests MODIFY status ENUM('submitted', 'pending', 'approved', 'denied', 'rejected', 'indicated') NOT NULL DEFAULT 'submitted'");
+            DB::table('repair_requests')->where('status', 'pending')->update(['status' => 'submitted']);
+            DB::table('repair_requests')->where('status', 'denied')->update(['status' => 'rejected']);
+            DB::table('repair_requests')->where('status', 'indicated')->update(['status' => 'rejected']);
+            DB::statement("ALTER TABLE repair_requests MODIFY status ENUM('submitted', 'approved', 'rejected') NOT NULL DEFAULT 'submitted'");
         }
 
-        if (Schema::hasColumn('repairs', 'request_id') && Schema::hasColumn('repair_requests', 'repair_id')) {
+        if ($driver === 'mysql' && Schema::hasColumn('repairs', 'request_id') && Schema::hasColumn('repair_requests', 'repair_id')) {
             DB::statement("
                 UPDATE repair_requests rr
                 INNER JOIN repairs r ON r.request_id = rr.id
@@ -155,10 +157,11 @@ return new class extends Migration
         });
 
         if ($driver === 'mysql' && Schema::hasColumn('writeoff_requests', 'status')) {
-            DB::statement("ALTER TABLE writeoff_requests MODIFY status ENUM('submitted', 'pending', 'approved', 'denied', 'indicated') NOT NULL DEFAULT 'pending'");
-            DB::table('writeoff_requests')->where('status', 'submitted')->update(['status' => 'pending']);
-            DB::table('writeoff_requests')->where('status', 'indicated')->update(['status' => 'denied']);
-            DB::statement("ALTER TABLE writeoff_requests MODIFY status ENUM('pending', 'approved', 'denied') NOT NULL DEFAULT 'pending'");
+            DB::statement("ALTER TABLE writeoff_requests MODIFY status ENUM('submitted', 'pending', 'approved', 'denied', 'rejected', 'indicated') NOT NULL DEFAULT 'submitted'");
+            DB::table('writeoff_requests')->where('status', 'pending')->update(['status' => 'submitted']);
+            DB::table('writeoff_requests')->where('status', 'denied')->update(['status' => 'rejected']);
+            DB::table('writeoff_requests')->where('status', 'indicated')->update(['status' => 'rejected']);
+            DB::statement("ALTER TABLE writeoff_requests MODIFY status ENUM('submitted', 'approved', 'rejected') NOT NULL DEFAULT 'submitted'");
         }
     }
 
@@ -185,10 +188,11 @@ return new class extends Migration
         }
 
         if ($driver === 'mysql' && Schema::hasColumn('device_transfers', 'status')) {
-            DB::statement("ALTER TABLE device_transfers MODIFY status ENUM('submitted', 'pending', 'approved', 'denied', 'indicated') NOT NULL DEFAULT 'pending'");
-            DB::table('device_transfers')->where('status', 'submitted')->update(['status' => 'pending']);
-            DB::table('device_transfers')->where('status', 'indicated')->update(['status' => 'denied']);
-            DB::statement("ALTER TABLE device_transfers MODIFY status ENUM('pending', 'approved', 'denied') NOT NULL DEFAULT 'pending'");
+            DB::statement("ALTER TABLE device_transfers MODIFY status ENUM('submitted', 'pending', 'approved', 'denied', 'rejected', 'indicated') NOT NULL DEFAULT 'submitted'");
+            DB::table('device_transfers')->where('status', 'pending')->update(['status' => 'submitted']);
+            DB::table('device_transfers')->where('status', 'denied')->update(['status' => 'rejected']);
+            DB::table('device_transfers')->where('status', 'indicated')->update(['status' => 'rejected']);
+            DB::statement("ALTER TABLE device_transfers MODIFY status ENUM('submitted', 'approved', 'rejected') NOT NULL DEFAULT 'submitted'");
         }
     }
 };

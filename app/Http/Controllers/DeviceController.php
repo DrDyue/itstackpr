@@ -18,7 +18,7 @@ use Illuminate\Validation\ValidationException;
 
 class DeviceController extends Controller
 {
-    private const STATUSES = ['active', 'reserve', 'broken', 'repair', 'written_off', 'kitting'];
+    private const STATUSES = [Device::STATUS_ACTIVE, Device::STATUS_REPAIR, Device::STATUS_WRITEOFF];
 
     public function index(Request $request)
     {
@@ -34,7 +34,7 @@ class DeviceController extends Controller
         ];
 
         $devices = $this->visibleDevicesQuery($user)
-            ->with(['type', 'building', 'room', 'activeRepair', 'assignedUser'])
+            ->with(['type', 'building', 'room', 'activeRepair', 'assignedTo'])
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
 
@@ -214,7 +214,7 @@ class DeviceController extends Controller
     {
         return Device::query()->when(
             ! $user->canManageRequests(),
-            fn (Builder $query) => $query->where('assigned_user_id', $user->id)
+            fn (Builder $query) => $query->where('assigned_to_id', $user->id)
         );
     }
 
@@ -227,7 +227,7 @@ class DeviceController extends Controller
             return;
         }
 
-        abort_unless((int) $device->assigned_user_id === (int) $user->id, 403);
+        abort_unless((int) $device->assigned_to_id === (int) $user->id, 403);
     }
 
     private function formData(): array
@@ -253,7 +253,7 @@ class DeviceController extends Controller
                 'status' => ['required', Rule::in(self::STATUSES)],
                 'building_id' => ['nullable', 'exists:buildings,id'],
                 'room_id' => ['nullable', 'exists:rooms,id'],
-                'assigned_user_id' => ['nullable', 'exists:users,id'],
+                'assigned_to_id' => ['nullable', 'exists:users,id'],
                 'purchase_date' => ['nullable', 'date'],
                 'purchase_price' => ['nullable', 'numeric', 'min:0'],
                 'warranty_until' => ['nullable', 'date'],
@@ -265,7 +265,7 @@ class DeviceController extends Controller
             ]
         );
 
-        foreach (['building_id', 'room_id', 'assigned_user_id'] as $field) {
+        foreach (['building_id', 'room_id', 'assigned_to_id'] as $field) {
             $data[$field] = $data[$field] ?: null;
         }
 
@@ -295,9 +295,9 @@ class DeviceController extends Controller
             ]);
         }
 
-        if (($data['status'] ?? null) === 'written_off' && ! empty($data['assigned_user_id'])) {
+        if (($data['status'] ?? null) === Device::STATUS_WRITEOFF && ! empty($data['assigned_to_id'])) {
             throw ValidationException::withMessages([
-                'assigned_user_id' => ['Norakstitai iericei nevajag but pieskirtai personai.'],
+                'assigned_to_id' => ['Norakstitai iericei nevajag but pieskirtai personai.'],
             ]);
         }
 
@@ -319,7 +319,7 @@ class DeviceController extends Controller
             'status',
             'building_id',
             'room_id',
-            'assigned_user_id',
+            'assigned_to_id',
             'purchase_date',
             'purchase_price',
             'warranty_until',
@@ -399,11 +399,8 @@ class DeviceController extends Controller
     private function statusLabel(string $status): string
     {
         return match ($status) {
-            'reserve' => 'Rezerve',
-            'broken' => 'Bojata',
             'repair' => 'Remonta',
-            'written_off' => 'Norakstita',
-            'kitting' => 'Komplektacija',
+            'writeoff' => 'Norakstita',
             default => 'Aktiva',
         };
     }
@@ -431,7 +428,7 @@ class DeviceController extends Controller
             return ['level' => 'error', 'message' => 'Nav izvelets korekts statuss.'];
         }
 
-        if ($status === 'written_off' && filled($device->assigned_user_id)) {
+        if ($status === Device::STATUS_WRITEOFF && filled($device->assigned_to_id)) {
             return ['level' => 'error', 'message' => 'Norakstitu ierici vispirms atsaisti no personas.'];
         }
 
@@ -500,14 +497,6 @@ class DeviceController extends Controller
             'device_set_id' => $set->id,
             'device_id' => $device->id,
         ]);
-
-        $before = ['status' => $device->status];
-
-        if ($device->status !== 'kitting') {
-            $device->forceFill(['status' => 'kitting'])->save();
-        }
-
-        AuditTrail::updatedFromState(auth()->id(), $device, $before, ['status' => $device->status]);
 
         return ['level' => 'success', 'message' => 'Ierice pievienota komplektacijai.'];
     }

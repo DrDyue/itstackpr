@@ -10,6 +10,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Device extends Model
 {
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_REPAIR = 'repair';
+    public const STATUS_WRITEOFF = 'writeoff';
+
     protected $table = 'devices';
 
     protected $fillable = [
@@ -20,7 +24,7 @@ class Device extends Model
         'status',
         'building_id',
         'room_id',
-        'assigned_user_id',
+        'assigned_to_id',
         'purchase_date',
         'purchase_price',
         'warranty_until',
@@ -58,9 +62,14 @@ class Device extends Model
         return $this->belongsTo(Room::class);
     }
 
+    public function assignedTo(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to_id');
+    }
+
     public function assignedUser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'assigned_user_id');
+        return $this->assignedTo();
     }
 
     public function createdBy(): BelongsTo
@@ -124,5 +133,35 @@ class Device extends Model
     public function warrantyImageThumbUrl(): ?string
     {
         return app(DeviceAssetManager::class)->thumbUrl($this->warranty_photo_name);
+    }
+
+    public function getAssignedUserIdAttribute(): mixed
+    {
+        return $this->attributes['assigned_to_id'] ?? $this->attributes['assigned_user_id'] ?? null;
+    }
+
+    public function setAssignedUserIdAttribute(mixed $value): void
+    {
+        $this->attributes['assigned_to_id'] = $value;
+        $this->attributes['assigned_user_id'] = $value;
+    }
+
+    public function getStatusAttribute(?string $value): string
+    {
+        return self::normalizeStatus($value);
+    }
+
+    public function setStatusAttribute(?string $value): void
+    {
+        $this->attributes['status'] = self::normalizeStatus($value);
+    }
+
+    public static function normalizeStatus(?string $status): string
+    {
+        return match ($status) {
+            'repair' => self::STATUS_REPAIR,
+            'writeoff', 'written_off' => self::STATUS_WRITEOFF,
+            default => self::STATUS_ACTIVE,
+        };
     }
 }

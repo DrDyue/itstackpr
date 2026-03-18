@@ -9,7 +9,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 class User extends Authenticatable
 {
     public const ROLE_ADMIN = 'admin';
-    public const ROLE_IT_WORKER = 'it_worker';
     public const ROLE_USER = 'user';
 
     protected $fillable = [
@@ -52,7 +51,7 @@ class User extends Authenticatable
 
     public function assignedDevices(): HasMany
     {
-        return $this->hasMany(Device::class, 'assigned_user_id');
+        return $this->hasMany(Device::class, 'assigned_to_id');
     }
 
     public function responsibleRooms(): HasMany
@@ -62,17 +61,17 @@ class User extends Authenticatable
 
     public function reportedRepairs(): HasMany
     {
-        return $this->hasMany(Repair::class, 'reported_by_user_id');
+        return $this->hasMany(Repair::class, 'issue_reported_by');
     }
 
     public function assignedRepairs(): HasMany
     {
-        return $this->hasMany(Repair::class, 'assigned_to_user_id');
+        return $this->hasMany(Repair::class, 'accepted_by');
     }
 
     public function acceptedRepairs(): HasMany
     {
-        return $this->hasMany(Repair::class, 'accepted_by_user_id');
+        return $this->hasMany(Repair::class, 'accepted_by');
     }
 
     public function repairRequests(): HasMany
@@ -102,7 +101,7 @@ class User extends Authenticatable
 
     public function incomingTransfers(): HasMany
     {
-        return $this->hasMany(DeviceTransfer::class, 'transfer_to_user_id');
+        return $this->hasMany(DeviceTransfer::class, 'transfered_to_id');
     }
 
     public function reviewedTransfers(): HasMany
@@ -122,11 +121,11 @@ class User extends Authenticatable
 
     public function isItWorker(): bool
     {
-        return $this->role === self::ROLE_IT_WORKER;
+        return false;
     }
 
     public function canManageRequests(): bool
     {
-        return $this->isAdmin() || $this->isItWorker();
+        return $this->isAdmin();
     }
 }

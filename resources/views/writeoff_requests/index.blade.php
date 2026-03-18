@@ -19,7 +19,7 @@
                         <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{{ $request->status }}</span>
                     </div>
                     <div class="mt-3 text-sm text-slate-600">{{ $request->reason }}</div>
-                    @if ($canReview && $request->status === 'pending')
+                    @if ($canReview && $request->status === 'submitted')
                         <form method="POST" action="{{ route('writeoff-requests.review', $request) }}" class="mt-4 space-y-4 rounded-xl bg-slate-50 p-4">
                             @csrf
                             <div class="grid gap-4 md:grid-cols-2">
@@ -27,7 +27,7 @@
                                     <span class="crud-label">Lemums</span>
                                     <select name="status" class="crud-control">
                                         <option value="approved">Apstiprinat</option>
-                                        <option value="denied">Noraidit</option>
+                                        <option value="rejected">Noraidit</option>
                                     </select>
                                 </label>
                                 <label class="block">

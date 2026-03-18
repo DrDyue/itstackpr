@@ -7,10 +7,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DeviceTransfer extends Model
 {
+    public const STATUS_SUBMITTED = 'submitted';
+    public const STATUS_APPROVED = 'approved';
+    public const STATUS_REJECTED = 'rejected';
+
     protected $fillable = [
         'device_id',
         'responsible_user_id',
-        'transfer_to_user_id',
+        'transfered_to_id',
         'transfer_reason',
         'status',
         'reviewed_by_user_id',
@@ -37,11 +41,22 @@ class DeviceTransfer extends Model
 
     public function transferTo(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'transfer_to_user_id');
+        return $this->belongsTo(User::class, 'transfered_to_id');
     }
 
     public function reviewedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by_user_id');
+    }
+
+    public function getTransferToUserIdAttribute(): mixed
+    {
+        return $this->attributes['transfered_to_id'] ?? $this->attributes['transfer_to_user_id'] ?? null;
+    }
+
+    public function setTransferToUserIdAttribute(mixed $value): void
+    {
+        $this->attributes['transfered_to_id'] = $value;
+        $this->attributes['transfer_to_user_id'] = $value;
     }
 }

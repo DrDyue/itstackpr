@@ -49,23 +49,14 @@
                     @if ($request->review_notes)
                         <div class="mt-3 text-sm text-slate-500">Piezīmes: {{ $request->review_notes }}</div>
                     @endif
-                    @if ($canReview && $request->status === 'pending')
+                    @if ($canReview && $request->status === 'submitted')
                         <form method="POST" action="{{ route('repair-requests.review', $request) }}" class="mt-4 grid gap-4 rounded-xl bg-slate-50 p-4 md:grid-cols-5">
                             @csrf
                             <label class="block">
                                 <span class="crud-label">Lemums</span>
                                 <select name="status" class="crud-control">
                                     <option value="approved">Apstiprinat</option>
-                                    <option value="denied">Noraidit</option>
-                                </select>
-                            </label>
-                            <label class="block">
-                                <span class="crud-label">Pieskirt IT darbiniekam</span>
-                                <select name="assigned_to_user_id" class="crud-control">
-                                    <option value="">Automatiski man</option>
-                                    @foreach ($reviewUsers as $reviewUser)
-                                        <option value="{{ $reviewUser->id }}">{{ $reviewUser->full_name }}</option>
-                                    @endforeach
+                                    <option value="rejected">Noraidit</option>
                                 </select>
                             </label>
                             <label class="block">

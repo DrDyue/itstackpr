@@ -23,7 +23,7 @@
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div class="text-sm text-slate-500">Remontā</div>
                 <div class="mt-2 text-3xl font-semibold text-slate-900">{{ $inRepairDevices }}</div>
-                <div class="mt-2 text-sm text-slate-500">Bojātas: {{ $brokenDevices }}</div>
+                <div class="mt-2 text-sm text-slate-500">Norakstītas: {{ $writtenOffDevices }}</div>
             </div>
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div class="text-sm text-slate-500">Gaidāmie pieteikumi</div>
@@ -57,7 +57,7 @@
                                 <div class="mt-2 text-sm text-slate-600">{{ $repair->description }}</div>
                                 <div class="mt-2 text-sm text-slate-500">
                                     Pieteica: {{ $repair->reporter?->full_name ?? '-' }}
-                                    | Pieskirts: {{ $repair->assignee?->full_name ?? '-' }}
+                                    | Apstiprināja: {{ $repair->acceptedBy?->full_name ?? '-' }}
                                 </div>
                             </div>
                         @empty

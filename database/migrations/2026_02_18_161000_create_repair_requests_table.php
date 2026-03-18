@@ -17,7 +17,7 @@ return new class extends Migration
                 ->constrained('users')
                 ->cascadeOnDelete();
             $table->text('description');
-            $table->enum('status', ['pending', 'approved', 'denied'])->default('pending');
+            $table->enum('status', ['submitted', 'approved', 'rejected'])->default('submitted');
             $table->foreignId('reviewed_by_user_id')
                 ->nullable()
                 ->constrained('users')

@@ -16,14 +16,7 @@ return new class extends Migration
                 ->constrained('device_types')
                 ->cascadeOnDelete();
             $table->string('model', 100);
-            $table->enum('status', [
-                'active',
-                'reserve',
-                'broken',
-                'repair',
-                'written_off',
-                'kitting',
-            ])->default('active');
+            $table->enum('status', ['active', 'repair', 'writeoff'])->default('active');
             $table->foreignId('building_id')
                 ->nullable()
                 ->constrained('buildings')
@@ -32,7 +25,7 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('rooms')
                 ->nullOnDelete();
-            $table->foreignId('assigned_user_id')
+            $table->foreignId('assigned_to_id')
                 ->nullable()
                 ->constrained('users')
                 ->nullOnDelete();

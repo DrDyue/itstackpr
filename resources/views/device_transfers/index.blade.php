@@ -22,7 +22,7 @@
                     @if ($transfer->review_notes)
                         <div class="mt-2 text-sm text-slate-500">Piezīmes: {{ $transfer->review_notes }}</div>
                     @endif
-                    @if (($canReview || auth()->id() === $transfer->transfer_to_user_id) && $transfer->status === 'pending')
+                    @if (auth()->id() === $transfer->transfered_to_id && $transfer->status === 'submitted')
                         <form method="POST" action="{{ route('device-transfers.review', $transfer) }}" class="mt-4 space-y-4 rounded-xl bg-slate-50 p-4">
                             @csrf
                             <div class="grid gap-4 md:grid-cols-2">
@@ -30,7 +30,7 @@
                                     <span class="crud-label">Lemums</span>
                                     <select name="status" class="crud-control">
                                         <option value="approved">Apstiprinat</option>
-                                        <option value="denied">Noraidit</option>
+                                        <option value="rejected">Noraidit</option>
                                     </select>
                                 </label>
                                 <label class="block">

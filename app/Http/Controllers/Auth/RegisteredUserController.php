@@ -21,7 +21,7 @@ class RegisteredUserController extends Controller
         $this->requireAdmin();
 
         return view('auth.register', [
-            'roles' => [User::ROLE_ADMIN, User::ROLE_IT_WORKER, User::ROLE_USER],
+            'roles' => [User::ROLE_ADMIN, User::ROLE_USER],
         ]);
     }
 
@@ -35,7 +35,7 @@ class RegisteredUserController extends Controller
             'phone' => ['nullable', 'string', 'max:100'],
             'job_title' => ['nullable', 'string', 'max:100'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_IT_WORKER, User::ROLE_USER])],
+            'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_USER])],
         ]);
 
         $user = User::create([

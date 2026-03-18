@@ -2,7 +2,7 @@
     @php
         $user = auth()->user();
         $isAdmin = $user?->role === 'admin';
-        $isManager = $user?->role === 'admin' || $user?->role === 'it_worker';
+        $isManager = $user?->role === 'admin';
     @endphp
 
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
