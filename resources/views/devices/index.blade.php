@@ -1,5 +1,8 @@
 <x-app-layout>
     @php
+        $selectedFloorLabel = $filters['floor'] !== ''
+            ? ($filters['floor'] . '. stavs')
+            : ($filters['floor_query'] !== '' ? $filters['floor_query'] : null);
         $selectedRoomLabel = $selectedRoom
             ? ($selectedRoom->room_number . ($selectedRoom->room_name ? ' - ' . $selectedRoom->room_name : ''))
             : ($filters['room_query'] !== '' ? $filters['room_query'] : null);
@@ -30,6 +33,12 @@
                 $type->category,
                 $type->description,
             ])),
+        ])->values();
+        $floorSelectOptions = collect($floorOptions)->map(fn ($floor) => [
+            'value' => (string) $floor,
+            'label' => $floor . '. stavs',
+            'description' => 'Filtrs pec stava',
+            'search' => $floor . ' ' . $floor . '. stavs',
         ])->values();
     @endphp
 
@@ -89,6 +98,7 @@
             action="{{ route('devices.index') }}"
             class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-5"
             x-data="{}"
+            @searchable-select-updated.window="if ($event.detail.identifier === 'device-floor-filter') { $dispatch('searchable-select-clear', { target: 'device-room-filter' }) }"
         >
             <label class="block">
                 <span class="crud-label">Meklet</span>
@@ -100,12 +110,16 @@
             </label>
             <label class="block">
                 <span class="crud-label">Stavs</span>
-                <select name="floor" class="crud-control" @change="$dispatch('searchable-select-clear', { target: 'device-room-filter' })">
-                    <option value="">Visi stavi</option>
-                    @foreach ($floorOptions as $floor)
-                        <option value="{{ $floor }}" @selected($filters['floor'] === (string) $floor)>{{ $floor }}. stavs</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    name="floor"
+                    query-name="floor_query"
+                    identifier="device-floor-filter"
+                    :options="$floorSelectOptions"
+                    :selected="$filters['floor']"
+                    :query="$selectedFloorLabel"
+                    placeholder="Izvelies vai raksti stavu"
+                    empty-message="Neviens stavs neatbilst meklejumam."
+                />
             </label>
             <label class="block">
                 <span class="crud-label">Telpa</span>
@@ -133,33 +147,35 @@
                 />
             </label>
 
-            <div class="quick-status-filters md:col-span-2 xl:col-span-5">
-                @foreach ($statusFilterLinks as $statusFilter)
-                    @php
-                        $query = request()->except('page', 'status');
-                        if ($statusFilter['value'] !== '') {
-                            $query['status'] = $statusFilter['value'];
-                        }
-                    @endphp
-                    <a
-                        href="{{ route('devices.index', array_filter($query, fn ($value) => $value !== null && $value !== '')) }}"
-                        class="quick-status-filter quick-status-filter-{{ $statusFilter['tone'] }} {{ $filters['status'] === $statusFilter['value'] || ($statusFilter['value'] === '' && $filters['status'] === '') ? 'quick-status-filter-active' : '' }}"
-                    >
-                        <x-icon :name="$statusFilter['icon']" size="h-4 w-4" />
-                        <span>{{ $statusFilter['label'] }}</span>
-                    </a>
-                @endforeach
-            </div>
+            <div class="filter-toolbar-footer md:col-span-2 xl:col-span-5">
+                <div class="quick-status-filters">
+                    @foreach ($statusFilterLinks as $statusFilter)
+                        @php
+                            $query = request()->except('page', 'status');
+                            if ($statusFilter['value'] !== '') {
+                                $query['status'] = $statusFilter['value'];
+                            }
+                        @endphp
+                        <a
+                            href="{{ route('devices.index', array_filter($query, fn ($value) => $value !== null && $value !== '')) }}"
+                            class="quick-status-filter quick-status-filter-{{ $statusFilter['tone'] }} {{ $filters['status'] === $statusFilter['value'] || ($statusFilter['value'] === '' && $filters['status'] === '') ? 'quick-status-filter-active' : '' }}"
+                        >
+                            <x-icon :name="$statusFilter['icon']" size="h-4 w-4" />
+                            <span>{{ $statusFilter['label'] }}</span>
+                        </a>
+                    @endforeach
+                </div>
 
-            <div class="toolbar-actions md:col-span-2 xl:col-span-5">
-                <button type="submit" class="btn-search">
-                    <x-icon name="search" size="h-4 w-4" />
-                    <span>Meklet</span>
-                </button>
-                <a href="{{ route('devices.index') }}" class="btn-clear">
-                    <x-icon name="clear" size="h-4 w-4" />
-                    <span>Notirit</span>
-                </a>
+                <div class="toolbar-actions justify-end">
+                    <button type="submit" class="btn-search">
+                        <x-icon name="search" size="h-4 w-4" />
+                        <span>Meklet</span>
+                    </button>
+                    <a href="{{ route('devices.index') }}" class="btn-clear">
+                        <x-icon name="clear" size="h-4 w-4" />
+                        <span>Notirit</span>
+                    </a>
+                </div>
             </div>
         </form>
 
@@ -167,7 +183,7 @@
             :items="[
                 ['label' => 'Meklet', 'value' => $filters['q']],
                 ['label' => 'Kods', 'value' => $filters['code']],
-                ['label' => 'Stavs', 'value' => $filters['floor'] !== '' ? ($filters['floor'] . '. stavs') : null],
+                ['label' => 'Stavs', 'value' => $selectedFloorLabel],
                 ['label' => 'Telpa', 'value' => $selectedRoomLabel],
                 ['label' => 'Tips', 'value' => $selectedTypeLabel],
                 ['label' => 'Statuss', 'value' => $filters['status'] !== '' ? ($statusLabels[$filters['status']] ?? $filters['status']) : null],

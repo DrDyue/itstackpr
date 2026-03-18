@@ -28,6 +28,7 @@ class DeviceController extends Controller
             'q' => trim((string) $request->query('q', '')),
             'code' => trim((string) $request->query('code', '')),
             'floor' => trim((string) $request->query('floor', '')),
+            'floor_query' => trim((string) $request->query('floor_query', '')),
             'room_query' => trim((string) $request->query('room_query', '')),
             'room_id' => trim((string) $request->query('room_id', '')),
             'type' => trim((string) $request->query('type', '')),
@@ -55,6 +56,10 @@ class DeviceController extends Controller
             $filters['type_query'] = $selectedType->type_name;
         }
 
+        if ($filters['floor'] !== '') {
+            $filters['floor_query'] = $filters['floor'] . '. stavs';
+        }
+
         $maxFloor = (int) ($accessibleRooms->max('floor_number') ?? 0);
         $floorOptions = $maxFloor > 0 ? range(1, $maxFloor) : [];
         $roomOptions = $accessibleRooms
@@ -79,6 +84,15 @@ class DeviceController extends Controller
             ->when($filters['code'] !== '', fn (Builder $query) => $query->where('code', 'like', '%' . $filters['code'] . '%'))
             ->when($filters['floor'] !== '' && ctype_digit($filters['floor']), function (Builder $query) use ($filters) {
                 $query->whereHas('room', fn (Builder $roomQuery) => $roomQuery->where('floor_number', (int) $filters['floor']));
+            })
+            ->when($filters['floor'] === '' && $filters['floor_query'] !== '', function (Builder $query) use ($filters) {
+                $normalizedFloor = preg_replace('/\D+/', '', $filters['floor_query']);
+
+                if (! is_string($normalizedFloor) || $normalizedFloor === '' || ! ctype_digit($normalizedFloor)) {
+                    return;
+                }
+
+                $query->whereHas('room', fn (Builder $roomQuery) => $roomQuery->where('floor_number', (int) $normalizedFloor));
             })
             ->when($selectedRoom instanceof Room, fn (Builder $query) => $query->where('room_id', $selectedRoom->id))
             ->when(! ($selectedRoom instanceof Room) && $filters['room_query'] !== '', function (Builder $query) use ($filters) {

@@ -1,11 +1,13 @@
 import './bootstrap';
 
-document.addEventListener('alpine:init', () => {
-    if (window.__localizedDatePickerRegistered) {
+const Alpine = window.Alpine;
+
+const registerAlpineData = () => {
+    if (!Alpine || window.__appAlpineDataRegistered) {
         return;
     }
 
-    window.__localizedDatePickerRegistered = true;
+    window.__appAlpineDataRegistered = true;
 
     Alpine.data('localizedDatePicker', ({ value = '' } = {}) => ({
         open: false,
@@ -105,10 +107,11 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
-    Alpine.data('searchableSelect', ({ selected = '', query = '', options = [], placeholder = '', emptyMessage = '' } = {}) => ({
+    Alpine.data('searchableSelect', ({ selected = '', query = '', options = [], placeholder = '', emptyMessage = '', identifier = '' } = {}) => ({
         open: false,
         selected: String(selected ?? ''),
         query: query || '',
+        identifier,
         options: options.map((option) => ({
             value: String(option.value ?? ''),
             label: option.label ?? '',
@@ -162,6 +165,7 @@ document.addEventListener('alpine:init', () => {
             this.selected = '';
             this.query = '';
             this.highlightedIndex = 0;
+            this.dispatchUpdate();
             this.close();
         },
         preparePanel() {
@@ -204,7 +208,19 @@ document.addEventListener('alpine:init', () => {
 
             this.selected = option.value;
             this.query = option.label;
+            this.dispatchUpdate();
             this.open = false;
+        },
+        dispatchUpdate() {
+            if (!this.identifier) {
+                return;
+            }
+
+            this.$dispatch('searchable-select-updated', {
+                identifier: this.identifier,
+                value: this.selected,
+                query: this.query,
+            });
         },
         optionClasses(index, option) {
             const isActive = this.highlightedIndex === index;
@@ -279,7 +295,15 @@ document.addEventListener('alpine:init', () => {
             }
         },
     }));
-});
+};
+
+registerAlpineData();
+document.addEventListener('alpine:init', registerAlpineData);
+
+if (Alpine && !window.__appAlpineStarted) {
+    window.__appAlpineStarted = true;
+    Alpine.start();
+}
 
 const repairTransitionRules = {
     waiting: ['in-progress', 'cancelled'],

@@ -36,6 +36,7 @@
     x-data="searchableSelect({
         selected: @js((string) $selected),
         query: @js((string) $query),
+        identifier: @js((string) $identifier),
         placeholder: @js($placeholder),
         emptyMessage: @js($emptyMessage),
         options: @js($optionsPayload),
