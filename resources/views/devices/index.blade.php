@@ -2,7 +2,7 @@
     @php
         $selectedRoomLabel = $selectedRoom
             ? ($selectedRoom->room_number . ($selectedRoom->room_name ? ' - ' . $selectedRoom->room_name : ''))
-            : null;
+            : ($filters['room_query'] !== '' ? $filters['room_query'] : null);
         $statusFilterLinks = [
             ['label' => 'Visas', 'value' => '', 'icon' => 'device', 'tone' => 'slate'],
             ['label' => 'Aktivas', 'value' => 'active', 'icon' => 'check-circle', 'tone' => 'emerald'],
@@ -15,10 +15,32 @@
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-4xl">
-                    <div class="page-eyebrow">
-                        <x-icon name="device" size="h-4 w-4" />
-                        <span>Inventars</span>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="page-eyebrow">
+                            <x-icon name="device" size="h-4 w-4" />
+                            <span>Inventars</span>
+                        </div>
+
+                        <div class="inventory-inline-metrics">
+                            <span class="inventory-inline-chip inventory-inline-chip-slate">
+                                <span class="inventory-inline-label">Kopa</span>
+                                <span class="inventory-inline-value">{{ $deviceSummary['total'] }}</span>
+                            </span>
+                            <span class="inventory-inline-chip inventory-inline-chip-emerald">
+                                <span class="inventory-inline-label">Aktivas</span>
+                                <span class="inventory-inline-value">{{ $deviceSummary['active'] }}</span>
+                            </span>
+                            <span class="inventory-inline-chip inventory-inline-chip-amber">
+                                <span class="inventory-inline-label">Remonta</span>
+                                <span class="inventory-inline-value">{{ $deviceSummary['repair'] }}</span>
+                            </span>
+                            <span class="inventory-inline-chip inventory-inline-chip-rose">
+                                <span class="inventory-inline-label">Norakstitas</span>
+                                <span class="inventory-inline-value">{{ $deviceSummary['writeoff'] }}</span>
+                            </span>
+                        </div>
                     </div>
+
                     <div class="page-title-group mt-4">
                         <div class="page-title-icon page-title-icon-sky">
                             <x-icon name="device" size="h-7 w-7" />
@@ -26,25 +48,6 @@
                         <div>
                             <h1 class="page-title">Ierices</h1>
                             <p class="page-subtitle">{{ $canManageDevices ? 'Pilns iericu saraksts un parvaldiba.' : 'Tavas piesaistitas ierices.' }}</p>
-                        </div>
-                    </div>
-
-                    <div class="inventory-summary-strip">
-                        <div class="inventory-summary-card inventory-summary-card-slate">
-                            <div class="inventory-summary-label">Kopa</div>
-                            <div class="inventory-summary-value">{{ $deviceSummary['total'] }}</div>
-                        </div>
-                        <div class="inventory-summary-card inventory-summary-card-emerald">
-                            <div class="inventory-summary-label">Aktivas</div>
-                            <div class="inventory-summary-value">{{ $deviceSummary['active'] }}</div>
-                        </div>
-                        <div class="inventory-summary-card inventory-summary-card-amber">
-                            <div class="inventory-summary-label">Remonta</div>
-                            <div class="inventory-summary-value">{{ $deviceSummary['repair'] }}</div>
-                        </div>
-                        <div class="inventory-summary-card inventory-summary-card-rose">
-                            <div class="inventory-summary-label">Norakstitas</div>
-                            <div class="inventory-summary-value">{{ $deviceSummary['writeoff'] }}</div>
                         </div>
                     </div>
                 </div>
@@ -59,7 +62,19 @@
             </div>
         </div>
 
-        <form method="GET" action="{{ route('devices.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <form
+            method="GET"
+            action="{{ route('devices.index') }}"
+            class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-5"
+            x-data="{
+                roomQuery: @js($selectedRoomLabel ?? ''),
+                roomId: @js($filters['room_id']),
+                syncRoomId() {
+                    const match = Array.from(this.$refs.roomOptions.options).find((option) => option.value === this.roomQuery);
+                    this.roomId = match ? match.dataset.roomId : '';
+                }
+            }"
+        >
             <label class="block">
                 <span class="crud-label">Meklet</span>
                 <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, razotajs...">
@@ -70,7 +85,7 @@
             </label>
             <label class="block">
                 <span class="crud-label">Stavs</span>
-                <select name="floor" class="crud-control">
+                <select name="floor" class="crud-control" @change="roomQuery=''; roomId='';">
                     <option value="">Visi stavi</option>
                     @foreach ($floorOptions as $floor)
                         <option value="{{ $floor }}" @selected($filters['floor'] === (string) $floor)>{{ $floor }}. stavs</option>
@@ -79,14 +94,28 @@
             </label>
             <label class="block">
                 <span class="crud-label">Telpa</span>
-                <select name="room_id" class="crud-control">
-                    <option value="">Visas telpas</option>
+                <input
+                    x-ref="roomQuery"
+                    type="text"
+                    name="room_query"
+                    list="device-room-options"
+                    x-model="roomQuery"
+                    @input="syncRoomId()"
+                    @change="syncRoomId()"
+                    class="crud-control"
+                    placeholder="Raksti telpas numuru vai nosaukumu"
+                >
+                <datalist id="device-room-options" x-ref="roomOptions">
                     @foreach ($roomOptions as $room)
-                        <option value="{{ $room->id }}" @selected($filters['room_id'] === (string) $room->id)>
-                            {{ $room->room_number }}{{ $room->room_name ? ' - ' . $room->room_name : '' }}{{ $room->building?->building_name ? ' | ' . $room->building->building_name : '' }}
+                        <option
+                            value="{{ $room->room_number }}{{ $room->room_name ? ' - ' . $room->room_name : '' }}"
+                            data-room-id="{{ $room->id }}"
+                        >
+                            {{ $room->building?->building_name ?: '' }}
                         </option>
                     @endforeach
-                </select>
+                </datalist>
+                <input type="hidden" name="room_id" :value="roomId">
             </label>
             <label class="block">
                 <span class="crud-label">Tips</span>
@@ -97,6 +126,25 @@
                     @endforeach
                 </select>
             </label>
+
+            <div class="quick-status-filters md:col-span-2 xl:col-span-5">
+                @foreach ($statusFilterLinks as $statusFilter)
+                    @php
+                        $query = request()->except('page', 'status');
+                        if ($statusFilter['value'] !== '') {
+                            $query['status'] = $statusFilter['value'];
+                        }
+                    @endphp
+                    <a
+                        href="{{ route('devices.index', array_filter($query, fn ($value) => $value !== null && $value !== '')) }}"
+                        class="quick-status-filter quick-status-filter-{{ $statusFilter['tone'] }} {{ $filters['status'] === $statusFilter['value'] || ($statusFilter['value'] === '' && $filters['status'] === '') ? 'quick-status-filter-active' : '' }}"
+                    >
+                        <x-icon :name="$statusFilter['icon']" size="h-4 w-4" />
+                        <span>{{ $statusFilter['label'] }}</span>
+                    </a>
+                @endforeach
+            </div>
+
             <div class="toolbar-actions md:col-span-2 xl:col-span-5">
                 <button type="submit" class="btn-search">
                     <x-icon name="search" size="h-4 w-4" />
@@ -108,24 +156,6 @@
                 </a>
             </div>
         </form>
-
-        <div class="quick-status-filters">
-            @foreach ($statusFilterLinks as $statusFilter)
-                @php
-                    $query = request()->except('page', 'status');
-                    if ($statusFilter['value'] !== '') {
-                        $query['status'] = $statusFilter['value'];
-                    }
-                @endphp
-                <a
-                    href="{{ route('devices.index', array_filter($query, fn ($value) => $value !== null && $value !== '')) }}"
-                    class="quick-status-filter quick-status-filter-{{ $statusFilter['tone'] }} {{ $filters['status'] === $statusFilter['value'] || ($statusFilter['value'] === '' && $filters['status'] === '') ? 'quick-status-filter-active' : '' }}"
-                >
-                    <x-icon :name="$statusFilter['icon']" size="h-4 w-4" />
-                    <span>{{ $statusFilter['label'] }}</span>
-                </a>
-            @endforeach
-        </div>
 
         <x-active-filters
             :items="[
@@ -150,6 +180,7 @@
             <table class="min-w-full text-sm">
                 <thead class="bg-slate-50 text-left text-slate-500">
                     <tr>
+                        <th class="px-4 py-3">Attels</th>
                         <th class="px-4 py-3">Kods</th>
                         <th class="px-4 py-3">Nosaukums</th>
                         <th class="px-4 py-3">Atrasanas vieta</th>
@@ -161,26 +192,32 @@
                 </thead>
                 <tbody>
                     @forelse ($devices as $device)
+                        @php
+                            $thumbUrl = $device->deviceImageThumbUrl();
+                            $nameMeta = collect([$device->manufacturer, $device->model])->filter(fn ($value) => filled($value))->implode(' | ');
+                        @endphp
                         <tr class="border-t border-slate-100 align-top">
                             <td class="px-4 py-4">
+                                @if ($thumbUrl)
+                                    <img src="{{ $thumbUrl }}" alt="{{ $device->name }}" class="device-table-thumb">
+                                @else
+                                    <div class="device-table-thumb device-table-thumb-placeholder">
+                                        <x-icon name="device" size="h-4 w-4" />
+                                    </div>
+                                @endif
+                            </td>
+                            <td class="px-4 py-4">
                                 <div class="font-semibold text-slate-900">{{ $device->code ?: '-' }}</div>
-                                <div class="mt-1 text-xs text-slate-500">{{ $device->type?->type_name ?: 'Bez tipa' }}</div>
-                                <div class="mt-2 text-xs text-slate-400">{{ $device->serial_number ?: 'Bez serijas numura' }}</div>
+                                @if ($device->serial_number)
+                                    <div class="mt-1 text-xs text-slate-500">Serija: {{ $device->serial_number }}</div>
+                                @endif
                             </td>
                             <td class="px-4 py-4">
                                 <a href="{{ route('devices.show', $device) }}" class="font-semibold text-slate-900 hover:text-blue-700">{{ $device->name }}</a>
-                                <div class="mt-1 text-xs text-slate-500">{{ $device->model ?: '-' }}</div>
-                                <div class="mt-2 flex flex-wrap gap-2">
-                                    @if ($device->manufacturer)
-                                        <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">{{ $device->manufacturer }}</span>
-                                    @endif
-                                    @if ($device->purchase_date)
-                                        <span class="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2.5 py-1 text-[11px] font-medium text-sky-700">
-                                            <x-icon name="calendar" size="h-3.5 w-3.5" />
-                                            <span>{{ $device->purchase_date->format('d.m.Y') }}</span>
-                                        </span>
-                                    @endif
-                                </div>
+                                @if ($nameMeta !== '')
+                                    <div class="mt-1 text-xs text-slate-500">{{ $nameMeta }}</div>
+                                @endif
+                                <div class="mt-2 text-xs text-slate-400">{{ $device->type?->type_name ?: 'Bez tipa' }}</div>
                             </td>
                             <td class="px-4 py-4">
                                 <div class="font-medium text-slate-900">{{ $device->building?->building_name ?: 'Bez ekas' }}</div>
@@ -190,7 +227,9 @@
                                         | {{ $device->room->room_name }}
                                     @endif
                                 </div>
-                                <div class="mt-2 text-xs text-slate-400">{{ $device->room?->department ?: 'Nodala nav noradita' }}</div>
+                                @if ($device->room?->department)
+                                    <div class="mt-2 text-xs text-slate-400">{{ $device->room->department }}</div>
+                                @endif
                             </td>
                             <td class="px-4 py-4">
                                 <div class="font-medium text-slate-900">{{ $device->created_at?->format('d.m.Y') ?: '-' }}</div>
@@ -199,17 +238,12 @@
                             </td>
                             <td class="px-4 py-4">
                                 <div class="font-medium text-slate-900">{{ $device->assignedTo?->full_name ?: 'Nav pieskirts' }}</div>
-                                <div class="mt-1 text-xs text-slate-500">{{ $device->assignedTo?->job_title ?: 'Amats nav noradits' }}</div>
+                                @if ($device->assignedTo?->job_title)
+                                    <div class="mt-1 text-xs text-slate-500">{{ $device->assignedTo->job_title }}</div>
+                                @endif
                             </td>
                             <td class="px-4 py-4">
                                 <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
-                                <div class="mt-2 text-xs text-slate-500">
-                                    @if ($device->activeRepair)
-                                        Aktivs remonts
-                                    @else
-                                        Bez aktiva remonta
-                                    @endif
-                                </div>
                             </td>
                             <td class="px-4 py-4">
                                 <details class="table-action-menu">
@@ -232,25 +266,27 @@
                                                 <span>Rediget</span>
                                             </a>
 
-                                            <form method="POST" action="{{ route('devices.quick-update', $device) }}">
-                                                @csrf
-                                                <input type="hidden" name="action" value="status">
-                                                <input type="hidden" name="target_status" value="writeoff">
-                                                <button type="submit" class="table-action-button table-action-button-rose" @disabled($device->status === 'writeoff' || $device->status === 'repair')>
-                                                    <x-icon name="writeoff" size="h-4 w-4" />
-                                                    <span>Norakstit</span>
-                                                </button>
-                                            </form>
+                                            @if ($device->status === 'active')
+                                                <form method="POST" action="{{ route('devices.quick-update', $device) }}">
+                                                    @csrf
+                                                    <input type="hidden" name="action" value="status">
+                                                    <input type="hidden" name="target_status" value="writeoff">
+                                                    <button type="submit" class="table-action-button table-action-button-rose">
+                                                        <x-icon name="writeoff" size="h-4 w-4" />
+                                                        <span>Norakstit</span>
+                                                    </button>
+                                                </form>
 
-                                            <form method="POST" action="{{ route('devices.quick-update', $device) }}">
-                                                @csrf
-                                                <input type="hidden" name="action" value="status">
-                                                <input type="hidden" name="target_status" value="repair">
-                                                <button type="submit" class="table-action-button table-action-button-amber" @disabled($device->status !== 'active')>
-                                                    <x-icon name="repair" size="h-4 w-4" />
-                                                    <span>Atdot remonta</span>
-                                                </button>
-                                            </form>
+                                                <form method="POST" action="{{ route('devices.quick-update', $device) }}">
+                                                    @csrf
+                                                    <input type="hidden" name="action" value="status">
+                                                    <input type="hidden" name="target_status" value="repair">
+                                                    <button type="submit" class="table-action-button table-action-button-amber">
+                                                        <x-icon name="repair" size="h-4 w-4" />
+                                                        <span>Atdot remonta</span>
+                                                    </button>
+                                                </form>
+                                            @endif
                                         @endif
                                     </div>
                                 </details>
@@ -258,7 +294,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-8 text-center text-slate-500">Ierices nav atrastas.</td>
+                            <td colspan="8" class="px-4 py-8 text-center text-slate-500">Ierices nav atrastas.</td>
                         </tr>
                     @endforelse
                 </tbody>

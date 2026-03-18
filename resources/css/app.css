@@ -2173,36 +2173,36 @@ tbody td {
     @apply flex flex-wrap items-center gap-3;
 }
 
-.inventory-summary-strip {
-    @apply mt-5 flex flex-wrap gap-3;
+.inventory-inline-metrics {
+    @apply flex flex-wrap gap-2;
 }
 
-.inventory-summary-card {
-    @apply min-w-[120px] rounded-2xl border px-4 py-3 shadow-sm;
+.inventory-inline-chip {
+    @apply inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ring-1;
 }
 
-.inventory-summary-card-slate {
-    @apply border-slate-200 bg-white;
+.inventory-inline-chip-slate {
+    @apply bg-white text-slate-700 ring-slate-200;
 }
 
-.inventory-summary-card-emerald {
-    @apply border-emerald-200 bg-emerald-50;
+.inventory-inline-chip-emerald {
+    @apply bg-emerald-50 text-emerald-700 ring-emerald-200;
 }
 
-.inventory-summary-card-amber {
-    @apply border-amber-200 bg-amber-50;
+.inventory-inline-chip-amber {
+    @apply bg-amber-50 text-amber-700 ring-amber-200;
 }
 
-.inventory-summary-card-rose {
-    @apply border-rose-200 bg-rose-50;
+.inventory-inline-chip-rose {
+    @apply bg-rose-50 text-rose-700 ring-rose-200;
 }
 
-.inventory-summary-label {
-    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500;
+.inventory-inline-label {
+    @apply uppercase tracking-[0.16em];
 }
 
-.inventory-summary-value {
-    @apply mt-2 text-2xl font-semibold text-slate-900;
+.inventory-inline-value {
+    @apply rounded-full bg-white/80 px-2 py-0.5 text-slate-900 ring-1 ring-black/5;
 }
 
 .dashboard-action-badge {
@@ -2230,7 +2230,7 @@ tbody td {
 }
 
 .quick-status-filters {
-    @apply flex flex-wrap gap-3;
+    @apply flex flex-wrap gap-3 border-t border-slate-200 pt-4;
 }
 
 .quick-status-filter {
@@ -2448,6 +2448,14 @@ tbody td {
 
 .table-action-button-rose {
     @apply text-rose-700 hover:bg-rose-50;
+}
+
+.device-table-thumb {
+    @apply h-14 w-14 rounded-2xl object-cover ring-1 ring-slate-200;
+}
+
+.device-table-thumb-placeholder {
+    @apply flex items-center justify-center bg-slate-100 text-slate-400;
 }
 
 /* Auth enhancements */

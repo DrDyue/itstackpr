@@ -28,6 +28,7 @@ class DeviceController extends Controller
             'q' => trim((string) $request->query('q', '')),
             'code' => trim((string) $request->query('code', '')),
             'floor' => trim((string) $request->query('floor', '')),
+            'room_query' => trim((string) $request->query('room_query', '')),
             'room_id' => trim((string) $request->query('room_id', '')),
             'type' => trim((string) $request->query('type', '')),
             'status' => trim((string) $request->query('status', '')),
@@ -42,6 +43,7 @@ class DeviceController extends Controller
 
         if ($selectedRoom) {
             $filters['floor'] = (string) $selectedRoom->floor_number;
+            $filters['room_query'] = $selectedRoom->room_number . ($selectedRoom->room_name ? ' - ' . $selectedRoom->room_name : '');
         }
 
         $maxFloor = (int) ($accessibleRooms->max('floor_number') ?? 0);
@@ -70,6 +72,15 @@ class DeviceController extends Controller
                 $query->whereHas('room', fn (Builder $roomQuery) => $roomQuery->where('floor_number', (int) $filters['floor']));
             })
             ->when($selectedRoom instanceof Room, fn (Builder $query) => $query->where('room_id', $selectedRoom->id))
+            ->when(! ($selectedRoom instanceof Room) && $filters['room_query'] !== '', function (Builder $query) use ($filters) {
+                $term = $filters['room_query'];
+
+                $query->whereHas('room', function (Builder $roomQuery) use ($term) {
+                    $roomQuery->where('room_number', 'like', "%{$term}%")
+                        ->orWhere('room_name', 'like', "%{$term}%")
+                        ->orWhere('department', 'like', "%{$term}%");
+                });
+            })
             ->when($filters['type'] !== '' && ctype_digit($filters['type']), fn (Builder $query) => $query->where('device_type_id', (int) $filters['type']))
             ->when($filters['status'] !== '' && in_array($filters['status'], self::STATUSES, true), fn (Builder $query) => $query->where('status', $filters['status']))
             ->orderByDesc('id')
