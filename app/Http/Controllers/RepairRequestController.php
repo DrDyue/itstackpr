@@ -47,10 +47,6 @@ class RepairRequestController extends Controller
             'filters' => $filters,
             'statuses' => [RepairRequest::STATUS_SUBMITTED, RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED],
             'canReview' => $user->canManageRequests(),
-            'reviewUsers' => User::active()
-                ->where('role', User::ROLE_ADMIN)
-                ->orderBy('full_name')
-                ->get(),
         ]);
     }
 

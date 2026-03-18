@@ -76,7 +76,7 @@
                             </td>
                             <td class="px-4 py-3">{{ $device->type?->type_name ?: '-' }}</td>
                             <td class="px-4 py-3">{{ $statusLabels[$device->status] ?? $device->status }}</td>
-                            <td class="px-4 py-3">{{ $device->assignedUser?->full_name ?: '-' }}</td>
+                            <td class="px-4 py-3">{{ $device->assignedTo?->full_name ?: '-' }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex flex-wrap gap-2">
                                     <a href="{{ route('devices.show', $device) }}" class="crud-btn-secondary">Skatit</a>

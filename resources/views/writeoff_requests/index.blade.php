@@ -3,7 +3,7 @@
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
                 <h1 class="text-3xl font-semibold text-slate-900">Norakstisanas pieteikumi</h1>
-                <p class="mt-2 text-sm text-slate-600">{{ $canReview ? 'Visi lietotāju norakstīšanas pieteikumi.' : 'Tavi norakstīšanas pieteikumi.' }}</p>
+                <p class="mt-2 text-sm text-slate-600">{{ $canReview ? 'Visi lietotaju norakstisanas pieteikumi.' : 'Tavi norakstisanas pieteikumi.' }}</p>
             </div>
             <a href="{{ route('writeoff-requests.create') }}" class="crud-btn-primary">Jauns pieteikums</a>
         </div>
@@ -19,6 +19,9 @@
                         <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{{ $request->status }}</span>
                     </div>
                     <div class="mt-3 text-sm text-slate-600">{{ $request->reason }}</div>
+                    @if ($request->review_notes)
+                        <div class="mt-3 text-sm text-slate-500">Piezimes: {{ $request->review_notes }}</div>
+                    @endif
                     @if ($canReview && $request->status === 'submitted')
                         <form method="POST" action="{{ route('writeoff-requests.review', $request) }}" class="mt-4 space-y-4 rounded-xl bg-slate-50 p-4">
                             @csrf
@@ -40,7 +43,7 @@
                     @endif
                 </div>
             @empty
-                <div class="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500 shadow-sm">Pieteikumu vēl nav.</div>
+                <div class="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500 shadow-sm">Pieteikumu vel nav.</div>
             @endforelse
         </div>
 

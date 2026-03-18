@@ -1,8 +1,8 @@
 <nav x-data="{ open: false }" class="border-b border-gray-200 bg-white shadow-sm">
     @php
         $user = auth()->user();
-        $isAdmin = $user?->role === 'admin';
-        $isManager = $user?->role === 'admin';
+        $isAdmin = $user?->isAdmin() ?? false;
+        $canManageRequests = $user?->canManageRequests() ?? false;
     @endphp
 
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -18,7 +18,7 @@
                     <x-nav-link :href="route('repair-requests.index')" :active="request()->routeIs('repair-requests*')">Remonta pieteikumi</x-nav-link>
                     <x-nav-link :href="route('writeoff-requests.index')" :active="request()->routeIs('writeoff-requests*')">Norakstisanas pieteikumi</x-nav-link>
                     <x-nav-link :href="route('device-transfers.index')" :active="request()->routeIs('device-transfers*')">Parsutisanas</x-nav-link>
-                    @if ($isManager)
+                    @if ($canManageRequests)
                         <x-nav-link :href="route('repairs.index')" :active="request()->routeIs('repairs*')">Remonti</x-nav-link>
                         <x-nav-link :href="route('rooms.index')" :active="request()->routeIs('rooms*')">Telpas</x-nav-link>
                         <x-nav-link :href="route('buildings.index')" :active="request()->routeIs('buildings*')">Ekas</x-nav-link>
@@ -77,7 +77,7 @@
             <x-responsive-nav-link :href="route('repair-requests.index')" :active="request()->routeIs('repair-requests*')">Remonta pieteikumi</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('writeoff-requests.index')" :active="request()->routeIs('writeoff-requests*')">Norakstisanas pieteikumi</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('device-transfers.index')" :active="request()->routeIs('device-transfers*')">Parsutisanas</x-responsive-nav-link>
-            @if ($isManager)
+            @if ($canManageRequests)
                 <x-responsive-nav-link :href="route('repairs.index')" :active="request()->routeIs('repairs*')">Remonti</x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('rooms.index')" :active="request()->routeIs('rooms*')">Telpas</x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('buildings.index')" :active="request()->routeIs('buildings*')">Ekas</x-responsive-nav-link>

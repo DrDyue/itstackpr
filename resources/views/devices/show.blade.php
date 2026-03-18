@@ -19,7 +19,7 @@
                 <div class="mt-4 grid gap-4 md:grid-cols-2 text-sm">
                     <div><span class="font-medium text-slate-900">Statuss:</span> {{ $statusLabels[$device->status] ?? $device->status }}</div>
                     <div><span class="font-medium text-slate-900">Tips:</span> {{ $device->type?->type_name ?: '-' }}</div>
-                    <div><span class="font-medium text-slate-900">Pieskirta:</span> {{ $device->assignedUser?->full_name ?: '-' }}</div>
+                    <div><span class="font-medium text-slate-900">Pieskirta:</span> {{ $device->assignedTo?->full_name ?: '-' }}</div>
                     <div><span class="font-medium text-slate-900">Eka / telpa:</span> {{ $device->building?->building_name ?: '-' }} / {{ $device->room?->room_number ?: '-' }}</div>
                     <div><span class="font-medium text-slate-900">Serijas numurs:</span> {{ $device->serial_number ?: '-' }}</div>
                     <div><span class="font-medium text-slate-900">Razotajs:</span> {{ $device->manufacturer ?: '-' }}</div>

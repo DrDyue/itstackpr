@@ -51,7 +51,7 @@ class DeviceTransferController extends Controller
             'transfers' => $transfers,
             'filters' => $filters,
             'statuses' => [DeviceTransfer::STATUS_SUBMITTED, DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED],
-            'canReview' => false,
+            'isAdmin' => $user->isAdmin(),
         ]);
     }
 

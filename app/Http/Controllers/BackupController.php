@@ -23,7 +23,7 @@ class BackupController extends Controller
 
     public function index(): View
     {
-        $this->ensureAdmin();
+        $this->requireAdmin();
 
         $settings = $this->backupService->getSettings();
         $allBackups = $this->backupService->allBackups();
@@ -98,7 +98,7 @@ class BackupController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $this->ensureAdmin();
+        $this->requireAdmin();
 
         $backup = $this->backupService->createBackup($request->user(), 'manual');
 
@@ -109,7 +109,7 @@ class BackupController extends Controller
 
     public function updateSettings(Request $request): RedirectResponse
     {
-        $this->ensureAdmin();
+        $this->requireAdmin();
 
         $validated = $request->validate([
             'frequency' => ['required', 'in:daily,weekly,monthly'],
@@ -142,7 +142,7 @@ class BackupController extends Controller
 
     public function download(string $backup): StreamedResponse
     {
-        $this->ensureAdmin();
+        $this->requireAdmin();
 
         $record = $this->findBackupOrAbort($backup);
 
@@ -158,7 +158,7 @@ class BackupController extends Controller
 
     public function restore(Request $request, string $backup): RedirectResponse
     {
-        $this->ensureAdmin();
+        $this->requireAdmin();
 
         try {
             $record = $this->backupService->restoreBackup($backup, $request->user());
@@ -175,7 +175,7 @@ class BackupController extends Controller
 
     public function uploadAndRestore(Request $request): RedirectResponse
     {
-        $this->ensureAdmin();
+        $this->requireAdmin();
 
         $validated = $request->validate([
             'backup_file' => ['required', 'file', 'max:' . (int) config('backups.max_upload_kb', 102400)],
@@ -197,7 +197,7 @@ class BackupController extends Controller
 
     public function destroy(Request $request, string $backup): RedirectResponse
     {
-        $this->ensureAdmin();
+        $this->requireAdmin();
 
         $record = $this->findBackupOrAbort($backup);
 
@@ -221,13 +221,6 @@ class BackupController extends Controller
         return redirect()
             ->route('backups.index')
             ->with('success', 'Rezerves kopija izdzesta.');
-    }
-
-    private function ensureAdmin(): void
-    {
-        if (auth()->user()?->role !== 'admin') {
-            abort(403);
-        }
     }
 
     private function findBackupOrAbort(string $backup)
