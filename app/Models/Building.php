@@ -9,21 +9,19 @@ class Building extends Model
 {
     protected $table = 'buildings';
 
-    public $timestamps = false;
-
     protected $fillable = [
         'building_name',
         'address',
         'city',
         'total_floors',
         'notes',
-        'created_at',
     ];
 
     protected function casts(): array
     {
         return [
             'created_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
     }
 

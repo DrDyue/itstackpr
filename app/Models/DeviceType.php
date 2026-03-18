@@ -9,20 +9,18 @@ class DeviceType extends Model
 {
     protected $table = 'device_types';
 
-    public $timestamps = false;
-
     protected $fillable = [
         'type_name',
         'category',
         'description',
         'expected_lifetime_years',
-        'created_at',
     ];
 
     protected function casts(): array
     {
         return [
             'created_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
     }
 

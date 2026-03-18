@@ -63,7 +63,7 @@ class LatvianDemoDataSeeder extends Seeder
                 ['full_name' => 'Ruta Liepa', 'email' => 'ruta.liepa@itstackpr.test', 'phone' => '+37126000012', 'job_title' => 'Iestades vaditaja', 'role' => User::ROLE_USER],
             ];
 
-            $userRows = array_map(function (array $user) use ($now) {
+            $userRows = array_map(function (array $user) use ($now) { 
                 return array_merge($user, [
                     'password' => Hash::make('password'),
                     'is_active' => true,

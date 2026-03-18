@@ -48,11 +48,6 @@ class Device extends Model
         return $this->belongsTo(DeviceType::class, 'device_type_id');
     }
 
-    public function device_type(): BelongsTo
-    {
-        return $this->type();
-    }
-
     public function building(): BelongsTo
     {
         return $this->belongsTo(Building::class);

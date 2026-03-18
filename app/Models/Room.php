@@ -10,8 +10,6 @@ class Room extends Model
 {
     protected $table = 'rooms';
 
-    public $timestamps = false;
-
     protected $fillable = [
         'building_id',
         'floor_number',
@@ -20,13 +18,13 @@ class Room extends Model
         'user_id',
         'department',
         'notes',
-        'created_at',
     ];
 
     protected function casts(): array
     {
         return [
             'created_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
     }
 

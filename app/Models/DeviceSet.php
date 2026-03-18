@@ -10,8 +10,6 @@ class DeviceSet extends Model
 {
     protected $table = 'device_sets';
 
-    public $timestamps = false;
-
     protected $fillable = [
         'set_name',
         'set_code',
@@ -20,15 +18,13 @@ class DeviceSet extends Model
         'assigned_to',
         'notes',
         'created_by',
-        'name',
-        'description',
-        'created_at',
     ];
 
     protected function casts(): array
     {
         return [
             'created_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
     }
 

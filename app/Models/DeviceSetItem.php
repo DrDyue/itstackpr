@@ -9,21 +9,19 @@ class DeviceSetItem extends Model
 {
     protected $table = 'device_set_items';
 
-    public $timestamps = false;
-
     protected $fillable = [
         'device_set_id',
         'device_id',
         'quantity',
         'role',
         'description',
-        'created_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'created_at' => 'datetime', 
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
     } 
 
