@@ -16,8 +16,6 @@ use App\Http\Controllers\WriteoffRequestController;
 use App\Http\Controllers\DeviceTransferController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DeviceAssetController;
-use App\Http\Controllers\DeviceSetController;
-use App\Http\Controllers\DeviceSetItemController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
@@ -79,12 +77,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/device-transfers', [DeviceTransferController::class, 'store'])->name('device-transfers.store');
     Route::post('/device-transfers/{deviceTransfer}/review', [DeviceTransferController::class, 'review'])->name('device-transfers.review');
     Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
-    Route::resource('device-sets', DeviceSetController::class)->except(['show']);
-    Route::post('/device-sets/{deviceSet}/items', [DeviceSetController::class, 'addItem'])
-        ->name('device-sets.items.add');
-    Route::delete('/device-sets/{deviceSet}/items/{item}', [DeviceSetController::class, 'deleteItem'])
-        ->name('device-sets.items.delete');
-    Route::resource('device-set-items', DeviceSetItemController::class)->except(['show']);
     Route::resource('users', UserController::class)->except(['show']);
     Route::get('/backups', [BackupController::class, 'index'])->name('backups.index');
     Route::post('/backups/manual', [BackupController::class, 'store'])->name('backups.store');

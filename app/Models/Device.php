@@ -104,17 +104,6 @@ class Device extends Model
         return $this->hasMany(DeviceTransfer::class);
     }
 
-    public function sets()
-    {
-        return $this->belongsToMany(DeviceSet::class, 'device_set_items')
-            ->withPivot(['quantity', 'role', 'description']);
-    }
-
-    public function deviceSetItems(): HasMany
-    {
-        return $this->hasMany(DeviceSetItem::class);
-    }
-
     public function deviceImageUrl(): ?string
     {
         return app(DeviceAssetManager::class)->url($this->device_image_url);

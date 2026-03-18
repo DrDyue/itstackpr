@@ -15,12 +15,10 @@ class LatvianDemoDataSeeder extends Seeder
         $now = now();
 
         DB::transaction(function () use ($now) {
-            DB::table('device_set_items')->delete();
             DB::table('device_transfers')->delete();
             DB::table('writeoff_requests')->delete();
             DB::table('repair_requests')->delete();
             DB::table('repairs')->delete();
-            DB::table('device_sets')->delete();
             DB::table('devices')->delete();
             DB::table('rooms')->delete();
             DB::table('device_types')->delete();
@@ -359,62 +357,6 @@ class LatvianDemoDataSeeder extends Seeder
                         ->update(['request_id' => $approvedRequestId]);
                 }
             }
-
-            DB::table('device_sets')->insert([
-                [
-                    'name' => 'Darba vieta sekretarei',
-                    'description' => 'Pilns komplekts sekretarei',
-                    'set_name' => 'Sekretares komplekts',
-                    'set_code' => 'KIT-SEC-01',
-                    'status' => 'active',
-                    'room_id' => $roomIds['301'],
-                    'assigned_to' => 'Marta Zvirbule',
-                    'notes' => 'Darba vietas pamata komplekts',
-                    'created_by' => $adminUserId,
-                    'created_at' => $now,
-                ],
-                [
-                    'name' => 'Rezerves komplekts',
-                    'description' => 'Rezerves tehnikai noliktava',
-                    'set_name' => 'Rezerves komplekts',
-                    'set_code' => 'KIT-RES-01',
-                    'status' => 'draft',
-                    'room_id' => $roomIds['T1'],
-                    'assigned_to' => 'Maris Vitols',
-                    'notes' => 'Noliktavas komplekts',
-                    'created_by' => $adminUserId,
-                    'created_at' => $now,
-                ],
-            ]);
-
-            $setIds = DB::table('device_sets')->pluck('id', 'set_code')->all();
-
-            DB::table('device_set_items')->insert([
-                [
-                    'device_set_id' => $setIds['KIT-SEC-01'],
-                    'device_id' => $deviceIds['LDZ-0002'],
-                    'quantity' => 1,
-                    'role' => 'Monitors',
-                    'description' => 'Sekretares monitors',
-                    'created_at' => $now,
-                ],
-                [
-                    'device_set_id' => $setIds['KIT-SEC-01'],
-                    'device_id' => $deviceIds['LDZ-0012'],
-                    'quantity' => 1,
-                    'role' => 'Printeris',
-                    'description' => 'Drukas ierice sekretarei',
-                    'created_at' => $now,
-                ],
-                [
-                    'device_set_id' => $setIds['KIT-RES-01'],
-                    'device_id' => $deviceIds['LDZ-0011'],
-                    'quantity' => 1,
-                    'role' => 'Rezerves dators',
-                    'description' => 'Rezerves darba vietas dators',
-                    'created_at' => $now,
-                ],
-            ]);
 
             DB::table('audit_log')->insert([
                 [

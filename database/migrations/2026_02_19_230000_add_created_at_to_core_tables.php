@@ -9,7 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        $tables = ['buildings', 'rooms', 'device_types', 'device_set_items'];
+        $tables = ['buildings', 'rooms', 'device_types'];
 
         foreach ($tables as $table) {
             if (! Schema::hasColumn($table, 'created_at')) {
@@ -28,7 +28,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        $tables = ['buildings', 'rooms', 'device_types', 'device_set_items'];
+        $tables = ['buildings', 'rooms', 'device_types'];
 
         foreach ($tables as $table) {
             if (Schema::hasColumn($table, 'created_at')) {

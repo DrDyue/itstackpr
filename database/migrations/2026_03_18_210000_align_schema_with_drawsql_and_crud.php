@@ -14,34 +14,6 @@ return new class extends Migration
         $this->ensureTimestampColumns('buildings');
         $this->ensureTimestampColumns('rooms');
         $this->ensureTimestampColumns('device_types');
-        $this->ensureTimestampColumns('device_sets');
-        $this->ensureTimestampColumns('device_set_items');
-
-        Schema::table('device_sets', function (Blueprint $table) {
-            if (! Schema::hasColumn('device_sets', 'name')) {
-                $table->string('name', 100)->nullable()->after('id');
-            }
-
-            if (! Schema::hasColumn('device_sets', 'description')) {
-                $table->text('description')->nullable()->after('name');
-            }
-        });
-
-        DB::table('device_sets')
-            ->whereNull('name')
-            ->update([
-                'name' => DB::raw("COALESCE(set_name, '')"),
-            ]);
-
-        DB::table('device_sets')
-            ->whereNull('description')
-            ->update([
-                'description' => DB::raw("COALESCE(notes, '')"),
-            ]);
-
-        if ($driver !== 'sqlite') {
-            DB::statement("ALTER TABLE device_sets MODIFY name VARCHAR(100) NOT NULL");
-        }
     }
 
     public function down(): void

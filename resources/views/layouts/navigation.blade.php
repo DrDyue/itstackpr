@@ -23,7 +23,6 @@
                         <x-nav-link :href="route('rooms.index')" :active="request()->routeIs('rooms*')">Telpas</x-nav-link>
                         <x-nav-link :href="route('buildings.index')" :active="request()->routeIs('buildings*')">Ekas</x-nav-link>
                         <x-nav-link :href="route('device-types.index')" :active="request()->routeIs('device-types*')">Iericu tipi</x-nav-link>
-                        <x-nav-link :href="route('device-sets.index')" :active="request()->routeIs('device-sets*') || request()->routeIs('device-set-items*')">Komplekti</x-nav-link>
                     @endif
                     @if ($isAdmin)
                         <x-nav-link :href="route('users.index')" :active="request()->routeIs('users*')">Lietotaji</x-nav-link>
@@ -82,7 +81,6 @@
                 <x-responsive-nav-link :href="route('rooms.index')" :active="request()->routeIs('rooms*')">Telpas</x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('buildings.index')" :active="request()->routeIs('buildings*')">Ekas</x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('device-types.index')" :active="request()->routeIs('device-types*')">Iericu tipi</x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('device-sets.index')" :active="request()->routeIs('device-sets*') || request()->routeIs('device-set-items*')">Komplekti</x-responsive-nav-link>
             @endif
             @if ($isAdmin)
                 <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users*')">Lietotaji</x-responsive-nav-link>

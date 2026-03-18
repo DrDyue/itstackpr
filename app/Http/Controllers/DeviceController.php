@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Building;
 use App\Models\Device;
-use App\Models\DeviceSet;
-use App\Models\DeviceSetItem;
 use App\Models\DeviceType;
 use App\Models\Room;
 use App\Models\User;
@@ -118,7 +116,6 @@ class DeviceController extends Controller
             'writeoffRequests.responsibleUser',
             'transfers.responsibleUser',
             'transfers.transferTo',
-            'sets.room.building',
         ]);
 
         return view('devices.show', [
@@ -164,10 +161,9 @@ class DeviceController extends Controller
         $this->requireManager();
 
         $validated = $request->validate([
-            'action' => ['required', Rule::in(['status', 'room', 'set'])],
+            'action' => ['required', Rule::in(['status', 'room'])],
             'target_status' => ['nullable', Rule::in(self::STATUSES)],
             'target_room_id' => ['nullable', 'exists:rooms,id'],
-            'target_set_id' => ['nullable', 'exists:device_sets,id'],
         ]);
 
         $result = $this->performDeviceAction($device, $validated);
@@ -182,10 +178,9 @@ class DeviceController extends Controller
         $validated = $request->validate([
             'device_ids' => ['required', 'array', 'min:1'],
             'device_ids.*' => ['integer', 'exists:devices,id'],
-            'action' => ['required', Rule::in(['status', 'room', 'set'])],
+            'action' => ['required', Rule::in(['status', 'room'])],
             'target_status' => ['nullable', Rule::in(self::STATUSES)],
             'target_room_id' => ['nullable', 'exists:rooms,id'],
-            'target_set_id' => ['nullable', 'exists:device_sets,id'],
         ]);
 
         $devices = Device::query()->whereIn('id', $validated['device_ids'])->get();
@@ -417,7 +412,6 @@ class DeviceController extends Controller
         return match ($data['action']) {
             'status' => $this->changeDeviceStatus($device, (string) ($data['target_status'] ?? '')),
             'room' => $this->moveDevice($device, $data['target_room_id'] ?? null),
-            'set' => $this->attachDeviceToSet($device, $data['target_set_id'] ?? null),
             default => ['level' => 'error', 'message' => 'Neatbalstita darbiba.'],
         };
     }
@@ -471,33 +465,5 @@ class DeviceController extends Controller
         ]);
 
         return ['level' => 'success', 'message' => 'Ierice parvietota uz citu telpu.'];
-    }
-
-    private function attachDeviceToSet(Device $device, mixed $setId): array
-    {
-        if (! $setId) {
-            return ['level' => 'error', 'message' => 'Nav izveleta komplektacija.'];
-        }
-
-        $set = DeviceSet::query()->find($setId);
-        if (! $set) {
-            return ['level' => 'error', 'message' => 'Komplektacija nav atrasta.'];
-        }
-
-        $existing = DeviceSetItem::query()
-            ->where('device_set_id', $set->id)
-            ->where('device_id', $device->id)
-            ->first();
-
-        if ($existing) {
-            return ['level' => 'error', 'message' => 'Ierice jau ir saja komplektacija.'];
-        }
-
-        DeviceSetItem::create([
-            'device_set_id' => $set->id,
-            'device_id' => $device->id,
-        ]);
-
-        return ['level' => 'success', 'message' => 'Ierice pievienota komplektacijai.'];
     }
 }

@@ -292,6 +292,8 @@ return new class extends Migration
             return;
         }
 
+        Schema::dropIfExists('device_set_items');
+        Schema::dropIfExists('device_sets');
         Schema::dropIfExists('device_history');
         Schema::dropIfExists('employees');
     }
