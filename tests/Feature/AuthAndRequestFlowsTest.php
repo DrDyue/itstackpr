@@ -445,9 +445,11 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->actingAs($user)
             ->get(route('dashboard'))
             ->assertOk()
+            ->assertSee('Stavi un telpas')
+            ->assertSee('DEV-DASH-OWN')
+            ->assertDontSee('DEV-DASH-OTHER')
             ->assertSee('Mana personiga darbiba')
-            ->assertDontSee('Svesa admina darbiba')
-            ->assertSee('No 1 telpam');
+            ->assertDontSee('Svesa admina darbiba');
     }
 
     private function createUser(string $role, ?string $email = null): User

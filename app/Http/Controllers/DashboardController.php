@@ -3,19 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
-use App\Models\Building;
 use App\Models\Device;
 use App\Models\DeviceTransfer;
 use App\Models\Repair;
 use App\Models\RepairRequest;
 use App\Models\Room;
 use App\Models\WriteoffRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         $user = $this->user();
         abort_unless($user, 403);
@@ -23,8 +23,9 @@ class DashboardController extends Controller
         $hasDevices = $this->featureTableExists('devices');
         $hasRepairs = $this->featureTableExists('repairs');
         $hasRooms = $this->featureTableExists('rooms');
-        $hasBuildings = $this->featureTableExists('buildings');
         $hasAuditLog = $this->featureTableExists('audit_log');
+        $selectedFloor = trim((string) $request->query('floor', ''));
+        $selectedRoomId = trim((string) $request->query('room', ''));
 
         $deviceQuery = $hasDevices ? Device::query() : null;
         $repairRequestQuery = Schema::hasTable('repair_requests') ? RepairRequest::query() : null;
@@ -53,7 +54,7 @@ class DashboardController extends Controller
 
         $activeRepairs = $repairQuery
             ? (clone $repairQuery)
-                ->with(['device.building', 'device.room', 'acceptedBy'])
+                ->with(['device.building', 'device.room', 'acceptedBy', 'reporter'])
                 ->whereIn('status', ['waiting', 'in-progress'])
                 ->orderByRaw("case when status = 'in-progress' then 0 else 1 end")
                 ->orderByDesc('id')
@@ -61,23 +62,40 @@ class DashboardController extends Controller
                 ->get()
             : collect();
 
-        $roomsQuery = null;
-
-        if ($hasRooms) {
-            $roomsQuery = Room::query();
-
-            if (! $user->canManageRequests()) {
-                $roomsQuery->whereHas('devices', fn ($query) => $query->where('assigned_to_id', $user->id));
-            }
-        }
-
-        $recentDevices = $deviceQuery
-            ? (clone $deviceQuery)
-                ->with(['room', 'building', 'type', 'assignedTo'])
-                ->latest('created_at')
-                ->limit(5)
+        $locationRooms = $hasRooms
+            ? Room::query()
+                ->with(['building'])
+                ->withCount([
+                    'devices' => function ($query) use ($user) {
+                        if (! $user->canManageRequests()) {
+                            $query->where('assigned_to_id', $user->id);
+                        }
+                    },
+                ])
+                ->when(
+                    ! $user->canManageRequests(),
+                    fn ($query) => $query->whereHas('devices', fn ($deviceBuilder) => $deviceBuilder->where('assigned_to_id', $user->id))
+                )
+                ->orderBy('floor_number')
+                ->orderBy('room_number')
                 ->get()
             : collect();
+
+        $availableFloorIds = $locationRooms
+            ->map(fn (Room $room) => (string) ($room->floor_number ?? ''))
+            ->filter(fn (string $floor) => $floor !== '')
+            ->unique()
+            ->values();
+
+        $selectedRoom = ctype_digit($selectedRoomId)
+            ? $locationRooms->firstWhere('id', (int) $selectedRoomId)
+            : null;
+
+        if ($selectedRoom instanceof Room) {
+            $selectedFloor = (string) $selectedRoom->floor_number;
+        } elseif (! $availableFloorIds->contains($selectedFloor)) {
+            $selectedFloor = '';
+        }
 
         $recentActivity = $hasAuditLog
             ? tap(AuditLog::query()->with('user'), function ($query) use ($user) {
@@ -90,64 +108,53 @@ class DashboardController extends Controller
                 ->get()
             : collect();
 
-        $buildings = $user->canManageRequests() && $hasBuildings && $hasRooms && $hasDevices
-            ? Building::query()
-                ->withCount(['rooms', 'devices'])
-                ->with([
-                    'rooms' => function ($query) {
-                        $query->with(['user'])
-                            ->withCount('devices')
-                            ->orderBy('floor_number')
-                            ->orderBy('room_number');
-                    },
-                ])
-                ->orderBy('building_name')
+        $dashboardDevices = $deviceQuery
+            ? (clone $deviceQuery)
+                ->with(['room.building', 'building', 'type', 'assignedTo', 'activeRepair'])
+                ->when(
+                    $selectedRoom instanceof Room,
+                    fn ($query) => $query->where('room_id', $selectedRoom->id)
+                )
+                ->when(
+                    ! ($selectedRoom instanceof Room) && $selectedFloor !== '',
+                    fn ($query) => $query->whereHas('room', fn ($roomQuery) => $roomQuery->where('floor_number', (int) $selectedFloor))
+                )
+                ->orderBy('building_id')
+                ->orderBy('room_id')
+                ->orderBy('name')
                 ->get()
             : collect();
 
-        $buildingTree = $buildings->map(function (Building $building) {
-            $floors = $building->rooms
-                ->groupBy(fn ($room) => (string) ($room->floor_number ?? 0))
-                ->sortKeys()
-                ->map(function ($rooms, $floorKey) {
-                    return [
-                        'floor_label' => ((int) $floorKey) . '. stavs',
-                        'device_count' => (int) $rooms->sum('devices_count'),
-                        'room_count' => $rooms->count(),
-                        'rooms' => $rooms->values(),
-                    ];
-                })
-                ->values();
-
-            return [
-                'building' => $building,
-                'floor_count' => $floors->count(),
-                'device_count' => (int) $building->devices_count,
-                'rooms_count' => (int) $building->rooms_count,
-                'floors' => $floors,
-            ];
-        });
+        $locationTree = $locationRooms
+            ->groupBy(fn (Room $room) => (string) ($room->floor_number ?? 0))
+            ->sortKeys()
+            ->map(function ($rooms, $floorKey) {
+                return [
+                    'id' => (string) $floorKey,
+                    'label' => ((int) $floorKey) . '. stavs',
+                    'room_count' => $rooms->count(),
+                    'device_count' => (int) $rooms->sum('devices_count'),
+                    'rooms' => $rooms->map(function (Room $room) {
+                        return [
+                            'id' => $room->id,
+                            'room_number' => $room->room_number,
+                            'room_name' => $room->room_name,
+                            'building_name' => $room->building?->building_name,
+                            'department' => $room->department,
+                            'device_count' => (int) $room->devices_count,
+                        ];
+                    })->values(),
+                ];
+            })
+            ->values();
 
         return view('dashboard', [
             'user' => $user,
-            'totalDevices' => $totalDevices,
-            'activeDevices' => $activeDevices,
-            'writtenOffDevices' => $writtenOffDevices,
-            'inRepairDevices' => $inRepairDevices,
-            'totalRooms' => $roomsQuery ? (clone $roomsQuery)->count() : 0,
-            'mappedRooms' => $roomsQuery ? (clone $roomsQuery)->has('devices')->count() : 0,
-            'activeRepairsCount' => $repairQuery ? (clone $repairQuery)->whereIn('status', ['waiting', 'in-progress'])->count() : 0,
-            'waitingRepairsCount' => $repairQuery ? (clone $repairQuery)->where('status', 'waiting')->count() : 0,
-            'inProgressRepairsCount' => $repairQuery ? (clone $repairQuery)->where('status', 'in-progress')->count() : 0,
-            'completedRepairsThisMonth' => $repairQuery ? (clone $repairQuery)->where('status', 'completed')->where('end_date', '>=', now()->startOfMonth())->count() : 0,
-            'pendingRepairRequests' => $repairRequestQuery ? (clone $repairRequestQuery)->where('status', RepairRequest::STATUS_SUBMITTED)->count() : 0,
-            'pendingWriteoffRequests' => $writeoffRequestQuery ? (clone $writeoffRequestQuery)->where('status', WriteoffRequest::STATUS_SUBMITTED)->count() : 0,
-            'pendingTransfers' => $transferQuery ? (clone $transferQuery)->where('status', DeviceTransfer::STATUS_SUBMITTED)->count() : 0,
-            'averageRepairCost' => (float) ($repairQuery ? ((clone $repairQuery)->whereNotNull('cost')->avg('cost') ?? 0) : 0),
-            'latestInventoryAt' => $deviceQuery ? (clone $deviceQuery)->max('created_at') : null,
-            'buildingTree' => $buildingTree,
+            'dashboardDevices' => $dashboardDevices,
+            'locationTree' => $locationTree,
+            'selectedFloor' => $selectedFloor,
+            'selectedRoom' => $selectedRoom,
             'activeRepairs' => $activeRepairs,
-            'recentDevices' => $recentDevices,
             'recentActivity' => $recentActivity,
             'statusLabels' => [
                 'waiting' => 'Gaida',
