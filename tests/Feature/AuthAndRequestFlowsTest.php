@@ -539,6 +539,27 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertDontSee('Testa ierice DEV-FLOOR-TWO');
     }
 
+    public function test_devices_index_accepts_type_text_filter_without_exact_selection(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-type-filter-admin@example.com');
+        $firstDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-TYPE-ONE');
+        $secondDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-TYPE-TWO');
+
+        DB::table('device_types')->where('id', $firstDevice->device_type_id)->update([
+            'type_name' => 'Komutators Alpha',
+        ]);
+
+        DB::table('device_types')->where('id', $secondDevice->device_type_id)->update([
+            'type_name' => 'Marsrutetajs Beta',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('devices.index', ['type_query' => 'Komut']))
+            ->assertOk()
+            ->assertSee('Testa ierice DEV-TYPE-ONE')
+            ->assertDontSee('Testa ierice DEV-TYPE-TWO');
+    }
+
     private function createUser(string $role, ?string $email = null): User
     {
         return User::create([

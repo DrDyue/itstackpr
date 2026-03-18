@@ -104,6 +104,181 @@ document.addEventListener('alpine:init', () => {
             return days;
         },
     }));
+
+    Alpine.data('searchableSelect', ({ selected = '', query = '', options = [], placeholder = '', emptyMessage = '' } = {}) => ({
+        open: false,
+        selected: String(selected ?? ''),
+        query: query || '',
+        options: options.map((option) => ({
+            value: String(option.value ?? ''),
+            label: option.label ?? '',
+            description: option.description ?? '',
+            search: (option.search ?? `${option.label ?? ''} ${option.description ?? ''}`).toLowerCase(),
+        })),
+        placeholder,
+        emptyMessage,
+        highlightedIndex: 0,
+        pointerActive: false,
+        dragging: false,
+        suppressClick: false,
+        startY: 0,
+        startScrollTop: 0,
+        init() {
+            if (this.selected && !this.query) {
+                const current = this.options.find((option) => option.value === this.selected);
+                if (current) {
+                    this.query = current.label;
+                }
+            }
+        },
+        get filteredOptions() {
+            const term = this.query.trim().toLowerCase();
+
+            if (term === '') {
+                return this.options;
+            }
+
+            return this.options.filter((option) => option.search.includes(term));
+        },
+        togglePanel() {
+            this.open = !this.open;
+            if (this.open) {
+                this.preparePanel();
+            }
+        },
+        openPanel() {
+            if (this.open) {
+                return;
+            }
+
+            this.open = true;
+            this.preparePanel();
+        },
+        close() {
+            this.open = false;
+            this.stopPointer();
+        },
+        clearSelection() {
+            this.selected = '';
+            this.query = '';
+            this.highlightedIndex = 0;
+            this.close();
+        },
+        preparePanel() {
+            const selectedIndex = this.filteredOptions.findIndex((option) => option.value === this.selected);
+            this.highlightedIndex = selectedIndex >= 0 ? selectedIndex : 0;
+            this.$nextTick(() => this.scrollToHighlighted());
+        },
+        handleInput() {
+            this.open = true;
+            const normalized = this.query.trim().toLowerCase();
+            const exact = this.options.find((option) => option.label.toLowerCase() === normalized);
+            this.selected = exact ? exact.value : '';
+            this.highlightedIndex = 0;
+        },
+        move(direction) {
+            if (!this.open) {
+                this.openPanel();
+            }
+
+            if (this.filteredOptions.length === 0) {
+                return;
+            }
+
+            const maxIndex = this.filteredOptions.length - 1;
+            this.highlightedIndex = Math.min(maxIndex, Math.max(0, this.highlightedIndex + direction));
+            this.$nextTick(() => this.scrollToHighlighted());
+        },
+        commit() {
+            const option = this.filteredOptions[this.highlightedIndex] ?? this.filteredOptions[0];
+            if (!option) {
+                return;
+            }
+
+            this.choose(option);
+        },
+        choose(option) {
+            if (this.suppressClick) {
+                return;
+            }
+
+            this.selected = option.value;
+            this.query = option.label;
+            this.open = false;
+        },
+        optionClasses(index, option) {
+            const isActive = this.highlightedIndex === index;
+            const isSelected = this.selected === option.value;
+
+            if (isActive || isSelected) {
+                return 'bg-slate-900 text-white';
+            }
+
+            return 'text-slate-700 hover:bg-slate-50';
+        },
+        scrollToHighlighted() {
+            const panel = this.$refs.panel;
+            if (!panel) {
+                return;
+            }
+
+            const option = panel.querySelectorAll('.searchable-select-option')[this.highlightedIndex];
+            if (!option) {
+                return;
+            }
+
+            const optionTop = option.offsetTop;
+            const optionBottom = optionTop + option.offsetHeight;
+            const viewTop = panel.scrollTop;
+            const viewBottom = viewTop + panel.clientHeight;
+
+            if (optionTop < viewTop) {
+                panel.scrollTop = optionTop;
+            } else if (optionBottom > viewBottom) {
+                panel.scrollTop = optionBottom - panel.clientHeight;
+            }
+        },
+        startPointer(event) {
+            if (!this.open || !this.$refs.panel) {
+                return;
+            }
+
+            this.pointerActive = true;
+            this.dragging = false;
+            this.startY = event.clientY;
+            this.startScrollTop = this.$refs.panel.scrollTop;
+        },
+        handlePointerMove(event) {
+            if (!this.pointerActive || !this.$refs.panel) {
+                return;
+            }
+
+            const delta = event.clientY - this.startY;
+
+            if (Math.abs(delta) > 3) {
+                this.dragging = true;
+                this.suppressClick = true;
+            }
+
+            if (this.dragging) {
+                this.$refs.panel.scrollTop = this.startScrollTop - delta;
+            }
+        },
+        stopPointer() {
+            if (!this.pointerActive) {
+                return;
+            }
+
+            this.pointerActive = false;
+            this.dragging = false;
+
+            if (this.suppressClick) {
+                window.setTimeout(() => {
+                    this.suppressClick = false;
+                }, 80);
+            }
+        },
+    }));
 });
 
 const repairTransitionRules = {

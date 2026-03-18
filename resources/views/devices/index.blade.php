@@ -3,12 +3,34 @@
         $selectedRoomLabel = $selectedRoom
             ? ($selectedRoom->room_number . ($selectedRoom->room_name ? ' - ' . $selectedRoom->room_name : ''))
             : ($filters['room_query'] !== '' ? $filters['room_query'] : null);
+        $selectedTypeLabel = $selectedType?->type_name ?: ($filters['type_query'] !== '' ? $filters['type_query'] : null);
         $statusFilterLinks = [
             ['label' => 'Visas', 'value' => '', 'icon' => 'device', 'tone' => 'slate'],
             ['label' => 'Aktivas', 'value' => 'active', 'icon' => 'check-circle', 'tone' => 'emerald'],
             ['label' => 'Remonta', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'amber'],
             ['label' => 'Norakstitas', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
         ];
+        $roomSelectOptions = $roomOptions->map(fn ($room) => [
+            'value' => (string) $room->id,
+            'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
+            'description' => collect([$room->building?->building_name, $room->department])->filter()->implode(' | '),
+            'search' => implode(' ', array_filter([
+                $room->room_number,
+                $room->room_name,
+                $room->department,
+                $room->building?->building_name,
+            ])),
+        ])->values();
+        $typeSelectOptions = $types->map(fn ($type) => [
+            'value' => (string) $type->id,
+            'label' => $type->type_name,
+            'description' => $type->category ?: '',
+            'search' => implode(' ', array_filter([
+                $type->type_name,
+                $type->category,
+                $type->description,
+            ])),
+        ])->values();
     @endphp
 
     <section class="app-shell">
@@ -66,14 +88,7 @@
             method="GET"
             action="{{ route('devices.index') }}"
             class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-5"
-            x-data="{
-                roomQuery: @js($selectedRoomLabel ?? ''),
-                roomId: @js($filters['room_id']),
-                syncRoomId() {
-                    const match = Array.from(this.$refs.roomOptions.options).find((option) => option.value === this.roomQuery);
-                    this.roomId = match ? match.dataset.roomId : '';
-                }
-            }"
+            x-data="{}"
         >
             <label class="block">
                 <span class="crud-label">Meklet</span>
@@ -85,7 +100,7 @@
             </label>
             <label class="block">
                 <span class="crud-label">Stavs</span>
-                <select name="floor" class="crud-control" @change="roomQuery=''; roomId='';">
+                <select name="floor" class="crud-control" @change="$dispatch('searchable-select-clear', { target: 'device-room-filter' })">
                     <option value="">Visi stavi</option>
                     @foreach ($floorOptions as $floor)
                         <option value="{{ $floor }}" @selected($filters['floor'] === (string) $floor)>{{ $floor }}. stavs</option>
@@ -94,37 +109,28 @@
             </label>
             <label class="block">
                 <span class="crud-label">Telpa</span>
-                <input
-                    x-ref="roomQuery"
-                    type="text"
-                    name="room_query"
-                    list="device-room-options"
-                    x-model="roomQuery"
-                    @input="syncRoomId()"
-                    @change="syncRoomId()"
-                    class="crud-control"
+                <x-searchable-select
+                    name="room_id"
+                    query-name="room_query"
+                    identifier="device-room-filter"
+                    :options="$roomSelectOptions"
+                    :selected="$filters['room_id']"
+                    :query="$selectedRoomLabel"
                     placeholder="Raksti telpas numuru vai nosaukumu"
-                >
-                <datalist id="device-room-options" x-ref="roomOptions">
-                    @foreach ($roomOptions as $room)
-                        <option
-                            value="{{ $room->room_number }}{{ $room->room_name ? ' - ' . $room->room_name : '' }}"
-                            data-room-id="{{ $room->id }}"
-                        >
-                            {{ $room->building?->building_name ?: '' }}
-                        </option>
-                    @endforeach
-                </datalist>
-                <input type="hidden" name="room_id" :value="roomId">
+                    empty-message="Neviena telpa neatbilst meklejumam."
+                />
             </label>
             <label class="block">
                 <span class="crud-label">Tips</span>
-                <select name="type" class="crud-control">
-                    <option value="">Visi tipi</option>
-                    @foreach ($types as $type)
-                        <option value="{{ $type->id }}" @selected($filters['type'] == $type->id)>{{ $type->type_name }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    name="type"
+                    query-name="type_query"
+                    :options="$typeSelectOptions"
+                    :selected="$filters['type']"
+                    :query="$selectedTypeLabel"
+                    placeholder="Raksti tipa nosaukumu"
+                    empty-message="Neviens tips neatbilst meklejumam."
+                />
             </label>
 
             <div class="quick-status-filters md:col-span-2 xl:col-span-5">
@@ -163,7 +169,7 @@
                 ['label' => 'Kods', 'value' => $filters['code']],
                 ['label' => 'Stavs', 'value' => $filters['floor'] !== '' ? ($filters['floor'] . '. stavs') : null],
                 ['label' => 'Telpa', 'value' => $selectedRoomLabel],
-                ['label' => 'Tips', 'value' => $filters['type'] !== '' && ctype_digit($filters['type']) ? optional($types->firstWhere('id', (int) $filters['type']))->type_name : null],
+                ['label' => 'Tips', 'value' => $selectedTypeLabel],
                 ['label' => 'Statuss', 'value' => $filters['status'] !== '' ? ($statusLabels[$filters['status']] ?? $filters['status']) : null],
             ]"
             :clear-url="route('devices.index')"

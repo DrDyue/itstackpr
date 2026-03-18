@@ -31,19 +31,28 @@ class DeviceController extends Controller
             'room_query' => trim((string) $request->query('room_query', '')),
             'room_id' => trim((string) $request->query('room_id', '')),
             'type' => trim((string) $request->query('type', '')),
+            'type_query' => trim((string) $request->query('type_query', '')),
             'status' => trim((string) $request->query('status', '')),
         ];
 
         $summaryQuery = $this->visibleDevicesQuery($user);
         $accessibleRooms = $this->accessibleRooms($user);
+        $types = DeviceType::query()->orderBy('type_name')->get();
         $selectedRoom = null;
+        $selectedType = null;
         if (ctype_digit($filters['room_id'])) {
             $selectedRoom = $accessibleRooms->firstWhere('id', (int) $filters['room_id']);
+        }
+        if (ctype_digit($filters['type'])) {
+            $selectedType = $types->firstWhere('id', (int) $filters['type']);
         }
 
         if ($selectedRoom) {
             $filters['floor'] = (string) $selectedRoom->floor_number;
             $filters['room_query'] = $selectedRoom->room_number . ($selectedRoom->room_name ? ' - ' . $selectedRoom->room_name : '');
+        }
+        if ($selectedType) {
+            $filters['type_query'] = $selectedType->type_name;
         }
 
         $maxFloor = (int) ($accessibleRooms->max('floor_number') ?? 0);
@@ -81,7 +90,15 @@ class DeviceController extends Controller
                         ->orWhere('department', 'like', "%{$term}%");
                 });
             })
-            ->when($filters['type'] !== '' && ctype_digit($filters['type']), fn (Builder $query) => $query->where('device_type_id', (int) $filters['type']))
+            ->when($selectedType instanceof DeviceType, fn (Builder $query) => $query->where('device_type_id', $selectedType->id))
+            ->when(! ($selectedType instanceof DeviceType) && $filters['type_query'] !== '', function (Builder $query) use ($filters) {
+                $term = $filters['type_query'];
+
+                $query->whereHas('type', function (Builder $typeQuery) use ($term) {
+                    $typeQuery->where('type_name', 'like', "%{$term}%")
+                        ->orWhere('category', 'like', "%{$term}%");
+                });
+            })
             ->when($filters['status'] !== '' && in_array($filters['status'], self::STATUSES, true), fn (Builder $query) => $query->where('status', $filters['status']))
             ->orderByDesc('id')
             ->paginate(20)
@@ -99,7 +116,8 @@ class DeviceController extends Controller
             'floorOptions' => $floorOptions,
             'roomOptions' => $roomOptions,
             'selectedRoom' => $selectedRoom,
-            'types' => DeviceType::query()->orderBy('type_name')->get(),
+            'types' => $types,
+            'selectedType' => $selectedType,
             'statuses' => self::STATUSES,
             'statusLabels' => $this->statusLabels(),
             'canManageDevices' => $user->canManageRequests(),
