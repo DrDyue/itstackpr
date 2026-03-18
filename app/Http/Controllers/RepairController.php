@@ -31,7 +31,12 @@ class RepairController extends Controller
 
         if (! $this->featureTableExists('repairs')) {
             return view('repairs.index', [
-                'repairs' => $this->emptyPaginator(),
+                'repairs' => collect(),
+                'repairColumns' => [
+                    'waiting' => collect(),
+                    'in-progress' => collect(),
+                    'completed' => collect(),
+                ],
                 'filters' => $filters,
                 'statuses' => self::STATUSES,
                 'repairTypes' => self::TYPES,
@@ -62,12 +67,19 @@ class RepairController extends Controller
             ->when($filters['status'] !== '' && in_array($filters['status'], self::STATUSES, true), fn (Builder $query) => $query->where('status', $filters['status']))
             ->when($filters['priority'] !== '' && in_array($filters['priority'], self::PRIORITIES, true), fn (Builder $query) => $query->where('priority', $filters['priority']))
             ->when($filters['repair_type'] !== '' && in_array($filters['repair_type'], self::TYPES, true), fn (Builder $query) => $query->where('repair_type', $filters['repair_type']))
+            ->orderByRaw("case when status = 'waiting' then 0 when status = 'in-progress' then 1 when status = 'completed' then 2 else 3 end")
             ->orderByDesc('id')
-            ->paginate(20)
-            ->withQueryString();
+            ->get();
+
+        $repairColumns = [
+            'waiting' => $repairs->where('status', 'waiting')->values(),
+            'in-progress' => $repairs->where('status', 'in-progress')->values(),
+            'completed' => $repairs->filter(fn (Repair $repair) => in_array($repair->status, ['completed', 'cancelled'], true))->values(),
+        ];
 
         return view('repairs.index', [
             'repairs' => $repairs,
+            'repairColumns' => $repairColumns,
             'filters' => $filters,
             'statuses' => self::STATUSES,
             'repairTypes' => self::TYPES,
@@ -305,12 +317,32 @@ class RepairController extends Controller
         $validated['priority'] = $validated['priority'] ?? ($repair?->priority ?? 'medium');
         $validated['issue_reported_by'] = $validated['issue_reported_by'] ?? $repair?->issue_reported_by ?? $this->user()?->id;
         $validated['accepted_by'] = $repair?->accepted_by ?? $this->user()?->id;
+        $validated['request_id'] = $validated['request_id'] ?? $repair?->request_id ?? null;
 
         $device = Device::query()->find($validated['device_id']);
         if ($device && $device->status === Device::STATUS_WRITEOFF && (! $repair || (int) $repair->device_id !== (int) $device->id)) {
             throw ValidationException::withMessages([
                 'device_id' => ['So ierici nevar nodot remonta, jo ta ir norakstita.'],
             ]);
+        }
+
+        if (! $repair && $device && $device->status !== Device::STATUS_ACTIVE) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Jaunu remontu var izveidot tikai aktivai iericei.'],
+            ]);
+        }
+
+        if ($device) {
+            $activeRepairQuery = $device->repairs()->whereIn('status', ['waiting', 'in-progress']);
+            if ($repair) {
+                $activeRepairQuery->whereKeyNot($repair->id);
+            }
+
+            if ($activeRepairQuery->exists()) {
+                throw ValidationException::withMessages([
+                    'device_id' => ['Sai iericei jau ir aktivs remonta ieraksts.'],
+                ]);
+            }
         }
 
         if ($validated['repair_type'] === 'internal') {

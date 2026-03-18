@@ -24,14 +24,21 @@
         <span class="crud-label">Apraksts</span>
         <textarea name="description" rows="4" class="crud-control" required>{{ old('description', $currentRepair?->description) }}</textarea>
     </label>
-    <label class="block">
-        <span class="crud-label">Statuss</span>
-        <select name="status" class="crud-control">
-            @foreach ($statuses as $status)
-                <option value="{{ $status }}" @selected(old('status', $currentRepair?->status ?? 'waiting') === $status)>{{ $statusLabels[$status] }}</option>
-            @endforeach
-        </select>
-    </label>
+    @if ($currentRepair)
+        <label class="block">
+            <span class="crud-label">Statuss</span>
+            <select name="status" class="crud-control">
+                @foreach ($statuses as $status)
+                    <option value="{{ $status }}" @selected(old('status', $currentRepair?->status ?? 'waiting') === $status)>{{ $statusLabels[$status] }}</option>
+                @endforeach
+            </select>
+        </label>
+    @else
+        <input type="hidden" name="status" value="waiting">
+        <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            Jauns remonta ieraksts vienmer sakas ar statusu <strong>Gaida</strong>.
+        </div>
+    @endif
     <label class="block">
         <span class="crud-label">Remonta tips</span>
         <select name="repair_type" class="crud-control" required>

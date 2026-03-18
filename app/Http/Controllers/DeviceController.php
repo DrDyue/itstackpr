@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Building;
 use App\Models\Device;
+use App\Models\Repair;
 use App\Models\DeviceType;
 use App\Models\Room;
 use App\Models\User;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -515,8 +517,12 @@ class DeviceController extends Controller
             return ['level' => 'error', 'message' => 'Nav izvelets korekts statuss.'];
         }
 
-        if ($status === Device::STATUS_REPAIR && $device->status === Device::STATUS_WRITEOFF) {
-            return ['level' => 'error', 'message' => 'Norakstitu ierici nevar nodot remonta.'];
+        if ($status === Device::STATUS_REPAIR && $device->status !== Device::STATUS_ACTIVE) {
+            return ['level' => 'error', 'message' => 'Remonta ierakstu var izveidot tikai aktivai iericei.'];
+        }
+
+        if ($status === Device::STATUS_REPAIR && $device->repairs()->whereIn('status', ['waiting', 'in-progress'])->exists()) {
+            return ['level' => 'error', 'message' => 'Sai iericei jau ir aktivs remonta ieraksts.'];
         }
 
         if ($status === Device::STATUS_WRITEOFF && $device->status !== Device::STATUS_ACTIVE) {
@@ -529,6 +535,33 @@ class DeviceController extends Controller
 
         if ($device->status === $status) {
             return ['level' => 'error', 'message' => 'Statuss jau ir iestatits.'];
+        }
+
+        if ($status === Device::STATUS_REPAIR) {
+            $before = [
+                'status' => $device->status,
+            ];
+
+            $repair = null;
+
+            DB::transaction(function () use ($device, &$repair, $before) {
+                $repair = Repair::create([
+                    'device_id' => $device->id,
+                    'issue_reported_by' => $device->assigned_to_id,
+                    'accepted_by' => auth()->id(),
+                    'description' => 'Ierice nodota remonta no iericu saraksta.',
+                    'status' => 'waiting',
+                    'repair_type' => 'internal',
+                    'priority' => 'medium',
+                    'request_id' => null,
+                ]);
+
+                $this->saveDevicePayload($device, ['status' => Device::STATUS_REPAIR]);
+                AuditTrail::created(auth()->id(), $repair);
+                AuditTrail::updatedFromState(auth()->id(), $device, $before, ['status' => $device->status]);
+            });
+
+            return ['level' => 'success', 'message' => 'Ierice nodota remonta. Izveidots remonta ieraksts #' . $repair->id . '.'];
         }
 
         $before = [

@@ -152,6 +152,12 @@ class AuthAndRequestFlowsTest extends TestCase
             'id' => $device->id,
             'status' => Device::STATUS_REPAIR,
         ]);
+        $this->assertDatabaseHas('repairs', [
+            'device_id' => $device->id,
+            'status' => 'waiting',
+            'accepted_by' => $admin->id,
+            'request_id' => null,
+        ]);
     }
 
     public function test_manager_can_writeoff_device_from_devices_table_action(): void
@@ -255,6 +261,7 @@ class AuthAndRequestFlowsTest extends TestCase
             'issue_reported_by' => $user->id,
             'accepted_by' => $admin->id,
             'request_id' => $repairRequestId,
+            'status' => 'waiting',
         ]);
         $this->assertDatabaseHas('devices', [
             'id' => $device->id,

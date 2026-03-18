@@ -163,6 +163,12 @@ class RepairRequestController extends Controller
                     ]);
                 }
 
+                if ($device->repairs()->whereIn('status', ['waiting', 'in-progress'])->exists()) {
+                    throw ValidationException::withMessages([
+                        'status' => ['Sai iericei jau ir aktivs remonta ieraksts.'],
+                    ]);
+                }
+
                 $repair = Repair::create([
                     'device_id' => $repairRequest->device_id,
                     'issue_reported_by' => $repairRequest->responsible_user_id,
