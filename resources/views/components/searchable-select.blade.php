@@ -68,7 +68,10 @@
             name="{{ $queryName }}"
             x-model="query"
             class="crud-control pr-14"
-            :class="open ? 'border-sky-300 ring-2 ring-sky-100 bg-white cursor-text' : 'cursor-default'"
+            :class="[
+                open ? 'border-sky-300 ring-2 ring-sky-100 bg-white cursor-text' : 'cursor-default',
+                pointerMode === 'scrub' ? 'text-transparent caret-transparent' : '',
+            ]"
             :readonly="!open"
             placeholder="{{ $placeholder }}"
             autocomplete="off"
