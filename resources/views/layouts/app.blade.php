@@ -9,10 +9,10 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="layout-body-reset app-bg">
+    <body class="layout-body-reset app-bg bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),transparent_32%),radial-gradient(circle_at_top_right,_rgba(16,185,129,0.12),transparent_28%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] text-slate-900">
         @include('layouts.navigation')
 
-        <main>
+        <main class="pb-10">
             {{ $slot }}
         </main>
     </body>

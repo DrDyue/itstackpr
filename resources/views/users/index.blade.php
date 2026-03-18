@@ -1,14 +1,22 @@
 <x-app-layout>
-    <section class="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-semibold text-slate-900">Lietotaji</h1>
-                <p class="mt-2 text-sm text-slate-600">Pārvaldi sistēmas lietotājus un viņu lomas.</p>
+    <section class="app-shell">
+        <div class="page-hero">
+            <div class="page-hero-grid">
+                <div class="max-w-3xl">
+                    <div class="page-eyebrow"><x-icon name="users" size="h-4 w-4" /><span>Lietotaji</span></div>
+                    <div class="page-title-group mt-4">
+                        <div class="page-title-icon page-title-icon-violet"><x-icon name="users" size="h-7 w-7" /></div>
+                        <div>
+                            <h1 class="page-title">Lietotaji</h1>
+                            <p class="page-subtitle">Parvaldi sistemas lietotajus, lomas un piekluves statusus.</p>
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ route('users.create') }}" class="btn-create"><x-icon name="plus" size="h-4 w-4" /><span>Jauns lietotajs</span></a>
             </div>
-            <a href="{{ route('users.create') }}" class="crud-btn-primary inline-flex items-center gap-2">Jauns lietotajs</a>
         </div>
 
-        <form method="GET" action="{{ route('users.index') }}" class="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-4">
+        <form method="GET" action="{{ route('users.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-4">
             <label class="block">
                 <span class="crud-label">Vards</span>
                 <input type="text" name="name" value="{{ $filters['name'] }}" class="crud-control">
@@ -34,9 +42,9 @@
                     <option value="0" @selected($filters['is_active'] === '0')>Neaktivi</option>
                 </select>
             </label>
-            <div class="md:col-span-4 flex flex-wrap gap-3">
-                <button type="submit" class="crud-btn-primary">Meklet</button>
-                <a href="{{ route('users.index') }}" class="crud-btn-secondary">Notirit</a>
+            <div class="toolbar-actions md:col-span-4">
+                <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklet</span></button>
+                <a href="{{ route('users.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notirit</span></a>
             </div>
         </form>
 
@@ -47,7 +55,7 @@
             <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
         @endif
 
-        <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="overflow-x-auto rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
             <table class="min-w-full text-sm">
                 <thead class="bg-slate-50 text-left text-slate-500">
                     <tr>
@@ -67,17 +75,17 @@
                             <td class="px-4 py-3 text-slate-600">{{ $managedUser->role }}</td>
                             <td class="px-4 py-3 text-slate-600">{{ $managedUser->job_title ?: '-' }}</td>
                             <td class="px-4 py-3">
-                                <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $managedUser->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">
+                                <span class="status-pill {{ $managedUser->is_active ? 'status-pill-success' : 'status-pill-danger' }}">
                                     {{ $managedUser->is_active ? 'Aktivs' : 'Neaktivs' }}
                                 </span>
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex flex-wrap gap-2">
-                                    <a href="{{ route('users.edit', $managedUser) }}" class="crud-btn-secondary">Rediget</a>
+                                    <a href="{{ route('users.edit', $managedUser) }}" class="btn-edit"><x-icon name="edit" size="h-4 w-4" /><span>Rediget</span></a>
                                     <form method="POST" action="{{ route('users.destroy', $managedUser) }}" onsubmit="return confirm('Dzest so lietotaju?')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="rounded-lg border border-rose-300 px-3 py-2 text-sm font-medium text-rose-700" @disabled(auth()->id() === $managedUser->id)>Dzest</button>
+                                        <button type="submit" class="btn-danger" @disabled(auth()->id() === $managedUser->id)><x-icon name="trash" size="h-4 w-4" /><span>Dzest</span></button>
                                     </form>
                                 </div>
                             </td>
@@ -94,3 +102,4 @@
         {{ $users->links() }}
     </section>
 </x-app-layout>
+

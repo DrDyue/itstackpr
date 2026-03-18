@@ -49,6 +49,7 @@
         </div>
 
         <button type="submit" class="btn-primary">
+            <x-icon name="profile" size="h-5 w-5" />
             Pierakstities
         </button>
 
@@ -60,9 +61,27 @@
             </div>
         @endif
 
-        <div class="mt-6 space-y-2 text-sm text-slate-500">
-            <p>Demo admin: artis.berzins@ludzas.lv | Parole: password</p>
-            <p>Demo user: ilze.strautina@ludzas.lv | Parole: password</p>
+        <div class="auth-demo-list">
+            <div class="auth-demo-item">
+                <span class="auth-demo-icon auth-demo-icon-admin">
+                    <x-icon name="users" size="h-4 w-4" />
+                </span>
+                <div>
+                    <div class="font-semibold text-slate-900">Demo admin</div>
+                    <div>artis.berzins@ludzas.lv</div>
+                    <div>Parole: password</div>
+                </div>
+            </div>
+            <div class="auth-demo-item">
+                <span class="auth-demo-icon auth-demo-icon-user">
+                    <x-icon name="user" size="h-4 w-4" />
+                </span>
+                <div>
+                    <div class="font-semibold text-slate-900">Demo user</div>
+                    <div>ilze.strautina@ludzas.lv</div>
+                    <div>Parole: password</div>
+                </div>
+            </div>
         </div>
     </form>
 </x-guest-layout>

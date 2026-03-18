@@ -1,16 +1,24 @@
 <x-app-layout>
-    <section class="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-semibold text-slate-900">Remonti</h1>
-                <p class="mt-2 text-sm text-slate-600">{{ $canManageRepairs ? 'Faktiskie remontdarbi pēc apstiprinātiem pieteikumiem.' : 'Tavu ierīču remontu statuss.' }}</p>
+    <section class="app-shell">
+        <div class="page-hero">
+            <div class="page-hero-grid">
+                <div class="max-w-3xl">
+                    <div class="page-eyebrow"><x-icon name="repair" size="h-4 w-4" /><span>Serviss</span></div>
+                    <div class="page-title-group mt-4">
+                        <div class="page-title-icon page-title-icon-amber"><x-icon name="repair" size="h-7 w-7" /></div>
+                        <div>
+                            <h1 class="page-title">Remonti</h1>
+                            <p class="page-subtitle">{{ $canManageRepairs ? 'Faktiskie remontdarbi pec apstiprinatiem pieteikumiem.' : 'Tavu iericu remontu statuss.' }}</p>
+                        </div>
+                    </div>
+                </div>
+                @if ($canManageRepairs)
+                    <a href="{{ route('repairs.create') }}" class="btn-create"><x-icon name="plus" size="h-4 w-4" /><span>Jauns remonts</span></a>
+                @endif
             </div>
-            @if ($canManageRepairs)
-                <a href="{{ route('repairs.create') }}" class="crud-btn-primary">Jauns remonts</a>
-            @endif
         </div>
 
-        <form method="GET" action="{{ route('repairs.index') }}" class="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-4">
+        <form method="GET" action="{{ route('repairs.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-4">
             <label class="block">
                 <span class="crud-label">Meklet</span>
                 <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control">
@@ -42,9 +50,9 @@
                     @endforeach
                 </select>
             </label>
-            <div class="md:col-span-4 flex flex-wrap gap-3">
-                <button type="submit" class="crud-btn-primary">Meklet</button>
-                <a href="{{ route('repairs.index') }}" class="crud-btn-secondary">Notirit</a>
+            <div class="toolbar-actions md:col-span-4">
+                <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklet</span></button>
+                <a href="{{ route('repairs.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notirit</span></a>
             </div>
         </form>
 
@@ -52,7 +60,7 @@
             <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
         @endif
 
-        <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="overflow-x-auto rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
             <table class="min-w-full text-sm">
                 <thead class="bg-slate-50 text-left text-slate-500">
                     <tr>
@@ -72,12 +80,12 @@
                                 <div class="text-xs text-slate-500">{{ $repair->device?->code ?: '-' }}</div>
                             </td>
                             <td class="px-4 py-3 text-slate-600">{{ $repair->description }}</td>
-                            <td class="px-4 py-3">{{ $statusLabels[$repair->status] ?? $repair->status }}</td>
-                            <td class="px-4 py-3">{{ $priorityLabels[$repair->priority] ?? $repair->priority }}</td>
+                            <td class="px-4 py-3"><span class="status-pill {{ $repair->status === 'completed' ? 'status-pill-success' : ($repair->status === 'cancelled' ? 'status-pill-danger' : 'status-pill-warning') }}">{{ $statusLabels[$repair->status] ?? $repair->status }}</span></td>
+                            <td class="px-4 py-3"><span class="status-pill {{ $repair->priority === 'critical' ? 'status-pill-danger' : ($repair->priority === 'high' ? 'status-pill-warning' : 'status-pill-neutral') }}">{{ $priorityLabels[$repair->priority] ?? $repair->priority }}</span></td>
                             <td class="px-4 py-3">{{ $repair->acceptedBy?->full_name ?: '-' }}</td>
                             <td class="px-4 py-3">
                                 @if ($canManageRepairs)
-                                    <a href="{{ route('repairs.edit', $repair) }}" class="crud-btn-secondary">Rediget</a>
+                                    <a href="{{ route('repairs.edit', $repair) }}" class="btn-edit"><x-icon name="edit" size="h-4 w-4" /><span>Rediget</span></a>
                                 @else
                                     <span class="text-slate-400">Tikai apskate</span>
                                 @endif
@@ -95,3 +103,4 @@
         {{ $repairs->links() }}
     </section>
 </x-app-layout>
+

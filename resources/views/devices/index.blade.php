@@ -1,16 +1,34 @@
 <x-app-layout>
-    <section class="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-semibold text-slate-900">Ierices</h1>
-                <p class="mt-2 text-sm text-slate-600">{{ $canManageDevices ? 'Pilns ierīču saraksts un pārvaldība.' : 'Tavas piesaistītās ierīces.' }}</p>
+    <section class="app-shell">
+        <div class="page-hero">
+            <div class="page-hero-grid">
+                <div class="max-w-3xl">
+                    <div class="page-eyebrow">
+                        <x-icon name="device" size="h-4 w-4" />
+                        <span>Inventars</span>
+                    </div>
+                    <div class="page-title-group mt-4">
+                        <div class="page-title-icon page-title-icon-sky">
+                            <x-icon name="device" size="h-7 w-7" />
+                        </div>
+                        <div>
+                            <h1 class="page-title">Ierices</h1>
+                            <p class="page-subtitle">{{ $canManageDevices ? 'Pilns iericu saraksts un parvaldiba.' : 'Tavas piesaistitas ierices.' }}</p>
+                        </div>
+                    </div>
+                </div>
+                @if ($canManageDevices)
+                    <div class="page-actions">
+                        <a href="{{ route('devices.create') }}" class="btn-create">
+                            <x-icon name="plus" size="h-4 w-4" />
+                            <span>Jauna ierice</span>
+                        </a>
+                    </div>
+                @endif
             </div>
-            @if ($canManageDevices)
-                <a href="{{ route('devices.create') }}" class="crud-btn-primary">Jauna ierice</a>
-            @endif
         </div>
 
-        <form method="GET" action="{{ route('devices.index') }}" class="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-5">
+        <form method="GET" action="{{ route('devices.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-5">
             <label class="block">
                 <span class="crud-label">Meklet</span>
                 <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control">
@@ -41,9 +59,15 @@
                     @endforeach
                 </select>
             </label>
-            <div class="md:col-span-5 flex flex-wrap gap-3">
-                <button type="submit" class="crud-btn-primary">Meklet</button>
-                <a href="{{ route('devices.index') }}" class="crud-btn-secondary">Notirit</a>
+            <div class="toolbar-actions md:col-span-5">
+                <button type="submit" class="btn-search">
+                    <x-icon name="search" size="h-4 w-4" />
+                    <span>Meklet</span>
+                </button>
+                <a href="{{ route('devices.index') }}" class="btn-clear">
+                    <x-icon name="clear" size="h-4 w-4" />
+                    <span>Notirit</span>
+                </a>
             </div>
         </form>
 
@@ -54,7 +78,7 @@
             <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
         @endif
 
-        <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="overflow-x-auto rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
             <table class="min-w-full text-sm">
                 <thead class="bg-slate-50 text-left text-slate-500">
                     <tr>
@@ -75,13 +99,23 @@
                                 <div class="text-xs text-slate-500">{{ $device->model }}</div>
                             </td>
                             <td class="px-4 py-3">{{ $device->type?->type_name ?: '-' }}</td>
-                            <td class="px-4 py-3">{{ $statusLabels[$device->status] ?? $device->status }}</td>
+                            <td class="px-4 py-3">
+                                <span class="status-pill {{ $device->status === 'active' ? 'status-pill-success' : ($device->status === 'repair' ? 'status-pill-warning' : 'status-pill-danger') }}">
+                                    {{ $statusLabels[$device->status] ?? $device->status }}
+                                </span>
+                            </td>
                             <td class="px-4 py-3">{{ $device->assignedTo?->full_name ?: '-' }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex flex-wrap gap-2">
-                                    <a href="{{ route('devices.show', $device) }}" class="crud-btn-secondary">Skatit</a>
+                                    <a href="{{ route('devices.show', $device) }}" class="btn-view">
+                                        <x-icon name="view" size="h-4 w-4" />
+                                        <span>Skatit</span>
+                                    </a>
                                     @if ($canManageDevices)
-                                        <a href="{{ route('devices.edit', $device) }}" class="crud-btn-secondary">Rediget</a>
+                                        <a href="{{ route('devices.edit', $device) }}" class="btn-edit">
+                                            <x-icon name="edit" size="h-4 w-4" />
+                                            <span>Rediget</span>
+                                        </a>
                                     @endif
                                 </div>
                             </td>
@@ -98,3 +132,4 @@
         {{ $devices->links() }}
     </section>
 </x-app-layout>
+

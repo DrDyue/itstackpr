@@ -12,7 +12,10 @@
     <x-danger-button
         x-data=""
         x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
-    >Dzest kontu</x-danger-button>
+    >
+        <x-icon name="trash" size="h-4 w-4" />
+        <span>Dzest kontu</span>
+    </x-danger-button>
 
     <x-modal name="confirm-user-deletion" :show="$errors->userDeletion->isNotEmpty()" focusable>
         <form method="post" action="{{ route('profile.destroy') }}" class="p-6">
@@ -43,15 +46,18 @@
 
             <div class="mt-6 flex justify-end">
                 <x-secondary-button x-on:click="$dispatch('close')">
+                    <x-icon name="clear" size="h-4 w-4" />
                     Atcelt
                 </x-secondary-button>
 
                 <x-danger-button class="ms-3">
+                    <x-icon name="trash" size="h-4 w-4" />
                     Dzest kontu
                 </x-danger-button>
             </div>
         </form>
     </x-modal>
 </section>
+
 
 

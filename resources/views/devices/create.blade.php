@@ -1,11 +1,27 @@
 <x-app-layout>
-    <section class="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-semibold text-slate-900">Jauna ierice</h1>
-                <p class="mt-2 text-sm text-slate-600">Pievieno jaunu ierīci un piesaisti to lietotājam.</p>
+    <section class="app-shell max-w-5xl">
+        <div class="page-hero">
+            <div class="page-hero-grid">
+                <div class="max-w-3xl">
+                    <div class="page-eyebrow">
+                        <x-icon name="plus" size="h-4 w-4" />
+                        <span>Jauns ieraksts</span>
+                    </div>
+                    <div class="page-title-group mt-4">
+                        <div class="page-title-icon page-title-icon-emerald">
+                            <x-icon name="device" size="h-7 w-7" />
+                        </div>
+                        <div>
+                            <h1 class="page-title">Jauna ierice</h1>
+                            <p class="page-subtitle">Pievieno jaunu ierici un piesaisti to lietotajam.</p>
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ route('devices.index') }}" class="btn-back">
+                    <x-icon name="back" size="h-4 w-4" />
+                    <span>Atpakal</span>
+                </a>
             </div>
-            <a href="{{ route('devices.index') }}" class="crud-btn-secondary">Atpakal</a>
         </div>
 
         @if ($errors->any())
@@ -18,13 +34,20 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('devices.store') }}" enctype="multipart/form-data" class="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <form method="POST" action="{{ route('devices.store') }}" enctype="multipart/form-data" class="surface-card space-y-6 p-6">
             @csrf
             @include('devices.partials.form-fields', ['device' => null])
             <div class="flex flex-wrap gap-3">
-                <button type="submit" class="crud-btn-primary">Saglabat</button>
-                <a href="{{ route('devices.index') }}" class="crud-btn-secondary">Atcelt</a>
+                <button type="submit" class="btn-create">
+                    <x-icon name="save" size="h-4 w-4" />
+                    <span>Saglabat</span>
+                </button>
+                <a href="{{ route('devices.index') }}" class="btn-clear">
+                    <x-icon name="clear" size="h-4 w-4" />
+                    <span>Atcelt</span>
+                </a>
             </div>
         </form>
     </section>
 </x-app-layout>
+

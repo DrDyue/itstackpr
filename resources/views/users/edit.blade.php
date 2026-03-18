@@ -1,11 +1,19 @@
 <x-app-layout>
-    <section class="mx-auto max-w-4xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-semibold text-slate-900">Rediget lietotaju</h1>
-                <p class="mt-2 text-sm text-slate-600">Atjauno lietotāja datus, lomu un piekļuvi.</p>
+    <section class="app-shell max-w-4xl">
+        <div class="page-hero">
+            <div class="page-hero-grid">
+                <div class="max-w-3xl">
+                    <div class="page-eyebrow"><x-icon name="edit" size="h-4 w-4" /><span>Labosana</span></div>
+                    <div class="page-title-group mt-4">
+                        <div class="page-title-icon page-title-icon-amber"><x-icon name="user" size="h-7 w-7" /></div>
+                        <div>
+                            <h1 class="page-title">Rediget lietotaju</h1>
+                            <p class="page-subtitle">Atjauno lietotaja datus, lomu un piekluvi.</p>
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ route('users.index') }}" class="btn-back"><x-icon name="back" size="h-4 w-4" /><span>Atpakal</span></a>
             </div>
-            <a href="{{ route('users.index') }}" class="crud-btn-secondary">Atpakal</a>
         </div>
 
         @if ($errors->any())
@@ -18,7 +26,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('users.update', $user) }}" class="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <form method="POST" action="{{ route('users.update', $user) }}" class="surface-card space-y-6 p-6">
             @csrf
             @method('PUT')
 
@@ -63,9 +71,10 @@
             </label>
 
             <div class="flex flex-wrap gap-3">
-                <button type="submit" class="crud-btn-primary">Saglabat</button>
-                <a href="{{ route('users.index') }}" class="crud-btn-secondary">Atcelt</a>
+                <button type="submit" class="btn-edit"><x-icon name="save" size="h-4 w-4" /><span>Saglabat</span></button>
+                <a href="{{ route('users.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Atcelt</span></a>
             </div>
         </form>
     </section>
 </x-app-layout>
+

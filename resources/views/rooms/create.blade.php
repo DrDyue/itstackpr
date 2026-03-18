@@ -1,11 +1,19 @@
 <x-app-layout>
-    <section class="mx-auto max-w-4xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-semibold text-slate-900">Jauna telpa</h1>
-                <p class="mt-2 text-sm text-slate-600">Pievieno telpu un, ja vajag, piesaisti atbildīgo lietotāju.</p>
+    <section class="app-shell max-w-4xl">
+        <div class="page-hero">
+            <div class="page-hero-grid">
+                <div class="max-w-3xl">
+                    <div class="page-eyebrow"><x-icon name="room" size="h-4 w-4" /><span>Jauna telpa</span></div>
+                    <div class="page-title-group mt-4">
+                        <div class="page-title-icon page-title-icon-emerald"><x-icon name="room" size="h-7 w-7" /></div>
+                        <div>
+                            <h1 class="page-title">Jauna telpa</h1>
+                            <p class="page-subtitle">Pievieno telpu un, ja vajag, piesaisti atbildigo lietotaju.</p>
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ route('rooms.index') }}" class="btn-back"><x-icon name="back" size="h-4 w-4" /><span>Atpakal</span></a>
             </div>
-            <a href="{{ route('rooms.index') }}" class="crud-btn-secondary">Atpakal</a>
         </div>
 
         @if ($errors->any())
@@ -18,7 +26,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('rooms.store') }}" class="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <form method="POST" action="{{ route('rooms.store') }}" class="surface-card space-y-6 p-6">
             @csrf
             <div class="grid gap-4 md:grid-cols-2">
                 <label class="block">
@@ -60,9 +68,10 @@
                 </label>
             </div>
             <div class="flex flex-wrap gap-3">
-                <button type="submit" class="crud-btn-primary">Saglabat</button>
-                <a href="{{ route('rooms.index') }}" class="crud-btn-secondary">Atcelt</a>
+                <button type="submit" class="btn-create"><x-icon name="save" size="h-4 w-4" /><span>Saglabat</span></button>
+                <a href="{{ route('rooms.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Atcelt</span></a>
             </div>
         </form>
     </section>
 </x-app-layout>
+

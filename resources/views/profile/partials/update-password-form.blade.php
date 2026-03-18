@@ -32,7 +32,10 @@
         </div>
 
         <div class="flex items-center gap-4">
-            <x-primary-button>Saglabat</x-primary-button>
+            <x-primary-button>
+                <x-icon name="save" size="h-4 w-4" />
+                <span>Saglabat</span>
+            </x-primary-button>
 
             @if (session('status') === 'password-updated')
                 <p
@@ -46,5 +49,6 @@
         </div>
     </form>
 </section>
+
 
 

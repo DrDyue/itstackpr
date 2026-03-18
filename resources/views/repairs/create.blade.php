@@ -1,11 +1,19 @@
 <x-app-layout>
-    <section class="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-semibold text-slate-900">Jauns remonts</h1>
-                <p class="mt-2 text-sm text-slate-600">Izveido faktisko remonta ierakstu.</p>
+    <section class="app-shell max-w-5xl">
+        <div class="page-hero">
+            <div class="page-hero-grid">
+                <div class="max-w-3xl">
+                    <div class="page-eyebrow"><x-icon name="repair" size="h-4 w-4" /><span>Jauns remonts</span></div>
+                    <div class="page-title-group mt-4">
+                        <div class="page-title-icon page-title-icon-emerald"><x-icon name="repair" size="h-7 w-7" /></div>
+                        <div>
+                            <h1 class="page-title">Jauns remonts</h1>
+                            <p class="page-subtitle">Izveido faktisko remonta ierakstu.</p>
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ route('repairs.index') }}" class="btn-back"><x-icon name="back" size="h-4 w-4" /><span>Atpakal</span></a>
             </div>
-            <a href="{{ route('repairs.index') }}" class="crud-btn-secondary">Atpakal</a>
         </div>
 
         @if ($errors->any())
@@ -18,13 +26,14 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('repairs.store') }}" class="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <form method="POST" action="{{ route('repairs.store') }}" class="surface-card space-y-6 p-6">
             @csrf
             @include('repairs.partials.form-fields', ['repair' => null])
             <div class="flex flex-wrap gap-3">
-                <button type="submit" class="crud-btn-primary">Saglabat</button>
-                <a href="{{ route('repairs.index') }}" class="crud-btn-secondary">Atcelt</a>
+                <button type="submit" class="btn-create"><x-icon name="save" size="h-4 w-4" /><span>Saglabat</span></button>
+                <a href="{{ route('repairs.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Atcelt</span></a>
             </div>
         </form>
     </section>
 </x-app-layout>
+
