@@ -106,6 +106,35 @@ class AuthAndRequestFlowsTest extends TestCase
         }
     }
 
+    public function test_admin_cannot_open_or_submit_user_only_request_forms(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'admin-user-only-requests@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-ADMIN-USER-ONLY');
+
+        foreach ([
+            route('repair-requests.create'),
+            route('writeoff-requests.create'),
+        ] as $url) {
+            $this->actingAs($admin)
+                ->get($url)
+                ->assertForbidden();
+        }
+
+        $this->actingAs($admin)
+            ->post(route('repair-requests.store'), [
+                'device_id' => $device->id,
+                'description' => 'Adminam nevajadzetu pieteikt remontu caur lietotaja formu.',
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($admin)
+            ->post(route('writeoff-requests.store'), [
+                'device_id' => $device->id,
+                'reason' => 'Adminam nevajadzetu pieteikt norakstisanu caur lietotaja formu.',
+            ])
+            ->assertForbidden();
+    }
+
     public function test_user_can_submit_repair_request_for_own_device(): void
     {
         $user = $this->createUser(role: User::ROLE_USER, email: 'user1@example.com');
@@ -450,6 +479,25 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertDontSee('DEV-DASH-OTHER')
             ->assertSee('Mana personiga darbiba')
             ->assertDontSee('Svesa admina darbiba');
+    }
+
+    public function test_devices_index_accepts_floor_and_room_filters_from_dashboard_links(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-filter-admin@example.com');
+        $firstDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-FLOOR-ONE');
+        $secondDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-FLOOR-TWO');
+
+        DB::table('rooms')->where('id', $secondDevice->room_id)->update([
+            'floor_number' => 2,
+            'room_number' => '201-DEV-FLOOR-TWO',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('devices.index', ['floor' => 1, 'room_id' => $firstDevice->room_id]))
+            ->assertOk()
+            ->assertSee('DEV-FLOOR-ONE')
+            ->assertSee('Testa ierice DEV-FLOOR-ONE')
+            ->assertDontSee('Testa ierice DEV-FLOOR-TWO');
     }
 
     private function createUser(string $role, ?string $email = null): User

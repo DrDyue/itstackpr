@@ -66,6 +66,7 @@ class RepairRequestController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+        abort_if($user->canManageRequests(), 403);
 
         if (! $this->featureTableExists('repair_requests')) {
             return view('repair_requests.create', [
@@ -83,6 +84,7 @@ class RepairRequestController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+        abort_if($user->canManageRequests(), 403);
 
         if (! $this->featureTableExists('repair_requests')) {
             return redirect()->route('repair-requests.index')->with('error', 'Remonta pieteikumus sobrid nevar saglabat, jo tabula repair_requests nav pieejama.');

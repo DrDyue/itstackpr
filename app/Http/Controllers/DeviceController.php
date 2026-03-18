@@ -26,10 +26,21 @@ class DeviceController extends Controller
         $filters = [
             'q' => trim((string) $request->query('q', '')),
             'code' => trim((string) $request->query('code', '')),
+            'floor' => trim((string) $request->query('floor', '')),
             'room' => trim((string) $request->query('room', '')),
+            'room_id' => trim((string) $request->query('room_id', '')),
             'type' => trim((string) $request->query('type', '')),
             'status' => trim((string) $request->query('status', '')),
         ];
+
+        $selectedRoom = null;
+        if (ctype_digit($filters['room_id'])) {
+            $selectedRoom = Room::query()->with('building')->find((int) $filters['room_id']);
+
+            if ($selectedRoom && $filters['room'] === '') {
+                $filters['room'] = $selectedRoom->room_number . ($selectedRoom->room_name ? ' - ' . $selectedRoom->room_name : '');
+            }
+        }
 
         $devices = $this->visibleDevicesQuery($user)
             ->with(['type', 'building', 'room', 'activeRepair', 'assignedTo'])
@@ -44,7 +55,11 @@ class DeviceController extends Controller
                 });
             })
             ->when($filters['code'] !== '', fn (Builder $query) => $query->where('code', 'like', '%' . $filters['code'] . '%'))
-            ->when($filters['room'] !== '', function (Builder $query) use ($filters) {
+            ->when($filters['floor'] !== '' && ctype_digit($filters['floor']), function (Builder $query) use ($filters) {
+                $query->whereHas('room', fn (Builder $roomQuery) => $roomQuery->where('floor_number', (int) $filters['floor']));
+            })
+            ->when($selectedRoom instanceof Room, fn (Builder $query) => $query->where('room_id', $selectedRoom->id))
+            ->when(! ($selectedRoom instanceof Room) && $filters['room'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['room'];
 
                 $query->whereHas('room', function (Builder $roomQuery) use ($term) {
@@ -62,6 +77,7 @@ class DeviceController extends Controller
         return view('devices.index', [
             'devices' => $devices,
             'filters' => $filters,
+            'selectedRoom' => $selectedRoom,
             'types' => DeviceType::query()->orderBy('type_name')->get(),
             'statuses' => self::STATUSES,
             'statusLabels' => $this->statusLabels(),

@@ -17,10 +17,12 @@
                         </div>
                     </div>
                 </div>
-                <a href="{{ route('repair-requests.create') }}" class="btn-create">
-                    <x-icon name="plus" size="h-4 w-4" />
-                    <span>Jauns pieteikums</span>
-                </a>
+                @unless ($canReview)
+                    <a href="{{ route('repair-requests.create') }}" class="btn-create">
+                        <x-icon name="plus" size="h-4 w-4" />
+                        <span>Jauns pieteikums</span>
+                    </a>
+                @endunless
             </div>
         </div>
 

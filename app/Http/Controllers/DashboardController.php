@@ -8,14 +8,14 @@ use App\Models\DeviceTransfer;
 use App\Models\Repair;
 use App\Models\RepairRequest;
 use App\Models\Room;
+use App\Models\User;
 use App\Models\WriteoffRequest;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request): View
+    public function index(): View
     {
         $user = $this->user();
         abort_unless($user, 403);
@@ -24,8 +24,6 @@ class DashboardController extends Controller
         $hasRepairs = $this->featureTableExists('repairs');
         $hasRooms = $this->featureTableExists('rooms');
         $hasAuditLog = $this->featureTableExists('audit_log');
-        $selectedFloor = trim((string) $request->query('floor', ''));
-        $selectedRoomId = trim((string) $request->query('room', ''));
 
         $deviceQuery = $hasDevices ? Device::query() : null;
         $repairRequestQuery = Schema::hasTable('repair_requests') ? RepairRequest::query() : null;
@@ -46,11 +44,6 @@ class DashboardController extends Controller
                     ->orWhereHas('device', fn ($deviceBuilder) => $deviceBuilder->where('assigned_to_id', $user->id));
             });
         }
-
-        $totalDevices = $deviceQuery ? (clone $deviceQuery)->count() : 0;
-        $activeDevices = $deviceQuery ? (clone $deviceQuery)->where('status', Device::STATUS_ACTIVE)->count() : 0;
-        $inRepairDevices = $deviceQuery ? (clone $deviceQuery)->where('status', Device::STATUS_REPAIR)->count() : 0;
-        $writtenOffDevices = $deviceQuery ? (clone $deviceQuery)->where('status', Device::STATUS_WRITEOFF)->count() : 0;
 
         $activeRepairs = $repairQuery
             ? (clone $repairQuery)
@@ -81,22 +74,6 @@ class DashboardController extends Controller
                 ->get()
             : collect();
 
-        $availableFloorIds = $locationRooms
-            ->map(fn (Room $room) => (string) ($room->floor_number ?? ''))
-            ->filter(fn (string $floor) => $floor !== '')
-            ->unique()
-            ->values();
-
-        $selectedRoom = ctype_digit($selectedRoomId)
-            ? $locationRooms->firstWhere('id', (int) $selectedRoomId)
-            : null;
-
-        if ($selectedRoom instanceof Room) {
-            $selectedFloor = (string) $selectedRoom->floor_number;
-        } elseif (! $availableFloorIds->contains($selectedFloor)) {
-            $selectedFloor = '';
-        }
-
         $recentActivity = $hasAuditLog
             ? tap(AuditLog::query()->with('user'), function ($query) use ($user) {
                 if (! $user->canManageRequests()) {
@@ -111,17 +88,8 @@ class DashboardController extends Controller
         $dashboardDevices = $deviceQuery
             ? (clone $deviceQuery)
                 ->with(['room.building', 'building', 'type', 'assignedTo', 'activeRepair'])
-                ->when(
-                    $selectedRoom instanceof Room,
-                    fn ($query) => $query->where('room_id', $selectedRoom->id)
-                )
-                ->when(
-                    ! ($selectedRoom instanceof Room) && $selectedFloor !== '',
-                    fn ($query) => $query->whereHas('room', fn ($roomQuery) => $roomQuery->where('floor_number', (int) $selectedFloor))
-                )
-                ->orderBy('building_id')
-                ->orderBy('room_id')
-                ->orderBy('name')
+                ->latest('id')
+                ->limit(8)
                 ->get()
             : collect();
 
@@ -148,14 +116,36 @@ class DashboardController extends Controller
             })
             ->values();
 
+        $pendingRepairRequestCount = $repairRequestQuery
+            ? (clone $repairRequestQuery)->where('status', RepairRequest::STATUS_SUBMITTED)->count()
+            : 0;
+
+        $pendingWriteoffRequestCount = $writeoffRequestQuery
+            ? (clone $writeoffRequestQuery)->where('status', WriteoffRequest::STATUS_SUBMITTED)->count()
+            : 0;
+
+        $pendingTransferRequestCount = $transferQuery
+            ? (clone $transferQuery)
+                ->when(
+                    ! $user->canManageRequests(),
+                    fn ($query) => $query->where('transfered_to_id', $user->id)
+                )
+                ->where('status', DeviceTransfer::STATUS_SUBMITTED)
+                ->count()
+            : 0;
+
         return view('dashboard', [
             'user' => $user,
             'dashboardDevices' => $dashboardDevices,
             'locationTree' => $locationTree,
-            'selectedFloor' => $selectedFloor,
-            'selectedRoom' => $selectedRoom,
             'activeRepairs' => $activeRepairs,
             'recentActivity' => $recentActivity,
+            'quickActions' => $this->quickActions(
+                $user,
+                $pendingRepairRequestCount,
+                $pendingWriteoffRequestCount,
+                $pendingTransferRequestCount
+            ),
             'statusLabels' => [
                 'waiting' => 'Gaida',
                 'in-progress' => 'Procesa',
@@ -163,5 +153,83 @@ class DashboardController extends Controller
                 'cancelled' => 'Atcelts',
             ],
         ]);
+    }
+
+    private function quickActions(
+        User $user,
+        int $pendingRepairRequestCount,
+        int $pendingWriteoffRequestCount,
+        int $pendingTransferRequestCount
+    ): array {
+        if ($user->canManageRequests()) {
+            return [
+                [
+                    'label' => 'Jauna ierice',
+                    'url' => route('devices.create'),
+                    'icon' => 'plus',
+                    'class' => 'btn-create',
+                    'count' => null,
+                ],
+                [
+                    'label' => 'Pievienot remontu',
+                    'url' => route('repairs.create'),
+                    'icon' => 'repair',
+                    'class' => 'btn-edit',
+                    'count' => null,
+                ],
+                [
+                    'label' => 'Remonta pieteikumi',
+                    'url' => route('repair-requests.index'),
+                    'icon' => 'repair-request',
+                    'class' => 'btn-view',
+                    'count' => $pendingRepairRequestCount,
+                ],
+                [
+                    'label' => 'Norakstisanas pieteikumi',
+                    'url' => route('writeoff-requests.index'),
+                    'icon' => 'writeoff',
+                    'class' => 'btn-danger',
+                    'count' => $pendingWriteoffRequestCount,
+                ],
+                [
+                    'label' => 'Parsutisanas pieteikumi',
+                    'url' => route('device-transfers.index'),
+                    'icon' => 'transfer',
+                    'class' => 'btn-search',
+                    'count' => $pendingTransferRequestCount,
+                ],
+            ];
+        }
+
+        return [
+            [
+                'label' => 'Manas ierices',
+                'url' => route('devices.index'),
+                'icon' => 'device',
+                'class' => 'btn-view',
+                'count' => null,
+            ],
+            [
+                'label' => 'Remonta pieteikumi',
+                'url' => route('repair-requests.index'),
+                'icon' => 'repair-request',
+                'class' => 'btn-view',
+                'count' => $pendingRepairRequestCount,
+            ],
+            [
+                'label' => 'Norakstisanas pieteikumi',
+                'url' => route('writeoff-requests.index'),
+                'icon' => 'writeoff',
+                'class' => 'btn-danger',
+                'count' => $pendingWriteoffRequestCount,
+            ],
+            [
+                'label' => 'Parsutisanas pieteikumi',
+                'url' => route('device-transfers.index'),
+                'icon' => 'transfer',
+                'class' => 'btn-search',
+                'count' => $pendingTransferRequestCount,
+            ],
+        ];
     }
 }

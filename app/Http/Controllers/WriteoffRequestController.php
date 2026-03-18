@@ -64,6 +64,7 @@ class WriteoffRequestController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+        abort_if($user->canManageRequests(), 403);
 
         if (! $this->featureTableExists('writeoff_requests')) {
             return view('writeoff_requests.create', [
@@ -81,6 +82,7 @@ class WriteoffRequestController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+        abort_if($user->canManageRequests(), 403);
 
         if (! $this->featureTableExists('writeoff_requests')) {
             return redirect()->route('writeoff-requests.index')->with('error', 'Norakstisanas pieteikumus sobrid nevar saglabat, jo tabula writeoff_requests nav pieejama.');

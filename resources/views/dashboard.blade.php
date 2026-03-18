@@ -1,11 +1,4 @@
 <x-app-layout>
-    @php
-        $selectedRoomId = $selectedRoom?->id;
-        $selectedScopeLabel = $selectedRoom
-            ? (($selectedRoom->building?->building_name ?: '-') . ' / ' . $selectedRoom->room_number . ($selectedRoom->room_name ? ' - ' . $selectedRoom->room_name : ''))
-            : ($selectedFloor !== '' ? ($selectedFloor . '. stavs') : 'Visas pieejamas ierices');
-    @endphp
-
     <section class="app-shell">
         <div class="page-hero">
             <div class="page-hero-grid">
@@ -21,24 +14,21 @@
                         <div>
                             <h1 class="page-title">Darbvirsma</h1>
                             <p class="page-subtitle">
-                                Kreisaja puse izvelies stavu un telpu, bet labaja puse uzreiz redzi attiecigas ierices, aktivus remontus un jaunakas darbibas.
+                                Vienuviet redzi telpu strukturu, ierices, aktivus remontus un jaunakas darbibas.
                             </p>
                         </div>
                     </div>
                 </div>
                 <div class="page-actions">
-                    <a href="{{ route('repair-requests.create') }}" class="btn-create">
-                        <x-icon name="repair-request" size="h-4 w-4" />
-                        <span>Pieteikt remontu</span>
-                    </a>
-                    <a href="{{ route('writeoff-requests.create') }}" class="btn-danger">
-                        <x-icon name="writeoff" size="h-4 w-4" />
-                        <span>Pieteikt norakstisanu</span>
-                    </a>
-                    <a href="{{ route('device-transfers.create') }}" class="btn-view">
-                        <x-icon name="transfer" size="h-4 w-4" />
-                        <span>Pieteikt parsutisanu</span>
-                    </a>
+                    @foreach ($quickActions as $action)
+                        <a href="{{ $action['url'] }}" class="{{ $action['class'] }}">
+                            <x-icon :name="$action['icon']" size="h-4 w-4" />
+                            <span>{{ $action['label'] }}</span>
+                            @if ($action['count'] !== null)
+                                <span class="dashboard-action-badge">{{ $action['count'] }}</span>
+                            @endif
+                        </a>
+                    @endforeach
                 </div>
             </div>
         </div>
@@ -46,29 +36,19 @@
         <div class="dash-workspace-grid">
             <aside class="dash-location-panel">
                 <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <div class="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
-                            <x-icon name="room" size="h-5 w-5" class="text-emerald-600" />
-                            <span>Stavi un telpas</span>
-                        </div>
-                        <p class="mt-2 text-sm leading-6 text-slate-600">
-                            Atver stavu un izvelies telpu, lai filtrs uzreiz paradas iericu saraksta.
-                        </p>
+                    <div class="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
+                        <x-icon name="room" size="h-5 w-5" class="text-emerald-600" />
+                        <span>Stavi un telpas</span>
                     </div>
-                    <a href="{{ route('dashboard') }}" class="btn-clear">
-                        <x-icon name="clear" size="h-4 w-4" />
-                        <span>Visas</span>
+                    <a href="{{ route('devices.index') }}" class="btn-clear">
+                        <x-icon name="view" size="h-4 w-4" />
+                        <span>Visas ierices</span>
                     </a>
-                </div>
-
-                <div class="mt-4 rounded-[1.35rem] border border-sky-200 bg-sky-50 px-4 py-3">
-                    <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">Aktivais filtrs</div>
-                    <div class="mt-2 text-sm font-medium text-sky-900">{{ $selectedScopeLabel }}</div>
                 </div>
 
                 <div class="dash-room-tree">
                     @forelse ($locationTree as $floor)
-                        <details class="dash-floor-card" @if ($selectedFloor === (string) $floor['id']) open @endif>
+                        <details class="dash-floor-card" @if ($loop->first) open @endif>
                             <summary class="dash-floor-summary">
                                 <div>
                                     <div class="dash-floor-title">{{ $floor['label'] }}</div>
@@ -78,16 +58,16 @@
                             </summary>
 
                             <div class="px-3 pb-3">
-                                <a href="{{ route('dashboard', ['floor' => $floor['id']]) }}" class="dash-floor-filter {{ $selectedFloor === (string) $floor['id'] && ! $selectedRoom ? 'dash-floor-filter-active' : '' }}">
+                                <a href="{{ route('devices.index', ['floor' => $floor['id']]) }}" class="dash-floor-filter">
                                     <x-icon name="view" size="h-4 w-4" />
-                                    <span>Skatit visa stava ierices</span>
+                                    <span>Atvert iericu tabulu</span>
                                 </a>
 
                                 <div class="dash-room-list">
                                     @foreach ($floor['rooms'] as $room)
                                         <a
-                                            href="{{ route('dashboard', ['floor' => $floor['id'], 'room' => $room['id']]) }}"
-                                            class="dash-room-link {{ (int) $selectedRoomId === (int) $room['id'] ? 'dash-room-link-active' : '' }}"
+                                            href="{{ route('devices.index', ['floor' => $floor['id'], 'room_id' => $room['id']]) }}"
+                                            class="dash-room-link"
                                         >
                                             <div class="dash-room-name">
                                                 <span>{{ $room['room_number'] }}</span>
@@ -122,55 +102,75 @@
                                 <span>Ierices</span>
                             </h2>
                             <p class="mt-2 text-sm text-slate-600">
-                                {{ $selectedRoom ? 'Filtrets pec izveletas telpas.' : ($selectedFloor !== '' ? 'Filtrets pec izveleta stava.' : 'Redzams pilns pieejamais iericu saraksts.') }}
+                                Kompakts parskats par jaunakajam pieejamajam iericem.
                             </p>
                         </div>
-                        <div class="rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                            Atrastas ierices: <strong class="text-slate-900">{{ $dashboardDevices->count() }}</strong>
-                        </div>
+                        <a href="{{ route('devices.index') }}" class="btn-view">
+                            <x-icon name="view" size="h-4 w-4" />
+                            <span>Iericu tabula</span>
+                        </a>
                     </div>
 
-                    <div class="dash-device-list">
-                        @forelse ($dashboardDevices as $device)
-                            <a href="{{ route('devices.show', $device) }}" class="dash-device-card">
-                                <div class="dash-device-head">
-                                    <div>
-                                        <div class="dash-device-title">{{ $device->name }}</div>
-                                        <div class="dash-device-subtitle">
-                                            {{ $device->code ?: 'Bez koda' }} | {{ $device->type?->type_name ?: 'Bez tipa' }} | {{ $device->model }}
-                                        </div>
-                                    </div>
-                                    <x-status-pill context="device" :value="$device->status" />
-                                </div>
-
-                                <div class="dash-device-grid">
-                                    <div class="dash-device-metric">
-                                        <div class="dash-device-label">Atrasanas vieta</div>
-                                        <div class="dash-device-value">{{ $device->building?->building_name ?: '-' }} / {{ $device->room?->room_number ?: '-' }}</div>
-                                    </div>
-                                    <div class="dash-device-metric">
-                                        <div class="dash-device-label">Pieskirta</div>
-                                        <div class="dash-device-value">{{ $device->assignedTo?->full_name ?: 'Nav pieskirts' }}</div>
-                                    </div>
-                                    <div class="dash-device-metric">
-                                        <div class="dash-device-label">Serijas numurs</div>
-                                        <div class="dash-device-value">{{ $device->serial_number ?: '-' }}</div>
-                                    </div>
-                                    <div class="dash-device-metric">
-                                        <div class="dash-device-label">Stavoklis</div>
-                                        <div class="dash-device-value">
-                                            @if ($device->activeRepair)
-                                                Aktivs remonts: {{ $device->activeRepair->description ?: 'Procesa' }}
-                                            @else
-                                                Bez aktiva remonta
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        @empty
-                            <div class="dash-empty-block">Saja skata ierices netika atrastas.</div>
-                        @endforelse
+                    <div class="mt-5 overflow-x-auto rounded-[1.5rem] border border-slate-200 bg-white">
+                        <table class="dash-table">
+                            <thead class="dash-table-head">
+                                <tr>
+                                    <th>Kods</th>
+                                    <th>Ierice</th>
+                                    <th>Atrasanas vieta</th>
+                                    <th>Pieskirta</th>
+                                    <th>Statuss</th>
+                                    <th>Darbibas</th>
+                                </tr>
+                            </thead>
+                            <tbody class="dash-table-body">
+                                @forelse ($dashboardDevices as $device)
+                                    <tr>
+                                        <td>
+                                            <div class="dash-table-cell-strong">{{ $device->code ?: '-' }}</div>
+                                            <div class="dash-table-subline">{{ $device->type?->type_name ?: 'Bez tipa' }}</div>
+                                        </td>
+                                        <td>
+                                            <a href="{{ route('devices.show', $device) }}" class="dash-table-link">{{ $device->name }}</a>
+                                            <div class="dash-table-subline">{{ $device->model ?: '-' }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="dash-table-cell-strong">{{ $device->building?->building_name ?: '-' }}</div>
+                                            <div class="dash-table-subline">
+                                                {{ $device->room?->room_number ?: '-' }}
+                                                @if ($device->room?->room_name)
+                                                    | {{ $device->room->room_name }}
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="dash-table-cell-strong">{{ $device->assignedTo?->full_name ?: 'Nav pieskirts' }}</div>
+                                            <div class="dash-table-subline">{{ $device->serial_number ?: 'Bez serijas numura' }}</div>
+                                        </td>
+                                        <td>
+                                            <x-status-pill context="device" :value="$device->status" />
+                                            <div class="dash-table-subline">
+                                                @if ($device->activeRepair)
+                                                    Aktivs remonts
+                                                @else
+                                                    Bez aktiva remonta
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a href="{{ route('devices.show', $device) }}" class="btn-view">
+                                                <x-icon name="view" size="h-4 w-4" />
+                                                <span>Skatit</span>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="px-4 py-8 text-center text-slate-500">Ierices pagaidam nav pieejamas.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </section>
 

@@ -28,7 +28,7 @@
             </div>
         </div>
 
-        <form method="GET" action="{{ route('devices.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-5">
+        <form method="GET" action="{{ route('devices.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-6">
             <label class="block">
                 <span class="crud-label">Meklet</span>
                 <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, razotajs...">
@@ -38,8 +38,15 @@
                 <input type="text" name="code" value="{{ $filters['code'] }}" class="crud-control">
             </label>
             <label class="block">
+                <span class="crud-label">Stavs</span>
+                <input type="text" name="floor" value="{{ $filters['floor'] }}" class="crud-control" placeholder="Piem. 1">
+            </label>
+            <label class="block">
                 <span class="crud-label">Telpa</span>
                 <input type="text" name="room" value="{{ $filters['room'] }}" class="crud-control">
+                @if ($selectedRoom)
+                    <input type="hidden" name="room_id" value="{{ $selectedRoom->id }}">
+                @endif
             </label>
             <label class="block">
                 <span class="crud-label">Tips</span>
@@ -59,7 +66,7 @@
                     @endforeach
                 </select>
             </label>
-            <div class="toolbar-actions md:col-span-5">
+            <div class="toolbar-actions md:col-span-2 xl:col-span-6">
                 <button type="submit" class="btn-search">
                     <x-icon name="search" size="h-4 w-4" />
                     <span>Meklet</span>
@@ -75,7 +82,8 @@
             :items="[
                 ['label' => 'Meklet', 'value' => $filters['q']],
                 ['label' => 'Kods', 'value' => $filters['code']],
-                ['label' => 'Telpa', 'value' => $filters['room']],
+                ['label' => 'Stavs', 'value' => $filters['floor']],
+                ['label' => 'Telpa', 'value' => $selectedRoom ? ($selectedRoom->room_number . ($selectedRoom->room_name ? ' - ' . $selectedRoom->room_name : '')) : $filters['room']],
                 ['label' => 'Tips', 'value' => $filters['type'] !== '' && ctype_digit($filters['type']) ? optional($types->firstWhere('id', (int) $filters['type']))->type_name : null],
                 ['label' => 'Statuss', 'value' => $filters['status'] !== '' ? ($statusLabels[$filters['status']] ?? $filters['status']) : null],
             ]"
