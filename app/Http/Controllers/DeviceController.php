@@ -9,6 +9,8 @@ use App\Models\Room;
 use App\Models\User;
 use App\Support\AuditTrail;
 use App\Support\DeviceAssetManager;
+use App\Support\RuntimeSchemaBootstrapper;
+use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Http\RedirectResponse;
@@ -543,7 +545,7 @@ class DeviceController extends Controller
             $payload['room_id'] = null;
         }
 
-        $device->forceFill($payload)->save();
+        $this->saveDevicePayload($device, $payload);
         AuditTrail::updatedFromState(auth()->id(), $device, $before, [
             'status' => $device->status,
             'assigned_to_id' => $device->assigned_to_id,
@@ -575,10 +577,10 @@ class DeviceController extends Controller
 
         $before = $device->only(['room_id', 'building_id']);
 
-        $device->forceFill([
+        $this->saveDevicePayload($device, [
             'room_id' => $room->id,
             'building_id' => $room->building_id,
-        ])->save();
+        ]);
 
         AuditTrail::updatedFromState(auth()->id(), $device, $before, [
             'room_id' => $room->id,
@@ -598,5 +600,28 @@ class DeviceController extends Controller
         }
 
         return redirect()->route('devices.show', $device)->with($level, $message);
+    }
+
+    private function saveDevicePayload(Device $device, array $payload): void
+    {
+        try {
+            $device->forceFill($payload)->save();
+        } catch (QueryException $exception) {
+            if (! $this->isLegacyStatusEnumMismatch($exception)) {
+                throw $exception;
+            }
+
+            app(RuntimeSchemaBootstrapper::class)->ensure();
+            $device->refresh();
+            $device->forceFill($payload)->save();
+        }
+    }
+
+    private function isLegacyStatusEnumMismatch(QueryException $exception): bool
+    {
+        $message = strtolower($exception->getMessage());
+
+        return str_contains($message, 'data truncated for column')
+            && str_contains($message, "'status'");
     }
 }

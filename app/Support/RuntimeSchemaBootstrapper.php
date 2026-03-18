@@ -289,12 +289,119 @@ class RuntimeSchemaBootstrapper
 
     private function normalizeLegacyData(): void
     {
+        $this->alignMysqlStatusColumns();
         $this->normalizeDeviceStatuses();
         $this->normalizeRequestStatuses('repair_requests');
         $this->normalizeRequestStatuses('writeoff_requests');
         $this->normalizeRequestStatuses('device_transfers');
         $this->copyLegacyTransferColumn();
         $this->copyLegacyRepairColumns();
+    }
+
+    private function alignMysqlStatusColumns(): void
+    {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
+        $this->alignMysqlEnumStatusColumn(
+            'devices',
+            'status',
+            [Device::STATUS_ACTIVE, Device::STATUS_REPAIR, Device::STATUS_WRITEOFF],
+            [Device::STATUS_ACTIVE, Device::STATUS_REPAIR, Device::STATUS_WRITEOFF, 'written_off', 'reserve', 'broken', 'kitting'],
+            [
+                ['from' => ['reserve', 'broken', 'kitting'], 'to' => Device::STATUS_ACTIVE],
+                ['from' => ['written_off'], 'to' => Device::STATUS_WRITEOFF],
+            ],
+            Device::STATUS_ACTIVE,
+        );
+
+        foreach (['repair_requests', 'writeoff_requests', 'device_transfers'] as $table) {
+            $this->alignMysqlEnumStatusColumn(
+                $table,
+                'status',
+                [RepairRequest::STATUS_SUBMITTED, RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED],
+                [RepairRequest::STATUS_SUBMITTED, RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED, 'pending', 'denied', 'indicated'],
+                [
+                    ['from' => ['pending'], 'to' => RepairRequest::STATUS_SUBMITTED],
+                    ['from' => ['denied', 'indicated'], 'to' => RepairRequest::STATUS_REJECTED],
+                ],
+                RepairRequest::STATUS_SUBMITTED,
+            );
+        }
+    }
+
+    private function alignMysqlEnumStatusColumn(
+        string $table,
+        string $column,
+        array $canonicalValues,
+        array $extendedValues,
+        array $normalizations,
+        string $default
+    ): void {
+        if (! Schema::hasTable($table) || ! Schema::hasColumn($table, $column)) {
+            return;
+        }
+
+        $columnType = strtolower($this->mysqlColumnType($table, $column));
+        if (! str_starts_with($columnType, 'enum(')) {
+            return;
+        }
+
+        if ($this->enumMatchesExactly($columnType, $canonicalValues)) {
+            return;
+        }
+
+        DB::statement(sprintf(
+            'ALTER TABLE `%s` MODIFY `%s` ENUM(%s) NOT NULL DEFAULT %s',
+            $table,
+            $column,
+            $this->quoteEnumValues($extendedValues),
+            $this->quoteSqlLiteral($default),
+        ));
+
+        foreach ($normalizations as $normalization) {
+            $fromValues = array_values(array_filter((array) ($normalization['from'] ?? []), fn ($value) => is_string($value) && $value !== ''));
+            $toValue = (string) ($normalization['to'] ?? '');
+
+            if ($fromValues === [] || $toValue === '') {
+                continue;
+            }
+
+            DB::table($table)->whereIn($column, $fromValues)->update([$column => $toValue]);
+        }
+
+        DB::statement(sprintf(
+            'ALTER TABLE `%s` MODIFY `%s` ENUM(%s) NOT NULL DEFAULT %s',
+            $table,
+            $column,
+            $this->quoteEnumValues($canonicalValues),
+            $this->quoteSqlLiteral($default),
+        ));
+    }
+
+    private function mysqlColumnType(string $table, string $column): string
+    {
+        $result = DB::selectOne(sprintf("SHOW COLUMNS FROM `%s` LIKE '%s'", $table, $column));
+
+        return (string) ($result->Type ?? '');
+    }
+
+    private function enumMatchesExactly(string $currentType, array $expectedValues): bool
+    {
+        $expectedType = 'enum(' . implode(',', array_map(fn (string $value) => $this->quoteSqlLiteral($value), $expectedValues)) . ')';
+
+        return strtolower($currentType) === strtolower($expectedType);
+    }
+
+    private function quoteEnumValues(array $values): string
+    {
+        return implode(',', array_map(fn (string $value) => $this->quoteSqlLiteral($value), $values));
+    }
+
+    private function quoteSqlLiteral(string $value): string
+    {
+        return "'" . str_replace("'", "\\'", $value) . "'";
     }
 
     private function normalizeDeviceStatuses(): void
