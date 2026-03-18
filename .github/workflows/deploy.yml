@@ -40,6 +40,61 @@ jobs:
           npm ci
           npm run build
 
+      - name: Create production environment file
+        run: |
+          cat > .env <<EOF
+          APP_NAME="${{ secrets.APP_NAME || 'IT Inventara uzskaites sistema' }}"
+          APP_ENV=production
+          APP_KEY=${{ secrets.APP_KEY }}
+          APP_DEBUG=false
+          APP_URL=${{ secrets.APP_URL }}
+          APP_TIMEZONE=Europe/Riga
+          APP_LOCALE=lv
+          APP_FALLBACK_LOCALE=lv
+          APP_FAKER_LOCALE=lv_LV
+          APP_MAINTENANCE_DRIVER=file
+          BCRYPT_ROUNDS=12
+          LOG_CHANNEL=stack
+          LOG_STACK=single
+          LOG_DEPRECATIONS_CHANNEL=null
+          LOG_LEVEL=error
+          DB_CONNECTION=mysql
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=${{ secrets.DB_PORT || '3306' }}
+          DB_DATABASE=${{ secrets.DB_DATABASE }}
+          DB_USERNAME=${{ secrets.DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          SESSION_DRIVER=file
+          SESSION_LIFETIME=120
+          SESSION_ENCRYPT=false
+          SESSION_PATH=/
+          SESSION_DOMAIN=null
+          SESSION_SECURE_COOKIE=true
+          BROADCAST_CONNECTION=log
+          FILESYSTEM_DISK=local
+          QUEUE_CONNECTION=sync
+          CACHE_STORE=file
+          MEMCACHED_HOST=127.0.0.1
+          REDIS_CLIENT=phpredis
+          REDIS_HOST=127.0.0.1
+          REDIS_PASSWORD=null
+          REDIS_PORT=6379
+          MAIL_MAILER=log
+          MAIL_SCHEME=null
+          MAIL_HOST=127.0.0.1
+          MAIL_PORT=2525
+          MAIL_USERNAME=null
+          MAIL_PASSWORD=null
+          MAIL_FROM_ADDRESS="noreply@example.com"
+          MAIL_FROM_NAME="${{ secrets.APP_NAME || 'IT Inventara uzskaites sistema' }}"
+          AWS_ACCESS_KEY_ID=
+          AWS_SECRET_ACCESS_KEY=
+          AWS_DEFAULT_REGION=us-east-1
+          AWS_BUCKET=
+          AWS_USE_PATH_STYLE_ENDPOINT=false
+          VITE_APP_NAME="${{ secrets.APP_NAME || 'IT Inventara uzskaites sistema' }}"
+          EOF
+
       - name: Deploy to InfinityFree
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -70,7 +125,5 @@ jobs:
             phpunit.xml
             **/*.md
             **/*.log
-            .env
-            .env.*
             **/.DS_Store
             **/Thumbs.db
