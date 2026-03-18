@@ -56,7 +56,10 @@
             type="button"
             class="searchable-select-surface"
             title="Klikskini, lai atvertu. Turi un velc uz augsu vai leju, lai atri izveletos."
-            @mousedown.left.prevent.stop="beginScrub($event)"
+            @pointerdown.prevent.stop="beginScrub($event)"
+            @pointermove.stop="handleSurfacePointerMove($event)"
+            @pointerup.stop="finishSurfacePointer($event)"
+            @pointercancel.stop="cancelSurfacePointer($event)"
         ></button>
 
         <input

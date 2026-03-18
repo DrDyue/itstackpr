@@ -2239,6 +2239,7 @@ tbody td {
 
 .searchable-select-surface {
     @apply absolute inset-0 z-10 rounded-lg cursor-ns-resize bg-transparent;
+    touch-action: none;
 }
 
 .searchable-select-toggle {
@@ -2254,7 +2255,8 @@ tbody td {
 }
 
 .searchable-select-list {
-    @apply max-h-64 overflow-y-auto p-2;
+    @apply overflow-visible p-2;
+    max-height: none;
 }
 
 .searchable-select-option {

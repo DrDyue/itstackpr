@@ -124,6 +124,7 @@ const registerAlpineData = () => {
         highlightedIndex: 0,
         pointerActive: false,
         pointerMode: null,
+        surfacePointerId: null,
         wasOpenBeforePointer: false,
         dragging: false,
         suppressClick: false,
@@ -184,6 +185,7 @@ const registerAlpineData = () => {
         resetPointerState() {
             this.pointerActive = false;
             this.pointerMode = null;
+            this.surfacePointerId = null;
             this.dragging = false;
             this.suppressClick = false;
             this.wasOpenBeforePointer = false;
@@ -213,19 +215,66 @@ const registerAlpineData = () => {
             this.highlightedIndex = 0;
         },
         beginScrub(event) {
-            if (event.button !== 0) {
+            const isPrimaryButton = event.button === 0 || event.button === -1 || event.buttons === 1;
+            if (!isPrimaryButton) {
                 return;
             }
 
             this.wasOpenBeforePointer = this.open;
             this.pointerActive = true;
             this.pointerMode = 'scrub';
+            this.surfacePointerId = event.pointerId ?? null;
             this.dragging = false;
             this.suppressClick = false;
             this.startY = event.clientY;
             const selectedIndex = this.options.findIndex((option) => option.value === this.selected);
             this.dragStartIndex = selectedIndex >= 0 ? selectedIndex : 0;
             this.highlightedIndex = this.dragStartIndex;
+
+            if (typeof event.currentTarget?.setPointerCapture === 'function' && event.pointerId !== undefined) {
+                event.currentTarget.setPointerCapture(event.pointerId);
+            }
+        },
+        handleSurfacePointerMove(event) {
+            if (this.pointerMode !== 'scrub') {
+                return;
+            }
+
+            if (this.surfacePointerId !== null && event.pointerId !== this.surfacePointerId) {
+                return;
+            }
+
+            this.handleScrubMove(event);
+        },
+        finishSurfacePointer(event) {
+            if (this.pointerMode !== 'scrub') {
+                return;
+            }
+
+            if (this.surfacePointerId !== null && event.pointerId !== this.surfacePointerId) {
+                return;
+            }
+
+            if (typeof event.currentTarget?.releasePointerCapture === 'function' && event.pointerId !== undefined) {
+                try {
+                    event.currentTarget.releasePointerCapture(event.pointerId);
+                } catch (error) {
+                    // Ignore capture release errors; they are harmless if capture was already lost.
+                }
+            }
+
+            this.stopPointer();
+        },
+        cancelSurfacePointer(event) {
+            if (this.pointerMode !== 'scrub') {
+                return;
+            }
+
+            if (this.surfacePointerId !== null && event.pointerId !== this.surfacePointerId) {
+                return;
+            }
+
+            this.resetPointerState();
         },
         move(direction) {
             if (!this.open) {
@@ -314,11 +363,6 @@ const registerAlpineData = () => {
         },
         handlePointerMove(event) {
             if (!this.pointerActive) {
-                return;
-            }
-
-            if (this.pointerMode === 'scrub') {
-                this.handleScrubMove(event);
                 return;
             }
 
