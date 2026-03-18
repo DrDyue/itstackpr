@@ -16,12 +16,11 @@
         $roomSelectOptions = $roomOptions->map(fn ($room) => [
             'value' => (string) $room->id,
             'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
-            'description' => collect([$room->building?->building_name, $room->department])->filter()->implode(' | '),
+            'description' => $room->department ?: '',
             'search' => implode(' ', array_filter([
                 $room->room_number,
                 $room->room_name,
                 $room->department,
-                $room->building?->building_name,
             ])),
         ])->values();
         $typeSelectOptions = $types->map(fn ($type) => [
@@ -242,15 +241,18 @@
                                 <div class="mt-2 text-xs text-slate-400">{{ $device->type?->type_name ?: 'Bez tipa' }}</div>
                             </td>
                             <td class="px-4 py-4">
-                                <div class="font-medium text-slate-900">{{ $device->building?->building_name ?: 'Bez ekas' }}</div>
-                                <div class="mt-1 text-xs text-slate-500">
-                                    {{ $device->room?->room_number ?: '-' }}
-                                    @if ($device->room?->room_name)
-                                        | {{ $device->room->room_name }}
+                                @if ($device->room)
+                                    <div class="font-medium text-slate-900">
+                                        {{ $device->room->room_number }}
+                                        @if ($device->room->room_name)
+                                            | {{ $device->room->room_name }}
+                                        @endif
+                                    </div>
+                                    @if ($device->room->department)
+                                        <div class="mt-2 text-xs text-slate-400">{{ $device->room->department }}</div>
                                     @endif
-                                </div>
-                                @if ($device->room?->department)
-                                    <div class="mt-2 text-xs text-slate-400">{{ $device->room->department }}</div>
+                                @else
+                                    <div class="font-medium text-slate-900">Vieta nav noradita</div>
                                 @endif
                             </td>
                             <td class="px-4 py-4">

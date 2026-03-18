@@ -112,6 +112,7 @@ const registerAlpineData = () => {
         selected: String(selected ?? ''),
         query: query || '',
         identifier,
+        showAllOptions: false,
         options: options.map((option) => ({
             value: String(option.value ?? ''),
             label: option.label ?? '',
@@ -135,6 +136,10 @@ const registerAlpineData = () => {
             }
         },
         get filteredOptions() {
+            if (this.open && this.showAllOptions) {
+                return this.options;
+            }
+
             const term = this.query.trim().toLowerCase();
 
             if (term === '') {
@@ -155,10 +160,15 @@ const registerAlpineData = () => {
             }
 
             this.open = true;
+            this.showAllOptions = true;
             this.preparePanel();
+            this.$nextTick(() => {
+                this.$refs.input?.select();
+            });
         },
         close() {
             this.open = false;
+            this.showAllOptions = false;
             this.stopPointer();
         },
         clearSelection() {
@@ -175,6 +185,7 @@ const registerAlpineData = () => {
         },
         handleInput() {
             this.open = true;
+            this.showAllOptions = false;
             const normalized = this.query.trim().toLowerCase();
             const exact = this.options.find((option) => option.label.toLowerCase() === normalized);
             this.selected = exact ? exact.value : '';
@@ -201,8 +212,8 @@ const registerAlpineData = () => {
 
             this.choose(option);
         },
-        choose(option) {
-            if (this.suppressClick) {
+        choose(option, force = false) {
+            if (this.suppressClick && !force) {
                 return;
             }
 
@@ -278,6 +289,7 @@ const registerAlpineData = () => {
 
             if (this.dragging) {
                 this.$refs.panel.scrollTop = this.startScrollTop - delta;
+                this.syncHighlightFromPointer(event);
             }
         },
         stopPointer() {
@@ -288,10 +300,25 @@ const registerAlpineData = () => {
             this.pointerActive = false;
             this.dragging = false;
 
+            if (this.suppressClick && this.filteredOptions[this.highlightedIndex]) {
+                this.choose(this.filteredOptions[this.highlightedIndex], true);
+            }
+
             if (this.suppressClick) {
                 window.setTimeout(() => {
                     this.suppressClick = false;
                 }, 80);
+            }
+        },
+        syncHighlightFromPointer(event) {
+            const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('.searchable-select-option');
+            if (!target) {
+                return;
+            }
+
+            const nextIndex = Number(target.dataset.index ?? '-1');
+            if (!Number.isNaN(nextIndex) && nextIndex >= 0) {
+                this.highlightedIndex = nextIndex;
             }
         },
     }));

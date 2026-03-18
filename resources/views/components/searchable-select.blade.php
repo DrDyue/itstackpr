@@ -51,6 +51,7 @@
 
     <div class="relative">
         <input
+            x-ref="input"
             type="text"
             name="{{ $queryName }}"
             x-model="query"
@@ -94,6 +95,7 @@
                 <button
                     type="button"
                     class="searchable-select-option"
+                    :data-index="index"
                     :class="optionClasses(index, option)"
                     @mouseenter="highlightedIndex = index"
                     @click="choose(option)"
