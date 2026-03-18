@@ -49,7 +49,7 @@
 >
     <input type="hidden" name="{{ $name }}" x-model="selected">
 
-    <div class="relative">
+    <div class="searchable-select-control" :class="pointerMode === 'scrub' ? 'searchable-select-control-scrubbing' : ''">
         <button
             x-cloak
             x-show="!open"
@@ -93,6 +93,45 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
             </svg>
         </button>
+
+        <div
+            x-cloak
+            x-show="pointerMode === 'scrub'"
+            x-transition.opacity.duration.150ms
+            class="searchable-select-scrub-preview"
+        >
+            <div
+                class="searchable-select-scrub-stack"
+                :style="`transform: translateY(${scrubVisualOffset}px)`"
+            >
+                <div class="searchable-select-scrub-row searchable-select-scrub-row-muted">
+                    <template x-if="scrubPreviousOption">
+                        <div>
+                            <div class="searchable-select-scrub-label" x-text="scrubPreviousOption.label"></div>
+                            <div class="searchable-select-scrub-meta" x-show="scrubPreviousOption.description" x-text="scrubPreviousOption.description"></div>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="searchable-select-scrub-row searchable-select-scrub-row-active">
+                    <template x-if="scrubCurrentOption">
+                        <div>
+                            <div class="searchable-select-scrub-label" x-text="scrubCurrentOption.label"></div>
+                            <div class="searchable-select-scrub-meta" x-show="scrubCurrentOption.description" x-text="scrubCurrentOption.description"></div>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="searchable-select-scrub-row searchable-select-scrub-row-muted">
+                    <template x-if="scrubNextOption">
+                        <div>
+                            <div class="searchable-select-scrub-label" x-text="scrubNextOption.label"></div>
+                            <div class="searchable-select-scrub-meta" x-show="scrubNextOption.description" x-text="scrubNextOption.description"></div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div

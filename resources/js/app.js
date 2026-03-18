@@ -128,6 +128,9 @@ const registerAlpineData = () => {
         wasOpenBeforePointer: false,
         dragging: false,
         suppressClick: false,
+        scrubDirection: null,
+        scrubVisualOffset: 0,
+        scrubAnimationFrame: null,
         startY: 0,
         startScrollTop: 0,
         dragStartIndex: 0,
@@ -152,6 +155,15 @@ const registerAlpineData = () => {
             }
 
             return this.options.filter((option) => option.search.includes(term));
+        },
+        get scrubPreviousOption() {
+            return this.options[this.highlightedIndex - 1] ?? null;
+        },
+        get scrubCurrentOption() {
+            return this.options[this.highlightedIndex] ?? null;
+        },
+        get scrubNextOption() {
+            return this.options[this.highlightedIndex + 1] ?? null;
         },
         togglePanel() {
             this.open = !this.open;
@@ -189,6 +201,13 @@ const registerAlpineData = () => {
             this.dragging = false;
             this.suppressClick = false;
             this.wasOpenBeforePointer = false;
+            this.scrubDirection = null;
+            this.scrubVisualOffset = 0;
+
+            if (this.scrubAnimationFrame) {
+                window.cancelAnimationFrame(this.scrubAnimationFrame);
+                this.scrubAnimationFrame = null;
+            }
         },
         close() {
             this.closePanelOnly();
@@ -435,9 +454,24 @@ const registerAlpineData = () => {
             const nextIndex = Math.min(maxIndex, Math.max(0, this.dragStartIndex + offset));
 
             if (nextIndex !== this.highlightedIndex) {
+                const direction = nextIndex > this.highlightedIndex ? 'down' : 'up';
                 this.highlightedIndex = nextIndex;
                 this.query = this.options[nextIndex]?.label ?? this.query;
+                this.animateScrubPreview(direction);
             }
+        },
+        animateScrubPreview(direction) {
+            this.scrubDirection = direction;
+            this.scrubVisualOffset = direction === 'down' ? -14 : 14;
+
+            if (this.scrubAnimationFrame) {
+                window.cancelAnimationFrame(this.scrubAnimationFrame);
+            }
+
+            this.scrubAnimationFrame = window.requestAnimationFrame(() => {
+                this.scrubVisualOffset = 0;
+                this.scrubAnimationFrame = null;
+            });
         },
         finishScrub() {
             if (this.dragging && this.options[this.highlightedIndex]) {

@@ -2237,6 +2237,14 @@ tbody td {
     @apply relative;
 }
 
+.searchable-select-control {
+    @apply relative transition-all duration-200 ease-out;
+}
+
+.searchable-select-control-scrubbing {
+    @apply min-h-[9.5rem];
+}
+
 .searchable-select-surface {
     @apply absolute inset-0 z-10 rounded-lg cursor-ns-resize bg-transparent;
     touch-action: none;
@@ -2248,6 +2256,34 @@ tbody td {
 
 .searchable-select-toggle-active {
     @apply border-sky-300 bg-sky-50 text-sky-700 ring-2 ring-sky-100;
+}
+
+.searchable-select-scrub-preview {
+    @apply pointer-events-none absolute inset-x-0 top-[calc(100%+0.5rem)] z-30 overflow-hidden rounded-2xl border border-sky-200 bg-white/95 p-2 shadow-xl ring-1 ring-sky-100 backdrop-blur;
+}
+
+.searchable-select-scrub-stack {
+    @apply transition-transform duration-200 ease-out;
+}
+
+.searchable-select-scrub-row {
+    @apply rounded-xl px-3 py-2.5 text-center;
+}
+
+.searchable-select-scrub-row-active {
+    @apply bg-slate-900 text-white shadow-sm;
+}
+
+.searchable-select-scrub-row-muted {
+    @apply text-slate-500;
+}
+
+.searchable-select-scrub-label {
+    @apply text-sm font-semibold leading-5;
+}
+
+.searchable-select-scrub-meta {
+    @apply mt-1 text-xs leading-5 opacity-75;
 }
 
 .searchable-select-panel {
