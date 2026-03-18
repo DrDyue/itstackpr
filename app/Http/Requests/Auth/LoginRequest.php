@@ -4,9 +4,11 @@ namespace App\Http\Requests\Auth;
 
 use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -39,10 +41,18 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        $user = User::query()
-            ->where('email', $this->email)
-            ->where('is_active', true)
-            ->first();
+        try {
+            $user = User::query()
+                ->where('email', $this->email)
+                ->where('is_active', true)
+                ->first();
+        } catch (QueryException $e) {
+            // If the schema is out-of-sync (missing columns), treat it as a failed login
+            // to avoid a 500 error. Also log for debugging.
+            Log::error('Login query failed (possible missing column): ' . $e->getMessage());
+
+            $user = null;
+        }
 
         if (! $user || ! Hash::check($this->password, $user->password)) {
             RateLimiter::hit($this->throttleKey());
