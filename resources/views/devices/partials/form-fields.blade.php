@@ -4,8 +4,8 @@
 
 <div class="grid gap-4 md:grid-cols-2">
     <label class="block">
-        <span class="crud-label">Kods</span>
-        <input type="text" name="code" value="{{ old('code', $current?->code) }}" class="crud-control">
+        <span class="crud-label">Kods *</span>
+        <input type="text" name="code" value="{{ old('code', $current?->code) }}" class="crud-control" required>
     </label>
     <label class="block">
         <span class="crud-label">Nosaukums</span>
@@ -60,7 +60,7 @@
     </label>
     <label class="block">
         <span class="crud-label">Iegades datums</span>
-        <input type="date" name="purchase_date" value="{{ old('purchase_date', $current?->purchase_date?->format('Y-m-d')) }}" class="crud-control" required>
+        <input type="date" name="purchase_date" value="{{ old('purchase_date', $current?->purchase_date?->format('Y-m-d')) }}" class="crud-control">
     </label>
     <label class="block">
         <span class="crud-label">Iegades cena</span>

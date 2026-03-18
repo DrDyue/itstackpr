@@ -246,7 +246,7 @@ class DeviceController extends Controller
     {
         $data = $request->validate(
             [
-                'code' => ['nullable', 'string', 'max:20', Rule::unique('devices', 'code')->ignore($device?->id)],
+                'code' => ['required', 'string', 'max:20', Rule::unique('devices', 'code')->ignore($device?->id)],
                 'name' => ['required', 'string', 'max:200'],
                 'device_type_id' => ['required', 'exists:device_types,id'],
                 'model' => ['required', 'string', 'max:100'],
@@ -254,7 +254,7 @@ class DeviceController extends Controller
                 'building_id' => ['nullable', 'exists:buildings,id'],
                 'room_id' => ['nullable', 'exists:rooms,id'],
                 'assigned_user_id' => ['nullable', 'exists:users,id'],
-                'purchase_date' => ['required', 'date'],
+                'purchase_date' => ['nullable', 'date'],
                 'purchase_price' => ['nullable', 'numeric', 'min:0'],
                 'warranty_until' => ['nullable', 'date'],
                 'serial_number' => ['nullable', 'string', 'max:100'],
@@ -268,6 +268,8 @@ class DeviceController extends Controller
         foreach (['building_id', 'room_id', 'assigned_user_id'] as $field) {
             $data[$field] = $data[$field] ?: null;
         }
+
+        $data['purchase_date'] = $data['purchase_date'] ?: null;
 
         if (($data['room_id'] ?? null) !== null) {
             $room = Room::query()->find($data['room_id']);
