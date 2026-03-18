@@ -1,8 +1,15 @@
 @php
     $current = $device;
+    $isWrittenOff = ($current?->status ?? null) === \App\Models\Device::STATUS_WRITEOFF;
 @endphp
 
 <div class="grid gap-4 md:grid-cols-2">
+    @if ($isWrittenOff)
+        <div class="md:col-span-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            Norakstitai iericei var labot tikai informacijas laukus. Statuss, piesaiste lietotajam un telpa vairs netiek mainiti.
+        </div>
+    @endif
+
     <label class="block">
         <span class="crud-label">Kods *</span>
         <input type="text" name="code" value="{{ old('code', $current?->code) }}" class="crud-control" required>
@@ -25,7 +32,10 @@
     </label>
     <label class="block">
         <span class="crud-label">Statuss</span>
-        <select name="status" class="crud-control" required>
+        @if ($isWrittenOff)
+            <input type="hidden" name="status" value="{{ $current?->status }}">
+        @endif
+        <select name="status" class="crud-control" required @disabled($isWrittenOff)>
             @foreach ($statuses as $status)
                 <option value="{{ $status }}" @selected(old('status', $current?->status ?? 'active') === $status)>{{ $statusLabels[$status] }}</option>
             @endforeach
@@ -33,7 +43,10 @@
     </label>
     <label class="block">
         <span class="crud-label">Pieskirtais lietotajs</span>
-        <select name="assigned_to_id" class="crud-control">
+        @if ($isWrittenOff)
+            <input type="hidden" name="assigned_to_id" value="">
+        @endif
+        <select name="assigned_to_id" class="crud-control" @disabled($isWrittenOff)>
             <option value="">Nav pieskirts</option>
             @foreach ($users as $assignedUser)
                 <option value="{{ $assignedUser->id }}" @selected(old('assigned_to_id', $current?->assigned_to_id) == $assignedUser->id)>{{ $assignedUser->full_name }}</option>
@@ -42,7 +55,10 @@
     </label>
     <label class="block">
         <span class="crud-label">Eka</span>
-        <select name="building_id" class="crud-control">
+        @if ($isWrittenOff)
+            <input type="hidden" name="building_id" value="">
+        @endif
+        <select name="building_id" class="crud-control" @disabled($isWrittenOff)>
             <option value="">Nav noradita</option>
             @foreach ($buildings as $building)
                 <option value="{{ $building->id }}" @selected(old('building_id', $current?->building_id) == $building->id)>{{ $building->building_name }}</option>
@@ -51,7 +67,10 @@
     </label>
     <label class="block">
         <span class="crud-label">Telpa</span>
-        <select name="room_id" class="crud-control">
+        @if ($isWrittenOff)
+            <input type="hidden" name="room_id" value="">
+        @endif
+        <select name="room_id" class="crud-control" @disabled($isWrittenOff)>
             <option value="">Nav noradita</option>
             @foreach ($rooms as $room)
                 <option value="{{ $room->id }}" @selected(old('room_id', $current?->room_id) == $room->id)>{{ $room->building?->building_name }} / {{ $room->room_number }}</option>

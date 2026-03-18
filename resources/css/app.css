@@ -2237,8 +2237,12 @@ tbody td {
     @apply relative;
 }
 
+.searchable-select-surface {
+    @apply absolute inset-0 z-10 rounded-lg cursor-ns-resize bg-transparent;
+}
+
 .searchable-select-toggle {
-    @apply absolute right-2 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-500 shadow-sm transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700 active:scale-[0.98] cursor-ns-resize;
+    @apply absolute right-2 top-1/2 z-20 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-500 shadow-sm transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700 active:scale-[0.98];
 }
 
 .searchable-select-toggle-active {

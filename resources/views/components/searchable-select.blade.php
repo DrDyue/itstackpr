@@ -50,19 +50,27 @@
     <input type="hidden" name="{{ $name }}" x-model="selected">
 
     <div class="relative">
+        <button
+            x-cloak
+            x-show="!open"
+            type="button"
+            class="searchable-select-surface"
+            title="Klikskini, lai atvertu. Turi un velc uz augsu vai leju, lai atri izveletos."
+            @mousedown.left.prevent.stop="beginScrub($event)"
+        ></button>
+
         <input
             x-ref="input"
             type="text"
             name="{{ $queryName }}"
             x-model="query"
             class="crud-control pr-14"
-            :class="open ? 'border-sky-300 ring-2 ring-sky-100 bg-white cursor-text' : 'cursor-ns-resize'"
+            :class="open ? 'border-sky-300 ring-2 ring-sky-100 bg-white cursor-text' : 'cursor-default'"
             :readonly="!open"
             placeholder="{{ $placeholder }}"
             autocomplete="off"
             @focus="openPanel()"
             @click="handleTriggerClick()"
-            @mousedown.left="if (!open) { $event.preventDefault(); beginScrub($event) }"
             @input="handleInput()"
             @keydown.arrow-down.prevent="move(1)"
             @keydown.arrow-up.prevent="move(-1)"
@@ -74,7 +82,7 @@
             class="searchable-select-toggle"
             :class="pointerMode === 'scrub' ? 'searchable-select-toggle-active' : ''"
             title="Turi un velc uz augsu vai leju, lai atri izveletos vertibu"
-            @mousedown.left.prevent.stop="beginScrub($event)"
+            @click="togglePanel()"
             @keydown.enter.prevent="togglePanel()"
             @keydown.space.prevent="togglePanel()"
         >

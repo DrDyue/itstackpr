@@ -11,6 +11,7 @@ use App\Support\AuditTrail;
 use App\Support\DeviceAssetManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -240,7 +241,16 @@ class DeviceController extends Controller
 
         $result = $this->performDeviceAction($device, $validated);
 
-        return back()->with($result['level'], $result['message']);
+        return $this->redirectAfterQuickAction($device, $result['level'], $result['message']);
+    }
+
+    public function quickUpdateRedirect(Device $device): RedirectResponse
+    {
+        $this->requireManager();
+
+        return redirect()
+            ->route('devices.show', $device)
+            ->with('error', 'So adresi nevar atvert ar GET pieprasijumu. Izmanto darbibu pogas no ierices saraksta.');
     }
 
     public function bulkUpdate(Request $request)
@@ -385,9 +395,19 @@ class DeviceController extends Controller
         }
 
         if (($data['status'] ?? null) === Device::STATUS_WRITEOFF && ! empty($data['assigned_to_id'])) {
-            throw ValidationException::withMessages([
-                'assigned_to_id' => ['Norakstitai iericei nevajag but pieskirtai personai.'],
-            ]);
+            $data['assigned_to_id'] = null;
+        }
+
+        if (($data['status'] ?? null) === Device::STATUS_WRITEOFF) {
+            $data['room_id'] = null;
+            $data['building_id'] = null;
+        }
+
+        if ($device && $device->status === Device::STATUS_WRITEOFF) {
+            $data['status'] = Device::STATUS_WRITEOFF;
+            $data['assigned_to_id'] = null;
+            $data['room_id'] = null;
+            $data['building_id'] = null;
         }
 
         unset($data['device_image']);
@@ -493,6 +513,10 @@ class DeviceController extends Controller
             return ['level' => 'error', 'message' => 'Norakstitu ierici nevar nodot remonta.'];
         }
 
+        if ($status === Device::STATUS_WRITEOFF && $device->status !== Device::STATUS_ACTIVE) {
+            return ['level' => 'error', 'message' => 'Norakstit var tikai aktivu ierici.'];
+        }
+
         if ($status === Device::STATUS_WRITEOFF && ($device->status === Device::STATUS_REPAIR || $device->activeRepair()->exists())) {
             return ['level' => 'error', 'message' => 'Ierici nevar norakstit, kamer tai ir aktivs remonta process.'];
         }
@@ -504,17 +528,23 @@ class DeviceController extends Controller
         $before = [
             'status' => $device->status,
             'assigned_to_id' => $device->assigned_to_id,
+            'building_id' => $device->building_id,
+            'room_id' => $device->room_id,
         ];
 
         $payload = ['status' => $status];
         if ($status === Device::STATUS_WRITEOFF) {
             $payload['assigned_to_id'] = null;
+            $payload['building_id'] = null;
+            $payload['room_id'] = null;
         }
 
         $device->forceFill($payload)->save();
         AuditTrail::updatedFromState(auth()->id(), $device, $before, [
             'status' => $device->status,
             'assigned_to_id' => $device->assigned_to_id,
+            'building_id' => $device->building_id,
+            'room_id' => $device->room_id,
         ]);
 
         return ['level' => 'success', 'message' => 'Statuss atjauninats.'];
@@ -522,6 +552,10 @@ class DeviceController extends Controller
 
     private function moveDevice(Device $device, mixed $roomId): array
     {
+        if ($device->status === Device::STATUS_WRITEOFF) {
+            return ['level' => 'error', 'message' => 'Norakstitu ierici vairs nevar pieskirt telpai.'];
+        }
+
         if (! $roomId) {
             return ['level' => 'error', 'message' => 'Nav izveleta telpa.'];
         }
@@ -548,5 +582,17 @@ class DeviceController extends Controller
         ]);
 
         return ['level' => 'success', 'message' => 'Ierice parvietota uz citu telpu.'];
+    }
+
+    private function redirectAfterQuickAction(Device $device, string $level, string $message): RedirectResponse
+    {
+        $previousUrl = url()->previous();
+        $previousPath = is_string($previousUrl) ? (parse_url($previousUrl, PHP_URL_PATH) ?: '') : '';
+
+        if (is_string($previousUrl) && $previousUrl !== '' && ! str_contains($previousPath, '/quick-update')) {
+            return redirect()->to($previousUrl)->with($level, $message);
+        }
+
+        return redirect()->route('devices.show', $device)->with($level, $message);
     }
 }

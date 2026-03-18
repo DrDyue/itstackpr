@@ -149,21 +149,29 @@ class WriteoffRequestController extends Controller
                 'review_notes' => $validated['review_notes'] ?: null,
             ]);
 
-            if ($validated['status'] !== 'approved') {
+            if ($validated['status'] !== WriteoffRequest::STATUS_APPROVED) {
                 return;
             }
 
             $device = $writeoffRequest->device()->lockForUpdate()->first();
 
-            if (! $device || $device->status === 'repair') {
+            if (! $device) {
                 throw ValidationException::withMessages([
-                    'status' => ['Ierici nevar norakstit, kamer tai ir aktivs remonta process.'],
+                    'status' => ['Ierice norakstisanai vairs nav atrasta.'],
+                ]);
+            }
+
+            if ($device->status !== Device::STATUS_ACTIVE || $device->activeRepair()->exists()) {
+                throw ValidationException::withMessages([
+                    'status' => ['Norakstit var tikai aktivu ierici bez aktiva remonta procesa.'],
                 ]);
             }
 
             $device->forceFill([
                 'status' => Device::STATUS_WRITEOFF,
                 'assigned_to_id' => null,
+                'building_id' => null,
+                'room_id' => null,
             ])->save();
         });
 
