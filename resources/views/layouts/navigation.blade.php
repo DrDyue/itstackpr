@@ -12,6 +12,8 @@
             ['route' => 'writeoff-requests.index', 'pattern' => 'writeoff-requests*', 'label' => 'Norakstisanas pieteikumi', 'icon' => 'writeoff'],
             ['route' => 'device-transfers.index', 'pattern' => 'device-transfers*', 'label' => 'Parsutisanas pieteikumi', 'icon' => 'transfer'],
         ];
+        $requestReviewNavigationItems = $canManageRequests ? collect($requestNavigationItems)->take(2)->values()->all() : $requestNavigationItems;
+        $requestHistoryNavigationItems = $canManageRequests ? collect($requestNavigationItems)->slice(2)->values()->all() : [];
         $lessImportantNavigationItems = [];
         $repairsNavigationItem = null;
         $usersNavigationItem = null;
@@ -80,25 +82,27 @@
                             <div class="px-4 pb-2 pt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                                 Pieteikumu centrs
                             </div>
-                            <div class="px-4 pb-2 pt-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-600">
-                                Admina izskatisana
+                            <div class="px-4 pb-2 pt-2 text-[11px] font-semibold uppercase tracking-[0.18em] {{ $canManageRequests ? 'text-sky-600' : 'text-slate-500' }}">
+                                {{ $canManageRequests ? 'Admina izskatisana' : 'Pieprasijumi' }}
                             </div>
-                            @foreach (collect($requestNavigationItems)->take(2) as $item)
+                            @foreach ($requestReviewNavigationItems as $item)
                                 <x-dropdown-link :href="route($item['route'])">
                                     <x-icon :name="$item['icon']" size="h-4 w-4" />
                                     <span>{{ $item['label'] }}</span>
                                 </x-dropdown-link>
                             @endforeach
-                            <div class="mx-4 my-2 h-px bg-slate-200"></div>
-                            <div class="px-4 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-600">
-                                Parsutisanas vesture
-                            </div>
-                            @foreach (collect($requestNavigationItems)->slice(2) as $item)
-                                <x-dropdown-link :href="route($item['route'])">
-                                    <x-icon :name="$item['icon']" size="h-4 w-4" />
-                                    <span>{{ $item['label'] }}</span>
-                                </x-dropdown-link>
-                            @endforeach
+                            @if ($requestHistoryNavigationItems !== [])
+                                <div class="mx-4 my-2 h-px bg-slate-200"></div>
+                                <div class="px-4 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-600">
+                                    Parsutisanas vesture
+                                </div>
+                                @foreach ($requestHistoryNavigationItems as $item)
+                                    <x-dropdown-link :href="route($item['route'])">
+                                        <x-icon :name="$item['icon']" size="h-4 w-4" />
+                                        <span>{{ $item['label'] }}</span>
+                                    </x-dropdown-link>
+                                @endforeach
+                            @endif
                         </x-slot>
                     </x-dropdown>
 
@@ -207,10 +211,10 @@
             <div class="rounded-2xl border border-slate-200 bg-slate-50 p-2">
                 <div class="px-3 pb-2 pt-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pieteikumi</div>
                 <div class="space-y-1">
-                    <div class="px-3 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-600">
-                        Admina izskatisana
+                    <div class="px-3 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] {{ $canManageRequests ? 'text-sky-600' : 'text-slate-500' }}">
+                        {{ $canManageRequests ? 'Admina izskatisana' : 'Pieprasijumi' }}
                     </div>
-                    @foreach (collect($requestNavigationItems)->take(2) as $item)
+                    @foreach ($requestReviewNavigationItems as $item)
                         <x-responsive-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
                             <span class="inline-flex items-center gap-2.5">
                                 <x-icon :name="$item['icon']" size="h-5 w-5" />
@@ -218,18 +222,20 @@
                             </span>
                         </x-responsive-nav-link>
                     @endforeach
-                    <div class="mx-3 my-2 h-px bg-slate-200"></div>
-                    <div class="px-3 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-600">
-                        Parsutisanas vesture
-                    </div>
-                    @foreach (collect($requestNavigationItems)->slice(2) as $item)
-                        <x-responsive-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
-                            <span class="inline-flex items-center gap-2.5">
-                                <x-icon :name="$item['icon']" size="h-5 w-5" />
-                                <span>{{ $item['label'] }}</span>
-                            </span>
-                        </x-responsive-nav-link>
-                    @endforeach
+                    @if ($requestHistoryNavigationItems !== [])
+                        <div class="mx-3 my-2 h-px bg-slate-200"></div>
+                        <div class="px-3 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-600">
+                            Parsutisanas vesture
+                        </div>
+                        @foreach ($requestHistoryNavigationItems as $item)
+                            <x-responsive-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
+                                <span class="inline-flex items-center gap-2.5">
+                                    <x-icon :name="$item['icon']" size="h-5 w-5" />
+                                    <span>{{ $item['label'] }}</span>
+                                </span>
+                            </x-responsive-nav-link>
+                        @endforeach
+                    @endif
                 </div>
             </div>
 

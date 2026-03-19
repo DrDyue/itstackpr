@@ -204,30 +204,17 @@ class DeviceTransferController extends Controller
 
         $validated = $this->validateInput($request, [
             'status' => ['required', Rule::in([DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED])],
-            'review_notes' => ['nullable', 'string'],
-            'room_id' => ['nullable', 'exists:rooms,id'],
-            'keep_current_room' => ['nullable', 'boolean'],
         ], [
             'status.required' => 'Izvelies lemumu parsutisanas pieteikumam.',
         ]);
 
-        if (
-            $validated['status'] === DeviceTransfer::STATUS_APPROVED
-            && ! $request->boolean('keep_current_room')
-            && blank($validated['room_id'] ?? null)
-        ) {
-            throw ValidationException::withMessages([
-                'room_id' => ['Izvelies jauno telpu vai atzime, ka ierice paliek esosaja telpa.'],
-            ]);
-        }
-
         $before = $deviceTransfer->only(['status', 'reviewed_by_user_id', 'review_notes']);
 
-        DB::transaction(function () use ($validated, $deviceTransfer, $reviewer, $request) {
+        DB::transaction(function () use ($validated, $deviceTransfer, $reviewer) {
             $deviceTransfer->update([
                 'status' => $validated['status'],
                 'reviewed_by_user_id' => $reviewer->id,
-                'review_notes' => $validated['review_notes'] ?: null,
+                'review_notes' => null,
             ]);
 
             if ($validated['status'] !== 'approved') {
@@ -245,14 +232,6 @@ class DeviceTransferController extends Controller
             $device->forceFill([
                 'assigned_to_id' => $deviceTransfer->transfered_to_id,
             ]);
-
-            if (! $request->boolean('keep_current_room') && filled($validated['room_id'] ?? null)) {
-                $room = Room::query()->find($validated['room_id']);
-                $device->forceFill([
-                    'room_id' => $room?->id,
-                    'building_id' => $room?->building_id,
-                ]);
-            }
 
             $device->save();
         });

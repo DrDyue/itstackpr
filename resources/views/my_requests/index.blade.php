@@ -159,51 +159,19 @@
                         </div>
 
                         @if ($item['type'] === 'transfer' && $item['is_incoming'] && $item['status'] === 'submitted')
-                            <div class="mt-5 rounded-[1.5rem] border border-emerald-200 bg-emerald-50/80 p-4" x-data="{ keepCurrent: true }">
+                            <div class="mt-5 rounded-[1.5rem] border border-emerald-200 bg-emerald-50/80 p-4">
                                 <div class="text-sm font-semibold text-emerald-900">Apstiprini ierices sanemsanu</div>
                                 <div class="mt-1 text-sm text-emerald-800">
                                     Vari atstat ierici esosaja telpa vai uzreiz noradit jaunu atrasanas vietu.
                                 </div>
 
-                                <form method="POST" action="{{ route('device-transfers.review', $item['model']) }}" class="mt-4 space-y-4">
+                                <form method="POST" action="{{ route('device-transfers.review', $item['model']) }}" class="mt-4">
                                     @csrf
                                     <input type="hidden" name="status" value="approved">
-
-                                    <label class="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-700">
-                                        <input type="checkbox" name="keep_current_room" value="1" checked x-model="keepCurrent" class="mt-1 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
-                                        <span>
-                                            Atstat ierici esosaja telpa
-                                            <span class="mt-1 block text-xs text-slate-500">
-                                                Paslaik: {{ $item['model']->device?->room?->room_number ?: 'telpa nav noradita' }}
-                                                @if ($item['model']->device?->building?->building_name)
-                                                    | {{ $item['model']->device->building->building_name }}
-                                                @endif
-                                            </span>
-                                        </span>
-                                    </label>
-
-                                    <div x-show="!keepCurrent" x-cloak>
-                                        <div class="mb-2 text-sm font-medium text-slate-700">Jauna telpa</div>
-                                        <x-searchable-select
-                                            name="room_id"
-                                            queryName="room_query_{{ $item['model']->id }}"
-                                            :options="$roomOptions"
-                                            :selected="old('room_id')"
-                                            :query="''"
-                                            identifier="incoming-transfer-room-{{ $item['model']->id }}"
-                                            placeholder="Izvelies telpu"
-                                        />
-                                    </div>
-
-                                    <label class="block">
-                                        <span class="mb-2 block text-sm font-medium text-slate-700">Piezimes</span>
-                                        <textarea name="review_notes" rows="2" class="crud-control" placeholder="Ja vajag, pievieno komentaru sanemsanai."></textarea>
-                                    </label>
-
                                     <div class="flex flex-wrap gap-2">
                                         <button type="submit" class="btn-create">
                                             <x-icon name="check" size="h-4 w-4" />
-                                            <span>Apstiprinat sanemsanu</span>
+                                            <span>Apstiprinat</span>
                                         </button>
                                     </div>
                                 </form>
@@ -211,13 +179,10 @@
                                 <form method="POST" action="{{ route('device-transfers.review', $item['model']) }}" class="mt-3">
                                     @csrf
                                     <input type="hidden" name="status" value="rejected">
-                                    <div class="flex flex-wrap gap-2">
-                                        <input type="text" name="review_notes" class="crud-control max-w-xl" placeholder="Komentars, ja noraidi pieteikumu">
-                                        <button type="submit" class="btn-danger">
-                                            <x-icon name="x-mark" size="h-4 w-4" />
-                                            <span>Noraidit</span>
-                                        </button>
-                                    </div>
+                                    <button type="submit" class="btn-danger">
+                                        <x-icon name="x-mark" size="h-4 w-4" />
+                                        <span>Noraidit</span>
+                                    </button>
                                 </form>
                             </div>
                         @endif
