@@ -589,7 +589,7 @@ window.repairBoard = (config) => ({
         }
 
         const repairName = repair.name ?? 'so remontu';
-        if (!window.confirm(`Vai tiesam gribat pabeigt remontu "${repairName}"?`)) {
+        if (!window.confirm(`Vai tiesam gribat pabeigt ierices remontu "${repairName}"?`)) {
             return;
         }
 
@@ -601,7 +601,7 @@ window.repairProcess = (config) => ({
     repairType: config.repairType,
     status: config.status,
     submitCompletion() {
-        if (!window.confirm('Vai tiesam gribat pabeigt remontu?')) {
+        if (!window.confirm('Vai tiesam gribat pabeigt so ierices remontu?')) {
             return;
         }
 

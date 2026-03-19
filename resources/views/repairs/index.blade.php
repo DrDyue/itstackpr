@@ -256,32 +256,32 @@
                                     </div>
                                 @endif
 
-                                <div class="repair-board-actions">
-                                    <a href="{{ route('repairs.edit', $repair) }}" class="repair-action repair-action-edit">
+                                <div class="repair-board-actions" draggable="false" @dragstart.prevent>
+                                    <a href="{{ route('repairs.edit', $repair) }}" class="repair-action repair-action-edit" draggable="false" @mousedown.stop @click.stop>
                                         <x-icon name="edit" size="h-4 w-4" />
                                         <span>Atvert</span>
                                     </a>
 
                                     @if ($canManageRepairs && $repair->status === 'waiting')
-                                        <button type="button" class="repair-action repair-action-start" @click="submitTransition({{ $repair->id }}, 'in-progress')">
+                                        <button type="button" class="repair-action repair-action-start" draggable="false" @mousedown.stop @click.stop="submitTransition({{ $repair->id }}, 'in-progress')">
                                             <x-icon name="stats" size="h-4 w-4" />
                                             <span>Sakt</span>
                                         </button>
                                     @endif
 
                                     @if ($canManageRepairs && $repair->status === 'in-progress')
-                                        <button type="button" class="repair-action repair-action-back" @click="submitTransition({{ $repair->id }}, 'waiting')">
+                                        <button type="button" class="repair-action repair-action-back" draggable="false" @mousedown.stop @click.stop="submitTransition({{ $repair->id }}, 'waiting')">
                                             <x-icon name="back" size="h-4 w-4" />
                                             <span>Atpakal gaida</span>
                                         </button>
-                                        <button type="button" class="repair-action repair-action-complete" @click="submitCompletion({ id: {{ $repair->id }}, name: @js($repair->device?->name ?: ('Remonts #' . $repair->id)) })">
+                                        <button type="button" class="repair-action repair-action-complete" draggable="false" @mousedown.stop @click.stop="submitCompletion({ id: {{ $repair->id }}, name: @js($repair->device?->name ?: ('Remonts #' . $repair->id)) })">
                                             <x-icon name="check-circle" size="h-4 w-4" />
                                             <span>Pabeigt</span>
                                         </button>
                                     @endif
 
                                     @if ($canManageRepairs && in_array($repair->status, ['completed', 'cancelled'], true))
-                                        <button type="button" class="repair-action repair-action-back" @click="submitTransition({{ $repair->id }}, 'in-progress')">
+                                        <button type="button" class="repair-action repair-action-back" draggable="false" @mousedown.stop @click.stop="submitTransition({{ $repair->id }}, 'in-progress')">
                                             <x-icon name="back" size="h-4 w-4" />
                                             <span>Atpakal procesa</span>
                                         </button>

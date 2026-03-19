@@ -171,6 +171,8 @@ class AuthAndRequestFlowsTest extends TestCase
             'status' => 'waiting',
             'accepted_by' => $admin->id,
             'request_id' => null,
+            'start_date' => null,
+            'end_date' => null,
         ]);
     }
 
@@ -276,6 +278,8 @@ class AuthAndRequestFlowsTest extends TestCase
             'accepted_by' => $admin->id,
             'request_id' => $repairRequestId,
             'status' => 'waiting',
+            'start_date' => null,
+            'end_date' => null,
         ]);
         $this->assertDatabaseHas('devices', [
             'id' => $device->id,

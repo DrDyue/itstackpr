@@ -177,6 +177,12 @@ class RepairRequestController extends Controller
                     'status' => 'waiting',
                     'repair_type' => $validated['repair_type'] ?: 'internal',
                     'priority' => $validated['priority'] ?: 'medium',
+                    'start_date' => null,
+                    'end_date' => null,
+                    'cost' => null,
+                    'vendor_name' => null,
+                    'vendor_contact' => null,
+                    'invoice_number' => null,
                     'request_id' => $repairRequest->id,
                 ]);
 
