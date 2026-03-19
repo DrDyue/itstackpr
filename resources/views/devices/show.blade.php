@@ -1,4 +1,8 @@
 <x-app-layout>
+    @php
+        $deviceMeta = collect([$device->manufacturer, $device->model])->filter(fn ($value) => filled($value))->implode(' | ');
+    @endphp
+
     <section class="app-shell max-w-7xl">
         <div class="page-hero">
             <div class="page-hero-grid">
@@ -50,6 +54,92 @@
                 </div>
             </div>
         </div>
+
+        <section class="surface-card p-6">
+            <div class="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+                <div class="flex flex-col gap-5 md:flex-row">
+                    <div class="shrink-0">
+                        @if ($deviceImageUrl)
+                            <img src="{{ $deviceImageUrl }}" alt="{{ $device->name }}" class="h-44 w-44 rounded-[1.75rem] border border-slate-200 object-cover">
+                        @else
+                            <div class="flex h-44 w-44 items-center justify-center rounded-[1.75rem] border border-dashed border-slate-300 bg-slate-50 text-slate-400">
+                                <x-icon name="device" size="h-10 w-10" />
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="min-w-0 flex-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
+                            @if ($device->activeRepair)
+                                <span class="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800">
+                                    <x-icon name="repair" size="h-3.5 w-3.5" />
+                                    <span>Remonts: {{ $repairStatusLabel }}</span>
+                                </span>
+                            @endif
+                            <span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
+                                <x-icon name="type" size="h-3.5 w-3.5" />
+                                <span>{{ $device->type?->type_name ?: 'Bez tipa' }}</span>
+                            </span>
+                        </div>
+
+                        <div class="mt-4 grid gap-4 md:grid-cols-2">
+                            <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+                                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Identitate</div>
+                                <div class="mt-3 space-y-2 text-sm text-slate-700">
+                                    <div><strong class="text-slate-900">Kods:</strong> {{ $device->code ?: '-' }}</div>
+                                    <div><strong class="text-slate-900">Nosaukums:</strong> {{ $device->name }}</div>
+                                    <div><strong class="text-slate-900">Razotajs un modelis:</strong> {{ $deviceMeta !== '' ? $deviceMeta : '-' }}</div>
+                                    <div><strong class="text-slate-900">Serijas numurs:</strong> {{ $device->serial_number ?: '-' }}</div>
+                                </div>
+                            </div>
+                            <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+                                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Piesaiste</div>
+                                <div class="mt-3 space-y-2 text-sm text-slate-700">
+                                    <div><strong class="text-slate-900">Lietotajs:</strong> {{ $device->assignedTo?->full_name ?: 'Nav pieskirts' }}</div>
+                                    <div><strong class="text-slate-900">Eka:</strong> {{ $device->building?->building_name ?: 'Nav noradita' }}</div>
+                                    <div><strong class="text-slate-900">Telpa:</strong> {{ $device->room?->room_number ?: 'Nav noradita' }}@if ($device->room?->room_name) | {{ $device->room->room_name }} @endif</div>
+                                    <div><strong class="text-slate-900">Izveidoja:</strong> {{ $device->createdBy?->full_name ?: 'Sistema' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="rounded-[1.5rem] border border-slate-200 bg-white p-5">
+                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Datumi un finanses</div>
+                        <div class="mt-3 space-y-2 text-sm text-slate-700">
+                            <div><strong class="text-slate-900">Iegades datums:</strong> {{ $device->purchase_date?->format('d.m.Y') ?: '-' }}</div>
+                            <div><strong class="text-slate-900">Iegades cena:</strong> {{ $device->purchase_price !== null ? number_format((float) $device->purchase_price, 2, '.', ' ') . ' EUR' : '-' }}</div>
+                            <div><strong class="text-slate-900">Garantija lidz:</strong> {{ $device->warranty_until?->format('d.m.Y') ?: '-' }}</div>
+                            <div><strong class="text-slate-900">Izveidots:</strong> {{ $device->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
+                        </div>
+                    </div>
+
+                    @if (! $canManageDevices)
+                        <div class="rounded-[1.5rem] border border-slate-200 bg-white p-5">
+                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ka ierice nonaca pie tevis</div>
+                            <div class="mt-3 text-sm leading-6 text-slate-700">{{ $originLabel }}</div>
+                        </div>
+                    @endif
+
+                    @if ($requestAvailability['reason'])
+                        <div class="rounded-[1.5rem] border border-amber-200 bg-amber-50 p-5">
+                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">Svarigs ierobezojums</div>
+                            <div class="mt-3 text-sm leading-6 text-amber-900">{{ $requestAvailability['reason'] }}</div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            @if ($device->notes)
+                <div class="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+                    <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Piezimes</div>
+                    <div class="mt-3 text-sm leading-6 text-slate-700">{{ $device->notes }}</div>
+                </div>
+            @endif
+        </section>
 
         @if (! $canManageDevices)
             <div class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
