@@ -71,7 +71,6 @@
                 <table class="min-w-full text-sm">
                     <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
                         <tr>
-                            <th class="px-4 py-3 text-left">ID</th>
                             <th class="px-4 py-3 text-left">Nosaukums</th>
                             <th class="px-4 py-3 text-left">Resursi</th>
                             <th class="px-4 py-3 text-left">Pilseta</th>
@@ -85,7 +84,6 @@
                     <tbody class="divide-y divide-slate-100">
                         @forelse ($buildings as $building)
                             <tr class="hover:bg-slate-50">
-                                <td class="px-4 py-3">{{ $building->id }}</td>
                                 <td class="px-4 py-3 font-medium text-slate-900">{{ $building->building_name }}</td>
                                 <td class="px-4 py-3 text-slate-600">
                                     <div>Telpas: {{ $building->rooms_count }}</div>
@@ -109,7 +107,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="px-4 py-8 text-center text-slate-500">Ekas vel nav pievienotas.</td>
+                                <td colspan="8" class="px-4 py-8 text-center text-slate-500">Ekas vel nav pievienotas.</td>
                             </tr>
                         @endforelse
                     </tbody>
