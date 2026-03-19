@@ -21,16 +21,30 @@ class UserRequestCenterController extends Controller
     public function index(Request $request)
     {
         $user = $this->requireRegularUser();
+        $availableStatuses = array_keys($this->requestStatusLabels());
+        $availableTypes = array_keys($this->typeLabels());
+        $statusFilterTouched = $request->has('statuses_filter');
+        $typeFilterTouched = $request->has('types_filter');
+        $selectedStatuses = collect($request->query('statuses', $statusFilterTouched ? [] : $availableStatuses))
+            ->map(fn ($value) => (string) $value)
+            ->filter(fn (string $value) => in_array($value, $availableStatuses, true))
+            ->values()
+            ->all();
+        $selectedTypes = collect($request->query('types', $typeFilterTouched ? [] : $availableTypes))
+            ->map(fn ($value) => (string) $value)
+            ->filter(fn (string $value) => in_array($value, $availableTypes, true))
+            ->values()
+            ->all();
 
         $filters = [
             'q' => trim((string) $request->query('q', '')),
-            'status' => trim((string) $request->query('status', '')),
-            'type' => trim((string) $request->query('type', '')),
+            'statuses' => $selectedStatuses === [] ? $availableStatuses : $selectedStatuses,
+            'types' => $selectedTypes === [] ? $availableTypes : $selectedTypes,
         ];
 
         $items = $this->requestItems($user)
-            ->when($filters['status'] !== '' && in_array($filters['status'], ['submitted', 'approved', 'rejected'], true), fn (Collection $collection) => $collection->where('status', $filters['status']))
-            ->when($filters['type'] !== '' && in_array($filters['type'], ['repair', 'writeoff', 'transfer'], true), fn (Collection $collection) => $collection->where('type', $filters['type']))
+            ->when(count($filters['statuses']) !== count($availableStatuses), fn (Collection $collection) => $collection->whereIn('status', $filters['statuses']))
+            ->when(count($filters['types']) !== count($availableTypes), fn (Collection $collection) => $collection->whereIn('type', $filters['types']))
             ->when($filters['q'] !== '', function (Collection $collection) use ($filters) {
                 $term = mb_strtolower($filters['q']);
 

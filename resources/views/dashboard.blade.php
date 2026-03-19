@@ -50,28 +50,43 @@
                                 Te redzi jaunakos remonta, norakstisanas un nodosanas pieteikumus, kas saistiti ar tevi.
                             </p>
                         </div>
-                        <a href="{{ route('my-requests.index') }}" class="btn-view">
+                    </div>
+
+                    <div class="mt-4 grid gap-3 lg:grid-cols-[auto_1fr] lg:items-stretch">
+                        <a href="{{ route('my-requests.index') }}" class="btn-view h-full min-h-[7.75rem] justify-center px-5">
                             <x-icon name="view" size="h-4 w-4" />
                             <span>Visi pieteikumi</span>
                         </a>
-                    </div>
 
-                    <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                        <div class="rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3">
-                            <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Kopa</div>
-                            <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $userRequestSummary['total'] }}</div>
-                        </div>
-                        <div class="rounded-[1.25rem] border border-sky-200 bg-sky-50 px-4 py-3">
-                            <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">Gaida</div>
-                            <div class="mt-2 text-2xl font-semibold text-sky-900">{{ $userRequestSummary['submitted'] }}</div>
-                        </div>
-                        <div class="rounded-[1.25rem] border border-emerald-200 bg-emerald-50 px-4 py-3">
-                            <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">Apstiprinati</div>
-                            <div class="mt-2 text-2xl font-semibold text-emerald-900">{{ $userRequestSummary['approved'] }}</div>
-                        </div>
-                        <div class="rounded-[1.25rem] border border-rose-200 bg-rose-50 px-4 py-3">
-                            <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-700">Noraiditi</div>
-                            <div class="mt-2 text-2xl font-semibold text-rose-900">{{ $userRequestSummary['rejected'] }}</div>
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <div class="rounded-[1.15rem] border border-slate-200 bg-slate-50 px-3.5 py-3">
+                                <div class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                    <x-icon name="repair-request" size="h-3.5 w-3.5" />
+                                    <span>Kopa</span>
+                                </div>
+                                <div class="mt-2 text-xl font-semibold text-slate-900">{{ $userRequestSummary['total'] }}</div>
+                            </div>
+                            <div class="rounded-[1.15rem] border border-sky-200 bg-sky-50 px-3.5 py-3">
+                                <div class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">
+                                    <x-icon name="clock" size="h-3.5 w-3.5" />
+                                    <span>Gaida</span>
+                                </div>
+                                <div class="mt-2 text-xl font-semibold text-sky-900">{{ $userRequestSummary['submitted'] }}</div>
+                            </div>
+                            <div class="rounded-[1.15rem] border border-emerald-200 bg-emerald-50 px-3.5 py-3">
+                                <div class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">
+                                    <x-icon name="check-circle" size="h-3.5 w-3.5" />
+                                    <span>Apstiprinati</span>
+                                </div>
+                                <div class="mt-2 text-xl font-semibold text-emerald-900">{{ $userRequestSummary['approved'] }}</div>
+                            </div>
+                            <div class="rounded-[1.15rem] border border-rose-200 bg-rose-50 px-3.5 py-3">
+                                <div class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-700">
+                                    <x-icon name="x-circle" size="h-3.5 w-3.5" />
+                                    <span>Noraiditi</span>
+                                </div>
+                                <div class="mt-2 text-xl font-semibold text-rose-900">{{ $userRequestSummary['rejected'] }}</div>
+                            </div>
                         </div>
                     </div>
 

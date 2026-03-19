@@ -32,21 +32,10 @@
             </div>
         </div>
 
-        @php
-            $statusOptions = collect($statusLabels)->map(fn ($label, $value) => [
-                'value' => $value,
-                'label' => $label,
-                'search' => $label,
-            ])->values();
-            $typeOptions = collect($typeLabels)->map(fn ($label, $value) => [
-                'value' => $value,
-                'label' => $label,
-                'search' => $label,
-            ])->values();
-        @endphp
-
         <section class="surface-card p-6">
-            <form method="GET" class="grid gap-4 xl:grid-cols-[1.3fr_0.8fr_0.8fr_auto]">
+            <form method="GET" class="grid gap-5 xl:grid-cols-[1.3fr_1fr_auto]">
+                <input type="hidden" name="statuses_filter" value="1">
+                <input type="hidden" name="types_filter" value="1">
                 <label class="block">
                     <span class="mb-2 block text-sm font-medium text-slate-700">Meklet</span>
                     <input
@@ -58,30 +47,38 @@
                     >
                 </label>
 
-                <div>
-                    <span class="mb-2 block text-sm font-medium text-slate-700">Statuss</span>
-                    <x-searchable-select
-                        name="status"
-                        queryName="status_query"
-                        :options="$statusOptions"
-                        :selected="$filters['status']"
-                        :query="$statusLabels[$filters['status']] ?? ''"
-                        identifier="my-requests-status"
-                        placeholder="Visi statusi"
-                    />
-                </div>
+                <div class="grid gap-4 lg:grid-cols-2">
+                    <div>
+                        <span class="mb-2 block text-sm font-medium text-slate-700">Statuss</span>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach ($statusLabels as $value => $label)
+                                @php $selected = in_array($value, $filters['statuses'], true); @endphp
+                                <label class="{{ $selected ? 'border-sky-300 bg-sky-50 text-sky-900 shadow-[0_16px_36px_-28px_rgba(14,165,233,0.6)]' : 'border-slate-200 bg-white text-slate-600' }} inline-flex cursor-pointer items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-semibold transition hover:border-sky-200 hover:text-slate-900">
+                                    <input type="checkbox" name="statuses[]" value="{{ $value }}" class="sr-only" @checked($selected)>
+                                    <span class="inline-flex h-5 w-5 items-center justify-center rounded-full {{ $selected ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-400' }}">
+                                        <x-icon :name="$selected ? 'check' : 'plus'" size="h-3.5 w-3.5" />
+                                    </span>
+                                    <span>{{ $label }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
 
-                <div>
-                    <span class="mb-2 block text-sm font-medium text-slate-700">Tips</span>
-                    <x-searchable-select
-                        name="type"
-                        queryName="type_query"
-                        :options="$typeOptions"
-                        :selected="$filters['type']"
-                        :query="$typeLabels[$filters['type']] ?? ''"
-                        identifier="my-requests-type"
-                        placeholder="Visi tipi"
-                    />
+                    <div>
+                        <span class="mb-2 block text-sm font-medium text-slate-700">Tips</span>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach ($typeLabels as $value => $label)
+                                @php $selected = in_array($value, $filters['types'], true); @endphp
+                                <label class="{{ $selected ? 'border-emerald-300 bg-emerald-50 text-emerald-900 shadow-[0_16px_36px_-28px_rgba(16,185,129,0.55)]' : 'border-slate-200 bg-white text-slate-600' }} inline-flex cursor-pointer items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-semibold transition hover:border-emerald-200 hover:text-slate-900">
+                                    <input type="checkbox" name="types[]" value="{{ $value }}" class="sr-only" @checked($selected)>
+                                    <span class="inline-flex h-5 w-5 items-center justify-center rounded-full {{ $selected ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-400' }}">
+                                        <x-icon :name="$selected ? 'check' : 'plus'" size="h-3.5 w-3.5" />
+                                    </span>
+                                    <span>{{ $label }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
 
                 <div class="flex flex-wrap items-end gap-2">
