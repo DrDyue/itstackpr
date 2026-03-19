@@ -2070,8 +2070,20 @@ tbody td {
     @apply mt-1 text-xs text-slate-500;
 }
 
+.dash-table-subline-wrap {
+    @apply whitespace-normal leading-5 text-slate-500;
+}
+
 .dash-table-link {
     @apply text-sm font-semibold text-sky-700 hover:text-sky-900;
+}
+
+.dash-table-nowrap {
+    white-space: nowrap;
+}
+
+.dash-table-action-btn {
+    @apply px-3 py-2 text-xs;
 }
 
 .dash-empty-block {

@@ -136,6 +136,62 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_device_create_form_preselects_current_admin_and_default_warehouse_room(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-create-defaults@example.com');
+
+        $response = $this->actingAs($admin)
+            ->get(route('devices.create'))
+            ->assertOk();
+
+        $warehouseRoomId = DB::table('rooms')
+            ->where('room_name', 'Noliktava')
+            ->value('id');
+
+        $this->assertNotNull($warehouseRoomId);
+        $this->assertDatabaseHas('buildings', [
+            'id' => DB::table('rooms')->where('id', $warehouseRoomId)->value('building_id'),
+        ]);
+
+        $content = $response->getContent();
+
+        $this->assertIsString($content);
+        $this->assertMatchesRegularExpression('/<option value="' . preg_quote((string) $admin->id, '/') . '"[^>]*selected/', $content);
+        $this->assertMatchesRegularExpression('/<option value="' . preg_quote((string) $warehouseRoomId, '/') . '"[^>]*selected/', $content);
+    }
+
+    public function test_admin_can_create_device_without_explicit_assignee_or_room_and_defaults_are_applied(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-store-defaults@example.com');
+        $typeId = DB::table('device_types')->insertGetId([
+            'type_name' => 'Dators',
+            'category' => 'Darba vieta',
+            'description' => 'Tests',
+            'created_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('devices.store'), [
+                'code' => 'DEV-STORE-DEFAULTS',
+                'name' => 'Noklusetais dators',
+                'device_type_id' => $typeId,
+                'model' => 'OptiPlex 7000',
+                'status' => Device::STATUS_ACTIVE,
+            ])
+            ->assertRedirect(route('devices.index'));
+
+        $device = Device::query()->where('code', 'DEV-STORE-DEFAULTS')->first();
+
+        $this->assertNotNull($device);
+        $this->assertSame($admin->id, $device->assigned_to_id);
+        $this->assertNotNull($device->room_id);
+        $this->assertNotNull($device->building_id);
+        $this->assertSame(
+            'Noliktava',
+            DB::table('rooms')->where('id', $device->room_id)->value('room_name')
+        );
+    }
+
     public function test_manager_can_send_device_to_repair_from_devices_table_action(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-repair-action@example.com');
@@ -564,6 +620,40 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->assertTrue(Schema::hasTable('audit_log'));
     }
 
+    public function test_dashboard_device_table_shows_serial_number_job_title_and_device_metadata(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'dashboard-metadata-admin@example.com');
+        $assignee = $this->createUser(role: User::ROLE_USER, email: 'dashboard-metadata-user@example.com');
+        $device = $this->createDevice($assignee->id, Device::STATUS_ACTIVE, 'DEV-DASH-META');
+
+        DB::table('users')->where('id', $assignee->id)->update([
+            'full_name' => 'Maris Vitols',
+            'job_title' => null,
+        ]);
+
+        DB::table('device_types')->where('id', $device->device_type_id)->update([
+            'type_name' => 'Dators',
+        ]);
+
+        $device->update([
+            'name' => 'Darba stacija',
+            'manufacturer' => 'HP',
+            'model' => 'EliteDesk 800',
+            'serial_number' => 'SN-HP-800',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertOk();
+
+        $content = $response->getContent();
+
+        $this->assertIsString($content);
+        $this->assertMatchesRegularExpression('/DEV-DASH-META.*SN-HP-800/s', $content);
+        $this->assertMatchesRegularExpression('/Darba stacija.*Dators.*HP EliteDesk 800/s', $content);
+        $this->assertMatchesRegularExpression('/Maris Vitols.*Nav amata/s', $content);
+    }
+
     public function test_regular_user_cannot_view_foreign_device_asset(): void
     {
         Storage::fake('public');
@@ -676,6 +766,27 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertOk()
             ->assertSee('Testa ierice DEV-TYPE-ONE')
             ->assertDontSee('Testa ierice DEV-TYPE-TWO');
+    }
+
+    public function test_active_device_update_requires_assignee_and_room(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-update-required@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-UPDATE-REQ');
+
+        $this->actingAs($admin)
+            ->from(route('devices.edit', $device))
+            ->put(route('devices.update', $device), [
+                'code' => $device->code,
+                'name' => $device->name,
+                'device_type_id' => $device->device_type_id,
+                'model' => $device->model,
+                'status' => Device::STATUS_ACTIVE,
+                'building_id' => $device->building_id,
+                'room_id' => '',
+                'assigned_to_id' => '',
+            ])
+            ->assertRedirect(route('devices.edit', $device))
+            ->assertSessionHasErrors(['assigned_to_id', 'room_id']);
     }
 
     private function createUser(string $role, ?string $email = null): User

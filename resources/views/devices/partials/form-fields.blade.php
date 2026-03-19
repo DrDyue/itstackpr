@@ -1,6 +1,9 @@
 @php
     $current = $device;
     $isWrittenOff = ($current?->status ?? null) === \App\Models\Device::STATUS_WRITEOFF;
+    $selectedAssignedToId = old('assigned_to_id', $current?->assigned_to_id ?? $defaultAssignedToId ?? null);
+    $selectedBuildingId = old('building_id', $current?->building_id ?? $defaultBuildingId ?? null);
+    $selectedRoomId = old('room_id', $current?->room_id ?? $defaultRoomId ?? null);
 @endphp
 
 <div class="grid gap-4 md:grid-cols-2">
@@ -42,14 +45,13 @@
         </select>
     </label>
     <label class="block">
-        <span class="crud-label">Pieskirtais lietotajs</span>
+        <span class="crud-label">Atbildiga persona *</span>
         @if ($isWrittenOff)
             <input type="hidden" name="assigned_to_id" value="">
         @endif
-        <select name="assigned_to_id" class="crud-control" @disabled($isWrittenOff)>
-            <option value="">Nav pieskirts</option>
+        <select name="assigned_to_id" class="crud-control" required @disabled($isWrittenOff)>
             @foreach ($users as $assignedUser)
-                <option value="{{ $assignedUser->id }}" @selected(old('assigned_to_id', $current?->assigned_to_id) == $assignedUser->id)>{{ $assignedUser->full_name }}</option>
+                <option value="{{ $assignedUser->id }}" @selected($selectedAssignedToId == $assignedUser->id)>{{ $assignedUser->full_name }}</option>
             @endforeach
         </select>
     </label>
@@ -59,21 +61,19 @@
             <input type="hidden" name="building_id" value="">
         @endif
         <select name="building_id" class="crud-control" @disabled($isWrittenOff)>
-            <option value="">Nav noradita</option>
             @foreach ($buildings as $building)
-                <option value="{{ $building->id }}" @selected(old('building_id', $current?->building_id) == $building->id)>{{ $building->building_name }}</option>
+                <option value="{{ $building->id }}" @selected($selectedBuildingId == $building->id)>{{ $building->building_name }}</option>
             @endforeach
         </select>
     </label>
     <label class="block">
-        <span class="crud-label">Telpa</span>
+        <span class="crud-label">Telpa *</span>
         @if ($isWrittenOff)
             <input type="hidden" name="room_id" value="">
         @endif
-        <select name="room_id" class="crud-control" @disabled($isWrittenOff)>
-            <option value="">Nav noradita</option>
+        <select name="room_id" class="crud-control" required @disabled($isWrittenOff)>
             @foreach ($rooms as $room)
-                <option value="{{ $room->id }}" @selected(old('room_id', $current?->room_id) == $room->id)>{{ $room->building?->building_name }} / {{ $room->room_number }}</option>
+                <option value="{{ $room->id }}" @selected($selectedRoomId == $room->id)>{{ $room->building?->building_name }} / {{ $room->room_number }}{{ $room->room_name ? ' - ' . $room->room_name : '' }}</option>
             @endforeach
         </select>
     </label>

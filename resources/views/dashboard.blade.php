@@ -125,27 +125,45 @@
                             </thead>
                             <tbody class="dash-table-body">
                                 @forelse ($dashboardDevices as $device)
+                                    @php
+                                        $manufacturer = trim((string) ($device->manufacturer ?? ''));
+                                        $model = trim((string) ($device->model ?? ''));
+                                        $typeName = $device->type?->type_name ?: 'Bez tipa';
+                                        $brandModel = $model !== ''
+                                            ? (
+                                                $manufacturer !== '' && ! \Illuminate\Support\Str::startsWith(
+                                                    mb_strtolower($model),
+                                                    mb_strtolower($manufacturer)
+                                                )
+                                                    ? trim($manufacturer . ' ' . $model)
+                                                    : $model
+                                            )
+                                            : ($manufacturer !== '' ? $manufacturer : 'Razotajs un modelis nav noradits');
+                                        $assignedJobTitle = $device->assignedTo?->job_title ?: 'Nav amata';
+                                        $roomLabel = collect([
+                                            $device->room?->room_number,
+                                            $device->room?->room_name,
+                                        ])->filter()->implode(' | ');
+                                    @endphp
                                     <tr>
                                         <td>
                                             <div class="dash-table-cell-strong">{{ $device->code ?: '-' }}</div>
-                                            <div class="dash-table-subline">{{ $device->type?->type_name ?: 'Bez tipa' }}</div>
+                                            <div class="dash-table-subline">{{ $device->serial_number ?: 'Nav serijas numura' }}</div>
                                         </td>
                                         <td>
                                             <a href="{{ route('devices.show', $device) }}" class="dash-table-link">{{ $device->name }}</a>
-                                            <div class="dash-table-subline">{{ $device->model ?: '-' }}</div>
+                                            <div class="dash-table-subline">{{ $typeName }}</div>
+                                            <div class="dash-table-subline dash-table-subline-wrap">{{ $brandModel }}</div>
                                         </td>
                                         <td>
-                                            <div class="dash-table-cell-strong">{{ $device->building?->building_name ?: '-' }}</div>
+                                            <div class="dash-table-cell-strong dash-table-nowrap">{{ $device->building?->building_name ?: '-' }}</div>
                                             <div class="dash-table-subline">
-                                                {{ $device->room?->room_number ?: '-' }}
-                                                @if ($device->room?->room_name)
-                                                    | {{ $device->room->room_name }}
-                                                @endif
+                                                {{ $roomLabel !== '' ? $roomLabel : 'Telpa nav noradita' }}
                                             </div>
                                         </td>
                                         <td>
                                             <div class="dash-table-cell-strong">{{ $device->assignedTo?->full_name ?: 'Nav pieskirts' }}</div>
-                                            <div class="dash-table-subline">{{ $device->serial_number ?: 'Bez serijas numura' }}</div>
+                                            <div class="dash-table-subline">{{ $assignedJobTitle }}</div>
                                         </td>
                                         <td>
                                             <x-status-pill context="device" :value="$device->status" />
@@ -158,7 +176,7 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <a href="{{ route('devices.show', $device) }}" class="btn-view">
+                                            <a href="{{ route('devices.show', $device) }}" class="btn-view dash-table-action-btn">
                                                 <x-icon name="view" size="h-4 w-4" />
                                                 <span>Skatit</span>
                                             </a>

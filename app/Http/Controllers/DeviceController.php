@@ -23,6 +23,9 @@ use Illuminate\Validation\ValidationException;
 class DeviceController extends Controller
 {
     private const STATUSES = [Device::STATUS_ACTIVE, Device::STATUS_REPAIR, Device::STATUS_WRITEOFF];
+    private const DEFAULT_WAREHOUSE_ROOM_NAME = 'Noliktava';
+    private const DEFAULT_WAREHOUSE_ROOM_NUMBER_PREFIX = 'NOL-';
+    private const DEFAULT_BUILDING_NAME = 'Ludzes novada pasvaldiba';
 
     public function index(Request $request)
     {
@@ -331,6 +334,9 @@ class DeviceController extends Controller
 
     private function formData(): array
     {
+        $warehouseRoom = $this->ensureWarehouseRoom();
+        $user = $this->user();
+
         return [
             'types' => DeviceType::orderBy('type_name')->get(),
             'buildings' => Building::orderBy('building_name')->get(),
@@ -338,11 +344,33 @@ class DeviceController extends Controller
             'users' => User::active()->orderBy('full_name')->get(),
             'statuses' => self::STATUSES,
             'statusLabels' => $this->statusLabels(),
+            'defaultAssignedToId' => $user?->id,
+            'defaultRoomId' => $warehouseRoom->id,
+            'defaultBuildingId' => $warehouseRoom->building_id,
         ];
     }
 
     private function validatedData(Request $request, ?Device $device = null): array
     {
+        if (! $device && ! $request->filled('assigned_to_id')) {
+            $request->merge([
+                'assigned_to_id' => $this->user()?->id,
+            ]);
+        }
+
+        if (! $device && ! $request->filled('room_id')) {
+            $warehouseRoom = $this->ensureWarehouseRoom();
+
+            $request->merge([
+                'room_id' => $warehouseRoom->id,
+                'building_id' => $warehouseRoom->building_id,
+            ]);
+        }
+
+        $requiresAssignmentAndRoom = Device::normalizeStatus(
+            (string) $request->input('status', $device?->status ?? Device::STATUS_ACTIVE)
+        ) !== Device::STATUS_WRITEOFF;
+
         $data = $this->validateInput(
             $request,
             [
@@ -352,8 +380,8 @@ class DeviceController extends Controller
                 'model' => ['required', 'string', 'max:100'],
                 'status' => ['required', Rule::in(self::STATUSES)],
                 'building_id' => ['nullable', 'exists:buildings,id'],
-                'room_id' => ['nullable', 'exists:rooms,id'],
-                'assigned_to_id' => ['nullable', 'exists:users,id'],
+                'room_id' => [Rule::requiredIf($requiresAssignmentAndRoom), 'nullable', 'exists:rooms,id'],
+                'assigned_to_id' => [Rule::requiredIf($requiresAssignmentAndRoom), 'nullable', 'exists:users,id'],
                 'purchase_date' => ['nullable', 'date'],
                 'purchase_price' => ['nullable', 'numeric', 'min:0'],
                 'warranty_until' => ['nullable', 'date'],
@@ -368,27 +396,35 @@ class DeviceController extends Controller
                 'device_type_id.required' => 'Izvelies ierices tipu.',
                 'model.required' => 'Noradi ierices modeli.',
                 'status.required' => 'Izvelies ierices statusu.',
+                'assigned_to_id.required' => 'Izvelies atbildigo personu.',
+                'room_id.required' => 'Izvelies telpu.',
                 'purchase_price.min' => 'Iegades cenai jabut 0 vai lielakai.',
             ]
         );
+
+        foreach ([
+            'building_id',
+            'room_id',
+            'assigned_to_id',
+            'purchase_date',
+            'purchase_price',
+            'warranty_until',
+            'serial_number',
+            'manufacturer',
+            'notes',
+        ] as $field) {
+            $data[$field] = $data[$field] ?? null;
+        }
 
         foreach (['building_id', 'room_id', 'assigned_to_id'] as $field) {
             $data[$field] = $data[$field] ?: null;
         }
 
-        $data['purchase_date'] = $data['purchase_date'] ?: null;
-
         if (($data['room_id'] ?? null) !== null) {
             $room = Room::query()->find($data['room_id']);
 
-            if ($room && ($data['building_id'] ?? null) === null) {
+            if ($room) {
                 $data['building_id'] = $room->building_id;
-            }
-
-            if ($room && ($data['building_id'] ?? null) !== null && (int) $room->building_id !== (int) $data['building_id']) {
-                throw ValidationException::withMessages([
-                    'room_id' => ['Izveleta telpa nepieder noraditajai ekai.'],
-                ]);
             }
         }
 
@@ -423,6 +459,96 @@ class DeviceController extends Controller
         $data['device_image_url'] = $device?->device_image_url;
 
         return $data;
+    }
+
+    private function ensureWarehouseRoom(): Room
+    {
+        $warehouseRoom = Room::query()
+            ->with('building')
+            ->get()
+            ->first(function (Room $room) {
+                return $this->isWarehouseLabel($room->room_name)
+                    || $this->isWarehouseLabel($room->room_number)
+                    || $this->isWarehouseLabel($room->notes);
+            });
+
+        if ($warehouseRoom) {
+            return $warehouseRoom;
+        }
+
+        $building = $this->preferredWarehouseBuilding();
+
+        return Room::query()->create([
+            'building_id' => $building->id,
+            'floor_number' => 1,
+            'room_number' => $this->nextWarehouseRoomNumber($building->id),
+            'room_name' => self::DEFAULT_WAREHOUSE_ROOM_NAME,
+            'user_id' => $this->user()?->id,
+            'department' => 'Inventars',
+            'notes' => 'Automatiski izveidota nokluseta noliktavas telpa.',
+        ])->load('building');
+    }
+
+    private function preferredWarehouseBuilding(): Building
+    {
+        $preferredBuilding = Building::query()
+            ->orderBy('building_name')
+            ->get()
+            ->first(fn (Building $building) => $this->matchesPreferredBuildingName($building->building_name));
+
+        if ($preferredBuilding) {
+            return $preferredBuilding;
+        }
+
+        $existingBuilding = Building::query()->orderBy('building_name')->first();
+
+        if ($existingBuilding) {
+            return $existingBuilding;
+        }
+
+        return Building::query()->create([
+            'building_name' => self::DEFAULT_BUILDING_NAME,
+            'city' => 'Ludza',
+            'total_floors' => 1,
+            'notes' => 'Automatiski izveidota nokluseta eka noliktavas telpai.',
+        ]);
+    }
+
+    private function nextWarehouseRoomNumber(int $buildingId): string
+    {
+        $existingNumbers = Room::query()
+            ->where('building_id', $buildingId)
+            ->pluck('room_number')
+            ->map(fn (mixed $value) => trim((string) $value))
+            ->filter()
+            ->all();
+
+        $sequence = 1;
+
+        do {
+            $candidate = self::DEFAULT_WAREHOUSE_ROOM_NUMBER_PREFIX . str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
+            $sequence++;
+        } while (in_array($candidate, $existingNumbers, true));
+
+        return $candidate;
+    }
+
+    private function isWarehouseLabel(?string $value): bool
+    {
+        if (! filled($value)) {
+            return false;
+        }
+
+        return str_contains(mb_strtolower(trim($value)), 'noliktav');
+    }
+
+    private function matchesPreferredBuildingName(?string $value): bool
+    {
+        if (! filled($value)) {
+            return false;
+        }
+
+        return str_contains(mb_strtolower(trim($value)), 'ludz');
     }
 
     private function trackedFields(): array
