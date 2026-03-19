@@ -136,29 +136,35 @@
                             </div>
                         </div>
 
-                        <form method="POST" action="{{ route('devices.user-room.update', $device) }}" class="mt-5 grid gap-4 lg:grid-cols-[1fr_auto]">
-                            @csrf
-                            <div>
-                                <x-searchable-select
-                                    name="room_id"
-                                    queryName="room_query"
-                                    :options="$roomOptions"
-                                    :selected="old('room_id', (string) $device->room_id)"
-                                    :query="''"
-                                    identifier="device-user-room"
-                                    placeholder="Izvelies telpu"
-                                />
-                                @error('room_id')
-                                    <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
-                                @enderror
+                        @if ($roomUpdateAvailability['allowed'])
+                            <form method="POST" action="{{ route('devices.user-room.update', $device) }}" class="mt-5 grid gap-4 lg:grid-cols-[1fr_auto]">
+                                @csrf
+                                <div>
+                                    <x-searchable-select
+                                        name="room_id"
+                                        queryName="room_query"
+                                        :options="$roomOptions"
+                                        :selected="old('room_id', (string) $device->room_id)"
+                                        :query="''"
+                                        identifier="device-user-room"
+                                        placeholder="Izvelies telpu"
+                                    />
+                                    @error('room_id')
+                                        <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="flex items-end">
+                                    <button type="submit" class="btn-create">
+                                        <x-icon name="check" size="h-4 w-4" />
+                                        <span>Atjaunot telpu</span>
+                                    </button>
+                                </div>
+                            </form>
+                        @else
+                            <div class="mt-5 rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+                                {{ $roomUpdateAvailability['reason'] }}
                             </div>
-                            <div class="flex items-end">
-                                <button type="submit" class="btn-create">
-                                    <x-icon name="check" size="h-4 w-4" />
-                                    <span>Atjaunot telpu</span>
-                                </button>
-                            </div>
-                        </form>
+                        @endif
                     </section>
                 </div>
 

@@ -191,7 +191,7 @@ class RepairRequestController extends Controller
 
                 $repair = $this->createRepairRecord([
                     'device_id' => $repairRequest->device_id,
-                    'issue_reported_by' => $repairRequest->responsible_user_id,
+                    'issue_reported_by' => null,
                     'accepted_by' => $manager->id,
                     'description' => $repairRequest->description,
                     'status' => 'waiting',

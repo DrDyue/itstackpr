@@ -256,6 +256,7 @@ class DeviceController extends Controller
         $pendingRepairRequest = $device->repairRequests->firstWhere('status', 'submitted');
         $pendingWriteoffRequest = $device->writeoffRequests->firstWhere('status', 'submitted');
         $pendingTransferRequest = $device->transfers->firstWhere('status', 'submitted');
+        $roomUpdateAvailability = $this->userRoomUpdateAvailability($device, $pendingRepairRequest, $pendingWriteoffRequest, $pendingTransferRequest);
 
         return view('devices.show', [
             'device' => $device,
@@ -281,6 +282,7 @@ class DeviceController extends Controller
                             ? 'Sai iericei jau ir gaidoss norakstisanas pieteikums.'
                             : ($pendingTransferRequest ? 'Sai iericei jau ir gaidoss nodosanas pieteikums.' : null))),
             ],
+            'roomUpdateAvailability' => $roomUpdateAvailability,
             'repairStatusLabel' => $this->repairStatusLabel($device->activeRepair?->status),
         ]);
     }
@@ -292,6 +294,16 @@ class DeviceController extends Controller
         abort_if($user->canManageRequests(), 403);
         abort_unless((int) $device->assigned_to_id === (int) $user->id, 403);
         abort_if($device->status === Device::STATUS_WRITEOFF, 403);
+
+        $device->loadMissing(['repairRequests', 'writeoffRequests', 'transfers', 'activeRepair']);
+        $pendingRepairRequest = $device->repairRequests->firstWhere('status', 'submitted');
+        $pendingWriteoffRequest = $device->writeoffRequests->firstWhere('status', 'submitted');
+        $pendingTransferRequest = $device->transfers->firstWhere('status', 'submitted');
+        $roomUpdateAvailability = $this->userRoomUpdateAvailability($device, $pendingRepairRequest, $pendingWriteoffRequest, $pendingTransferRequest);
+
+        if (! $roomUpdateAvailability['allowed']) {
+            return redirect()->route('devices.show', $device)->with('error', $roomUpdateAvailability['reason']);
+        }
 
         $validated = $this->validateInput($request, [
             'room_id' => ['nullable', 'exists:rooms,id'],
@@ -677,7 +689,7 @@ class DeviceController extends Controller
             DB::transaction(function () use ($device, &$repair, $before) {
                 $repair = $this->createRepairRecord([
                     'device_id' => $device->id,
-                    'issue_reported_by' => $device->assigned_to_id,
+                    'issue_reported_by' => null,
                     'accepted_by' => auth()->id(),
                     'description' => 'Ierice nodota remonta no iericu saraksta.',
                     'status' => 'waiting',
@@ -757,6 +769,42 @@ class DeviceController extends Controller
         ]);
 
         return ['level' => 'success', 'message' => 'Ierice parvietota uz citu telpu.'];
+    }
+
+    private function userRoomUpdateAvailability(Device $device, mixed $pendingRepairRequest, mixed $pendingWriteoffRequest, mixed $pendingTransferRequest): array
+    {
+        if ($device->status === Device::STATUS_REPAIR) {
+            return [
+                'allowed' => false,
+                'reason' => 'Ierices atrasanas vietu nevar mainit, kamer ierice ir remonta ar statusu "' . $this->repairStatusLabel($device->activeRepair?->status) . '".',
+            ];
+        }
+
+        if ($pendingRepairRequest) {
+            return [
+                'allowed' => false,
+                'reason' => 'Ierices atrasanas vietu nevar mainit, jo sai iericei ir gaidoss remonta pieteikums.',
+            ];
+        }
+
+        if ($pendingWriteoffRequest) {
+            return [
+                'allowed' => false,
+                'reason' => 'Ierices atrasanas vietu nevar mainit, jo sai iericei ir gaidoss norakstisanas pieteikums.',
+            ];
+        }
+
+        if ($pendingTransferRequest) {
+            return [
+                'allowed' => false,
+                'reason' => 'Ierices atrasanas vietu nevar mainit, jo sai iericei ir gaidoss nodosanas pieteikums.',
+            ];
+        }
+
+        return [
+            'allowed' => true,
+            'reason' => null,
+        ];
     }
 
     private function redirectAfterQuickAction(Device $device, string $level, string $message): RedirectResponse

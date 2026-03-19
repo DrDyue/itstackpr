@@ -115,7 +115,7 @@ abstract class Controller
             'full_name' => 'pilnais vards',
             'invoice_number' => 'rekina numurs',
             'is_active' => 'aktivitates statuss',
-            'issue_reported_by' => 'problemas pieteicejs',
+            'issue_reported_by' => 'izpilditajs',
             'job_title' => 'amats',
             'manufacturer' => 'razotajs',
             'model' => 'modelis',

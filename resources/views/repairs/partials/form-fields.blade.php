@@ -17,27 +17,34 @@
             <div class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
                 <div>
                     <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pamata informacija</div>
-                    <div class="mt-1 text-sm text-slate-500">Galvenie lauki par ierici, atbildigo personu un remonta saturu.</div>
+                    <div class="mt-1 text-sm text-slate-500">Galvenie lauki par ierici, remonta saturu un darba izpildi.</div>
                 </div>
                 <div class="mt-4 grid gap-4 md:grid-cols-2">
-                    <label class="block">
-                        <span class="crud-label">Ierice</span>
-                        <select name="device_id" class="crud-control" required>
-                            @foreach ($devices as $device)
-                                <option value="{{ $device->id }}" @selected(old('device_id', $currentRepair?->device_id ?? $preselectedDeviceId ?? null) == $device->id)>{{ $device->name }} ({{ $device->code ?: 'bez koda' }}){{ $device->assignedTo ? ' | ' . $device->assignedTo->full_name : '' }}{{ $device->room ? ' | telpa ' . $device->room->room_number : '' }}</option>
-                            @endforeach
-                        </select>
-                    </label>
+                    @if ($currentRepair)
+                        <div class="block">
+                            <span class="crud-label">Ierice</span>
+                            <input type="text" class="crud-control bg-slate-50 text-slate-600" value="{{ $currentRepair->device?->name ?: 'Ierice nav atrasta' }} ({{ $currentRepair->device?->code ?: 'bez koda' }})" readonly>
+                            <input type="hidden" name="device_id" value="{{ old('device_id', $currentRepair->device_id) }}">
+                            <div class="mt-2 text-xs text-slate-500">Esosam remontam ierici mainit nevar. Ja vajag citu ierici, atcel so remontu un izveido jaunu ierakstu.</div>
+                        </div>
+                    @else
+                        <label class="block">
+                            <span class="crud-label">Ierice</span>
+                            <select name="device_id" class="crud-control" required>
+                                @foreach ($devices as $device)
+                                    <option value="{{ $device->id }}" @selected(old('device_id', $currentRepair?->device_id ?? $preselectedDeviceId ?? null) == $device->id)>{{ $device->name }} ({{ $device->code ?: 'bez koda' }}){{ $device->assignedTo ? ' | ' . $device->assignedTo->full_name : '' }}{{ $device->room ? ' | telpa ' . $device->room->room_number : '' }}</option>
+                                @endforeach
+                            </select>
+                        </label>
+                    @endif
 
-                    <label class="block">
-                        <span class="crud-label">Pieteicejs / izpilditajs</span>
-                        <select name="issue_reported_by" class="crud-control">
-                            <option value="">Nav noradits</option>
-                            @foreach ($users as $repairUser)
-                                <option value="{{ $repairUser->id }}" @selected(old('issue_reported_by', $currentRepair?->issue_reported_by ?? $defaultExecutorId ?? null) == $repairUser->id)>{{ $repairUser->full_name }}</option>
-                            @endforeach
-                        </select>
-                    </label>
+                    @if ($currentRepair && $currentRepair->status !== 'waiting')
+                        <div class="block">
+                            <span class="crud-label">Izpilditajs</span>
+                            <input type="text" class="crud-control bg-slate-50 text-slate-600" value="{{ $currentRepair->executor?->full_name ?: 'Nav noradits' }}" readonly>
+                            <div class="mt-2 text-xs text-slate-500">Izpilditajs tiek pieskirts automatiski bridi, kad remonts no gaida pariet uz procesa statusu.</div>
+                        </div>
+                    @endif
 
                     <label class="block md:col-span-2">
                         <span class="crud-label">Apraksts</span>
@@ -49,7 +56,7 @@
             <div class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
                 <div>
                     <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta iestatijumi</div>
-                    <div class="mt-1 text-sm text-slate-500">Izvelies remonta tipu, prioritatei un izmaksu informaciju.</div>
+                    <div class="mt-1 text-sm text-slate-500">Izvelies remonta tipu, prioritati un izmaksu informaciju.</div>
                 </div>
                 <div class="mt-4 grid gap-4 md:grid-cols-2">
                     <div class="md:col-span-2">
@@ -79,16 +86,36 @@
                         </div>
                     </div>
 
-                    <label class="block">
+                    <div class="block md:col-span-2">
                         <span class="crud-label">Prioritate</span>
-                        <select name="priority" class="crud-control">
+                        <div class="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                             @foreach ($priorities as $priority)
-                                <option value="{{ $priority }}" @selected(old('priority', $currentRepair?->priority ?? 'medium') === $priority)>{{ $priorityLabels[$priority] }}</option>
+                                @php
+                                    $selectedPriority = old('priority', $currentRepair?->priority ?? 'medium') === $priority;
+                                    $priorityDotClass = match ($priority) {
+                                        'low' => 'bg-emerald-500',
+                                        'medium' => 'bg-sky-500',
+                                        'high' => 'bg-amber-500',
+                                        default => 'bg-rose-500',
+                                    };
+                                @endphp
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="priority" value="{{ $priority }}" class="sr-only" @checked($selectedPriority)>
+                                    <span class="flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm font-semibold transition {{ $selectedPriority ? 'border-slate-900 bg-slate-900 text-white shadow-[0_20px_40px_-30px_rgba(15,23,42,0.9)]' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900' }}">
+                                        <span class="inline-flex items-center gap-2">
+                                            <span class="inline-flex h-2.5 w-2.5 rounded-full {{ $priorityDotClass }}"></span>
+                                            <span>{{ $priorityLabels[$priority] }}</span>
+                                        </span>
+                                        @if ($selectedPriority)
+                                            <x-icon name="check-circle" size="h-4 w-4" />
+                                        @endif
+                                    </span>
+                                </label>
                             @endforeach
-                        </select>
-                    </label>
+                        </div>
+                    </div>
 
-                    <label class="block">
+                    <label class="block md:col-span-2" x-cloak x-show="repairStatus !== 'waiting'">
                         <span class="crud-label">Izmaksas</span>
                         <input type="number" step="0.01" name="cost" value="{{ old('cost', $currentRepair?->cost) }}" class="crud-control">
                     </label>
@@ -103,7 +130,7 @@
                 <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Areja remonta dati</div>
                 <div class="mt-1 text-sm text-slate-500">Vendoru informacija tiek izmantota tikai arejam remontam.</div>
                 <div class="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600" x-show="repairStatus !== 'in-progress'">
-                    Vendora lauki aktivizējas un ir obligati tikai tad, kad remonts ir procesa statusa.
+                    Vendora lauki aktivizejas un ir obligati tikai tad, kad remonts ir procesa statusa.
                 </div>
                 <div class="mt-4 grid gap-4 md:grid-cols-3" x-show="repairStatus === 'in-progress'">
                     <label class="block">

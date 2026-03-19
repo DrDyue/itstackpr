@@ -40,6 +40,9 @@
             'description' => 'Filtrs pec stava',
             'search' => $floor . ' ' . $floor . '. stavs',
         ])->values();
+        $toolbarGridClass = $canManageDevices
+            ? 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.85fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,1fr)]'
+            : 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,1fr)]';
     @endphp
 
     <section class="app-shell">
@@ -100,7 +103,7 @@
         <form
             method="GET"
             action="{{ route('devices.index') }}"
-            class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-6"
+            class="{{ $toolbarGridClass }}"
             x-data="{}"
             @searchable-select-updated.window="if ($event.detail.identifier === 'device-floor-filter') { $dispatch('searchable-select-clear', { target: 'device-room-filter' }) }"
         >
@@ -160,7 +163,7 @@
                 />
             </label>
 
-            <div class="filter-toolbar-footer md:col-span-2 xl:col-span-5">
+            <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
                 <div class="quick-status-filters">
                     @foreach ($statusFilterLinks as $statusFilter)
                         @php

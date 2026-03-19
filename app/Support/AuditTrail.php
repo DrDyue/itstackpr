@@ -507,7 +507,7 @@ class AuditTrail
             'vendor_name' => 'pakalpojuma sniedzejs',
             'vendor_contact' => 'kontakts',
             'invoice_number' => 'rekina numurs',
-            'issue_reported_by' => 'pieteicejs',
+            'issue_reported_by' => 'izpilditajs',
             'accepted_by' => 'apstiprinatajs',
             'responsible_user_id' => 'atbildigais lietotajs',
             'reviewed_by_user_id' => 'izskatija',

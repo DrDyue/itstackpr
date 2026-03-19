@@ -33,7 +33,7 @@
                         <div class="page-title-icon page-title-icon-amber"><x-icon name="repair" size="h-7 w-7" /></div>
                         <div>
                             <h1 class="page-title">Rediget remontu</h1>
-                            <p class="page-subtitle">Atjauno remonta informaciju, bet statusu maini no remonta kolonnam.</p>
+                            <p class="page-subtitle">Atjauno remonta informaciju. Statusu un izpilditaju sistema pieskir ar remonta darbibu pogam.</p>
                         </div>
                     </div>
                 </div>

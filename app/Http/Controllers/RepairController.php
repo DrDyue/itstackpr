@@ -245,9 +245,12 @@ class RepairController extends Controller
         if ($validated['target_status'] === 'waiting') {
             $payload['start_date'] = null;
             $payload['end_date'] = null;
+            $payload['cost'] = null;
+            $payload['issue_reported_by'] = null;
         } elseif ($validated['target_status'] === 'in-progress') {
             $payload['start_date'] = filled($repair->start_date) ? $repair->start_date->toDateString() : now()->toDateString();
             $payload['end_date'] = null;
+            $payload['issue_reported_by'] = auth()->id();
         } elseif ($validated['target_status'] === 'completed') {
             $payload['end_date'] = now()->toDateString();
         }
@@ -305,7 +308,6 @@ class RepairController extends Controller
     {
         $validated = $this->validateInput($request, [
             'device_id' => ['required', 'exists:devices,id'],
-            'issue_reported_by' => ['nullable', 'exists:users,id'],
             'description' => ['required', 'string'],
             'repair_type' => ['required', Rule::in(self::TYPES)],
             'priority' => ['nullable', Rule::in(self::PRIORITIES)],
@@ -321,7 +323,6 @@ class RepairController extends Controller
         ]);
 
         foreach ([
-            'issue_reported_by',
             'priority',
             'vendor_name',
             'vendor_contact',
@@ -333,11 +334,17 @@ class RepairController extends Controller
 
         $validated['status'] = $repair?->status ?? 'waiting';
         $validated['priority'] = $validated['priority'] ?? ($repair?->priority ?? 'medium');
-        $validated['issue_reported_by'] = $validated['issue_reported_by'] ?? $repair?->issue_reported_by ?? null;
+        $validated['issue_reported_by'] = $repair?->issue_reported_by ?? null;
         $validated['accepted_by'] = $repair?->accepted_by ?? $this->user()?->id;
         $validated['request_id'] = $validated['request_id'] ?? $repair?->request_id ?? null;
         $validated['start_date'] = $repair?->start_date?->toDateString();
         $validated['end_date'] = $repair?->end_date?->toDateString();
+
+        if ($repair && (int) $validated['device_id'] !== (int) $repair->device_id) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Esosam remontam ierici mainit nevar. Atcel so remontu un izveido jaunu ierakstu pareizajai iericei.'],
+            ]);
+        }
 
         $device = Device::query()->find($validated['device_id']);
         if ($device && $device->status === Device::STATUS_WRITEOFF && (! $repair || (int) $repair->device_id !== (int) $device->id)) {
@@ -363,6 +370,10 @@ class RepairController extends Controller
                     'device_id' => ['Sai iericei jau ir aktivs remonta ieraksts.'],
                 ]);
             }
+        }
+
+        if ($validated['status'] === 'waiting') {
+            $validated['cost'] = null;
         }
 
         if ($validated['repair_type'] === 'internal') {
