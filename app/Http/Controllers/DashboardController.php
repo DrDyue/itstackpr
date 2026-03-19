@@ -191,13 +191,6 @@ class DashboardController extends Controller
                     'class' => 'btn-danger',
                     'count' => $pendingWriteoffRequestCount,
                 ],
-                [
-                    'label' => 'Parsutisanas pieteikumi',
-                    'url' => route('device-transfers.index'),
-                    'icon' => 'transfer',
-                    'class' => 'btn-search',
-                    'count' => $pendingTransferRequestCount,
-                ],
             ];
         }
 
@@ -222,13 +215,6 @@ class DashboardController extends Controller
                 'icon' => 'writeoff',
                 'class' => 'btn-danger',
                 'count' => $pendingWriteoffRequestCount,
-            ],
-            [
-                'label' => 'Parsutisanas pieteikumi',
-                'url' => route('device-transfers.index'),
-                'icon' => 'transfer',
-                'class' => 'btn-search',
-                'count' => $pendingTransferRequestCount,
             ],
         ];
     }

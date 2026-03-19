@@ -52,7 +52,7 @@
                             <summary class="dash-floor-summary">
                                 <div>
                                     <div class="dash-floor-title">{{ $floor['label'] }}</div>
-                                    <div class="dash-floor-sub">Telpas {{ $floor['room_count'] }}, ierices {{ $floor['device_count'] }}</div>
+                                    <div class="dash-floor-sub">Telpas {{ $floor['room_count'] }}</div>
                                 </div>
                                 <span class="dash-floor-badge">{{ $floor['device_count'] }}</span>
                             </summary>
