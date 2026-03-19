@@ -92,6 +92,13 @@
         @endif
         <div class="space-y-4">
             @forelse ($transfers as $transfer)
+                @php
+                    $isIncomingPending = ! $isAdmin
+                        && (int) $currentUserId === (int) $transfer->transfered_to_id
+                        && $transfer->status === 'submitted';
+                    $currentRoomLabel = $transfer->device?->room?->room_number ?: 'telpa nav noradita';
+                    $currentBuildingLabel = $transfer->device?->building?->building_name ?: null;
+                @endphp
                 <div class="surface-card">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div>
@@ -103,6 +110,11 @@
                                 <span class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700 ring-1 ring-emerald-200">
                                     <x-icon name="view" size="h-3.5 w-3.5" />
                                     <span>Vesture</span>
+                                </span>
+                            @elseif ($isIncomingPending)
+                                <span class="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-sky-700 ring-1 ring-sky-200">
+                                    <x-icon name="transfer" size="h-3.5 w-3.5" />
+                                    <span>Ienakoss piedavajums</span>
                                 </span>
                             @endif
                             <x-status-pill context="request" :value="$transfer->status" :label="$statusLabels[$transfer->status] ?? null" />
@@ -119,24 +131,68 @@
                     @if ($transfer->review_notes)
                         <div class="mt-2 text-sm text-slate-500">Piezimes: {{ $transfer->review_notes }}</div>
                     @endif
-                    @if (auth()->id() === $transfer->transfered_to_id && $transfer->status === 'submitted')
-                        <form method="POST" action="{{ route('device-transfers.review', $transfer) }}" class="mt-4 space-y-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
-                            @csrf
-                            <div class="grid gap-4 md:grid-cols-2">
-                                <label class="block">
-                                    <span class="crud-label">Lemums</span>
-                                    <select name="status" class="crud-control">
-                                        <option value="approved">Apstiprinat</option>
-                                        <option value="rejected">Noraidit</option>
-                                    </select>
+                    @if ($isIncomingPending)
+                        <div class="mt-5 rounded-[1.5rem] border border-emerald-200 bg-emerald-50/80 p-4" x-data="{ keepCurrent: true }">
+                            <div class="text-sm font-semibold text-emerald-900">Tu vari sanemt so ierici</div>
+                            <div class="mt-1 text-sm text-emerald-800">
+                                Ja apstiprinasi, ierice uzreiz tiks pieskirta tev. Ja noraidisi, ta paliks pie esoša lietotaja.
+                            </div>
+
+                            <form method="POST" action="{{ route('device-transfers.review', $transfer) }}" class="mt-4 space-y-4">
+                                @csrf
+                                <input type="hidden" name="status" value="approved">
+
+                                <label class="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-700">
+                                    <input type="checkbox" name="keep_current_room" value="1" checked x-model="keepCurrent" class="mt-1 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                                    <span>
+                                        Atstat ierici esosaja telpa
+                                        <span class="mt-1 block text-xs text-slate-500">
+                                            Paslaik: {{ $currentRoomLabel }}
+                                            @if ($currentBuildingLabel)
+                                                | {{ $currentBuildingLabel }}
+                                            @endif
+                                        </span>
+                                    </span>
                                 </label>
+
+                                <div x-show="!keepCurrent" x-cloak>
+                                    <div class="mb-2 text-sm font-medium text-slate-700">Jauna telpa</div>
+                                    <x-searchable-select
+                                        name="room_id"
+                                        queryName="room_query_{{ $transfer->id }}"
+                                        :options="$roomOptions"
+                                        :selected="old('room_id')"
+                                        :query="''"
+                                        identifier="device-transfer-room-{{ $transfer->id }}"
+                                        placeholder="Izvelies telpu"
+                                    />
+                                </div>
+
                                 <label class="block">
                                     <span class="crud-label">Piezimes</span>
-                                    <textarea name="review_notes" rows="3" class="crud-control"></textarea>
+                                    <textarea name="review_notes" rows="2" class="crud-control" placeholder="Ja vajag, pievieno komentaru sanemsanai."></textarea>
                                 </label>
-                            </div>
-                            <button type="submit" class="btn-approve"><x-icon name="check-circle" size="h-4 w-4" /><span>Saglabat lemumu</span></button>
-                        </form>
+
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="submit" class="btn-create">
+                                        <x-icon name="check" size="h-4 w-4" />
+                                        <span>Apstiprinat</span>
+                                    </button>
+                                </div>
+                            </form>
+
+                            <form method="POST" action="{{ route('device-transfers.review', $transfer) }}" class="mt-3">
+                                @csrf
+                                <input type="hidden" name="status" value="rejected">
+                                <div class="flex flex-wrap gap-2">
+                                    <input type="text" name="review_notes" class="crud-control max-w-xl" placeholder="Komentars, ja noraidi piedavajumu">
+                                    <button type="submit" class="btn-danger">
+                                        <x-icon name="x-mark" size="h-4 w-4" />
+                                        <span>Noraidit</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     @endif
                 </div>
             @empty

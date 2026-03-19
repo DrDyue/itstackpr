@@ -53,7 +53,7 @@ class DeviceTransferController extends Controller
             });
 
         $transfers = (clone $baseQuery)
-            ->with(['device', 'responsibleUser', 'transferTo', 'reviewedBy'])
+            ->with(['device.building', 'device.room.building', 'responsibleUser', 'transferTo', 'reviewedBy'])
             ->when($filters['status'] !== '' && in_array($filters['status'], [DeviceTransfer::STATUS_SUBMITTED, DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED], true), fn (Builder $query) => $query->where('status', $filters['status']))
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
@@ -81,6 +81,31 @@ class DeviceTransferController extends Controller
             'statuses' => [DeviceTransfer::STATUS_SUBMITTED, DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED],
             'statusLabels' => $this->requestStatusLabels(),
             'isAdmin' => $user->isAdmin(),
+            'currentUserId' => $user->id,
+            'roomOptions' => $user->isAdmin()
+                ? collect()
+                : Room::query()
+                    ->with('building')
+                    ->orderBy('floor_number')
+                    ->orderBy('room_number')
+                    ->get()
+                    ->map(fn (Room $room) => [
+                        'value' => (string) $room->id,
+                        'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
+                        'description' => collect([
+                            $room->building?->building_name,
+                            $room->floor_number !== null ? $room->floor_number . '. stavs' : null,
+                            $room->department,
+                        ])->filter()->implode(' | '),
+                        'search' => implode(' ', array_filter([
+                            $room->room_number,
+                            $room->room_name,
+                            $room->building?->building_name,
+                            $room->department,
+                            $room->floor_number,
+                        ])),
+                    ])
+                    ->values(),
         ]);
     }
 
