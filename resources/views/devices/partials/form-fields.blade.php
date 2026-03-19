@@ -77,18 +77,20 @@
             @endforeach
         </select>
     </label>
-    <label class="block">
-        <span class="crud-label">Iegades datums</span>
-        <input type="date" name="purchase_date" value="{{ old('purchase_date', $current?->purchase_date?->format('Y-m-d')) }}" class="crud-control">
-    </label>
+    <x-localized-date-input
+        name="purchase_date"
+        label="Iegades datums"
+        :value="old('purchase_date', $current?->purchase_date?->format('Y-m-d'))"
+    />
     <label class="block">
         <span class="crud-label">Iegades cena</span>
         <input type="number" step="0.01" name="purchase_price" value="{{ old('purchase_price', $current?->purchase_price) }}" class="crud-control">
     </label>
-    <label class="block">
-        <span class="crud-label">Garantija lidz</span>
-        <input type="date" name="warranty_until" value="{{ old('warranty_until', $current?->warranty_until?->format('Y-m-d')) }}" class="crud-control">
-    </label>
+    <x-localized-date-input
+        name="warranty_until"
+        label="Garantija lidz"
+        :value="old('warranty_until', $current?->warranty_until?->format('Y-m-d'))"
+    />
     <label class="block">
         <span class="crud-label">Serijas numurs</span>
         <input type="text" name="serial_number" value="{{ old('serial_number', $current?->serial_number) }}" class="crud-control">
