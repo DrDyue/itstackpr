@@ -15,7 +15,10 @@
     <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div class="space-y-6">
             <div class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pamata informacija</div>
+                <div>
+                    <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pamata informacija</div>
+                    <div class="mt-1 text-sm text-slate-500">Galvenie lauki par ierici, atbildigo personu un remonta saturu.</div>
+                </div>
                 <div class="mt-4 grid gap-4 md:grid-cols-2">
                     <label class="block">
                         <span class="crud-label">Ierice</span>
@@ -27,7 +30,7 @@
                     </label>
 
                     <label class="block">
-                        <span class="crud-label">Izpilditajs</span>
+                        <span class="crud-label">Pieteicejs / izpilditajs</span>
                         <select name="issue_reported_by" class="crud-control">
                             <option value="">Nav noradits</option>
                             @foreach ($users as $repairUser)
@@ -44,7 +47,10 @@
             </div>
 
             <div class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta iestatijumi</div>
+                <div>
+                    <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta iestatijumi</div>
+                    <div class="mt-1 text-sm text-slate-500">Izvelies remonta tipu, prioritatei un izmaksu informaciju.</div>
+                </div>
                 <div class="mt-4 grid gap-4 md:grid-cols-2">
                     <div class="md:col-span-2">
                         <span class="crud-label">Remonta tips</span>
@@ -95,6 +101,7 @@
                 x-show="repairType === 'external'"
             >
                 <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Areja remonta dati</div>
+                <div class="mt-1 text-sm text-slate-500">Vendoru informacija tiek izmantota tikai arejam remontam.</div>
                 <div class="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600" x-show="repairStatus !== 'in-progress'">
                     Vendora lauki aktivizējas un ir obligati tikai tad, kad remonts ir procesa statusa.
                 </div>
@@ -132,12 +139,6 @@
                 </div>
             @endif
 
-            @if ($currentRepair?->request_id)
-                <div class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm text-sm text-slate-600">
-                    <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Saistiba</div>
-                    <div class="mt-3">Saistitais remonta pieteikums: #{{ $currentRepair->request_id }}</div>
-                </div>
-            @endif
         </div>
     </div>
 

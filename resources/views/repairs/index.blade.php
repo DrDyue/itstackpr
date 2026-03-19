@@ -182,6 +182,9 @@
 
                     <div class="repair-board-stack">
                         @forelse ($columnRepairs as $repair)
+                            @php
+                                $deviceThumbUrl = $repair->device?->deviceImageThumbUrl();
+                            @endphp
                             <article
                                 class="repair-board-card {{ $canManageRepairs ? 'repair-card-draggable' : '' }}"
                                 @if ($canManageRepairs)
@@ -192,17 +195,26 @@
                                 @endif
                             >
                                 <div class="repair-board-card-head">
-                                    <div>
-                                        @if ($repair->device)
-                                            <a href="{{ route('devices.show', $repair->device) }}" class="repair-board-device-link">{{ $repair->device->name }}</a>
+                                    <div class="flex items-start gap-3">
+                                        @if ($deviceThumbUrl)
+                                            <img src="{{ $deviceThumbUrl }}" alt="{{ $repair->device?->name ?: 'Ierice' }}" class="device-table-thumb shrink-0">
                                         @else
-                                            <span class="repair-board-device-link">Ierice nav atrasta</span>
+                                            <div class="device-table-thumb device-table-thumb-placeholder shrink-0">
+                                                <x-icon name="device" size="h-4 w-4" />
+                                            </div>
                                         @endif
-                                        <div class="repair-board-device-meta">
-                                            <span>{{ $repair->device?->code ?: 'bez koda' }}</span>
-                                            @if ($repair->device?->room)
-                                                <span>Telpa {{ $repair->device->room->room_number }}</span>
+                                        <div>
+                                            @if ($repair->device)
+                                                <a href="{{ route('devices.show', $repair->device) }}" class="repair-board-device-link">{{ $repair->device->name }}</a>
+                                            @else
+                                                <span class="repair-board-device-link">Ierice nav atrasta</span>
                                             @endif
+                                            <div class="repair-board-device-meta">
+                                                <span>{{ $repair->device?->code ?: 'bez koda' }}</span>
+                                                @if ($repair->device?->room)
+                                                    <span>Telpa {{ $repair->device->room->room_number }}</span>
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                     <x-status-pill context="repair" :value="$repair->status" :label="$statusLabels[$repair->status] ?? null" />
