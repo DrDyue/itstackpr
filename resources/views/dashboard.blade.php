@@ -90,9 +90,20 @@
                         @forelse ($recentUserRequests as $item)
                             <div class="surface-card-muted">
                                 <div class="flex flex-wrap items-start justify-between gap-3">
-                                    <div>
-                                        <div class="text-sm font-semibold text-slate-900">{{ $item['type'] }}</div>
-                                        <div class="mt-1 text-sm text-slate-600">{{ $item['device_name'] }}</div>
+                                    <div class="flex items-start gap-3">
+                                        @if (! empty($item['device_image_url']))
+                                            <img src="{{ $item['device_image_url'] }}" alt="{{ $item['device_name'] }}" class="device-table-thumb shrink-0">
+                                        @else
+                                            <div class="device-table-thumb device-table-thumb-placeholder shrink-0">
+                                                <x-icon name="device" size="h-4 w-4" />
+                                            </div>
+                                        @endif
+                                        <div>
+                                            <div class="text-sm font-semibold text-slate-900">{{ $item['type'] }}</div>
+                                            <div class="mt-1 text-sm font-medium text-slate-800">{{ $item['device_name'] }}</div>
+                                            <div class="mt-1 text-xs text-slate-500">{{ $item['device_code'] }}</div>
+                                            <div class="mt-1 text-xs text-slate-500">{{ $item['device_meta'] ?: '-' }}</div>
+                                        </div>
                                     </div>
                                     <x-status-pill context="request" :value="$item['status']" />
                                 </div>

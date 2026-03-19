@@ -227,7 +227,7 @@ class DashboardController extends Controller
     {
         $repairRequests = Schema::hasTable('repair_requests')
             ? RepairRequest::query()
-                ->with(['device', 'reviewedBy', 'repair'])
+                ->with(['device.type', 'reviewedBy', 'repair'])
                 ->where('responsible_user_id', $user->id)
                 ->get()
                 ->map(fn (RepairRequest $request) => [
@@ -236,6 +236,9 @@ class DashboardController extends Controller
                     'status' => $request->status,
                     'created_at' => $request->created_at,
                     'device_name' => $request->device?->name ?: 'Ierice nav atrasta',
+                    'device_code' => $request->device?->code ?: 'Bez koda',
+                    'device_meta' => collect([$request->device?->manufacturer, $request->device?->model])->filter()->implode(' | '),
+                    'device_image_url' => $request->device?->deviceImageThumbUrl(),
                     'summary' => $request->description,
                     'meta' => $request->repair ? 'Saistits remonts #' . $request->repair->id : null,
                 ])
@@ -243,7 +246,7 @@ class DashboardController extends Controller
 
         $writeoffRequests = Schema::hasTable('writeoff_requests')
             ? WriteoffRequest::query()
-                ->with(['device', 'reviewedBy'])
+                ->with(['device.type', 'reviewedBy'])
                 ->where('responsible_user_id', $user->id)
                 ->get()
                 ->map(fn (WriteoffRequest $request) => [
@@ -252,6 +255,9 @@ class DashboardController extends Controller
                     'status' => $request->status,
                     'created_at' => $request->created_at,
                     'device_name' => $request->device?->name ?: 'Ierice nav atrasta',
+                    'device_code' => $request->device?->code ?: 'Bez koda',
+                    'device_meta' => collect([$request->device?->manufacturer, $request->device?->model])->filter()->implode(' | '),
+                    'device_image_url' => $request->device?->deviceImageThumbUrl(),
                     'summary' => $request->reason,
                     'meta' => $request->review_notes,
                 ])
@@ -259,7 +265,7 @@ class DashboardController extends Controller
 
         $transfers = Schema::hasTable('device_transfers')
             ? DeviceTransfer::query()
-                ->with(['device', 'responsibleUser', 'transferTo'])
+                ->with(['device.type', 'responsibleUser', 'transferTo'])
                 ->where(function ($query) use ($user) {
                     $query->where('responsible_user_id', $user->id)
                         ->orWhere('transfered_to_id', $user->id);
@@ -275,6 +281,9 @@ class DashboardController extends Controller
                         'status' => $transfer->status,
                         'created_at' => $transfer->created_at,
                         'device_name' => $transfer->device?->name ?: 'Ierice nav atrasta',
+                        'device_code' => $transfer->device?->code ?: 'Bez koda',
+                        'device_meta' => collect([$transfer->device?->manufacturer, $transfer->device?->model])->filter()->implode(' | '),
+                        'device_image_url' => $transfer->device?->deviceImageThumbUrl(),
                         'summary' => $incoming
                             ? 'Tev tiek nodota ierice no ' . ($transfer->responsibleUser?->full_name ?: 'cita lietotaja')
                             : $transfer->transfer_reason,
