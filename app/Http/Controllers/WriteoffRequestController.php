@@ -20,17 +20,30 @@ class WriteoffRequestController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+        $availableStatuses = [
+            WriteoffRequest::STATUS_SUBMITTED,
+            WriteoffRequest::STATUS_APPROVED,
+            WriteoffRequest::STATUS_REJECTED,
+        ];
+        $statusFilterTouched = $request->has('statuses_filter');
+        $selectedStatuses = collect($request->query('status', $statusFilterTouched ? [] : [WriteoffRequest::STATUS_SUBMITTED]))
+            ->map(fn (mixed $status) => trim((string) $status))
+            ->filter(fn (string $status) => in_array($status, $availableStatuses, true))
+            ->unique()
+            ->values()
+            ->all();
 
         $filters = [
-            'status' => trim((string) $request->query('status', '')),
             'q' => trim((string) $request->query('q', '')),
+            'statuses' => $selectedStatuses,
+            'has_status_filter' => true,
         ];
 
         if (! $this->featureTableExists('writeoff_requests')) {
             return view('writeoff_requests.index', [
                 'requests' => $this->emptyPaginator(),
                 'filters' => $filters,
-                'statuses' => [WriteoffRequest::STATUS_SUBMITTED, WriteoffRequest::STATUS_APPROVED, WriteoffRequest::STATUS_REJECTED],
+                'statuses' => $availableStatuses,
                 'statusLabels' => $this->requestStatusLabels(),
                 'canReview' => $user->canManageRequests(),
                 'featureMessage' => 'Tabula writeoff_requests sobrid nav pieejama.',
@@ -40,7 +53,7 @@ class WriteoffRequestController extends Controller
         $requests = WriteoffRequest::query()
             ->with(['device.assignedTo', 'responsibleUser', 'reviewedBy'])
             ->when(! $user->canManageRequests(), fn (Builder $query) => $query->where('responsible_user_id', $user->id))
-            ->when($filters['status'] !== '' && in_array($filters['status'], [WriteoffRequest::STATUS_SUBMITTED, WriteoffRequest::STATUS_APPROVED, WriteoffRequest::STATUS_REJECTED], true), fn (Builder $query) => $query->where('status', $filters['status']))
+            ->whereIn('status', $filters['statuses'] === [] ? ['__none__'] : $filters['statuses'])
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
 
@@ -56,7 +69,7 @@ class WriteoffRequestController extends Controller
         return view('writeoff_requests.index', [
             'requests' => $requests,
             'filters' => $filters,
-            'statuses' => [WriteoffRequest::STATUS_SUBMITTED, WriteoffRequest::STATUS_APPROVED, WriteoffRequest::STATUS_REJECTED],
+            'statuses' => $availableStatuses,
             'statusLabels' => $this->requestStatusLabels(),
             'canReview' => $user->canManageRequests(),
         ]);

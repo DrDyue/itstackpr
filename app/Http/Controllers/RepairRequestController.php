@@ -19,17 +19,30 @@ class RepairRequestController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+        $availableStatuses = [
+            RepairRequest::STATUS_SUBMITTED,
+            RepairRequest::STATUS_APPROVED,
+            RepairRequest::STATUS_REJECTED,
+        ];
+        $statusFilterTouched = $request->has('statuses_filter');
+        $selectedStatuses = collect($request->query('status', $statusFilterTouched ? [] : [RepairRequest::STATUS_SUBMITTED]))
+            ->map(fn (mixed $status) => trim((string) $status))
+            ->filter(fn (string $status) => in_array($status, $availableStatuses, true))
+            ->unique()
+            ->values()
+            ->all();
 
         $filters = [
-            'status' => trim((string) $request->query('status', '')),
             'q' => trim((string) $request->query('q', '')),
+            'statuses' => $selectedStatuses,
+            'has_status_filter' => true,
         ];
 
         if (! $this->featureTableExists('repair_requests')) {
             return view('repair_requests.index', [
                 'requests' => $this->emptyPaginator(),
                 'filters' => $filters,
-                'statuses' => [RepairRequest::STATUS_SUBMITTED, RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED],
+                'statuses' => $availableStatuses,
                 'statusLabels' => $this->requestStatusLabels(),
                 'canReview' => $user->canManageRequests(),
                 'featureMessage' => 'Tabula repair_requests sobrid nav pieejama.',
@@ -39,7 +52,7 @@ class RepairRequestController extends Controller
         $requests = RepairRequest::query()
             ->with(['device.assignedTo', 'responsibleUser', 'reviewedBy', 'repair'])
             ->when(! $user->canManageRequests(), fn (Builder $query) => $query->where('responsible_user_id', $user->id))
-            ->when($filters['status'] !== '' && in_array($filters['status'], [RepairRequest::STATUS_SUBMITTED, RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED], true), fn (Builder $query) => $query->where('status', $filters['status']))
+            ->whereIn('status', $filters['statuses'] === [] ? ['__none__'] : $filters['statuses'])
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
 
@@ -56,7 +69,7 @@ class RepairRequestController extends Controller
         return view('repair_requests.index', [
             'requests' => $requests,
             'filters' => $filters,
-            'statuses' => [RepairRequest::STATUS_SUBMITTED, RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED],
+            'statuses' => $availableStatuses,
             'statusLabels' => $this->requestStatusLabels(),
             'canReview' => $user->canManageRequests(),
         ]);
