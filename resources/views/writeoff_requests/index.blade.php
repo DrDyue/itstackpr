@@ -68,21 +68,6 @@
         @if (! empty($featureMessage))
             <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
         @endif
-        @if ($canReview)
-            <div class="rounded-[1.5rem] border border-rose-200 bg-gradient-to-r from-rose-50 to-orange-50 px-5 py-4 shadow-sm">
-                <div class="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-rose-700">Admina izskatisana</div>
-                        <div class="mt-1 text-sm font-semibold text-slate-900">Saja sadala admins pienem gala lemumu par norakstisanas pieteikumu.</div>
-                        <div class="mt-1 text-sm text-slate-600">Lietotaja iesnieguma saturs ir tikai apskatei. Apstiprinot pieteikumu, ierice tiek norakstita un atsaistita no lietotaja un atrasanas vietas.</div>
-                    </div>
-                    <div class="inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-rose-700 ring-1 ring-rose-200">
-                        <x-icon name="writeoff" size="h-4 w-4" />
-                        <span>Maina ierices statusu uz norakstitu</span>
-                    </div>
-                </div>
-            </div>
-        @endif
 
         <div class="space-y-4">
             @forelse ($requests as $request)
@@ -105,14 +90,8 @@
 
                     <div class="mt-4 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
                         <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50/90 p-4">
-                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Lietotaja iesniegtais pieteikums</div>
+                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Iesniegums</div>
                             <div class="mt-3 text-sm text-slate-600">
-                                <div class="mb-3">
-                                    <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Norakstisanas iemesls</div>
-                                    <div class="mt-2 rounded-2xl bg-white px-4 py-3 leading-6 text-slate-700 ring-1 ring-slate-200">
-                                        {{ $request->reason }}
-                                    </div>
-                                </div>
                                 <div class="grid gap-3 md:grid-cols-2">
                                     <div>
                                         <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Pieteicejs</div>
@@ -123,19 +102,25 @@
                                         <div class="mt-1 text-slate-700">{{ $statusLabels[$request->status] ?? $request->status }}</div>
                                     </div>
                                 </div>
+                                <div class="mt-4">
+                                    <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Norakstisanas iemesls</div>
+                                    <div class="mt-2 rounded-2xl bg-white px-4 py-3 leading-6 text-slate-700 ring-1 ring-slate-200">
+                                        {{ $request->reason }}
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <div class="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
-                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ierices informacija</div>
+                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ierice</div>
                             <div class="mt-3 grid gap-3 text-sm text-slate-600">
+                                <div>
+                                    <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Nosaukums</div>
+                                    <div class="mt-1 text-slate-700">{{ $request->device?->name ?: '-' }}</div>
+                                </div>
                                 <div>
                                     <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Kods</div>
                                     <div class="mt-1 text-slate-700">{{ $request->device?->code ?: '-' }}</div>
-                                </div>
-                                <div>
-                                    <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Atbildigais lietotajs</div>
-                                    <div class="mt-1 text-slate-700">{{ $request->device?->assignedTo?->full_name ?: '-' }}</div>
                                 </div>
                                 <div>
                                     <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Pasreizejais statuss</div>
@@ -151,46 +136,24 @@
                         </div>
                     </div>
 
-                    @if ($request->review_notes)
-                        <div class="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                            <span class="font-semibold text-slate-900">Admina piezimes:</span> {{ $request->review_notes }}
-                        </div>
-                    @endif
                     @if ($canReview && $request->status === 'submitted')
-                        <div class="mt-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
-                            <div class="mb-3 text-sm font-semibold text-slate-900">Admina lemums</div>
-                            <div class="mb-4 text-sm text-slate-600">
-                                Apstiprinot pieteikumu, ierices statuss tiks mainits uz `Norakstita`, un atbildigais lietotajs, eka un telpa tiks notiritas.
-                            </div>
-
-                            <form method="POST" action="{{ route('writeoff-requests.review', $request) }}" class="space-y-4">
+                        <div class="mt-4 flex flex-wrap gap-3 border-t border-slate-200 pt-4">
+                            <form method="POST" action="{{ route('writeoff-requests.review', $request) }}">
                                 @csrf
                                 <input type="hidden" name="status" value="approved">
-                                <label class="block">
-                                    <span class="crud-label">Piezimes lietotajam</span>
-                                    <textarea name="review_notes" rows="3" class="crud-control" placeholder="Ja vajag, pievieno skaidrojumu apstiprinasanai."></textarea>
-                                </label>
-                                <div class="flex flex-wrap gap-3">
-                                    <button type="submit" class="btn-approve">
-                                        <x-icon name="check-circle" size="h-4 w-4" />
-                                        <span>Apstiprinat norakstisanu</span>
-                                    </button>
-                                </div>
+                                <button type="submit" class="btn-approve">
+                                    <x-icon name="check-circle" size="h-4 w-4" />
+                                    <span>Apstiprinat</span>
+                                </button>
                             </form>
 
-                            <form method="POST" action="{{ route('writeoff-requests.review', $request) }}" class="mt-3 space-y-4">
+                            <form method="POST" action="{{ route('writeoff-requests.review', $request) }}">
                                 @csrf
                                 <input type="hidden" name="status" value="rejected">
-                                <label class="block">
-                                    <span class="crud-label">Noraidijuma piezimes</span>
-                                    <textarea name="review_notes" rows="3" class="crud-control" placeholder="Apraksti, kapec pieteikums tiek noraidits."></textarea>
-                                </label>
-                                <div class="flex flex-wrap gap-3">
-                                    <button type="submit" class="btn-reject">
-                                        <x-icon name="x-circle" size="h-4 w-4" />
-                                        <span>Noraidit pieteikumu</span>
-                                    </button>
-                                </div>
+                                <button type="submit" class="btn-reject">
+                                    <x-icon name="x-circle" size="h-4 w-4" />
+                                    <span>Noraidit</span>
+                                </button>
                             </form>
                         </div>
                     @endif

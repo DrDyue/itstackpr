@@ -133,7 +133,6 @@ class WriteoffRequestController extends Controller
 
         $validated = $this->validateInput($request, [
             'status' => ['required', Rule::in([WriteoffRequest::STATUS_APPROVED, WriteoffRequest::STATUS_REJECTED])],
-            'review_notes' => ['nullable', 'string'],
         ], [
             'status.required' => 'Izvelies lemumu norakstisanas pieteikumam.',
         ]);
@@ -144,7 +143,7 @@ class WriteoffRequestController extends Controller
             $writeoffRequest->update([
                 'status' => $validated['status'],
                 'reviewed_by_user_id' => $manager->id,
-                'review_notes' => $validated['review_notes'] ?: null,
+                'review_notes' => null,
             ]);
 
             if ($validated['status'] !== WriteoffRequest::STATUS_APPROVED) {

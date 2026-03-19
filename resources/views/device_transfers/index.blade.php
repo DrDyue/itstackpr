@@ -66,22 +66,6 @@
         @if (! empty($featureMessage))
             <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
         @endif
-        @if ($isAdmin)
-            <div class="rounded-[1.5rem] border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 px-5 py-4 shadow-sm">
-                <div class="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Vesture un uzraudziba</div>
-                        <div class="mt-1 text-sm font-semibold text-slate-900">Parsutisanas pieteikumus admins neapstiprina.</div>
-                        <div class="mt-1 text-sm text-slate-600">Seit redzams, kurs kam piedavaja ierici, un vai sanemejs so nodosanu apstiprinaja vai noraidija.</div>
-                    </div>
-                    <div class="inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
-                        <x-icon name="transfer" size="h-4 w-4" />
-                        <span>Lemumu pienem sanemejs</span>
-                    </div>
-                </div>
-            </div>
-        @endif
-
         <div class="space-y-4">
             @forelse ($transfers as $transfer)
                 <div class="surface-card">

@@ -133,7 +133,6 @@ class RepairRequestController extends Controller
 
         $validated = $this->validateInput($request, [
             'status' => ['required', Rule::in([RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED])],
-            'review_notes' => ['nullable', 'string'],
         ], [
             'status.required' => 'Izvelies lemumu remonta pieteikumam.',
         ]);
@@ -144,7 +143,7 @@ class RepairRequestController extends Controller
         $payload = [
             'status' => $validated['status'],
             'reviewed_by_user_id' => $manager->id,
-            'review_notes' => $validated['review_notes'] ?: null,
+            'review_notes' => null,
         ];
 
         DB::transaction(function () use ($validated, $repairRequest, $manager, &$payload) {
