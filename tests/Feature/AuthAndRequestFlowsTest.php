@@ -693,6 +693,76 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertDontSee($writeoffDevice->code);
     }
 
+    public function test_repairs_index_shows_related_request_author_problem_and_approver(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'repair-board-admin@example.com');
+        $user = $this->createUser(role: User::ROLE_USER, email: 'repair-board-user@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_REPAIR, 'DEV-REPAIR-BOARD');
+
+        $requestId = DB::table('repair_requests')->insertGetId([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'description' => 'Ekrans mirgo un dators izsledzas.',
+            'status' => RepairRequest::STATUS_APPROVED,
+            'reviewed_by_user_id' => $admin->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        Repair::create([
+            'device_id' => $device->id,
+            'description' => 'Veikt diagnostiku un remontu.',
+            'status' => 'waiting',
+            'repair_type' => 'internal',
+            'priority' => 'medium',
+            'issue_reported_by' => $user->id,
+            'accepted_by' => $admin->id,
+            'request_id' => $requestId,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('repairs.index'))
+            ->assertOk()
+            ->assertSee('Saistitais remonta pieteikums #' . $requestId)
+            ->assertSee($user->full_name)
+            ->assertSee('Ekrans mirgo un dators izsledzas.')
+            ->assertSee($admin->full_name);
+    }
+
+    public function test_repairs_index_can_filter_only_repairs_assigned_to_current_admin(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'repair-filter-admin-a@example.com');
+        $otherAdmin = $this->createUser(role: User::ROLE_ADMIN, email: 'repair-filter-admin-b@example.com');
+        $user = $this->createUser(role: User::ROLE_USER, email: 'repair-filter-user@example.com');
+
+        $myDevice = $this->createDevice($user->id, Device::STATUS_REPAIR, 'DEV-MY-REPAIR');
+        $otherDevice = $this->createDevice($user->id, Device::STATUS_REPAIR, 'DEV-OTHER-REPAIR');
+
+        Repair::create([
+            'device_id' => $myDevice->id,
+            'description' => 'Remonts pieskirts aktivajam adminam.',
+            'status' => 'waiting',
+            'repair_type' => 'internal',
+            'priority' => 'medium',
+            'accepted_by' => $admin->id,
+        ]);
+
+        Repair::create([
+            'device_id' => $otherDevice->id,
+            'description' => 'Remonts pieskirts citam adminam.',
+            'status' => 'waiting',
+            'repair_type' => 'internal',
+            'priority' => 'medium',
+            'accepted_by' => $otherAdmin->id,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('repairs.index', ['mine' => 1]))
+            ->assertOk()
+            ->assertSee('DEV-MY-REPAIR')
+            ->assertDontSee('DEV-OTHER-REPAIR');
+    }
+
     private function createUser(string $role, ?string $email = null): User
     {
         return User::create([

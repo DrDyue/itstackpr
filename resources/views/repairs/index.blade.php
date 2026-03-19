@@ -20,6 +20,10 @@
                 'tone' => 'emerald',
             ],
         ];
+        $mineQuery = request()->except('page', 'mine');
+        if (! $filters['mine']) {
+            $mineQuery['mine'] = 1;
+        }
     @endphp
 
     <section class="app-shell">
@@ -85,6 +89,15 @@
                 </div>
 
                 <div class="toolbar-actions justify-end">
+                    @if ($canManageRepairs)
+                        <a
+                            href="{{ route('repairs.index', $mineQuery) }}"
+                            class="quick-status-filter quick-status-filter-slate {{ $filters['mine'] ? 'quick-status-filter-active' : '' }}"
+                        >
+                            <x-icon name="user" size="h-4 w-4" />
+                            <span>Man pieskirtie</span>
+                        </a>
+                    @endif
                     <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklet</span></button>
                     <a href="{{ route('repairs.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notirit</span></a>
                 </div>
@@ -97,6 +110,7 @@
                 ['label' => 'Statuss', 'value' => $filters['status'] !== '' ? ($statusLabels[$filters['status']] ?? $filters['status']) : null],
                 ['label' => 'Prioritate', 'value' => $filters['priority'] !== '' ? ($priorityLabels[$filters['priority']] ?? $filters['priority']) : null],
                 ['label' => 'Tips', 'value' => $filters['repair_type'] !== '' ? ($typeLabels[$filters['repair_type']] ?? $filters['repair_type']) : null],
+                ['label' => 'Pieskirts', 'value' => $filters['mine'] && $canManageRepairs ? 'Man' : null],
             ]"
             :clear-url="route('repairs.index')"
         />
@@ -186,7 +200,7 @@
                                     </div>
                                     <div>
                                         <dt>Apstiprinaja</dt>
-                                        <dd>{{ $repair->acceptedBy?->full_name ?: 'Nav noradits' }}</dd>
+                                        <dd>{{ $repair->approval_actor?->full_name ?: 'Nav noradits' }}</dd>
                                     </div>
                                     <div>
                                         <dt>Pieteikums</dt>
@@ -205,6 +219,20 @@
                                         <dd>{{ $repair->end_date?->format('d.m.Y') ?: '-' }}</dd>
                                     </div>
                                 </dl>
+
+                                @if ($repair->request)
+                                    <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                                        <div class="font-semibold text-slate-900">Saistitais remonta pieteikums #{{ $repair->request->id }}</div>
+                                        <div class="mt-1">
+                                            <span class="font-medium text-slate-900">Pieteica:</span>
+                                            {{ $repair->request->responsibleUser?->full_name ?: 'Nav noradits' }}
+                                        </div>
+                                        <div class="mt-1">
+                                            <span class="font-medium text-slate-900">Problemas apraksts:</span>
+                                            {{ $repair->request->description ?: '-' }}
+                                        </div>
+                                    </div>
+                                @endif
 
                                 <div class="repair-board-actions">
                                     <a href="{{ route('repairs.edit', $repair) }}" class="repair-action repair-action-edit">

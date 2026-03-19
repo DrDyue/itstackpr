@@ -27,6 +27,7 @@ class RepairController extends Controller
             'status' => trim((string) $request->query('status', '')),
             'priority' => trim((string) $request->query('priority', '')),
             'repair_type' => trim((string) $request->query('repair_type', '')),
+            'mine' => $request->boolean('mine'),
         ];
 
         if (! $this->featureTableExists('repairs')) {
@@ -50,7 +51,7 @@ class RepairController extends Controller
         }
 
         $repairs = $this->visibleRepairsQuery($user)
-            ->with(['device.building', 'device.room', 'executor', 'acceptedBy', 'request'])
+            ->with(['device.building', 'device.room', 'executor', 'acceptedBy', 'request.responsibleUser', 'request.reviewedBy'])
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
 
@@ -67,6 +68,7 @@ class RepairController extends Controller
             ->when($filters['status'] !== '' && in_array($filters['status'], self::STATUSES, true), fn (Builder $query) => $query->where('status', $filters['status']))
             ->when($filters['priority'] !== '' && in_array($filters['priority'], self::PRIORITIES, true), fn (Builder $query) => $query->where('priority', $filters['priority']))
             ->when($filters['repair_type'] !== '' && in_array($filters['repair_type'], self::TYPES, true), fn (Builder $query) => $query->where('repair_type', $filters['repair_type']))
+            ->when($filters['mine'] && $user->canManageRequests(), fn (Builder $query) => $query->where('accepted_by', $user->id))
             ->orderByRaw("case when status = 'waiting' then 0 when status = 'in-progress' then 1 when status = 'completed' then 2 else 3 end")
             ->orderByDesc('id')
             ->get();
@@ -121,7 +123,7 @@ class RepairController extends Controller
         $validated['accepted_by'] = $manager->id;
 
         $repair = Repair::create($validated);
-        $repair->load(['device', 'executor', 'acceptedBy']);
+        $repair->load(['device', 'executor', 'acceptedBy', 'request.responsibleUser', 'request.reviewedBy']);
 
         $this->syncDeviceStatus($repair);
         AuditTrail::created($manager->id, $repair);
@@ -137,7 +139,7 @@ class RepairController extends Controller
             return redirect()->route('repairs.index')->with('error', 'Tabula repairs sobrid nav pieejama.');
         }
 
-        $repair->load(['device', 'executor', 'acceptedBy']);
+        $repair->load(['device', 'executor', 'acceptedBy', 'request.responsibleUser', 'request.reviewedBy']);
 
         return view('repairs.edit', array_merge([
             'repair' => $repair,
@@ -170,7 +172,7 @@ class RepairController extends Controller
         ]);
 
         $repair->update($this->validatedData($request, $repair));
-        $repair->load(['device', 'executor', 'acceptedBy']);
+        $repair->load(['device', 'executor', 'acceptedBy', 'request.responsibleUser', 'request.reviewedBy']);
         $this->syncDeviceStatus($repair, $before['status'] ?? null);
 
         $after = $repair->fresh()->only(array_keys($before));

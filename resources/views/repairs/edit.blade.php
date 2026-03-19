@@ -33,6 +33,10 @@
         <div class="surface-card-muted text-sm text-slate-600">
             <div><strong class="text-slate-900">Ierice:</strong> {{ $repair->device?->name ?: '-' }} ({{ $repair->device?->code ?: 'bez koda' }})</div>
             <div class="mt-1"><strong class="text-slate-900">Saistitais pieteikums:</strong> {{ $repair->request_id ? '#' . $repair->request_id : 'Nav piesaistits' }}</div>
+            @if ($repair->request)
+                <div class="mt-1"><strong class="text-slate-900">Pieteica:</strong> {{ $repair->request->responsibleUser?->full_name ?: 'Nav noradits' }}</div>
+                <div class="mt-1"><strong class="text-slate-900">Problemas apraksts:</strong> {{ $repair->request->description ?: '-' }}</div>
+            @endif
         </div>
 
         <form method="POST" action="{{ route('repairs.update', $repair) }}" class="surface-card space-y-6 p-6">
@@ -52,4 +56,3 @@
         </form>
     </section>
 </x-app-layout>
-
