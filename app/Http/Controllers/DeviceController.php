@@ -38,8 +38,15 @@ class DeviceController extends Controller
             'room_id' => trim((string) $request->query('room_id', '')),
             'type' => trim((string) $request->query('type', '')),
             'type_query' => trim((string) $request->query('type_query', '')),
-            'status' => trim((string) $request->query('status', '')),
+            'statuses' => collect($request->query('status', []))
+                ->map(fn (mixed $status) => trim((string) $status))
+                ->filter(fn (string $status) => in_array($status, self::STATUSES, true))
+                ->unique()
+                ->values()
+                ->all(),
         ];
+
+        $filters['has_status_filter'] = count($filters['statuses']) > 0 && count($filters['statuses']) < count(self::STATUSES);
 
         $summaryQuery = $this->visibleDevicesQuery($user);
         $accessibleRooms = $this->accessibleRooms($user);
@@ -118,7 +125,10 @@ class DeviceController extends Controller
                         ->orWhere('category', 'like', "%{$term}%");
                 });
             })
-            ->when($filters['status'] !== '' && in_array($filters['status'], self::STATUSES, true), fn (Builder $query) => $query->where('status', $filters['status']))
+            ->when(
+                $filters['has_status_filter'],
+                fn (Builder $query) => $query->whereIn('status', $filters['statuses'])
+            )
             ->orderByDesc('id')
             ->paginate(20)
             ->withQueryString();

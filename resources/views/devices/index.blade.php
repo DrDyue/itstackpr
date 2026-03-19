@@ -8,11 +8,11 @@
             : ($filters['room_query'] !== '' ? $filters['room_query'] : null);
         $selectedTypeLabel = $selectedType?->type_name ?: ($filters['type_query'] !== '' ? $filters['type_query'] : null);
         $statusFilterLinks = [
-            ['label' => 'Visas', 'value' => '', 'icon' => 'device', 'tone' => 'slate'],
             ['label' => 'Aktivas', 'value' => 'active', 'icon' => 'check-circle', 'tone' => 'emerald'],
             ['label' => 'Remonta', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'amber'],
             ['label' => 'Norakstitas', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
         ];
+        $selectedStatuses = $filters['has_status_filter'] ? $filters['statuses'] : collect($statusFilterLinks)->pluck('value')->all();
         $roomSelectOptions = $roomOptions->map(fn ($room) => [
             'value' => (string) $room->id,
             'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
@@ -151,13 +151,21 @@
                     @foreach ($statusFilterLinks as $statusFilter)
                         @php
                             $query = request()->except('page', 'status');
-                            if ($statusFilter['value'] !== '') {
-                                $query['status'] = $statusFilter['value'];
+                            $statusValues = collect($selectedStatuses);
+                            $isActive = $statusValues->contains($statusFilter['value']);
+                            $nextStatuses = $isActive
+                                ? $statusValues->reject(fn ($value) => $value === $statusFilter['value'])->values()->all()
+                                : $statusValues->push($statusFilter['value'])->unique()->values()->all();
+
+                            if (count($nextStatuses) === 0 || count($nextStatuses) === count($statusFilterLinks)) {
+                                unset($query['status']);
+                            } else {
+                                $query['status'] = $nextStatuses;
                             }
                         @endphp
                         <a
-                            href="{{ route('devices.index', array_filter($query, fn ($value) => $value !== null && $value !== '')) }}"
-                            class="quick-status-filter quick-status-filter-{{ $statusFilter['tone'] }} {{ $filters['status'] === $statusFilter['value'] || ($statusFilter['value'] === '' && $filters['status'] === '') ? 'quick-status-filter-active' : '' }}"
+                            href="{{ route('devices.index', $query) }}"
+                            class="quick-status-filter quick-status-filter-{{ $statusFilter['tone'] }} {{ $isActive ? 'quick-status-filter-active' : '' }}"
                         >
                             <x-icon :name="$statusFilter['icon']" size="h-4 w-4" />
                             <span>{{ $statusFilter['label'] }}</span>
@@ -185,7 +193,7 @@
                 ['label' => 'Stavs', 'value' => $selectedFloorLabel],
                 ['label' => 'Telpa', 'value' => $selectedRoomLabel],
                 ['label' => 'Tips', 'value' => $selectedTypeLabel],
-                ['label' => 'Statuss', 'value' => $filters['status'] !== '' ? ($statusLabels[$filters['status']] ?? $filters['status']) : null],
+                ['label' => 'Statuss', 'value' => $filters['has_status_filter'] ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ') : null],
             ]"
             :clear-url="route('devices.index')"
         />

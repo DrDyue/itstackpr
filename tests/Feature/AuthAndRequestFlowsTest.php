@@ -678,6 +678,21 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertDontSee('Testa ierice DEV-TYPE-TWO');
     }
 
+    public function test_devices_index_can_filter_by_multiple_statuses(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-status-filter-admin@example.com');
+        $activeDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-STATUS-ACTIVE');
+        $repairDevice = $this->createDevice($admin->id, Device::STATUS_REPAIR, 'DEV-STATUS-REPAIR');
+        $writeoffDevice = $this->createDevice($admin->id, Device::STATUS_WRITEOFF, 'DEV-STATUS-WRITEOFF');
+
+        $this->actingAs($admin)
+            ->get(route('devices.index', ['status' => [Device::STATUS_ACTIVE, Device::STATUS_REPAIR]]))
+            ->assertOk()
+            ->assertSee($activeDevice->code)
+            ->assertSee($repairDevice->code)
+            ->assertDontSee($writeoffDevice->code);
+    }
+
     private function createUser(string $role, ?string $email = null): User
     {
         return User::create([
