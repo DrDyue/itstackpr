@@ -6,12 +6,6 @@
             'description' => 'Filtrs pec pilsetas',
             'search' => (string) $city,
         ])->values();
-        $scopeOptions = [
-            ['value' => 'with_rooms', 'label' => 'Ar telpam', 'description' => 'Rada ekas, kuram ir telpas', 'search' => 'Ar telpam'],
-            ['value' => 'with_devices', 'label' => 'Ar iericem', 'description' => 'Rada ekas ar iericem', 'search' => 'Ar iericem'],
-            ['value' => 'empty', 'label' => 'Tuksa eka', 'description' => 'Rada tuksas ekas', 'search' => 'Tuksa eka'],
-        ];
-        $selectedScopeLabel = collect($scopeOptions)->firstWhere('value', $filters['scope'])['label'] ?? null;
     @endphp
     <section class="app-shell">
         <div class="page-hero">
@@ -33,7 +27,7 @@
             </div>
         </div>
 
-        <form method="GET" action="{{ route('buildings.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-3">
+        <form method="GET" action="{{ route('buildings.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-2">
             <label class="block">
                 <span class="crud-label">Meklet</span>
                 <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, adrese vai piezimes...">
@@ -51,20 +45,7 @@
                     empty-message="Neviena pilseta neatbilst meklejumam."
                 />
             </label>
-            <label class="block">
-                <span class="crud-label">Saturs</span>
-                <x-searchable-select
-                    name="scope"
-                    query-name="scope_query"
-                    identifier="building-scope-filter"
-                    :options="$scopeOptions"
-                    :selected="$filters['scope']"
-                    :query="$selectedScopeLabel"
-                    placeholder="Izvelies saturu"
-                    empty-message="Neviens filtrs neatbilst meklejumam."
-                />
-            </label>
-            <div class="toolbar-actions md:col-span-3">
+            <div class="toolbar-actions md:col-span-2">
                 <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklet</span></button>
                 <a href="{{ route('buildings.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notirit</span></a>
             </div>
@@ -74,7 +55,6 @@
             :items="[
                 ['label' => 'Meklet', 'value' => $filters['q']],
                 ['label' => 'Pilseta', 'value' => $filters['city']],
-                ['label' => 'Saturs', 'value' => $filters['scope'] === 'with_rooms' ? 'Ar telpam' : ($filters['scope'] === 'with_devices' ? 'Ar iericem' : ($filters['scope'] === 'empty' ? 'Tuksa eka' : null))],
             ]"
             :clear-url="route('buildings.index')"
         />

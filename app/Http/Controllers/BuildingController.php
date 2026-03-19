@@ -18,7 +18,6 @@ class BuildingController extends Controller
         $filters = [
             'q' => trim((string) $request->query('q', '')),
             'city' => trim((string) $request->query('city', '')),
-            'scope' => trim((string) $request->query('scope', '')),
         ];
 
         $buildings = Building::query()
@@ -33,9 +32,6 @@ class BuildingController extends Controller
                 });
             })
             ->when($filters['city'] !== '', fn (Builder $query) => $query->where('city', $filters['city']))
-            ->when($filters['scope'] === 'with_rooms', fn (Builder $query) => $query->whereHas('rooms'))
-            ->when($filters['scope'] === 'with_devices', fn (Builder $query) => $query->whereHas('devices'))
-            ->when($filters['scope'] === 'empty', fn (Builder $query) => $query->doesntHave('rooms')->doesntHave('devices'))
             ->orderBy('building_name')
             ->paginate(20)
             ->withQueryString();
