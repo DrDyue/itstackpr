@@ -11,4 +11,3 @@ export default {
 
 
 
-skaties tagad ie
