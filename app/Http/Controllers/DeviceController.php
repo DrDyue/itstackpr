@@ -188,6 +188,7 @@ class DeviceController extends Controller
     {
         $this->authorizeView($device);
 
+        $user = $this->user();
         $device->load([
             'type',
             'building',
@@ -197,6 +198,8 @@ class DeviceController extends Controller
             'repairs.assignee',
             'repairRequests.responsibleUser',
             'repairRequests.reviewedBy',
+            'repairRequests.repair.acceptedBy',
+            'repairRequests.repair.executor',
             'writeoffRequests.responsibleUser',
             'writeoffRequests.reviewedBy',
             'transfers.responsibleUser',
@@ -204,12 +207,84 @@ class DeviceController extends Controller
             'transfers.reviewedBy',
         ]);
 
+        $latestTransferToCurrentUser = $device->transfers
+            ->where('status', 'approved')
+            ->where('transfered_to_id', $user?->id)
+            ->sortByDesc('created_at')
+            ->first();
+
+        $roomOptions = Room::query()
+            ->with('building')
+            ->orderBy('floor_number')
+            ->orderBy('room_number')
+            ->get()
+            ->map(fn (Room $room) => [
+                'value' => (string) $room->id,
+                'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
+                'description' => collect([
+                    $room->building?->building_name,
+                    $room->floor_number !== null ? $room->floor_number . '. stavs' : null,
+                    $room->department,
+                ])->filter()->implode(' | '),
+                'search' => implode(' ', array_filter([
+                    $room->room_number,
+                    $room->room_name,
+                    $room->building?->building_name,
+                    $room->department,
+                    $room->floor_number,
+                ])),
+            ])
+            ->values();
+
         return view('devices.show', [
             'device' => $device,
             'deviceImageUrl' => $device->deviceImageUrl(),
             'statusLabels' => $this->statusLabels(),
             'canManageDevices' => $this->user()?->canManageRequests() ?? false,
+            'originLabel' => $latestTransferToCurrentUser
+                ? 'Ierice tev nodota no ' . ($latestTransferToCurrentUser->responsibleUser?->full_name ?: 'cita lietotaja') . '.'
+                : 'Ierici tev pieskira administrators.',
+            'roomOptions' => $roomOptions,
+            'visibleWriteoffRequests' => ($this->user()?->canManageRequests() ?? false)
+                ? $device->writeoffRequests
+                : $device->writeoffRequests->where('status', 'rejected')->values(),
         ]);
+    }
+
+    public function updateUserRoom(Request $request, Device $device): RedirectResponse
+    {
+        $user = $this->user();
+        abort_unless($user, 403);
+        abort_if($user->canManageRequests(), 403);
+        abort_unless((int) $device->assigned_to_id === (int) $user->id, 403);
+        abort_if($device->status === Device::STATUS_WRITEOFF, 403);
+
+        $validated = $this->validateInput($request, [
+            'room_id' => ['nullable', 'exists:rooms,id'],
+        ], [
+            'room_id.exists' => 'Izveleta telpa nav atrasta.',
+        ]);
+
+        $roomId = $validated['room_id'] ?? null;
+        $room = $roomId ? Room::query()->with('building')->find($roomId) : null;
+
+        $payload = [
+            'room_id' => $room?->id,
+            'building_id' => $room?->building_id,
+        ];
+
+        if ((int) $device->room_id === (int) ($room?->id ?? 0) && (int) $device->building_id === (int) ($room?->building_id ?? 0)) {
+            return redirect()->route('devices.show', $device)->with('error', 'Ierice jau atrodas saja telpa.');
+        }
+
+        $before = $device->only(['room_id', 'building_id']);
+        $this->saveDevicePayload($device, $payload);
+        AuditTrail::updatedFromState(auth()->id(), $device, $before, [
+            'room_id' => $device->room_id,
+            'building_id' => $device->building_id,
+        ]);
+
+        return redirect()->route('devices.show', $device)->with('success', 'Ierices atrasanas vieta atjauninata.');
     }
 
     public function update(Request $request, Device $device)

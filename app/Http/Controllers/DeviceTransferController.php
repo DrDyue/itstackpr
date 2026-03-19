@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Device;
 use App\Models\DeviceTransfer;
+use App\Models\Room;
 use App\Models\User;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
@@ -167,13 +168,25 @@ class DeviceTransferController extends Controller
         $validated = $this->validateInput($request, [
             'status' => ['required', Rule::in([DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED])],
             'review_notes' => ['nullable', 'string'],
+            'room_id' => ['nullable', 'exists:rooms,id'],
+            'keep_current_room' => ['nullable', 'boolean'],
         ], [
             'status.required' => 'Izvelies lemumu parsutisanas pieteikumam.',
         ]);
 
+        if (
+            $validated['status'] === DeviceTransfer::STATUS_APPROVED
+            && ! $request->boolean('keep_current_room')
+            && blank($validated['room_id'] ?? null)
+        ) {
+            throw ValidationException::withMessages([
+                'room_id' => ['Izvelies jauno telpu vai atzime, ka ierice paliek esosaja telpa.'],
+            ]);
+        }
+
         $before = $deviceTransfer->only(['status', 'reviewed_by_user_id', 'review_notes']);
 
-        DB::transaction(function () use ($validated, $deviceTransfer, $reviewer) {
+        DB::transaction(function () use ($validated, $deviceTransfer, $reviewer, $request) {
             $deviceTransfer->update([
                 'status' => $validated['status'],
                 'reviewed_by_user_id' => $reviewer->id,
@@ -194,7 +207,17 @@ class DeviceTransferController extends Controller
 
             $device->forceFill([
                 'assigned_to_id' => $deviceTransfer->transfered_to_id,
-            ])->save();
+            ]);
+
+            if (! $request->boolean('keep_current_room') && filled($validated['room_id'] ?? null)) {
+                $room = Room::query()->find($validated['room_id']);
+                $device->forceFill([
+                    'room_id' => $room?->id,
+                    'building_id' => $room?->building_id,
+                ]);
+            }
+
+            $device->save();
         });
 
         $after = $deviceTransfer->fresh()->only(array_keys($before));

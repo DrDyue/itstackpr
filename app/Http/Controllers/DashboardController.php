@@ -10,6 +10,7 @@ use App\Models\RepairRequest;
 use App\Models\Room;
 use App\Models\User;
 use App\Models\WriteoffRequest;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
@@ -19,6 +20,7 @@ class DashboardController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+        $isManager = $user->canManageRequests();
 
         $hasDevices = $this->featureTableExists('devices');
         $hasRepairs = $this->featureTableExists('repairs');
@@ -31,7 +33,7 @@ class DashboardController extends Controller
         $transferQuery = Schema::hasTable('device_transfers') ? DeviceTransfer::query() : null;
         $repairQuery = $hasRepairs ? Repair::query() : null;
 
-        if (! $user->canManageRequests()) {
+        if (! $isManager) {
             $deviceQuery?->where('assigned_to_id', $user->id);
             $repairRequestQuery?->where('responsible_user_id', $user->id);
             $writeoffRequestQuery?->where('responsible_user_id', $user->id);
@@ -55,7 +57,7 @@ class DashboardController extends Controller
                 ->get()
             : collect();
 
-        $locationRooms = $hasRooms
+        $locationRooms = $hasRooms && $isManager
             ? Room::query()
                 ->with(['building'])
                 ->withCount([
@@ -74,7 +76,7 @@ class DashboardController extends Controller
                 ->get()
             : collect();
 
-        $recentActivity = $hasAuditLog
+        $recentActivity = $hasAuditLog && $isManager
             ? tap(AuditLog::query()->with('user'), function ($query) use ($user) {
                 if (! $user->canManageRequests()) {
                     $query->where('user_id', $user->id);
@@ -134,12 +136,18 @@ class DashboardController extends Controller
                 ->count()
             : 0;
 
+        $recentUserRequests = ! $isManager
+            ? $this->recentUserRequests($user)
+            : collect();
+
         return view('dashboard', [
             'user' => $user,
+            'isManager' => $isManager,
             'dashboardDevices' => $dashboardDevices,
             'locationTree' => $locationTree,
             'activeRepairs' => $activeRepairs,
             'recentActivity' => $recentActivity,
+            'recentUserRequests' => $recentUserRequests,
             'quickActions' => $this->quickActions(
                 $user,
                 $pendingRepairRequestCount,
@@ -203,19 +211,82 @@ class DashboardController extends Controller
                 'count' => null,
             ],
             [
-                'label' => 'Remonta pieteikumi',
-                'url' => route('repair-requests.index'),
+                'label' => 'Apskatit pieteikumus',
+                'url' => route('my-requests.index'),
                 'icon' => 'repair-request',
                 'class' => 'btn-view',
-                'count' => $pendingRepairRequestCount,
-            ],
-            [
-                'label' => 'Norakstisanas pieteikumi',
-                'url' => route('writeoff-requests.index'),
-                'icon' => 'writeoff',
-                'class' => 'btn-danger',
-                'count' => $pendingWriteoffRequestCount,
+                'count' => $pendingRepairRequestCount + $pendingWriteoffRequestCount + $pendingTransferRequestCount,
             ],
         ];
+    }
+
+    private function recentUserRequests(User $user): Collection
+    {
+        $repairRequests = Schema::hasTable('repair_requests')
+            ? RepairRequest::query()
+                ->with(['device', 'reviewedBy', 'repair'])
+                ->where('responsible_user_id', $user->id)
+                ->get()
+                ->map(fn (RepairRequest $request) => [
+                    'id' => 'repair-' . $request->id,
+                    'type' => 'Remonts',
+                    'status' => $request->status,
+                    'created_at' => $request->created_at,
+                    'device_name' => $request->device?->name ?: 'Ierice nav atrasta',
+                    'summary' => $request->description,
+                    'meta' => $request->repair ? 'Saistits remonts #' . $request->repair->id : null,
+                ])
+            : collect();
+
+        $writeoffRequests = Schema::hasTable('writeoff_requests')
+            ? WriteoffRequest::query()
+                ->with(['device', 'reviewedBy'])
+                ->where('responsible_user_id', $user->id)
+                ->get()
+                ->map(fn (WriteoffRequest $request) => [
+                    'id' => 'writeoff-' . $request->id,
+                    'type' => 'Norakstisana',
+                    'status' => $request->status,
+                    'created_at' => $request->created_at,
+                    'device_name' => $request->device?->name ?: 'Ierice nav atrasta',
+                    'summary' => $request->reason,
+                    'meta' => $request->review_notes,
+                ])
+            : collect();
+
+        $transfers = Schema::hasTable('device_transfers')
+            ? DeviceTransfer::query()
+                ->with(['device', 'responsibleUser', 'transferTo'])
+                ->where(function ($query) use ($user) {
+                    $query->where('responsible_user_id', $user->id)
+                        ->orWhere('transfered_to_id', $user->id);
+                })
+                ->get()
+                ->map(function (DeviceTransfer $transfer) use ($user) {
+                    $incoming = (int) $transfer->transfered_to_id === (int) $user->id
+                        && (int) $transfer->responsible_user_id !== (int) $user->id;
+
+                    return [
+                        'id' => 'transfer-' . $transfer->id,
+                        'type' => 'Nodosana',
+                        'status' => $transfer->status,
+                        'created_at' => $transfer->created_at,
+                        'device_name' => $transfer->device?->name ?: 'Ierice nav atrasta',
+                        'summary' => $incoming
+                            ? 'Tev tiek nodota ierice no ' . ($transfer->responsibleUser?->full_name ?: 'cita lietotaja')
+                            : $transfer->transfer_reason,
+                        'meta' => $incoming
+                            ? 'Gaida tavu lemumu'
+                            : ('Sanemejs: ' . ($transfer->transferTo?->full_name ?: '-')),
+                    ];
+                })
+            : collect();
+
+        return $repairRequests
+            ->concat($writeoffRequests)
+            ->concat($transfers)
+            ->sortByDesc(fn (array $item) => $item['created_at']?->getTimestamp() ?? 0)
+            ->take(6)
+            ->values();
     }
 }

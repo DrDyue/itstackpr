@@ -648,11 +648,163 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->actingAs($user)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('Stavi un telpas')
+            ->assertSee('Pedejie pieteikumi')
+            ->assertSee('Manas ierices')
             ->assertSee('DEV-DASH-OWN')
             ->assertDontSee('DEV-DASH-OTHER')
-            ->assertSee('Mana personiga darbiba')
+            ->assertDontSee('Stavi un telpas')
+            ->assertDontSee('Jaunakas darbibas')
+            ->assertDontSee('Mana personiga darbiba')
             ->assertDontSee('Svesa admina darbiba');
+    }
+
+    public function test_regular_user_can_open_unified_request_center_and_see_related_request_types(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'request-center-user@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'request-center-recipient@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-REQUEST-CENTER');
+
+        RepairRequest::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'description' => 'Jaiet uz vienoto centru.',
+            'status' => RepairRequest::STATUS_SUBMITTED,
+        ]);
+
+        WriteoffRequest::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'reason' => 'Ar norakstisanu saistits ieraksts.',
+            'status' => WriteoffRequest::STATUS_REJECTED,
+        ]);
+
+        DeviceTransfer::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Nodosanas ieraksts vienotajam sarakstam.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('my-requests.index'))
+            ->assertOk()
+            ->assertSee('Mani pieteikumi')
+            ->assertSee('Jaiet uz vienoto centru.')
+            ->assertSee('Ar norakstisanu saistits ieraksts.')
+            ->assertSee('Nodosanas ieraksts vienotajam sarakstam.');
+    }
+
+    public function test_regular_user_can_create_transfer_request_from_unified_form(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'unified-create-user@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'unified-create-recipient@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-UNIFIED-CREATE');
+
+        $this->actingAs($user)
+            ->post(route('my-requests.store'), [
+                'request_type' => 'transfer',
+                'device_id' => $device->id,
+                'transfered_to_id' => $recipient->id,
+                'transfer_reason' => 'Vienota forma nodosanai.',
+            ])
+            ->assertRedirect(route('my-requests.index'));
+
+        $this->assertDatabaseHas('device_transfers', [
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Vienota forma nodosanai.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+        ]);
+    }
+
+    public function test_transfer_recipient_can_approve_device_and_change_room(): void
+    {
+        $sender = $this->createUser(role: User::ROLE_USER, email: 'transfer-room-sender@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'transfer-room-recipient@example.com');
+        $device = $this->createDevice($sender->id, Device::STATUS_ACTIVE, 'DEV-TRANSFER-ROOM');
+
+        $newBuildingId = DB::table('buildings')->insertGetId([
+            'building_name' => 'Jauna eka',
+            'address' => 'Adrese 2',
+            'city' => 'Ludza',
+            'total_floors' => 2,
+            'notes' => null,
+            'created_at' => now(),
+        ]);
+
+        $newRoomId = DB::table('rooms')->insertGetId([
+            'building_id' => $newBuildingId,
+            'floor_number' => 2,
+            'room_number' => '205-NEW',
+            'room_name' => 'Jauna telpa',
+            'user_id' => $recipient->id,
+            'department' => 'IT',
+            'notes' => null,
+            'created_at' => now(),
+        ]);
+
+        $transfer = DeviceTransfer::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $sender->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Pec apstiprinasanas mainit telpu.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($recipient)
+            ->post(route('device-transfers.review', $transfer), [
+                'status' => DeviceTransfer::STATUS_APPROVED,
+                'room_id' => $newRoomId,
+                'keep_current_room' => 0,
+            ])
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('devices', [
+            'id' => $device->id,
+            'assigned_to_id' => $recipient->id,
+            'room_id' => $newRoomId,
+            'building_id' => $newBuildingId,
+        ]);
+    }
+
+    public function test_regular_user_can_update_room_for_owned_device(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'device-room-user@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-USER-ROOM');
+
+        $newBuildingId = DB::table('buildings')->insertGetId([
+            'building_name' => 'Papildus eka',
+            'address' => 'Adrese 3',
+            'city' => 'Ludza',
+            'total_floors' => 1,
+            'notes' => null,
+            'created_at' => now(),
+        ]);
+
+        $newRoomId = DB::table('rooms')->insertGetId([
+            'building_id' => $newBuildingId,
+            'floor_number' => 1,
+            'room_number' => '110-USER',
+            'room_name' => 'Lietotaja telpa',
+            'user_id' => $user->id,
+            'department' => 'IT',
+            'notes' => null,
+            'created_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('devices.user-room.update', $device), [
+                'room_id' => $newRoomId,
+            ])
+            ->assertRedirect(route('devices.show', $device));
+
+        $this->assertDatabaseHas('devices', [
+            'id' => $device->id,
+            'room_id' => $newRoomId,
+            'building_id' => $newBuildingId,
+        ]);
     }
 
     public function test_devices_index_accepts_floor_and_room_filters_from_dashboard_links(): void

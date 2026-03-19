@@ -19,6 +19,7 @@ use App\Http\Controllers\DeviceAssetController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserRequestCenterController;
 
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
@@ -65,8 +66,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/my-requests', [UserRequestCenterController::class, 'index'])->name('my-requests.index');
+    Route::get('/my-requests/create', [UserRequestCenterController::class, 'create'])->name('my-requests.create');
+    Route::post('/my-requests', [UserRequestCenterController::class, 'store'])->name('my-requests.store');
 
     Route::resource('devices', DeviceController::class)->only(['index', 'show']);
+    Route::post('/devices/{device}/user-room', [DeviceController::class, 'updateUserRoom'])->name('devices.user-room.update');
     Route::get('/device-assets/remote-preview', [DeviceAssetController::class, 'remotePreview'])
         ->name('device-assets.remote-preview');
     Route::get('/device-assets/{path}', [DeviceAssetController::class, 'show'])
