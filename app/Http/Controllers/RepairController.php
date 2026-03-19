@@ -122,7 +122,7 @@ class RepairController extends Controller
         $validated = $this->validatedData($request);
         $validated['accepted_by'] = $manager->id;
 
-        $repair = Repair::create($validated);
+        $repair = $this->createRepairRecord($validated);
         $repair->load(['device', 'executor', 'acceptedBy', 'request.responsibleUser', 'request.reviewedBy']);
 
         $this->syncDeviceStatus($repair);
@@ -237,7 +237,7 @@ class RepairController extends Controller
             $payload['end_date'] = now()->toDateString();
         }
 
-        $repair->update($payload);
+        $repair->update($this->normalizeRepairPayloadForPersistence($payload));
         $this->syncDeviceStatus($repair, $before['status'] ?? null);
         $after = $repair->fresh()->only(array_keys($before));
 

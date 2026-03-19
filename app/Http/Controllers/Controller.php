@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Repair;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -156,5 +157,45 @@ abstract class Controller
             'approved' => 'Apstiprinats',
             'rejected' => 'Noraidits',
         ];
+    }
+
+    protected function createRepairRecord(array $payload): Repair
+    {
+        return Repair::create($this->normalizeRepairPayloadForPersistence($payload));
+    }
+
+    protected function normalizeRepairPayloadForPersistence(array $payload): array
+    {
+        $status = (string) ($payload['status'] ?? 'waiting');
+        $today = now()->toDateString();
+
+        if (($payload['start_date'] ?? null) === null && ! $this->repairColumnAllowsNull('start_date')) {
+            $payload['start_date'] = $status === 'completed'
+                ? (string) ($payload['end_date'] ?? $today)
+                : $today;
+        }
+
+        if (($payload['end_date'] ?? null) === null && ! $this->repairColumnAllowsNull('end_date')) {
+            $payload['end_date'] = $status === 'completed'
+                ? (string) ($payload['start_date'] ?? $today)
+                : (string) ($payload['start_date'] ?? $today);
+        }
+
+        return $payload;
+    }
+
+    protected function repairColumnAllowsNull(string $column): bool
+    {
+        static $repairsColumnNullability = null;
+
+        if ($repairsColumnNullability === null) {
+            $repairsColumnNullability = collect(Schema::getColumns('repairs'))
+                ->mapWithKeys(fn (array $definition) => [
+                    (string) ($definition['name'] ?? '') => (bool) ($definition['nullable'] ?? false),
+                ])
+                ->all();
+        }
+
+        return (bool) ($repairsColumnNullability[$column] ?? true);
     }
 }

@@ -675,7 +675,7 @@ class DeviceController extends Controller
             $repair = null;
 
             DB::transaction(function () use ($device, &$repair, $before) {
-                $repair = Repair::create([
+                $repair = $this->createRepairRecord([
                     'device_id' => $device->id,
                     'issue_reported_by' => $device->assigned_to_id,
                     'accepted_by' => auth()->id(),

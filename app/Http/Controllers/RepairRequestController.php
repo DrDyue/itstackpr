@@ -175,7 +175,7 @@ class RepairRequestController extends Controller
                     ]);
                 }
 
-                $repair = Repair::create([
+                $repair = $this->createRepairRecord([
                     'device_id' => $repairRequest->device_id,
                     'issue_reported_by' => $repairRequest->responsible_user_id,
                     'accepted_by' => $manager->id,
