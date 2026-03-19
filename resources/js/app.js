@@ -487,14 +487,6 @@ const registerAlpineData = () => {
     }));
 };
 
-registerAlpineData();
-document.addEventListener('alpine:init', registerAlpineData);
-
-if (Alpine && !window.__appAlpineStarted) {
-    window.__appAlpineStarted = true;
-    Alpine.start();
-}
-
 const repairTransitionRules = {
     waiting: ['in-progress', 'cancelled'],
     'in-progress': ['waiting', 'completed', 'cancelled'],
@@ -611,3 +603,11 @@ window.repairProcess = (config) => ({
         this.submitTransition(config.repairId, 'completed');
     },
 });
+
+registerAlpineData();
+document.addEventListener('alpine:init', registerAlpineData);
+
+if (Alpine && !window.__appAlpineStarted) {
+    window.__appAlpineStarted = true;
+    Alpine.start();
+}
