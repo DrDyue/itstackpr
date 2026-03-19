@@ -58,12 +58,17 @@ class UserRequestCenterController extends Controller
     {
         $user = $this->requireRegularUser();
         $devices = $this->availableDevicesForUser($user)->get();
+        $selectedDeviceId = (string) $request->query('device_id', '');
+        $selectedDevice = $devices->firstWhere('id', (int) $selectedDeviceId);
 
         return view('my_requests.create', [
             'devices' => $devices,
             'users' => User::active()->whereKeyNot($user->id)->orderBy('full_name')->get(),
             'selectedType' => in_array($request->query('type'), ['repair', 'writeoff', 'transfer'], true) ? (string) $request->query('type') : 'repair',
-            'selectedDeviceId' => $request->query('device_id'),
+            'selectedDeviceId' => $selectedDevice?->id ? (string) $selectedDevice->id : '',
+            'selectedDeviceLabel' => $selectedDevice
+                ? $selectedDevice->name . ' (' . ($selectedDevice->code ?: 'bez koda') . ')'
+                : '',
             'user' => $user,
             'deviceOptions' => $devices->map(fn (Device $device) => [
                 'value' => (string) $device->id,

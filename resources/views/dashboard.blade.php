@@ -154,7 +154,7 @@
                                     </a>
                                     <a href="{{ route('my-requests.create', ['type' => 'repair', 'device_id' => $device->id]) }}" class="btn-edit">
                                         <x-icon name="repair" size="h-4 w-4" />
-                                        <span>Pieteikt remontu</span>
+                                        <span>Veidot pieteikumu</span>
                                     </a>
                                 </div>
                             </div>

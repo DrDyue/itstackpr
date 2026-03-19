@@ -66,7 +66,7 @@
                             queryName="device_query"
                             :options="$deviceOptions"
                             :selected="old('device_id', (string) $selectedDeviceId)"
-                            :query="''"
+                            :query="old('device_query', $selectedDeviceLabel)"
                             identifier="my-request-device"
                             placeholder="Izvelies ierici"
                         />
