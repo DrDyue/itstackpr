@@ -333,7 +333,7 @@ class RepairController extends Controller
             'invoice_number',
             'request_id',
         ] as $field) {
-            $validated[$field] = $validated[$field] ?: null;
+            $validated[$field] = $validated[$field] ?? null;
         }
 
         $validated['status'] = $repair?->status ?? 'waiting';
