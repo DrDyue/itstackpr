@@ -1,4 +1,18 @@
 <x-app-layout>
+    @php
+        $cityOptions = collect($cities)->map(fn ($city) => [
+            'value' => (string) $city,
+            'label' => (string) $city,
+            'description' => 'Filtrs pec pilsetas',
+            'search' => (string) $city,
+        ])->values();
+        $scopeOptions = [
+            ['value' => 'with_rooms', 'label' => 'Ar telpam', 'description' => 'Rada ekas, kuram ir telpas', 'search' => 'Ar telpam'],
+            ['value' => 'with_devices', 'label' => 'Ar iericem', 'description' => 'Rada ekas ar iericem', 'search' => 'Ar iericem'],
+            ['value' => 'empty', 'label' => 'Tuksa eka', 'description' => 'Rada tuksas ekas', 'search' => 'Tuksa eka'],
+        ];
+        $selectedScopeLabel = collect($scopeOptions)->firstWhere('value', $filters['scope'])['label'] ?? null;
+    @endphp
     <section class="app-shell">
         <div class="page-hero">
             <div class="page-hero-grid">
@@ -26,21 +40,29 @@
             </label>
             <label class="block">
                 <span class="crud-label">Pilseta</span>
-                <select name="city" class="crud-control">
-                    <option value="">Visas</option>
-                    @foreach ($cities as $city)
-                        <option value="{{ $city }}" @selected($filters['city'] === $city)>{{ $city }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    name="city"
+                    query-name="city_query"
+                    identifier="building-city-filter"
+                    :options="$cityOptions"
+                    :selected="$filters['city']"
+                    :query="$filters['city']"
+                    placeholder="Izvelies pilsetu"
+                    empty-message="Neviena pilseta neatbilst meklejumam."
+                />
             </label>
             <label class="block">
                 <span class="crud-label">Saturs</span>
-                <select name="scope" class="crud-control">
-                    <option value="">Viss</option>
-                    <option value="with_rooms" @selected($filters['scope'] === 'with_rooms')>Ar telpam</option>
-                    <option value="with_devices" @selected($filters['scope'] === 'with_devices')>Ar iericem</option>
-                    <option value="empty" @selected($filters['scope'] === 'empty')>Tuksa eka</option>
-                </select>
+                <x-searchable-select
+                    name="scope"
+                    query-name="scope_query"
+                    identifier="building-scope-filter"
+                    :options="$scopeOptions"
+                    :selected="$filters['scope']"
+                    :query="$selectedScopeLabel"
+                    placeholder="Izvelies saturu"
+                    empty-message="Neviens filtrs neatbilst meklejumam."
+                />
             </label>
             <div class="toolbar-actions md:col-span-3">
                 <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklet</span></button>
@@ -118,4 +140,3 @@
         {{ $buildings->links() }}
     </section>
 </x-app-layout>
-

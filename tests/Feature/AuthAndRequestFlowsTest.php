@@ -75,6 +75,19 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_admin_can_filter_users_by_multiple_roles(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'multi-role-admin@example.com');
+        $otherAdmin = $this->createUser(role: User::ROLE_ADMIN, email: 'second-admin@example.com');
+        $employee = $this->createUser(role: User::ROLE_USER, email: 'employee-filter@example.com');
+
+        $this->actingAs($admin)
+            ->get(route('users.index', ['role' => [User::ROLE_ADMIN]]))
+            ->assertOk()
+            ->assertSee($otherAdmin->email)
+            ->assertDontSee($employee->email);
+    }
+
     public function test_regular_user_cannot_open_manager_routes(): void
     {
         $user = $this->createUser(role: User::ROLE_USER, email: 'manager-blocked@example.com');

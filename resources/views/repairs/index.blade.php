@@ -24,6 +24,20 @@
         if (! $filters['mine']) {
             $mineQuery['mine'] = 1;
         }
+        $priorityOptions = collect($priorities)->map(fn ($priority) => [
+            'value' => (string) $priority,
+            'label' => $priorityLabels[$priority] ?? $priority,
+            'description' => 'Filtrs pec prioritates',
+            'search' => ($priorityLabels[$priority] ?? $priority) . ' ' . $priority,
+        ])->values();
+        $repairTypeOptions = collect($repairTypes)->map(fn ($repairType) => [
+            'value' => (string) $repairType,
+            'label' => $typeLabels[$repairType] ?? $repairType,
+            'description' => 'Filtrs pec remonta tipa',
+            'search' => ($typeLabels[$repairType] ?? $repairType) . ' ' . $repairType,
+        ])->values();
+        $selectedPriorityLabel = $filters['priority'] !== '' ? ($priorityLabels[$filters['priority']] ?? $filters['priority']) : null;
+        $selectedRepairTypeLabel = $filters['repair_type'] !== '' ? ($typeLabels[$filters['repair_type']] ?? $filters['repair_type']) : null;
     @endphp
 
     <section class="app-shell">
@@ -52,21 +66,29 @@
             </label>
             <label class="block">
                 <span class="crud-label">Prioritate</span>
-                <select name="priority" class="crud-control">
-                    <option value="">Visas</option>
-                    @foreach ($priorities as $priority)
-                        <option value="{{ $priority }}" @selected($filters['priority'] === $priority)>{{ $priorityLabels[$priority] }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    name="priority"
+                    query-name="priority_query"
+                    identifier="repair-priority-filter"
+                    :options="$priorityOptions"
+                    :selected="$filters['priority']"
+                    :query="$selectedPriorityLabel"
+                    placeholder="Izvelies prioritate"
+                    empty-message="Neviena prioritate neatbilst meklejumam."
+                />
             </label>
             <label class="block">
                 <span class="crud-label">Tips</span>
-                <select name="repair_type" class="crud-control">
-                    <option value="">Visi</option>
-                    @foreach ($repairTypes as $repairType)
-                        <option value="{{ $repairType }}" @selected($filters['repair_type'] === $repairType)>{{ $typeLabels[$repairType] }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    name="repair_type"
+                    query-name="repair_type_query"
+                    identifier="repair-type-filter"
+                    :options="$repairTypeOptions"
+                    :selected="$filters['repair_type']"
+                    :query="$selectedRepairTypeLabel"
+                    placeholder="Izvelies remonta tipu"
+                    empty-message="Neviens remonta tips neatbilst meklejumam."
+                />
             </label>
 
             <div class="filter-toolbar-footer md:col-span-4">

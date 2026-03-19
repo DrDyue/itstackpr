@@ -36,6 +36,10 @@
             'active' => ['label' => 'Aktivs', 'tone' => 'success', 'icon' => 'check-circle'],
             'inactive' => ['label' => 'Neaktivs', 'tone' => 'danger', 'icon' => 'x-circle'],
         ],
+        'user-role' => [
+            'admin' => ['label' => 'Admins', 'tone' => 'violet', 'icon' => 'users'],
+            'user' => ['label' => 'Darbinieks', 'tone' => 'info', 'icon' => 'profile'],
+        ],
         'severity' => [
             'info' => ['label' => 'Info', 'tone' => 'neutral', 'icon' => 'audit'],
             'warning' => ['label' => 'Bridinajums', 'tone' => 'warning', 'icon' => 'exclamation-triangle'],

@@ -18,10 +18,16 @@ class UserController extends Controller
 
         $filters = [
             'q' => trim((string) $request->query('q', '')),
-            'role' => trim((string) $request->query('role', '')),
+            'roles' => collect($request->query('role', []))
+                ->map(fn (mixed $role) => trim((string) $role))
+                ->filter(fn (string $role) => in_array($role, self::ROLES, true))
+                ->unique()
+                ->values()
+                ->all(),
             'is_active' => (string) $request->query('is_active', ''),
             'last_login' => trim((string) $request->query('last_login', '')),
         ];
+        $filters['has_role_filter'] = count($filters['roles']) > 0 && count($filters['roles']) < count(self::ROLES);
 
         $legacyName = trim((string) $request->query('name', ''));
         $legacyEmail = trim((string) $request->query('email', ''));
@@ -39,7 +45,7 @@ class UserController extends Controller
             })
             ->when($legacyName !== '', fn ($query) => $query->where('full_name', 'like', '%' . $legacyName . '%'))
             ->when($legacyEmail !== '', fn ($query) => $query->where('email', 'like', '%' . $legacyEmail . '%'))
-            ->when($filters['role'] !== '', fn ($query) => $query->where('role', $filters['role']))
+            ->when($filters['has_role_filter'], fn ($query) => $query->whereIn('role', $filters['roles']))
             ->when($filters['is_active'] !== '', fn ($query) => $query->where('is_active', $filters['is_active'] === '1'))
             ->when($filters['last_login'] === 'today', fn ($query) => $query->whereDate('last_login', today()))
             ->when($filters['last_login'] === 'recent', fn ($query) => $query->where('last_login', '>=', now()->subDays(7)))

@@ -1,4 +1,32 @@
 <x-app-layout>
+    @php
+        $buildingOptions = $buildings->map(fn ($building) => [
+            'value' => (string) $building->id,
+            'label' => $building->building_name,
+            'description' => $building->city ?: '',
+            'search' => implode(' ', array_filter([$building->building_name, $building->city, $building->address])),
+        ])->values();
+        $departmentOptions = collect($departments)->map(fn ($department) => [
+            'value' => (string) $department,
+            'label' => (string) $department,
+            'description' => 'Filtrs pec nodalas',
+            'search' => (string) $department,
+        ])->values();
+        $userOptions = $responsibleUsers->map(fn ($responsibleUser) => [
+            'value' => (string) $responsibleUser->id,
+            'label' => $responsibleUser->full_name,
+            'description' => $responsibleUser->job_title ?: '',
+            'search' => implode(' ', array_filter([$responsibleUser->full_name, $responsibleUser->job_title, $responsibleUser->email])),
+        ])->values();
+        $hasDeviceOptions = [
+            ['value' => '1', 'label' => 'Ar iericem', 'description' => 'Telpas ar iericem', 'search' => 'Ar iericem'],
+            ['value' => '0', 'label' => 'Bez iericem', 'description' => 'Telpas bez iericem', 'search' => 'Bez iericem'],
+        ];
+        $selectedBuildingLabel = optional($buildings->firstWhere('id', (int) $filters['building_id']))->building_name;
+        $selectedDepartmentLabel = $filters['department'] !== '' ? $filters['department'] : null;
+        $selectedUserLabel = optional($responsibleUsers->firstWhere('id', (int) $filters['user_id']))->full_name;
+        $selectedHasDevicesLabel = collect($hasDeviceOptions)->firstWhere('value', $filters['has_devices'])['label'] ?? null;
+    @endphp
     <section class="app-shell">
         <div class="page-hero">
             <div class="page-hero-grid">
@@ -23,38 +51,55 @@
             </label>
             <label class="block">
                 <span class="crud-label">Eka</span>
-                <select name="building_id" class="crud-control">
-                    <option value="">Visas</option>
-                    @foreach ($buildings as $building)
-                        <option value="{{ $building->id }}" @selected($filters['building_id'] == $building->id)>{{ $building->building_name }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    name="building_id"
+                    query-name="building_query"
+                    identifier="room-building-filter"
+                    :options="$buildingOptions"
+                    :selected="$filters['building_id']"
+                    :query="$selectedBuildingLabel"
+                    placeholder="Izvelies eku"
+                    empty-message="Neviena eka neatbilst meklejumam."
+                />
             </label>
             <label class="block">
                 <span class="crud-label">Nodala</span>
-                <select name="department" class="crud-control">
-                    <option value="">Visas</option>
-                    @foreach ($departments as $department)
-                        <option value="{{ $department }}" @selected($filters['department'] === $department)>{{ $department }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    name="department"
+                    query-name="department_query"
+                    identifier="room-department-filter"
+                    :options="$departmentOptions"
+                    :selected="$filters['department']"
+                    :query="$selectedDepartmentLabel"
+                    placeholder="Izvelies nodalu"
+                    empty-message="Neviena nodala neatbilst meklejumam."
+                />
             </label>
             <label class="block">
                 <span class="crud-label">Atbildigais</span>
-                <select name="user_id" class="crud-control">
-                    <option value="">Visi</option>
-                    @foreach ($responsibleUsers as $responsibleUser)
-                        <option value="{{ $responsibleUser->id }}" @selected($filters['user_id'] == $responsibleUser->id)>{{ $responsibleUser->full_name }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    name="user_id"
+                    query-name="user_query"
+                    identifier="room-user-filter"
+                    :options="$userOptions"
+                    :selected="$filters['user_id']"
+                    :query="$selectedUserLabel"
+                    placeholder="Izvelies atbildigo"
+                    empty-message="Neviens lietotajs neatbilst meklejumam."
+                />
             </label>
             <label class="block">
                 <span class="crud-label">Ierices telpa</span>
-                <select name="has_devices" class="crud-control">
-                    <option value="">Visas</option>
-                    <option value="1" @selected($filters['has_devices'] === '1')>Ar iericem</option>
-                    <option value="0" @selected($filters['has_devices'] === '0')>Bez iericem</option>
-                </select>
+                <x-searchable-select
+                    name="has_devices"
+                    query-name="has_devices_query"
+                    identifier="room-device-filter"
+                    :options="$hasDeviceOptions"
+                    :selected="$filters['has_devices']"
+                    :query="$selectedHasDevicesLabel"
+                    placeholder="Izvelies telpas tipu"
+                    empty-message="Neviens variants neatbilst meklejumam."
+                />
             </label>
             <div class="toolbar-actions md:col-span-5">
                 <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklet</span></button>
@@ -129,4 +174,3 @@
         {{ $rooms->links() }}
     </section>
 </x-app-layout>
-

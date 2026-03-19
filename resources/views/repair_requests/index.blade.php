@@ -1,4 +1,13 @@
 <x-app-layout>
+    @php
+        $statusOptions = collect($statuses)->map(fn ($status) => [
+            'value' => (string) $status,
+            'label' => $statusLabels[$status] ?? $status,
+            'description' => 'Filtrs pec pieteikuma statusa',
+            'search' => ($statusLabels[$status] ?? $status) . ' ' . $status,
+        ])->values();
+        $selectedStatusLabel = $filters['status'] !== '' ? ($statusLabels[$filters['status']] ?? $filters['status']) : null;
+    @endphp
     <section class="app-shell">
         <div class="page-hero">
             <div class="page-hero-grid">
@@ -33,12 +42,16 @@
             </label>
             <label class="block">
                 <span class="crud-label">Statuss</span>
-                <select name="status" class="crud-control">
-                    <option value="">Visi</option>
-                    @foreach ($statuses as $status)
-                        <option value="{{ $status }}" @selected($filters['status'] === $status)>{{ $statusLabels[$status] ?? $status }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    name="status"
+                    query-name="status_query"
+                    identifier="repair-request-status-filter"
+                    :options="$statusOptions"
+                    :selected="$filters['status']"
+                    :query="$selectedStatusLabel"
+                    placeholder="Izvelies statusu"
+                    empty-message="Neviens statuss neatbilst meklejumam."
+                />
             </label>
             <div class="toolbar-actions">
                 <button type="submit" class="btn-search">
@@ -142,4 +155,3 @@
         {{ $requests->links() }}
     </section>
 </x-app-layout>
-
