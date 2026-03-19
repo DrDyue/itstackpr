@@ -60,29 +60,5 @@
                 </a>
             </div>
         @endif
-
-        <div class="auth-demo-list">
-            <div class="auth-demo-item">
-                <span class="auth-demo-icon auth-demo-icon-admin">
-                    <x-icon name="users" size="h-4 w-4" />
-                </span>
-                <div>
-                    <div class="font-semibold text-slate-900">Demo admin</div>
-                    <div>artis.berzins@ludzas.lv</div>
-                    <div>Parole: password</div>
-                </div>
-            </div>
-            <div class="auth-demo-item">
-                <span class="auth-demo-icon auth-demo-icon-user">
-                    <x-icon name="user" size="h-4 w-4" />
-                </span>
-                <div>
-                    <div class="font-semibold text-slate-900">Demo user</div>
-                    <div>ilze.strautina@ludzas.lv</div>
-                    <div>Parole: password</div>
-                </div>
-            </div>
-        </div>
     </form>
 </x-guest-layout>
-
