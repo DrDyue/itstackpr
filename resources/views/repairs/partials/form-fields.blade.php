@@ -10,7 +10,7 @@
 
 <div
     class="space-y-6"
-    x-data="{ repairType: @js(old('repair_type', $currentRepair?->repair_type ?? 'internal')), repairStatus: @js($currentRepair?->status ?? 'waiting') }"
+    x-data="{ repairType: @js(old('repair_type', $currentRepair?->repair_type ?? 'internal')), repairStatus: @js($currentRepair?->status ?? 'waiting'), priority: @js(old('priority', $currentRepair?->priority ?? 'medium')) }"
 >
     <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div class="space-y-6">
@@ -100,15 +100,20 @@
                                     };
                                 @endphp
                                 <label class="cursor-pointer">
-                                    <input type="radio" name="priority" value="{{ $priority }}" class="sr-only" @checked($selectedPriority)>
-                                    <span class="flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm font-semibold transition {{ $selectedPriority ? 'border-slate-900 bg-slate-900 text-white shadow-[0_20px_40px_-30px_rgba(15,23,42,0.9)]' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900' }}">
+                                    <input type="radio" name="priority" value="{{ $priority }}" class="sr-only" x-model="priority" @checked($selectedPriority)>
+                                    <span
+                                        class="flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm font-semibold transition"
+                                        :class="priority === '{{ $priority }}'
+                                            ? 'border-slate-900 bg-slate-900 text-white shadow-[0_20px_40px_-30px_rgba(15,23,42,0.9)]'
+                                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900'"
+                                    >
                                         <span class="inline-flex items-center gap-2">
                                             <span class="inline-flex h-2.5 w-2.5 rounded-full {{ $priorityDotClass }}"></span>
                                             <span>{{ $priorityLabels[$priority] }}</span>
                                         </span>
-                                        @if ($selectedPriority)
+                                        <span x-cloak x-show="priority === '{{ $priority }}'">
                                             <x-icon name="check-circle" size="h-4 w-4" />
-                                        @endif
+                                        </span>
                                     </span>
                                 </label>
                             @endforeach

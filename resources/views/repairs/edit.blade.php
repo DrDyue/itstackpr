@@ -175,10 +175,5 @@
             </div>
         </form>
 
-        <form method="POST" action="{{ route('repairs.destroy', $repair) }}" onsubmit="return confirm('Dzest so remonta ierakstu?')" class="surface-card border-rose-200 p-6">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="btn-danger-solid"><x-icon name="trash" size="h-4 w-4" /><span>Dzest remontu</span></button>
-        </form>
     </section>
 </x-app-layout>
