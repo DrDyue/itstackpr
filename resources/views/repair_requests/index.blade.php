@@ -82,6 +82,21 @@
         @if (! empty($featureMessage))
             <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
         @endif
+        @if ($canReview)
+            <div class="rounded-[1.5rem] border border-sky-200 bg-gradient-to-r from-sky-50 to-cyan-50 px-5 py-4 shadow-sm">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Admina izskatisana</div>
+                        <div class="mt-1 text-sm font-semibold text-slate-900">Saja sadala admins pienem gala lemumu par remonta pieteikumu.</div>
+                        <div class="mt-1 text-sm text-slate-600">Te vari tikai izlasit lietotaja iesniegumu, apskatit ierici un apstiprinat vai noraidit pieteikumu.</div>
+                    </div>
+                    <div class="inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-sky-700 ring-1 ring-sky-200">
+                        <x-icon name="check-circle" size="h-4 w-4" />
+                        <span>Izveido remontu pec apstiprinasanas</span>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <div class="space-y-4">
             @forelse ($requests as $request)

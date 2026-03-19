@@ -68,6 +68,21 @@
         @if (! empty($featureMessage))
             <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
         @endif
+        @if ($canReview)
+            <div class="rounded-[1.5rem] border border-rose-200 bg-gradient-to-r from-rose-50 to-orange-50 px-5 py-4 shadow-sm">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-rose-700">Admina izskatisana</div>
+                        <div class="mt-1 text-sm font-semibold text-slate-900">Saja sadala admins pienem gala lemumu par norakstisanas pieteikumu.</div>
+                        <div class="mt-1 text-sm text-slate-600">Lietotaja iesnieguma saturs ir tikai apskatei. Apstiprinot pieteikumu, ierice tiek norakstita un atsaistita no lietotaja un atrasanas vietas.</div>
+                    </div>
+                    <div class="inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-rose-700 ring-1 ring-rose-200">
+                        <x-icon name="writeoff" size="h-4 w-4" />
+                        <span>Maina ierices statusu uz norakstitu</span>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <div class="space-y-4">
             @forelse ($requests as $request)
