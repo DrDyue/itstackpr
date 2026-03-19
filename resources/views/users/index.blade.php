@@ -149,13 +149,38 @@
                             </td>
                             <td class="px-4 py-3 text-slate-600">{{ $managedUser->last_login?->format('d.m.Y H:i') ?: '-' }}</td>
                             <td class="px-4 py-3">
-                                <div class="flex flex-wrap gap-2">
-                                    <a href="{{ route('users.edit', $managedUser) }}" class="btn-edit"><x-icon name="edit" size="h-4 w-4" /><span>Rediget</span></a>
-                                    <form method="POST" action="{{ route('users.destroy', $managedUser) }}" onsubmit="return confirm('Dzest so lietotaju?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn-danger" @disabled(auth()->id() === $managedUser->id)><x-icon name="trash" size="h-4 w-4" /><span>Dzest</span></button>
-                                    </form>
+                                <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">
+                                    <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
+                                        <span>Darbibas</span>
+                                        <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                        </svg>
+                                    </button>
+
+                                    <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
+                                        <a href="{{ route('users.edit', $managedUser) }}" class="table-action-item table-action-item-amber" @click="open = false">
+                                            <x-icon name="edit" size="h-4 w-4" />
+                                            <span>Rediget</span>
+                                        </a>
+
+                                        <a
+                                            href="{{ route('devices.index', ['assigned_to_id' => $managedUser->id, 'assigned_to_query' => $managedUser->full_name]) }}"
+                                            class="table-action-item"
+                                            @click="open = false"
+                                        >
+                                            <x-icon name="device" size="h-4 w-4" />
+                                            <span>Apskatit piesaistitas ierices</span>
+                                        </a>
+
+                                        <form method="POST" action="{{ route('users.destroy', $managedUser) }}" onsubmit="return confirm('Dzest so lietotaju?')" class="contents">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="table-action-button table-action-button-rose" @disabled(auth()->id() === $managedUser->id)">
+                                                <x-icon name="trash" size="h-4 w-4" />
+                                                <span>Dzest</span>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             </td>
                         </tr>

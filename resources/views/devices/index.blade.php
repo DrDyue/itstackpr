@@ -7,6 +7,7 @@
             ? ($selectedRoom->room_number . ($selectedRoom->room_name ? ' - ' . $selectedRoom->room_name : ''))
             : ($filters['room_query'] !== '' ? $filters['room_query'] : null);
         $selectedTypeLabel = $selectedType?->type_name ?: ($filters['type_query'] !== '' ? $filters['type_query'] : null);
+        $selectedAssignedUserLabel = $selectedAssignedUser?->full_name ?: ($filters['assigned_to_query'] !== '' ? $filters['assigned_to_query'] : null);
         $statusFilterLinks = [
             ['label' => 'Aktivas', 'value' => 'active', 'icon' => 'check-circle', 'tone' => 'emerald'],
             ['label' => 'Remonta', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'amber'],
@@ -95,7 +96,7 @@
         <form
             method="GET"
             action="{{ route('devices.index') }}"
-            class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-5"
+            class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-6"
             x-data="{}"
             @searchable-select-updated.window="if ($event.detail.identifier === 'device-floor-filter') { $dispatch('searchable-select-clear', { target: 'device-room-filter' }) }"
         >
@@ -107,6 +108,15 @@
                 <span class="crud-label">Kods</span>
                 <input type="text" name="code" value="{{ $filters['code'] }}" class="crud-control">
             </label>
+            @if ($canManageDevices)
+                <label class="block">
+                    <span class="crud-label">Pieskirta</span>
+                    <input type="text" name="assigned_to_query" value="{{ $filters['assigned_to_query'] }}" class="crud-control" placeholder="Lietotaja vards">
+                    @if ($filters['assigned_to_id'] !== '')
+                        <input type="hidden" name="assigned_to_id" value="{{ $filters['assigned_to_id'] }}">
+                    @endif
+                </label>
+            @endif
             <label class="block">
                 <span class="crud-label">Stavs</span>
                 <x-searchable-select
@@ -190,6 +200,7 @@
             :items="[
                 ['label' => 'Meklet', 'value' => $filters['q']],
                 ['label' => 'Kods', 'value' => $filters['code']],
+                ['label' => 'Pieskirta', 'value' => $canManageDevices ? $selectedAssignedUserLabel : null],
                 ['label' => 'Stavs', 'value' => $selectedFloorLabel],
                 ['label' => 'Telpa', 'value' => $selectedRoomLabel],
                 ['label' => 'Tips', 'value' => $selectedTypeLabel],

@@ -88,6 +88,25 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertDontSee($employee->email);
     }
 
+    public function test_admin_can_filter_devices_by_assigned_user_from_user_list_shortcut(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'user-device-shortcut-admin@example.com');
+        $firstUser = $this->createUser(role: User::ROLE_USER, email: 'shortcut-first@example.com');
+        $secondUser = $this->createUser(role: User::ROLE_USER, email: 'shortcut-second@example.com');
+
+        $firstDevice = $this->createDevice($firstUser->id, Device::STATUS_ACTIVE, 'DEV-USER-SHORTCUT-1');
+        $secondDevice = $this->createDevice($secondUser->id, Device::STATUS_ACTIVE, 'DEV-USER-SHORTCUT-2');
+
+        $this->actingAs($admin)
+            ->get(route('devices.index', [
+                'assigned_to_id' => $firstUser->id,
+                'assigned_to_query' => $firstUser->full_name,
+            ]))
+            ->assertOk()
+            ->assertSee($firstDevice->code)
+            ->assertDontSee($secondDevice->code);
+    }
+
     public function test_regular_user_cannot_open_manager_routes(): void
     {
         $user = $this->createUser(role: User::ROLE_USER, email: 'manager-blocked@example.com');
@@ -1068,6 +1087,22 @@ class AuthAndRequestFlowsTest extends TestCase
 
         $this->assertDatabaseHas('buildings', [
             'id' => $device->building_id,
+        ]);
+    }
+
+    public function test_user_cannot_be_deleted_while_related_records_are_still_assigned(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'user-delete-admin@example.com');
+        $employee = $this->createUser(role: User::ROLE_USER, email: 'user-delete-employee@example.com');
+        $this->createDevice($employee->id, Device::STATUS_ACTIVE, 'DEV-USER-DELETE-BLOCK');
+
+        $this->actingAs($admin)
+            ->delete(route('users.destroy', $employee))
+            ->assertRedirect(route('users.index'))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $employee->id,
         ]);
     }
 

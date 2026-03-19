@@ -130,6 +130,33 @@ class UserController extends Controller
             return redirect()->route('users.index')->with('error', 'Nevar dzest savu lietotaja kontu.');
         }
 
+        $blockingRelations = collect([
+            'piesaistitas ierices' => $user->assignedDevices()->count(),
+            'atbildetas telpas' => $user->responsibleRooms()->count(),
+            'izveidoti remonta pieteikumi' => $user->repairRequests()->count(),
+            'izskatiti remonta pieteikumi' => $user->reviewedRepairRequests()->count(),
+            'izveidoti norakstisanas pieteikumi' => $user->writeoffRequests()->count(),
+            'izskatiti norakstisanas pieteikumi' => $user->reviewedWriteoffRequests()->count(),
+            'izveidotas nodosanas' => $user->outgoingTransfers()->count(),
+            'sanemtas nodosanas' => $user->incomingTransfers()->count(),
+            'izskatitas nodosanas' => $user->reviewedTransfers()->count(),
+            'izveidotas ierices' => $user->createdDevices()->count(),
+            'pieteikti remonti' => $user->reportedRepairs()->count(),
+            'apstiprinati remonti' => $user->acceptedRepairs()->count(),
+            'audita ieraksti' => $user->auditLogs()->count(),
+        ])->filter(fn (int $count) => $count > 0);
+
+        if ($blockingRelations->isNotEmpty()) {
+            $summary = $blockingRelations
+                ->map(fn (int $count, string $label) => $label . ' (' . $count . ')')
+                ->implode(', ');
+
+            return redirect()->route('users.index')->with(
+                'error',
+                'Lietotaju nevar izdzest, jo vinam vel ir piesaistiti ieraksti: ' . $summary . '. Vispirms atsien vai parvieto sos ierakstus.'
+            );
+        }
+
         AuditTrail::deleted(auth()->id(), $user, severity: AuditTrail::SEVERITY_WARNING);
         $user->delete();
 

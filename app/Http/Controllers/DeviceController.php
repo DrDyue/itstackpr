@@ -32,6 +32,8 @@ class DeviceController extends Controller
         $filters = [
             'q' => trim((string) $request->query('q', '')),
             'code' => trim((string) $request->query('code', '')),
+            'assigned_to_id' => trim((string) $request->query('assigned_to_id', '')),
+            'assigned_to_query' => trim((string) $request->query('assigned_to_query', '')),
             'floor' => trim((string) $request->query('floor', '')),
             'floor_query' => trim((string) $request->query('floor_query', '')),
             'room_query' => trim((string) $request->query('room_query', '')),
@@ -53,11 +55,15 @@ class DeviceController extends Controller
         $types = DeviceType::query()->orderBy('type_name')->get();
         $selectedRoom = null;
         $selectedType = null;
+        $selectedAssignedUser = null;
         if (ctype_digit($filters['room_id'])) {
             $selectedRoom = $accessibleRooms->firstWhere('id', (int) $filters['room_id']);
         }
         if (ctype_digit($filters['type'])) {
             $selectedType = $types->firstWhere('id', (int) $filters['type']);
+        }
+        if ($user->canManageRequests() && ctype_digit($filters['assigned_to_id'])) {
+            $selectedAssignedUser = User::query()->find((int) $filters['assigned_to_id']);
         }
 
         if ($selectedRoom) {
@@ -66,6 +72,9 @@ class DeviceController extends Controller
         }
         if ($selectedType) {
             $filters['type_query'] = $selectedType->type_name;
+        }
+        if ($selectedAssignedUser) {
+            $filters['assigned_to_query'] = $selectedAssignedUser->full_name;
         }
 
         if ($filters['floor'] !== '') {
@@ -94,6 +103,12 @@ class DeviceController extends Controller
                 });
             })
             ->when($filters['code'] !== '', fn (Builder $query) => $query->where('code', 'like', '%' . $filters['code'] . '%'))
+            ->when($selectedAssignedUser instanceof User, fn (Builder $query) => $query->where('assigned_to_id', $selectedAssignedUser->id))
+            ->when(! ($selectedAssignedUser instanceof User) && $user->canManageRequests() && $filters['assigned_to_query'] !== '', function (Builder $query) use ($filters) {
+                $term = $filters['assigned_to_query'];
+
+                $query->whereHas('assignedTo', fn (Builder $userQuery) => $userQuery->where('full_name', 'like', "%{$term}%"));
+            })
             ->when($filters['floor'] !== '' && ctype_digit($filters['floor']), function (Builder $query) use ($filters) {
                 $query->whereHas('room', fn (Builder $roomQuery) => $roomQuery->where('floor_number', (int) $filters['floor']));
             })
@@ -147,6 +162,7 @@ class DeviceController extends Controller
             'selectedRoom' => $selectedRoom,
             'types' => $types,
             'selectedType' => $selectedType,
+            'selectedAssignedUser' => $selectedAssignedUser,
             'statuses' => self::STATUSES,
             'statusLabels' => $this->statusLabels(),
             'canManageDevices' => $user->canManageRequests(),
