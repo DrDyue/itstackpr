@@ -71,6 +71,9 @@ class UserRequestCenterController extends Controller
                 'description' => collect([
                     $device->room?->room_number ? 'telpa ' . $device->room->room_number : null,
                     $device->building?->building_name,
+                    $device->status === Device::STATUS_REPAIR
+                        ? 'remonts: ' . $this->repairStatusLabel($device->activeRepair?->status)
+                        : null,
                 ])->filter()->implode(' | '),
                 'search' => implode(' ', array_filter([
                     $device->name,
@@ -115,13 +118,9 @@ class UserRequestCenterController extends Controller
             ]);
         }
 
-        if ($validated['request_type'] === 'repair') {
-            if (RepairRequest::query()->where('device_id', $device->id)->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
-                throw ValidationException::withMessages([
-                    'device_id' => ['Sai iericei jau ir gaidoss remonta pieteikums.'],
-                ]);
-            }
+        $this->ensureDeviceCanAcceptRequest($device, $validated['request_type']);
 
+        if ($validated['request_type'] === 'repair') {
             $repairRequest = RepairRequest::create([
                 'device_id' => $device->id,
                 'responsible_user_id' => $user->id,
@@ -135,12 +134,6 @@ class UserRequestCenterController extends Controller
         }
 
         if ($validated['request_type'] === 'writeoff') {
-            if (WriteoffRequest::query()->where('device_id', $device->id)->where('status', WriteoffRequest::STATUS_SUBMITTED)->exists()) {
-                throw ValidationException::withMessages([
-                    'device_id' => ['Sai iericei jau ir gaidoss norakstisanas pieteikums.'],
-                ]);
-            }
-
             $writeoffRequest = WriteoffRequest::create([
                 'device_id' => $device->id,
                 'responsible_user_id' => $user->id,
@@ -151,12 +144,6 @@ class UserRequestCenterController extends Controller
             AuditTrail::created($user->id, $writeoffRequest);
 
             return redirect()->route('my-requests.index')->with('success', 'Norakstisanas pieteikums izveidots.');
-        }
-
-        if (DeviceTransfer::query()->where('device_id', $device->id)->where('status', DeviceTransfer::STATUS_SUBMITTED)->exists()) {
-            throw ValidationException::withMessages([
-                'device_id' => ['Sai iericei jau ir gaidoss nodosanas pieteikums.'],
-            ]);
         }
 
         $transfer = DeviceTransfer::create([
@@ -186,8 +173,103 @@ class UserRequestCenterController extends Controller
         return Device::query()
             ->where('assigned_to_id', $user->id)
             ->where('status', Device::STATUS_ACTIVE)
-            ->with(['building', 'room.building', 'type'])
+            ->with(['building', 'room.building', 'type', 'activeRepair'])
             ->orderBy('name');
+    }
+
+    private function ensureDeviceCanAcceptRequest(Device $device, string $requestType): void
+    {
+        if ($device->status === Device::STATUS_REPAIR) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau notiek remonts (' . $this->repairStatusLabel($device->activeRepair?->status) . '), tapec jaunus pieteikumus veidot nevar.'],
+            ]);
+        }
+
+        $hasPendingRepair = RepairRequest::query()
+            ->where('device_id', $device->id)
+            ->where('status', RepairRequest::STATUS_SUBMITTED)
+            ->exists();
+
+        $hasPendingWriteoff = WriteoffRequest::query()
+            ->where('device_id', $device->id)
+            ->where('status', WriteoffRequest::STATUS_SUBMITTED)
+            ->exists();
+
+        $hasPendingTransfer = DeviceTransfer::query()
+            ->where('device_id', $device->id)
+            ->where('status', DeviceTransfer::STATUS_SUBMITTED)
+            ->exists();
+
+        if ($requestType === 'repair') {
+            if ($hasPendingRepair) {
+                throw ValidationException::withMessages([
+                    'device_id' => ['Sai iericei jau ir gaidoss remonta pieteikums.'],
+                ]);
+            }
+
+            if ($hasPendingWriteoff) {
+                throw ValidationException::withMessages([
+                    'device_id' => ['Sai iericei jau ir gaidoss norakstisanas pieteikums, tapec remonta pieteikumu veidot nevar.'],
+                ]);
+            }
+
+            if ($hasPendingTransfer) {
+                throw ValidationException::withMessages([
+                    'device_id' => ['Sai iericei jau ir gaidoss nodosanas pieteikums, tapec remonta pieteikumu veidot nevar.'],
+                ]);
+            }
+        }
+
+        if ($requestType === 'writeoff') {
+            if ($hasPendingWriteoff) {
+                throw ValidationException::withMessages([
+                    'device_id' => ['Sai iericei jau ir gaidoss norakstisanas pieteikums.'],
+                ]);
+            }
+
+            if ($hasPendingRepair) {
+                throw ValidationException::withMessages([
+                    'device_id' => ['Sai iericei jau ir gaidoss remonta pieteikums, tapec norakstisanas pieteikumu veidot nevar.'],
+                ]);
+            }
+
+            if ($hasPendingTransfer) {
+                throw ValidationException::withMessages([
+                    'device_id' => ['Sai iericei jau ir gaidoss nodosanas pieteikums, tapec norakstisanas pieteikumu veidot nevar.'],
+                ]);
+            }
+        }
+
+        if ($requestType === 'transfer') {
+            if ($hasPendingTransfer) {
+                throw ValidationException::withMessages([
+                    'device_id' => ['Sai iericei jau ir gaidoss nodosanas pieteikums.'],
+                ]);
+            }
+
+            if ($hasPendingRepair) {
+                throw ValidationException::withMessages([
+                    'device_id' => ['Sai iericei jau ir gaidoss remonta pieteikums, tapec nodosanas pieteikumu veidot nevar.'],
+                ]);
+            }
+
+            if ($hasPendingWriteoff) {
+                throw ValidationException::withMessages([
+                    'device_id' => ['Sai iericei jau ir gaidoss norakstisanas pieteikums, tapec nodosanas pieteikumu veidot nevar.'],
+                ]);
+            }
+        }
+    }
+
+    private function repairStatusLabel(?string $status): string
+    {
+        return match ($status) {
+            'waiting' => 'Gaida',
+            'in-progress' => 'Procesa',
+            'completed' => 'Pabeigts',
+            'cancelled' => 'Atcelts',
+            default => 'Remonta',
+        };
     }
 
     private function roomOptions(): Collection

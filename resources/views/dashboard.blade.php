@@ -56,6 +56,25 @@
                         </a>
                     </div>
 
+                    <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                        <div class="rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3">
+                            <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Kopa</div>
+                            <div class="mt-2 text-2xl font-semibold text-slate-900">{{ $userRequestSummary['total'] }}</div>
+                        </div>
+                        <div class="rounded-[1.25rem] border border-sky-200 bg-sky-50 px-4 py-3">
+                            <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">Gaida</div>
+                            <div class="mt-2 text-2xl font-semibold text-sky-900">{{ $userRequestSummary['submitted'] }}</div>
+                        </div>
+                        <div class="rounded-[1.25rem] border border-emerald-200 bg-emerald-50 px-4 py-3">
+                            <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">Apstiprinati</div>
+                            <div class="mt-2 text-2xl font-semibold text-emerald-900">{{ $userRequestSummary['approved'] }}</div>
+                        </div>
+                        <div class="rounded-[1.25rem] border border-rose-200 bg-rose-50 px-4 py-3">
+                            <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-700">Noraiditi</div>
+                            <div class="mt-2 text-2xl font-semibold text-rose-900">{{ $userRequestSummary['rejected'] }}</div>
+                        </div>
+                    </div>
+
                     <div class="mt-5 space-y-3">
                         @forelse ($recentUserRequests as $item)
                             <div class="surface-card-muted">
@@ -120,7 +139,7 @@
                                         <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Stavoklis</div>
                                         <div class="mt-1">
                                             @if ($device->activeRepair)
-                                                Aktivs remonts
+                                                Remonts: {{ ['waiting' => 'Gaida', 'in-progress' => 'Procesa', 'completed' => 'Pabeigts', 'cancelled' => 'Atcelts'][$device->activeRepair->status] ?? 'Remonta' }}
                                             @else
                                                 Pieejama darbam
                                             @endif

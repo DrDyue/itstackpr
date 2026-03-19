@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Device;
+use App\Models\DeviceTransfer;
+use App\Models\RepairRequest;
 use App\Models\User;
 use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
@@ -103,11 +105,7 @@ class WriteoffRequestController extends Controller
             ]);
         }
 
-        if (WriteoffRequest::query()->where('device_id', $device->id)->where('status', WriteoffRequest::STATUS_SUBMITTED)->exists()) {
-            throw ValidationException::withMessages([
-                'device_id' => ['Sai iericei jau ir gaidoss norakstisanas pieteikums.'],
-            ]);
-        }
+        $this->ensureDeviceCanAcceptWriteoffRequest($device);
 
         $writeoffRequest = WriteoffRequest::create([
             'device_id' => $device->id,
@@ -186,7 +184,45 @@ class WriteoffRequestController extends Controller
         return Device::query()
             ->where('assigned_to_id', $user->id)
             ->where('status', Device::STATUS_ACTIVE)
-            ->with(['type', 'building', 'room'])
+            ->with(['type', 'building', 'room', 'activeRepair'])
             ->orderBy('name');
+    }
+
+    private function ensureDeviceCanAcceptWriteoffRequest(Device $device): void
+    {
+        if ($device->status === Device::STATUS_REPAIR) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau notiek remonts (' . $this->repairStatusLabel($device->activeRepair?->status) . '), tapec norakstisanas pieteikumu veidot nevar.'],
+            ]);
+        }
+
+        if (WriteoffRequest::query()->where('device_id', $device->id)->where('status', WriteoffRequest::STATUS_SUBMITTED)->exists()) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau ir gaidoss norakstisanas pieteikums.'],
+            ]);
+        }
+
+        if (RepairRequest::query()->where('device_id', $device->id)->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau ir gaidoss remonta pieteikums, tapec norakstisanas pieteikumu veidot nevar.'],
+            ]);
+        }
+
+        if (DeviceTransfer::query()->where('device_id', $device->id)->where('status', DeviceTransfer::STATUS_SUBMITTED)->exists()) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau ir gaidoss nodosanas pieteikums, tapec norakstisanas pieteikumu veidot nevar.'],
+            ]);
+        }
+    }
+
+    private function repairStatusLabel(?string $status): string
+    {
+        return match ($status) {
+            'waiting' => 'Gaida',
+            'in-progress' => 'Procesa',
+            'completed' => 'Pabeigts',
+            'cancelled' => 'Atcelts',
+            default => 'Remonta',
+        };
     }
 }

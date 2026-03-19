@@ -195,6 +195,7 @@ class DeviceController extends Controller
             'room.building',
             'createdBy',
             'assignedTo',
+            'activeRepair',
             'repairs.assignee',
             'repairRequests.responsibleUser',
             'repairRequests.reviewedBy',
@@ -236,6 +237,10 @@ class DeviceController extends Controller
             ])
             ->values();
 
+        $pendingRepairRequest = $device->repairRequests->firstWhere('status', 'submitted');
+        $pendingWriteoffRequest = $device->writeoffRequests->firstWhere('status', 'submitted');
+        $pendingTransferRequest = $device->transfers->firstWhere('status', 'submitted');
+
         return view('devices.show', [
             'device' => $device,
             'deviceImageUrl' => $device->deviceImageUrl(),
@@ -248,6 +253,19 @@ class DeviceController extends Controller
             'visibleWriteoffRequests' => ($this->user()?->canManageRequests() ?? false)
                 ? $device->writeoffRequests
                 : $device->writeoffRequests->where('status', 'rejected')->values(),
+            'requestAvailability' => [
+                'repair' => ! $pendingWriteoffRequest && ! $pendingTransferRequest && $device->status !== Device::STATUS_REPAIR,
+                'writeoff' => ! $pendingRepairRequest && ! $pendingTransferRequest && $device->status !== Device::STATUS_REPAIR,
+                'transfer' => ! $pendingRepairRequest && ! $pendingWriteoffRequest && $device->status !== Device::STATUS_REPAIR,
+                'reason' => $device->status === Device::STATUS_REPAIR
+                    ? 'Ierice sobrid ir remonta ar statusu "' . $this->repairStatusLabel($device->activeRepair?->status) . '".'
+                    : ($pendingRepairRequest
+                        ? 'Sai iericei jau ir gaidoss remonta pieteikums.'
+                        : ($pendingWriteoffRequest
+                            ? 'Sai iericei jau ir gaidoss norakstisanas pieteikums.'
+                            : ($pendingTransferRequest ? 'Sai iericei jau ir gaidoss nodosanas pieteikums.' : null))),
+            ],
+            'repairStatusLabel' => $this->repairStatusLabel($device->activeRepair?->status),
         ]);
     }
 
@@ -585,6 +603,17 @@ class DeviceController extends Controller
         return collect(self::STATUSES)
             ->mapWithKeys(fn (string $status) => [$status => $this->statusLabel($status)])
             ->all();
+    }
+
+    private function repairStatusLabel(?string $status): string
+    {
+        return match ($status) {
+            'waiting' => 'Gaida',
+            'in-progress' => 'Procesa',
+            'completed' => 'Pabeigts',
+            'cancelled' => 'Atcelts',
+            default => 'Remonta',
+        };
     }
 
     private function performDeviceAction(Device $device, array $data): array

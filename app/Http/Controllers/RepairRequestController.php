@@ -105,11 +105,7 @@ class RepairRequestController extends Controller
             ]);
         }
 
-        if (RepairRequest::query()->where('device_id', $device->id)->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
-            throw ValidationException::withMessages([
-                'device_id' => ['Sai iericei jau ir gaidoss remonta pieteikums.'],
-            ]);
-        }
+        $this->ensureDeviceCanAcceptRepairRequest($device);
 
         $repairRequest = RepairRequest::create([
             'device_id' => $device->id,
@@ -138,8 +134,6 @@ class RepairRequestController extends Controller
         $validated = $this->validateInput($request, [
             'status' => ['required', Rule::in([RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED])],
             'review_notes' => ['nullable', 'string'],
-            'repair_type' => ['nullable', Rule::in(['internal', 'external'])],
-            'priority' => ['nullable', Rule::in(['low', 'medium', 'high', 'critical'])],
         ], [
             'status.required' => 'Izvelies lemumu remonta pieteikumam.',
         ]);
@@ -175,8 +169,8 @@ class RepairRequestController extends Controller
                     'accepted_by' => $manager->id,
                     'description' => $repairRequest->description,
                     'status' => 'waiting',
-                    'repair_type' => $validated['repair_type'] ?: 'internal',
-                    'priority' => $validated['priority'] ?: 'medium',
+                    'repair_type' => 'internal',
+                    'priority' => 'medium',
                     'start_date' => null,
                     'end_date' => null,
                     'cost' => null,
@@ -207,7 +201,45 @@ class RepairRequestController extends Controller
         return Device::query()
             ->where('assigned_to_id', $user->id)
             ->where('status', Device::STATUS_ACTIVE)
-            ->with(['type', 'building', 'room'])
+            ->with(['type', 'building', 'room', 'activeRepair'])
             ->orderBy('name');
+    }
+
+    private function ensureDeviceCanAcceptRepairRequest(Device $device): void
+    {
+        if ($device->status === Device::STATUS_REPAIR) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau notiek remonts (' . $this->repairStatusLabel($device->activeRepair?->status) . '), tapec jaunu remonta pieteikumu veidot nevar.'],
+            ]);
+        }
+
+        if (RepairRequest::query()->where('device_id', $device->id)->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau ir gaidoss remonta pieteikums.'],
+            ]);
+        }
+
+        if (WriteoffRequest::query()->where('device_id', $device->id)->where('status', 'submitted')->exists()) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau ir gaidoss norakstisanas pieteikums, tapec remonta pieteikumu veidot nevar.'],
+            ]);
+        }
+
+        if (DeviceTransfer::query()->where('device_id', $device->id)->where('status', 'submitted')->exists()) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau ir gaidoss nodosanas pieteikums, tapec remonta pieteikumu veidot nevar.'],
+            ]);
+        }
+    }
+
+    private function repairStatusLabel(?string $status): string
+    {
+        return match ($status) {
+            'waiting' => 'Gaida',
+            'in-progress' => 'Procesa',
+            'completed' => 'Pabeigts',
+            'cancelled' => 'Atcelts',
+            default => 'Remonta',
+        };
     }
 }

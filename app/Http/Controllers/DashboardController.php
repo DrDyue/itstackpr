@@ -136,8 +136,12 @@ class DashboardController extends Controller
                 ->count()
             : 0;
 
+        $allUserRequests = ! $isManager
+            ? $this->recentUserRequests($user, limit: null)
+            : collect();
+
         $recentUserRequests = ! $isManager
-            ? $this->recentUserRequests($user)
+            ? $allUserRequests->take(6)->values()
             : collect();
 
         return view('dashboard', [
@@ -148,6 +152,12 @@ class DashboardController extends Controller
             'activeRepairs' => $activeRepairs,
             'recentActivity' => $recentActivity,
             'recentUserRequests' => $recentUserRequests,
+            'userRequestSummary' => ! $isManager ? [
+                'total' => $allUserRequests->count(),
+                'submitted' => $allUserRequests->where('status', 'submitted')->count(),
+                'approved' => $allUserRequests->where('status', 'approved')->count(),
+                'rejected' => $allUserRequests->where('status', 'rejected')->count(),
+            ] : null,
             'quickActions' => $this->quickActions(
                 $user,
                 $pendingRepairRequestCount,
@@ -204,23 +214,16 @@ class DashboardController extends Controller
 
         return [
             [
-                'label' => 'Manas ierices',
-                'url' => route('devices.index'),
-                'icon' => 'device',
-                'class' => 'btn-view',
-                'count' => null,
-            ],
-            [
-                'label' => 'Apskatit pieteikumus',
-                'url' => route('my-requests.index'),
-                'icon' => 'repair-request',
-                'class' => 'btn-view',
+                'label' => 'Izveidot pieteikumu',
+                'url' => route('my-requests.create'),
+                'icon' => 'plus',
+                'class' => 'btn-create',
                 'count' => $pendingRepairRequestCount + $pendingWriteoffRequestCount + $pendingTransferRequestCount,
             ],
         ];
     }
 
-    private function recentUserRequests(User $user): Collection
+    private function recentUserRequests(User $user, ?int $limit = 6): Collection
     {
         $repairRequests = Schema::hasTable('repair_requests')
             ? RepairRequest::query()
@@ -282,11 +285,16 @@ class DashboardController extends Controller
                 })
             : collect();
 
-        return $repairRequests
+        $items = $repairRequests
             ->concat($writeoffRequests)
             ->concat($transfers)
             ->sortByDesc(fn (array $item) => $item['created_at']?->getTimestamp() ?? 0)
-            ->take(6)
             ->values();
+
+        if ($limit === null) {
+            return $items;
+        }
+
+        return $items->take($limit)->values();
     }
 }

@@ -276,6 +276,11 @@
                             </td>
                             <td class="px-4 py-4">
                                 <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
+                                @if ($device->activeRepair)
+                                    <div class="mt-2 text-xs text-slate-500">
+                                        Remonta statuss: {{ ['waiting' => 'Gaida', 'in-progress' => 'Procesa', 'completed' => 'Pabeigts', 'cancelled' => 'Atcelts'][$device->activeRepair->status] ?? 'Remonta' }}
+                                    </div>
+                                @endif
                             </td>
                             <td class="px-4 py-4">
                                 <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">

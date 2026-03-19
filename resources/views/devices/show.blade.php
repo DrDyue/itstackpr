@@ -24,18 +24,24 @@
                             <span>Rediget</span>
                         </a>
                     @else
-                        <a href="{{ route('my-requests.create', ['type' => 'repair', 'device_id' => $device->id]) }}" class="btn-edit">
-                            <x-icon name="repair" size="h-4 w-4" />
-                            <span>Pieteikt remontu</span>
-                        </a>
-                        <a href="{{ route('my-requests.create', ['type' => 'writeoff', 'device_id' => $device->id]) }}" class="btn-danger">
-                            <x-icon name="writeoff" size="h-4 w-4" />
-                            <span>Pieteikt norakstisanu</span>
-                        </a>
-                        <a href="{{ route('my-requests.create', ['type' => 'transfer', 'device_id' => $device->id]) }}" class="btn-view">
-                            <x-icon name="transfer" size="h-4 w-4" />
-                            <span>Nodot citam</span>
-                        </a>
+                        @if ($requestAvailability['repair'])
+                            <a href="{{ route('my-requests.create', ['type' => 'repair', 'device_id' => $device->id]) }}" class="btn-edit">
+                                <x-icon name="repair" size="h-4 w-4" />
+                                <span>Pieteikt remontu</span>
+                            </a>
+                        @endif
+                        @if ($requestAvailability['writeoff'])
+                            <a href="{{ route('my-requests.create', ['type' => 'writeoff', 'device_id' => $device->id]) }}" class="btn-danger">
+                                <x-icon name="writeoff" size="h-4 w-4" />
+                                <span>Pieteikt norakstisanu</span>
+                            </a>
+                        @endif
+                        @if ($requestAvailability['transfer'])
+                            <a href="{{ route('my-requests.create', ['type' => 'transfer', 'device_id' => $device->id]) }}" class="btn-view">
+                                <x-icon name="transfer" size="h-4 w-4" />
+                                <span>Nodot citam</span>
+                            </a>
+                        @endif
                     @endif
                     <a href="{{ route('devices.index') }}" class="btn-back">
                         <x-icon name="back" size="h-4 w-4" />
@@ -61,6 +67,9 @@
                                         <div class="mt-2">
                                             <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
                                         </div>
+                                        @if ($device->activeRepair)
+                                            <div class="mt-2 text-xs text-slate-500">Remonta statuss: {{ $repairStatusLabel }}</div>
+                                        @endif
                                     </div>
                                     <div>
                                         <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Tips</div>
@@ -94,6 +103,12 @@
                                     <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Ka ierice nonaca pie tevis</div>
                                     <div class="mt-2 text-sm leading-6 text-slate-700">{{ $originLabel }}</div>
                                 </div>
+                                @if ($requestAvailability['reason'])
+                                    <div class="rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4">
+                                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Pieteikumu ierobezojums</div>
+                                        <div class="mt-2 text-sm leading-6 text-amber-900">{{ $requestAvailability['reason'] }}</div>
+                                    </div>
+                                @endif
                                 <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
                                     <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Pasreizeja atrasanas vieta</div>
                                     <div class="mt-2 text-sm font-semibold text-slate-900">{{ $device->building?->building_name ?: 'Bez ekas' }}</div>

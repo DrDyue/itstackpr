@@ -262,8 +262,6 @@ class AuthAndRequestFlowsTest extends TestCase
         $response = $this->actingAs($admin)->post(route('repair-requests.review', $repairRequestId), [
             'status' => RepairRequest::STATUS_APPROVED,
             'review_notes' => 'Apstiprinats.',
-            'repair_type' => 'internal',
-            'priority' => 'high',
         ]);
 
         $response->assertSessionHas('success');
@@ -278,6 +276,8 @@ class AuthAndRequestFlowsTest extends TestCase
             'accepted_by' => $admin->id,
             'request_id' => $repairRequestId,
             'status' => 'waiting',
+            'repair_type' => 'internal',
+            'priority' => 'medium',
             'start_date' => null,
             'end_date' => null,
         ]);
@@ -805,6 +805,115 @@ class AuthAndRequestFlowsTest extends TestCase
             'room_id' => $newRoomId,
             'building_id' => $newBuildingId,
         ]);
+    }
+
+    public function test_user_cannot_create_writeoff_request_when_pending_repair_request_exists(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'blocked-writeoff@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-BLOCK-WRITEOFF');
+
+        RepairRequest::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'description' => 'Gaida remonta izskatisanu.',
+            'status' => RepairRequest::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($user)
+            ->from(route('my-requests.create'))
+            ->post(route('my-requests.store'), [
+                'request_type' => 'writeoff',
+                'device_id' => $device->id,
+                'reason' => 'Nevajadzetu laut izveidot.',
+            ])
+            ->assertSessionHasErrors('device_id');
+    }
+
+    public function test_user_cannot_create_transfer_request_when_pending_writeoff_request_exists(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'blocked-transfer@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'blocked-transfer-recipient@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-BLOCK-TRANSFER');
+
+        WriteoffRequest::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'reason' => 'Gaida norakstisanas izskatisanu.',
+            'status' => WriteoffRequest::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($user)
+            ->from(route('my-requests.create'))
+            ->post(route('my-requests.store'), [
+                'request_type' => 'transfer',
+                'device_id' => $device->id,
+                'transfered_to_id' => $recipient->id,
+                'transfer_reason' => 'Nevajadzetu laut nodot.',
+            ])
+            ->assertSessionHasErrors('device_id');
+    }
+
+    public function test_user_cannot_create_repair_request_when_pending_transfer_request_exists(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'blocked-repair@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'blocked-repair-recipient@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-BLOCK-REPAIR');
+
+        DeviceTransfer::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Gaida nodosanas izskatisanu.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('repair-requests.store'), [
+                'device_id' => $device->id,
+                'description' => 'Nevajadzetu laut pieteikt remontu.',
+            ])
+            ->assertSessionHasErrors('device_id');
+    }
+
+    public function test_user_cannot_create_any_request_for_device_in_repair_status(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'repair-state-blocked@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'repair-state-target@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_REPAIR, 'DEV-IN-REPAIR');
+
+        Repair::create([
+            'device_id' => $device->id,
+            'description' => 'Ierice jau ir remonta.',
+            'status' => 'in-progress',
+            'repair_type' => 'internal',
+            'priority' => 'medium',
+            'accepted_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('my-requests.store'), [
+                'request_type' => 'repair',
+                'device_id' => $device->id,
+                'description' => 'Vel viens remonts.',
+            ])
+            ->assertSessionHasErrors('device_id');
+
+        $this->actingAs($user)
+            ->post(route('my-requests.store'), [
+                'request_type' => 'writeoff',
+                'device_id' => $device->id,
+                'reason' => 'Nevajadzetu laut norakstit.',
+            ])
+            ->assertSessionHasErrors('device_id');
+
+        $this->actingAs($user)
+            ->post(route('my-requests.store'), [
+                'request_type' => 'transfer',
+                'device_id' => $device->id,
+                'transfered_to_id' => $recipient->id,
+                'transfer_reason' => 'Nevajadzetu laut nodot.',
+            ])
+            ->assertSessionHasErrors('device_id');
     }
 
     public function test_devices_index_accepts_floor_and_room_filters_from_dashboard_links(): void
