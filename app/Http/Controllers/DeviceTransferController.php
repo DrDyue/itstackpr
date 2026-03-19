@@ -30,6 +30,12 @@ class DeviceTransferController extends Controller
         if (! $this->featureTableExists('device_transfers')) {
             return view('device_transfers.index', [
                 'transfers' => $this->emptyPaginator(),
+                'transferSummary' => [
+                    'total' => 0,
+                    'submitted' => 0,
+                    'approved' => 0,
+                    'rejected' => 0,
+                ],
                 'filters' => $filters,
                 'statuses' => [DeviceTransfer::STATUS_SUBMITTED, DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED],
                 'statusLabels' => $this->requestStatusLabels(),
@@ -38,14 +44,16 @@ class DeviceTransferController extends Controller
             ]);
         }
 
-        $transfers = DeviceTransfer::query()
-            ->with(['device', 'responsibleUser', 'transferTo', 'reviewedBy'])
+        $baseQuery = DeviceTransfer::query()
             ->when(! $user->isAdmin(), function (Builder $query) use ($user) {
                 $query->where(function (Builder $builder) use ($user) {
                     $builder->where('responsible_user_id', $user->id)
                         ->orWhere('transfered_to_id', $user->id);
                 });
-            })
+            });
+
+        $transfers = (clone $baseQuery)
+            ->with(['device', 'responsibleUser', 'transferTo', 'reviewedBy'])
             ->when($filters['status'] !== '' && in_array($filters['status'], [DeviceTransfer::STATUS_SUBMITTED, DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED], true), fn (Builder $query) => $query->where('status', $filters['status']))
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
@@ -63,6 +71,12 @@ class DeviceTransferController extends Controller
 
         return view('device_transfers.index', [
             'transfers' => $transfers,
+            'transferSummary' => [
+                'total' => (clone $baseQuery)->count(),
+                'submitted' => (clone $baseQuery)->where('status', DeviceTransfer::STATUS_SUBMITTED)->count(),
+                'approved' => (clone $baseQuery)->where('status', DeviceTransfer::STATUS_APPROVED)->count(),
+                'rejected' => (clone $baseQuery)->where('status', DeviceTransfer::STATUS_REJECTED)->count(),
+            ],
             'filters' => $filters,
             'statuses' => [DeviceTransfer::STATUS_SUBMITTED, DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED],
             'statusLabels' => $this->requestStatusLabels(),

@@ -54,8 +54,15 @@ class UserController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        $userSummaryQuery = User::query();
+
         return view('users.index', [
             'users' => $users,
+            'userSummary' => [
+                'total' => (clone $userSummaryQuery)->count(),
+                'admin' => (clone $userSummaryQuery)->where('role', User::ROLE_ADMIN)->count(),
+                'user' => (clone $userSummaryQuery)->where('role', User::ROLE_USER)->count(),
+            ],
             'filters' => $filters,
             'roles' => self::ROLES,
             'roleLabels' => $this->roleLabels(),

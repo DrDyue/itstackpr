@@ -31,7 +31,16 @@
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-3xl">
-                    <div class="page-eyebrow"><x-icon name="room" size="h-4 w-4" /><span>Telpu parvaldiba</span></div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="page-eyebrow"><x-icon name="room" size="h-4 w-4" /><span>Telpu parvaldiba</span></div>
+                        <div class="inventory-inline-metrics">
+                            <span class="inventory-inline-chip inventory-inline-chip-slate">
+                                <x-icon name="room" size="h-3.5 w-3.5" />
+                                <span class="inventory-inline-label">Kopa</span>
+                                <span class="inventory-inline-value">{{ $roomSummary['total'] }}</span>
+                            </span>
+                        </div>
+                    </div>
                     <div class="page-title-group mt-4">
                         <div class="page-title-icon page-title-icon-slate"><x-icon name="room" size="h-7 w-7" /></div>
                         <div>

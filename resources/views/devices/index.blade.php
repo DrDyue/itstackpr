@@ -54,18 +54,22 @@
 
                         <div class="inventory-inline-metrics">
                             <span class="inventory-inline-chip inventory-inline-chip-slate">
+                                <x-icon name="device" size="h-3.5 w-3.5" />
                                 <span class="inventory-inline-label">Kopa</span>
                                 <span class="inventory-inline-value">{{ $deviceSummary['total'] }}</span>
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-emerald">
+                                <x-icon name="check-circle" size="h-3.5 w-3.5" />
                                 <span class="inventory-inline-label">Aktivas</span>
                                 <span class="inventory-inline-value">{{ $deviceSummary['active'] }}</span>
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-amber">
+                                <x-icon name="repair" size="h-3.5 w-3.5" />
                                 <span class="inventory-inline-label">Remonta</span>
                                 <span class="inventory-inline-value">{{ $deviceSummary['repair'] }}</span>
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-rose">
+                                <x-icon name="writeoff" size="h-3.5 w-3.5" />
                                 <span class="inventory-inline-label">Norakstitas</span>
                                 <span class="inventory-inline-value">{{ $deviceSummary['writeoff'] }}</span>
                             </span>

@@ -38,6 +38,12 @@ class RepairController extends Controller
                     'in-progress' => collect(),
                     'completed' => collect(),
                 ],
+                'repairSummary' => [
+                    'total' => 0,
+                    'waiting' => 0,
+                    'in_progress' => 0,
+                    'completed' => 0,
+                ],
                 'filters' => $filters,
                 'statuses' => self::STATUSES,
                 'repairTypes' => self::TYPES,
@@ -49,6 +55,9 @@ class RepairController extends Controller
                 'featureMessage' => 'Tabula repairs sobrid nav pieejama.',
             ]);
         }
+
+        $summaryQuery = $this->visibleRepairsQuery($user)
+            ->when($filters['mine'] && $user->canManageRequests(), fn (Builder $query) => $query->where('accepted_by', $user->id));
 
         $repairs = $this->visibleRepairsQuery($user)
             ->with(['device.building', 'device.room', 'executor', 'acceptedBy', 'request.responsibleUser', 'request.reviewedBy'])
@@ -82,6 +91,12 @@ class RepairController extends Controller
         return view('repairs.index', [
             'repairs' => $repairs,
             'repairColumns' => $repairColumns,
+            'repairSummary' => [
+                'total' => (clone $summaryQuery)->count(),
+                'waiting' => (clone $summaryQuery)->where('status', 'waiting')->count(),
+                'in_progress' => (clone $summaryQuery)->where('status', 'in-progress')->count(),
+                'completed' => (clone $summaryQuery)->whereIn('status', ['completed', 'cancelled'])->count(),
+            ],
             'filters' => $filters,
             'statuses' => self::STATUSES,
             'repairTypes' => self::TYPES,

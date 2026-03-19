@@ -42,6 +42,12 @@ class WriteoffRequestController extends Controller
         if (! $this->featureTableExists('writeoff_requests')) {
             return view('writeoff_requests.index', [
                 'requests' => $this->emptyPaginator(),
+                'requestSummary' => [
+                    'total' => 0,
+                    'submitted' => 0,
+                    'approved' => 0,
+                    'rejected' => 0,
+                ],
                 'filters' => $filters,
                 'statuses' => $availableStatuses,
                 'statusLabels' => $this->requestStatusLabels(),
@@ -50,9 +56,11 @@ class WriteoffRequestController extends Controller
             ]);
         }
 
-        $requests = WriteoffRequest::query()
+        $baseQuery = WriteoffRequest::query()
+            ->when(! $user->canManageRequests(), fn (Builder $query) => $query->where('responsible_user_id', $user->id));
+
+        $requests = (clone $baseQuery)
             ->with(['device.assignedTo', 'responsibleUser', 'reviewedBy'])
-            ->when(! $user->canManageRequests(), fn (Builder $query) => $query->where('responsible_user_id', $user->id))
             ->whereIn('status', $filters['statuses'] === [] ? ['__none__'] : $filters['statuses'])
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
@@ -68,6 +76,12 @@ class WriteoffRequestController extends Controller
 
         return view('writeoff_requests.index', [
             'requests' => $requests,
+            'requestSummary' => [
+                'total' => (clone $baseQuery)->count(),
+                'submitted' => (clone $baseQuery)->where('status', WriteoffRequest::STATUS_SUBMITTED)->count(),
+                'approved' => (clone $baseQuery)->where('status', WriteoffRequest::STATUS_APPROVED)->count(),
+                'rejected' => (clone $baseQuery)->where('status', WriteoffRequest::STATUS_REJECTED)->count(),
+            ],
             'filters' => $filters,
             'statuses' => $availableStatuses,
             'statusLabels' => $this->requestStatusLabels(),

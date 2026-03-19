@@ -12,7 +12,31 @@
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-3xl">
-                    <div class="page-eyebrow"><x-icon name="transfer" size="h-4 w-4" /><span>Nodosana</span></div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="page-eyebrow"><x-icon name="transfer" size="h-4 w-4" /><span>Nodosana</span></div>
+                        <div class="inventory-inline-metrics">
+                            <span class="inventory-inline-chip inventory-inline-chip-slate">
+                                <x-icon name="transfer" size="h-3.5 w-3.5" />
+                                <span class="inventory-inline-label">Kopa</span>
+                                <span class="inventory-inline-value">{{ $transferSummary['total'] }}</span>
+                            </span>
+                            <span class="inventory-inline-chip inventory-inline-chip-amber">
+                                <x-icon name="clock" size="h-3.5 w-3.5" />
+                                <span class="inventory-inline-label">Iesniegti</span>
+                                <span class="inventory-inline-value">{{ $transferSummary['submitted'] }}</span>
+                            </span>
+                            <span class="inventory-inline-chip inventory-inline-chip-emerald">
+                                <x-icon name="check-circle" size="h-3.5 w-3.5" />
+                                <span class="inventory-inline-label">Apstiprinati</span>
+                                <span class="inventory-inline-value">{{ $transferSummary['approved'] }}</span>
+                            </span>
+                            <span class="inventory-inline-chip inventory-inline-chip-rose">
+                                <x-icon name="x-circle" size="h-3.5 w-3.5" />
+                                <span class="inventory-inline-label">Noraiditi</span>
+                                <span class="inventory-inline-value">{{ $transferSummary['rejected'] }}</span>
+                            </span>
+                        </div>
+                    </div>
                     <div class="page-title-group mt-4">
                         <div class="page-title-icon page-title-icon-emerald"><x-icon name="transfer" size="h-7 w-7" /></div>
                         <div>

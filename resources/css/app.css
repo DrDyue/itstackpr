@@ -2297,6 +2297,14 @@ tbody td {
     @apply bg-amber-50 text-amber-700 ring-amber-200;
 }
 
+.inventory-inline-chip-sky {
+    @apply bg-sky-50 text-sky-700 ring-sky-200;
+}
+
+.inventory-inline-chip-violet {
+    @apply bg-violet-50 text-violet-700 ring-violet-200;
+}
+
 .inventory-inline-chip-rose {
     @apply bg-rose-50 text-rose-700 ring-rose-200;
 }

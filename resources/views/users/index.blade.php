@@ -22,7 +22,26 @@
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-3xl">
-                    <div class="page-eyebrow"><x-icon name="users" size="h-4 w-4" /><span>Lietotaji</span></div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="page-eyebrow"><x-icon name="users" size="h-4 w-4" /><span>Lietotaji</span></div>
+                        <div class="inventory-inline-metrics">
+                            <span class="inventory-inline-chip inventory-inline-chip-slate">
+                                <x-icon name="users" size="h-3.5 w-3.5" />
+                                <span class="inventory-inline-label">Kopa</span>
+                                <span class="inventory-inline-value">{{ $userSummary['total'] }}</span>
+                            </span>
+                            <span class="inventory-inline-chip inventory-inline-chip-violet">
+                                <x-icon name="users" size="h-3.5 w-3.5" />
+                                <span class="inventory-inline-label">Admini</span>
+                                <span class="inventory-inline-value">{{ $userSummary['admin'] }}</span>
+                            </span>
+                            <span class="inventory-inline-chip inventory-inline-chip-sky">
+                                <x-icon name="profile" size="h-3.5 w-3.5" />
+                                <span class="inventory-inline-label">Useri</span>
+                                <span class="inventory-inline-value">{{ $userSummary['user'] }}</span>
+                            </span>
+                        </div>
+                    </div>
                     <div class="page-title-group mt-4">
                         <div class="page-title-icon page-title-icon-violet"><x-icon name="users" size="h-7 w-7" /></div>
                         <div>

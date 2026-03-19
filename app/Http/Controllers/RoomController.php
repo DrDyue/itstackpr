@@ -52,6 +52,9 @@ class RoomController extends Controller
 
         return view('rooms.index', [
             'rooms' => $rooms,
+            'roomSummary' => [
+                'total' => Room::query()->count(),
+            ],
             'filters' => $filters,
             'buildings' => Building::orderBy('building_name')->get(),
             'departments' => Room::query()

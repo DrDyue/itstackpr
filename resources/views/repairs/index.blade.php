@@ -44,7 +44,31 @@
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-4xl">
-                    <div class="page-eyebrow"><x-icon name="repair" size="h-4 w-4" /><span>Serviss</span></div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="page-eyebrow"><x-icon name="repair" size="h-4 w-4" /><span>Serviss</span></div>
+                        <div class="inventory-inline-metrics">
+                            <span class="inventory-inline-chip inventory-inline-chip-slate">
+                                <x-icon name="repair" size="h-3.5 w-3.5" />
+                                <span class="inventory-inline-label">Kopa</span>
+                                <span class="inventory-inline-value">{{ $repairSummary['total'] }}</span>
+                            </span>
+                            <span class="inventory-inline-chip inventory-inline-chip-amber">
+                                <x-icon name="clock" size="h-3.5 w-3.5" />
+                                <span class="inventory-inline-label">Gaida</span>
+                                <span class="inventory-inline-value">{{ $repairSummary['waiting'] }}</span>
+                            </span>
+                            <span class="inventory-inline-chip inventory-inline-chip-sky">
+                                <x-icon name="stats" size="h-3.5 w-3.5" />
+                                <span class="inventory-inline-label">Procesa</span>
+                                <span class="inventory-inline-value">{{ $repairSummary['in_progress'] }}</span>
+                            </span>
+                            <span class="inventory-inline-chip inventory-inline-chip-emerald">
+                                <x-icon name="check-circle" size="h-3.5 w-3.5" />
+                                <span class="inventory-inline-label">Pabeigti</span>
+                                <span class="inventory-inline-value">{{ $repairSummary['completed'] }}</span>
+                            </span>
+                        </div>
+                    </div>
                     <div class="page-title-group mt-4">
                         <div class="page-title-icon page-title-icon-amber"><x-icon name="repair" size="h-7 w-7" /></div>
                         <div>
