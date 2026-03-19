@@ -12,15 +12,20 @@
             ['route' => 'writeoff-requests.index', 'pattern' => 'writeoff-requests*', 'label' => 'Norakstisanas pieteikumi', 'icon' => 'writeoff'],
             ['route' => 'device-transfers.index', 'pattern' => 'device-transfers*', 'label' => 'Parsutisanas pieteikumi', 'icon' => 'transfer'],
         ];
+        $infrastructureNavigationItems = [];
         $secondaryNavigationItems = [];
         $requestGroupActive = collect($requestNavigationItems)->contains(fn (array $item) => request()->routeIs($item['pattern']));
+        $infrastructureGroupActive = false;
 
         if ($canManageRequests) {
+            $infrastructureNavigationItems = [
+                ['route' => 'rooms.index', 'pattern' => 'rooms*', 'label' => 'Telpas', 'icon' => 'room'],
+                ['route' => 'buildings.index', 'pattern' => 'buildings*', 'label' => 'Ekas', 'icon' => 'building'],
+            ];
+            $infrastructureGroupActive = collect($infrastructureNavigationItems)->contains(fn (array $item) => request()->routeIs($item['pattern']));
             array_push(
                 $secondaryNavigationItems,
                 ['route' => 'repairs.index', 'pattern' => 'repairs*', 'label' => 'Remonti', 'icon' => 'repair'],
-                ['route' => 'rooms.index', 'pattern' => 'rooms*', 'label' => 'Telpas', 'icon' => 'room'],
-                ['route' => 'buildings.index', 'pattern' => 'buildings*', 'label' => 'Ekas', 'icon' => 'building'],
                 ['route' => 'device-types.index', 'pattern' => 'device-types*', 'label' => 'Iericu tipi', 'icon' => 'tag'],
             );
         }
@@ -74,6 +79,34 @@
                             @endforeach
                         </x-slot>
                     </x-dropdown>
+
+                    @if ($infrastructureNavigationItems !== [])
+                        <x-dropdown align="left" width="w-72">
+                            <x-slot name="trigger">
+                                <button class="{{ $infrastructureGroupActive
+                                    ? 'inline-flex items-center gap-2.5 whitespace-nowrap rounded-xl bg-sky-50 px-3.5 py-2.5 text-sm font-semibold text-sky-800 ring-1 ring-sky-200 shadow-sm transition duration-200'
+                                    : 'inline-flex items-center gap-2.5 whitespace-nowrap rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-600 transition duration-200 hover:bg-slate-100 hover:text-slate-900' }}">
+                                    <x-icon name="building" size="h-4 w-4" />
+                                    <span>Infrastruktura</span>
+                                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                    </svg>
+                                </button>
+                            </x-slot>
+
+                            <x-slot name="content">
+                                <div class="px-4 pb-2 pt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                    Telpas un ekas
+                                </div>
+                                @foreach ($infrastructureNavigationItems as $item)
+                                    <x-dropdown-link :href="route($item['route'])">
+                                        <x-icon :name="$item['icon']" size="h-4 w-4" />
+                                        <span>{{ $item['label'] }}</span>
+                                    </x-dropdown-link>
+                                @endforeach
+                            </x-slot>
+                        </x-dropdown>
+                    @endif
 
                     @foreach ($secondaryNavigationItems as $item)
                         <x-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
@@ -152,6 +185,22 @@
                     @endforeach
                 </div>
             </div>
+
+            @if ($infrastructureNavigationItems !== [])
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-2">
+                    <div class="px-3 pb-2 pt-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Infrastruktura</div>
+                    <div class="space-y-1">
+                        @foreach ($infrastructureNavigationItems as $item)
+                            <x-responsive-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
+                                <span class="inline-flex items-center gap-2.5">
+                                    <x-icon :name="$item['icon']" size="h-5 w-5" />
+                                    <span>{{ $item['label'] }}</span>
+                                </span>
+                            </x-responsive-nav-link>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             @foreach ($secondaryNavigationItems as $item)
                 <x-responsive-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">

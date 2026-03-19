@@ -112,6 +112,14 @@ class RoomController extends Controller
     {
         $this->requireManager();
 
+        $devicesCount = $room->devices()->count();
+
+        if ($devicesCount > 0) {
+            return redirect()
+                ->route('rooms.index')
+                ->with('error', 'Telpu nevar dzest, jo tai piesaistitas ' . $devicesCount . ' ierice' . ($devicesCount === 1 ? '' : 's') . '. Vispirms parvieto vai atsien ierices no si ieraksta, tad meginiet velreiz.');
+        }
+
         AuditTrail::deleted(auth()->id(), $room);
         $room->delete();
 

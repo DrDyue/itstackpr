@@ -763,6 +763,36 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertDontSee('DEV-OTHER-REPAIR');
     }
 
+    public function test_room_cannot_be_deleted_while_devices_are_assigned(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'room-delete-admin@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-ROOM-BLOCK');
+
+        $this->actingAs($admin)
+            ->delete(route('rooms.destroy', $device->room_id))
+            ->assertRedirect(route('rooms.index'))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('rooms', [
+            'id' => $device->room_id,
+        ]);
+    }
+
+    public function test_building_cannot_be_deleted_while_rooms_or_devices_are_assigned(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'building-delete-admin@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-BUILDING-BLOCK');
+
+        $this->actingAs($admin)
+            ->delete(route('buildings.destroy', $device->building_id))
+            ->assertRedirect(route('buildings.index'))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('buildings', [
+            'id' => $device->building_id,
+        ]);
+    }
+
     private function createUser(string $role, ?string $email = null): User
     {
         return User::create([

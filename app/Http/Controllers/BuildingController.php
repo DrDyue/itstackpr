@@ -92,6 +92,25 @@ class BuildingController extends Controller
     {
         $this->requireManager();
 
+        $roomsCount = $building->rooms()->count();
+        $devicesCount = $building->devices()->count();
+
+        if ($roomsCount > 0 || $devicesCount > 0) {
+            $parts = [];
+
+            if ($roomsCount > 0) {
+                $parts[] = "eka joprojam satur {$roomsCount} telpu" . ($roomsCount === 1 ? '' : 's');
+            }
+
+            if ($devicesCount > 0) {
+                $parts[] = "tai piesaistitas {$devicesCount} ierice" . ($devicesCount === 1 ? '' : 's');
+            }
+
+            return redirect()
+                ->route('buildings.index')
+                ->with('error', 'Eku nevar dzest, jo ' . implode(' un ', $parts) . '. Vispirms parvieto vai dzes piesaistitas telpas un ierices, tad meginiet velreiz.');
+        }
+
         AuditTrail::deleted(auth()->id(), $building);
         $building->delete();
 
