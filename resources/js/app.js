@@ -498,8 +498,8 @@ if (Alpine && !window.__appAlpineStarted) {
 const repairTransitionRules = {
     waiting: ['in-progress', 'cancelled'],
     'in-progress': ['waiting', 'completed', 'cancelled'],
-    completed: ['in-progress'],
-    cancelled: ['waiting', 'in-progress'],
+    completed: [],
+    cancelled: [],
 };
 
 const appendHiddenInput = (form, name, value) => {
@@ -600,11 +600,14 @@ window.repairBoard = (config) => ({
 window.repairProcess = (config) => ({
     repairType: config.repairType,
     status: config.status,
+    submitTransition(repairId, targetStatus, extra = {}) {
+        window.submitRepairTransition(config.transitionBaseUrl, config.csrfToken, repairId, targetStatus, extra);
+    },
     submitCompletion() {
         if (!window.confirm('Vai tiesam gribat pabeigt so ierices remontu?')) {
             return;
         }
 
-        window.submitRepairTransition(config.transitionBaseUrl, config.csrfToken, config.repairId, 'completed');
+        this.submitTransition(config.repairId, 'completed');
     },
 });

@@ -316,12 +316,6 @@
                                         </button>
                                     @endif
 
-                                    @if ($canManageRepairs && in_array($repair->status, ['completed', 'cancelled'], true))
-                                        <button type="button" class="repair-action repair-action-back" draggable="false" @mousedown.stop @click.stop="submitTransition({{ $repair->id }}, 'in-progress')">
-                                            <x-icon name="back" size="h-4 w-4" />
-                                            <span>Atpakal procesa</span>
-                                        </button>
-                                    @endif
                                 </div>
                             </article>
                         @empty

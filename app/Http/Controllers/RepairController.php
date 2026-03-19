@@ -227,6 +227,10 @@ class RepairController extends Controller
             'target_status.required' => 'Izvelies jauno remonta statusu.',
         ]);
 
+        if (! in_array($validated['target_status'], $this->allowedTransitionTargets($repair->status), true)) {
+            return back()->with('error', 'Sadu remonta statusa mainu veikt nevar.');
+        }
+
         $before = $repair->only([
             'status',
             'start_date',
@@ -482,5 +486,14 @@ class RepairController extends Controller
     private function labelForStatus(string $status): string
     {
         return $this->statusLabels()[$status] ?? $status;
+    }
+
+    private function allowedTransitionTargets(string $status): array
+    {
+        return match ($status) {
+            'waiting' => ['in-progress', 'cancelled'],
+            'in-progress' => ['waiting', 'completed', 'cancelled'],
+            default => [],
+        };
     }
 }

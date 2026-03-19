@@ -115,20 +115,6 @@
                                 <x-icon name="clear" size="h-4 w-4" />
                                 <span>Atcelt</span>
                             </button>
-                        @elseif ($repair->status === 'completed')
-                            <button type="button" class="btn-edit" @click="submitTransition({{ $repair->id }}, 'in-progress')">
-                                <x-icon name="back" size="h-4 w-4" />
-                                <span>Atgriezt procesa</span>
-                            </button>
-                        @elseif ($repair->status === 'cancelled')
-                            <button type="button" class="btn-clear" @click="submitTransition({{ $repair->id }}, 'waiting')">
-                                <x-icon name="back" size="h-4 w-4" />
-                                <span>Atgriezt uz gaida</span>
-                            </button>
-                            <button type="button" class="btn-edit" @click="submitTransition({{ $repair->id }}, 'in-progress')">
-                                <x-icon name="stats" size="h-4 w-4" />
-                                <span>Atgriezt procesa</span>
-                            </button>
                         @endif
                     </div>
                 </div>
