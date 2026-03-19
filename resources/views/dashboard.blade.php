@@ -3,9 +3,17 @@
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-3xl">
-                    <div class="page-eyebrow">
-                        <x-icon name="dashboard" size="h-4 w-4" />
-                        <span>{{ $isManager ? 'Galvenais darba skats' : 'Tavs darba skats' }}</span>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="page-eyebrow">
+                            <x-icon name="dashboard" size="h-4 w-4" />
+                            <span>{{ $isManager ? 'Galvenais darba skats' : 'Tavs darba skats' }}</span>
+                        </div>
+                        @unless ($isManager)
+                            <span class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700">
+                                <x-icon name="device" size="h-3.5 w-3.5" />
+                                <span>Ierices: {{ $dashboardDevices->count() }}</span>
+                            </span>
+                        @endunless
                     </div>
                     <div class="page-title-group mt-4">
                         <div class="page-title-icon page-title-icon-sky">
