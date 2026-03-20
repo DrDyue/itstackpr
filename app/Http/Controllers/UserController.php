@@ -18,10 +18,16 @@ class UserController extends Controller
 
         $filters = [
             'q' => trim((string) $request->query('q', '')),
-            'role' => trim((string) $request->query('role', '')),
+            'roles' => collect($request->query('role', []))
+                ->map(fn (mixed $role) => trim((string) $role))
+                ->filter(fn (string $role) => in_array($role, self::ROLES, true))
+                ->unique()
+                ->values()
+                ->all(),
             'is_active' => (string) $request->query('is_active', ''),
             'last_login' => trim((string) $request->query('last_login', '')),
         ];
+        $filters['has_role_filter'] = count($filters['roles']) > 0 && count($filters['roles']) < count(self::ROLES);
 
         $legacyName = trim((string) $request->query('name', ''));
         $legacyEmail = trim((string) $request->query('email', ''));
@@ -39,7 +45,7 @@ class UserController extends Controller
             })
             ->when($legacyName !== '', fn ($query) => $query->where('full_name', 'like', '%' . $legacyName . '%'))
             ->when($legacyEmail !== '', fn ($query) => $query->where('email', 'like', '%' . $legacyEmail . '%'))
-            ->when($filters['role'] !== '', fn ($query) => $query->where('role', $filters['role']))
+            ->when($filters['has_role_filter'], fn ($query) => $query->whereIn('role', $filters['roles']))
             ->when($filters['is_active'] !== '', fn ($query) => $query->where('is_active', $filters['is_active'] === '1'))
             ->when($filters['last_login'] === 'today', fn ($query) => $query->whereDate('last_login', today()))
             ->when($filters['last_login'] === 'recent', fn ($query) => $query->where('last_login', '>=', now()->subDays(7)))
@@ -48,8 +54,15 @@ class UserController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        $userSummaryQuery = User::query();
+
         return view('users.index', [
             'users' => $users,
+            'userSummary' => [
+                'total' => (clone $userSummaryQuery)->count(),
+                'admin' => (clone $userSummaryQuery)->where('role', User::ROLE_ADMIN)->count(),
+                'user' => (clone $userSummaryQuery)->where('role', User::ROLE_USER)->count(),
+            ],
             'filters' => $filters,
             'roles' => self::ROLES,
             'roleLabels' => $this->roleLabels(),
@@ -122,6 +135,33 @@ class UserController extends Controller
 
         if (auth()->id() === $user->id) {
             return redirect()->route('users.index')->with('error', 'Nevar dzest savu lietotaja kontu.');
+        }
+
+        $blockingRelations = collect([
+            'piesaistitas ierices' => $user->assignedDevices()->count(),
+            'atbildetas telpas' => $user->responsibleRooms()->count(),
+            'izveidoti remonta pieteikumi' => $user->repairRequests()->count(),
+            'izskatiti remonta pieteikumi' => $user->reviewedRepairRequests()->count(),
+            'izveidoti norakstisanas pieteikumi' => $user->writeoffRequests()->count(),
+            'izskatiti norakstisanas pieteikumi' => $user->reviewedWriteoffRequests()->count(),
+            'izveidotas nodosanas' => $user->outgoingTransfers()->count(),
+            'sanemtas nodosanas' => $user->incomingTransfers()->count(),
+            'izskatitas nodosanas' => $user->reviewedTransfers()->count(),
+            'izveidotas ierices' => $user->createdDevices()->count(),
+            'pieteikti remonti' => $user->reportedRepairs()->count(),
+            'apstiprinati remonti' => $user->acceptedRepairs()->count(),
+            'audita ieraksti' => $user->auditLogs()->count(),
+        ])->filter(fn (int $count) => $count > 0);
+
+        if ($blockingRelations->isNotEmpty()) {
+            $summary = $blockingRelations
+                ->map(fn (int $count, string $label) => $label . ' (' . $count . ')')
+                ->implode(', ');
+
+            return redirect()->route('users.index')->with(
+                'error',
+                'Lietotaju nevar izdzest, jo vinam vel ir piesaistiti ieraksti: ' . $summary . '. Vispirms atsien vai parvieto sos ierakstus.'
+            );
         }
 
         AuditTrail::deleted(auth()->id(), $user, severity: AuditTrail::SEVERITY_WARNING);

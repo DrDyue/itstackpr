@@ -487,19 +487,11 @@ const registerAlpineData = () => {
     }));
 };
 
-registerAlpineData();
-document.addEventListener('alpine:init', registerAlpineData);
-
-if (Alpine && !window.__appAlpineStarted) {
-    window.__appAlpineStarted = true;
-    Alpine.start();
-}
-
 const repairTransitionRules = {
     waiting: ['in-progress', 'cancelled'],
     'in-progress': ['waiting', 'completed', 'cancelled'],
-    completed: ['in-progress'],
-    cancelled: ['waiting', 'in-progress'],
+    completed: [],
+    cancelled: [],
 };
 
 const appendHiddenInput = (form, name, value) => {
@@ -589,7 +581,7 @@ window.repairBoard = (config) => ({
         }
 
         const repairName = repair.name ?? 'so remontu';
-        if (!window.confirm(`Vai tiesam gribat pabeigt remontu "${repairName}"?`)) {
+        if (!window.confirm(`Vai tiesam gribat pabeigt ierices remontu "${repairName}"?`)) {
             return;
         }
 
@@ -600,11 +592,22 @@ window.repairBoard = (config) => ({
 window.repairProcess = (config) => ({
     repairType: config.repairType,
     status: config.status,
+    submitTransition(repairId, targetStatus, extra = {}) {
+        window.submitRepairTransition(config.transitionBaseUrl, config.csrfToken, repairId, targetStatus, extra);
+    },
     submitCompletion() {
-        if (!window.confirm('Vai tiesam gribat pabeigt remontu?')) {
+        if (!window.confirm('Vai tiesam gribat pabeigt so ierices remontu?')) {
             return;
         }
 
-        window.submitRepairTransition(config.transitionBaseUrl, config.csrfToken, config.repairId, 'completed');
+        this.submitTransition(config.repairId, 'completed');
     },
 });
+
+registerAlpineData();
+document.addEventListener('alpine:init', registerAlpineData);
+
+if (Alpine && !window.__appAlpineStarted) {
+    window.__appAlpineStarted = true;
+    Alpine.start();
+}

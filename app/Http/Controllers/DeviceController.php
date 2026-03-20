@@ -35,25 +35,38 @@ class DeviceController extends Controller
         $filters = [
             'q' => trim((string) $request->query('q', '')),
             'code' => trim((string) $request->query('code', '')),
+            'assigned_to_id' => trim((string) $request->query('assigned_to_id', '')),
+            'assigned_to_query' => trim((string) $request->query('assigned_to_query', '')),
             'floor' => trim((string) $request->query('floor', '')),
             'floor_query' => trim((string) $request->query('floor_query', '')),
             'room_query' => trim((string) $request->query('room_query', '')),
             'room_id' => trim((string) $request->query('room_id', '')),
             'type' => trim((string) $request->query('type', '')),
             'type_query' => trim((string) $request->query('type_query', '')),
-            'status' => trim((string) $request->query('status', '')),
+            'statuses' => collect($request->query('status', []))
+                ->map(fn (mixed $status) => trim((string) $status))
+                ->filter(fn (string $status) => in_array($status, self::STATUSES, true))
+                ->unique()
+                ->values()
+                ->all(),
         ];
+
+        $filters['has_status_filter'] = count($filters['statuses']) > 0 && count($filters['statuses']) < count(self::STATUSES);
 
         $summaryQuery = $this->visibleDevicesQuery($user);
         $accessibleRooms = $this->accessibleRooms($user);
         $types = DeviceType::query()->orderBy('type_name')->get();
         $selectedRoom = null;
         $selectedType = null;
+        $selectedAssignedUser = null;
         if (ctype_digit($filters['room_id'])) {
             $selectedRoom = $accessibleRooms->firstWhere('id', (int) $filters['room_id']);
         }
         if (ctype_digit($filters['type'])) {
             $selectedType = $types->firstWhere('id', (int) $filters['type']);
+        }
+        if ($user->canManageRequests() && ctype_digit($filters['assigned_to_id'])) {
+            $selectedAssignedUser = User::query()->find((int) $filters['assigned_to_id']);
         }
 
         if ($selectedRoom) {
@@ -62,6 +75,9 @@ class DeviceController extends Controller
         }
         if ($selectedType) {
             $filters['type_query'] = $selectedType->type_name;
+        }
+        if ($selectedAssignedUser) {
+            $filters['assigned_to_query'] = $selectedAssignedUser->full_name;
         }
 
         if ($filters['floor'] !== '') {
@@ -90,6 +106,12 @@ class DeviceController extends Controller
                 });
             })
             ->when($filters['code'] !== '', fn (Builder $query) => $query->where('code', 'like', '%' . $filters['code'] . '%'))
+            ->when($selectedAssignedUser instanceof User, fn (Builder $query) => $query->where('assigned_to_id', $selectedAssignedUser->id))
+            ->when(! ($selectedAssignedUser instanceof User) && $user->canManageRequests() && $filters['assigned_to_query'] !== '', function (Builder $query) use ($filters) {
+                $term = $filters['assigned_to_query'];
+
+                $query->whereHas('assignedTo', fn (Builder $userQuery) => $userQuery->where('full_name', 'like', "%{$term}%"));
+            })
             ->when($filters['floor'] !== '' && ctype_digit($filters['floor']), function (Builder $query) use ($filters) {
                 $query->whereHas('room', fn (Builder $roomQuery) => $roomQuery->where('floor_number', (int) $filters['floor']));
             })
@@ -121,7 +143,10 @@ class DeviceController extends Controller
                         ->orWhere('category', 'like', "%{$term}%");
                 });
             })
-            ->when($filters['status'] !== '' && in_array($filters['status'], self::STATUSES, true), fn (Builder $query) => $query->where('status', $filters['status']))
+            ->when(
+                $filters['has_status_filter'],
+                fn (Builder $query) => $query->whereIn('status', $filters['statuses'])
+            )
             ->orderByDesc('id')
             ->paginate(20)
             ->withQueryString();
@@ -140,6 +165,7 @@ class DeviceController extends Controller
             'selectedRoom' => $selectedRoom,
             'types' => $types,
             'selectedType' => $selectedType,
+            'selectedAssignedUser' => $selectedAssignedUser,
             'statuses' => self::STATUSES,
             'statusLabels' => $this->statusLabels(),
             'canManageDevices' => $user->canManageRequests(),
@@ -181,15 +207,19 @@ class DeviceController extends Controller
     {
         $this->authorizeView($device);
 
+        $user = $this->user();
         $device->load([
             'type',
             'building',
             'room.building',
             'createdBy',
             'assignedTo',
+            'activeRepair',
             'repairs.assignee',
             'repairRequests.responsibleUser',
             'repairRequests.reviewedBy',
+            'repairRequests.repair.acceptedBy',
+            'repairRequests.repair.executor',
             'writeoffRequests.responsibleUser',
             'writeoffRequests.reviewedBy',
             'transfers.responsibleUser',
@@ -197,12 +227,113 @@ class DeviceController extends Controller
             'transfers.reviewedBy',
         ]);
 
+        $latestTransferToCurrentUser = $device->transfers
+            ->where('status', 'approved')
+            ->where('transfered_to_id', $user?->id)
+            ->sortByDesc('created_at')
+            ->first();
+
+        $roomOptions = Room::query()
+            ->with('building')
+            ->orderBy('floor_number')
+            ->orderBy('room_number')
+            ->get()
+            ->map(fn (Room $room) => [
+                'value' => (string) $room->id,
+                'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
+                'description' => collect([
+                    $room->building?->building_name,
+                    $room->floor_number !== null ? $room->floor_number . '. stavs' : null,
+                    $room->department,
+                ])->filter()->implode(' | '),
+                'search' => implode(' ', array_filter([
+                    $room->room_number,
+                    $room->room_name,
+                    $room->building?->building_name,
+                    $room->department,
+                    $room->floor_number,
+                ])),
+            ])
+            ->values();
+
+        $pendingRepairRequest = $device->repairRequests->firstWhere('status', 'submitted');
+        $pendingWriteoffRequest = $device->writeoffRequests->firstWhere('status', 'submitted');
+        $pendingTransferRequest = $device->transfers->firstWhere('status', 'submitted');
+        $roomUpdateAvailability = $this->userRoomUpdateAvailability($device, $pendingRepairRequest, $pendingWriteoffRequest, $pendingTransferRequest);
+
         return view('devices.show', [
             'device' => $device,
             'deviceImageUrl' => $device->deviceImageUrl(),
             'statusLabels' => $this->statusLabels(),
             'canManageDevices' => $this->user()?->canManageRequests() ?? false,
+            'originLabel' => $latestTransferToCurrentUser
+                ? 'Ierice tev nodota no ' . ($latestTransferToCurrentUser->responsibleUser?->full_name ?: 'cita lietotaja') . '.'
+                : 'Ierici tev pieskira administrators.',
+            'roomOptions' => $roomOptions,
+            'visibleWriteoffRequests' => ($this->user()?->canManageRequests() ?? false)
+                ? $device->writeoffRequests
+                : $device->writeoffRequests->where('status', 'rejected')->values(),
+            'requestAvailability' => [
+                'repair' => ! $pendingWriteoffRequest && ! $pendingTransferRequest && $device->status !== Device::STATUS_REPAIR,
+                'writeoff' => ! $pendingRepairRequest && ! $pendingTransferRequest && $device->status !== Device::STATUS_REPAIR,
+                'transfer' => ! $pendingRepairRequest && ! $pendingWriteoffRequest && $device->status !== Device::STATUS_REPAIR,
+                'reason' => $device->status === Device::STATUS_REPAIR
+                    ? 'Ierice sobrid ir remonta ar statusu "' . $this->repairStatusLabel($device->activeRepair?->status) . '".'
+                    : ($pendingRepairRequest
+                        ? 'Sai iericei jau ir gaidoss remonta pieteikums.'
+                        : ($pendingWriteoffRequest
+                            ? 'Sai iericei jau ir gaidoss norakstisanas pieteikums.'
+                            : ($pendingTransferRequest ? 'Sai iericei jau ir gaidoss nodosanas pieteikums.' : null))),
+            ],
+            'roomUpdateAvailability' => $roomUpdateAvailability,
+            'repairStatusLabel' => $this->repairStatusLabel($device->activeRepair?->status),
         ]);
+    }
+
+    public function updateUserRoom(Request $request, Device $device): RedirectResponse
+    {
+        $user = $this->user();
+        abort_unless($user, 403);
+        abort_if($user->canManageRequests(), 403);
+        abort_unless((int) $device->assigned_to_id === (int) $user->id, 403);
+        abort_if($device->status === Device::STATUS_WRITEOFF, 403);
+
+        $device->loadMissing(['repairRequests', 'writeoffRequests', 'transfers', 'activeRepair']);
+        $pendingRepairRequest = $device->repairRequests->firstWhere('status', 'submitted');
+        $pendingWriteoffRequest = $device->writeoffRequests->firstWhere('status', 'submitted');
+        $pendingTransferRequest = $device->transfers->firstWhere('status', 'submitted');
+        $roomUpdateAvailability = $this->userRoomUpdateAvailability($device, $pendingRepairRequest, $pendingWriteoffRequest, $pendingTransferRequest);
+
+        if (! $roomUpdateAvailability['allowed']) {
+            return redirect()->route('devices.show', $device)->with('error', $roomUpdateAvailability['reason']);
+        }
+
+        $validated = $this->validateInput($request, [
+            'room_id' => ['nullable', 'exists:rooms,id'],
+        ], [
+            'room_id.exists' => 'Izveleta telpa nav atrasta.',
+        ]);
+
+        $roomId = $validated['room_id'] ?? null;
+        $room = $roomId ? Room::query()->with('building')->find($roomId) : null;
+
+        $payload = [
+            'room_id' => $room?->id,
+            'building_id' => $room?->building_id,
+        ];
+
+        if ((int) $device->room_id === (int) ($room?->id ?? 0) && (int) $device->building_id === (int) ($room?->building_id ?? 0)) {
+            return redirect()->route('devices.show', $device)->with('error', 'Ierice jau atrodas saja telpa.');
+        }
+
+        $before = $device->only(['room_id', 'building_id']);
+        $this->saveDevicePayload($device, $payload);
+        AuditTrail::updatedFromState(auth()->id(), $device, $before, [
+            'room_id' => $device->room_id,
+            'building_id' => $device->building_id,
+        ]);
+
+        return redirect()->route('devices.show', $device)->with('success', 'Ierices atrasanas vieta atjauninata.');
     }
 
     public function update(Request $request, Device $device)
@@ -628,6 +759,17 @@ class DeviceController extends Controller
             ->all();
     }
 
+    private function repairStatusLabel(?string $status): string
+    {
+        return match ($status) {
+            'waiting' => 'Gaida',
+            'in-progress' => 'Procesa',
+            'completed' => 'Pabeigts',
+            'cancelled' => 'Atcelts',
+            default => 'Remonta',
+        };
+    }
+
     private function performDeviceAction(Device $device, array $data): array
     {
         return match ($data['action']) {
@@ -671,14 +813,20 @@ class DeviceController extends Controller
             $repair = null;
 
             DB::transaction(function () use ($device, &$repair, $before) {
-                $repair = Repair::create([
+                $repair = $this->createRepairRecord([
                     'device_id' => $device->id,
-                    'issue_reported_by' => $device->assigned_to_id,
+                    'issue_reported_by' => null,
                     'accepted_by' => auth()->id(),
                     'description' => 'Ierice nodota remonta no iericu saraksta.',
                     'status' => 'waiting',
                     'repair_type' => 'internal',
                     'priority' => 'medium',
+                    'start_date' => null,
+                    'end_date' => null,
+                    'cost' => null,
+                    'vendor_name' => null,
+                    'vendor_contact' => null,
+                    'invoice_number' => null,
                     'request_id' => null,
                 ]);
 
@@ -747,6 +895,42 @@ class DeviceController extends Controller
         ]);
 
         return ['level' => 'success', 'message' => 'Ierice parvietota uz citu telpu.'];
+    }
+
+    private function userRoomUpdateAvailability(Device $device, mixed $pendingRepairRequest, mixed $pendingWriteoffRequest, mixed $pendingTransferRequest): array
+    {
+        if ($device->status === Device::STATUS_REPAIR) {
+            return [
+                'allowed' => false,
+                'reason' => 'Ierices atrasanas vietu nevar mainit, kamer ierice ir remonta ar statusu "' . $this->repairStatusLabel($device->activeRepair?->status) . '".',
+            ];
+        }
+
+        if ($pendingRepairRequest) {
+            return [
+                'allowed' => false,
+                'reason' => 'Ierices atrasanas vietu nevar mainit, jo sai iericei ir gaidoss remonta pieteikums.',
+            ];
+        }
+
+        if ($pendingWriteoffRequest) {
+            return [
+                'allowed' => false,
+                'reason' => 'Ierices atrasanas vietu nevar mainit, jo sai iericei ir gaidoss norakstisanas pieteikums.',
+            ];
+        }
+
+        if ($pendingTransferRequest) {
+            return [
+                'allowed' => false,
+                'reason' => 'Ierices atrasanas vietu nevar mainit, jo sai iericei ir gaidoss nodosanas pieteikums.',
+            ];
+        }
+
+        return [
+            'allowed' => true,
+            'reason' => null,
+        ];
     }
 
     private function redirectAfterQuickAction(Device $device, string $level, string $message): RedirectResponse

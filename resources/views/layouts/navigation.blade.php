@@ -12,24 +12,33 @@
             ['route' => 'writeoff-requests.index', 'pattern' => 'writeoff-requests*', 'label' => 'Norakstisanas pieteikumi', 'icon' => 'writeoff'],
             ['route' => 'device-transfers.index', 'pattern' => 'device-transfers*', 'label' => 'Parsutisanas pieteikumi', 'icon' => 'transfer'],
         ];
-        $secondaryNavigationItems = [];
+        $requestReviewNavigationItems = $canManageRequests ? collect($requestNavigationItems)->take(2)->values()->all() : $requestNavigationItems;
+        $requestHistoryNavigationItems = $canManageRequests ? collect($requestNavigationItems)->slice(2)->values()->all() : [];
+        $lessImportantNavigationItems = [];
+        $repairsNavigationItem = null;
+        $usersNavigationItem = null;
         $requestGroupActive = collect($requestNavigationItems)->contains(fn (array $item) => request()->routeIs($item['pattern']));
+        $lessImportantGroupActive = false;
 
         if ($canManageRequests) {
-            array_push(
-                $secondaryNavigationItems,
-                ['route' => 'repairs.index', 'pattern' => 'repairs*', 'label' => 'Remonti', 'icon' => 'repair'],
+            $repairsNavigationItem = ['route' => 'repairs.index', 'pattern' => 'repairs*', 'label' => 'Remonti', 'icon' => 'repair'];
+
+            $lessImportantNavigationItems = [
                 ['route' => 'rooms.index', 'pattern' => 'rooms*', 'label' => 'Telpas', 'icon' => 'room'],
                 ['route' => 'buildings.index', 'pattern' => 'buildings*', 'label' => 'Ekas', 'icon' => 'building'],
                 ['route' => 'device-types.index', 'pattern' => 'device-types*', 'label' => 'Iericu tipi', 'icon' => 'tag'],
-            );
+            ];
         }
 
         if ($isAdmin) {
-            array_push(
-                $secondaryNavigationItems,
-                ['route' => 'users.index', 'pattern' => 'users*', 'label' => 'Lietotaji', 'icon' => 'users'],
-                ['route' => 'audit-log.index', 'pattern' => 'audit-log*', 'label' => 'Audits', 'icon' => 'audit'],
+            $usersNavigationItem = ['route' => 'users.index', 'pattern' => 'users*', 'label' => 'Lietotaji', 'icon' => 'users'];
+
+            $lessImportantNavigationItems[] = ['route' => 'audit-log.index', 'pattern' => 'audit-log*', 'label' => 'Audits', 'icon' => 'audit'];
+        }
+
+        if ($lessImportantNavigationItems !== []) {
+            $lessImportantGroupActive = collect($lessImportantNavigationItems)->contains(
+                fn (array $item) => request()->routeIs($item['pattern'])
             );
         }
     @endphp
@@ -41,13 +50,20 @@
                     <x-application-logo />
                 </a>
 
-                <div class="hidden flex-wrap items-center gap-2 xl:flex">
+                <div class="hidden items-center gap-1.5 xl:flex xl:flex-nowrap">
                     @foreach ($primaryNavigationItems as $item)
                         <x-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
                             <x-icon :name="$item['icon']" size="h-4 w-4" />
                             <span>{{ $item['label'] }}</span>
                         </x-nav-link>
                     @endforeach
+
+                    @if ($repairsNavigationItem)
+                        <x-nav-link :href="route($repairsNavigationItem['route'])" :active="request()->routeIs($repairsNavigationItem['pattern'])">
+                            <x-icon :name="$repairsNavigationItem['icon']" size="h-4 w-4" />
+                            <span>{{ $repairsNavigationItem['label'] }}</span>
+                        </x-nav-link>
+                    @endif
 
                     <x-dropdown align="left" width="w-72">
                         <x-slot name="trigger">
@@ -66,21 +82,65 @@
                             <div class="px-4 pb-2 pt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                                 Pieteikumu centrs
                             </div>
-                            @foreach ($requestNavigationItems as $item)
+                            <div class="px-4 pb-2 pt-2 text-[11px] font-semibold uppercase tracking-[0.18em] {{ $canManageRequests ? 'text-sky-600' : 'text-slate-500' }}">
+                                {{ $canManageRequests ? 'Admina izskatisana' : 'Pieprasijumi' }}
+                            </div>
+                            @foreach ($requestReviewNavigationItems as $item)
                                 <x-dropdown-link :href="route($item['route'])">
                                     <x-icon :name="$item['icon']" size="h-4 w-4" />
                                     <span>{{ $item['label'] }}</span>
                                 </x-dropdown-link>
                             @endforeach
+                            @if ($requestHistoryNavigationItems !== [])
+                                <div class="mx-4 my-2 h-px bg-slate-200"></div>
+                                <div class="px-4 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-600">
+                                    Parsutisanas vesture
+                                </div>
+                                @foreach ($requestHistoryNavigationItems as $item)
+                                    <x-dropdown-link :href="route($item['route'])">
+                                        <x-icon :name="$item['icon']" size="h-4 w-4" />
+                                        <span>{{ $item['label'] }}</span>
+                                    </x-dropdown-link>
+                                @endforeach
+                            @endif
                         </x-slot>
                     </x-dropdown>
 
-                    @foreach ($secondaryNavigationItems as $item)
-                        <x-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
-                            <x-icon :name="$item['icon']" size="h-4 w-4" />
-                            <span>{{ $item['label'] }}</span>
+                    @if ($usersNavigationItem)
+                        <x-nav-link :href="route($usersNavigationItem['route'])" :active="request()->routeIs($usersNavigationItem['pattern'])">
+                            <x-icon :name="$usersNavigationItem['icon']" size="h-4 w-4" />
+                            <span>{{ $usersNavigationItem['label'] }}</span>
                         </x-nav-link>
-                    @endforeach
+                    @endif
+
+                    @if ($lessImportantNavigationItems !== [])
+                        <x-dropdown align="left" width="w-72">
+                            <x-slot name="trigger">
+                                <button class="{{ $lessImportantGroupActive
+                                    ? 'inline-flex items-center gap-2.5 whitespace-nowrap rounded-xl bg-sky-50 px-3.5 py-2.5 text-sm font-semibold text-sky-800 ring-1 ring-sky-200 shadow-sm transition duration-200'
+                                    : 'inline-flex items-center gap-2.5 whitespace-nowrap rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-600 transition duration-200 hover:bg-slate-100 hover:text-slate-900' }}">
+                                    <x-icon name="view" size="h-4 w-4" />
+                                    <span>Vairak</span>
+                                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                    </svg>
+                                </button>
+                            </x-slot>
+
+                            <x-slot name="content">
+                                <div class="px-4 pb-2 pt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                    Mazak svarigais
+                                </div>
+                                @foreach ($lessImportantNavigationItems as $item)
+                                    <x-dropdown-link :href="route($item['route'])">
+                                        <x-icon :name="$item['icon']" size="h-4 w-4" />
+                                        <span>{{ $item['label'] }}</span>
+                                    </x-dropdown-link>
+                                @endforeach
+                            </x-slot>
+                        </x-dropdown>
+                    @endif
+
                 </div>
             </div>
 
@@ -139,10 +199,22 @@
                 </x-responsive-nav-link>
             @endforeach
 
+            @if ($repairsNavigationItem)
+                <x-responsive-nav-link :href="route($repairsNavigationItem['route'])" :active="request()->routeIs($repairsNavigationItem['pattern'])">
+                    <span class="inline-flex items-center gap-2.5">
+                        <x-icon :name="$repairsNavigationItem['icon']" size="h-5 w-5" />
+                        <span>{{ $repairsNavigationItem['label'] }}</span>
+                    </span>
+                </x-responsive-nav-link>
+            @endif
+
             <div class="rounded-2xl border border-slate-200 bg-slate-50 p-2">
                 <div class="px-3 pb-2 pt-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pieteikumi</div>
                 <div class="space-y-1">
-                    @foreach ($requestNavigationItems as $item)
+                    <div class="px-3 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] {{ $canManageRequests ? 'text-sky-600' : 'text-slate-500' }}">
+                        {{ $canManageRequests ? 'Admina izskatisana' : 'Pieprasijumi' }}
+                    </div>
+                    @foreach ($requestReviewNavigationItems as $item)
                         <x-responsive-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
                             <span class="inline-flex items-center gap-2.5">
                                 <x-icon :name="$item['icon']" size="h-5 w-5" />
@@ -150,17 +222,47 @@
                             </span>
                         </x-responsive-nav-link>
                     @endforeach
+                    @if ($requestHistoryNavigationItems !== [])
+                        <div class="mx-3 my-2 h-px bg-slate-200"></div>
+                        <div class="px-3 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-600">
+                            Parsutisanas vesture
+                        </div>
+                        @foreach ($requestHistoryNavigationItems as $item)
+                            <x-responsive-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
+                                <span class="inline-flex items-center gap-2.5">
+                                    <x-icon :name="$item['icon']" size="h-5 w-5" />
+                                    <span>{{ $item['label'] }}</span>
+                                </span>
+                            </x-responsive-nav-link>
+                        @endforeach
+                    @endif
                 </div>
             </div>
 
-            @foreach ($secondaryNavigationItems as $item)
-                <x-responsive-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
+            @if ($usersNavigationItem)
+                <x-responsive-nav-link :href="route($usersNavigationItem['route'])" :active="request()->routeIs($usersNavigationItem['pattern'])">
                     <span class="inline-flex items-center gap-2.5">
-                        <x-icon :name="$item['icon']" size="h-5 w-5" />
-                        <span>{{ $item['label'] }}</span>
+                        <x-icon :name="$usersNavigationItem['icon']" size="h-5 w-5" />
+                        <span>{{ $usersNavigationItem['label'] }}</span>
                     </span>
                 </x-responsive-nav-link>
-            @endforeach
+            @endif
+
+            @if ($lessImportantNavigationItems !== [])
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-2">
+                    <div class="px-3 pb-2 pt-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Vairak</div>
+                    <div class="space-y-1">
+                        @foreach ($lessImportantNavigationItems as $item)
+                            <x-responsive-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
+                                <span class="inline-flex items-center gap-2.5">
+                                    <x-icon :name="$item['icon']" size="h-5 w-5" />
+                                    <span>{{ $item['label'] }}</span>
+                                </span>
+                            </x-responsive-nav-link>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </div>
 
         <div class="border-t border-slate-200 pb-4 pt-4">

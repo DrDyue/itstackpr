@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Device;
+use App\Models\DeviceTransfer;
+use App\Models\RepairRequest;
 use App\Models\User;
 use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
@@ -18,27 +20,48 @@ class WriteoffRequestController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+        $availableStatuses = [
+            WriteoffRequest::STATUS_SUBMITTED,
+            WriteoffRequest::STATUS_APPROVED,
+            WriteoffRequest::STATUS_REJECTED,
+        ];
+        $statusFilterTouched = $request->has('statuses_filter');
+        $selectedStatuses = collect($request->query('status', $statusFilterTouched ? [] : [WriteoffRequest::STATUS_SUBMITTED]))
+            ->map(fn (mixed $status) => trim((string) $status))
+            ->filter(fn (string $status) => in_array($status, $availableStatuses, true))
+            ->unique()
+            ->values()
+            ->all();
 
         $filters = [
-            'status' => trim((string) $request->query('status', '')),
             'q' => trim((string) $request->query('q', '')),
+            'statuses' => $selectedStatuses,
+            'has_status_filter' => true,
         ];
 
         if (! $this->featureTableExists('writeoff_requests')) {
             return view('writeoff_requests.index', [
                 'requests' => $this->emptyPaginator(),
+                'requestSummary' => [
+                    'total' => 0,
+                    'submitted' => 0,
+                    'approved' => 0,
+                    'rejected' => 0,
+                ],
                 'filters' => $filters,
-                'statuses' => [WriteoffRequest::STATUS_SUBMITTED, WriteoffRequest::STATUS_APPROVED, WriteoffRequest::STATUS_REJECTED],
+                'statuses' => $availableStatuses,
                 'statusLabels' => $this->requestStatusLabels(),
                 'canReview' => $user->canManageRequests(),
                 'featureMessage' => 'Tabula writeoff_requests sobrid nav pieejama.',
             ]);
         }
 
-        $requests = WriteoffRequest::query()
+        $baseQuery = WriteoffRequest::query()
+            ->when(! $user->canManageRequests(), fn (Builder $query) => $query->where('responsible_user_id', $user->id));
+
+        $requests = (clone $baseQuery)
             ->with(['device.assignedTo', 'responsibleUser', 'reviewedBy'])
-            ->when(! $user->canManageRequests(), fn (Builder $query) => $query->where('responsible_user_id', $user->id))
-            ->when($filters['status'] !== '' && in_array($filters['status'], [WriteoffRequest::STATUS_SUBMITTED, WriteoffRequest::STATUS_APPROVED, WriteoffRequest::STATUS_REJECTED], true), fn (Builder $query) => $query->where('status', $filters['status']))
+            ->whereIn('status', $filters['statuses'] === [] ? ['__none__'] : $filters['statuses'])
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
 
@@ -53,8 +76,14 @@ class WriteoffRequestController extends Controller
 
         return view('writeoff_requests.index', [
             'requests' => $requests,
+            'requestSummary' => [
+                'total' => (clone $baseQuery)->count(),
+                'submitted' => (clone $baseQuery)->where('status', WriteoffRequest::STATUS_SUBMITTED)->count(),
+                'approved' => (clone $baseQuery)->where('status', WriteoffRequest::STATUS_APPROVED)->count(),
+                'rejected' => (clone $baseQuery)->where('status', WriteoffRequest::STATUS_REJECTED)->count(),
+            ],
             'filters' => $filters,
-            'statuses' => [WriteoffRequest::STATUS_SUBMITTED, WriteoffRequest::STATUS_APPROVED, WriteoffRequest::STATUS_REJECTED],
+            'statuses' => $availableStatuses,
             'statusLabels' => $this->requestStatusLabels(),
             'canReview' => $user->canManageRequests(),
         ]);
@@ -103,11 +132,7 @@ class WriteoffRequestController extends Controller
             ]);
         }
 
-        if (WriteoffRequest::query()->where('device_id', $device->id)->where('status', WriteoffRequest::STATUS_SUBMITTED)->exists()) {
-            throw ValidationException::withMessages([
-                'device_id' => ['Sai iericei jau ir gaidoss norakstisanas pieteikums.'],
-            ]);
-        }
+        $this->ensureDeviceCanAcceptWriteoffRequest($device);
 
         $writeoffRequest = WriteoffRequest::create([
             'device_id' => $device->id,
@@ -135,7 +160,6 @@ class WriteoffRequestController extends Controller
 
         $validated = $this->validateInput($request, [
             'status' => ['required', Rule::in([WriteoffRequest::STATUS_APPROVED, WriteoffRequest::STATUS_REJECTED])],
-            'review_notes' => ['nullable', 'string'],
         ], [
             'status.required' => 'Izvelies lemumu norakstisanas pieteikumam.',
         ]);
@@ -146,7 +170,7 @@ class WriteoffRequestController extends Controller
             $writeoffRequest->update([
                 'status' => $validated['status'],
                 'reviewed_by_user_id' => $manager->id,
-                'review_notes' => $validated['review_notes'] ?: null,
+                'review_notes' => null,
             ]);
 
             if ($validated['status'] !== WriteoffRequest::STATUS_APPROVED) {
@@ -186,7 +210,45 @@ class WriteoffRequestController extends Controller
         return Device::query()
             ->where('assigned_to_id', $user->id)
             ->where('status', Device::STATUS_ACTIVE)
-            ->with(['type', 'building', 'room'])
+            ->with(['type', 'building', 'room', 'activeRepair'])
             ->orderBy('name');
+    }
+
+    private function ensureDeviceCanAcceptWriteoffRequest(Device $device): void
+    {
+        if ($device->status === Device::STATUS_REPAIR) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau notiek remonts (' . $this->repairStatusLabel($device->activeRepair?->status) . '), tapec norakstisanas pieteikumu veidot nevar.'],
+            ]);
+        }
+
+        if (WriteoffRequest::query()->where('device_id', $device->id)->where('status', WriteoffRequest::STATUS_SUBMITTED)->exists()) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau ir gaidoss norakstisanas pieteikums.'],
+            ]);
+        }
+
+        if (RepairRequest::query()->where('device_id', $device->id)->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau ir gaidoss remonta pieteikums, tapec norakstisanas pieteikumu veidot nevar.'],
+            ]);
+        }
+
+        if (DeviceTransfer::query()->where('device_id', $device->id)->where('status', DeviceTransfer::STATUS_SUBMITTED)->exists()) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau ir gaidoss nodosanas pieteikums, tapec norakstisanas pieteikumu veidot nevar.'],
+            ]);
+        }
+    }
+
+    private function repairStatusLabel(?string $status): string
+    {
+        return match ($status) {
+            'waiting' => 'Gaida',
+            'in-progress' => 'Procesa',
+            'completed' => 'Pabeigts',
+            'cancelled' => 'Atcelts',
+            default => 'Remonta',
+        };
     }
 }

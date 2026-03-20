@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use App\Support\AuditTrail;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
 
 class AuditLogController extends Controller
 {
@@ -28,13 +28,12 @@ class AuditLogController extends Controller
                 'filters' => $filters,
                 'summary' => [
                     'total' => 0,
-                    'filtered' => 0,
                     'today' => 0,
                     'critical' => 0,
-                    'active_users' => 0,
-                    'latest' => null,
                 ],
-                'entityTypes' => collect(),
+                'actionOptions' => collect(),
+                'severityOptions' => collect(),
+                'entityOptions' => collect(),
                 'featureMessage' => 'Tabula audit_log sobrid nav pieejama.',
             ]);
         }
@@ -62,19 +61,43 @@ class AuditLogController extends Controller
 
         $summary = [
             'total' => AuditLog::count(),
-            'filtered' => (clone $logQuery)->count(),
             'today' => AuditLog::query()->where('timestamp', '>=', now()->startOfDay())->count(),
             'critical' => AuditLog::query()->where('severity', 'critical')->count(),
-            'active_users' => AuditLog::query()->whereNotNull('user_id')->distinct('user_id')->count('user_id'),
-            'latest' => AuditLog::query()->latest('timestamp')->first(),
         ];
 
-        $entityTypes = AuditLog::query()
+        $actionOptions = AuditLog::query()
+            ->select('action')
+            ->distinct()
+            ->orderBy('action')
+            ->pluck('action')
+            ->map(fn (string $action) => [
+                'value' => $action,
+                'label' => AuditTrail::actionLabel($action),
+                'search' => AuditTrail::actionLabel($action) . ' ' . $action,
+            ]);
+
+        $severityOptions = AuditLog::query()
+            ->select('severity')
+            ->distinct()
+            ->orderBy('severity')
+            ->pluck('severity')
+            ->map(fn (string $severity) => [
+                'value' => $severity,
+                'label' => AuditTrail::severityLabel($severity),
+                'search' => AuditTrail::severityLabel($severity) . ' ' . $severity,
+            ]);
+
+        $entityOptions = AuditLog::query()
             ->select('entity_type')
             ->distinct()
             ->orderBy('entity_type')
-            ->pluck('entity_type');
+            ->pluck('entity_type')
+            ->map(fn (string $entityType) => [
+                'value' => $entityType,
+                'label' => AuditTrail::entityLabel($entityType),
+                'search' => AuditTrail::entityLabel($entityType) . ' ' . $entityType,
+            ]);
 
-        return view('audit_log.index', compact('logs', 'filters', 'summary', 'entityTypes'));
+        return view('audit_log.index', compact('logs', 'filters', 'summary', 'actionOptions', 'severityOptions', 'entityOptions'));
     }
 }

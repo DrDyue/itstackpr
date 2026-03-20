@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Device;
 use App\Models\DeviceTransfer;
+use App\Models\RepairRequest;
+use App\Models\Room;
 use App\Models\User;
+use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -27,6 +30,12 @@ class DeviceTransferController extends Controller
         if (! $this->featureTableExists('device_transfers')) {
             return view('device_transfers.index', [
                 'transfers' => $this->emptyPaginator(),
+                'transferSummary' => [
+                    'total' => 0,
+                    'submitted' => 0,
+                    'approved' => 0,
+                    'rejected' => 0,
+                ],
                 'filters' => $filters,
                 'statuses' => [DeviceTransfer::STATUS_SUBMITTED, DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED],
                 'statusLabels' => $this->requestStatusLabels(),
@@ -35,14 +44,16 @@ class DeviceTransferController extends Controller
             ]);
         }
 
-        $transfers = DeviceTransfer::query()
-            ->with(['device', 'responsibleUser', 'transferTo', 'reviewedBy'])
+        $baseQuery = DeviceTransfer::query()
             ->when(! $user->isAdmin(), function (Builder $query) use ($user) {
                 $query->where(function (Builder $builder) use ($user) {
                     $builder->where('responsible_user_id', $user->id)
                         ->orWhere('transfered_to_id', $user->id);
                 });
-            })
+            });
+
+        $transfers = (clone $baseQuery)
+            ->with(['device.building', 'device.room.building', 'responsibleUser', 'transferTo', 'reviewedBy'])
             ->when($filters['status'] !== '' && in_array($filters['status'], [DeviceTransfer::STATUS_SUBMITTED, DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED], true), fn (Builder $query) => $query->where('status', $filters['status']))
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
@@ -60,10 +71,41 @@ class DeviceTransferController extends Controller
 
         return view('device_transfers.index', [
             'transfers' => $transfers,
+            'transferSummary' => [
+                'total' => (clone $baseQuery)->count(),
+                'submitted' => (clone $baseQuery)->where('status', DeviceTransfer::STATUS_SUBMITTED)->count(),
+                'approved' => (clone $baseQuery)->where('status', DeviceTransfer::STATUS_APPROVED)->count(),
+                'rejected' => (clone $baseQuery)->where('status', DeviceTransfer::STATUS_REJECTED)->count(),
+            ],
             'filters' => $filters,
             'statuses' => [DeviceTransfer::STATUS_SUBMITTED, DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED],
             'statusLabels' => $this->requestStatusLabels(),
             'isAdmin' => $user->isAdmin(),
+            'currentUserId' => $user->id,
+            'roomOptions' => $user->isAdmin()
+                ? collect()
+                : Room::query()
+                    ->with('building')
+                    ->orderBy('floor_number')
+                    ->orderBy('room_number')
+                    ->get()
+                    ->map(fn (Room $room) => [
+                        'value' => (string) $room->id,
+                        'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
+                        'description' => collect([
+                            $room->building?->building_name,
+                            $room->floor_number !== null ? $room->floor_number . '. stavs' : null,
+                            $room->department,
+                        ])->filter()->implode(' | '),
+                        'search' => implode(' ', array_filter([
+                            $room->room_number,
+                            $room->room_name,
+                            $room->building?->building_name,
+                            $room->department,
+                            $room->floor_number,
+                        ])),
+                    ])
+                    ->values(),
         ]);
     }
 
@@ -129,11 +171,7 @@ class DeviceTransferController extends Controller
             ]);
         }
 
-        if (DeviceTransfer::query()->where('device_id', $device->id)->where('status', DeviceTransfer::STATUS_SUBMITTED)->exists()) {
-            throw ValidationException::withMessages([
-                'device_id' => ['Sai iericei jau ir gaidoss parsutisanas pieteikums.'],
-            ]);
-        }
+        $this->ensureDeviceCanAcceptTransferRequest($device);
 
         $transfer = DeviceTransfer::create([
             'device_id' => $device->id,
@@ -164,20 +202,28 @@ class DeviceTransferController extends Controller
             return back()->with('error', 'Sis pieteikums jau ir izskatits.');
         }
 
+        $keepCurrentRoom = ! $request->exists('keep_current_room') || $request->boolean('keep_current_room');
+
         $validated = $this->validateInput($request, [
             'status' => ['required', Rule::in([DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED])],
-            'review_notes' => ['nullable', 'string'],
+            'keep_current_room' => ['nullable', 'boolean'],
+            'room_id' => [
+                Rule::requiredIf(fn () => $request->input('status') === DeviceTransfer::STATUS_APPROVED && ! $keepCurrentRoom),
+                'nullable',
+                'exists:rooms,id',
+            ],
         ], [
             'status.required' => 'Izvelies lemumu parsutisanas pieteikumam.',
+            'room_id.required' => 'Izvelies telpu, uz kuru novietot ierici.',
         ]);
 
         $before = $deviceTransfer->only(['status', 'reviewed_by_user_id', 'review_notes']);
 
-        DB::transaction(function () use ($validated, $deviceTransfer, $reviewer) {
+        DB::transaction(function () use ($validated, $deviceTransfer, $reviewer, $keepCurrentRoom) {
             $deviceTransfer->update([
                 'status' => $validated['status'],
                 'reviewed_by_user_id' => $reviewer->id,
-                'review_notes' => $validated['review_notes'] ?: null,
+                'review_notes' => null,
             ]);
 
             if ($validated['status'] !== 'approved') {
@@ -192,9 +238,27 @@ class DeviceTransferController extends Controller
                 ]);
             }
 
+            $targetRoom = null;
+
+            if (! $keepCurrentRoom) {
+                $targetRoom = filled($validated['room_id'] ?? null)
+                    ? Room::query()->find($validated['room_id'])
+                    : null;
+
+                if (! $targetRoom) {
+                    throw ValidationException::withMessages([
+                        'room_id' => ['Izveleta telpa nav atrasta.'],
+                    ]);
+                }
+            }
+
             $device->forceFill([
                 'assigned_to_id' => $deviceTransfer->transfered_to_id,
-            ])->save();
+                'room_id' => $targetRoom?->id ?? $device->room_id,
+                'building_id' => $targetRoom?->building_id ?? $device->building_id,
+            ]);
+
+            $device->save();
         });
 
         $after = $deviceTransfer->fresh()->only(array_keys($before));
@@ -209,8 +273,46 @@ class DeviceTransferController extends Controller
             ->when($user->isAdmin(), fn (Builder $query) => $query->whereNotNull('assigned_to_id'))
             ->when(! $user->isAdmin(), fn (Builder $query) => $query->where('assigned_to_id', $user->id))
             ->where('status', Device::STATUS_ACTIVE)
-            ->with(['type', 'building', 'room', 'assignedTo'])
+            ->with(['type', 'building', 'room', 'assignedTo', 'activeRepair'])
             ->orderBy('name');
+    }
+
+    private function ensureDeviceCanAcceptTransferRequest(Device $device): void
+    {
+        if ($device->status === Device::STATUS_REPAIR) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau notiek remonts (' . $this->repairStatusLabel($device->activeRepair?->status) . '), tapec nodosanas pieteikumu veidot nevar.'],
+            ]);
+        }
+
+        if (DeviceTransfer::query()->where('device_id', $device->id)->where('status', DeviceTransfer::STATUS_SUBMITTED)->exists()) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau ir gaidoss nodosanas pieteikums.'],
+            ]);
+        }
+
+        if (RepairRequest::query()->where('device_id', $device->id)->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau ir gaidoss remonta pieteikums, tapec nodosanas pieteikumu veidot nevar.'],
+            ]);
+        }
+
+        if (WriteoffRequest::query()->where('device_id', $device->id)->where('status', WriteoffRequest::STATUS_SUBMITTED)->exists()) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau ir gaidoss norakstisanas pieteikums, tapec nodosanas pieteikumu veidot nevar.'],
+            ]);
+        }
+    }
+
+    private function repairStatusLabel(?string $status): string
+    {
+        return match ($status) {
+            'waiting' => 'Gaida',
+            'in-progress' => 'Procesa',
+            'completed' => 'Pabeigts',
+            'cancelled' => 'Atcelts',
+            default => 'Remonta',
+        };
     }
 
     private function transferOwnerId(User $actor, Device $device): ?int

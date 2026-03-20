@@ -27,6 +27,7 @@ class RepairController extends Controller
             'status' => trim((string) $request->query('status', '')),
             'priority' => trim((string) $request->query('priority', '')),
             'repair_type' => trim((string) $request->query('repair_type', '')),
+            'mine' => $request->boolean('mine'),
         ];
 
         if (! $this->featureTableExists('repairs')) {
@@ -36,6 +37,12 @@ class RepairController extends Controller
                     'waiting' => collect(),
                     'in-progress' => collect(),
                     'completed' => collect(),
+                ],
+                'repairSummary' => [
+                    'total' => 0,
+                    'waiting' => 0,
+                    'in_progress' => 0,
+                    'completed' => 0,
                 ],
                 'filters' => $filters,
                 'statuses' => self::STATUSES,
@@ -49,8 +56,11 @@ class RepairController extends Controller
             ]);
         }
 
+        $summaryQuery = $this->visibleRepairsQuery($user)
+            ->when($filters['mine'] && $user->canManageRequests(), fn (Builder $query) => $query->where('accepted_by', $user->id));
+
         $repairs = $this->visibleRepairsQuery($user)
-            ->with(['device.building', 'device.room', 'executor', 'acceptedBy', 'request'])
+            ->with(['device.building', 'device.room', 'executor', 'acceptedBy', 'request.responsibleUser', 'request.reviewedBy'])
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
 
@@ -67,6 +77,7 @@ class RepairController extends Controller
             ->when($filters['status'] !== '' && in_array($filters['status'], self::STATUSES, true), fn (Builder $query) => $query->where('status', $filters['status']))
             ->when($filters['priority'] !== '' && in_array($filters['priority'], self::PRIORITIES, true), fn (Builder $query) => $query->where('priority', $filters['priority']))
             ->when($filters['repair_type'] !== '' && in_array($filters['repair_type'], self::TYPES, true), fn (Builder $query) => $query->where('repair_type', $filters['repair_type']))
+            ->when($filters['mine'] && $user->canManageRequests(), fn (Builder $query) => $query->where('accepted_by', $user->id))
             ->orderByRaw("case when status = 'waiting' then 0 when status = 'in-progress' then 1 when status = 'completed' then 2 else 3 end")
             ->orderByDesc('id')
             ->get();
@@ -80,6 +91,12 @@ class RepairController extends Controller
         return view('repairs.index', [
             'repairs' => $repairs,
             'repairColumns' => $repairColumns,
+            'repairSummary' => [
+                'total' => (clone $summaryQuery)->count(),
+                'waiting' => (clone $summaryQuery)->where('status', 'waiting')->count(),
+                'in_progress' => (clone $summaryQuery)->where('status', 'in-progress')->count(),
+                'completed' => (clone $summaryQuery)->whereIn('status', ['completed', 'cancelled'])->count(),
+            ],
             'filters' => $filters,
             'statuses' => self::STATUSES,
             'repairTypes' => self::TYPES,
@@ -120,8 +137,8 @@ class RepairController extends Controller
         $validated = $this->validatedData($request);
         $validated['accepted_by'] = $manager->id;
 
-        $repair = Repair::create($validated);
-        $repair->load(['device', 'executor', 'acceptedBy']);
+        $repair = $this->createRepairRecord($validated);
+        $repair->load(['device', 'executor', 'acceptedBy', 'request.responsibleUser', 'request.reviewedBy']);
 
         $this->syncDeviceStatus($repair);
         AuditTrail::created($manager->id, $repair);
@@ -137,7 +154,7 @@ class RepairController extends Controller
             return redirect()->route('repairs.index')->with('error', 'Tabula repairs sobrid nav pieejama.');
         }
 
-        $repair->load(['device', 'executor', 'acceptedBy']);
+        $repair->load(['device', 'executor', 'acceptedBy', 'request.responsibleUser', 'request.reviewedBy']);
 
         return view('repairs.edit', array_merge([
             'repair' => $repair,
@@ -170,7 +187,7 @@ class RepairController extends Controller
         ]);
 
         $repair->update($this->validatedData($request, $repair));
-        $repair->load(['device', 'executor', 'acceptedBy']);
+        $repair->load(['device', 'executor', 'acceptedBy', 'request.responsibleUser', 'request.reviewedBy']);
         $this->syncDeviceStatus($repair, $before['status'] ?? null);
 
         $after = $repair->fresh()->only(array_keys($before));
@@ -210,6 +227,10 @@ class RepairController extends Controller
             'target_status.required' => 'Izvelies jauno remonta statusu.',
         ]);
 
+        if (! in_array($validated['target_status'], $this->allowedTransitionTargets($repair->status), true)) {
+            return back()->with('error', 'Sadu remonta statusa mainu veikt nevar.');
+        }
+
         $before = $repair->only([
             'status',
             'start_date',
@@ -228,14 +249,17 @@ class RepairController extends Controller
         if ($validated['target_status'] === 'waiting') {
             $payload['start_date'] = null;
             $payload['end_date'] = null;
+            $payload['cost'] = null;
+            $payload['issue_reported_by'] = null;
         } elseif ($validated['target_status'] === 'in-progress') {
             $payload['start_date'] = filled($repair->start_date) ? $repair->start_date->toDateString() : now()->toDateString();
             $payload['end_date'] = null;
+            $payload['issue_reported_by'] = auth()->id();
         } elseif ($validated['target_status'] === 'completed') {
             $payload['end_date'] = now()->toDateString();
         }
 
-        $repair->update($payload);
+        $repair->update($this->normalizeRepairPayloadForPersistence($payload));
         $this->syncDeviceStatus($repair, $before['status'] ?? null);
         $after = $repair->fresh()->only(array_keys($before));
 
@@ -288,7 +312,6 @@ class RepairController extends Controller
     {
         $validated = $this->validateInput($request, [
             'device_id' => ['required', 'exists:devices,id'],
-            'issue_reported_by' => ['nullable', 'exists:users,id'],
             'description' => ['required', 'string'],
             'repair_type' => ['required', Rule::in(self::TYPES)],
             'priority' => ['nullable', Rule::in(self::PRIORITIES)],
@@ -304,23 +327,28 @@ class RepairController extends Controller
         ]);
 
         foreach ([
-            'issue_reported_by',
             'priority',
             'vendor_name',
             'vendor_contact',
             'invoice_number',
             'request_id',
         ] as $field) {
-            $validated[$field] = $validated[$field] ?: null;
+            $validated[$field] = $validated[$field] ?? null;
         }
 
         $validated['status'] = $repair?->status ?? 'waiting';
         $validated['priority'] = $validated['priority'] ?? ($repair?->priority ?? 'medium');
-        $validated['issue_reported_by'] = $validated['issue_reported_by'] ?? $repair?->issue_reported_by ?? null;
+        $validated['issue_reported_by'] = $repair?->issue_reported_by ?? null;
         $validated['accepted_by'] = $repair?->accepted_by ?? $this->user()?->id;
         $validated['request_id'] = $validated['request_id'] ?? $repair?->request_id ?? null;
         $validated['start_date'] = $repair?->start_date?->toDateString();
         $validated['end_date'] = $repair?->end_date?->toDateString();
+
+        if ($repair && (int) $validated['device_id'] !== (int) $repair->device_id) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Esosam remontam ierici mainit nevar. Atcel so remontu un izveido jaunu ierakstu pareizajai iericei.'],
+            ]);
+        }
 
         $device = Device::query()->find($validated['device_id']);
         if ($device && $device->status === Device::STATUS_WRITEOFF && (! $repair || (int) $repair->device_id !== (int) $device->id)) {
@@ -346,6 +374,10 @@ class RepairController extends Controller
                     'device_id' => ['Sai iericei jau ir aktivs remonta ieraksts.'],
                 ]);
             }
+        }
+
+        if ($validated['status'] === 'waiting') {
+            $validated['cost'] = null;
         }
 
         if ($validated['repair_type'] === 'internal') {
@@ -454,5 +486,15 @@ class RepairController extends Controller
     private function labelForStatus(string $status): string
     {
         return $this->statusLabels()[$status] ?? $status;
+    }
+
+    private function allowedTransitionTargets(string $status): array
+    {
+        return match ($status) {
+            'waiting' => ['in-progress', 'cancelled'],
+            'in-progress' => ['waiting', 'completed', 'cancelled'],
+            'completed' => ['in-progress'],
+            default => [],
+        };
     }
 }

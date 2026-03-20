@@ -62,6 +62,19 @@ class Repair extends Model
         return $this->belongsTo(User::class, 'accepted_by');
     }
 
+    public function getApprovalActorAttribute(): ?User
+    {
+        if ($this->relationLoaded('acceptedBy') && $this->acceptedBy) {
+            return $this->acceptedBy;
+        }
+
+        if ($this->relationLoaded('request') && $this->request?->relationLoaded('reviewedBy') && $this->request->reviewedBy) {
+            return $this->request->reviewedBy;
+        }
+
+        return null;
+    }
+
     public function request(): BelongsTo
     {
         return $this->belongsTo(RepairRequest::class, 'request_id');

@@ -75,6 +75,38 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_admin_can_filter_users_by_multiple_roles(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'multi-role-admin@example.com');
+        $otherAdmin = $this->createUser(role: User::ROLE_ADMIN, email: 'second-admin@example.com');
+        $employee = $this->createUser(role: User::ROLE_USER, email: 'employee-filter@example.com');
+
+        $this->actingAs($admin)
+            ->get(route('users.index', ['role' => [User::ROLE_ADMIN]]))
+            ->assertOk()
+            ->assertSee($otherAdmin->email)
+            ->assertDontSee($employee->email);
+    }
+
+    public function test_admin_can_filter_devices_by_assigned_user_from_user_list_shortcut(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'user-device-shortcut-admin@example.com');
+        $firstUser = $this->createUser(role: User::ROLE_USER, email: 'shortcut-first@example.com');
+        $secondUser = $this->createUser(role: User::ROLE_USER, email: 'shortcut-second@example.com');
+
+        $firstDevice = $this->createDevice($firstUser->id, Device::STATUS_ACTIVE, 'DEV-USER-SHORTCUT-1');
+        $secondDevice = $this->createDevice($secondUser->id, Device::STATUS_ACTIVE, 'DEV-USER-SHORTCUT-2');
+
+        $this->actingAs($admin)
+            ->get(route('devices.index', [
+                'assigned_to_id' => $firstUser->id,
+                'assigned_to_query' => $firstUser->full_name,
+            ]))
+            ->assertOk()
+            ->assertSee($firstDevice->name)
+            ->assertDontSee($secondDevice->name);
+    }
+
     public function test_regular_user_cannot_open_manager_routes(): void
     {
         $user = $this->createUser(role: User::ROLE_USER, email: 'manager-blocked@example.com');
@@ -214,6 +246,8 @@ class AuthAndRequestFlowsTest extends TestCase
             'status' => 'waiting',
             'accepted_by' => $admin->id,
             'request_id' => null,
+            'start_date' => null,
+            'end_date' => null,
         ]);
     }
 
@@ -303,8 +337,6 @@ class AuthAndRequestFlowsTest extends TestCase
         $response = $this->actingAs($admin)->post(route('repair-requests.review', $repairRequestId), [
             'status' => RepairRequest::STATUS_APPROVED,
             'review_notes' => 'Apstiprinats.',
-            'repair_type' => 'internal',
-            'priority' => 'high',
         ]);
 
         $response->assertSessionHas('success');
@@ -319,6 +351,10 @@ class AuthAndRequestFlowsTest extends TestCase
             'accepted_by' => $admin->id,
             'request_id' => $repairRequestId,
             'status' => 'waiting',
+            'repair_type' => 'internal',
+            'priority' => 'medium',
+            'start_date' => null,
+            'end_date' => null,
         ]);
         $this->assertDatabaseHas('devices', [
             'id' => $device->id,
@@ -721,11 +757,272 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->actingAs($user)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('Stavi un telpas')
+            ->assertSee('Pedejie pieteikumi')
+            ->assertSee('Manas ierices')
             ->assertSee('DEV-DASH-OWN')
             ->assertDontSee('DEV-DASH-OTHER')
-            ->assertSee('Mana personiga darbiba')
+            ->assertDontSee('Stavi un telpas')
+            ->assertDontSee('Jaunakas darbibas')
+            ->assertDontSee('Mana personiga darbiba')
             ->assertDontSee('Svesa admina darbiba');
+    }
+
+    public function test_regular_user_can_open_unified_request_center_and_see_related_request_types(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'request-center-user@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'request-center-recipient@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-REQUEST-CENTER');
+
+        RepairRequest::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'description' => 'Jaiet uz vienoto centru.',
+            'status' => RepairRequest::STATUS_SUBMITTED,
+        ]);
+
+        WriteoffRequest::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'reason' => 'Ar norakstisanu saistits ieraksts.',
+            'status' => WriteoffRequest::STATUS_REJECTED,
+        ]);
+
+        DeviceTransfer::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Nodosanas ieraksts vienotajam sarakstam.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('my-requests.index'))
+            ->assertOk()
+            ->assertSee('Mani pieteikumi')
+            ->assertSee('Jaiet uz vienoto centru.')
+            ->assertSee('Ar norakstisanu saistits ieraksts.')
+            ->assertSee('Nodosanas ieraksts vienotajam sarakstam.');
+    }
+
+    public function test_regular_user_can_create_transfer_request_from_unified_form(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'unified-create-user@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'unified-create-recipient@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-UNIFIED-CREATE');
+
+        $this->actingAs($user)
+            ->post(route('my-requests.store'), [
+                'request_type' => 'transfer',
+                'device_id' => $device->id,
+                'transfered_to_id' => $recipient->id,
+                'transfer_reason' => 'Vienota forma nodosanai.',
+            ])
+            ->assertRedirect(route('my-requests.index'));
+
+        $this->assertDatabaseHas('device_transfers', [
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Vienota forma nodosanai.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+        ]);
+    }
+
+    public function test_transfer_recipient_can_approve_device_and_change_room(): void
+    {
+        $sender = $this->createUser(role: User::ROLE_USER, email: 'transfer-room-sender@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'transfer-room-recipient@example.com');
+        $device = $this->createDevice($sender->id, Device::STATUS_ACTIVE, 'DEV-TRANSFER-ROOM');
+
+        $newBuildingId = DB::table('buildings')->insertGetId([
+            'building_name' => 'Jauna eka',
+            'address' => 'Adrese 2',
+            'city' => 'Ludza',
+            'total_floors' => 2,
+            'notes' => null,
+            'created_at' => now(),
+        ]);
+
+        $newRoomId = DB::table('rooms')->insertGetId([
+            'building_id' => $newBuildingId,
+            'floor_number' => 2,
+            'room_number' => '205-NEW',
+            'room_name' => 'Jauna telpa',
+            'user_id' => $recipient->id,
+            'department' => 'IT',
+            'notes' => null,
+            'created_at' => now(),
+        ]);
+
+        $transfer = DeviceTransfer::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $sender->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Pec apstiprinasanas mainit telpu.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($recipient)
+            ->post(route('device-transfers.review', $transfer), [
+                'status' => DeviceTransfer::STATUS_APPROVED,
+                'room_id' => $newRoomId,
+                'keep_current_room' => 0,
+            ])
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('devices', [
+            'id' => $device->id,
+            'assigned_to_id' => $recipient->id,
+            'room_id' => $newRoomId,
+            'building_id' => $newBuildingId,
+        ]);
+    }
+
+    public function test_regular_user_can_update_room_for_owned_device(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'device-room-user@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-USER-ROOM');
+
+        $newBuildingId = DB::table('buildings')->insertGetId([
+            'building_name' => 'Papildus eka',
+            'address' => 'Adrese 3',
+            'city' => 'Ludza',
+            'total_floors' => 1,
+            'notes' => null,
+            'created_at' => now(),
+        ]);
+
+        $newRoomId = DB::table('rooms')->insertGetId([
+            'building_id' => $newBuildingId,
+            'floor_number' => 1,
+            'room_number' => '110-USER',
+            'room_name' => 'Lietotaja telpa',
+            'user_id' => $user->id,
+            'department' => 'IT',
+            'notes' => null,
+            'created_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('devices.user-room.update', $device), [
+                'room_id' => $newRoomId,
+            ])
+            ->assertRedirect(route('devices.show', $device));
+
+        $this->assertDatabaseHas('devices', [
+            'id' => $device->id,
+            'room_id' => $newRoomId,
+            'building_id' => $newBuildingId,
+        ]);
+    }
+
+    public function test_user_cannot_create_writeoff_request_when_pending_repair_request_exists(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'blocked-writeoff@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-BLOCK-WRITEOFF');
+
+        RepairRequest::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'description' => 'Gaida remonta izskatisanu.',
+            'status' => RepairRequest::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($user)
+            ->from(route('my-requests.create'))
+            ->post(route('my-requests.store'), [
+                'request_type' => 'writeoff',
+                'device_id' => $device->id,
+                'reason' => 'Nevajadzetu laut izveidot.',
+            ])
+            ->assertSessionHasErrors('device_id');
+    }
+
+    public function test_user_cannot_create_transfer_request_when_pending_writeoff_request_exists(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'blocked-transfer@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'blocked-transfer-recipient@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-BLOCK-TRANSFER');
+
+        WriteoffRequest::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'reason' => 'Gaida norakstisanas izskatisanu.',
+            'status' => WriteoffRequest::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($user)
+            ->from(route('my-requests.create'))
+            ->post(route('my-requests.store'), [
+                'request_type' => 'transfer',
+                'device_id' => $device->id,
+                'transfered_to_id' => $recipient->id,
+                'transfer_reason' => 'Nevajadzetu laut nodot.',
+            ])
+            ->assertSessionHasErrors('device_id');
+    }
+
+    public function test_user_cannot_create_repair_request_when_pending_transfer_request_exists(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'blocked-repair@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'blocked-repair-recipient@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-BLOCK-REPAIR');
+
+        DeviceTransfer::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Gaida nodosanas izskatisanu.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('repair-requests.store'), [
+                'device_id' => $device->id,
+                'description' => 'Nevajadzetu laut pieteikt remontu.',
+            ])
+            ->assertSessionHasErrors('device_id');
+    }
+
+    public function test_user_cannot_create_any_request_for_device_in_repair_status(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'repair-state-blocked@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'repair-state-target@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_REPAIR, 'DEV-IN-REPAIR');
+
+        Repair::create([
+            'device_id' => $device->id,
+            'description' => 'Ierice jau ir remonta.',
+            'status' => 'in-progress',
+            'repair_type' => 'internal',
+            'priority' => 'medium',
+            'accepted_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('my-requests.store'), [
+                'request_type' => 'repair',
+                'device_id' => $device->id,
+                'description' => 'Vel viens remonts.',
+            ])
+            ->assertSessionHasErrors('device_id');
+
+        $this->actingAs($user)
+            ->post(route('my-requests.store'), [
+                'request_type' => 'writeoff',
+                'device_id' => $device->id,
+                'reason' => 'Nevajadzetu laut norakstit.',
+            ])
+            ->assertSessionHasErrors('device_id');
+
+        $this->actingAs($user)
+            ->post(route('my-requests.store'), [
+                'request_type' => 'transfer',
+                'device_id' => $device->id,
+                'transfered_to_id' => $recipient->id,
+                'transfer_reason' => 'Nevajadzetu laut nodot.',
+            ])
+            ->assertSessionHasErrors('device_id');
     }
 
     public function test_devices_index_accepts_floor_and_room_filters_from_dashboard_links(): void
@@ -787,6 +1084,137 @@ class AuthAndRequestFlowsTest extends TestCase
             ])
             ->assertRedirect(route('devices.edit', $device))
             ->assertSessionHasErrors(['assigned_to_id', 'room_id']);
+    }
+
+    public function test_devices_index_can_filter_by_multiple_statuses(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-status-filter-admin@example.com');
+        $activeDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-STATUS-ACTIVE');
+        $repairDevice = $this->createDevice($admin->id, Device::STATUS_REPAIR, 'DEV-STATUS-REPAIR');
+        $writeoffDevice = $this->createDevice($admin->id, Device::STATUS_WRITEOFF, 'DEV-STATUS-WRITEOFF');
+
+        $this->actingAs($admin)
+            ->get(route('devices.index', ['status' => [Device::STATUS_ACTIVE, Device::STATUS_REPAIR]]))
+            ->assertOk()
+            ->assertSee($activeDevice->name)
+            ->assertSee($repairDevice->name)
+            ->assertDontSee($writeoffDevice->name);
+    }
+
+    public function test_repairs_index_shows_related_request_author_problem_and_approver(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'repair-board-admin@example.com');
+        $user = $this->createUser(role: User::ROLE_USER, email: 'repair-board-user@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_REPAIR, 'DEV-REPAIR-BOARD');
+
+        $requestId = DB::table('repair_requests')->insertGetId([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'description' => 'Ekrans mirgo un dators izsledzas.',
+            'status' => RepairRequest::STATUS_APPROVED,
+            'reviewed_by_user_id' => $admin->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        Repair::create([
+            'device_id' => $device->id,
+            'description' => 'Veikt diagnostiku un remontu.',
+            'status' => 'waiting',
+            'repair_type' => 'internal',
+            'priority' => 'medium',
+            'issue_reported_by' => $user->id,
+            'accepted_by' => $admin->id,
+            'request_id' => $requestId,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('repairs.index'))
+            ->assertOk()
+            ->assertSee('Saistitais remonta pieteikums #' . $requestId)
+            ->assertSee($user->full_name)
+            ->assertSee('Ekrans mirgo un dators izsledzas.')
+            ->assertSee($admin->full_name);
+    }
+
+    public function test_repairs_index_can_filter_only_repairs_assigned_to_current_admin(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'repair-filter-admin-a@example.com');
+        $otherAdmin = $this->createUser(role: User::ROLE_ADMIN, email: 'repair-filter-admin-b@example.com');
+        $user = $this->createUser(role: User::ROLE_USER, email: 'repair-filter-user@example.com');
+
+        $myDevice = $this->createDevice($user->id, Device::STATUS_REPAIR, 'DEV-MY-REPAIR');
+        $otherDevice = $this->createDevice($user->id, Device::STATUS_REPAIR, 'DEV-OTHER-REPAIR');
+
+        Repair::create([
+            'device_id' => $myDevice->id,
+            'description' => 'Remonts pieskirts aktivajam adminam.',
+            'status' => 'waiting',
+            'repair_type' => 'internal',
+            'priority' => 'medium',
+            'accepted_by' => $admin->id,
+        ]);
+
+        Repair::create([
+            'device_id' => $otherDevice->id,
+            'description' => 'Remonts pieskirts citam adminam.',
+            'status' => 'waiting',
+            'repair_type' => 'internal',
+            'priority' => 'medium',
+            'accepted_by' => $otherAdmin->id,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('repairs.index', ['mine' => 1]))
+            ->assertOk()
+            ->assertSee('DEV-MY-REPAIR')
+            ->assertDontSee('DEV-OTHER-REPAIR');
+    }
+
+    public function test_room_cannot_be_deleted_while_devices_are_assigned(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'room-delete-admin@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-ROOM-BLOCK');
+
+        $this->actingAs($admin)
+            ->delete(route('rooms.destroy', $device->room_id))
+            ->assertRedirect(route('rooms.index'))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('rooms', [
+            'id' => $device->room_id,
+        ]);
+    }
+
+    public function test_building_cannot_be_deleted_while_rooms_or_devices_are_assigned(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'building-delete-admin@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-BUILDING-BLOCK');
+
+        $this->actingAs($admin)
+            ->delete(route('buildings.destroy', $device->building_id))
+            ->assertRedirect(route('buildings.index'))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('buildings', [
+            'id' => $device->building_id,
+        ]);
+    }
+
+    public function test_user_cannot_be_deleted_while_related_records_are_still_assigned(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'user-delete-admin@example.com');
+        $employee = $this->createUser(role: User::ROLE_USER, email: 'user-delete-employee@example.com');
+        $this->createDevice($employee->id, Device::STATUS_ACTIVE, 'DEV-USER-DELETE-BLOCK');
+
+        $this->actingAs($admin)
+            ->delete(route('users.destroy', $employee))
+            ->assertRedirect(route('users.index'))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $employee->id,
+        ]);
     }
 
     private function createUser(string $role, ?string $email = null): User

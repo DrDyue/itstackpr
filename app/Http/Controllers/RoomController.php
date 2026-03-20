@@ -52,6 +52,9 @@ class RoomController extends Controller
 
         return view('rooms.index', [
             'rooms' => $rooms,
+            'roomSummary' => [
+                'total' => Room::query()->count(),
+            ],
             'filters' => $filters,
             'buildings' => Building::orderBy('building_name')->get(),
             'departments' => Room::query()
@@ -111,6 +114,14 @@ class RoomController extends Controller
     public function destroy(Room $room)
     {
         $this->requireManager();
+
+        $devicesCount = $room->devices()->count();
+
+        if ($devicesCount > 0) {
+            return redirect()
+                ->route('rooms.index')
+                ->with('error', 'Telpu nevar dzest, jo tai piesaistitas ' . $devicesCount . ' ierice' . ($devicesCount === 1 ? '' : 's') . '. Vispirms parvieto vai atsien ierices no si ieraksta, tad meginiet velreiz.');
+        }
 
         AuditTrail::deleted(auth()->id(), $room);
         $room->delete();

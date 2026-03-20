@@ -34,20 +34,25 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('devices.store') }}" enctype="multipart/form-data" class="surface-card space-y-6 p-6">
+        <form method="POST" action="{{ route('devices.store') }}" enctype="multipart/form-data" class="space-y-6">
             @csrf
             @include('devices.partials.form-fields', ['device' => null])
-            <div class="flex flex-wrap gap-3">
-                <button type="submit" class="btn-create">
-                    <x-icon name="save" size="h-4 w-4" />
-                    <span>Saglabat</span>
-                </button>
-                <a href="{{ route('devices.index') }}" class="btn-clear">
-                    <x-icon name="clear" size="h-4 w-4" />
-                    <span>Atcelt</span>
-                </a>
+            <div class="surface-card flex flex-wrap items-center justify-between gap-4 p-6">
+                <div>
+                    <div class="text-sm font-semibold text-slate-900">Pirms saglabasanas parbaudi pamatdatus</div>
+                    <div class="mt-1 text-sm text-slate-500">Svarigakais ir kods, nosaukums, tips un modelis. Parejo informaciju vari papildinat ari velak.</div>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <button type="submit" class="btn-create">
+                        <x-icon name="save" size="h-4 w-4" />
+                        <span>Saglabat</span>
+                    </button>
+                    <a href="{{ route('devices.index') }}" class="btn-clear">
+                        <x-icon name="clear" size="h-4 w-4" />
+                        <span>Atcelt</span>
+                    </a>
+                </div>
             </div>
         </form>
     </section>
 </x-app-layout>
-

@@ -44,4 +44,14 @@ class AuditLog extends Model
     {
         return AuditTrail::entityLabel($this->entity_type);
     }
+
+    public function getLocalizedActionAttribute(): string
+    {
+        return AuditTrail::actionLabel($this->action);
+    }
+
+    public function getLocalizedSeverityAttribute(): string
+    {
+        return AuditTrail::severityLabel($this->severity);
+    }
 }

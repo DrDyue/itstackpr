@@ -7,12 +7,13 @@
             ? ($selectedRoom->room_number . ($selectedRoom->room_name ? ' - ' . $selectedRoom->room_name : ''))
             : ($filters['room_query'] !== '' ? $filters['room_query'] : null);
         $selectedTypeLabel = $selectedType?->type_name ?: ($filters['type_query'] !== '' ? $filters['type_query'] : null);
+        $selectedAssignedUserLabel = $selectedAssignedUser?->full_name ?: ($filters['assigned_to_query'] !== '' ? $filters['assigned_to_query'] : null);
         $statusFilterLinks = [
-            ['label' => 'Visas', 'value' => '', 'icon' => 'device', 'tone' => 'slate'],
             ['label' => 'Aktivas', 'value' => 'active', 'icon' => 'check-circle', 'tone' => 'emerald'],
             ['label' => 'Remonta', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'amber'],
             ['label' => 'Norakstitas', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
         ];
+        $selectedStatuses = $filters['has_status_filter'] ? $filters['statuses'] : collect($statusFilterLinks)->pluck('value')->all();
         $roomSelectOptions = $roomOptions->map(fn ($room) => [
             'value' => (string) $room->id,
             'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
@@ -39,6 +40,9 @@
             'description' => 'Filtrs pec stava',
             'search' => $floor . ' ' . $floor . '. stavs',
         ])->values();
+        $toolbarGridClass = $canManageDevices
+            ? 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.85fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,1fr)]'
+            : 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,1fr)]';
     @endphp
 
     <section class="app-shell">
@@ -53,18 +57,22 @@
 
                         <div class="inventory-inline-metrics">
                             <span class="inventory-inline-chip inventory-inline-chip-slate">
+                                <x-icon name="device" size="h-3.5 w-3.5" />
                                 <span class="inventory-inline-label">Kopa</span>
                                 <span class="inventory-inline-value">{{ $deviceSummary['total'] }}</span>
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-emerald">
+                                <x-icon name="check-circle" size="h-3.5 w-3.5" />
                                 <span class="inventory-inline-label">Aktivas</span>
                                 <span class="inventory-inline-value">{{ $deviceSummary['active'] }}</span>
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-amber">
+                                <x-icon name="repair" size="h-3.5 w-3.5" />
                                 <span class="inventory-inline-label">Remonta</span>
                                 <span class="inventory-inline-value">{{ $deviceSummary['repair'] }}</span>
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-rose">
+                                <x-icon name="writeoff" size="h-3.5 w-3.5" />
                                 <span class="inventory-inline-label">Norakstitas</span>
                                 <span class="inventory-inline-value">{{ $deviceSummary['writeoff'] }}</span>
                             </span>
@@ -95,7 +103,7 @@
         <form
             method="GET"
             action="{{ route('devices.index') }}"
-            class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-5"
+            class="{{ $toolbarGridClass }}"
             x-data="{}"
             @searchable-select-updated.window="if ($event.detail.identifier === 'device-floor-filter') { $dispatch('searchable-select-clear', { target: 'device-room-filter' }) }"
         >
@@ -107,6 +115,15 @@
                 <span class="crud-label">Kods</span>
                 <input type="text" name="code" value="{{ $filters['code'] }}" class="crud-control">
             </label>
+            @if ($canManageDevices)
+                <label class="block">
+                    <span class="crud-label">Pieskirta</span>
+                    <input type="text" name="assigned_to_query" value="{{ $filters['assigned_to_query'] }}" class="crud-control" placeholder="Lietotaja vards">
+                    @if ($filters['assigned_to_id'] !== '')
+                        <input type="hidden" name="assigned_to_id" value="{{ $filters['assigned_to_id'] }}">
+                    @endif
+                </label>
+            @endif
             <label class="block">
                 <span class="crud-label">Stavs</span>
                 <x-searchable-select
@@ -146,18 +163,26 @@
                 />
             </label>
 
-            <div class="filter-toolbar-footer md:col-span-2 xl:col-span-5">
+            <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
                 <div class="quick-status-filters">
                     @foreach ($statusFilterLinks as $statusFilter)
                         @php
                             $query = request()->except('page', 'status');
-                            if ($statusFilter['value'] !== '') {
-                                $query['status'] = $statusFilter['value'];
+                            $statusValues = collect($selectedStatuses);
+                            $isActive = $statusValues->contains($statusFilter['value']);
+                            $nextStatuses = $isActive
+                                ? $statusValues->reject(fn ($value) => $value === $statusFilter['value'])->values()->all()
+                                : $statusValues->push($statusFilter['value'])->unique()->values()->all();
+
+                            if (count($nextStatuses) === 0 || count($nextStatuses) === count($statusFilterLinks)) {
+                                unset($query['status']);
+                            } else {
+                                $query['status'] = $nextStatuses;
                             }
                         @endphp
                         <a
-                            href="{{ route('devices.index', array_filter($query, fn ($value) => $value !== null && $value !== '')) }}"
-                            class="quick-status-filter quick-status-filter-{{ $statusFilter['tone'] }} {{ $filters['status'] === $statusFilter['value'] || ($statusFilter['value'] === '' && $filters['status'] === '') ? 'quick-status-filter-active' : '' }}"
+                            href="{{ route('devices.index', $query) }}"
+                            class="quick-status-filter quick-status-filter-{{ $statusFilter['tone'] }} {{ $isActive ? 'quick-status-filter-active' : '' }}"
                         >
                             <x-icon :name="$statusFilter['icon']" size="h-4 w-4" />
                             <span>{{ $statusFilter['label'] }}</span>
@@ -182,10 +207,11 @@
             :items="[
                 ['label' => 'Meklet', 'value' => $filters['q']],
                 ['label' => 'Kods', 'value' => $filters['code']],
+                ['label' => 'Pieskirta', 'value' => $canManageDevices ? $selectedAssignedUserLabel : null],
                 ['label' => 'Stavs', 'value' => $selectedFloorLabel],
                 ['label' => 'Telpa', 'value' => $selectedRoomLabel],
                 ['label' => 'Tips', 'value' => $selectedTypeLabel],
-                ['label' => 'Statuss', 'value' => $filters['status'] !== '' ? ($statusLabels[$filters['status']] ?? $filters['status']) : null],
+                ['label' => 'Statuss', 'value' => $filters['has_status_filter'] ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ') : null],
             ]"
             :clear-url="route('devices.index')"
         />
@@ -268,6 +294,11 @@
                             </td>
                             <td class="px-4 py-4">
                                 <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
+                                @if ($device->activeRepair)
+                                    <div class="mt-2 text-xs text-slate-500">
+                                        Remonta statuss: {{ ['waiting' => 'Gaida', 'in-progress' => 'Procesa', 'completed' => 'Pabeigts', 'cancelled' => 'Atcelts'][$device->activeRepair->status] ?? 'Remonta' }}
+                                    </div>
+                                @endif
                             </td>
                             <td class="px-4 py-4">
                                 <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">

@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Device;
+use App\Models\DeviceTransfer;
 use App\Models\Repair;
 use App\Models\RepairRequest;
 use App\Models\User;
+use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -19,27 +21,48 @@ class RepairRequestController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+        $availableStatuses = [
+            RepairRequest::STATUS_SUBMITTED,
+            RepairRequest::STATUS_APPROVED,
+            RepairRequest::STATUS_REJECTED,
+        ];
+        $statusFilterTouched = $request->has('statuses_filter');
+        $selectedStatuses = collect($request->query('status', $statusFilterTouched ? [] : [RepairRequest::STATUS_SUBMITTED]))
+            ->map(fn (mixed $status) => trim((string) $status))
+            ->filter(fn (string $status) => in_array($status, $availableStatuses, true))
+            ->unique()
+            ->values()
+            ->all();
 
         $filters = [
-            'status' => trim((string) $request->query('status', '')),
             'q' => trim((string) $request->query('q', '')),
+            'statuses' => $selectedStatuses,
+            'has_status_filter' => true,
         ];
 
         if (! $this->featureTableExists('repair_requests')) {
             return view('repair_requests.index', [
                 'requests' => $this->emptyPaginator(),
+                'requestSummary' => [
+                    'total' => 0,
+                    'submitted' => 0,
+                    'approved' => 0,
+                    'rejected' => 0,
+                ],
                 'filters' => $filters,
-                'statuses' => [RepairRequest::STATUS_SUBMITTED, RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED],
+                'statuses' => $availableStatuses,
                 'statusLabels' => $this->requestStatusLabels(),
                 'canReview' => $user->canManageRequests(),
                 'featureMessage' => 'Tabula repair_requests sobrid nav pieejama.',
             ]);
         }
 
-        $requests = RepairRequest::query()
+        $baseQuery = RepairRequest::query()
+            ->when(! $user->canManageRequests(), fn (Builder $query) => $query->where('responsible_user_id', $user->id));
+
+        $requests = (clone $baseQuery)
             ->with(['device.assignedTo', 'responsibleUser', 'reviewedBy', 'repair'])
-            ->when(! $user->canManageRequests(), fn (Builder $query) => $query->where('responsible_user_id', $user->id))
-            ->when($filters['status'] !== '' && in_array($filters['status'], [RepairRequest::STATUS_SUBMITTED, RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED], true), fn (Builder $query) => $query->where('status', $filters['status']))
+            ->whereIn('status', $filters['statuses'] === [] ? ['__none__'] : $filters['statuses'])
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
 
@@ -55,8 +78,14 @@ class RepairRequestController extends Controller
 
         return view('repair_requests.index', [
             'requests' => $requests,
+            'requestSummary' => [
+                'total' => (clone $baseQuery)->count(),
+                'submitted' => (clone $baseQuery)->where('status', RepairRequest::STATUS_SUBMITTED)->count(),
+                'approved' => (clone $baseQuery)->where('status', RepairRequest::STATUS_APPROVED)->count(),
+                'rejected' => (clone $baseQuery)->where('status', RepairRequest::STATUS_REJECTED)->count(),
+            ],
             'filters' => $filters,
-            'statuses' => [RepairRequest::STATUS_SUBMITTED, RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED],
+            'statuses' => $availableStatuses,
             'statusLabels' => $this->requestStatusLabels(),
             'canReview' => $user->canManageRequests(),
         ]);
@@ -105,11 +134,7 @@ class RepairRequestController extends Controller
             ]);
         }
 
-        if (RepairRequest::query()->where('device_id', $device->id)->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
-            throw ValidationException::withMessages([
-                'device_id' => ['Sai iericei jau ir gaidoss remonta pieteikums.'],
-            ]);
-        }
+        $this->ensureDeviceCanAcceptRepairRequest($device);
 
         $repairRequest = RepairRequest::create([
             'device_id' => $device->id,
@@ -137,9 +162,6 @@ class RepairRequestController extends Controller
 
         $validated = $this->validateInput($request, [
             'status' => ['required', Rule::in([RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED])],
-            'review_notes' => ['nullable', 'string'],
-            'repair_type' => ['nullable', Rule::in(['internal', 'external'])],
-            'priority' => ['nullable', Rule::in(['low', 'medium', 'high', 'critical'])],
         ], [
             'status.required' => 'Izvelies lemumu remonta pieteikumam.',
         ]);
@@ -150,7 +172,7 @@ class RepairRequestController extends Controller
         $payload = [
             'status' => $validated['status'],
             'reviewed_by_user_id' => $manager->id,
-            'review_notes' => $validated['review_notes'] ?: null,
+            'review_notes' => null,
         ];
 
         DB::transaction(function () use ($validated, $repairRequest, $manager, &$payload) {
@@ -169,14 +191,20 @@ class RepairRequestController extends Controller
                     ]);
                 }
 
-                $repair = Repair::create([
+                $repair = $this->createRepairRecord([
                     'device_id' => $repairRequest->device_id,
                     'issue_reported_by' => $repairRequest->responsible_user_id,
                     'accepted_by' => $manager->id,
                     'description' => $repairRequest->description,
                     'status' => 'waiting',
-                    'repair_type' => $validated['repair_type'] ?: 'internal',
-                    'priority' => $validated['priority'] ?: 'medium',
+                    'repair_type' => 'internal',
+                    'priority' => 'medium',
+                    'start_date' => null,
+                    'end_date' => null,
+                    'cost' => null,
+                    'vendor_name' => null,
+                    'vendor_contact' => null,
+                    'invoice_number' => null,
                     'request_id' => $repairRequest->id,
                 ]);
 
@@ -201,7 +229,45 @@ class RepairRequestController extends Controller
         return Device::query()
             ->where('assigned_to_id', $user->id)
             ->where('status', Device::STATUS_ACTIVE)
-            ->with(['type', 'building', 'room'])
+            ->with(['type', 'building', 'room', 'activeRepair'])
             ->orderBy('name');
+    }
+
+    private function ensureDeviceCanAcceptRepairRequest(Device $device): void
+    {
+        if ($device->status === Device::STATUS_REPAIR) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau notiek remonts (' . $this->repairStatusLabel($device->activeRepair?->status) . '), tapec jaunu remonta pieteikumu veidot nevar.'],
+            ]);
+        }
+
+        if (RepairRequest::query()->where('device_id', $device->id)->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau ir gaidoss remonta pieteikums.'],
+            ]);
+        }
+
+        if (WriteoffRequest::query()->where('device_id', $device->id)->where('status', 'submitted')->exists()) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau ir gaidoss norakstisanas pieteikums, tapec remonta pieteikumu veidot nevar.'],
+            ]);
+        }
+
+        if (DeviceTransfer::query()->where('device_id', $device->id)->where('status', 'submitted')->exists()) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau ir gaidoss nodosanas pieteikums, tapec remonta pieteikumu veidot nevar.'],
+            ]);
+        }
+    }
+
+    private function repairStatusLabel(?string $status): string
+    {
+        return match ($status) {
+            'waiting' => 'Gaida',
+            'in-progress' => 'Procesa',
+            'completed' => 'Pabeigts',
+            'cancelled' => 'Atcelts',
+            default => 'Remonta',
+        };
     }
 }

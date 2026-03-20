@@ -20,13 +20,55 @@
                 'tone' => 'emerald',
             ],
         ];
+        $mineQuery = request()->except('page', 'mine');
+        if (! $filters['mine']) {
+            $mineQuery['mine'] = 1;
+        }
+        $priorityOptions = collect($priorities)->map(fn ($priority) => [
+            'value' => (string) $priority,
+            'label' => $priorityLabels[$priority] ?? $priority,
+            'description' => 'Filtrs pec prioritates',
+            'search' => ($priorityLabels[$priority] ?? $priority) . ' ' . $priority,
+        ])->values();
+        $repairTypeOptions = collect($repairTypes)->map(fn ($repairType) => [
+            'value' => (string) $repairType,
+            'label' => $typeLabels[$repairType] ?? $repairType,
+            'description' => 'Filtrs pec remonta tipa',
+            'search' => ($typeLabels[$repairType] ?? $repairType) . ' ' . $repairType,
+        ])->values();
+        $selectedPriorityLabel = $filters['priority'] !== '' ? ($priorityLabels[$filters['priority']] ?? $filters['priority']) : null;
+        $selectedRepairTypeLabel = $filters['repair_type'] !== '' ? ($typeLabels[$filters['repair_type']] ?? $filters['repair_type']) : null;
     @endphp
 
     <section class="app-shell">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-4xl">
-                    <div class="page-eyebrow"><x-icon name="repair" size="h-4 w-4" /><span>Serviss</span></div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="page-eyebrow"><x-icon name="repair" size="h-4 w-4" /><span>Serviss</span></div>
+                        <div class="inventory-inline-metrics">
+                            <span class="inventory-inline-chip inventory-inline-chip-slate">
+                                <x-icon name="repair" size="h-3.5 w-3.5" />
+                                <span class="inventory-inline-label">Kopa</span>
+                                <span class="inventory-inline-value">{{ $repairSummary['total'] }}</span>
+                            </span>
+                            <span class="inventory-inline-chip inventory-inline-chip-amber">
+                                <x-icon name="clock" size="h-3.5 w-3.5" />
+                                <span class="inventory-inline-label">Gaida</span>
+                                <span class="inventory-inline-value">{{ $repairSummary['waiting'] }}</span>
+                            </span>
+                            <span class="inventory-inline-chip inventory-inline-chip-sky">
+                                <x-icon name="stats" size="h-3.5 w-3.5" />
+                                <span class="inventory-inline-label">Procesa</span>
+                                <span class="inventory-inline-value">{{ $repairSummary['in_progress'] }}</span>
+                            </span>
+                            <span class="inventory-inline-chip inventory-inline-chip-emerald">
+                                <x-icon name="check-circle" size="h-3.5 w-3.5" />
+                                <span class="inventory-inline-label">Pabeigti</span>
+                                <span class="inventory-inline-value">{{ $repairSummary['completed'] }}</span>
+                            </span>
+                        </div>
+                    </div>
                     <div class="page-title-group mt-4">
                         <div class="page-title-icon page-title-icon-amber"><x-icon name="repair" size="h-7 w-7" /></div>
                         <div>
@@ -48,21 +90,29 @@
             </label>
             <label class="block">
                 <span class="crud-label">Prioritate</span>
-                <select name="priority" class="crud-control">
-                    <option value="">Visas</option>
-                    @foreach ($priorities as $priority)
-                        <option value="{{ $priority }}" @selected($filters['priority'] === $priority)>{{ $priorityLabels[$priority] }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    name="priority"
+                    query-name="priority_query"
+                    identifier="repair-priority-filter"
+                    :options="$priorityOptions"
+                    :selected="$filters['priority']"
+                    :query="$selectedPriorityLabel"
+                    placeholder="Izvelies prioritate"
+                    empty-message="Neviena prioritate neatbilst meklejumam."
+                />
             </label>
             <label class="block">
                 <span class="crud-label">Tips</span>
-                <select name="repair_type" class="crud-control">
-                    <option value="">Visi</option>
-                    @foreach ($repairTypes as $repairType)
-                        <option value="{{ $repairType }}" @selected($filters['repair_type'] === $repairType)>{{ $typeLabels[$repairType] }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    name="repair_type"
+                    query-name="repair_type_query"
+                    identifier="repair-type-filter"
+                    :options="$repairTypeOptions"
+                    :selected="$filters['repair_type']"
+                    :query="$selectedRepairTypeLabel"
+                    placeholder="Izvelies remonta tipu"
+                    empty-message="Neviens remonta tips neatbilst meklejumam."
+                />
             </label>
 
             <div class="filter-toolbar-footer md:col-span-4">
@@ -85,6 +135,15 @@
                 </div>
 
                 <div class="toolbar-actions justify-end">
+                    @if ($canManageRepairs)
+                        <a
+                            href="{{ route('repairs.index', $mineQuery) }}"
+                            class="quick-status-filter quick-status-filter-slate {{ $filters['mine'] ? 'quick-status-filter-active' : '' }}"
+                        >
+                            <x-icon name="user" size="h-4 w-4" />
+                            <span>Man pieskirtie</span>
+                        </a>
+                    @endif
                     <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklet</span></button>
                     <a href="{{ route('repairs.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notirit</span></a>
                 </div>
@@ -97,6 +156,7 @@
                 ['label' => 'Statuss', 'value' => $filters['status'] !== '' ? ($statusLabels[$filters['status']] ?? $filters['status']) : null],
                 ['label' => 'Prioritate', 'value' => $filters['priority'] !== '' ? ($priorityLabels[$filters['priority']] ?? $filters['priority']) : null],
                 ['label' => 'Tips', 'value' => $filters['repair_type'] !== '' ? ($typeLabels[$filters['repair_type']] ?? $filters['repair_type']) : null],
+                ['label' => 'Pieskirts', 'value' => $filters['mine'] && $canManageRepairs ? 'Man' : null],
             ]"
             :clear-url="route('repairs.index')"
         />
@@ -146,6 +206,9 @@
 
                     <div class="repair-board-stack">
                         @forelse ($columnRepairs as $repair)
+                            @php
+                                $deviceThumbUrl = $repair->device?->deviceImageThumbUrl();
+                            @endphp
                             <article
                                 class="repair-board-card {{ $canManageRepairs ? 'repair-card-draggable' : '' }}"
                                 @if ($canManageRepairs)
@@ -156,17 +219,26 @@
                                 @endif
                             >
                                 <div class="repair-board-card-head">
-                                    <div>
-                                        @if ($repair->device)
-                                            <a href="{{ route('devices.show', $repair->device) }}" class="repair-board-device-link">{{ $repair->device->name }}</a>
+                                    <div class="flex items-start gap-3">
+                                        @if ($deviceThumbUrl)
+                                            <img src="{{ $deviceThumbUrl }}" alt="{{ $repair->device?->name ?: 'Ierice' }}" class="device-table-thumb shrink-0">
                                         @else
-                                            <span class="repair-board-device-link">Ierice nav atrasta</span>
+                                            <div class="device-table-thumb device-table-thumb-placeholder shrink-0">
+                                                <x-icon name="device" size="h-4 w-4" />
+                                            </div>
                                         @endif
-                                        <div class="repair-board-device-meta">
-                                            <span>{{ $repair->device?->code ?: 'bez koda' }}</span>
-                                            @if ($repair->device?->room)
-                                                <span>Telpa {{ $repair->device->room->room_number }}</span>
+                                        <div>
+                                            @if ($repair->device)
+                                                <a href="{{ route('devices.show', $repair->device) }}" class="repair-board-device-link">{{ $repair->device->name }}</a>
+                                            @else
+                                                <span class="repair-board-device-link">Ierice nav atrasta</span>
                                             @endif
+                                            <div class="repair-board-device-meta">
+                                                <span>{{ $repair->device?->code ?: 'bez koda' }}</span>
+                                                @if ($repair->device?->room)
+                                                    <span>Telpa {{ $repair->device->room->room_number }}</span>
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                     <x-status-pill context="repair" :value="$repair->status" :label="$statusLabels[$repair->status] ?? null" />
@@ -186,7 +258,7 @@
                                     </div>
                                     <div>
                                         <dt>Apstiprinaja</dt>
-                                        <dd>{{ $repair->acceptedBy?->full_name ?: 'Nav noradits' }}</dd>
+                                        <dd>{{ $repair->approval_actor?->full_name ?: 'Nav noradits' }}</dd>
                                     </div>
                                     <div>
                                         <dt>Pieteikums</dt>
@@ -206,36 +278,44 @@
                                     </div>
                                 </dl>
 
-                                <div class="repair-board-actions">
-                                    <a href="{{ route('repairs.edit', $repair) }}" class="repair-action repair-action-edit">
+                                @if ($repair->request)
+                                    <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                                        <div class="font-semibold text-slate-900">Saistitais remonta pieteikums #{{ $repair->request->id }}</div>
+                                        <div class="mt-1">
+                                            <span class="font-medium text-slate-900">Pieteica:</span>
+                                            {{ $repair->request->responsibleUser?->full_name ?: 'Nav noradits' }}
+                                        </div>
+                                        <div class="mt-1">
+                                            <span class="font-medium text-slate-900">Problemas apraksts:</span>
+                                            {{ $repair->request->description ?: '-' }}
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <div class="repair-board-actions" draggable="false" @dragstart.prevent>
+                                    <a href="{{ route('repairs.edit', $repair) }}" class="repair-action repair-action-edit" draggable="false" @mousedown.stop @click.stop>
                                         <x-icon name="edit" size="h-4 w-4" />
                                         <span>Atvert</span>
                                     </a>
 
                                     @if ($canManageRepairs && $repair->status === 'waiting')
-                                        <button type="button" class="repair-action repair-action-start" @click="submitTransition({{ $repair->id }}, 'in-progress')">
+                                        <button type="button" class="repair-action repair-action-start" draggable="false" @mousedown.stop @click.stop="submitTransition({{ $repair->id }}, 'in-progress')">
                                             <x-icon name="stats" size="h-4 w-4" />
                                             <span>Sakt</span>
                                         </button>
                                     @endif
 
                                     @if ($canManageRepairs && $repair->status === 'in-progress')
-                                        <button type="button" class="repair-action repair-action-back" @click="submitTransition({{ $repair->id }}, 'waiting')">
+                                        <button type="button" class="repair-action repair-action-back" draggable="false" @mousedown.stop @click.stop="submitTransition({{ $repair->id }}, 'waiting')">
                                             <x-icon name="back" size="h-4 w-4" />
                                             <span>Atpakal gaida</span>
                                         </button>
-                                        <button type="button" class="repair-action repair-action-complete" @click="submitCompletion({ id: {{ $repair->id }}, name: @js($repair->device?->name ?: ('Remonts #' . $repair->id)) })">
+                                        <button type="button" class="repair-action repair-action-complete" draggable="false" @mousedown.stop @click.stop="submitCompletion({ id: {{ $repair->id }}, name: @js($repair->device?->name ?: ('Remonts #' . $repair->id)) })">
                                             <x-icon name="check-circle" size="h-4 w-4" />
                                             <span>Pabeigt</span>
                                         </button>
                                     @endif
 
-                                    @if ($canManageRepairs && in_array($repair->status, ['completed', 'cancelled'], true))
-                                        <button type="button" class="repair-action repair-action-back" @click="submitTransition({{ $repair->id }}, 'in-progress')">
-                                            <x-icon name="back" size="h-4 w-4" />
-                                            <span>Atpakal procesa</span>
-                                        </button>
-                                    @endif
                                 </div>
                             </article>
                         @empty

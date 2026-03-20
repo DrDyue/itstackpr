@@ -179,6 +179,7 @@ class RuntimeSchemaBootstrapper
         $this->addColumnIfMissing('repairs', 'request_id', fn (Blueprint $table) => $table->unsignedBigInteger('request_id')->nullable());
         $this->addColumnIfMissing('repairs', 'created_at', fn (Blueprint $table) => $table->timestamp('created_at')->nullable());
         $this->addColumnIfMissing('repairs', 'updated_at', fn (Blueprint $table) => $table->timestamp('updated_at')->nullable());
+        $this->ensureRepairsDateColumnsAllowNull();
     }
 
     private function ensureRepairRequestsTable(): void
@@ -466,6 +467,32 @@ class RuntimeSchemaBootstrapper
                     ->whereNull('end_date')
                     ->update(['end_date' => DB::raw('actual_completion')]);
             }
+        }
+    }
+
+    private function ensureRepairsDateColumnsAllowNull(): void
+    {
+        if (! Schema::hasTable('repairs')) {
+            return;
+        }
+
+        foreach (['start_date', 'end_date'] as $column) {
+            if (! Schema::hasColumn('repairs', $column)) {
+                continue;
+            }
+
+            $columnDefinition = collect(Schema::getColumns('repairs'))
+                ->firstWhere('name', $column);
+
+            if (($columnDefinition['nullable'] ?? false) === true) {
+                continue;
+            }
+
+            DB::statement(sprintf(
+                'ALTER TABLE `%s` MODIFY `%s` DATE NULL',
+                'repairs',
+                $column,
+            ));
         }
     }
 
