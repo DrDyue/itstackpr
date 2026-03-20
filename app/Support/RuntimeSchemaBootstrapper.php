@@ -2,10 +2,14 @@
 
 namespace App\Support;
 
+use App\Models\Building;
 use App\Models\Device;
 use App\Models\DeviceTransfer;
 use App\Models\RepairRequest;
+use App\Models\Room;
+use App\Models\User;
 use App\Models\WriteoffRequest;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -14,6 +18,13 @@ use Throwable;
 
 class RuntimeSchemaBootstrapper
 {
+    private const DEFAULT_WAREHOUSE_ROOM_NAME = 'Noliktava';
+    private const DEFAULT_WAREHOUSE_ROOM_NUMBER_PREFIX = 'NOL-';
+    private const DEFAULT_BUILDING_NAME = 'Ludzes novada pasvaldiba';
+
+    private ?int $fallbackOwnerId = null;
+    private bool $resolvedFallbackOwnerId = false;
+
     public function ensure(): void
     {
         try {
@@ -297,6 +308,7 @@ class RuntimeSchemaBootstrapper
         $this->normalizeRequestStatuses('device_transfers');
         $this->copyLegacyTransferColumn();
         $this->copyLegacyRepairColumns();
+        $this->backfillLegacyActiveDeviceAssignments();
     }
 
     private function alignMysqlStatusColumns(): void
@@ -468,6 +480,210 @@ class RuntimeSchemaBootstrapper
                     ->update(['end_date' => DB::raw('actual_completion')]);
             }
         }
+    }
+
+    private function backfillLegacyActiveDeviceAssignments(): void
+    {
+        if (
+            ! Schema::hasTable('devices')
+            || ! Schema::hasTable('rooms')
+            || ! Schema::hasTable('buildings')
+            || ! Schema::hasTable('users')
+        ) {
+            return;
+        }
+
+        Device::query()
+            ->with('room')
+            ->where('status', '!=', Device::STATUS_WRITEOFF)
+            ->where(function (Builder $query) {
+                $query->whereNull('room_id')
+                    ->orWhereNull('building_id')
+                    ->orWhereNull('assigned_to_id')
+                    ->orWhereDoesntHave('room');
+            })
+            ->orderBy('id')
+            ->chunkById(100, function ($devices) {
+                $warehouseRoom = null;
+
+                foreach ($devices as $device) {
+                    $updates = [];
+                    $room = $device->room;
+
+                    if (! $room) {
+                        $warehouseRoom ??= $this->ensureWarehouseRoom(
+                            $this->resolveLegacyOwnerId($device, null)
+                        );
+
+                        $room = $warehouseRoom;
+                        $updates['room_id'] = $room->id;
+                        $updates['building_id'] = $room->building_id;
+                    } elseif ((int) ($device->building_id ?? 0) !== (int) ($room->building_id ?? 0)) {
+                        $updates['building_id'] = $room->building_id;
+                    }
+
+                    if (empty($device->assigned_to_id)) {
+                        $ownerId = $this->resolveLegacyOwnerId($device, $room);
+
+                        if ($ownerId !== null) {
+                            $updates['assigned_to_id'] = $ownerId;
+                        }
+                    }
+
+                    if ($updates === []) {
+                        continue;
+                    }
+
+                    if (Schema::hasColumn('devices', 'updated_at')) {
+                        $updates['updated_at'] = now();
+                    }
+
+                    DB::table('devices')
+                        ->where('id', $device->id)
+                        ->update($updates);
+                }
+            });
+    }
+
+    private function resolveLegacyOwnerId(Device $device, ?Room $room): ?int
+    {
+        foreach ([$device->assigned_to_id, $device->created_by, $room?->user_id] as $candidateId) {
+            $resolvedId = $this->resolveExistingUserId($candidateId);
+
+            if ($resolvedId !== null) {
+                return $resolvedId;
+            }
+        }
+
+        return $this->fallbackOwnerId();
+    }
+
+    private function resolveExistingUserId(mixed $candidateId): ?int
+    {
+        if (! is_numeric($candidateId)) {
+            return null;
+        }
+
+        $userId = (int) $candidateId;
+
+        if ($userId <= 0) {
+            return null;
+        }
+
+        return User::query()->whereKey($userId)->exists() ? $userId : null;
+    }
+
+    private function fallbackOwnerId(): ?int
+    {
+        if ($this->resolvedFallbackOwnerId) {
+            return $this->fallbackOwnerId;
+        }
+
+        $this->resolvedFallbackOwnerId = true;
+        $this->fallbackOwnerId = User::query()
+            ->where('is_active', true)
+            ->whereIn('role', [User::ROLE_ADMIN, User::ROLE_IT_WORKER])
+            ->orderBy('id')
+            ->value('id')
+            ?? User::query()
+                ->where('is_active', true)
+                ->orderBy('id')
+                ->value('id')
+            ?? User::query()
+                ->orderBy('id')
+                ->value('id');
+
+        return $this->fallbackOwnerId;
+    }
+
+    private function ensureWarehouseRoom(?int $preferredUserId = null): Room
+    {
+        $warehouseRoom = Room::query()
+            ->with('building')
+            ->get()
+            ->first(function (Room $room) {
+                return $this->isWarehouseLabel($room->room_name)
+                    || $this->isWarehouseLabel($room->room_number)
+                    || $this->isWarehouseLabel($room->notes);
+            });
+
+        if ($warehouseRoom) {
+            return $warehouseRoom;
+        }
+
+        $building = $this->preferredWarehouseBuilding();
+
+        return Room::query()->create([
+            'building_id' => $building->id,
+            'floor_number' => 1,
+            'room_number' => $this->nextWarehouseRoomNumber($building->id),
+            'room_name' => self::DEFAULT_WAREHOUSE_ROOM_NAME,
+            'user_id' => $preferredUserId,
+            'department' => 'Inventars',
+            'notes' => 'Automatiski izveidota nokluseta noliktavas telpa.',
+        ])->load('building');
+    }
+
+    private function preferredWarehouseBuilding(): Building
+    {
+        $preferredBuilding = Building::query()
+            ->orderBy('building_name')
+            ->get()
+            ->first(fn (Building $building) => $this->matchesPreferredBuildingName($building->building_name));
+
+        if ($preferredBuilding) {
+            return $preferredBuilding;
+        }
+
+        $existingBuilding = Building::query()->orderBy('building_name')->first();
+
+        if ($existingBuilding) {
+            return $existingBuilding;
+        }
+
+        return Building::query()->create([
+            'building_name' => self::DEFAULT_BUILDING_NAME,
+            'city' => 'Ludza',
+            'total_floors' => 1,
+            'notes' => 'Automatiski izveidota nokluseta eka noliktavas telpai.',
+        ]);
+    }
+
+    private function nextWarehouseRoomNumber(int $buildingId): string
+    {
+        $existingNumbers = Room::query()
+            ->where('building_id', $buildingId)
+            ->pluck('room_number')
+            ->map(fn (mixed $value) => trim((string) $value))
+            ->filter()
+            ->all();
+
+        $sequence = 1;
+
+        do {
+            $candidate = self::DEFAULT_WAREHOUSE_ROOM_NUMBER_PREFIX . str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
+            $sequence++;
+        } while (in_array($candidate, $existingNumbers, true));
+
+        return $candidate;
+    }
+
+    private function isWarehouseLabel(?string $value): bool
+    {
+        if (! filled($value)) {
+            return false;
+        }
+
+        return str_contains(mb_strtolower(trim($value)), 'noliktav');
+    }
+
+    private function matchesPreferredBuildingName(?string $value): bool
+    {
+        if (! filled($value)) {
+            return false;
+        }
+
+        return str_contains(mb_strtolower(trim($value)), 'ludz');
     }
 
     private function ensureRepairsDateColumnsAllowNull(): void

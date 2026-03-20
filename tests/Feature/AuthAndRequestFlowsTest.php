@@ -273,6 +273,38 @@ class AuthAndRequestFlowsTest extends TestCase
         ]);
     }
 
+    public function test_runtime_bootstrap_backfills_legacy_active_device_without_room(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'legacy-device-backfill-admin@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-LEGACY-RM');
+
+        DB::table('devices')
+            ->where('id', $device->id)
+            ->update([
+                'assigned_to_id' => null,
+                'building_id' => null,
+                'room_id' => null,
+            ]);
+
+        $this->assertDatabaseMissing('rooms', [
+            'room_name' => 'Noliktava',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('devices.index'))
+            ->assertOk();
+
+        $device->refresh();
+
+        $this->assertSame($admin->id, $device->assigned_to_id);
+        $this->assertNotNull($device->room_id);
+        $this->assertNotNull($device->building_id);
+        $this->assertSame(
+            'Noliktava',
+            DB::table('rooms')->where('id', $device->room_id)->value('room_name')
+        );
+    }
+
     public function test_manager_can_send_device_to_repair_from_devices_table_action(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-repair-action@example.com');
