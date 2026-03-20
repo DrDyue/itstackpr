@@ -1,4 +1,29 @@
 <x-app-layout>
+    @php
+        $typeSections = [
+            'repair' => [
+                'title' => 'Remonta pieteikumi',
+                'subtitle' => 'Visi remonta iesniegumi vienkopus.',
+                'accent' => 'amber',
+                'icon' => 'repair-request',
+            ],
+            'writeoff' => [
+                'title' => 'Norakstisanas pieteikumi',
+                'subtitle' => 'Iesniegumi iericu norakstisanai.',
+                'accent' => 'rose',
+                'icon' => 'writeoff',
+            ],
+            'transfer' => [
+                'title' => 'Nodosanas pieteikumi',
+                'subtitle' => 'Ienakosie un izejosie iericu nodosanas pieprasijumi.',
+                'accent' => 'emerald',
+                'icon' => 'transfer',
+            ],
+        ];
+        $groupedItems = $items->getCollection()
+            ->groupBy('type')
+            ->sortBy(fn ($_, $type) => array_search($type, array_keys($typeSections), true));
+    @endphp
     <section class="app-shell max-w-7xl">
         <div class="page-hero">
             <div class="page-hero-grid">
@@ -105,87 +130,114 @@
             </div>
 
             <div class="space-y-4">
-                @forelse ($items as $item)
-                    <div class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)]">
-                        <div class="flex flex-wrap items-start justify-between gap-4">
-                            <div class="space-y-2">
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">
-                                        {{ $typeLabels[$item['type']] ?? ucfirst($item['type']) }}
-                                    </span>
-                                    <x-status-pill context="request" :value="$item['status']" />
-                                </div>
-                                <div>
-                                    <div class="text-lg font-semibold text-slate-900">{{ $item['device_name'] }}</div>
-                                    <div class="text-sm text-slate-500">{{ $item['device_code'] }}</div>
-                                </div>
+                @forelse ($groupedItems as $type => $typeItems)
+                    @php
+                        $section = $typeSections[$type] ?? [
+                            'title' => $typeLabels[$type] ?? ucfirst($type),
+                            'subtitle' => 'Pieteikumu grupa.',
+                            'accent' => 'slate',
+                            'icon' => 'repair-request',
+                        ];
+                    @endphp
+                    <div class="request-type-section">
+                        <div class="request-type-divider request-type-divider-{{ $section['accent'] }}">
+                            <div class="request-type-divider-line"></div>
+                            <div class="request-type-divider-chip">
+                                <span class="request-type-divider-icon">
+                                    <x-icon :name="$section['icon']" size="h-4 w-4" />
+                                </span>
+                                <span>{{ $section['title'] }}</span>
+                                <span class="request-type-divider-count">{{ $typeItems->count() }}</span>
                             </div>
-                            <div class="text-right text-sm text-slate-500">
-                                <div>{{ $item['created_at']?->format('d.m.Y H:i') ?: '-' }}</div>
-                                @if ($item['model']->device && (int) $item['model']->device->assigned_to_id === (int) $user->id)
-                                    <a href="{{ route('devices.show', $item['model']->device_id) }}" class="mt-2 inline-flex text-sm font-medium text-sky-700 hover:text-sky-800">
-                                        Atvert ierici
-                                    </a>
-                                @endif
-                            </div>
+                            <div class="request-type-divider-line"></div>
                         </div>
+                        <p class="request-type-divider-note">{{ $section['subtitle'] }}</p>
 
-                        <div class="mt-4 grid gap-4 lg:grid-cols-[1fr_0.9fr]">
-                            <div class="space-y-3">
-                                <div>
-                                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Virziens</div>
-                                    <div class="mt-1 text-sm text-slate-700">{{ $item['direction'] }}</div>
-                                </div>
-                                <div>
-                                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Apraksts</div>
-                                    <div class="mt-1 text-sm leading-6 text-slate-700">{{ $item['summary'] ?: '-' }}</div>
-                                </div>
-                            </div>
+                        <div class="space-y-4">
+                            @foreach ($typeItems as $item)
+                                <div class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)]">
+                                    <div class="flex flex-wrap items-start justify-between gap-4">
+                                        <div class="space-y-2">
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">
+                                                    {{ $typeLabels[$item['type']] ?? ucfirst($item['type']) }}
+                                                </span>
+                                                <x-status-pill context="request" :value="$item['status']" />
+                                            </div>
+                                            <div>
+                                                <div class="text-lg font-semibold text-slate-900">{{ $item['device_name'] }}</div>
+                                                <div class="text-sm text-slate-500">{{ $item['device_code'] }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="text-right text-sm text-slate-500">
+                                            <div>{{ $item['created_at']?->format('d.m.Y H:i') ?: '-' }}</div>
+                                            @if ($item['model']->device && (int) $item['model']->device->assigned_to_id === (int) $user->id)
+                                                <a href="{{ route('devices.show', $item['model']->device_id) }}" class="mt-2 inline-flex text-sm font-medium text-sky-700 hover:text-sky-800">
+                                                    Atvert ierici
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </div>
 
-                            <div class="space-y-3">
-                                <div>
-                                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                                        {{ $item['is_incoming'] ? 'Nosutija' : 'Saistitais lietotajs' }}
+                                    <div class="mt-4 grid gap-4 lg:grid-cols-[1fr_0.9fr]">
+                                        <div class="space-y-3">
+                                            <div>
+                                                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Virziens</div>
+                                                <div class="mt-1 text-sm text-slate-700">{{ $item['direction'] }}</div>
+                                            </div>
+                                            <div>
+                                                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Apraksts</div>
+                                                <div class="mt-1 text-sm leading-6 text-slate-700">{{ $item['summary'] ?: '-' }}</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="space-y-3">
+                                            <div>
+                                                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                                                    {{ $item['is_incoming'] ? 'Nosutija' : 'Saistitais lietotajs' }}
+                                                </div>
+                                                <div class="mt-1 text-sm text-slate-700">{{ $item['actor'] ?: '-' }}</div>
+                                            </div>
+                                            @if (! empty($item['meta']))
+                                                <div>
+                                                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Papildinformacija</div>
+                                                    <div class="mt-1 text-sm leading-6 text-slate-700">{{ $item['meta'] }}</div>
+                                                </div>
+                                            @endif
+                                        </div>
                                     </div>
-                                    <div class="mt-1 text-sm text-slate-700">{{ $item['actor'] ?: '-' }}</div>
+
+                                    @if ($item['type'] === 'transfer' && $item['is_incoming'] && $item['status'] === 'submitted')
+                                        <div class="mt-5 rounded-[1.5rem] border border-emerald-200 bg-emerald-50/80 p-4">
+                                            <div class="text-sm font-semibold text-emerald-900">Apstiprini ierices sanemsanu</div>
+                                            <div class="mt-1 text-sm text-emerald-800">
+                                                Vari atstat ierici esosaja telpa vai uzreiz noradit jaunu atrasanas vietu.
+                                            </div>
+
+                                            <form method="POST" action="{{ route('device-transfers.review', $item['model']) }}" class="mt-4">
+                                                @csrf
+                                                <input type="hidden" name="status" value="approved">
+                                                <div class="flex flex-wrap gap-2">
+                                                    <button type="submit" class="btn-create">
+                                                        <x-icon name="check" size="h-4 w-4" />
+                                                        <span>Apstiprinat</span>
+                                                    </button>
+                                                </div>
+                                            </form>
+
+                                            <form method="POST" action="{{ route('device-transfers.review', $item['model']) }}" class="mt-3">
+                                                @csrf
+                                                <input type="hidden" name="status" value="rejected">
+                                                <button type="submit" class="btn-danger">
+                                                    <x-icon name="x-mark" size="h-4 w-4" />
+                                                    <span>Noraidit</span>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @endif
                                 </div>
-                                @if (! empty($item['meta']))
-                                    <div>
-                                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Papildinformacija</div>
-                                        <div class="mt-1 text-sm leading-6 text-slate-700">{{ $item['meta'] }}</div>
-                                    </div>
-                                @endif
-                            </div>
+                            @endforeach
                         </div>
-
-                        @if ($item['type'] === 'transfer' && $item['is_incoming'] && $item['status'] === 'submitted')
-                            <div class="mt-5 rounded-[1.5rem] border border-emerald-200 bg-emerald-50/80 p-4">
-                                <div class="text-sm font-semibold text-emerald-900">Apstiprini ierices sanemsanu</div>
-                                <div class="mt-1 text-sm text-emerald-800">
-                                    Vari atstat ierici esosaja telpa vai uzreiz noradit jaunu atrasanas vietu.
-                                </div>
-
-                                <form method="POST" action="{{ route('device-transfers.review', $item['model']) }}" class="mt-4">
-                                    @csrf
-                                    <input type="hidden" name="status" value="approved">
-                                    <div class="flex flex-wrap gap-2">
-                                        <button type="submit" class="btn-create">
-                                            <x-icon name="check" size="h-4 w-4" />
-                                            <span>Apstiprinat</span>
-                                        </button>
-                                    </div>
-                                </form>
-
-                                <form method="POST" action="{{ route('device-transfers.review', $item['model']) }}" class="mt-3">
-                                    @csrf
-                                    <input type="hidden" name="status" value="rejected">
-                                    <button type="submit" class="btn-danger">
-                                        <x-icon name="x-mark" size="h-4 w-4" />
-                                        <span>Noraidit</span>
-                                    </button>
-                                </form>
-                            </div>
-                        @endif
                     </div>
                 @empty
                     <div class="dash-empty-block">Neviens pieteikums pec izveletajiem filtriem netika atrasts.</div>
