@@ -224,6 +224,55 @@ class AuthAndRequestFlowsTest extends TestCase
         );
     }
 
+    public function test_admin_create_with_blank_assignee_and_room_creates_warehouse_and_assigns_creator(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-store-empty-defaults@example.com');
+        $typeId = DB::table('device_types')->insertGetId([
+            'type_name' => 'Monitors',
+            'category' => 'Darba vieta',
+            'description' => 'Tests',
+            'created_at' => now(),
+        ]);
+
+        $this->assertDatabaseMissing('rooms', [
+            'room_name' => 'Noliktava',
+        ]);
+
+        $this->assertDatabaseMissing('buildings', [
+            'building_name' => 'Ludzes novada pasvaldiba',
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('devices.store'), [
+                'code' => 'DEV-BLNK-DFLT',
+                'name' => 'Automatiski pieskirtais monitors',
+                'device_type_id' => $typeId,
+                'model' => 'Dell P2723',
+                'status' => Device::STATUS_ACTIVE,
+                'assigned_to_id' => '',
+                'building_id' => '',
+                'room_id' => '',
+            ])
+            ->assertRedirect(route('devices.index'));
+
+        $device = Device::query()->where('code', 'DEV-BLNK-DFLT')->first();
+
+        $this->assertNotNull($device);
+        $this->assertSame($admin->id, $device->assigned_to_id);
+        $this->assertNotNull($device->room_id);
+        $this->assertNotNull($device->building_id);
+
+        $this->assertDatabaseHas('rooms', [
+            'id' => $device->room_id,
+            'room_name' => 'Noliktava',
+        ]);
+
+        $this->assertDatabaseHas('buildings', [
+            'id' => $device->building_id,
+            'building_name' => 'Ludzes novada pasvaldiba',
+        ]);
+    }
+
     public function test_manager_can_send_device_to_repair_from_devices_table_action(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-repair-action@example.com');
