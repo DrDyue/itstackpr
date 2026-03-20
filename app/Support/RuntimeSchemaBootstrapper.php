@@ -54,10 +54,12 @@ class RuntimeSchemaBootstrapper
                 $table->integer('total_floors')->nullable();
                 $table->string('notes', 200)->nullable();
                 $table->timestamp('created_at')->nullable();
+                $table->timestamp('updated_at')->nullable();
             });
         }
 
         $this->addColumnIfMissing('buildings', 'created_at', fn (Blueprint $table) => $table->timestamp('created_at')->nullable());
+        $this->addColumnIfMissing('buildings', 'updated_at', fn (Blueprint $table) => $table->timestamp('updated_at')->nullable());
     }
 
     private function ensureRoomsTable(): void
@@ -73,6 +75,7 @@ class RuntimeSchemaBootstrapper
                 $table->string('department', 100)->nullable();
                 $table->string('notes', 200)->nullable();
                 $table->timestamp('created_at')->nullable();
+                $table->timestamp('updated_at')->nullable();
             });
         }
 
@@ -84,6 +87,7 @@ class RuntimeSchemaBootstrapper
         $this->addColumnIfMissing('rooms', 'department', fn (Blueprint $table) => $table->string('department', 100)->nullable());
         $this->addColumnIfMissing('rooms', 'notes', fn (Blueprint $table) => $table->string('notes', 200)->nullable());
         $this->addColumnIfMissing('rooms', 'created_at', fn (Blueprint $table) => $table->timestamp('created_at')->nullable());
+        $this->addColumnIfMissing('rooms', 'updated_at', fn (Blueprint $table) => $table->timestamp('updated_at')->nullable());
     }
 
     private function ensureDeviceTypesTable(): void
@@ -95,6 +99,7 @@ class RuntimeSchemaBootstrapper
                 $table->string('category', 50)->nullable();
                 $table->text('description')->nullable();
                 $table->timestamp('created_at')->nullable();
+                $table->timestamp('updated_at')->nullable();
             });
         }
 
@@ -102,6 +107,7 @@ class RuntimeSchemaBootstrapper
         $this->addColumnIfMissing('device_types', 'category', fn (Blueprint $table) => $table->string('category', 50)->nullable());
         $this->addColumnIfMissing('device_types', 'description', fn (Blueprint $table) => $table->text('description')->nullable());
         $this->addColumnIfMissing('device_types', 'created_at', fn (Blueprint $table) => $table->timestamp('created_at')->nullable());
+        $this->addColumnIfMissing('device_types', 'updated_at', fn (Blueprint $table) => $table->timestamp('updated_at')->nullable());
     }
 
     private function ensureDevicesTable(): void

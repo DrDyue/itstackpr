@@ -192,6 +192,40 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->assertMatchesRegularExpression('/<option value="' . preg_quote((string) $warehouseRoomId, '/') . '"[^>]*selected/', $content);
     }
 
+    public function test_device_create_form_restores_missing_room_and_building_updated_at_columns(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-create-missing-updated-at@example.com');
+
+        if (Schema::hasColumn('rooms', 'updated_at')) {
+            Schema::table('rooms', function ($table) {
+                $table->dropColumn('updated_at');
+            });
+        }
+
+        if (Schema::hasColumn('buildings', 'updated_at')) {
+            Schema::table('buildings', function ($table) {
+                $table->dropColumn('updated_at');
+            });
+        }
+
+        if (Schema::hasColumn('device_types', 'updated_at')) {
+            Schema::table('device_types', function ($table) {
+                $table->dropColumn('updated_at');
+            });
+        }
+
+        $this->actingAs($admin)
+            ->get(route('devices.create'))
+            ->assertOk();
+
+        $this->assertTrue(Schema::hasColumn('rooms', 'updated_at'));
+        $this->assertTrue(Schema::hasColumn('buildings', 'updated_at'));
+        $this->assertTrue(Schema::hasColumn('device_types', 'updated_at'));
+        $this->assertDatabaseHas('rooms', [
+            'room_name' => 'Noliktava',
+        ]);
+    }
+
     public function test_admin_can_create_device_without_explicit_assignee_or_room_and_defaults_are_applied(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-store-defaults@example.com');
