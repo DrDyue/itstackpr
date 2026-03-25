@@ -147,6 +147,11 @@
                         && $transfer->status === 'submitted';
                     $currentRoomLabel = $transfer->device?->room?->room_number ?: 'telpa nav noradita';
                     $currentBuildingLabel = $transfer->device?->building?->building_name ?: null;
+                    $deviceThumbUrl = $transfer->device?->deviceImageThumbUrl();
+                    $deviceTypeName = $transfer->device?->type?->type_name ?: 'Ierice';
+                    $deviceMeta = collect([$transfer->device?->manufacturer, $transfer->device?->model])
+                        ->filter(fn ($value) => filled($value))
+                        ->implode(' | ');
                 @endphp
                 <div class="surface-card">
                     <div class="flex flex-wrap items-start justify-between gap-3">
@@ -169,17 +174,91 @@
                             <x-status-pill context="request" :value="$transfer->status" :label="$statusLabels[$transfer->status] ?? null" />
                         </div>
                     </div>
-                    <div class="mt-3 text-sm text-slate-600">{{ $transfer->transfer_reason }}</div>
-                    <div class="mt-3 flex flex-wrap gap-3 text-xs text-slate-500">
-                        <span>Ierices kods: {{ $transfer->device?->code ?: '-' }}</span>
-                        <span>Izveidots: {{ $transfer->created_at?->format('d.m.Y H:i') ?: '-' }}</span>
-                        @if ($transfer->reviewedBy)
-                            <span>Izskatija: {{ $transfer->reviewedBy->full_name }}</span>
-                        @endif
+                    <div class="request-card-grid">
+                        <div class="request-info-panel">
+                            <div class="request-panel-heading">
+                                <span class="request-panel-heading-icon"><x-icon name="transfer" size="h-4 w-4" /></span>
+                                <span>Iesniegums</span>
+                            </div>
+
+                            <div class="request-field-grid">
+                                <div class="request-field-card">
+                                    <div class="request-field-label"><x-icon name="profile" size="h-4 w-4" /><span>Pieteicejs</span></div>
+                                    <div class="request-field-value">{{ $transfer->responsibleUser?->full_name ?: '-' }}</div>
+                                </div>
+                                <div class="request-field-card">
+                                    <div class="request-field-label"><x-icon name="user" size="h-4 w-4" /><span>Sanemejs</span></div>
+                                    <div class="request-field-value">{{ $transfer->transferTo?->full_name ?: '-' }}</div>
+                                </div>
+                                <div class="request-field-card">
+                                    <div class="request-field-label"><x-icon name="check-circle" size="h-4 w-4" /><span>Statuss</span></div>
+                                    <div class="request-field-value">{{ $statusLabels[$transfer->status] ?? $transfer->status }}</div>
+                                </div>
+                                <div class="request-field-card">
+                                    <div class="request-field-label"><x-icon name="clock" size="h-4 w-4" /><span>Izveidots</span></div>
+                                    <div class="request-field-value">{{ $transfer->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
+                                </div>
+                                @if ($transfer->reviewedBy)
+                                    <div class="request-field-card">
+                                        <div class="request-field-label"><x-icon name="audit" size="h-4 w-4" /><span>Izskatija</span></div>
+                                        <div class="request-field-value">{{ $transfer->reviewedBy->full_name }}</div>
+                                    </div>
+                                @endif
+                                <div class="request-field-card request-field-card-wide">
+                                    <div class="request-field-label"><x-icon name="transfer" size="h-4 w-4" /><span>Parsutisanas iemesls</span></div>
+                                    <div class="request-description-box">{{ $transfer->transfer_reason }}</div>
+                                </div>
+                                @if ($transfer->review_notes)
+                                    <div class="request-field-card request-field-card-wide">
+                                        <div class="request-field-label"><x-icon name="view" size="h-4 w-4" /><span>Piezimes</span></div>
+                                        <div class="request-field-value">{{ $transfer->review_notes }}</div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="request-device-panel">
+                            <div class="request-panel-heading">
+                                <span class="request-panel-heading-icon"><x-icon name="device" size="h-4 w-4" /></span>
+                                <span>Ierice</span>
+                            </div>
+
+                            <div class="request-device-hero mt-4">
+                                <div class="min-w-0 flex-1">
+                                    <span class="request-device-chip">
+                                        <x-icon name="type" size="h-3.5 w-3.5" />
+                                        <span>{{ $deviceTypeName }}</span>
+                                    </span>
+                                    <div class="mt-3 text-lg font-semibold text-slate-900">{{ $transfer->device?->name ?: '-' }}</div>
+                                    <div class="mt-2 text-sm leading-6 text-slate-500">{{ $deviceMeta !== '' ? $deviceMeta : 'Razotajs un modelis nav noraditi.' }}</div>
+                                </div>
+                                @if ($deviceThumbUrl)
+                                    <img src="{{ $deviceThumbUrl }}" alt="{{ $transfer->device?->name ?: 'Ierice' }}" class="request-device-thumb shrink-0">
+                                @else
+                                    <div class="request-device-thumb request-device-thumb-placeholder shrink-0">
+                                        <x-icon name="device" size="h-6 w-6" />
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div class="request-device-meta-grid">
+                                <div class="request-field-card">
+                                    <div class="request-field-label"><x-icon name="tag" size="h-4 w-4" /><span>Kods</span></div>
+                                    <div class="request-field-value">{{ $transfer->device?->code ?: '-' }}</div>
+                                </div>
+                                <div class="request-field-card">
+                                    <div class="request-field-label"><x-icon name="room" size="h-4 w-4" /><span>Pasreizeja telpa</span></div>
+                                    <div class="request-field-value">{{ $currentRoomLabel }}</div>
+                                </div>
+                                <div class="request-field-card md:col-span-2">
+                                    <div class="request-field-label"><x-icon name="building" size="h-4 w-4" /><span>Atrasanas vieta</span></div>
+                                    <div class="request-field-value">
+                                        {{ $currentBuildingLabel ? $currentBuildingLabel . ' | ' . $currentRoomLabel : $currentRoomLabel }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    @if ($transfer->review_notes)
-                        <div class="mt-2 text-sm text-slate-500">Piezimes: {{ $transfer->review_notes }}</div>
-                    @endif
 
                     @if (! $isAdmin && ! $isIncomingPending && $transfer->status === 'submitted')
                         <div class="mt-4 flex flex-wrap gap-3 border-t border-slate-200 pt-4">

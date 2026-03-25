@@ -144,6 +144,10 @@
                     $deviceMeta = collect([$request->device?->manufacturer, $request->device?->model])
                         ->filter(fn ($value) => filled($value))
                         ->implode(' | ');
+                    $deviceRoom = collect([
+                        $request->device?->room?->room_number,
+                        $request->device?->room?->room_name,
+                    ])->filter()->implode(' | ');
                 @endphp
                 <div class="surface-card">
                     <div class="flex flex-wrap items-start justify-between gap-4">
@@ -167,53 +171,29 @@
                         </div>
                     </div>
 
-                    <div class="mt-4 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-                        <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50/90 p-4">
-                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Iesniegums</div>
-                            <div class="mt-3 text-sm text-slate-600">
-                                <div class="grid gap-3 md:grid-cols-2">
-                                    <div>
-                                        <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Pieteicejs</div>
-                                        <div class="mt-1 text-slate-700">{{ $request->responsibleUser?->full_name ?: '-' }}</div>
-                                    </div>
-                                    <div>
-                                        <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Statuss</div>
-                                        <div class="mt-1 text-slate-700">{{ $statusLabels[$request->status] ?? $request->status }}</div>
-                                    </div>
-                                </div>
-                                <div class="mt-4">
-                                    <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Problemas apraksts</div>
-                                    <div class="mt-2 rounded-2xl bg-white px-4 py-3 leading-6 text-slate-700 ring-1 ring-slate-200">
-                                        {{ $request->description }}
-                                    </div>
-                                </div>
+                    <div class="request-card-grid">
+                        <div class="request-info-panel">
+                            <div class="request-panel-heading">
+                                <span class="request-panel-heading-icon"><x-icon name="repair-request" size="h-4 w-4" /></span>
+                                <span>Iesniegums</span>
                             </div>
-                        </div>
 
-                        <div class="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
-                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ierice</div>
-                            <div class="mt-3 grid gap-4 text-sm text-slate-600">
-                                <div class="flex items-start gap-4">
-                                    @if ($deviceThumbUrl)
-                                        <img src="{{ $deviceThumbUrl }}" alt="{{ $request->device?->name ?: 'Ierice' }}" class="device-table-thumb shrink-0">
-                                    @else
-                                        <div class="device-table-thumb device-table-thumb-placeholder shrink-0">
-                                            <x-icon name="device" size="h-4 w-4" />
-                                        </div>
-                                    @endif
-                                    <div class="min-w-0">
-                                        <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Nosaukums</div>
-                                        <div class="mt-1 text-base font-semibold text-slate-900">{{ $request->device?->name ?: '-' }}</div>
-                                        <div class="mt-1 text-sm text-slate-500">{{ $deviceMeta !== '' ? $deviceMeta : '-' }}</div>
-                                    </div>
+                            <div class="request-field-grid">
+                                <div class="request-field-card">
+                                    <div class="request-field-label"><x-icon name="profile" size="h-4 w-4" /><span>Pieteicejs</span></div>
+                                    <div class="request-field-value">{{ $request->responsibleUser?->full_name ?: '-' }}</div>
                                 </div>
-                                <div>
-                                    <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Kods</div>
-                                    <div class="mt-1 text-slate-700">{{ $request->device?->code ?: '-' }}</div>
+                                <div class="request-field-card">
+                                    <div class="request-field-label"><x-icon name="check-circle" size="h-4 w-4" /><span>Statuss</span></div>
+                                    <div class="request-field-value">{{ $statusLabels[$request->status] ?? $request->status }}</div>
                                 </div>
-                                <div>
-                                    <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Saistitais remonts</div>
-                                    <div class="mt-1 text-slate-700">
+                                <div class="request-field-card">
+                                    <div class="request-field-label"><x-icon name="clock" size="h-4 w-4" /><span>Iesniegts</span></div>
+                                    <div class="request-field-value">{{ $request->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
+                                </div>
+                                <div class="request-field-card">
+                                    <div class="request-field-label"><x-icon name="repair" size="h-4 w-4" /><span>Saistitais remonts</span></div>
+                                    <div class="request-field-value">
                                         @if ($request->repair)
                                             Izveidots remonts #{{ $request->repair->id }}
                                         @else
@@ -221,10 +201,50 @@
                                         @endif
                                     </div>
                                 </div>
+                                <div class="request-field-card request-field-card-wide">
+                                    <div class="request-field-label"><x-icon name="repair-request" size="h-4 w-4" /><span>Problemas apraksts</span></div>
+                                    <div class="request-description-box">{{ $request->description }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="request-device-panel">
+                            <div class="request-panel-heading">
+                                <span class="request-panel-heading-icon"><x-icon name="device" size="h-4 w-4" /></span>
+                                <span>Ierice</span>
+                            </div>
+
+                            <div class="request-device-hero mt-4">
+                                <div class="min-w-0 flex-1">
+                                    <span class="request-device-chip">
+                                        <x-icon name="type" size="h-3.5 w-3.5" />
+                                        <span>{{ $deviceTypeName }}</span>
+                                    </span>
+                                    <div class="mt-3 text-lg font-semibold text-slate-900">{{ $request->device?->name ?: '-' }}</div>
+                                    <div class="mt-2 text-sm leading-6 text-slate-500">{{ $deviceMeta !== '' ? $deviceMeta : 'Razotajs un modelis nav noraditi.' }}</div>
+                                </div>
+                                @if ($deviceThumbUrl)
+                                    <img src="{{ $deviceThumbUrl }}" alt="{{ $request->device?->name ?: 'Ierice' }}" class="request-device-thumb shrink-0">
+                                @else
+                                    <div class="request-device-thumb request-device-thumb-placeholder shrink-0">
+                                        <x-icon name="device" size="h-6 w-6" />
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div class="request-device-meta-grid">
+                                <div class="request-field-card">
+                                    <div class="request-field-label"><x-icon name="tag" size="h-4 w-4" /><span>Kods</span></div>
+                                    <div class="request-field-value">{{ $request->device?->code ?: '-' }}</div>
+                                </div>
+                                <div class="request-field-card">
+                                    <div class="request-field-label"><x-icon name="building" size="h-4 w-4" /><span>Vieta</span></div>
+                                    <div class="request-field-value">{{ $deviceRoom !== '' ? $deviceRoom : 'Telpa nav noradita' }}</div>
+                                </div>
                                 @if ($request->reviewedBy)
-                                    <div>
-                                        <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Izskatija</div>
-                                        <div class="mt-1 text-slate-700">{{ $request->reviewedBy->full_name }}</div>
+                                    <div class="request-field-card md:col-span-2">
+                                        <div class="request-field-label"><x-icon name="user" size="h-4 w-4" /><span>Izskatija</span></div>
+                                        <div class="request-field-value">{{ $request->reviewedBy->full_name }}</div>
                                     </div>
                                 @endif
                             </div>
