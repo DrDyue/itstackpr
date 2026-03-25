@@ -185,7 +185,9 @@
                                 </div>
                                 <div class="request-field-card">
                                     <div class="request-field-label"><x-icon name="check-circle" size="h-4 w-4" /><span>Statuss</span></div>
-                                    <div class="request-field-value">{{ $statusLabels[$request->status] ?? $request->status }}</div>
+                                    <div class="request-field-value">
+                                        <x-status-pill context="request" :value="$request->status" :label="$statusLabels[$request->status] ?? null" />
+                                    </div>
                                 </div>
                                 <div class="request-field-card">
                                     <div class="request-field-label"><x-icon name="clock" size="h-4 w-4" /><span>Iesniegts</span></div>
@@ -238,6 +240,10 @@
                                     <div class="request-field-value">{{ $request->device?->code ?: '-' }}</div>
                                 </div>
                                 <div class="request-field-card">
+                                    <div class="request-field-label"><x-icon name="key" size="h-4 w-4" /><span>Serijas numurs</span></div>
+                                    <div class="request-field-value">{{ $request->device?->serial_number ?: '-' }}</div>
+                                </div>
+                                <div class="request-field-card md:col-span-2">
                                     <div class="request-field-label"><x-icon name="building" size="h-4 w-4" /><span>Vieta</span></div>
                                     <div class="request-field-value">{{ $deviceRoom !== '' ? $deviceRoom : 'Telpa nav noradita' }}</div>
                                 </div>

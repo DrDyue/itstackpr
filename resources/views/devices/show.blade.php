@@ -145,13 +145,13 @@
             <div class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
                 <div class="space-y-6">
                     <section class="surface-card p-6">
-                        <div class="grid gap-5 md:grid-cols-[1.1fr_0.9fr]">
+                        <div class="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
                             <div>
                                 <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
                                     <x-icon name="stats" size="h-5 w-5" class="text-sky-600" />
                                     <span>Pamata informacija</span>
                                 </h2>
-                                <div class="mt-5 grid gap-4 text-sm md:grid-cols-2">
+                                <div class="mt-5 grid gap-4 text-sm md:grid-cols-2 xl:grid-cols-3">
                                     <div>
                                         <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Statuss</div>
                                         <div class="mt-2">
@@ -169,12 +169,20 @@
                                         <div class="mt-2 text-slate-700">{{ $device->type?->type_name ?: '-' }}</div>
                                     </div>
                                     <div>
+                                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Kods</div>
+                                        <div class="mt-2 text-slate-700">{{ $device->code ?: '-' }}</div>
+                                    </div>
+                                    <div>
                                         <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Serijas numurs</div>
                                         <div class="mt-2 text-slate-700">{{ $device->serial_number ?: '-' }}</div>
                                     </div>
                                     <div>
                                         <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Razotajs</div>
                                         <div class="mt-2 text-slate-700">{{ $device->manufacturer ?: '-' }}</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Modelis</div>
+                                        <div class="mt-2 text-slate-700">{{ $device->model ?: '-' }}</div>
                                     </div>
                                     <div>
                                         <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Iegades datums</div>
@@ -184,7 +192,11 @@
                                         <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Garantija lidz</div>
                                         <div class="mt-2 text-slate-700">{{ $device->warranty_until?->format('d.m.Y') ?: '-' }}</div>
                                     </div>
-                                    <div class="md:col-span-2">
+                                    <div>
+                                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Cena</div>
+                                        <div class="mt-2 text-slate-700">{{ $device->purchase_price !== null ? number_format((float) $device->purchase_price, 2, '.', ' ') . ' EUR' : '-' }}</div>
+                                    </div>
+                                    <div class="md:col-span-2 xl:col-span-3">
                                         <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Piezimes</div>
                                         <div class="mt-2 leading-6 text-slate-700">{{ $device->notes ?: 'Piezimes nav pievienotas.' }}</div>
                                     </div>
@@ -192,6 +204,48 @@
                             </div>
 
                             <div class="space-y-4">
+                                <div class="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+                                    <div class="flex flex-wrap items-start justify-between gap-4">
+                                        <div>
+                                            <h3 class="inline-flex items-center gap-2 text-base font-semibold text-slate-900">
+                                                <x-icon name="room" size="h-4.5 w-4.5" class="text-emerald-600" />
+                                                <span>Mainit ierices telpu</span>
+                                            </h3>
+                                            <p class="mt-2 text-sm leading-6 text-slate-600">
+                                                Ja ierice atrodas citur, vari uzreiz atjaunot tas atrasanas vietu.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    @if ($roomUpdateAvailability['allowed'])
+                                        <form method="POST" action="{{ route('devices.user-room.update', $device) }}" class="mt-5 space-y-4">
+                                            @csrf
+                                            <div>
+                                                <x-searchable-select
+                                                    name="room_id"
+                                                    queryName="room_query"
+                                                    :options="$roomOptions"
+                                                    :selected="old('room_id', (string) $device->room_id)"
+                                                    :query="''"
+                                                    identifier="device-user-room"
+                                                    placeholder="Izvelies telpu"
+                                                />
+                                                @error('room_id')
+                                                    <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                            <button type="submit" class="btn-create w-full justify-center">
+                                                <x-icon name="check" size="h-4 w-4" />
+                                                <span>Atjaunot telpu</span>
+                                            </button>
+                                        </form>
+                                    @else
+                                        <div class="mt-5 rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+                                            {{ $roomUpdateAvailability['reason'] }}
+                                        </div>
+                                    @endif
+                                </div>
+
                                 <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
                                     <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Ka ierice nonaca pie tevis</div>
                                     <div class="mt-2 text-sm leading-6 text-slate-700">{{ $originLabel }}</div>
@@ -214,50 +268,6 @@
                                 </div>
                             </div>
                         </div>
-                    </section>
-
-                    <section class="surface-card p-6">
-                        <div class="flex flex-wrap items-start justify-between gap-4">
-                            <div>
-                                <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
-                                    <x-icon name="room" size="h-5 w-5" class="text-emerald-600" />
-                                    <span>Mainit ierices telpu</span>
-                                </h2>
-                                <p class="mt-2 text-sm text-slate-600">
-                                    Ja ierice atrodas citur, vari uzreiz atjaunot tas atrasanas vietu.
-                                </p>
-                            </div>
-                        </div>
-
-                        @if ($roomUpdateAvailability['allowed'])
-                            <form method="POST" action="{{ route('devices.user-room.update', $device) }}" class="mt-5 grid gap-4 lg:grid-cols-[1fr_auto]">
-                                @csrf
-                                <div>
-                                    <x-searchable-select
-                                        name="room_id"
-                                        queryName="room_query"
-                                        :options="$roomOptions"
-                                        :selected="old('room_id', (string) $device->room_id)"
-                                        :query="''"
-                                        identifier="device-user-room"
-                                        placeholder="Izvelies telpu"
-                                    />
-                                    @error('room_id')
-                                        <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="flex items-end">
-                                    <button type="submit" class="btn-create">
-                                        <x-icon name="check" size="h-4 w-4" />
-                                        <span>Atjaunot telpu</span>
-                                    </button>
-                                </div>
-                            </form>
-                        @else
-                            <div class="mt-5 rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-                                {{ $roomUpdateAvailability['reason'] }}
-                            </div>
-                        @endif
                     </section>
                 </div>
 
