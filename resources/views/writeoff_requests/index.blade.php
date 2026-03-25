@@ -211,6 +211,23 @@
                         </div>
                     </div>
 
+                    @if (! $canReview && $request->status === 'submitted')
+                        <div class="mt-4 flex flex-wrap gap-3 border-t border-slate-200 pt-4">
+                            <a href="{{ route('my-requests.edit', ['requestType' => 'writeoff', 'requestId' => $request->id]) }}" class="btn-view">
+                                <x-icon name="view" size="h-4 w-4" />
+                                <span>Labot iemeslu</span>
+                            </a>
+                            <form method="POST" action="{{ route('my-requests.destroy', ['requestType' => 'writeoff', 'requestId' => $request->id]) }}" onsubmit="return confirm('Vai tiesam atcelt so pieteikumu?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn-danger">
+                                    <x-icon name="x-mark" size="h-4 w-4" />
+                                    <span>Atcelt pieteikumu</span>
+                                </button>
+                            </form>
+                        </div>
+                    @endif
+
                     @if ($canReview && $request->status === 'submitted')
                         <div class="mt-4 flex flex-wrap gap-3 border-t border-slate-200 pt-4">
                             <form method="POST" action="{{ route('writeoff-requests.review', $request) }}">

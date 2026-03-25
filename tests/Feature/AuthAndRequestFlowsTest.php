@@ -991,6 +991,23 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertDontSee('Darbvirsma');
     }
 
+    public function test_devices_index_uses_localized_pagination_labels(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'devices-pagination-user@example.com');
+
+        foreach (range(1, 21) as $index) {
+            $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-PAG-USER-'.$index);
+        }
+
+        $this->actingAs($user)
+            ->get(route('devices.index'))
+            ->assertOk()
+            ->assertSee('app-pagination', false)
+            ->assertSee('Iepriekseja')
+            ->assertSee('Nakama')
+            ->assertDontSee('Showing');
+    }
+
     public function test_regular_user_can_open_unified_request_center_and_see_related_request_types(): void
     {
         $user = $this->createUser(role: User::ROLE_USER, email: 'request-center-user@example.com');
@@ -1050,6 +1067,26 @@ class AuthAndRequestFlowsTest extends TestCase
             'transfer_reason' => 'Vienota forma nodosanai.',
             'status' => DeviceTransfer::STATUS_SUBMITTED,
         ]);
+    }
+
+    public function test_request_create_forms_show_searchable_device_details(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'request-create-search-user@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'request-create-search-recipient@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-SEARCHABLE-FORM');
+
+        $device->update([
+            'manufacturer' => 'HP',
+            'model' => 'EliteDesk 800',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('device-transfers.create'))
+            ->assertOk()
+            ->assertSee('searchable-select', false)
+            ->assertSee('HP EliteDesk 800')
+            ->assertSee('telpa 101-DEV-SEARCHABLE-FORM')
+            ->assertSee($recipient->full_name);
     }
 
     public function test_admin_request_indexes_show_all_statuses_by_default(): void
@@ -1172,6 +1209,59 @@ class AuthAndRequestFlowsTest extends TestCase
             'description' => 'Atjaunots remonta apraksts.',
             'status' => RepairRequest::STATUS_SUBMITTED,
         ]);
+    }
+
+    public function test_submitted_request_pages_show_edit_and_cancel_actions_for_user_view(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'request-page-actions-admin@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'request-page-actions-recipient@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-REQUEST-PAGE-ACTIONS');
+
+        $repairRequest = RepairRequest::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $admin->id,
+            'description' => 'Iesniegts remonta pieteikums pogu parbaudei.',
+            'status' => RepairRequest::STATUS_SUBMITTED,
+        ]);
+
+        $writeoffRequest = WriteoffRequest::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $admin->id,
+            'reason' => 'Iesniegts norakstisanas pieteikums pogu parbaudei.',
+            'status' => WriteoffRequest::STATUS_SUBMITTED,
+        ]);
+
+        $transfer = DeviceTransfer::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $admin->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Iesniegts nodosanas pieteikums pogu parbaudei.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('view-mode.update'), [
+                'mode' => User::VIEW_MODE_USER,
+            ])
+            ->assertRedirect(route('devices.index'));
+
+        $this->actingAs($admin)
+            ->get(route('repair-requests.index'))
+            ->assertOk()
+            ->assertSee(route('my-requests.edit', ['requestType' => 'repair', 'requestId' => $repairRequest->id]), false)
+            ->assertSee(route('my-requests.destroy', ['requestType' => 'repair', 'requestId' => $repairRequest->id]), false);
+
+        $this->actingAs($admin)
+            ->get(route('writeoff-requests.index'))
+            ->assertOk()
+            ->assertSee(route('my-requests.edit', ['requestType' => 'writeoff', 'requestId' => $writeoffRequest->id]), false)
+            ->assertSee(route('my-requests.destroy', ['requestType' => 'writeoff', 'requestId' => $writeoffRequest->id]), false);
+
+        $this->actingAs($admin)
+            ->get(route('device-transfers.index'))
+            ->assertOk()
+            ->assertSee(route('my-requests.edit', ['requestType' => 'transfer', 'requestId' => $transfer->id]), false)
+            ->assertSee(route('my-requests.destroy', ['requestType' => 'transfer', 'requestId' => $transfer->id]), false);
     }
 
     public function test_regular_user_can_edit_submitted_transfer_reason_without_changing_recipient(): void
@@ -1521,6 +1611,87 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertSee($activeDevice->name)
             ->assertSee($repairDevice->name)
             ->assertDontSee($writeoffDevice->name);
+    }
+
+    public function test_regular_user_devices_index_shows_request_actions_for_active_device(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'device-request-actions-user@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-REQ-ACTIVE');
+
+        $this->actingAs($user)
+            ->get(route('devices.index'))
+            ->assertOk()
+            ->assertSee($device->name)
+            ->assertSee('Pieteikt remontu')
+            ->assertSee('Pieteikt norakstisanu')
+            ->assertSee('Nodot citam');
+    }
+
+    public function test_regular_user_devices_index_blocks_new_request_actions_when_pending_request_exists(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'device-request-pending-user@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-REQ-PENDING');
+
+        RepairRequest::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'description' => 'Gaida remontu.',
+            'status' => RepairRequest::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('devices.index'))
+            ->assertOk()
+            ->assertSee($device->name)
+            ->assertSee('Gaida remonta pieteikums')
+            ->assertDontSee('Pieteikt remontu')
+            ->assertDontSee('Pieteikt norakstisanu')
+            ->assertDontSee('Nodot citam');
+    }
+
+    public function test_regular_user_devices_index_blocks_new_request_actions_for_device_in_repair(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'device-request-repair-user@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_REPAIR, 'DEV-REQ-REPAIR');
+
+        Repair::create([
+            'device_id' => $device->id,
+            'description' => 'Ierice jau ir remonta.',
+            'status' => 'in-progress',
+            'repair_type' => 'internal',
+            'priority' => 'medium',
+            'accepted_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('devices.index'))
+            ->assertOk()
+            ->assertSee($device->name)
+            ->assertSee('Remonta statuss: Procesa')
+            ->assertDontSee('Pieteikt remontu')
+            ->assertDontSee('Pieteikt norakstisanu')
+            ->assertDontSee('Nodot citam');
+    }
+
+    public function test_active_device_does_not_show_repair_substatus_when_device_status_is_active(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'device-stale-repair-user@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-REQ-STABLE');
+
+        Repair::create([
+            'device_id' => $device->id,
+            'description' => 'Vests remonta ieraksts bez statusa sinonizacijas.',
+            'status' => 'waiting',
+            'repair_type' => 'internal',
+            'priority' => 'medium',
+            'accepted_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('devices.index'))
+            ->assertOk()
+            ->assertSee($device->name)
+            ->assertDontSee('Remonta statuss:');
     }
 
     public function test_repairs_index_shows_related_request_author_problem_and_approver(): void

@@ -100,12 +100,16 @@ class RepairRequestController extends Controller
         if (! $this->featureTableExists('repair_requests')) {
             return view('repair_requests.create', [
                 'devices' => collect(),
+                'deviceOptions' => collect(),
                 'featureMessage' => 'Tabula repair_requests sobrid nav pieejama.',
             ]);
         }
 
+        $devices = $this->availableDevicesForUser($user)->get();
+
         return view('repair_requests.create', [
-            'devices' => $this->availableDevicesForUser($user)->get(),
+            'devices' => $devices,
+            'deviceOptions' => $this->deviceOptions($devices),
         ]);
     }
 
@@ -231,6 +235,34 @@ class RepairRequestController extends Controller
             ->where('status', Device::STATUS_ACTIVE)
             ->with(['type', 'building', 'room', 'activeRepair'])
             ->orderBy('name');
+    }
+
+    private function deviceOptions($devices)
+    {
+        return collect($devices)->map(function (Device $device) {
+            $description = collect([
+                $device->type?->type_name,
+                collect([$device->manufacturer, $device->model])->filter()->implode(' '),
+                $device->room?->room_number ? 'telpa ' . $device->room->room_number : null,
+                $device->building?->building_name,
+            ])->filter()->implode(' | ');
+
+            return [
+                'value' => (string) $device->id,
+                'label' => $device->name . ' (' . ($device->code ?: 'bez koda') . ')',
+                'description' => $description,
+                'search' => implode(' ', array_filter([
+                    $device->name,
+                    $device->code,
+                    $device->type?->type_name,
+                    $device->manufacturer,
+                    $device->model,
+                    $device->room?->room_number,
+                    $device->room?->room_name,
+                    $device->building?->building_name,
+                ])),
+            ];
+        })->values();
     }
 
     private function ensureDeviceCanAcceptRepairRequest(Device $device): void

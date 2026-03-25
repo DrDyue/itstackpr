@@ -2182,6 +2182,30 @@ tbody td {
     @apply cursor-default border-slate-200 bg-slate-50 text-slate-400 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-400;
 }
 
+.app-pagination {
+    @apply mt-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between;
+}
+
+.app-pagination-meta {
+    @apply flex flex-wrap items-center gap-3 text-sm font-medium text-slate-500;
+}
+
+.app-pagination-links {
+    @apply flex flex-wrap items-center gap-2;
+}
+
+.app-pagination-btn {
+    @apply inline-flex min-w-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-800;
+}
+
+.app-pagination-btn-active {
+    @apply border-sky-200 bg-sky-50 text-sky-800 shadow-sm;
+}
+
+.app-pagination-btn-disabled {
+    @apply cursor-default border-slate-200 bg-slate-50 text-slate-400 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-400;
+}
+
 .dash-device-list {
     @apply mt-5 space-y-3;
 }

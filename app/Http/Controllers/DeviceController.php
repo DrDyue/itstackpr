@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Building;
 use App\Models\Device;
+use App\Models\DeviceTransfer;
 use App\Models\DeviceType;
+use App\Models\RepairRequest;
 use App\Models\Room;
 use App\Models\User;
+use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
 use App\Support\DeviceAssetManager;
 use App\Support\RuntimeSchemaBootstrapper;
@@ -97,6 +100,11 @@ class DeviceController extends Controller
 
         $devices = $this->visibleDevicesQuery($user)
             ->with(['type', 'building', 'room.building', 'activeRepair', 'assignedTo', 'createdBy'])
+            ->withExists([
+                'repairRequests as has_pending_repair_request' => fn (Builder $query) => $query->where('status', RepairRequest::STATUS_SUBMITTED),
+                'writeoffRequests as has_pending_writeoff_request' => fn (Builder $query) => $query->where('status', WriteoffRequest::STATUS_SUBMITTED),
+                'transfers as has_pending_transfer_request' => fn (Builder $query) => $query->where('status', DeviceTransfer::STATUS_SUBMITTED),
+            ])
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
 
@@ -153,8 +161,32 @@ class DeviceController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        $deviceStates = $devices->getCollection()
+            ->mapWithKeys(function (Device $device) {
+                $requestAvailability = $this->requestAvailabilityForDevice(
+                    $device,
+                    (bool) ($device->has_pending_repair_request ?? false),
+                    (bool) ($device->has_pending_writeoff_request ?? false),
+                    (bool) ($device->has_pending_transfer_request ?? false),
+                );
+
+                return [
+                    $device->id => [
+                        'requestAvailability' => $requestAvailability,
+                        'pendingRequestBadge' => $this->pendingRequestBadge(
+                            (bool) ($device->has_pending_repair_request ?? false),
+                            (bool) ($device->has_pending_writeoff_request ?? false),
+                            (bool) ($device->has_pending_transfer_request ?? false),
+                        ),
+                        'repairStatusLabel' => $this->visibleRepairStatusLabel($device),
+                    ],
+                ];
+            })
+            ->all();
+
         return view('devices.index', [
             'devices' => $devices,
+            'deviceStates' => $deviceStates,
             'filters' => $filters,
             'deviceSummary' => [
                 'total' => (clone $summaryQuery)->count(),
@@ -275,20 +307,14 @@ class DeviceController extends Controller
             'visibleWriteoffRequests' => ($this->user()?->canManageRequests() ?? false)
                 ? $device->writeoffRequests
                 : $device->writeoffRequests->where('status', 'rejected')->values(),
-            'requestAvailability' => [
-                'repair' => ! $pendingWriteoffRequest && ! $pendingTransferRequest && $device->status !== Device::STATUS_REPAIR,
-                'writeoff' => ! $pendingRepairRequest && ! $pendingTransferRequest && $device->status !== Device::STATUS_REPAIR,
-                'transfer' => ! $pendingRepairRequest && ! $pendingWriteoffRequest && $device->status !== Device::STATUS_REPAIR,
-                'reason' => $device->status === Device::STATUS_REPAIR
-                    ? 'Ierice sobrid ir remonta ar statusu "'.$this->repairStatusLabel($device->activeRepair?->status).'".'
-                    : ($pendingRepairRequest
-                        ? 'Sai iericei jau ir gaidoss remonta pieteikums.'
-                        : ($pendingWriteoffRequest
-                            ? 'Sai iericei jau ir gaidoss norakstisanas pieteikums.'
-                            : ($pendingTransferRequest ? 'Sai iericei jau ir gaidoss nodosanas pieteikums.' : null))),
-            ],
+            'requestAvailability' => $this->requestAvailabilityForDevice(
+                $device,
+                (bool) $pendingRepairRequest,
+                (bool) $pendingWriteoffRequest,
+                (bool) $pendingTransferRequest,
+            ),
             'roomUpdateAvailability' => $roomUpdateAvailability,
-            'repairStatusLabel' => $this->repairStatusLabel($device->activeRepair?->status),
+            'repairStatusLabel' => $this->visibleRepairStatusLabel($device),
         ]);
     }
 
@@ -780,6 +806,112 @@ class DeviceController extends Controller
             'cancelled' => 'Atcelts',
             default => 'Remonta',
         };
+    }
+
+    private function visibleRepairStatusLabel(Device $device): ?string
+    {
+        if ($device->status !== Device::STATUS_REPAIR) {
+            return null;
+        }
+
+        return $this->repairStatusLabel($device->activeRepair?->status);
+    }
+
+    private function requestAvailabilityForDevice(
+        Device $device,
+        bool $hasPendingRepairRequest,
+        bool $hasPendingWriteoffRequest,
+        bool $hasPendingTransferRequest
+    ): array {
+        if ($device->status === Device::STATUS_WRITEOFF) {
+            return [
+                'repair' => false,
+                'writeoff' => false,
+                'transfer' => false,
+                'can_create_any' => false,
+                'reason' => 'Ierice ir norakstita, tapec jaunus pieteikumus veidot nevar.',
+            ];
+        }
+
+        if ($device->status === Device::STATUS_REPAIR) {
+            return [
+                'repair' => false,
+                'writeoff' => false,
+                'transfer' => false,
+                'can_create_any' => false,
+                'reason' => 'Ierice sobrid ir remonta ar statusu "'.$this->repairStatusLabel($device->activeRepair?->status).'".',
+            ];
+        }
+
+        if ($hasPendingRepairRequest) {
+            return [
+                'repair' => false,
+                'writeoff' => false,
+                'transfer' => false,
+                'can_create_any' => false,
+                'reason' => 'Sai iericei jau ir gaidoss remonta pieteikums.',
+            ];
+        }
+
+        if ($hasPendingWriteoffRequest) {
+            return [
+                'repair' => false,
+                'writeoff' => false,
+                'transfer' => false,
+                'can_create_any' => false,
+                'reason' => 'Sai iericei jau ir gaidoss norakstisanas pieteikums.',
+            ];
+        }
+
+        if ($hasPendingTransferRequest) {
+            return [
+                'repair' => false,
+                'writeoff' => false,
+                'transfer' => false,
+                'can_create_any' => false,
+                'reason' => 'Sai iericei jau ir gaidoss nodosanas pieteikums.',
+            ];
+        }
+
+        return [
+            'repair' => true,
+            'writeoff' => true,
+            'transfer' => true,
+            'can_create_any' => true,
+            'reason' => null,
+        ];
+    }
+
+    private function pendingRequestBadge(
+        bool $hasPendingRepairRequest,
+        bool $hasPendingWriteoffRequest,
+        bool $hasPendingTransferRequest
+    ): ?array {
+        if ($hasPendingRepairRequest) {
+            return [
+                'icon' => 'repair-request',
+                'label' => 'Gaida remonta pieteikums',
+                'class' => 'border-sky-200 bg-sky-50 text-sky-700',
+            ];
+        }
+
+        if ($hasPendingWriteoffRequest) {
+            return [
+                'icon' => 'writeoff',
+                'label' => 'Gaida norakstisanas pieteikums',
+                'class' => 'border-rose-200 bg-rose-50 text-rose-700',
+            ];
+        }
+
+        if ($hasPendingTransferRequest) {
+            return [
+                'icon' => 'transfer',
+                'label' => 'Gaida nodosanas pieteikums',
+                'class' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
+            ];
+        }
+
+        return null;
     }
 
     private function performDeviceAction(Device $device, array $data): array

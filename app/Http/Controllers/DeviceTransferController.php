@@ -21,6 +21,7 @@ class DeviceTransferController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+        $canManageTransfers = $user->canManageRequests();
         $availableStatuses = [
             DeviceTransfer::STATUS_SUBMITTED,
             DeviceTransfer::STATUS_APPROVED,
@@ -52,13 +53,13 @@ class DeviceTransferController extends Controller
                 'filters' => $filters,
                 'statuses' => $availableStatuses,
                 'statusLabels' => $this->requestStatusLabels(),
-                'isAdmin' => $user->isAdmin(),
+                'isAdmin' => $canManageTransfers,
                 'featureMessage' => 'Tabula device_transfers sobrid nav pieejama.',
             ]);
         }
 
         $baseQuery = DeviceTransfer::query()
-            ->when(! $user->isAdmin(), function (Builder $query) use ($user) {
+            ->when(! $canManageTransfers, function (Builder $query) use ($user) {
                 $query->where(function (Builder $builder) use ($user) {
                     $builder->where('responsible_user_id', $user->id)
                         ->orWhere('transfered_to_id', $user->id);
@@ -93,9 +94,9 @@ class DeviceTransferController extends Controller
             'filters' => $filters,
             'statuses' => $availableStatuses,
             'statusLabels' => $this->requestStatusLabels(),
-            'isAdmin' => $user->isAdmin(),
+            'isAdmin' => $canManageTransfers,
             'currentUserId' => $user->id,
-            'roomOptions' => $user->isAdmin()
+            'roomOptions' => $canManageTransfers
                 ? collect()
                 : Room::query()
                     ->with('building')
@@ -126,20 +127,28 @@ class DeviceTransferController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+        $canManageTransfers = $user->canManageRequests();
 
         if (! $this->featureTableExists('device_transfers')) {
             return view('device_transfers.create', [
                 'devices' => collect(),
                 'users' => collect(),
+                'deviceOptions' => collect(),
+                'recipientOptions' => collect(),
                 'featureMessage' => 'Tabula device_transfers sobrid nav pieejama.',
-                'isAdmin' => $user->isAdmin(),
+                'isAdmin' => $canManageTransfers,
             ]);
         }
 
+        $devices = $this->availableDevicesForUser($user)->get();
+        $recipients = User::active()->whereKeyNot($user->id)->orderBy('full_name')->get();
+
         return view('device_transfers.create', [
-            'devices' => $this->availableDevicesForUser($user)->get(),
-            'users' => User::active()->whereKeyNot($user->id)->orderBy('full_name')->get(),
-            'isAdmin' => $user->isAdmin(),
+            'devices' => $devices,
+            'users' => $recipients,
+            'deviceOptions' => $this->deviceOptions($devices),
+            'recipientOptions' => $this->recipientOptions($recipients),
+            'isAdmin' => $canManageTransfers,
         ]);
     }
 
@@ -165,7 +174,7 @@ class DeviceTransferController extends Controller
         $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
         if (! $device) {
             throw ValidationException::withMessages([
-                'device_id' => [$user->isAdmin()
+                'device_id' => [$user->canManageRequests()
                     ? 'Admins var pieteikt parsutisanu tikai aktivai un pieskirtai iericei.'
                     : 'Vari pieteikt nodosanu tikai savai piesaistitai iericei.'],
             ]);
@@ -283,11 +292,55 @@ class DeviceTransferController extends Controller
     private function availableDevicesForUser(User $user): Builder
     {
         return Device::query()
-            ->when($user->isAdmin(), fn (Builder $query) => $query->whereNotNull('assigned_to_id'))
-            ->when(! $user->isAdmin(), fn (Builder $query) => $query->where('assigned_to_id', $user->id))
+            ->when($user->canManageRequests(), fn (Builder $query) => $query->whereNotNull('assigned_to_id'))
+            ->when(! $user->canManageRequests(), fn (Builder $query) => $query->where('assigned_to_id', $user->id))
             ->where('status', Device::STATUS_ACTIVE)
             ->with(['type', 'building', 'room', 'assignedTo', 'activeRepair'])
             ->orderBy('name');
+    }
+
+    private function deviceOptions($devices)
+    {
+        return collect($devices)->map(function (Device $device) {
+            $description = collect([
+                $device->type?->type_name,
+                collect([$device->manufacturer, $device->model])->filter()->implode(' '),
+                $device->assignedTo?->full_name ? 'paslaik: ' . $device->assignedTo->full_name : null,
+                $device->room?->room_number ? 'telpa ' . $device->room->room_number : null,
+                $device->building?->building_name,
+            ])->filter()->implode(' | ');
+
+            return [
+                'value' => (string) $device->id,
+                'label' => $device->name . ' (' . ($device->code ?: 'bez koda') . ')',
+                'description' => $description,
+                'search' => implode(' ', array_filter([
+                    $device->name,
+                    $device->code,
+                    $device->type?->type_name,
+                    $device->manufacturer,
+                    $device->model,
+                    $device->assignedTo?->full_name,
+                    $device->room?->room_number,
+                    $device->room?->room_name,
+                    $device->building?->building_name,
+                ])),
+            ];
+        })->values();
+    }
+
+    private function recipientOptions($users)
+    {
+        return collect($users)->map(fn (User $recipient) => [
+            'value' => (string) $recipient->id,
+            'label' => $recipient->full_name,
+            'description' => $recipient->job_title ?: $recipient->email,
+            'search' => implode(' ', array_filter([
+                $recipient->full_name,
+                $recipient->job_title,
+                $recipient->email,
+            ])),
+        ])->values();
     }
 
     private function ensureDeviceCanAcceptTransferRequest(Device $device): void
@@ -330,7 +383,7 @@ class DeviceTransferController extends Controller
 
     private function transferOwnerId(User $actor, Device $device): ?int
     {
-        if ($actor->isAdmin()) {
+        if ($actor->canManageRequests()) {
             return $device->assigned_to_id ? (int) $device->assigned_to_id : null;
         }
 

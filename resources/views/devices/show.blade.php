@@ -71,7 +71,7 @@
                     <div class="min-w-0 flex-1">
                         <div class="flex flex-wrap items-center gap-2">
                             <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
-                            @if ($device->activeRepair)
+                            @if ($repairStatusLabel)
                                 <span class="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800">
                                     <x-icon name="repair" size="h-3.5 w-3.5" />
                                     <span>Remonts: {{ $repairStatusLabel }}</span>
@@ -157,7 +157,7 @@
                                         <div class="mt-2">
                                             <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
                                         </div>
-                                        @if ($device->activeRepair)
+                                        @if ($repairStatusLabel)
                                             <div class="mt-2 text-xs text-slate-500">Remonta statuss: {{ $repairStatusLabel }}</div>
                                         @endif
                                     </div>

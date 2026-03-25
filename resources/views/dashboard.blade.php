@@ -178,10 +178,11 @@
                                         <td>
                                             <x-status-pill context="device" :value="$device->status" />
                                             <div class="dash-table-subline">
-                                                @if ($device->activeRepair)
-                                                    Aktivs remonts
+                                                @if ($device->status === \App\Models\Device::STATUS_REPAIR)
+                                                    Remonta statuss:
+                                                    {{ ['waiting' => 'Gaida', 'in-progress' => 'Procesa', 'completed' => 'Pabeigts', 'cancelled' => 'Atcelts'][$device->activeRepair?->status] ?? 'Remonta' }}
                                                 @else
-                                                    Bez aktiva remonta
+                                                    Bez gaidosa remonta
                                                 @endif
                                             </div>
                                         </td>

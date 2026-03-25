@@ -22,22 +22,40 @@
 
         <form method="POST" action="{{ route('device-transfers.store') }}" class="surface-card space-y-6 p-6">
             @csrf
-            <label class="block">
-                <span class="crud-label">Ierice</span>
-                <select name="device_id" class="crud-control" required>
-                    @foreach ($devices as $device)
-                        <option value="{{ $device->id }}" @selected(old('device_id') == $device->id)>{{ $device->name }} ({{ $device->code ?: 'bez koda' }}){{ $device->assignedTo ? ' | Paslaik: ' . $device->assignedTo->full_name : '' }}</option>
-                    @endforeach
-                </select>
-            </label>
-            <label class="block">
-                <span class="crud-label">Kam nodot</span>
-                <select name="transfered_to_id" class="crud-control" required>
-                    @foreach ($users as $transferUser)
-                        <option value="{{ $transferUser->id }}" @selected(old('transfered_to_id') == $transferUser->id)>{{ $transferUser->full_name }}</option>
-                    @endforeach
-                </select>
-            </label>
+            <div class="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+                <div>
+                    <span class="crud-label">Ierice</span>
+                    <x-searchable-select
+                        name="device_id"
+                        query-name="device_query"
+                        identifier="device-transfer-device"
+                        :options="$deviceOptions"
+                        :selected="old('device_id')"
+                        :query="old('device_query', '')"
+                        placeholder="Mekle pec nosaukuma, koda vai lietotaja"
+                        empty-message="Neviena ierice neatbilst meklejumam."
+                    />
+                    @error('device_id')
+                        <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div>
+                    <span class="crud-label">Kam nodot</span>
+                    <x-searchable-select
+                        name="transfered_to_id"
+                        query-name="transfered_to_query"
+                        identifier="device-transfer-recipient"
+                        :options="$recipientOptions"
+                        :selected="old('transfered_to_id')"
+                        :query="old('transfered_to_query', '')"
+                        placeholder="Mekle lietotaju"
+                        empty-message="Neviens lietotajs neatbilst meklejumam."
+                    />
+                    @error('transfered_to_id')
+                        <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
             <label class="block">
                 <span class="crud-label">Iemesls</span>
                 <textarea name="transfer_reason" rows="5" class="crud-control" required>{{ old('transfer_reason') }}</textarea>

@@ -160,6 +160,24 @@
                     @if ($transfer->review_notes)
                         <div class="mt-2 text-sm text-slate-500">Piezimes: {{ $transfer->review_notes }}</div>
                     @endif
+
+                    @if (! $isAdmin && ! $isIncomingPending && $transfer->status === 'submitted')
+                        <div class="mt-4 flex flex-wrap gap-3 border-t border-slate-200 pt-4">
+                            <a href="{{ route('my-requests.edit', ['requestType' => 'transfer', 'requestId' => $transfer->id]) }}" class="btn-view">
+                                <x-icon name="view" size="h-4 w-4" />
+                                <span>Labot iemeslu</span>
+                            </a>
+                            <form method="POST" action="{{ route('my-requests.destroy', ['requestType' => 'transfer', 'requestId' => $transfer->id]) }}" onsubmit="return confirm('Vai tiesam atcelt so pieteikumu?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn-danger">
+                                    <x-icon name="x-mark" size="h-4 w-4" />
+                                    <span>Atcelt pieteikumu</span>
+                                </button>
+                            </form>
+                        </div>
+                    @endif
+
                     @if ($isIncomingPending)
                         <div class="mt-5 rounded-[1.5rem] border border-emerald-200 bg-emerald-50/80 p-4">
                             <div class="text-sm font-semibold text-emerald-900">Tu vari sanemt so ierici</div>

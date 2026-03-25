@@ -22,14 +22,30 @@
 
         <form method="POST" action="{{ route('writeoff-requests.store') }}" class="surface-card space-y-6 p-6">
             @csrf
-            <label class="block">
-                <span class="crud-label">Ierice</span>
-                <select name="device_id" class="crud-control" required>
-                    @foreach ($devices as $device)
-                        <option value="{{ $device->id }}" @selected(old('device_id') == $device->id)>{{ $device->name }} ({{ $device->code ?: 'bez koda' }})</option>
-                    @endforeach
-                </select>
-            </label>
+            <div class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+                <div>
+                    <span class="crud-label">Ierice</span>
+                    <x-searchable-select
+                        name="device_id"
+                        query-name="device_query"
+                        identifier="writeoff-request-device"
+                        :options="$deviceOptions"
+                        :selected="old('device_id')"
+                        :query="old('device_query', '')"
+                        placeholder="Mekle pec nosaukuma, koda vai telpas"
+                        empty-message="Neviena ierice neatbilst meklejumam."
+                    />
+                    @error('device_id')
+                        <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                    <div class="font-semibold text-slate-900">Pirms iesniegsanas</div>
+                    <div class="mt-2 leading-6">
+                        Izvelejoties ierici, redzesi tipu, razotaju ar modeli un telpu, lai norakstisanas pieteikums tiktu piesaistits pareizajam inventaram.
+                    </div>
+                </div>
+            </div>
             <label class="block">
                 <span class="crud-label">Iemesls</span>
                 <textarea name="reason" rows="5" class="crud-control" required>{{ old('reason') }}</textarea>
