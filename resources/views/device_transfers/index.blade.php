@@ -52,6 +52,13 @@
                                 <span class="inventory-inline-label">Noraiditi</span>
                                 <span class="inventory-inline-value">{{ $transferSummary['rejected'] }}</span>
                             </span>
+                            @if (($incomingPendingCount ?? 0) > 0)
+                                <span class="inventory-inline-chip inventory-inline-chip-amber ring-1 ring-amber-300">
+                                    <x-icon name="exclamation-triangle" size="h-3.5 w-3.5" />
+                                    <span class="inventory-inline-label">Jaizskata</span>
+                                    <span class="inventory-inline-value">{{ $incomingPendingCount }}</span>
+                                </span>
+                            @endif
                         </div>
                     </div>
                     <div class="page-title-group mt-4">
@@ -118,6 +125,19 @@
         @endif
         @if (! empty($featureMessage))
             <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
+        @endif
+        @if (($incomingPendingCount ?? 0) > 0)
+            <div class="rounded-[1.5rem] border border-amber-200 bg-amber-50/90 px-5 py-4 shadow-sm">
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-sm">
+                        <x-icon name="exclamation-triangle" size="h-5 w-5" />
+                    </span>
+                    <div>
+                        <div class="text-sm font-semibold text-amber-950">Tev ir {{ $incomingPendingCount }} ienakoss parsutisanas pieteikums{{ $incomingPendingCount > 1 ? 'i' : '' }}</div>
+                        <div class="mt-1 text-sm text-amber-900">Atver zemak redzamos ierakstus un pie katra lem, vai apstiprinat vai noraidit ierices sanemsanu.</div>
+                    </div>
+                </div>
+            </div>
         @endif
         <div class="space-y-4">
             @forelse ($transfers as $transfer)

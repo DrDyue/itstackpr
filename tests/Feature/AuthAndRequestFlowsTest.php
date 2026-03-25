@@ -728,6 +728,32 @@ class AuthAndRequestFlowsTest extends TestCase
         ]);
     }
 
+    public function test_transfer_recipient_sees_pending_review_indicator_in_navigation_and_index(): void
+    {
+        $sender = $this->createUser(role: User::ROLE_USER, email: 'transfer-indicator-sender@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'transfer-indicator-recipient@example.com');
+        $device = $this->createDevice($sender->id, Device::STATUS_ACTIVE, 'DEV-TRANSFER-ALERT');
+
+        DeviceTransfer::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $sender->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Jaskata un japienem lemums.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+        ]);
+
+        $response = $this->actingAs($recipient)
+            ->get(route('device-transfers.index'))
+            ->assertOk();
+
+        $content = $response->getContent();
+
+        $this->assertIsString($content);
+        $this->assertStringContainsString('Tev ir 1 ienakoss parsutisanas pieteikums', $content);
+        $this->assertStringContainsString('Jaizskata: 1', $content);
+        $this->assertStringContainsString('Ienakoss piedavajums', $content);
+    }
+
     public function test_admin_can_create_transfer_request_for_any_active_assigned_device(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'admin-transfer-create@example.com');

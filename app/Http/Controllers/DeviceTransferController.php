@@ -66,9 +66,20 @@ class DeviceTransferController extends Controller
                 });
             });
 
+        $incomingPendingCount = ! $canManageTransfers
+            ? (clone $baseQuery)
+                ->where('transfered_to_id', $user->id)
+                ->where('status', DeviceTransfer::STATUS_SUBMITTED)
+                ->count()
+            : 0;
+
         $transfers = (clone $baseQuery)
             ->with(['device.building', 'device.room.building', 'responsibleUser', 'transferTo', 'reviewedBy'])
             ->whereIn('status', $filters['statuses'] === [] ? ['__none__'] : $filters['statuses'])
+            ->when(! $canManageTransfers, fn (Builder $query) => $query->orderByRaw(
+                'case when transfered_to_id = ? and status = ? then 0 else 1 end',
+                [$user->id, DeviceTransfer::STATUS_SUBMITTED]
+            ))
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
 
@@ -96,6 +107,7 @@ class DeviceTransferController extends Controller
             'statusLabels' => $this->requestStatusLabels(),
             'isAdmin' => $canManageTransfers,
             'currentUserId' => $user->id,
+            'incomingPendingCount' => $incomingPendingCount,
             'roomOptions' => $canManageTransfers
                 ? collect()
                 : Room::query()
