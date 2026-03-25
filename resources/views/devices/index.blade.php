@@ -308,23 +308,33 @@
                                     @if (! empty($pendingRequestBadge['url']))
                                         <a href="{{ $pendingRequestBadge['url'] }}" class="device-request-badge-link mt-2 {{ $pendingRequestBadge['class'] }}">
                                             <span class="device-request-badge-main">
-                                                <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
-                                                <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
+                                                <span class="device-request-badge-row">
+                                                    <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
+                                                    <span>{{ $pendingRequestBadge['line_one'] ?? $pendingRequestBadge['label'] }}</span>
+                                                </span>
+                                                @if (! empty($pendingRequestBadge['line_two']))
+                                                    <span class="device-request-badge-row device-request-badge-row-offset">{{ $pendingRequestBadge['line_two'] }}</span>
+                                                @endif
                                             </span>
-                                            <span class="device-request-badge-meta">{{ $pendingRequestBadge['meta_label'] ?? 'Skatit' }}</span>
                                         </a>
                                     @else
                                         <div class="device-request-badge-link mt-2 {{ $pendingRequestBadge['class'] }}">
                                             <span class="device-request-badge-main">
-                                                <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
-                                                <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
+                                                <span class="device-request-badge-row">
+                                                    <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
+                                                    <span>{{ $pendingRequestBadge['line_one'] ?? $pendingRequestBadge['label'] }}</span>
+                                                </span>
+                                                @if (! empty($pendingRequestBadge['line_two']))
+                                                    <span class="device-request-badge-row device-request-badge-row-offset">{{ $pendingRequestBadge['line_two'] }}</span>
+                                                @endif
                                             </span>
                                         </div>
                                     @endif
                                 @endif
                                 @if ($repairStatusLabel)
-                                    <div class="mt-2 text-xs text-slate-500">
-                                        Remonta statuss: {{ $repairStatusLabel }}
+                                    <div class="device-repair-state-chip mt-2">
+                                        <x-icon name="repair" size="h-3.5 w-3.5" />
+                                        <span>{{ $repairStatusLabel }}</span>
                                     </div>
                                 @endif
                             </td>

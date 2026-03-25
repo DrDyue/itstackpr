@@ -798,14 +798,12 @@ class DeviceController extends Controller
             ->all();
     }
 
-    private function repairStatusLabel(?string $status): string
+    private function repairStatusLabel(?string $status): ?string
     {
         return match ($status) {
             'waiting' => 'Gaida',
             'in-progress' => 'Procesa',
-            'completed' => 'Pabeigts',
-            'cancelled' => 'Atcelts',
-            default => 'Remonta',
+            default => null,
         };
     }
 
@@ -816,6 +814,17 @@ class DeviceController extends Controller
         }
 
         return $this->repairStatusLabel($device->activeRepair?->status);
+    }
+
+    private function repairReasonText(Device $device): string
+    {
+        $repairStatusLabel = $this->repairStatusLabel($device->activeRepair?->status);
+
+        if ($repairStatusLabel) {
+            return 'Ierice sobrid ir remonta ar statusu "'.$repairStatusLabel.'".';
+        }
+
+        return 'Ierice sobrid ir remonta.';
     }
 
     private function requestAvailabilityForDevice(
@@ -840,7 +849,7 @@ class DeviceController extends Controller
                 'writeoff' => false,
                 'transfer' => false,
                 'can_create_any' => false,
-                'reason' => 'Ierice sobrid ir remonta ar statusu "'.$this->repairStatusLabel($device->activeRepair?->status).'".',
+                'reason' => $this->repairReasonText($device),
             ];
         }
 
@@ -894,8 +903,8 @@ class DeviceController extends Controller
             return [
                 'icon' => 'repair-request',
                 'label' => 'Gaida remonta pieteikumu',
-                'short_label' => 'Gaida remontu',
-                'meta_label' => 'Skatit pieteikumu',
+                'line_one' => 'Gaida',
+                'line_two' => 'remontu',
                 'class' => 'border-sky-200 bg-sky-50 text-sky-700',
                 'url' => $this->requestIndexUrl($device, $canManageRequests, 'repair'),
             ];
@@ -905,8 +914,8 @@ class DeviceController extends Controller
             return [
                 'icon' => 'writeoff',
                 'label' => 'Gaida norakstisanas pieteikumu',
-                'short_label' => 'Gaida norakstisanu',
-                'meta_label' => 'Skatit pieteikumu',
+                'line_one' => 'Gaida',
+                'line_two' => 'norakst.',
                 'class' => 'border-rose-200 bg-rose-50 text-rose-700',
                 'url' => $this->requestIndexUrl($device, $canManageRequests, 'writeoff'),
             ];
@@ -916,8 +925,8 @@ class DeviceController extends Controller
             return [
                 'icon' => 'transfer',
                 'label' => 'Gaida nodosanas pieteikumu',
-                'short_label' => 'Gaida nodosanu',
-                'meta_label' => 'Skatit pieteikumu',
+                'line_one' => 'Gaida',
+                'line_two' => 'nodosanu',
                 'class' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
                 'url' => $this->requestIndexUrl($device, $canManageRequests, 'transfer'),
             ];
@@ -1070,9 +1079,11 @@ class DeviceController extends Controller
     private function userRoomUpdateAvailability(Device $device, mixed $pendingRepairRequest, mixed $pendingWriteoffRequest, mixed $pendingTransferRequest): array
     {
         if ($device->status === Device::STATUS_REPAIR) {
+            $repairStatusLabel = $this->repairStatusLabel($device->activeRepair?->status);
+
             return [
                 'allowed' => false,
-                'reason' => 'Ierices atrasanas vietu nevar mainit, kamer ierice ir remonta ar statusu "'.$this->repairStatusLabel($device->activeRepair?->status).'".',
+                'reason' => 'Ierices atrasanas vietu nevar mainit, kamer ierice ir remonta'.($repairStatusLabel ? ' ar statusu "'.$repairStatusLabel.'".' : '.'),
             ];
         }
 

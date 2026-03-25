@@ -177,14 +177,14 @@
                                         </td>
                                         <td>
                                             <x-status-pill context="device" :value="$device->status" />
-                                            <div class="dash-table-subline">
-                                                @if ($device->status === \App\Models\Device::STATUS_REPAIR)
-                                                    Remonta statuss:
-                                                    {{ ['waiting' => 'Gaida', 'in-progress' => 'Procesa', 'completed' => 'Pabeigts', 'cancelled' => 'Atcelts'][$device->activeRepair?->status] ?? 'Remonta' }}
-                                                @else
-                                                    Bez gaidosa remonta
-                                                @endif
-                                            </div>
+                                            @if ($device->status === \App\Models\Device::STATUS_REPAIR)
+                                                <div class="device-repair-state-chip mt-2">
+                                                    <x-icon name="repair" size="h-3.5 w-3.5" />
+                                                    <span>{{ ['waiting' => 'Gaida', 'in-progress' => 'Procesa'][$device->activeRepair?->status] ?? 'Remonta' }}</span>
+                                                </div>
+                                            @else
+                                                <div class="dash-table-subline">Bez gaidosa remonta</div>
+                                            @endif
                                         </td>
                                         <td>
                                             <a href="{{ route('devices.show', $device) }}" class="btn-view dash-table-action-btn">
