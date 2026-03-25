@@ -1665,10 +1665,47 @@ class AuthAndRequestFlowsTest extends TestCase
             ->get(route('devices.index'))
             ->assertOk()
             ->assertSee($device->name)
-            ->assertSee('Remonta statuss: Procesa')
+            ->assertSee('Remonts')
+            ->assertSee('Procesa')
             ->assertDontSee('Pieteikt remontu')
             ->assertDontSee('Pieteikt norakstisanu')
             ->assertDontSee('Nodot citam');
+    }
+
+    public function test_dashboard_shows_request_review_link_and_repair_substatus(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'dashboard-status-admin@example.com');
+        $employee = $this->createUser(role: User::ROLE_USER, email: 'dashboard-status-user@example.com');
+
+        $pendingDevice = $this->createDevice($employee->id, Device::STATUS_ACTIVE, 'DEV-DASH-PENDING');
+        $repairDevice = $this->createDevice($employee->id, Device::STATUS_REPAIR, 'DEV-DASH-REPAIR');
+
+        RepairRequest::create([
+            'device_id' => $pendingDevice->id,
+            'responsible_user_id' => $employee->id,
+            'description' => 'Jaskata adminam.',
+            'status' => RepairRequest::STATUS_SUBMITTED,
+        ]);
+
+        Repair::create([
+            'device_id' => $repairDevice->id,
+            'description' => 'Remonts procesa.',
+            'status' => 'in-progress',
+            'repair_type' => 'internal',
+            'priority' => 'medium',
+            'accepted_by' => $admin->id,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertOk();
+
+        $content = $response->getContent();
+
+        $this->assertIsString($content);
+        $this->assertMatchesRegularExpression('/DEV-DASH-PENDING.*Apskatit.*Remonts/s', $content);
+        $this->assertMatchesRegularExpression('/DEV-DASH-REPAIR.*Remonts.*Procesa/s', $content);
+        $this->assertStringNotContainsString('Bez gaidosa remonta', $content);
     }
 
     public function test_active_device_does_not_show_repair_substatus_when_device_status_is_active(): void

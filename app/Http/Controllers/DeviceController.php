@@ -100,7 +100,7 @@ class DeviceController extends Controller
             ->values();
 
         $devices = $this->visibleDevicesQuery($user)
-            ->with(['type', 'building', 'room.building', 'activeRepair', 'assignedTo', 'createdBy'])
+            ->with(['type', 'building', 'room.building', 'activeRepair', 'latestRepair', 'assignedTo', 'createdBy'])
             ->withExists([
                 'repairRequests as has_pending_repair_request' => fn (Builder $query) => $query->where('status', RepairRequest::STATUS_SUBMITTED),
                 'writeoffRequests as has_pending_writeoff_request' => fn (Builder $query) => $query->where('status', WriteoffRequest::STATUS_SUBMITTED),
@@ -252,6 +252,7 @@ class DeviceController extends Controller
             'createdBy',
             'assignedTo',
             'activeRepair',
+            'latestRepair',
             'repairs.assignee',
             'repairRequests.responsibleUser',
             'repairRequests.reviewedBy',
@@ -813,7 +814,10 @@ class DeviceController extends Controller
             return null;
         }
 
-        return $this->repairStatusLabel($device->activeRepair?->status);
+        $label = $this->repairStatusLabel($device->activeRepair?->status)
+            ?? $this->repairStatusLabel($device->latestRepair?->status);
+
+        return $label ?: 'Gaida';
     }
 
     private function repairReasonText(Device $device): string

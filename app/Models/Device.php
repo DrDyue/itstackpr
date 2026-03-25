@@ -88,6 +88,11 @@ class Device extends Model
             ->latestOfMany('id');
     }
 
+    public function latestRepair(): HasOne
+    {
+        return $this->hasOne(Repair::class)->latestOfMany('id');
+    }
+
     public function repairRequests(): HasMany
     {
         return $this->hasMany(RepairRequest::class);

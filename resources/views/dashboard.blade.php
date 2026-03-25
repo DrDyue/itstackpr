@@ -156,6 +156,9 @@
                                             $device->room?->room_number,
                                             $device->room?->room_name,
                                         ])->filter()->implode(' | ');
+                                        $deviceState = $dashboardDeviceStates[$device->id] ?? [];
+                                        $repairStatusLabel = $deviceState['repairStatusLabel'] ?? null;
+                                        $pendingRequestBadge = $deviceState['pendingRequestBadge'] ?? null;
                                     @endphp
                                     <tr>
                                         <td>
@@ -176,15 +179,29 @@
                                             <div class="dash-table-subline">{{ $assignedJobTitle }}</div>
                                         </td>
                                         <td>
-                                            <x-status-pill context="device" :value="$device->status" />
-                                            @if ($device->status === \App\Models\Device::STATUS_REPAIR)
-                                                <div class="device-repair-state-chip mt-2">
-                                                    <x-icon name="repair" size="h-3.5 w-3.5" />
-                                                    <span>{{ ['waiting' => 'Gaida', 'in-progress' => 'Procesa'][$device->activeRepair?->status] ?? 'Remonta' }}</span>
-                                                </div>
-                                            @else
-                                                <div class="dash-table-subline">Bez gaidosa remonta</div>
-                                            @endif
+                                            <div class="device-status-stack">
+                                                @if ($device->status === \App\Models\Device::STATUS_REPAIR && $repairStatusLabel)
+                                                    <div class="device-status-split-chip device-status-split-chip-repair">
+                                                        <span class="device-status-split-main">
+                                                            <x-icon name="repair" size="h-3.5 w-3.5" />
+                                                            <span>Remonts</span>
+                                                        </span>
+                                                        <span class="device-status-split-sub">{{ $repairStatusLabel }}</span>
+                                                    </div>
+                                                @else
+                                                    <x-status-pill context="device" :value="$device->status" />
+                                                @endif
+
+                                                @if ($pendingRequestBadge)
+                                                    <a href="{{ $pendingRequestBadge['url'] }}" class="device-request-badge-link {{ $pendingRequestBadge['class'] }}">
+                                                        <span class="device-status-split-main">
+                                                            <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
+                                                            <span>{{ $pendingRequestBadge['label'] }}</span>
+                                                        </span>
+                                                        <span class="device-status-split-sub">{{ $pendingRequestBadge['detail_label'] }}</span>
+                                                    </a>
+                                                @endif
+                                            </div>
                                         </td>
                                         <td>
                                             <a href="{{ route('devices.show', $device) }}" class="btn-view dash-table-action-btn">
