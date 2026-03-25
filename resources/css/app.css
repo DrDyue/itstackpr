@@ -2874,8 +2874,24 @@ tbody td {
     @apply flex flex-col items-start gap-2;
 }
 
+.device-status-split-chip {
+    @apply inline-flex flex-col items-start gap-0.5 rounded-2xl border px-3 py-2 text-[11px] font-semibold leading-4;
+}
+
+.device-status-split-chip-repair {
+    @apply border-amber-200 bg-amber-50 text-amber-800;
+}
+
+.device-status-split-main {
+    @apply inline-flex items-center gap-1.5;
+}
+
+.device-status-split-sub {
+    @apply pl-5 text-[10px] font-semibold uppercase tracking-[0.14em] opacity-80;
+}
+
 .device-request-badge-link {
-    @apply inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold leading-none transition hover:brightness-[0.98];
+    @apply inline-flex flex-col items-start gap-0.5 rounded-2xl border px-3 py-2 text-[11px] font-semibold leading-4 transition hover:brightness-[0.98];
 }
 
 .device-repair-state-chip {

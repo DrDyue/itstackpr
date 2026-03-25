@@ -904,6 +904,7 @@ class DeviceController extends Controller
                 'icon' => 'repair-request',
                 'label' => 'Gaida remonta pieteikumu',
                 'short_label' => 'Pieprasijums',
+                'detail_label' => 'Remonts',
                 'class' => 'border-sky-200 bg-sky-50 text-sky-700',
                 'url' => $this->requestIndexUrl($device, $canManageRequests, 'repair'),
             ];
@@ -914,6 +915,7 @@ class DeviceController extends Controller
                 'icon' => 'writeoff',
                 'label' => 'Gaida norakstisanas pieteikumu',
                 'short_label' => 'Pieprasijums',
+                'detail_label' => 'Norakst.',
                 'class' => 'border-rose-200 bg-rose-50 text-rose-700',
                 'url' => $this->requestIndexUrl($device, $canManageRequests, 'writeoff'),
             ];
@@ -924,6 +926,7 @@ class DeviceController extends Controller
                 'icon' => 'transfer',
                 'label' => 'Gaida nodosanas pieteikumu',
                 'short_label' => 'Pieprasijums',
+                'detail_label' => 'Nodosana',
                 'class' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
                 'url' => $this->requestIndexUrl($device, $canManageRequests, 'transfer'),
             ];

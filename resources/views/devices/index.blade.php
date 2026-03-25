@@ -305,7 +305,13 @@
                             <td class="px-4 py-4">
                                 <div class="device-status-stack">
                                     @if ($device->status === \App\Models\Device::STATUS_REPAIR && $repairStatusLabel)
-                                        <x-status-pill context="device" value="repair" :label="'Remonts: ' . mb_strtolower($repairStatusLabel)" />
+                                        <div class="device-status-split-chip device-status-split-chip-repair">
+                                            <span class="device-status-split-main">
+                                                <x-icon name="repair" size="h-3.5 w-3.5" />
+                                                <span>Remonts</span>
+                                            </span>
+                                            <span class="device-status-split-sub">{{ $repairStatusLabel }}</span>
+                                        </div>
                                     @else
                                         <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
                                     @endif
@@ -313,13 +319,23 @@
                                     @if ($pendingRequestBadge)
                                         @if (! empty($pendingRequestBadge['url']))
                                             <a href="{{ $pendingRequestBadge['url'] }}" class="device-request-badge-link {{ $pendingRequestBadge['class'] }}">
-                                                <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
-                                                <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
+                                                <span class="device-status-split-main">
+                                                    <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
+                                                    <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
+                                                </span>
+                                                @if (! empty($pendingRequestBadge['detail_label']))
+                                                    <span class="device-status-split-sub">{{ $pendingRequestBadge['detail_label'] }}</span>
+                                                @endif
                                             </a>
                                         @else
                                             <div class="device-request-badge-link {{ $pendingRequestBadge['class'] }}">
-                                                <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
-                                                <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
+                                                <span class="device-status-split-main">
+                                                    <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
+                                                    <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
+                                                </span>
+                                                @if (! empty($pendingRequestBadge['detail_label']))
+                                                    <span class="device-status-split-sub">{{ $pendingRequestBadge['detail_label'] }}</span>
+                                                @endif
                                             </div>
                                         @endif
                                     @endif
