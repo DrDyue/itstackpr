@@ -911,6 +911,28 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->assertMatchesRegularExpression('/DEV-DASH-META.*SN-HP-800/s', $content);
         $this->assertMatchesRegularExpression('/Darba stacija.*Dators.*HP EliteDesk 800/s', $content);
         $this->assertMatchesRegularExpression('/Maris Vitols.*Nav amata/s', $content);
+        $this->assertStringNotContainsString('Aktivie remonti', $content);
+        $this->assertStringNotContainsString('Jaunakas darbibas', $content);
+    }
+
+    public function test_dashboard_uses_localized_device_pagination(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'dashboard-pagination-admin@example.com');
+
+        foreach (range(1, 13) as $index) {
+            $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-PAG-'.$index);
+        }
+
+        $response = $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertOk();
+
+        $content = $response->getContent();
+
+        $this->assertIsString($content);
+        $this->assertStringContainsString('Lapa 1 no 2', $content);
+        $this->assertStringContainsString('Nakama', $content);
+        $this->assertStringNotContainsString('Showing', $content);
     }
 
     public function test_regular_user_cannot_view_foreign_device_asset(): void
@@ -1244,7 +1266,7 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertSee('DEV-FLOOR-ONE')
             ->assertSee('Testa ierice DEV-FLOOR-ONE')
             ->assertDontSee('Testa ierice DEV-FLOOR-TWO')
-            ->assertSee('Telpas filtrs ieslēgts');
+            ->assertSee('Telpas filtrs ieslegts');
     }
 
     public function test_devices_index_accepts_type_text_filter_without_exact_selection(): void

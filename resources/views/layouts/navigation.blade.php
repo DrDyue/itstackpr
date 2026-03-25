@@ -44,7 +44,7 @@
         }
     @endphp
 
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-[92rem] px-4 sm:px-6 lg:px-8">
         <div class="flex min-h-20 items-center justify-between gap-4 py-3">
             <div class="flex min-w-0 items-center gap-3">
                 <a href="{{ route($canManageRequests ? 'dashboard' : 'devices.index') }}" class="flex min-w-0 items-center gap-3">
@@ -136,8 +136,8 @@
                 </div>
             </div>
 
-            <div class="hidden sm:flex sm:items-center">
-                <div class="flex items-center gap-3">
+            <div class="hidden min-w-0 sm:flex sm:items-center">
+                <div class="flex min-w-0 items-center gap-3">
                     @if ($isAdmin)
                         <form method="POST" action="{{ route('view-mode.update') }}" class="hidden lg:block">
                             @csrf
@@ -162,16 +162,16 @@
                         </form>
                     @endif
 
-                    <x-dropdown align="right" width="w-56">
+                    <x-dropdown align="right" width="w-64">
                     <x-slot name="trigger">
-                        <button class="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <button class="inline-flex min-w-0 max-w-[17rem] items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-500">
                             <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-sm font-semibold text-white shadow-sm">
                                 {{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($user?->full_name ?? 'L', 0, 1)) }}
                             </div>
-                            <div class="text-left leading-tight">
-                                <div class="font-semibold text-slate-900">{{ $user?->full_name ?? 'Lietotajs' }}</div>
-                                <div class="mt-1 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                                    {{ $isAdmin ? ($canManageRequests ? 'admin view' : 'user view') : ($user?->role ?? '') }}
+                            <div class="min-w-0 text-left leading-tight">
+                                <div class="truncate font-semibold text-slate-900">{{ $user?->full_name ?? 'Lietotajs' }}</div>
+                                <div class="mt-1 inline-flex max-w-full items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                                    <span class="truncate">{{ $isAdmin ? ($canManageRequests ? 'admin view' : 'user view') : ($user?->role ?? '') }}</span>
                                 </div>
                             </div>
                             <svg class="ms-1 h-4 w-4 fill-current text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">

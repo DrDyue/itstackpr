@@ -2158,6 +2158,30 @@ tbody td {
     @apply space-y-6;
 }
 
+.dashboard-pagination {
+    @apply flex flex-col gap-3 border-t border-slate-200 px-5 py-4 md:flex-row md:items-center md:justify-between;
+}
+
+.dashboard-pagination-meta {
+    @apply flex flex-wrap items-center gap-3 text-sm font-medium text-slate-500;
+}
+
+.dashboard-pagination-links {
+    @apply flex flex-wrap items-center gap-2;
+}
+
+.dashboard-pagination-btn {
+    @apply inline-flex min-w-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-800;
+}
+
+.dashboard-pagination-btn-active {
+    @apply border-sky-200 bg-sky-50 text-sky-800 shadow-sm;
+}
+
+.dashboard-pagination-btn-disabled {
+    @apply cursor-default border-slate-200 bg-slate-50 text-slate-400 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-400;
+}
+
 .dash-device-list {
     @apply mt-5 space-y-3;
 }
@@ -2230,7 +2254,7 @@ tbody td {
 
 /* Shared page chrome */
 .app-shell {
-    @apply mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8;
+    @apply mx-auto max-w-[92rem] space-y-6 px-4 py-6 sm:px-6 lg:px-8;
 }
 
 .page-hero {

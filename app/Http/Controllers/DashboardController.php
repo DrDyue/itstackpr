@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AuditLog;
 use App\Models\Device;
-use App\Models\Repair;
 use App\Models\RepairRequest;
 use App\Models\Room;
 use App\Models\WriteoffRequest;
@@ -31,14 +29,11 @@ class DashboardController extends Controller
         ];
 
         $hasDevices = $this->featureTableExists('devices');
-        $hasRepairs = $this->featureTableExists('repairs');
         $hasRooms = $this->featureTableExists('rooms');
-        $hasAuditLog = $this->featureTableExists('audit_log');
 
         $deviceQuery = $hasDevices ? Device::query() : null;
         $repairRequestQuery = Schema::hasTable('repair_requests') ? RepairRequest::query() : null;
         $writeoffRequestQuery = Schema::hasTable('writeoff_requests') ? WriteoffRequest::query() : null;
-        $repairQuery = $hasRepairs ? Repair::query() : null;
 
         if ($deviceQuery) {
             $deviceQuery
@@ -52,30 +47,12 @@ class DashboardController extends Controller
                 );
         }
 
-        $activeRepairs = $repairQuery
-            ? (clone $repairQuery)
-                ->with(['device.building', 'device.room', 'acceptedBy', 'executor'])
-                ->whereIn('status', ['waiting', 'in-progress'])
-                ->orderByRaw("case when status = 'in-progress' then 0 else 1 end")
-                ->orderByDesc('id')
-                ->limit(6)
-                ->get()
-            : collect();
-
         $locationRooms = $hasRooms && $isManager
             ? Room::query()
                 ->with(['building'])
                 ->withCount(['devices'])
                 ->orderBy('floor_number')
                 ->orderBy('room_number')
-                ->get()
-            : collect();
-
-        $recentActivity = $hasAuditLog && $isManager
-            ? AuditLog::query()
-                ->with('user')
-                ->latest('timestamp')
-                ->limit(8)
                 ->get()
             : collect();
 
@@ -125,19 +102,11 @@ class DashboardController extends Controller
             'isManager' => $isManager,
             'dashboardDevices' => $dashboardDevices,
             'locationTree' => $locationTree,
-            'activeRepairs' => $activeRepairs,
-            'recentActivity' => $recentActivity,
             'quickActions' => $this->quickActions(
                 $pendingRepairRequestCount,
                 $pendingWriteoffRequestCount
             ),
             'filters' => $filters,
-            'statusLabels' => [
-                'waiting' => 'Gaida',
-                'in-progress' => 'Procesa',
-                'completed' => 'Pabeigts',
-                'cancelled' => 'Atcelts',
-            ],
         ]);
     }
 
