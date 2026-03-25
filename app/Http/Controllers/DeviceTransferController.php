@@ -21,10 +21,23 @@ class DeviceTransferController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+        $availableStatuses = [
+            DeviceTransfer::STATUS_SUBMITTED,
+            DeviceTransfer::STATUS_APPROVED,
+            DeviceTransfer::STATUS_REJECTED,
+        ];
+        $statusFilterTouched = $request->has('statuses_filter');
+        $selectedStatuses = collect($request->query('status', $statusFilterTouched ? [] : $availableStatuses))
+            ->map(fn (mixed $status) => trim((string) $status))
+            ->filter(fn (string $status) => in_array($status, $availableStatuses, true))
+            ->unique()
+            ->values()
+            ->all();
 
         $filters = [
-            'status' => trim((string) $request->query('status', '')),
             'q' => trim((string) $request->query('q', '')),
+            'statuses' => $selectedStatuses === [] ? $availableStatuses : $selectedStatuses,
+            'has_status_filter' => true,
         ];
 
         if (! $this->featureTableExists('device_transfers')) {
@@ -37,7 +50,7 @@ class DeviceTransferController extends Controller
                     'rejected' => 0,
                 ],
                 'filters' => $filters,
-                'statuses' => [DeviceTransfer::STATUS_SUBMITTED, DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED],
+                'statuses' => $availableStatuses,
                 'statusLabels' => $this->requestStatusLabels(),
                 'isAdmin' => $user->isAdmin(),
                 'featureMessage' => 'Tabula device_transfers sobrid nav pieejama.',
@@ -54,7 +67,7 @@ class DeviceTransferController extends Controller
 
         $transfers = (clone $baseQuery)
             ->with(['device.building', 'device.room.building', 'responsibleUser', 'transferTo', 'reviewedBy'])
-            ->when($filters['status'] !== '' && in_array($filters['status'], [DeviceTransfer::STATUS_SUBMITTED, DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED], true), fn (Builder $query) => $query->where('status', $filters['status']))
+            ->whereIn('status', $filters['statuses'] === [] ? ['__none__'] : $filters['statuses'])
             ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['q'];
 
@@ -78,7 +91,7 @@ class DeviceTransferController extends Controller
                 'rejected' => (clone $baseQuery)->where('status', DeviceTransfer::STATUS_REJECTED)->count(),
             ],
             'filters' => $filters,
-            'statuses' => [DeviceTransfer::STATUS_SUBMITTED, DeviceTransfer::STATUS_APPROVED, DeviceTransfer::STATUS_REJECTED],
+            'statuses' => $availableStatuses,
             'statusLabels' => $this->requestStatusLabels(),
             'isAdmin' => $user->isAdmin(),
             'currentUserId' => $user->id,

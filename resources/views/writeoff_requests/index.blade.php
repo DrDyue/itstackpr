@@ -1,4 +1,30 @@
 <x-app-layout>
+    @php
+        $statusFilterOptions = collect($statuses)->map(fn ($status) => [
+            'value' => (string) $status,
+            'label' => $statusLabels[$status] ?? $status,
+            'icon' => match ($status) {
+                'submitted' => 'clock',
+                'approved' => 'check-circle',
+                'rejected' => 'x-circle',
+                default => 'view',
+            },
+            'activeClasses' => match ($status) {
+                'submitted' => 'border-amber-300 bg-amber-50 text-amber-950 shadow-[0_16px_36px_-28px_rgba(245,158,11,0.6)]',
+                'approved' => 'border-emerald-300 bg-emerald-50 text-emerald-950 shadow-[0_16px_36px_-28px_rgba(16,185,129,0.6)]',
+                'rejected' => 'border-rose-300 bg-rose-50 text-rose-950 shadow-[0_16px_36px_-28px_rgba(244,63,94,0.55)]',
+                default => 'border-sky-300 bg-sky-50 text-sky-900',
+            },
+            'inactiveClasses' => 'border-slate-200 bg-white text-slate-600',
+            'activeIconClasses' => match ($status) {
+                'submitted' => 'bg-amber-500 text-white',
+                'approved' => 'bg-emerald-600 text-white',
+                'rejected' => 'bg-rose-600 text-white',
+                default => 'bg-sky-600 text-white',
+            },
+            'inactiveIconClasses' => 'bg-slate-100 text-slate-400',
+        ])->values();
+    @endphp
     <section class="app-shell">
         <div class="page-hero">
             <div class="page-hero-grid">
@@ -48,19 +74,28 @@
                 <span class="crud-label">Meklet</span>
                 <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Ierice, kods vai iemesls...">
             </label>
-            <div>
+            <div x-data="filterChipGroup({ selected: @js($filters['statuses']), minimum: 1 })">
                 <span class="crud-label">Statuss</span>
                 <div class="mt-2 flex flex-wrap gap-2">
-                    @foreach ($statuses as $status)
-                        @php $selected = in_array($status, $filters['statuses'], true); @endphp
-                        <label class="{{ $selected ? 'border-sky-300 bg-sky-50 text-sky-900 shadow-[0_16px_36px_-28px_rgba(14,165,233,0.6)]' : 'border-slate-200 bg-white text-slate-600' }} inline-flex cursor-pointer items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-semibold transition hover:border-sky-200 hover:text-slate-900">
-                            <input type="checkbox" name="status[]" value="{{ $status }}" class="sr-only" @checked($selected)>
-                            <span class="inline-flex h-5 w-5 items-center justify-center rounded-full {{ $selected ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-400' }}">
-                                <x-icon :name="$selected ? 'check' : 'plus'" size="h-3.5 w-3.5" />
+                    @foreach ($statusFilterOptions as $option)
+                        <button
+                            type="button"
+                            @click="toggle(@js($option['value']))"
+                            :class="isSelected(@js($option['value'])) ? @js($option['activeClasses']) : @js($option['inactiveClasses'])"
+                            class="inline-flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-semibold transition hover:border-slate-300 hover:text-slate-900"
+                        >
+                            <span
+                                :class="isSelected(@js($option['value'])) ? @js($option['activeIconClasses']) : @js($option['inactiveIconClasses'])"
+                                class="inline-flex h-5 w-5 items-center justify-center rounded-full transition"
+                            >
+                                <x-icon :name="$option['icon']" size="h-3.5 w-3.5" />
                             </span>
-                            <span>{{ $statusLabels[$status] ?? $status }}</span>
-                        </label>
+                            <span>{{ $option['label'] }}</span>
+                        </button>
                     @endforeach
+                    <template x-for="value in selected" :key="'writeoff-status-' + value">
+                        <input type="hidden" name="status[]" :value="value">
+                    </template>
                 </div>
             </div>
             <div class="toolbar-actions xl:justify-end">

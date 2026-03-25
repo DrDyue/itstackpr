@@ -71,6 +71,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/my-requests', [UserRequestCenterController::class, 'index'])->name('my-requests.index');
     Route::get('/my-requests/create', [UserRequestCenterController::class, 'create'])->name('my-requests.create');
     Route::post('/my-requests', [UserRequestCenterController::class, 'store'])->name('my-requests.store');
+    Route::get('/my-requests/{requestType}/{requestId}/edit', [UserRequestCenterController::class, 'edit'])->name('my-requests.edit');
+    Route::patch('/my-requests/{requestType}/{requestId}', [UserRequestCenterController::class, 'update'])->name('my-requests.update');
+    Route::delete('/my-requests/{requestType}/{requestId}', [UserRequestCenterController::class, 'destroy'])->name('my-requests.destroy');
 
     Route::resource('devices', DeviceController::class)->only(['index', 'show']);
     Route::post('/devices/{device}/user-room', [DeviceController::class, 'updateUserRoom'])->name('devices.user-room.update');

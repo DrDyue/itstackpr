@@ -107,6 +107,29 @@ const registerAlpineData = () => {
         },
     }));
 
+    Alpine.data('filterChipGroup', ({ selected = [], minimum = 1 } = {}) => ({
+        selected: Array.from(new Set((selected ?? []).map((value) => String(value)))),
+        minimum: Math.max(Number(minimum) || 1, 1),
+        isSelected(value) {
+            return this.selected.includes(String(value));
+        },
+        toggle(value) {
+            const normalizedValue = String(value);
+
+            if (this.isSelected(normalizedValue)) {
+                if (this.selected.length <= this.minimum) {
+                    return;
+                }
+
+                this.selected = this.selected.filter((item) => item !== normalizedValue);
+
+                return;
+            }
+
+            this.selected = [...this.selected, normalizedValue];
+        },
+    }));
+
     Alpine.data('searchableSelect', ({ selected = '', query = '', options = [], placeholder = '', emptyMessage = '', identifier = '' } = {}) => ({
         open: false,
         selected: String(selected ?? ''),

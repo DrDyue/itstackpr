@@ -9,6 +9,7 @@ use App\Models\Room;
 use App\Models\User;
 use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
@@ -176,6 +177,59 @@ class UserRequestCenterController extends Controller
         AuditTrail::created($user->id, $transfer);
 
         return redirect()->route('my-requests.index')->with('success', 'Nodosanas pieteikums izveidots.');
+    }
+
+    public function edit(string $requestType, int $requestId)
+    {
+        $user = $this->requireRegularUser();
+        [$editableRequest, $config] = $this->editableRequestForUser($user, $requestType, $requestId);
+        $editableRequest->loadMissing('device');
+
+        return view('my_requests.edit', [
+            'editableRequest' => $editableRequest,
+            'requestType' => $requestType,
+            'fieldName' => $config['field'],
+            'fieldLabel' => $config['label'],
+            'fieldValue' => (string) ($editableRequest->{$config['field']} ?? ''),
+            'pageTitle' => $config['title'],
+            'pageSubtitle' => $config['subtitle'],
+            'typeLabel' => $config['type_label'],
+            'icon' => $config['icon'],
+        ]);
+    }
+
+    public function update(Request $request, string $requestType, int $requestId)
+    {
+        $user = $this->requireRegularUser();
+        [$editableRequest, $config] = $this->editableRequestForUser($user, $requestType, $requestId);
+        $field = $config['field'];
+        $validated = $this->validateInput($request, [
+            $field => ['required', 'string'],
+        ], [
+            $field . '.required' => $config['required_message'],
+        ]);
+
+        $before = $editableRequest->only([$field]);
+        $editableRequest->update([
+            $field => (string) $validated[$field],
+        ]);
+
+        AuditTrail::updatedFromState($user->id, $editableRequest, $before, [
+            $field => $editableRequest->{$field},
+        ]);
+
+        return redirect()->route('my-requests.index')->with('success', $config['updated_message']);
+    }
+
+    public function destroy(string $requestType, int $requestId)
+    {
+        $user = $this->requireRegularUser();
+        [$editableRequest, $config] = $this->editableRequestForUser($user, $requestType, $requestId);
+
+        AuditTrail::deleted($user->id, $editableRequest, $config['deleted_audit_message']);
+        $editableRequest->delete();
+
+        return redirect()->route('my-requests.index')->with('success', $config['deleted_message']);
     }
 
     private function requireRegularUser(): User
@@ -408,6 +462,69 @@ class UserRequestCenterController extends Controller
             'writeoff' => 'Norakstisana',
             'transfer' => 'Nodosana',
         ];
+    }
+
+    private function editableRequestForUser(User $user, string $requestType, int $requestId): array
+    {
+        $config = $this->editableRequestConfig($requestType);
+        /** @var Model $editableRequest */
+        $editableRequest = $config['model']::query()
+            ->whereKey($requestId)
+            ->where('responsible_user_id', $user->id)
+            ->firstOrFail();
+
+        abort_unless(($editableRequest->status ?? null) === $config['submitted_status'], 403);
+
+        return [$editableRequest, $config];
+    }
+
+    private function editableRequestConfig(string $requestType): array
+    {
+        return match ($requestType) {
+            'repair' => [
+                'model' => RepairRequest::class,
+                'field' => 'description',
+                'label' => 'Apraksts',
+                'title' => 'Labot remonta pieteikumu',
+                'subtitle' => 'Vari mainit tikai problemu aprakstu, kamer pieteikums vel nav izskatits.',
+                'type_label' => 'Remonta pieteikums',
+                'icon' => 'repair-request',
+                'required_message' => 'Apraksti remonta problemu.',
+                'updated_message' => 'Remonta pieteikums atjaunots.',
+                'deleted_message' => 'Remonta pieteikums atcelts.',
+                'deleted_audit_message' => 'Lietotajs atcela iesniegtu remonta pieteikumu.',
+                'submitted_status' => RepairRequest::STATUS_SUBMITTED,
+            ],
+            'writeoff' => [
+                'model' => WriteoffRequest::class,
+                'field' => 'reason',
+                'label' => 'Iemesls',
+                'title' => 'Labot norakstisanas pieteikumu',
+                'subtitle' => 'Vari mainit tikai norakstisanas iemeslu, kamer pieteikums vel nav izskatits.',
+                'type_label' => 'Norakstisanas pieteikums',
+                'icon' => 'writeoff',
+                'required_message' => 'Apraksti norakstisanas iemeslu.',
+                'updated_message' => 'Norakstisanas pieteikums atjaunots.',
+                'deleted_message' => 'Norakstisanas pieteikums atcelts.',
+                'deleted_audit_message' => 'Lietotajs atcela iesniegtu norakstisanas pieteikumu.',
+                'submitted_status' => WriteoffRequest::STATUS_SUBMITTED,
+            ],
+            'transfer' => [
+                'model' => DeviceTransfer::class,
+                'field' => 'transfer_reason',
+                'label' => 'Nodosanas iemesls',
+                'title' => 'Labot nodosanas pieteikumu',
+                'subtitle' => 'Vari mainit tikai nodosanas iemeslu, kamer sanemejs vel nav izskatijis pieteikumu.',
+                'type_label' => 'Nodosanas pieteikums',
+                'icon' => 'transfer',
+                'required_message' => 'Apraksti nodosanas iemeslu.',
+                'updated_message' => 'Nodosanas pieteikums atjaunots.',
+                'deleted_message' => 'Nodosanas pieteikums atcelts.',
+                'deleted_audit_message' => 'Lietotajs atcela iesniegtu nodosanas pieteikumu.',
+                'submitted_status' => DeviceTransfer::STATUS_SUBMITTED,
+            ],
+            default => abort(404),
+        };
     }
 
     private function paginateCollection(Collection $items, int $perPage): LengthAwarePaginator

@@ -23,6 +23,56 @@
         $groupedItems = $items->getCollection()
             ->groupBy('type')
             ->sortBy(fn ($_, $type) => array_search($type, array_keys($typeSections), true));
+        $statusFilterOptions = collect($statusLabels)->map(fn ($label, $value) => [
+            'value' => (string) $value,
+            'label' => $label,
+            'icon' => match ($value) {
+                'submitted' => 'clock',
+                'approved' => 'check-circle',
+                'rejected' => 'x-circle',
+                default => 'view',
+            },
+            'selected' => in_array($value, $filters['statuses'], true),
+            'activeClasses' => match ($value) {
+                'submitted' => 'border-amber-300 bg-amber-50 text-amber-950 shadow-[0_16px_36px_-28px_rgba(245,158,11,0.6)]',
+                'approved' => 'border-emerald-300 bg-emerald-50 text-emerald-950 shadow-[0_16px_36px_-28px_rgba(16,185,129,0.6)]',
+                'rejected' => 'border-rose-300 bg-rose-50 text-rose-950 shadow-[0_16px_36px_-28px_rgba(244,63,94,0.55)]',
+                default => 'border-sky-300 bg-sky-50 text-sky-900',
+            },
+            'inactiveClasses' => 'border-slate-200 bg-white text-slate-600',
+            'activeIconClasses' => match ($value) {
+                'submitted' => 'bg-amber-500 text-white',
+                'approved' => 'bg-emerald-600 text-white',
+                'rejected' => 'bg-rose-600 text-white',
+                default => 'bg-sky-600 text-white',
+            },
+            'inactiveIconClasses' => 'bg-slate-100 text-slate-400',
+        ])->values();
+        $typeFilterOptions = collect($typeLabels)->map(fn ($label, $value) => [
+            'value' => (string) $value,
+            'label' => $label,
+            'icon' => match ($value) {
+                'repair' => 'repair-request',
+                'writeoff' => 'writeoff',
+                'transfer' => 'transfer',
+                default => 'view',
+            },
+            'selected' => in_array($value, $filters['types'], true),
+            'activeClasses' => match ($value) {
+                'repair' => 'border-amber-300 bg-amber-50 text-amber-950 shadow-[0_16px_36px_-28px_rgba(245,158,11,0.6)]',
+                'writeoff' => 'border-rose-300 bg-rose-50 text-rose-950 shadow-[0_16px_36px_-28px_rgba(244,63,94,0.55)]',
+                'transfer' => 'border-emerald-300 bg-emerald-50 text-emerald-950 shadow-[0_16px_36px_-28px_rgba(16,185,129,0.6)]',
+                default => 'border-slate-300 bg-slate-50 text-slate-900',
+            },
+            'inactiveClasses' => 'border-slate-200 bg-white text-slate-600',
+            'activeIconClasses' => match ($value) {
+                'repair' => 'bg-amber-500 text-white',
+                'writeoff' => 'bg-rose-600 text-white',
+                'transfer' => 'bg-emerald-600 text-white',
+                default => 'bg-slate-700 text-white',
+            },
+            'inactiveIconClasses' => 'bg-slate-100 text-slate-400',
+        ])->values();
     @endphp
     <section class="app-shell max-w-7xl">
         <div class="page-hero">
@@ -73,35 +123,53 @@
                 </label>
 
                 <div class="grid gap-4 lg:grid-cols-2">
-                    <div>
+                    <div x-data="filterChipGroup({ selected: @js($filters['statuses']), minimum: 1 })">
                         <span class="mb-2 block text-sm font-medium text-slate-700">Statuss</span>
                         <div class="flex flex-wrap gap-2">
-                            @foreach ($statusLabels as $value => $label)
-                                @php $selected = in_array($value, $filters['statuses'], true); @endphp
-                                <label class="{{ $selected ? 'border-sky-300 bg-sky-50 text-sky-900 shadow-[0_16px_36px_-28px_rgba(14,165,233,0.6)]' : 'border-slate-200 bg-white text-slate-600' }} inline-flex cursor-pointer items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-semibold transition hover:border-sky-200 hover:text-slate-900">
-                                    <input type="checkbox" name="statuses[]" value="{{ $value }}" class="sr-only" @checked($selected)>
-                                    <span class="inline-flex h-5 w-5 items-center justify-center rounded-full {{ $selected ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-400' }}">
-                                        <x-icon :name="$selected ? 'check' : 'plus'" size="h-3.5 w-3.5" />
+                            @foreach ($statusFilterOptions as $option)
+                                <button
+                                    type="button"
+                                    @click="toggle(@js($option['value']))"
+                                    :class="isSelected(@js($option['value'])) ? @js($option['activeClasses']) : @js($option['inactiveClasses'])"
+                                    class="inline-flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-semibold transition hover:border-slate-300 hover:text-slate-900"
+                                >
+                                    <span
+                                        :class="isSelected(@js($option['value'])) ? @js($option['activeIconClasses']) : @js($option['inactiveIconClasses'])"
+                                        class="inline-flex h-5 w-5 items-center justify-center rounded-full transition"
+                                    >
+                                        <x-icon :name="$option['icon']" size="h-3.5 w-3.5" />
                                     </span>
-                                    <span>{{ $label }}</span>
-                                </label>
+                                    <span>{{ $option['label'] }}</span>
+                                </button>
                             @endforeach
+                            <template x-for="value in selected" :key="'my-request-status-' + value">
+                                <input type="hidden" name="statuses[]" :value="value">
+                            </template>
                         </div>
                     </div>
 
-                    <div>
+                    <div x-data="filterChipGroup({ selected: @js($filters['types']), minimum: 1 })">
                         <span class="mb-2 block text-sm font-medium text-slate-700">Tips</span>
                         <div class="flex flex-wrap gap-2">
-                            @foreach ($typeLabels as $value => $label)
-                                @php $selected = in_array($value, $filters['types'], true); @endphp
-                                <label class="{{ $selected ? 'border-emerald-300 bg-emerald-50 text-emerald-900 shadow-[0_16px_36px_-28px_rgba(16,185,129,0.55)]' : 'border-slate-200 bg-white text-slate-600' }} inline-flex cursor-pointer items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-semibold transition hover:border-emerald-200 hover:text-slate-900">
-                                    <input type="checkbox" name="types[]" value="{{ $value }}" class="sr-only" @checked($selected)>
-                                    <span class="inline-flex h-5 w-5 items-center justify-center rounded-full {{ $selected ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-400' }}">
-                                        <x-icon :name="$selected ? 'check' : 'plus'" size="h-3.5 w-3.5" />
+                            @foreach ($typeFilterOptions as $option)
+                                <button
+                                    type="button"
+                                    @click="toggle(@js($option['value']))"
+                                    :class="isSelected(@js($option['value'])) ? @js($option['activeClasses']) : @js($option['inactiveClasses'])"
+                                    class="inline-flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-semibold transition hover:border-slate-300 hover:text-slate-900"
+                                >
+                                    <span
+                                        :class="isSelected(@js($option['value'])) ? @js($option['activeIconClasses']) : @js($option['inactiveIconClasses'])"
+                                        class="inline-flex h-5 w-5 items-center justify-center rounded-full transition"
+                                    >
+                                        <x-icon :name="$option['icon']" size="h-3.5 w-3.5" />
                                     </span>
-                                    <span>{{ $label }}</span>
-                                </label>
+                                    <span>{{ $option['label'] }}</span>
+                                </button>
                             @endforeach
+                            <template x-for="value in selected" :key="'my-request-type-' + value">
+                                <input type="hidden" name="types[]" :value="value">
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -115,6 +183,13 @@
                 </div>
             </form>
         </section>
+
+        @if (session('success'))
+            <div class="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
+        @endif
+        @if (session('error'))
+            <div class="mt-6 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
+        @endif
 
         <section class="surface-card mt-6 p-6">
             <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
@@ -206,6 +281,23 @@
                                             @endif
                                         </div>
                                     </div>
+
+                                    @if (! $item['is_incoming'] && $item['status'] === 'submitted')
+                                        <div class="mt-5 flex flex-wrap gap-3">
+                                            <a href="{{ route('my-requests.edit', ['requestType' => $item['type'], 'requestId' => $item['model']->id]) }}" class="btn-view">
+                                                <x-icon name="view" size="h-4 w-4" />
+                                                <span>Labot tekstu</span>
+                                            </a>
+                                            <form method="POST" action="{{ route('my-requests.destroy', ['requestType' => $item['type'], 'requestId' => $item['model']->id]) }}" onsubmit="return confirm('Vai tiesam atcelt so pieteikumu?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn-danger">
+                                                    <x-icon name="x-mark" size="h-4 w-4" />
+                                                    <span>Atcelt pieteikumu</span>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @endif
 
                                     @if ($item['type'] === 'transfer' && $item['is_incoming'] && $item['status'] === 'submitted')
                                         <div class="mt-5 rounded-[1.5rem] border border-emerald-200 bg-emerald-50/80 p-4">

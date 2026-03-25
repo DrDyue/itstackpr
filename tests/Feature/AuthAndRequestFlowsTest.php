@@ -1052,6 +1052,203 @@ class AuthAndRequestFlowsTest extends TestCase
         ]);
     }
 
+    public function test_admin_request_indexes_show_all_statuses_by_default(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'request-defaults-admin@example.com');
+        $user = $this->createUser(role: User::ROLE_USER, email: 'request-defaults-user@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'request-defaults-recipient@example.com');
+        $repairDevice = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-REQ-DEFAULT-REPAIR');
+        $writeoffDevice = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-REQ-DEFAULT-WRITEOFF');
+        $transferDevice = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-REQ-DEFAULT-TRANSFER');
+
+        RepairRequest::create([
+            'device_id' => $repairDevice->id,
+            'responsible_user_id' => $user->id,
+            'description' => 'Remonts iesniegts pec noklusejuma.',
+            'status' => RepairRequest::STATUS_SUBMITTED,
+        ]);
+        RepairRequest::create([
+            'device_id' => $repairDevice->id,
+            'responsible_user_id' => $user->id,
+            'description' => 'Remonts apstiprinats pec noklusejuma.',
+            'status' => RepairRequest::STATUS_APPROVED,
+        ]);
+        RepairRequest::create([
+            'device_id' => $repairDevice->id,
+            'responsible_user_id' => $user->id,
+            'description' => 'Remonts noraidits pec noklusejuma.',
+            'status' => RepairRequest::STATUS_REJECTED,
+        ]);
+
+        WriteoffRequest::create([
+            'device_id' => $writeoffDevice->id,
+            'responsible_user_id' => $user->id,
+            'reason' => 'Norakstisana iesniegta pec noklusejuma.',
+            'status' => WriteoffRequest::STATUS_SUBMITTED,
+        ]);
+        WriteoffRequest::create([
+            'device_id' => $writeoffDevice->id,
+            'responsible_user_id' => $user->id,
+            'reason' => 'Norakstisana apstiprinata pec noklusejuma.',
+            'status' => WriteoffRequest::STATUS_APPROVED,
+        ]);
+        WriteoffRequest::create([
+            'device_id' => $writeoffDevice->id,
+            'responsible_user_id' => $user->id,
+            'reason' => 'Norakstisana noraidita pec noklusejuma.',
+            'status' => WriteoffRequest::STATUS_REJECTED,
+        ]);
+
+        DeviceTransfer::create([
+            'device_id' => $transferDevice->id,
+            'responsible_user_id' => $user->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Nodosana iesniegta pec noklusejuma.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+        ]);
+        DeviceTransfer::create([
+            'device_id' => $transferDevice->id,
+            'responsible_user_id' => $user->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Nodosana apstiprinata pec noklusejuma.',
+            'status' => DeviceTransfer::STATUS_APPROVED,
+        ]);
+        DeviceTransfer::create([
+            'device_id' => $transferDevice->id,
+            'responsible_user_id' => $user->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Nodosana noraidita pec noklusejuma.',
+            'status' => DeviceTransfer::STATUS_REJECTED,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('repair-requests.index'))
+            ->assertOk()
+            ->assertSee('Remonts iesniegts pec noklusejuma.')
+            ->assertSee('Remonts apstiprinats pec noklusejuma.')
+            ->assertSee('Remonts noraidits pec noklusejuma.');
+
+        $this->actingAs($admin)
+            ->get(route('writeoff-requests.index'))
+            ->assertOk()
+            ->assertSee('Norakstisana iesniegta pec noklusejuma.')
+            ->assertSee('Norakstisana apstiprinata pec noklusejuma.')
+            ->assertSee('Norakstisana noraidita pec noklusejuma.');
+
+        $this->actingAs($admin)
+            ->get(route('device-transfers.index'))
+            ->assertOk()
+            ->assertSee('Nodosana iesniegta pec noklusejuma.')
+            ->assertSee('Nodosana apstiprinata pec noklusejuma.')
+            ->assertSee('Nodosana noraidita pec noklusejuma.');
+    }
+
+    public function test_regular_user_can_edit_submitted_repair_request_text_from_unified_center(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'request-edit-repair-user@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-EDIT-REPAIR');
+        $repairRequest = RepairRequest::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'description' => 'Sakotnejs remonta apraksts.',
+            'status' => RepairRequest::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('my-requests.edit', ['requestType' => 'repair', 'requestId' => $repairRequest->id]))
+            ->assertOk()
+            ->assertSee('Labot remonta pieteikumu');
+
+        $this->actingAs($user)
+            ->patch(route('my-requests.update', ['requestType' => 'repair', 'requestId' => $repairRequest->id]), [
+                'description' => 'Atjaunots remonta apraksts.',
+                'device_id' => 999999,
+            ])
+            ->assertRedirect(route('my-requests.index'));
+
+        $this->assertDatabaseHas('repair_requests', [
+            'id' => $repairRequest->id,
+            'device_id' => $device->id,
+            'description' => 'Atjaunots remonta apraksts.',
+            'status' => RepairRequest::STATUS_SUBMITTED,
+        ]);
+    }
+
+    public function test_regular_user_can_edit_submitted_transfer_reason_without_changing_recipient(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'request-edit-transfer-user@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'request-edit-transfer-recipient@example.com');
+        $otherRecipient = $this->createUser(role: User::ROLE_USER, email: 'request-edit-transfer-other@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-EDIT-TRANSFER');
+        $transfer = DeviceTransfer::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Sakotnejs nodosanas iemesls.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($user)
+            ->patch(route('my-requests.update', ['requestType' => 'transfer', 'requestId' => $transfer->id]), [
+                'transfer_reason' => 'Atjaunots nodosanas iemesls.',
+                'transfered_to_id' => $otherRecipient->id,
+            ])
+            ->assertRedirect(route('my-requests.index'));
+
+        $this->assertDatabaseHas('device_transfers', [
+            'id' => $transfer->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Atjaunots nodosanas iemesls.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+        ]);
+    }
+
+    public function test_regular_user_can_cancel_submitted_writeoff_request_from_unified_center(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'request-delete-writeoff-user@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-DELETE-WRITEOFF');
+        $writeoffRequest = WriteoffRequest::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'reason' => 'Atcelams norakstisanas pieteikums.',
+            'status' => WriteoffRequest::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($user)
+            ->delete(route('my-requests.destroy', ['requestType' => 'writeoff', 'requestId' => $writeoffRequest->id]))
+            ->assertRedirect(route('my-requests.index'));
+
+        $this->assertDatabaseMissing('writeoff_requests', [
+            'id' => $writeoffRequest->id,
+        ]);
+    }
+
+    public function test_regular_user_cannot_edit_or_cancel_reviewed_request_from_unified_center(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'request-edit-reviewed-user@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-EDIT-REVIEWED');
+        $repairRequest = RepairRequest::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'description' => 'Jau izskatits remonta pieteikums.',
+            'status' => RepairRequest::STATUS_APPROVED,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('my-requests.edit', ['requestType' => 'repair', 'requestId' => $repairRequest->id]))
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->patch(route('my-requests.update', ['requestType' => 'repair', 'requestId' => $repairRequest->id]), [
+                'description' => 'Nevajadzetu saglabaties.',
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->delete(route('my-requests.destroy', ['requestType' => 'repair', 'requestId' => $repairRequest->id]))
+            ->assertForbidden();
+    }
+
     public function test_transfer_recipient_can_approve_device_and_change_room(): void
     {
         $sender = $this->createUser(role: User::ROLE_USER, email: 'transfer-room-sender@example.com');

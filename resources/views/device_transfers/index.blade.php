@@ -1,12 +1,29 @@
 <x-app-layout>
     @php
-        $statusOptions = collect($statuses)->map(fn ($status) => [
+        $statusFilterOptions = collect($statuses)->map(fn ($status) => [
             'value' => (string) $status,
             'label' => $statusLabels[$status] ?? $status,
-            'description' => 'Filtrs pec pieteikuma statusa',
-            'search' => ($statusLabels[$status] ?? $status) . ' ' . $status,
+            'icon' => match ($status) {
+                'submitted' => 'clock',
+                'approved' => 'check-circle',
+                'rejected' => 'x-circle',
+                default => 'view',
+            },
+            'activeClasses' => match ($status) {
+                'submitted' => 'border-amber-300 bg-amber-50 text-amber-950 shadow-[0_16px_36px_-28px_rgba(245,158,11,0.6)]',
+                'approved' => 'border-emerald-300 bg-emerald-50 text-emerald-950 shadow-[0_16px_36px_-28px_rgba(16,185,129,0.6)]',
+                'rejected' => 'border-rose-300 bg-rose-50 text-rose-950 shadow-[0_16px_36px_-28px_rgba(244,63,94,0.55)]',
+                default => 'border-slate-300 bg-slate-50 text-slate-900',
+            },
+            'inactiveClasses' => 'border-slate-200 bg-white text-slate-600',
+            'activeIconClasses' => match ($status) {
+                'submitted' => 'bg-amber-500 text-white',
+                'approved' => 'bg-emerald-600 text-white',
+                'rejected' => 'bg-rose-600 text-white',
+                default => 'bg-slate-700 text-white',
+            },
+            'inactiveIconClasses' => 'bg-slate-100 text-slate-400',
         ])->values();
-        $selectedStatusLabel = $filters['status'] !== '' ? ($statusLabels[$filters['status']] ?? $filters['status']) : null;
     @endphp
     <section class="app-shell">
         <div class="page-hero">
@@ -49,25 +66,37 @@
             </div>
         </div>
 
-        <form method="GET" action="{{ route('device-transfers.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-3">
+        <form method="GET" action="{{ route('device-transfers.index') }}" class="surface-toolbar grid gap-4 xl:grid-cols-[1.2fr_1fr_auto] xl:items-end">
+            <input type="hidden" name="statuses_filter" value="1">
             <label class="block">
                 <span class="crud-label">Meklet</span>
                 <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Ierice, pieteicejs, sanemejs...">
             </label>
-            <label class="block">
+            <div x-data="filterChipGroup({ selected: @js($filters['statuses']), minimum: 1 })">
                 <span class="crud-label">Statuss</span>
-                <x-searchable-select
-                    name="status"
-                    query-name="status_query"
-                    identifier="device-transfer-status-filter"
-                    :options="$statusOptions"
-                    :selected="$filters['status']"
-                    :query="$selectedStatusLabel"
-                    placeholder="Izvelies statusu"
-                    empty-message="Neviens statuss neatbilst meklejumam."
-                />
-            </label>
-            <div class="toolbar-actions">
+                <div class="mt-2 flex flex-wrap gap-2">
+                    @foreach ($statusFilterOptions as $option)
+                        <button
+                            type="button"
+                            @click="toggle(@js($option['value']))"
+                            :class="isSelected(@js($option['value'])) ? @js($option['activeClasses']) : @js($option['inactiveClasses'])"
+                            class="inline-flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-semibold transition hover:border-slate-300 hover:text-slate-900"
+                        >
+                            <span
+                                :class="isSelected(@js($option['value'])) ? @js($option['activeIconClasses']) : @js($option['inactiveIconClasses'])"
+                                class="inline-flex h-5 w-5 items-center justify-center rounded-full transition"
+                            >
+                                <x-icon :name="$option['icon']" size="h-3.5 w-3.5" />
+                            </span>
+                            <span>{{ $option['label'] }}</span>
+                        </button>
+                    @endforeach
+                    <template x-for="value in selected" :key="'transfer-status-' + value">
+                        <input type="hidden" name="status[]" :value="value">
+                    </template>
+                </div>
+            </div>
+            <div class="toolbar-actions xl:justify-end">
                 <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklet</span></button>
                 <a href="{{ route('device-transfers.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notirit</span></a>
             </div>
@@ -76,7 +105,7 @@
         <x-active-filters
             :items="[
                 ['label' => 'Meklet', 'value' => $filters['q']],
-                ['label' => 'Statuss', 'value' => $filters['status'] !== '' ? ($statusLabels[$filters['status']] ?? $filters['status']) : null],
+                ['label' => 'Statuss', 'value' => collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ')],
             ]"
             :clear-url="route('device-transfers.index')"
         />

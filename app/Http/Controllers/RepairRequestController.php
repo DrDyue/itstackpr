@@ -27,7 +27,7 @@ class RepairRequestController extends Controller
             RepairRequest::STATUS_REJECTED,
         ];
         $statusFilterTouched = $request->has('statuses_filter');
-        $selectedStatuses = collect($request->query('status', $statusFilterTouched ? [] : [RepairRequest::STATUS_SUBMITTED]))
+        $selectedStatuses = collect($request->query('status', $statusFilterTouched ? [] : $availableStatuses))
             ->map(fn (mixed $status) => trim((string) $status))
             ->filter(fn (string $status) => in_array($status, $availableStatuses, true))
             ->unique()
@@ -36,7 +36,7 @@ class RepairRequestController extends Controller
 
         $filters = [
             'q' => trim((string) $request->query('q', '')),
-            'statuses' => $selectedStatuses,
+            'statuses' => $selectedStatuses === [] ? $availableStatuses : $selectedStatuses,
             'has_status_filter' => true,
         ];
 
