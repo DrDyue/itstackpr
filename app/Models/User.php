@@ -9,8 +9,16 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 class User extends Authenticatable
 {
     public const ROLE_ADMIN = 'admin';
+
     public const ROLE_IT_WORKER = 'it_worker';
+
     public const ROLE_USER = 'user';
+
+    public const VIEW_MODE_ADMIN = 'admin';
+
+    public const VIEW_MODE_USER = 'user';
+
+    public const VIEW_MODE_SESSION_KEY = 'user_view_mode';
 
     protected $fillable = [
         'full_name',
@@ -125,9 +133,35 @@ class User extends Authenticatable
         return $this->isAdmin();
     }
 
+    public function currentViewMode(): string
+    {
+        if (! $this->isAdmin()) {
+            return self::VIEW_MODE_USER;
+        }
+
+        $request = app()->bound('request') ? request() : null;
+        $mode = $request && $request->hasSession()
+            ? $request->session()->get(self::VIEW_MODE_SESSION_KEY)
+            : null;
+
+        return in_array($mode, [self::VIEW_MODE_ADMIN, self::VIEW_MODE_USER], true)
+            ? $mode
+            : self::VIEW_MODE_ADMIN;
+    }
+
+    public function isInAdminView(): bool
+    {
+        return $this->isAdmin() && $this->currentViewMode() === self::VIEW_MODE_ADMIN;
+    }
+
+    public function isInUserView(): bool
+    {
+        return ! $this->isAdmin() || $this->currentViewMode() === self::VIEW_MODE_USER;
+    }
+
     public function canManageRequests(): bool
     {
-        return $this->isAdmin();
+        return $this->isInAdminView();
     }
 
     public function canViewDevice(Device $device): bool

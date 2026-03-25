@@ -49,7 +49,7 @@
                         <x-icon name="plus" size="h-4 w-4" />
                         <span>Izveidot pieteikumu</span>
                     </a>
-                    <a href="{{ route('dashboard') }}" class="btn-back">
+                    <a href="{{ route('devices.index') }}" class="btn-back">
                         <x-icon name="back" size="h-4 w-4" />
                         <span>Atpakal</span>
                     </a>

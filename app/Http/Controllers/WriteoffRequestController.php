@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Building;
 use App\Models\Device;
 use App\Models\DeviceTransfer;
 use App\Models\RepairRequest;
+use App\Models\Room;
 use App\Models\User;
 use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
@@ -16,6 +18,12 @@ use Illuminate\Validation\ValidationException;
 
 class WriteoffRequestController extends Controller
 {
+    private const DEFAULT_WAREHOUSE_ROOM_NAME = 'Noliktava';
+
+    private const DEFAULT_WAREHOUSE_ROOM_NUMBER_PREFIX = 'NOL-';
+
+    private const DEFAULT_BUILDING_NAME = 'Ludzes novada pasvaldiba';
+
     public function index(Request $request)
     {
         $user = $this->user();
@@ -191,12 +199,10 @@ class WriteoffRequestController extends Controller
                 ]);
             }
 
-            $device->forceFill([
-                'status' => Device::STATUS_WRITEOFF,
-                'assigned_to_id' => null,
-                'building_id' => null,
-                'room_id' => null,
-            ])->save();
+            $device->forceFill(array_merge(
+                ['status' => Device::STATUS_WRITEOFF],
+                $this->writeoffWarehousePayload($manager->id)
+            ))->save();
         });
 
         $after = $writeoffRequest->fresh()->only(array_keys($before));
@@ -218,7 +224,7 @@ class WriteoffRequestController extends Controller
     {
         if ($device->status === Device::STATUS_REPAIR) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai iericei jau notiek remonts (' . $this->repairStatusLabel($device->activeRepair?->status) . '), tapec norakstisanas pieteikumu veidot nevar.'],
+                'device_id' => ['Sai iericei jau notiek remonts ('.$this->repairStatusLabel($device->activeRepair?->status).'), tapec norakstisanas pieteikumu veidot nevar.'],
             ]);
         }
 
@@ -250,5 +256,106 @@ class WriteoffRequestController extends Controller
             'cancelled' => 'Atcelts',
             default => 'Remonta',
         };
+    }
+
+    private function writeoffWarehousePayload(?int $preferredUserId = null): array
+    {
+        $warehouseRoom = $this->ensureWarehouseRoom($preferredUserId);
+
+        return [
+            'assigned_to_id' => null,
+            'building_id' => $warehouseRoom->building_id,
+            'room_id' => $warehouseRoom->id,
+        ];
+    }
+
+    private function ensureWarehouseRoom(?int $preferredUserId = null): Room
+    {
+        $warehouseRoom = Room::query()
+            ->with('building')
+            ->get()
+            ->first(function (Room $room) {
+                return $this->isWarehouseLabel($room->room_name)
+                    || $this->isWarehouseLabel($room->room_number)
+                    || $this->isWarehouseLabel($room->notes);
+            });
+
+        if ($warehouseRoom) {
+            return $warehouseRoom;
+        }
+
+        $building = $this->preferredWarehouseBuilding();
+
+        return Room::query()->create([
+            'building_id' => $building->id,
+            'floor_number' => 1,
+            'room_number' => $this->nextWarehouseRoomNumber($building->id),
+            'room_name' => self::DEFAULT_WAREHOUSE_ROOM_NAME,
+            'user_id' => $preferredUserId,
+            'department' => 'Inventars',
+            'notes' => 'Automatiski izveidota nokluseta noliktavas telpa.',
+        ])->load('building');
+    }
+
+    private function preferredWarehouseBuilding(): Building
+    {
+        $preferredBuilding = Building::query()
+            ->orderBy('building_name')
+            ->get()
+            ->first(fn (Building $building) => $this->matchesPreferredBuildingName($building->building_name));
+
+        if ($preferredBuilding) {
+            return $preferredBuilding;
+        }
+
+        $existingBuilding = Building::query()->orderBy('building_name')->first();
+
+        if ($existingBuilding) {
+            return $existingBuilding;
+        }
+
+        return Building::query()->create([
+            'building_name' => self::DEFAULT_BUILDING_NAME,
+            'city' => 'Ludza',
+            'total_floors' => 1,
+            'notes' => 'Automatiski izveidota nokluseta eka noliktavas telpai.',
+        ]);
+    }
+
+    private function nextWarehouseRoomNumber(int $buildingId): string
+    {
+        $existingNumbers = Room::query()
+            ->where('building_id', $buildingId)
+            ->pluck('room_number')
+            ->map(fn (mixed $value) => trim((string) $value))
+            ->filter()
+            ->all();
+
+        $sequence = 1;
+
+        do {
+            $candidate = self::DEFAULT_WAREHOUSE_ROOM_NUMBER_PREFIX.str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
+            $sequence++;
+        } while (in_array($candidate, $existingNumbers, true));
+
+        return $candidate;
+    }
+
+    private function isWarehouseLabel(?string $value): bool
+    {
+        if (! filled($value)) {
+            return false;
+        }
+
+        return str_contains(mb_strtolower(trim($value)), 'noliktav');
+    }
+
+    private function matchesPreferredBuildingName(?string $value): bool
+    {
+        if (! filled($value)) {
+            return false;
+        }
+
+        return str_contains(mb_strtolower(trim($value)), 'ludz');
     }
 }

@@ -3,10 +3,11 @@
         $user = auth()->user();
         $isAdmin = $user?->isAdmin() ?? false;
         $canManageRequests = $user?->canManageRequests() ?? false;
-        $primaryNavigationItems = [
-            ['route' => 'dashboard', 'pattern' => 'dashboard', 'label' => 'Darbvirsma', 'icon' => 'dashboard'],
+        $currentViewMode = $user?->currentViewMode() ?? \App\Models\User::VIEW_MODE_USER;
+        $primaryNavigationItems = array_values(array_filter([
+            $canManageRequests ? ['route' => 'dashboard', 'pattern' => 'dashboard', 'label' => 'Darbvirsma', 'icon' => 'dashboard'] : null,
             ['route' => 'devices.index', 'pattern' => 'devices*', 'label' => 'Ierices', 'icon' => 'device'],
-        ];
+        ]));
         $requestNavigationItems = [
             ['route' => 'repair-requests.index', 'pattern' => 'repair-requests*', 'label' => 'Remonta pieteikumi', 'icon' => 'repair-request'],
             ['route' => 'writeoff-requests.index', 'pattern' => 'writeoff-requests*', 'label' => 'Norakstisanas pieteikumi', 'icon' => 'writeoff'],
@@ -30,7 +31,7 @@
             ];
         }
 
-        if ($isAdmin) {
+        if ($isAdmin && $canManageRequests) {
             $usersNavigationItem = ['route' => 'users.index', 'pattern' => 'users*', 'label' => 'Lietotaji', 'icon' => 'users'];
 
             $lessImportantNavigationItems[] = ['route' => 'audit-log.index', 'pattern' => 'audit-log*', 'label' => 'Audits', 'icon' => 'audit'];
@@ -46,7 +47,7 @@
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex min-h-20 items-center justify-between gap-4 py-3">
             <div class="flex min-w-0 items-center gap-3">
-                <a href="{{ route('dashboard') }}" class="flex min-w-0 items-center gap-3">
+                <a href="{{ route($canManageRequests ? 'dashboard' : 'devices.index') }}" class="flex min-w-0 items-center gap-3">
                     <x-application-logo />
                 </a>
 
@@ -136,7 +137,32 @@
             </div>
 
             <div class="hidden sm:flex sm:items-center">
-                <x-dropdown align="right" width="w-56">
+                <div class="flex items-center gap-3">
+                    @if ($isAdmin)
+                        <form method="POST" action="{{ route('view-mode.update') }}" class="hidden lg:block">
+                            @csrf
+                            <div class="inline-flex items-center rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="mode" value="{{ \App\Models\User::VIEW_MODE_ADMIN }}" class="sr-only" onchange="this.form.submit()" @checked($currentViewMode === \App\Models\User::VIEW_MODE_ADMIN)>
+                                    <span class="{{ $currentViewMode === \App\Models\User::VIEW_MODE_ADMIN
+                                        ? 'inline-flex min-w-[6.5rem] items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white'
+                                        : 'inline-flex min-w-[6.5rem] items-center justify-center rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 transition hover:bg-slate-100 hover:text-slate-900' }}">
+                                        Admins
+                                    </span>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="mode" value="{{ \App\Models\User::VIEW_MODE_USER }}" class="sr-only" onchange="this.form.submit()" @checked($currentViewMode === \App\Models\User::VIEW_MODE_USER)>
+                                    <span class="{{ $currentViewMode === \App\Models\User::VIEW_MODE_USER
+                                        ? 'inline-flex min-w-[6.5rem] items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white'
+                                        : 'inline-flex min-w-[6.5rem] items-center justify-center rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 transition hover:bg-slate-100 hover:text-slate-900' }}">
+                                        Lietotajs
+                                    </span>
+                                </label>
+                            </div>
+                        </form>
+                    @endif
+
+                    <x-dropdown align="right" width="w-56">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-500">
                             <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-sm font-semibold text-white shadow-sm">
@@ -144,7 +170,9 @@
                             </div>
                             <div class="text-left leading-tight">
                                 <div class="font-semibold text-slate-900">{{ $user?->full_name ?? 'Lietotajs' }}</div>
-                                <div class="mt-1 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{{ $user?->role ?? '' }}</div>
+                                <div class="mt-1 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                                    {{ $isAdmin ? ($canManageRequests ? 'admin view' : 'user view') : ($user?->role ?? '') }}
+                                </div>
                             </div>
                             <svg class="ms-1 h-4 w-4 fill-current text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -166,6 +194,7 @@
                         </form>
                     </x-slot>
                 </x-dropdown>
+                </div>
             </div>
 
             <div class="-me-2 flex items-center xl:hidden">
@@ -181,6 +210,31 @@
 
     <div :class="{'block': open, 'hidden': !open}" class="hidden border-t border-slate-200 bg-white xl:hidden">
         <div class="space-y-2 px-4 pb-4 pt-3">
+            @if ($isAdmin)
+                <form method="POST" action="{{ route('view-mode.update') }}" class="mb-3 rounded-2xl border border-slate-200 bg-slate-50 p-2">
+                    @csrf
+                    <div class="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Skata rezims</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="mode" value="{{ \App\Models\User::VIEW_MODE_ADMIN }}" class="sr-only" onchange="this.form.submit()" @checked($currentViewMode === \App\Models\User::VIEW_MODE_ADMIN)>
+                            <span class="{{ $currentViewMode === \App\Models\User::VIEW_MODE_ADMIN
+                                ? 'flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white'
+                                : 'flex items-center justify-center rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-600 ring-1 ring-slate-200' }}">
+                                Admins
+                            </span>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="mode" value="{{ \App\Models\User::VIEW_MODE_USER }}" class="sr-only" onchange="this.form.submit()" @checked($currentViewMode === \App\Models\User::VIEW_MODE_USER)>
+                            <span class="{{ $currentViewMode === \App\Models\User::VIEW_MODE_USER
+                                ? 'flex items-center justify-center rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white'
+                                : 'flex items-center justify-center rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-600 ring-1 ring-slate-200' }}">
+                                Lietotajs
+                            </span>
+                        </label>
+                    </div>
+                </form>
+            @endif
+
             @foreach ($primaryNavigationItems as $item)
                 <x-responsive-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
                     <span class="inline-flex items-center gap-2.5">

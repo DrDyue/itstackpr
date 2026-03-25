@@ -17,7 +17,9 @@ class RedirectIfAuthenticated
     public function handle(Request $request, Closure $next): Response
     {
         if (Auth::check()) {
-            return redirect()->route('dashboard');
+            return redirect()->route(
+                Auth::user()?->canManageRequests() ? 'dashboard' : 'devices.index'
+            );
         }
 
         return $next($request);

@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Support\AuthBootstrapper;
+use App\Models\User;
 use App\Support\AuditTrail;
+use App\Support\AuthBootstrapper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,9 +34,18 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+        if ($request->user()?->isAdmin()) {
+            $request->session()->put(User::VIEW_MODE_SESSION_KEY, User::VIEW_MODE_ADMIN);
+        } else {
+            $request->session()->forget(User::VIEW_MODE_SESSION_KEY);
+        }
         AuditTrail::login($request->user());
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()->intended(
+            $request->user()?->canManageRequests()
+                ? route('dashboard', absolute: false)
+                : route('devices.index', absolute: false)
+        );
     }
 
     /**

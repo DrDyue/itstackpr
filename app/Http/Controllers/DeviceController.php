@@ -4,18 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Building;
 use App\Models\Device;
-use App\Models\Repair;
 use App\Models\DeviceType;
 use App\Models\Room;
 use App\Models\User;
 use App\Support\AuditTrail;
 use App\Support\DeviceAssetManager;
 use App\Support\RuntimeSchemaBootstrapper;
-use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Collection;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -23,8 +22,11 @@ use Illuminate\Validation\ValidationException;
 class DeviceController extends Controller
 {
     private const STATUSES = [Device::STATUS_ACTIVE, Device::STATUS_REPAIR, Device::STATUS_WRITEOFF];
+
     private const DEFAULT_WAREHOUSE_ROOM_NAME = 'Noliktava';
+
     private const DEFAULT_WAREHOUSE_ROOM_NUMBER_PREFIX = 'NOL-';
+
     private const DEFAULT_BUILDING_NAME = 'Ludzes novada pasvaldiba';
 
     public function index(Request $request)
@@ -71,7 +73,7 @@ class DeviceController extends Controller
 
         if ($selectedRoom) {
             $filters['floor'] = (string) $selectedRoom->floor_number;
-            $filters['room_query'] = $selectedRoom->room_number . ($selectedRoom->room_name ? ' - ' . $selectedRoom->room_name : '');
+            $filters['room_query'] = $selectedRoom->room_number.($selectedRoom->room_name ? ' - '.$selectedRoom->room_name : '');
         }
         if ($selectedType) {
             $filters['type_query'] = $selectedType->type_name;
@@ -81,7 +83,7 @@ class DeviceController extends Controller
         }
 
         if ($filters['floor'] !== '') {
-            $filters['floor_query'] = $filters['floor'] . '. stavs';
+            $filters['floor_query'] = $filters['floor'].'. stavs';
         }
 
         $maxFloor = (int) ($accessibleRooms->max('floor_number') ?? 0);
@@ -105,7 +107,7 @@ class DeviceController extends Controller
                         ->orWhere('model', 'like', "%{$term}%");
                 });
             })
-            ->when($filters['code'] !== '', fn (Builder $query) => $query->where('code', 'like', '%' . $filters['code'] . '%'))
+            ->when($filters['code'] !== '', fn (Builder $query) => $query->where('code', 'like', '%'.$filters['code'].'%'))
             ->when($selectedAssignedUser instanceof User, fn (Builder $query) => $query->where('assigned_to_id', $selectedAssignedUser->id))
             ->when(! ($selectedAssignedUser instanceof User) && $user->canManageRequests() && $filters['assigned_to_query'] !== '', function (Builder $query) use ($filters) {
                 $term = $filters['assigned_to_query'];
@@ -240,10 +242,10 @@ class DeviceController extends Controller
             ->get()
             ->map(fn (Room $room) => [
                 'value' => (string) $room->id,
-                'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
+                'label' => $room->room_number.($room->room_name ? ' - '.$room->room_name : ''),
                 'description' => collect([
                     $room->building?->building_name,
-                    $room->floor_number !== null ? $room->floor_number . '. stavs' : null,
+                    $room->floor_number !== null ? $room->floor_number.'. stavs' : null,
                     $room->department,
                 ])->filter()->implode(' | '),
                 'search' => implode(' ', array_filter([
@@ -267,7 +269,7 @@ class DeviceController extends Controller
             'statusLabels' => $this->statusLabels(),
             'canManageDevices' => $this->user()?->canManageRequests() ?? false,
             'originLabel' => $latestTransferToCurrentUser
-                ? 'Ierice tev nodota no ' . ($latestTransferToCurrentUser->responsibleUser?->full_name ?: 'cita lietotaja') . '.'
+                ? 'Ierice tev nodota no '.($latestTransferToCurrentUser->responsibleUser?->full_name ?: 'cita lietotaja').'.'
                 : 'Ierici tev pieskira administrators.',
             'roomOptions' => $roomOptions,
             'visibleWriteoffRequests' => ($this->user()?->canManageRequests() ?? false)
@@ -278,7 +280,7 @@ class DeviceController extends Controller
                 'writeoff' => ! $pendingRepairRequest && ! $pendingTransferRequest && $device->status !== Device::STATUS_REPAIR,
                 'transfer' => ! $pendingRepairRequest && ! $pendingWriteoffRequest && $device->status !== Device::STATUS_REPAIR,
                 'reason' => $device->status === Device::STATUS_REPAIR
-                    ? 'Ierice sobrid ir remonta ar statusu "' . $this->repairStatusLabel($device->activeRepair?->status) . '".'
+                    ? 'Ierice sobrid ir remonta ar statusu "'.$this->repairStatusLabel($device->activeRepair?->status).'".'
                     : ($pendingRepairRequest
                         ? 'Sai iericei jau ir gaidoss remonta pieteikums.'
                         : ($pendingWriteoffRequest
@@ -418,13 +420,13 @@ class DeviceController extends Controller
             if ($result['level'] === 'success') {
                 $processed++;
             } else {
-                $messages[] = ($device->code ?: ('ID ' . $device->id)) . ': ' . $result['message'];
+                $messages[] = ($device->code ?: ('ID '.$device->id)).': '.$result['message'];
             }
         }
 
-        $flash = $processed > 0 ? 'Apstradatas ierices: ' . $processed . '.' : 'Neviena ierice netika apstradata.';
+        $flash = $processed > 0 ? 'Apstradatas ierices: '.$processed.'.' : 'Neviena ierice netika apstradata.';
         if ($messages !== []) {
-            $flash .= ' ' . implode(' ', array_slice($messages, 0, 3));
+            $flash .= ' '.implode(' ', array_slice($messages, 0, 3));
         }
 
         return redirect()->route('devices.index')->with($processed > 0 ? 'success' : 'error', $flash);
@@ -483,6 +485,12 @@ class DeviceController extends Controller
 
     private function validatedData(Request $request, ?Device $device = null): array
     {
+        if (! $device) {
+            $request->merge([
+                'status' => Device::STATUS_ACTIVE,
+            ]);
+        }
+
         if (! $device && ! $request->filled('assigned_to_id')) {
             $request->merge([
                 'assigned_to_id' => $this->user()?->id,
@@ -519,7 +527,7 @@ class DeviceController extends Controller
                 'serial_number' => ['nullable', 'string', 'max:100'],
                 'manufacturer' => ['nullable', 'string', 'max:100'],
                 'notes' => ['nullable', 'string'],
-                'device_image' => ['nullable', 'image', 'max:' . (int) config('devices.max_upload_kb', 5120)],
+                'device_image' => ['nullable', 'image', 'max:'.(int) config('devices.max_upload_kb', 5120)],
             ],
             [
                 'code.required' => 'Noradi ierices kodu.',
@@ -569,20 +577,13 @@ class DeviceController extends Controller
             ]);
         }
 
-        if (($data['status'] ?? null) === Device::STATUS_WRITEOFF && ! empty($data['assigned_to_id'])) {
-            $data['assigned_to_id'] = null;
-        }
-
         if (($data['status'] ?? null) === Device::STATUS_WRITEOFF) {
-            $data['room_id'] = null;
-            $data['building_id'] = null;
+            $data = array_merge($data, $this->writeoffWarehousePayload());
         }
 
         if ($device && $device->status === Device::STATUS_WRITEOFF) {
             $data['status'] = Device::STATUS_WRITEOFF;
-            $data['assigned_to_id'] = null;
-            $data['room_id'] = null;
-            $data['building_id'] = null;
+            $data = array_merge($data, $this->writeoffWarehousePayload());
         }
 
         unset($data['device_image']);
@@ -618,6 +619,17 @@ class DeviceController extends Controller
             'department' => 'Inventars',
             'notes' => 'Automatiski izveidota nokluseta noliktavas telpa.',
         ])->load('building');
+    }
+
+    private function writeoffWarehousePayload(): array
+    {
+        $warehouseRoom = $this->ensureWarehouseRoom();
+
+        return [
+            'assigned_to_id' => null,
+            'building_id' => $warehouseRoom->building_id,
+            'room_id' => $warehouseRoom->id,
+        ];
     }
 
     private function preferredWarehouseBuilding(): Building
@@ -657,7 +669,7 @@ class DeviceController extends Controller
         $sequence = 1;
 
         do {
-            $candidate = self::DEFAULT_WAREHOUSE_ROOM_NUMBER_PREFIX . str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
+            $candidate = self::DEFAULT_WAREHOUSE_ROOM_NUMBER_PREFIX.str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
             $sequence++;
         } while (in_array($candidate, $existingNumbers, true));
 
@@ -835,7 +847,7 @@ class DeviceController extends Controller
                 AuditTrail::updatedFromState(auth()->id(), $device, $before, ['status' => $device->status]);
             });
 
-            return ['level' => 'success', 'message' => 'Ierice nodota remonta. Izveidots remonta ieraksts #' . $repair->id . '.'];
+            return ['level' => 'success', 'message' => 'Ierice nodota remonta. Izveidots remonta ieraksts #'.$repair->id.'.'];
         }
 
         $before = [
@@ -847,9 +859,7 @@ class DeviceController extends Controller
 
         $payload = ['status' => $status];
         if ($status === Device::STATUS_WRITEOFF) {
-            $payload['assigned_to_id'] = null;
-            $payload['building_id'] = null;
-            $payload['room_id'] = null;
+            $payload = array_merge($payload, $this->writeoffWarehousePayload());
         }
 
         $this->saveDevicePayload($device, $payload);
@@ -902,7 +912,7 @@ class DeviceController extends Controller
         if ($device->status === Device::STATUS_REPAIR) {
             return [
                 'allowed' => false,
-                'reason' => 'Ierices atrasanas vietu nevar mainit, kamer ierice ir remonta ar statusu "' . $this->repairStatusLabel($device->activeRepair?->status) . '".',
+                'reason' => 'Ierices atrasanas vietu nevar mainit, kamer ierice ir remonta ar statusu "'.$this->repairStatusLabel($device->activeRepair?->status).'".',
             ];
         }
 

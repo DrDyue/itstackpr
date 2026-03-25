@@ -1,7 +1,19 @@
 @php
     $current = $device;
+    $isCreating = ! $current;
     $isWrittenOff = ($current?->status ?? null) === \App\Models\Device::STATUS_WRITEOFF;
     $deviceImageUrl = $current?->deviceImageUrl();
+    $selectedTypeId = (string) old('device_type_id', $current?->device_type_id ?? '');
+    $selectedTypeLabel = old(
+        'device_type_query',
+        optional($types->firstWhere('id', (int) $selectedTypeId))->type_name ?? ''
+    );
+    $typeOptions = $types->map(fn ($type) => [
+        'value' => (string) $type->id,
+        'label' => $type->type_name,
+        'description' => $type->category ?: ($type->description ?: 'Ierices tips'),
+        'search' => implode(' ', array_filter([$type->type_name, $type->category, $type->description])),
+    ])->values();
     $selectedAssignedToId = old('assigned_to_id', $current?->assigned_to_id ?? $defaultAssignedToId ?? null);
     $selectedBuildingId = old('building_id', $current?->building_id ?? $defaultBuildingId ?? null);
     $selectedRoomId = old('room_id', $current?->room_id ?? $defaultRoomId ?? null);
@@ -37,11 +49,16 @@
                 </label>
                 <label class="block">
                     <span class="crud-label">Tips *</span>
-                    <select name="device_type_id" class="crud-control" required>
-                        @foreach ($types as $type)
-                            <option value="{{ $type->id }}" @selected(old('device_type_id', $current?->device_type_id) == $type->id)>{{ $type->type_name }}</option>
-                        @endforeach
-                    </select>
+                    <x-searchable-select
+                        name="device_type_id"
+                        query-name="device_type_query"
+                        identifier="device-type-form-select"
+                        :options="$typeOptions"
+                        :selected="$selectedTypeId"
+                        :query="$selectedTypeLabel"
+                        placeholder="Izvelies ierices tipu"
+                        empty-message="Neviens ierices tips neatbilst meklejumam."
+                    />
                 </label>
                 <label class="block">
                     <span class="crud-label">Modelis *</span>
@@ -70,17 +87,29 @@
             </div>
 
             <div class="grid gap-4 md:grid-cols-2">
-                <label class="block">
-                    <span class="crud-label">Statuss</span>
-                    @if ($isWrittenOff)
-                        <input type="hidden" name="status" value="{{ $current?->status }}">
-                    @endif
-                    <select name="status" class="crud-control" required @disabled($isWrittenOff)>
-                        @foreach ($statuses as $status)
-                            <option value="{{ $status }}" @selected(old('status', $current?->status ?? 'active') === $status)>{{ $statusLabels[$status] }}</option>
-                        @endforeach
-                    </select>
-                </label>
+                @if ($isCreating)
+                    <div class="block">
+                        <span class="crud-label">Statuss</span>
+                        <input type="hidden" name="status" value="{{ \App\Models\Device::STATUS_ACTIVE }}">
+                        <div class="crud-control flex items-center justify-between bg-slate-50 text-slate-700">
+                            <span>Aktiva</span>
+                            <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">Noklusets</span>
+                        </div>
+                        <div class="mt-2 text-xs text-slate-500">Jauna ierice vienmer tiek izveidota ar aktivu statusu.</div>
+                    </div>
+                @else
+                    <label class="block">
+                        <span class="crud-label">Statuss</span>
+                        @if ($isWrittenOff)
+                            <input type="hidden" name="status" value="{{ $current?->status }}">
+                        @endif
+                        <select name="status" class="crud-control" required @disabled($isWrittenOff)>
+                            @foreach ($statuses as $status)
+                                <option value="{{ $status }}" @selected(old('status', $current?->status ?? 'active') === $status)>{{ $statusLabels[$status] }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                @endif
                 <label class="block">
                     <span class="crud-label">Atbildiga persona *</span>
                     @if ($isWrittenOff)
@@ -170,6 +199,7 @@
                     <ul class="mt-3 space-y-2 leading-6">
                         <li>Kods, nosaukums, tips un modelis ir obligati lauki.</li>
                         <li>Atbildiga persona un telpa ir obligatas un pec noklusejuma tiek aizpilditas automatiski.</li>
+                        <li>Jauna ierice vienmer tiek saglabata ar aktivu statusu.</li>
                         <li>Datumi, cena un piezimes var palikt tuksi, ja tie nav zinami.</li>
                     </ul>
                 </div>

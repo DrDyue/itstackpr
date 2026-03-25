@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Device;
 use App\Models\DeviceTransfer;
-use App\Models\AuditLog;
 use App\Models\Repair;
 use App\Models\RepairRequest;
 use App\Models\User;
@@ -57,7 +56,7 @@ class AuthAndRequestFlowsTest extends TestCase
             'password' => 'password',
         ]);
 
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect(route('devices.index', absolute: false));
         $this->assertAuthenticated();
         $this->assertDatabaseHas('users', [
             'email' => 'ilze.strautina@ludzas.lv',
@@ -139,6 +138,63 @@ class AuthAndRequestFlowsTest extends TestCase
         }
     }
 
+    public function test_regular_user_cannot_switch_view_mode(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'view-mode-regular@example.com');
+
+        $this->actingAs($user)
+            ->post(route('view-mode.update'), [
+                'mode' => User::VIEW_MODE_ADMIN,
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_admin_can_switch_to_user_view_and_back(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'view-mode-admin@example.com');
+        $otherUser = $this->createUser(role: User::ROLE_USER, email: 'view-mode-other@example.com');
+        $ownDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-VIEW-OWN');
+        $foreignDevice = $this->createDevice($otherUser->id, Device::STATUS_ACTIVE, 'DEV-VIEW-FOREIGN');
+
+        $this->actingAs($admin)
+            ->post(route('view-mode.update'), [
+                'mode' => User::VIEW_MODE_USER,
+            ])
+            ->assertRedirect(route('devices.index'))
+            ->assertSessionHas(User::VIEW_MODE_SESSION_KEY, User::VIEW_MODE_USER);
+
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('devices.index'));
+
+        $this->actingAs($admin)
+            ->get(route('devices.index'))
+            ->assertOk()
+            ->assertSee('Ierices')
+            ->assertDontSee('Darbvirsma')
+            ->assertSee($ownDevice->name)
+            ->assertDontSee($foreignDevice->name);
+
+        $this->actingAs($admin)
+            ->get(route('my-requests.create'))
+            ->assertOk();
+
+        $this->actingAs($admin)
+            ->get(route('users.index'))
+            ->assertForbidden();
+
+        $this->actingAs($admin)
+            ->post(route('view-mode.update'), [
+                'mode' => User::VIEW_MODE_ADMIN,
+            ])
+            ->assertRedirect(route('dashboard'))
+            ->assertSessionHas(User::VIEW_MODE_SESSION_KEY, User::VIEW_MODE_ADMIN);
+
+        $this->actingAs($admin)
+            ->get(route('users.index'))
+            ->assertOk();
+    }
+
     public function test_admin_cannot_open_or_submit_user_only_request_forms(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'admin-user-only-requests@example.com');
@@ -188,8 +244,10 @@ class AuthAndRequestFlowsTest extends TestCase
         $content = $response->getContent();
 
         $this->assertIsString($content);
-        $this->assertMatchesRegularExpression('/<option value="' . preg_quote((string) $admin->id, '/') . '"[^>]*selected/', $content);
-        $this->assertMatchesRegularExpression('/<option value="' . preg_quote((string) $warehouseRoomId, '/') . '"[^>]*selected/', $content);
+        $this->assertStringContainsString('device-type-form-select', $content);
+        $this->assertStringContainsString('name="status" value="active"', $content);
+        $this->assertMatchesRegularExpression('/<option value="'.preg_quote((string) $admin->id, '/').'"[^>]*selected/', $content);
+        $this->assertMatchesRegularExpression('/<option value="'.preg_quote((string) $warehouseRoomId, '/').'"[^>]*selected/', $content);
     }
 
     public function test_device_create_form_restores_missing_room_and_building_updated_at_columns(): void
@@ -256,6 +314,32 @@ class AuthAndRequestFlowsTest extends TestCase
             'Noliktava',
             DB::table('rooms')->where('id', $device->room_id)->value('room_name')
         );
+    }
+
+    public function test_new_device_creation_always_forces_active_status(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-store-force-active@example.com');
+        $typeId = DB::table('device_types')->insertGetId([
+            'type_name' => 'Plansete',
+            'category' => 'Mobilas ierices',
+            'description' => 'Tests',
+            'created_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('devices.store'), [
+                'code' => 'DEV-FORCE-ACT',
+                'name' => 'Vienmer aktiva ierice',
+                'device_type_id' => $typeId,
+                'model' => 'Tab 11',
+                'status' => Device::STATUS_REPAIR,
+            ])
+            ->assertRedirect(route('devices.index'));
+
+        $this->assertDatabaseHas('devices', [
+            'code' => 'DEV-FORCE-ACT',
+            'status' => Device::STATUS_ACTIVE,
+        ]);
     }
 
     public function test_admin_create_with_blank_assignee_and_room_creates_warehouse_and_assigns_creator(): void
@@ -407,9 +491,8 @@ class AuthAndRequestFlowsTest extends TestCase
             'id' => $device->id,
             'status' => Device::STATUS_WRITEOFF,
             'assigned_to_id' => null,
-            'building_id' => null,
-            'room_id' => null,
         ]);
+        $this->assertSame('Noliktava', DB::table('rooms')->where('id', $device->fresh()->room_id)->value('room_name'));
     }
 
     public function test_get_quick_update_route_redirects_instead_of_throwing_method_not_allowed(): void
@@ -607,6 +690,7 @@ class AuthAndRequestFlowsTest extends TestCase
             'status' => Device::STATUS_WRITEOFF,
             'assigned_to_id' => null,
         ]);
+        $this->assertSame('Noliktava', DB::table('rooms')->where('id', $device->fresh()->room_id)->value('room_name'));
     }
 
     public function test_transfer_recipient_can_approve_and_receive_device(): void
@@ -865,45 +949,24 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_regular_user_dashboard_shows_only_own_activity_and_scope(): void
+    public function test_regular_user_dashboard_redirects_to_own_devices_scope(): void
     {
         $user = $this->createUser(role: User::ROLE_USER, email: 'dashboard-own@example.com');
         $otherUser = $this->createUser(role: User::ROLE_ADMIN, email: 'dashboard-other@example.com');
 
-        $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-DASH-OWN');
-        $this->createDevice($otherUser->id, Device::STATUS_ACTIVE, 'DEV-DASH-OTHER');
-
-        AuditLog::create([
-            'timestamp' => now(),
-            'user_id' => $user->id,
-            'action' => 'VIEW',
-            'entity_type' => 'device',
-            'entity_id' => 1,
-            'description' => 'Mana personiga darbiba',
-            'severity' => 'info',
-        ]);
-
-        AuditLog::create([
-            'timestamp' => now(),
-            'user_id' => $otherUser->id,
-            'action' => 'DELETE',
-            'entity_type' => 'device',
-            'entity_id' => 2,
-            'description' => 'Svesa admina darbiba',
-            'severity' => 'warning',
-        ]);
+        $ownDevice = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-DASH-OWN');
+        $foreignDevice = $this->createDevice($otherUser->id, Device::STATUS_ACTIVE, 'DEV-DASH-OTHER');
 
         $this->actingAs($user)
             ->get(route('dashboard'))
+            ->assertRedirect(route('devices.index'));
+
+        $this->actingAs($user)
+            ->get(route('devices.index'))
             ->assertOk()
-            ->assertSee('Pedejie pieteikumi')
-            ->assertSee('Manas ierices')
-            ->assertSee('DEV-DASH-OWN')
-            ->assertDontSee('DEV-DASH-OTHER')
-            ->assertDontSee('Stavi un telpas')
-            ->assertDontSee('Jaunakas darbibas')
-            ->assertDontSee('Mana personiga darbiba')
-            ->assertDontSee('Svesa admina darbiba');
+            ->assertSee($ownDevice->name)
+            ->assertDontSee($foreignDevice->name)
+            ->assertDontSee('Darbvirsma');
     }
 
     public function test_regular_user_can_open_unified_request_center_and_see_related_request_types(): void
@@ -1164,7 +1227,7 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertSessionHasErrors('device_id');
     }
 
-    public function test_devices_index_accepts_floor_and_room_filters_from_dashboard_links(): void
+    public function test_dashboard_accepts_floor_and_room_filters_without_leaving_page(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-filter-admin@example.com');
         $firstDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-FLOOR-ONE');
@@ -1176,11 +1239,12 @@ class AuthAndRequestFlowsTest extends TestCase
         ]);
 
         $this->actingAs($admin)
-            ->get(route('devices.index', ['floor' => 1, 'room_id' => $firstDevice->room_id]))
+            ->get(route('dashboard', ['floor' => 1, 'room_id' => $firstDevice->room_id]))
             ->assertOk()
             ->assertSee('DEV-FLOOR-ONE')
             ->assertSee('Testa ierice DEV-FLOOR-ONE')
-            ->assertDontSee('Testa ierice DEV-FLOOR-TWO');
+            ->assertDontSee('Testa ierice DEV-FLOOR-TWO')
+            ->assertSee('Telpas filtrs ieslēgts');
     }
 
     public function test_devices_index_accepts_type_text_filter_without_exact_selection(): void
@@ -1270,7 +1334,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->actingAs($admin)
             ->get(route('repairs.index'))
             ->assertOk()
-            ->assertSee('Saistitais remonta pieteikums #' . $requestId)
+            ->assertSee('Saistitais remonta pieteikums #'.$requestId)
             ->assertSee($user->full_name)
             ->assertSee('Ekrans mirgo un dators izsledzas.')
             ->assertSee($admin->full_name);
@@ -1370,7 +1434,7 @@ class AuthAndRequestFlowsTest extends TestCase
     private function createDevice(int $assignedToId, string $status, string $code): Device
     {
         $buildingId = DB::table('buildings')->insertGetId([
-            'building_name' => 'Testa eka ' . $code,
+            'building_name' => 'Testa eka '.$code,
             'address' => 'Adrese 1',
             'city' => 'Ludza',
             'total_floors' => 3,
@@ -1381,7 +1445,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $roomId = DB::table('rooms')->insertGetId([
             'building_id' => $buildingId,
             'floor_number' => 1,
-            'room_number' => '101-' . $code,
+            'room_number' => '101-'.$code,
             'room_name' => 'Testa telpa',
             'user_id' => $assignedToId,
             'department' => 'IT',
@@ -1390,7 +1454,7 @@ class AuthAndRequestFlowsTest extends TestCase
         ]);
 
         $typeId = DB::table('device_types')->insertGetId([
-            'type_name' => 'Klepjdators ' . $code,
+            'type_name' => 'Klepjdators '.$code,
             'category' => 'Datori',
             'description' => 'Tests',
             'created_at' => now(),
@@ -1398,9 +1462,9 @@ class AuthAndRequestFlowsTest extends TestCase
 
         return Device::create([
             'code' => $code,
-            'name' => 'Testa ierice ' . $code,
+            'name' => 'Testa ierice '.$code,
             'device_type_id' => $typeId,
-            'model' => 'Modelis ' . $code,
+            'model' => 'Modelis '.$code,
             'status' => $status,
             'building_id' => $buildingId,
             'room_id' => $roomId,

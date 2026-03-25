@@ -1,31 +1,32 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\BuildingController;
-use App\Http\Controllers\RoomController;
-use App\Http\Controllers\DeviceTypeController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DeviceAssetController;
 use App\Http\Controllers\DeviceController;
+use App\Http\Controllers\DeviceTransferController;
+use App\Http\Controllers\DeviceTypeController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RepairController;
 use App\Http\Controllers\RepairRequestController;
-use App\Http\Controllers\WriteoffRequestController;
-use App\Http\Controllers\DeviceTransferController;
-use App\Http\Controllers\AuditLogController;
-use App\Http\Controllers\DeviceAssetController;
+use App\Http\Controllers\RoomController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserRequestCenterController;
+use App\Http\Controllers\ViewModeController;
+use App\Http\Controllers\WriteoffRequestController;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
-    
+
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');
     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
@@ -66,6 +67,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/view-mode', [ViewModeController::class, 'update'])->name('view-mode.update');
     Route::get('/my-requests', [UserRequestCenterController::class, 'index'])->name('my-requests.index');
     Route::get('/my-requests/create', [UserRequestCenterController::class, 'create'])->name('my-requests.create');
     Route::post('/my-requests', [UserRequestCenterController::class, 'store'])->name('my-requests.store');
@@ -96,5 +98,6 @@ Route::get('/', function () {
     if (\Illuminate\Support\Facades\Auth::check()) {
         return redirect()->route('dashboard');
     }
+
     return redirect()->route('login');
 })->name('home');
