@@ -177,7 +177,7 @@ class AuthAndRequestFlowsTest extends TestCase
 
         $this->actingAs($admin)
             ->get(route('my-requests.create'))
-            ->assertRedirect(route('my-requests.index'));
+            ->assertRedirect(route('repair-requests.create'));
 
         $this->actingAs($admin)
             ->get(route('users.index'))
@@ -1010,7 +1010,7 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertDontSee('Showing');
     }
 
-    public function test_regular_user_can_open_unified_request_center_and_see_related_request_types(): void
+    public function test_my_requests_index_redirects_regular_user_to_repair_requests(): void
     {
         $user = $this->createUser(role: User::ROLE_USER, email: 'request-center-user@example.com');
         $recipient = $this->createUser(role: User::ROLE_USER, email: 'request-center-recipient@example.com');
@@ -1040,11 +1040,7 @@ class AuthAndRequestFlowsTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('my-requests.index'))
-            ->assertOk()
-            ->assertSee('Mani pieteikumi')
-            ->assertSee('Jaiet uz vienoto centru.')
-            ->assertSee('Ar norakstisanu saistits ieraksts.')
-            ->assertSee('Nodosanas ieraksts vienotajam sarakstam.');
+            ->assertRedirect(route('repair-requests.index'));
     }
 
     public function test_regular_user_can_create_transfer_request_from_unified_form(): void
@@ -1060,7 +1056,7 @@ class AuthAndRequestFlowsTest extends TestCase
                 'transfered_to_id' => $recipient->id,
                 'transfer_reason' => 'Vienota forma nodosanai.',
             ])
-            ->assertRedirect(route('my-requests.index'));
+            ->assertRedirect(route('device-transfers.index'));
 
         $this->assertDatabaseHas('device_transfers', [
             'device_id' => $device->id,
@@ -1203,7 +1199,7 @@ class AuthAndRequestFlowsTest extends TestCase
                 'description' => 'Atjaunots remonta apraksts.',
                 'device_id' => 999999,
             ])
-            ->assertRedirect(route('my-requests.index'));
+            ->assertRedirect(route('repair-requests.index'));
 
         $this->assertDatabaseHas('repair_requests', [
             'id' => $repairRequest->id,
@@ -1285,7 +1281,7 @@ class AuthAndRequestFlowsTest extends TestCase
                 'transfer_reason' => 'Atjaunots nodosanas iemesls.',
                 'transfered_to_id' => $otherRecipient->id,
             ])
-            ->assertRedirect(route('my-requests.index'));
+            ->assertRedirect(route('device-transfers.index'));
 
         $this->assertDatabaseHas('device_transfers', [
             'id' => $transfer->id,
@@ -1308,7 +1304,7 @@ class AuthAndRequestFlowsTest extends TestCase
 
         $this->actingAs($user)
             ->delete(route('my-requests.destroy', ['requestType' => 'writeoff', 'requestId' => $writeoffRequest->id]))
-            ->assertRedirect(route('my-requests.index'));
+            ->assertRedirect(route('writeoff-requests.index'));
 
         $this->assertDatabaseMissing('writeoff_requests', [
             'id' => $writeoffRequest->id,

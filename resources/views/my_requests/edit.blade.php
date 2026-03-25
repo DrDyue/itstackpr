@@ -17,7 +17,11 @@
                         </div>
                     </div>
                 </div>
-                <a href="{{ route('my-requests.index') }}" class="btn-back">
+                <a href="{{ route(match ($requestType) {
+                    'repair' => 'repair-requests.index',
+                    'writeoff' => 'writeoff-requests.index',
+                    'transfer' => 'device-transfers.index',
+                }) }}" class="btn-back">
                     <x-icon name="back" size="h-4 w-4" />
                     <span>Atpakal</span>
                 </a>
@@ -55,7 +59,11 @@
                     <x-icon name="check" size="h-4 w-4" />
                     <span>Saglabat izmainas</span>
                 </button>
-                <a href="{{ route('my-requests.index') }}" class="btn-clear">
+                <a href="{{ route(match ($requestType) {
+                    'repair' => 'repair-requests.index',
+                    'writeoff' => 'writeoff-requests.index',
+                    'transfer' => 'device-transfers.index',
+                }) }}" class="btn-clear">
                     <x-icon name="clear" size="h-4 w-4" />
                     <span>Atcelt</span>
                 </a>

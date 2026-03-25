@@ -32,7 +32,7 @@
                     <div class="flex flex-wrap items-center gap-2">
                         <div class="page-eyebrow">
                             <x-icon name="repair-request" size="h-4 w-4" />
-                            <span>Pieteikumu centrs</span>
+                            <span>Remonts</span>
                         </div>
                         <div class="inventory-inline-metrics">
                             <span class="inventory-inline-chip inventory-inline-chip-slate">

@@ -5,15 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Device;
 use App\Models\DeviceTransfer;
 use App\Models\RepairRequest;
-use App\Models\Room;
 use App\Models\User;
 use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -21,52 +17,9 @@ class UserRequestCenterController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $this->requireRegularUser();
-        $availableStatuses = array_keys($this->requestStatusLabels());
-        $availableTypes = array_keys($this->typeLabels());
-        $statusFilterTouched = $request->has('statuses_filter');
-        $typeFilterTouched = $request->has('types_filter');
-        $selectedStatuses = collect($request->query('statuses', $statusFilterTouched ? [] : $availableStatuses))
-            ->map(fn ($value) => (string) $value)
-            ->filter(fn (string $value) => in_array($value, $availableStatuses, true))
-            ->values()
-            ->all();
-        $selectedTypes = collect($request->query('types', $typeFilterTouched ? [] : $availableTypes))
-            ->map(fn ($value) => (string) $value)
-            ->filter(fn (string $value) => in_array($value, $availableTypes, true))
-            ->values()
-            ->all();
+        $this->requireRegularUser();
 
-        $filters = [
-            'q' => trim((string) $request->query('q', '')),
-            'statuses' => $selectedStatuses === [] ? $availableStatuses : $selectedStatuses,
-            'types' => $selectedTypes === [] ? $availableTypes : $selectedTypes,
-        ];
-
-        $items = $this->requestItems($user)
-            ->when(count($filters['statuses']) !== count($availableStatuses), fn (Collection $collection) => $collection->whereIn('status', $filters['statuses']))
-            ->when(count($filters['types']) !== count($availableTypes), fn (Collection $collection) => $collection->whereIn('type', $filters['types']))
-            ->when($filters['q'] !== '', function (Collection $collection) use ($filters) {
-                $term = mb_strtolower($filters['q']);
-
-                return $collection->filter(function (array $item) use ($term) {
-                    return str_contains(mb_strtolower($item['device_name']), $term)
-                        || str_contains(mb_strtolower($item['device_code']), $term)
-                        || str_contains(mb_strtolower($item['summary']), $term)
-                        || str_contains(mb_strtolower($item['actor']), $term);
-                });
-            })
-            ->sortByDesc('timestamp')
-            ->values();
-
-        return view('my_requests.index', [
-            'items' => $this->paginateCollection($items, 12),
-            'filters' => $filters,
-            'statusLabels' => $this->requestStatusLabels(),
-            'typeLabels' => $this->typeLabels(),
-            'roomOptions' => $this->roomOptions(),
-            'user' => $user,
-        ]);
+        return redirect()->route('repair-requests.index');
     }
 
     public function create(Request $request)
@@ -81,7 +34,7 @@ class UserRequestCenterController extends Controller
             'writeoff' => 'writeoff-requests.create',
             'transfer' => 'device-transfers.create',
             'repair' => 'repair-requests.create',
-            default => 'my-requests.index',
+            default => 'repair-requests.create',
         }, $params);
     }
 
@@ -123,7 +76,7 @@ class UserRequestCenterController extends Controller
 
             AuditTrail::created($user->id, $repairRequest);
 
-            return redirect()->route('my-requests.index')->with('success', 'Remonta pieteikums izveidots.');
+            return redirect()->route('repair-requests.index')->with('success', 'Remonta pieteikums izveidots.');
         }
 
         if ($validated['request_type'] === 'writeoff') {
@@ -136,7 +89,7 @@ class UserRequestCenterController extends Controller
 
             AuditTrail::created($user->id, $writeoffRequest);
 
-            return redirect()->route('my-requests.index')->with('success', 'Norakstisanas pieteikums izveidots.');
+            return redirect()->route('writeoff-requests.index')->with('success', 'Norakstisanas pieteikums izveidots.');
         }
 
         $transfer = DeviceTransfer::create([
@@ -149,7 +102,7 @@ class UserRequestCenterController extends Controller
 
         AuditTrail::created($user->id, $transfer);
 
-        return redirect()->route('my-requests.index')->with('success', 'Nodosanas pieteikums izveidots.');
+        return redirect()->route('device-transfers.index')->with('success', 'Nodosanas pieteikums izveidots.');
     }
 
     public function edit(string $requestType, int $requestId)
@@ -191,7 +144,7 @@ class UserRequestCenterController extends Controller
             $field => $editableRequest->{$field},
         ]);
 
-        return redirect()->route('my-requests.index')->with('success', $config['updated_message']);
+        return redirect()->route($config['index_route'])->with('success', $config['updated_message']);
     }
 
     public function destroy(string $requestType, int $requestId)
@@ -202,7 +155,7 @@ class UserRequestCenterController extends Controller
         AuditTrail::deleted($user->id, $editableRequest, $config['deleted_audit_message']);
         $editableRequest->delete();
 
-        return redirect()->route('my-requests.index')->with('success', $config['deleted_message']);
+        return redirect()->route($config['index_route'])->with('success', $config['deleted_message']);
     }
 
     private function requireRegularUser(): User
@@ -318,125 +271,6 @@ class UserRequestCenterController extends Controller
         };
     }
 
-    private function roomOptions(): Collection
-    {
-        return Room::query()
-            ->with('building')
-            ->orderBy('floor_number')
-            ->orderBy('room_number')
-            ->get()
-            ->map(fn (Room $room) => [
-                'value' => (string) $room->id,
-                'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
-                'description' => collect([
-                    $room->building?->building_name,
-                    $room->floor_number !== null ? $room->floor_number . '. stavs' : null,
-                    $room->department,
-                ])->filter()->implode(' | '),
-                'search' => implode(' ', array_filter([
-                    $room->room_number,
-                    $room->room_name,
-                    $room->building?->building_name,
-                    $room->department,
-                    $room->floor_number,
-                ])),
-            ])
-            ->values();
-    }
-
-    private function requestItems(User $user): Collection
-    {
-        $repairs = RepairRequest::query()
-            ->with(['device', 'reviewedBy', 'repair'])
-            ->where('responsible_user_id', $user->id)
-            ->get()
-            ->map(fn (RepairRequest $request) => [
-                'id' => 'repair-' . $request->id,
-                'type' => 'repair',
-                'model' => $request,
-                'status' => $request->status,
-                'timestamp' => $request->created_at?->getTimestamp() ?? 0,
-                'created_at' => $request->created_at,
-                'device_name' => $request->device?->name ?: 'Ierice nav atrasta',
-                'device_code' => $request->device?->code ?: 'bez koda',
-                'summary' => $request->description,
-                'actor' => $request->reviewedBy?->full_name ?: $user->full_name,
-                'meta' => $request->repair
-                    ? 'Saistits remonts #' . $request->repair->id . ' | ' . match ($request->repair->status) {
-                        'waiting' => 'Gaida',
-                        'in-progress' => 'Procesa',
-                        'completed' => 'Pabeigts',
-                        'cancelled' => 'Atcelts',
-                        default => $request->repair->status,
-                    }
-                    : null,
-                'direction' => 'Tevis iesniegts remonta pieteikums',
-                'is_incoming' => false,
-            ]);
-
-        $writeoffs = WriteoffRequest::query()
-            ->with(['device', 'reviewedBy'])
-            ->where('responsible_user_id', $user->id)
-            ->get()
-            ->map(fn (WriteoffRequest $request) => [
-                'id' => 'writeoff-' . $request->id,
-                'type' => 'writeoff',
-                'model' => $request,
-                'status' => $request->status,
-                'timestamp' => $request->created_at?->getTimestamp() ?? 0,
-                'created_at' => $request->created_at,
-                'device_name' => $request->device?->name ?: 'Ierice nav atrasta',
-                'device_code' => $request->device?->code ?: 'bez koda',
-                'summary' => $request->reason,
-                'actor' => $request->reviewedBy?->full_name ?: $user->full_name,
-                'meta' => $request->review_notes,
-                'direction' => 'Tevis iesniegts norakstisanas pieteikums',
-                'is_incoming' => false,
-            ]);
-
-        $transfers = DeviceTransfer::query()
-            ->with(['device.building', 'device.room.building', 'responsibleUser', 'transferTo', 'reviewedBy'])
-            ->where(function ($query) use ($user) {
-                $query->where('responsible_user_id', $user->id)
-                    ->orWhere('transfered_to_id', $user->id);
-            })
-            ->get()
-            ->map(function (DeviceTransfer $transfer) use ($user) {
-                $isIncoming = (int) $transfer->transfered_to_id === (int) $user->id && (int) $transfer->responsible_user_id !== (int) $user->id;
-
-                return [
-                    'id' => 'transfer-' . $transfer->id,
-                    'type' => 'transfer',
-                    'model' => $transfer,
-                    'status' => $transfer->status,
-                    'timestamp' => $transfer->created_at?->getTimestamp() ?? 0,
-                    'created_at' => $transfer->created_at,
-                    'device_name' => $transfer->device?->name ?: 'Ierice nav atrasta',
-                    'device_code' => $transfer->device?->code ?: 'bez koda',
-                    'summary' => $transfer->transfer_reason,
-                    'actor' => $isIncoming
-                        ? ($transfer->responsibleUser?->full_name ?: '-')
-                        : ($transfer->transferTo?->full_name ?: '-'),
-                    'meta' => $transfer->review_notes,
-                    'direction' => $isIncoming
-                        ? 'Tev nosutits nodosanas pieteikums'
-                        : 'Tevis izveidots nodosanas pieteikums',
-                    'is_incoming' => $isIncoming,
-                ];
-            });
-
-        return $repairs->concat($writeoffs)->concat($transfers);
-    }
-
-    private function typeLabels(): array
-    {
-        return [
-            'repair' => 'Remonts',
-            'writeoff' => 'Norakstisana',
-            'transfer' => 'Nodosana',
-        ];
-    }
-
     private function editableRequestForUser(User $user, string $requestType, int $requestId): array
     {
         $config = $this->editableRequestConfig($requestType);
@@ -466,6 +300,7 @@ class UserRequestCenterController extends Controller
                 'updated_message' => 'Remonta pieteikums atjaunots.',
                 'deleted_message' => 'Remonta pieteikums atcelts.',
                 'deleted_audit_message' => 'Lietotajs atcela iesniegtu remonta pieteikumu.',
+                'index_route' => 'repair-requests.index',
                 'submitted_status' => RepairRequest::STATUS_SUBMITTED,
             ],
             'writeoff' => [
@@ -480,6 +315,7 @@ class UserRequestCenterController extends Controller
                 'updated_message' => 'Norakstisanas pieteikums atjaunots.',
                 'deleted_message' => 'Norakstisanas pieteikums atcelts.',
                 'deleted_audit_message' => 'Lietotajs atcela iesniegtu norakstisanas pieteikumu.',
+                'index_route' => 'writeoff-requests.index',
                 'submitted_status' => WriteoffRequest::STATUS_SUBMITTED,
             ],
             'transfer' => [
@@ -494,26 +330,10 @@ class UserRequestCenterController extends Controller
                 'updated_message' => 'Nodosanas pieteikums atjaunots.',
                 'deleted_message' => 'Nodosanas pieteikums atcelts.',
                 'deleted_audit_message' => 'Lietotajs atcela iesniegtu nodosanas pieteikumu.',
+                'index_route' => 'device-transfers.index',
                 'submitted_status' => DeviceTransfer::STATUS_SUBMITTED,
             ],
             default => abort(404),
         };
-    }
-
-    private function paginateCollection(Collection $items, int $perPage): LengthAwarePaginator
-    {
-        $currentPage = Paginator::resolveCurrentPage('page');
-        $pageItems = $items->slice(($currentPage - 1) * $perPage, $perPage)->values();
-
-        return new LengthAwarePaginator(
-            $pageItems,
-            $items->count(),
-            $perPage,
-            $currentPage,
-            [
-                'path' => Paginator::resolveCurrentPath(),
-                'pageName' => 'page',
-            ]
-        );
     }
 }

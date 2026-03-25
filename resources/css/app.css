@@ -2871,7 +2871,15 @@ tbody td {
 }
 
 .device-request-badge-link {
-    @apply inline-flex max-w-[11rem] items-start gap-2 rounded-2xl border px-3 py-2 text-left text-[11px] font-semibold leading-4 transition hover:brightness-[0.98];
+    @apply inline-flex min-w-[8.75rem] max-w-[9.5rem] flex-col items-start gap-1.5 rounded-2xl border px-3 py-2 text-left text-[11px] font-semibold leading-4 transition hover:brightness-[0.98];
+}
+
+.device-request-badge-main {
+    @apply inline-flex items-center gap-1.5;
+}
+
+.device-request-badge-meta {
+    @apply pl-5 text-[10px] font-semibold uppercase tracking-[0.16em] opacity-75;
 }
 
 .device-table-thumb {

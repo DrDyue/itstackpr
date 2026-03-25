@@ -307,13 +307,18 @@
                                 @if ($pendingRequestBadge)
                                     @if (! empty($pendingRequestBadge['url']))
                                         <a href="{{ $pendingRequestBadge['url'] }}" class="device-request-badge-link mt-2 {{ $pendingRequestBadge['class'] }}">
-                                            <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
-                                            <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
+                                            <span class="device-request-badge-main">
+                                                <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
+                                                <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
+                                            </span>
+                                            <span class="device-request-badge-meta">{{ $pendingRequestBadge['meta_label'] ?? 'Skatit' }}</span>
                                         </a>
                                     @else
                                         <div class="device-request-badge-link mt-2 {{ $pendingRequestBadge['class'] }}">
-                                            <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
-                                            <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
+                                            <span class="device-request-badge-main">
+                                                <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
+                                                <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
+                                            </span>
                                         </div>
                                     @endif
                                 @endif
