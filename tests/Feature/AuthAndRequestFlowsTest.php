@@ -1708,6 +1708,30 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->assertStringNotContainsString('Bez gaidosa remonta', $content);
     }
 
+    public function test_runtime_schema_syncs_device_repair_statuses_with_active_repairs(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'runtime-repair-sync-admin@example.com');
+
+        $staleRepairDevice = $this->createDevice($admin->id, Device::STATUS_REPAIR, 'DEV-STALE-REPAIR');
+        $activeRepairDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-ACTIVE-REPAIR');
+
+        Repair::create([
+            'device_id' => $activeRepairDevice->id,
+            'description' => 'Aktivs remonts.',
+            'status' => 'waiting',
+            'repair_type' => 'internal',
+            'priority' => 'medium',
+            'accepted_by' => $admin->id,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertOk();
+
+        $this->assertSame(Device::STATUS_ACTIVE, $staleRepairDevice->fresh()->status);
+        $this->assertSame(Device::STATUS_REPAIR, $activeRepairDevice->fresh()->status);
+    }
+
     public function test_active_device_does_not_show_repair_substatus_when_device_status_is_active(): void
     {
         $user = $this->createUser(role: User::ROLE_USER, email: 'device-stale-repair-user@example.com');

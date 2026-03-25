@@ -314,6 +314,7 @@ class RuntimeSchemaBootstrapper
         $this->normalizeRequestStatuses('device_transfers');
         $this->copyLegacyTransferColumn();
         $this->copyLegacyRepairColumns();
+        $this->syncDeviceRepairStates();
         $this->backfillLegacyActiveDeviceAssignments();
     }
 
@@ -486,6 +487,56 @@ class RuntimeSchemaBootstrapper
                     ->update(['end_date' => DB::raw('actual_completion')]);
             }
         }
+    }
+
+    private function syncDeviceRepairStates(): void
+    {
+        if (
+            ! Schema::hasTable('devices')
+            || ! Schema::hasTable('repairs')
+            || ! Schema::hasColumn('devices', 'status')
+            || ! Schema::hasColumn('repairs', 'device_id')
+            || ! Schema::hasColumn('repairs', 'status')
+        ) {
+            return;
+        }
+
+        $activeRepairDeviceIds = DB::table('repairs')
+            ->whereIn('status', ['waiting', 'in-progress'])
+            ->whereNotNull('device_id')
+            ->distinct()
+            ->pluck('device_id')
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn (int $id) => $id > 0)
+            ->values();
+
+        $repairDeviceQuery = DB::table('devices')->where('status', Device::STATUS_REPAIR);
+
+        if ($activeRepairDeviceIds->isNotEmpty()) {
+            $repairDeviceQuery->whereNotIn('id', $activeRepairDeviceIds->all());
+        }
+
+        $repairDeviceUpdates = ['status' => Device::STATUS_ACTIVE];
+        if (Schema::hasColumn('devices', 'updated_at')) {
+            $repairDeviceUpdates['updated_at'] = now();
+        }
+
+        $repairDeviceQuery->update($repairDeviceUpdates);
+
+        if ($activeRepairDeviceIds->isEmpty()) {
+            return;
+        }
+
+        $activeRepairUpdates = ['status' => Device::STATUS_REPAIR];
+        if (Schema::hasColumn('devices', 'updated_at')) {
+            $activeRepairUpdates['updated_at'] = now();
+        }
+
+        DB::table('devices')
+            ->whereIn('id', $activeRepairDeviceIds->all())
+            ->where('status', '!=', Device::STATUS_WRITEOFF)
+            ->where('status', '!=', Device::STATUS_REPAIR)
+            ->update($activeRepairUpdates);
     }
 
     private function backfillLegacyActiveDeviceAssignments(): void
