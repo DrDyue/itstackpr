@@ -95,9 +95,17 @@
                     </div>
                 </div>
                 <div class="page-actions">
-                    <a href="{{ route('my-requests.create') }}" class="btn-create">
-                        <x-icon name="plus" size="h-4 w-4" />
-                        <span>Izveidot pieteikumu</span>
+                    <a href="{{ route('repair-requests.create') }}" class="btn-edit">
+                        <x-icon name="repair" size="h-4 w-4" />
+                        <span>Jauns remonts</span>
+                    </a>
+                    <a href="{{ route('writeoff-requests.create') }}" class="btn-danger">
+                        <x-icon name="writeoff" size="h-4 w-4" />
+                        <span>Jauna norakstisana</span>
+                    </a>
+                    <a href="{{ route('device-transfers.create') }}" class="btn-create">
+                        <x-icon name="transfer" size="h-4 w-4" />
+                        <span>Jauna nodosana</span>
                     </a>
                     <a href="{{ route('devices.index') }}" class="btn-back">
                         <x-icon name="back" size="h-4 w-4" />

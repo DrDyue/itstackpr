@@ -97,7 +97,7 @@ class WriteoffRequestController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $user = $this->user();
         abort_unless($user, 403);
@@ -112,10 +112,18 @@ class WriteoffRequestController extends Controller
         }
 
         $devices = $this->availableDevicesForUser($user)->get();
+        $selectedDeviceId = (string) $request->query('device_id', '');
+        $selectedDevice = ctype_digit($selectedDeviceId)
+            ? $devices->firstWhere('id', (int) $selectedDeviceId)
+            : null;
 
         return view('writeoff_requests.create', [
             'devices' => $devices,
             'deviceOptions' => $this->deviceOptions($devices),
+            'selectedDeviceId' => $selectedDevice?->id ? (string) $selectedDevice->id : '',
+            'selectedDeviceLabel' => $selectedDevice
+                ? $selectedDevice->name.' ('.($selectedDevice->code ?: 'bez koda').')'
+                : '',
         ]);
     }
 

@@ -29,19 +29,19 @@
                         </a>
                     @else
                         @if ($requestAvailability['repair'])
-                            <a href="{{ route('my-requests.create', ['type' => 'repair', 'device_id' => $device->id]) }}" class="btn-edit">
+                            <a href="{{ route('repair-requests.create', ['device_id' => $device->id]) }}" class="btn-edit">
                                 <x-icon name="repair" size="h-4 w-4" />
                                 <span>Pieteikt remontu</span>
                             </a>
                         @endif
                         @if ($requestAvailability['writeoff'])
-                            <a href="{{ route('my-requests.create', ['type' => 'writeoff', 'device_id' => $device->id]) }}" class="btn-danger">
+                            <a href="{{ route('writeoff-requests.create', ['device_id' => $device->id]) }}" class="btn-danger">
                                 <x-icon name="writeoff" size="h-4 w-4" />
                                 <span>Pieteikt norakstisanu</span>
                             </a>
                         @endif
                         @if ($requestAvailability['transfer'])
-                            <a href="{{ route('my-requests.create', ['type' => 'transfer', 'device_id' => $device->id]) }}" class="btn-view">
+                            <a href="{{ route('device-transfers.create', ['device_id' => $device->id]) }}" class="btn-view">
                                 <x-icon name="transfer" size="h-4 w-4" />
                                 <span>Nodot citam</span>
                             </a>
@@ -258,21 +258,6 @@
                     </section>
                 </div>
 
-                <section class="surface-card p-6">
-                    <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
-                        <x-icon name="view" size="h-5 w-5" class="text-violet-600" />
-                        <span>Ierices attels</span>
-                    </h2>
-                    <div class="mt-4">
-                        @if ($deviceImageUrl)
-                            <img src="{{ $deviceImageUrl }}" alt="{{ $device->name }}" class="max-h-[28rem] w-full rounded-[1.75rem] border border-slate-200 object-contain">
-                        @else
-                            <div class="rounded-[1.75rem] border border-dashed border-slate-300 px-6 py-16 text-center text-sm text-slate-500">
-                                Ierices attels nav pievienots.
-                            </div>
-                        @endif
-                    </div>
-                </section>
             </div>
 
             <div class="mt-6 grid gap-6 xl:grid-cols-3">
@@ -318,7 +303,7 @@
                 <section class="surface-card p-6">
                     <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
                         <x-icon name="writeoff" size="h-5 w-5" class="text-rose-600" />
-                        <span>Noraiditie norakstisanas pieteikumi</span>
+                        <span>Norakstisanas pieteikumu vesture</span>
                     </h2>
                     <div class="mt-4 space-y-3 text-sm">
                         @forelse ($visibleWriteoffRequests as $request)
@@ -340,7 +325,7 @@
                                 @endif
                             </div>
                         @empty
-                            <p class="text-slate-500">Noraiditu norakstisanas pieteikumu nav.</p>
+                            <p class="text-slate-500">Norakstisanas pieteikumu vel nav.</p>
                         @endforelse
                     </div>
                 </section>
@@ -401,22 +386,6 @@
                     </div>
                 </section>
 
-                <section class="surface-card p-6">
-                    <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
-                        <x-icon name="view" size="h-5 w-5" class="text-violet-600" />
-                        <span>Atteli</span>
-                    </h2>
-                    <div class="mt-4 grid gap-4">
-                        <div>
-                            <div class="text-sm font-medium text-slate-700">Ierices attels</div>
-                            @if ($deviceImageUrl)
-                                <img src="{{ $deviceImageUrl }}" alt="{{ $device->name }}" class="mt-2 max-h-56 rounded-xl border border-slate-200">
-                            @else
-                                <div class="mt-2 rounded-xl border border-dashed border-slate-300 px-4 py-8 text-sm text-slate-500">Nav pievienots</div>
-                            @endif
-                        </div>
-                    </div>
-                </section>
             </div>
 
             <div class="grid gap-6 xl:grid-cols-3">

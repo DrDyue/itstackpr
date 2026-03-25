@@ -2870,12 +2870,20 @@ tbody td {
     @apply text-rose-700 hover:bg-rose-50;
 }
 
+.device-request-badge-link {
+    @apply inline-flex max-w-[11rem] items-start gap-2 rounded-2xl border px-3 py-2 text-left text-[11px] font-semibold leading-4 transition hover:brightness-[0.98];
+}
+
 .device-table-thumb {
     @apply h-14 w-14 rounded-2xl object-cover ring-1 ring-slate-200;
 }
 
 .device-table-thumb-placeholder {
     @apply flex items-center justify-center bg-slate-100 text-slate-400;
+}
+
+.device-file-input {
+    @apply w-full rounded-[1.25rem] border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:font-semibold file:text-white hover:file:bg-slate-800;
 }
 
 /* Auth enhancements */

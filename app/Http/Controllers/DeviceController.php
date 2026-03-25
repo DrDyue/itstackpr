@@ -21,6 +21,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Route;
 
 class DeviceController extends Controller
 {
@@ -162,7 +163,7 @@ class DeviceController extends Controller
             ->withQueryString();
 
         $deviceStates = $devices->getCollection()
-            ->mapWithKeys(function (Device $device) {
+            ->mapWithKeys(function (Device $device) use ($user) {
                 $requestAvailability = $this->requestAvailabilityForDevice(
                     $device,
                     (bool) ($device->has_pending_repair_request ?? false),
@@ -174,6 +175,8 @@ class DeviceController extends Controller
                     $device->id => [
                         'requestAvailability' => $requestAvailability,
                         'pendingRequestBadge' => $this->pendingRequestBadge(
+                            $device,
+                            $user->canManageRequests(),
                             (bool) ($device->has_pending_repair_request ?? false),
                             (bool) ($device->has_pending_writeoff_request ?? false),
                             (bool) ($device->has_pending_transfer_request ?? false),
@@ -304,9 +307,7 @@ class DeviceController extends Controller
                 ? 'Ierice tev nodota no '.($latestTransferToCurrentUser->responsibleUser?->full_name ?: 'cita lietotaja').'.'
                 : 'Ierici tev pieskira administrators.',
             'roomOptions' => $roomOptions,
-            'visibleWriteoffRequests' => ($this->user()?->canManageRequests() ?? false)
-                ? $device->writeoffRequests
-                : $device->writeoffRequests->where('status', 'rejected')->values(),
+            'visibleWriteoffRequests' => $device->writeoffRequests,
             'requestAvailability' => $this->requestAvailabilityForDevice(
                 $device,
                 (bool) $pendingRepairRequest,
@@ -883,6 +884,8 @@ class DeviceController extends Controller
     }
 
     private function pendingRequestBadge(
+        Device $device,
+        bool $canManageRequests,
         bool $hasPendingRepairRequest,
         bool $hasPendingWriteoffRequest,
         bool $hasPendingTransferRequest
@@ -890,28 +893,50 @@ class DeviceController extends Controller
         if ($hasPendingRepairRequest) {
             return [
                 'icon' => 'repair-request',
-                'label' => 'Gaida remonta pieteikums',
+                'label' => 'Gaida remonta pieteikumu',
+                'short_label' => 'Gaida remontu',
                 'class' => 'border-sky-200 bg-sky-50 text-sky-700',
+                'url' => $this->requestIndexUrl($device, $canManageRequests, 'repair'),
             ];
         }
 
         if ($hasPendingWriteoffRequest) {
             return [
                 'icon' => 'writeoff',
-                'label' => 'Gaida norakstisanas pieteikums',
+                'label' => 'Gaida norakstisanas pieteikumu',
+                'short_label' => 'Gaida norakstisanu',
                 'class' => 'border-rose-200 bg-rose-50 text-rose-700',
+                'url' => $this->requestIndexUrl($device, $canManageRequests, 'writeoff'),
             ];
         }
 
         if ($hasPendingTransferRequest) {
             return [
                 'icon' => 'transfer',
-                'label' => 'Gaida nodosanas pieteikums',
+                'label' => 'Gaida nodosanas pieteikumu',
+                'short_label' => 'Gaida nodosanu',
                 'class' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
+                'url' => $this->requestIndexUrl($device, $canManageRequests, 'transfer'),
             ];
         }
 
         return null;
+    }
+
+    private function requestIndexUrl(Device $device, bool $canManageRequests, string $type): ?string
+    {
+        $params = [
+            'q' => $device->code ?: $device->name,
+            'statuses_filter' => 1,
+            'status' => ['submitted'],
+        ];
+
+        return match ($type) {
+            'repair' => Route::has('repair-requests.index') ? route('repair-requests.index', $params) : null,
+            'writeoff' => Route::has('writeoff-requests.index') ? route('writeoff-requests.index', $params) : null,
+            'transfer' => Route::has('device-transfers.index') ? route('device-transfers.index', $params) : null,
+            default => null,
+        };
     }
 
     private function performDeviceAction(Device $device, array $data): array

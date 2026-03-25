@@ -177,7 +177,7 @@ class AuthAndRequestFlowsTest extends TestCase
 
         $this->actingAs($admin)
             ->get(route('my-requests.create'))
-            ->assertOk();
+            ->assertRedirect(route('my-requests.index'));
 
         $this->actingAs($admin)
             ->get(route('users.index'))
@@ -246,8 +246,10 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->assertIsString($content);
         $this->assertStringContainsString('device-type-form-select', $content);
         $this->assertStringContainsString('name="status" value="active"', $content);
-        $this->assertMatchesRegularExpression('/<option value="'.preg_quote((string) $admin->id, '/').'"[^>]*selected/', $content);
-        $this->assertMatchesRegularExpression('/<option value="'.preg_quote((string) $warehouseRoomId, '/').'"[^>]*selected/', $content);
+        $this->assertStringContainsString('device-assigned-user-form-select', $content);
+        $this->assertStringContainsString('device-room-form-select', $content);
+        $this->assertMatchesRegularExpression("/selected:\\s*'".preg_quote((string) $admin->id, '/')."'/", $content);
+        $this->assertMatchesRegularExpression("/selected:\\s*'".preg_quote((string) $warehouseRoomId, '/')."'/", $content);
     }
 
     public function test_device_create_form_restores_missing_room_and_building_updated_at_columns(): void
@@ -1643,7 +1645,7 @@ class AuthAndRequestFlowsTest extends TestCase
             ->get(route('devices.index'))
             ->assertOk()
             ->assertSee($device->name)
-            ->assertSee('Gaida remonta pieteikums')
+            ->assertSee('Gaida remontu')
             ->assertDontSee('Pieteikt remontu')
             ->assertDontSee('Pieteikt norakstisanu')
             ->assertDontSee('Nodot citam');

@@ -305,10 +305,17 @@
                             <td class="px-4 py-4">
                                 <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
                                 @if ($pendingRequestBadge)
-                                    <div class="mt-2 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold {{ $pendingRequestBadge['class'] }}">
-                                        <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
-                                        <span>{{ $pendingRequestBadge['label'] }}</span>
-                                    </div>
+                                    @if (! empty($pendingRequestBadge['url']))
+                                        <a href="{{ $pendingRequestBadge['url'] }}" class="device-request-badge-link mt-2 {{ $pendingRequestBadge['class'] }}">
+                                            <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
+                                            <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
+                                        </a>
+                                    @else
+                                        <div class="device-request-badge-link mt-2 {{ $pendingRequestBadge['class'] }}">
+                                            <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
+                                            <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
+                                        </div>
+                                    @endif
                                 @endif
                                 @if ($repairStatusLabel)
                                     <div class="mt-2 text-xs text-slate-500">
@@ -333,21 +340,27 @@
 
                                         @if (! $canManageDevices)
                                             @if ($requestAvailability['can_create_any'])
-                                                <a href="{{ route('my-requests.create', ['type' => 'repair', 'device_id' => $device->id]) }}" class="table-action-item text-sky-700 hover:bg-sky-50" @click="open = false">
+                                                <a href="{{ route('repair-requests.create', ['device_id' => $device->id]) }}" class="table-action-item text-sky-700 hover:bg-sky-50" @click="open = false">
                                                     <x-icon name="repair" size="h-4 w-4" />
                                                     <span>Pieteikt remontu</span>
                                                 </a>
 
-                                                <a href="{{ route('my-requests.create', ['type' => 'writeoff', 'device_id' => $device->id]) }}" class="table-action-item text-rose-700 hover:bg-rose-50" @click="open = false">
+                                                <a href="{{ route('writeoff-requests.create', ['device_id' => $device->id]) }}" class="table-action-item text-rose-700 hover:bg-rose-50" @click="open = false">
                                                     <x-icon name="writeoff" size="h-4 w-4" />
                                                     <span>Pieteikt norakstisanu</span>
                                                 </a>
 
-                                                <a href="{{ route('my-requests.create', ['type' => 'transfer', 'device_id' => $device->id]) }}" class="table-action-item text-emerald-700 hover:bg-emerald-50" @click="open = false">
+                                                <a href="{{ route('device-transfers.create', ['device_id' => $device->id]) }}" class="table-action-item text-emerald-700 hover:bg-emerald-50" @click="open = false">
                                                     <x-icon name="transfer" size="h-4 w-4" />
                                                     <span>Nodot citam</span>
                                                 </a>
                                             @elseif ($requestAvailability['reason'])
+                                                @if (! empty($pendingRequestBadge['url']))
+                                                    <a href="{{ $pendingRequestBadge['url'] }}" class="table-action-item text-sky-700 hover:bg-sky-50" @click="open = false">
+                                                        <x-icon :name="$pendingRequestBadge['icon'] ?? 'view'" size="h-4 w-4" />
+                                                        <span>Skatit pieteikumu</span>
+                                                    </a>
+                                                @endif
                                                 <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">
                                                     <div class="inline-flex items-center gap-2 font-semibold text-slate-700">
                                                         <x-icon :name="$pendingRequestBadge['icon'] ?? 'clock'" size="h-3.5 w-3.5" />

@@ -30,8 +30,8 @@
                         query-name="device_query"
                         identifier="repair-request-device"
                         :options="$deviceOptions"
-                        :selected="old('device_id')"
-                        :query="old('device_query', '')"
+                        :selected="old('device_id', $selectedDeviceId ?? '')"
+                        :query="old('device_query', $selectedDeviceLabel ?? '')"
                         placeholder="Mekle pec nosaukuma, koda vai telpas"
                         empty-message="Neviena ierice neatbilst meklejumam."
                     />

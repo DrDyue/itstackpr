@@ -71,45 +71,18 @@ class UserRequestCenterController extends Controller
 
     public function create(Request $request)
     {
-        $user = $this->requireRegularUser();
-        $devices = $this->availableDevicesForUser($user)->get();
-        $selectedDeviceId = (string) $request->query('device_id', '');
-        $selectedDevice = $devices->firstWhere('id', (int) $selectedDeviceId);
+        $this->requireRegularUser();
 
-        return view('my_requests.create', [
-            'devices' => $devices,
-            'users' => User::active()->whereKeyNot($user->id)->orderBy('full_name')->get(),
-            'selectedType' => in_array($request->query('type'), ['repair', 'writeoff', 'transfer'], true) ? (string) $request->query('type') : 'repair',
-            'selectedDeviceId' => $selectedDevice?->id ? (string) $selectedDevice->id : '',
-            'selectedDeviceLabel' => $selectedDevice
-                ? $selectedDevice->name . ' (' . ($selectedDevice->code ?: 'bez koda') . ')'
-                : '',
-            'user' => $user,
-            'deviceOptions' => $devices->map(fn (Device $device) => [
-                'value' => (string) $device->id,
-                'label' => $device->name . ' (' . ($device->code ?: 'bez koda') . ')',
-                'description' => collect([
-                    $device->room?->room_number ? 'telpa ' . $device->room->room_number : null,
-                    $device->building?->building_name,
-                    $device->status === Device::STATUS_REPAIR
-                        ? 'remonts: ' . $this->repairStatusLabel($device->activeRepair?->status)
-                        : null,
-                ])->filter()->implode(' | '),
-                'search' => implode(' ', array_filter([
-                    $device->name,
-                    $device->code,
-                    $device->model,
-                    $device->room?->room_number,
-                    $device->building?->building_name,
-                ])),
-            ])->values(),
-            'recipientOptions' => User::active()->whereKeyNot($user->id)->orderBy('full_name')->get()->map(fn (User $recipient) => [
-                'value' => (string) $recipient->id,
-                'label' => $recipient->full_name,
-                'description' => $recipient->job_title ?: $recipient->email,
-                'search' => implode(' ', array_filter([$recipient->full_name, $recipient->job_title, $recipient->email])),
-            ])->values(),
-        ]);
+        $type = (string) $request->query('type', '');
+        $deviceId = trim((string) $request->query('device_id', ''));
+        $params = $deviceId !== '' ? ['device_id' => $deviceId] : [];
+
+        return redirect()->route(match ($type) {
+            'writeoff' => 'writeoff-requests.create',
+            'transfer' => 'device-transfers.create',
+            'repair' => 'repair-requests.create',
+            default => 'my-requests.index',
+        }, $params);
     }
 
     public function store(Request $request)

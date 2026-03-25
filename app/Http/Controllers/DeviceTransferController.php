@@ -123,7 +123,7 @@ class DeviceTransferController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $user = $this->user();
         abort_unless($user, 403);
@@ -142,6 +142,10 @@ class DeviceTransferController extends Controller
 
         $devices = $this->availableDevicesForUser($user)->get();
         $recipients = User::active()->whereKeyNot($user->id)->orderBy('full_name')->get();
+        $selectedDeviceId = (string) $request->query('device_id', '');
+        $selectedDevice = ctype_digit($selectedDeviceId)
+            ? $devices->firstWhere('id', (int) $selectedDeviceId)
+            : null;
 
         return view('device_transfers.create', [
             'devices' => $devices,
@@ -149,6 +153,10 @@ class DeviceTransferController extends Controller
             'deviceOptions' => $this->deviceOptions($devices),
             'recipientOptions' => $this->recipientOptions($recipients),
             'isAdmin' => $canManageTransfers,
+            'selectedDeviceId' => $selectedDevice?->id ? (string) $selectedDevice->id : '',
+            'selectedDeviceLabel' => $selectedDevice
+                ? $selectedDevice->name.' ('.($selectedDevice->code ?: 'bez koda').')'
+                : '',
         ]);
     }
 

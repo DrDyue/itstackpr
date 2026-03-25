@@ -17,6 +17,77 @@
     $selectedAssignedToId = old('assigned_to_id', $current?->assigned_to_id ?? $defaultAssignedToId ?? null);
     $selectedBuildingId = old('building_id', $current?->building_id ?? $defaultBuildingId ?? null);
     $selectedRoomId = old('room_id', $current?->room_id ?? $defaultRoomId ?? null);
+    $selectedStatus = old('status', $current?->status ?? \App\Models\Device::STATUS_ACTIVE);
+    $showBuildingField = $buildings->count() > 1;
+    $buildingOptions = $buildings->map(fn ($building) => [
+        'value' => (string) $building->id,
+        'label' => $building->building_name,
+        'description' => collect([
+            $building->city,
+            $building->address,
+            $building->total_floors ? $building->total_floors . ' stavi' : null,
+        ])->filter()->implode(' | '),
+        'search' => implode(' ', array_filter([
+            $building->building_name,
+            $building->city,
+            $building->address,
+        ])),
+    ])->values();
+    $roomOptions = $rooms->map(fn ($room) => [
+        'value' => (string) $room->id,
+        'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
+        'description' => collect([
+            $room->building?->building_name,
+            $room->floor_number !== null ? $room->floor_number . '. stavs' : null,
+            $room->department,
+        ])->filter()->implode(' | '),
+        'search' => implode(' ', array_filter([
+            $room->room_number,
+            $room->room_name,
+            $room->building?->building_name,
+            $room->department,
+            $room->floor_number,
+        ])),
+    ])->values();
+    $assignedUserOptions = $users->map(fn ($assignedUser) => [
+        'value' => (string) $assignedUser->id,
+        'label' => $assignedUser->full_name,
+        'description' => $assignedUser->job_title ?: $assignedUser->email,
+        'search' => implode(' ', array_filter([
+            $assignedUser->full_name,
+            $assignedUser->job_title,
+            $assignedUser->email,
+        ])),
+    ])->values();
+    $statusOptions = collect($statuses)->map(fn ($status) => [
+        'value' => (string) $status,
+        'label' => $statusLabels[$status] ?? ucfirst($status),
+        'description' => match ($status) {
+            \App\Models\Device::STATUS_ACTIVE => 'Ierice ir lietosana',
+            \App\Models\Device::STATUS_REPAIR => 'Ierice atrodas remonta',
+            \App\Models\Device::STATUS_WRITEOFF => 'Ierice ir norakstita',
+            default => '',
+        },
+        'search' => implode(' ', array_filter([
+            $status,
+            $statusLabels[$status] ?? ucfirst($status),
+        ])),
+    ])->values();
+    $selectedAssignedToLabel = old(
+        'assigned_to_query',
+        optional($users->firstWhere('id', (int) $selectedAssignedToId))->full_name ?? ''
+    );
+    $selectedBuildingLabel = old(
+        'building_query',
+        optional($buildings->firstWhere('id', (int) $selectedBuildingId))->building_name ?? ''
+    );
+    $selectedRoomLabel = old(
+        'room_query',
+        optional($rooms->firstWhere('id', (int) $selectedRoomId))->room_number
+            ? optional($rooms->firstWhere('id', (int) $selectedRoomId))->room_number . (optional($rooms->firstWhere('id', (int) $selectedRoomId))->room_name ? ' - ' . optional($rooms->firstWhere('id', (int) $selectedRoomId))->room_name : '')
+            : ''
+    );
+    $selectedStatusLabel = old('status_query', $statusLabels[$selectedStatus] ?? 'Aktiva');
 @endphp
 
 <div class="device-form-grid">
@@ -103,45 +174,87 @@
                         @if ($isWrittenOff)
                             <input type="hidden" name="status" value="{{ $current?->status }}">
                         @endif
-                        <select name="status" class="crud-control" required @disabled($isWrittenOff)>
-                            @foreach ($statuses as $status)
-                                <option value="{{ $status }}" @selected(old('status', $current?->status ?? 'active') === $status)>{{ $statusLabels[$status] }}</option>
-                            @endforeach
-                        </select>
+                        @if ($isWrittenOff)
+                            <div class="crud-control flex items-center bg-slate-50 text-slate-700">
+                                <span>{{ $statusLabels[$current?->status] ?? 'Norakstita' }}</span>
+                            </div>
+                        @else
+                            <x-searchable-select
+                                name="status"
+                                query-name="status_query"
+                                identifier="device-status-form-select"
+                                :options="$statusOptions"
+                                :selected="(string) $selectedStatus"
+                                :query="$selectedStatusLabel"
+                                placeholder="Izvelies statusu"
+                                empty-message="Neviens statuss neatbilst meklejumam."
+                            />
+                        @endif
                     </label>
                 @endif
                 <label class="block">
                     <span class="crud-label">Atbildiga persona *</span>
                     @if ($isWrittenOff)
                         <input type="hidden" name="assigned_to_id" value="">
+                        <div class="crud-control flex items-center bg-slate-50 text-slate-700">
+                            <span>Nav pieskirts</span>
+                        </div>
+                    @else
+                        <x-searchable-select
+                            name="assigned_to_id"
+                            query-name="assigned_to_query"
+                            identifier="device-assigned-user-form-select"
+                            :options="$assignedUserOptions"
+                            :selected="(string) $selectedAssignedToId"
+                            :query="$selectedAssignedToLabel"
+                            placeholder="Mekle atbildigo personu"
+                            empty-message="Neviens lietotajs neatbilst meklejumam."
+                        />
                     @endif
-                    <select name="assigned_to_id" class="crud-control" required @disabled($isWrittenOff)>
-                        @foreach ($users as $assignedUser)
-                            <option value="{{ $assignedUser->id }}" @selected($selectedAssignedToId == $assignedUser->id)>{{ $assignedUser->full_name }}</option>
-                        @endforeach
-                    </select>
                 </label>
-                <label class="block">
-                    <span class="crud-label">Eka</span>
-                    @if ($isWrittenOff)
-                        <input type="hidden" name="building_id" value="">
-                    @endif
-                    <select name="building_id" class="crud-control" @disabled($isWrittenOff)>
-                        @foreach ($buildings as $building)
-                            <option value="{{ $building->id }}" @selected($selectedBuildingId == $building->id)>{{ $building->building_name }}</option>
-                        @endforeach
-                    </select>
-                </label>
+                @if ($showBuildingField)
+                    <label class="block">
+                        <span class="crud-label">Eka</span>
+                        @if ($isWrittenOff)
+                            <input type="hidden" name="building_id" value="">
+                            <div class="crud-control flex items-center bg-slate-50 text-slate-700">
+                                <span>Nav pieskirta ekai</span>
+                            </div>
+                        @else
+                            <x-searchable-select
+                                name="building_id"
+                                query-name="building_query"
+                                identifier="device-building-form-select"
+                                :options="$buildingOptions"
+                                :selected="(string) $selectedBuildingId"
+                                :query="$selectedBuildingLabel"
+                                placeholder="Mekle eku"
+                                empty-message="Neviena eka neatbilst meklejumam."
+                            />
+                        @endif
+                    </label>
+                @else
+                    <input type="hidden" name="building_id" value="{{ $isWrittenOff ? '' : $selectedBuildingId }}">
+                @endif
                 <label class="block">
                     <span class="crud-label">Telpa *</span>
                     @if ($isWrittenOff)
                         <input type="hidden" name="room_id" value="">
+                        <div class="crud-control flex items-center bg-slate-50 text-slate-700">
+                            <span>Nav pieskirta telpai</span>
+                        </div>
+                    @else
+                        <x-searchable-select
+                            name="room_id"
+                            query-name="room_query"
+                            identifier="device-room-form-select"
+                            :options="$roomOptions"
+                            :selected="(string) $selectedRoomId"
+                            :query="$selectedRoomLabel"
+                            placeholder="Mekle telpu"
+                            empty-message="Neviena telpa neatbilst meklejumam."
+                        />
                     @endif
-                    <select name="room_id" class="crud-control" required @disabled($isWrittenOff)>
-                        @foreach ($rooms as $room)
-                            <option value="{{ $room->id }}" @selected($selectedRoomId == $room->id)>{{ $room->building?->building_name }} / {{ $room->room_number }}{{ $room->room_name ? ' - ' . $room->room_name : '' }}</option>
-                        @endforeach
-                    </select>
                 </label>
             </div>
         </section>
@@ -174,7 +287,8 @@
                 />
                 <div class="block">
                     <span class="crud-label">Ierices attels</span>
-                    <input type="file" name="device_image" class="crud-control">
+                    <input type="file" name="device_image" class="device-file-input">
+                    <div class="mt-2 text-xs text-slate-500">PNG, JPG vai WEBP lidz {{ (int) config('devices.max_upload_kb', 5120) / 1024 }} MB.</div>
                     @if ($current)
                         <label class="mt-3 inline-flex items-center gap-3">
                             <input type="checkbox" name="remove_device_image" value="1" class="rounded border-gray-300 text-blue-600">
