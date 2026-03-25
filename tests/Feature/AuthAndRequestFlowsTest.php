@@ -1641,8 +1641,7 @@ class AuthAndRequestFlowsTest extends TestCase
             ->get(route('devices.index'))
             ->assertOk()
             ->assertSee($device->name)
-            ->assertSee('Gaida')
-            ->assertSee('remontu')
+            ->assertSee('Pieprasijums')
             ->assertDontSee('Pieteikt remontu')
             ->assertDontSee('Pieteikt norakstisanu')
             ->assertDontSee('Nodot citam');

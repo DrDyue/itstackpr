@@ -303,24 +303,27 @@
                                 @endif
                             </td>
                             <td class="px-4 py-4">
-                                @if ($device->status === \App\Models\Device::STATUS_REPAIR && $repairStatusLabel)
-                                    <x-status-pill context="device" value="repair" :label="'Remonts: ' . mb_strtolower($repairStatusLabel)" />
-                                @else
-                                    <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
+                                <div class="device-status-stack">
+                                    @if ($device->status === \App\Models\Device::STATUS_REPAIR && $repairStatusLabel)
+                                        <x-status-pill context="device" value="repair" :label="'Remonts: ' . mb_strtolower($repairStatusLabel)" />
+                                    @else
+                                        <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
+                                    @endif
+
                                     @if ($pendingRequestBadge)
                                         @if (! empty($pendingRequestBadge['url']))
-                                            <a href="{{ $pendingRequestBadge['url'] }}" class="device-request-badge-link mt-2 {{ $pendingRequestBadge['class'] }}">
+                                            <a href="{{ $pendingRequestBadge['url'] }}" class="device-request-badge-link {{ $pendingRequestBadge['class'] }}">
                                                 <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
                                                 <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
                                             </a>
                                         @else
-                                            <div class="device-request-badge-link mt-2 {{ $pendingRequestBadge['class'] }}">
+                                            <div class="device-request-badge-link {{ $pendingRequestBadge['class'] }}">
                                                 <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
                                                 <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
                                             </div>
                                         @endif
                                     @endif
-                                @endif
+                                </div>
                             </td>
                             <td class="px-4 py-4">
                                 <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">

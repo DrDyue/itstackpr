@@ -2870,8 +2870,12 @@ tbody td {
     @apply text-rose-700 hover:bg-rose-50;
 }
 
+.device-status-stack {
+    @apply flex flex-col items-start gap-2;
+}
+
 .device-request-badge-link {
-    @apply inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold leading-none transition hover:brightness-[0.98];
+    @apply inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold leading-none transition hover:brightness-[0.98];
 }
 
 .device-repair-state-chip {
