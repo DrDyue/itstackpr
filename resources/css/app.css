@@ -2871,19 +2871,7 @@ tbody td {
 }
 
 .device-request-badge-link {
-    @apply inline-flex min-w-[6.5rem] max-w-[6.75rem] flex-col items-start rounded-2xl border px-3 py-2 text-left text-[11px] font-semibold leading-4 transition hover:brightness-[0.98];
-}
-
-.device-request-badge-main {
-    @apply flex flex-col gap-0.5;
-}
-
-.device-request-badge-row {
-    @apply inline-flex items-center gap-1.5;
-}
-
-.device-request-badge-row-offset {
-    @apply pl-5;
+    @apply inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold leading-none transition hover:brightness-[0.98];
 }
 
 .device-repair-state-chip {

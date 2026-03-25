@@ -303,39 +303,23 @@
                                 @endif
                             </td>
                             <td class="px-4 py-4">
-                                <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
-                                @if ($pendingRequestBadge)
-                                    @if (! empty($pendingRequestBadge['url']))
-                                        <a href="{{ $pendingRequestBadge['url'] }}" class="device-request-badge-link mt-2 {{ $pendingRequestBadge['class'] }}">
-                                            <span class="device-request-badge-main">
-                                                <span class="device-request-badge-row">
-                                                    <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
-                                                    <span>{{ $pendingRequestBadge['line_one'] ?? $pendingRequestBadge['label'] }}</span>
-                                                </span>
-                                                @if (! empty($pendingRequestBadge['line_two']))
-                                                    <span class="device-request-badge-row device-request-badge-row-offset">{{ $pendingRequestBadge['line_two'] }}</span>
-                                                @endif
-                                            </span>
-                                        </a>
-                                    @else
-                                        <div class="device-request-badge-link mt-2 {{ $pendingRequestBadge['class'] }}">
-                                            <span class="device-request-badge-main">
-                                                <span class="device-request-badge-row">
-                                                    <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
-                                                    <span>{{ $pendingRequestBadge['line_one'] ?? $pendingRequestBadge['label'] }}</span>
-                                                </span>
-                                                @if (! empty($pendingRequestBadge['line_two']))
-                                                    <span class="device-request-badge-row device-request-badge-row-offset">{{ $pendingRequestBadge['line_two'] }}</span>
-                                                @endif
-                                            </span>
-                                        </div>
+                                @if ($device->status === \App\Models\Device::STATUS_REPAIR && $repairStatusLabel)
+                                    <x-status-pill context="device" value="repair" :label="'Remonts: ' . mb_strtolower($repairStatusLabel)" />
+                                @else
+                                    <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
+                                    @if ($pendingRequestBadge)
+                                        @if (! empty($pendingRequestBadge['url']))
+                                            <a href="{{ $pendingRequestBadge['url'] }}" class="device-request-badge-link mt-2 {{ $pendingRequestBadge['class'] }}">
+                                                <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
+                                                <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
+                                            </a>
+                                        @else
+                                            <div class="device-request-badge-link mt-2 {{ $pendingRequestBadge['class'] }}">
+                                                <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
+                                                <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
+                                            </div>
+                                        @endif
                                     @endif
-                                @endif
-                                @if ($repairStatusLabel)
-                                    <div class="device-repair-state-chip mt-2">
-                                        <x-icon name="repair" size="h-3.5 w-3.5" />
-                                        <span>{{ $repairStatusLabel }}</span>
-                                    </div>
                                 @endif
                             </td>
                             <td class="px-4 py-4">
