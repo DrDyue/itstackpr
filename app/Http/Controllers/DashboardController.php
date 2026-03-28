@@ -100,8 +100,10 @@ class DashboardController extends Controller
                     'assignedTo',
                     'activeRepair.acceptedBy',
                     'activeRepair.request.responsibleUser',
+                    'activeRepair.request.reviewedBy',
                     'latestRepair.acceptedBy',
                     'latestRepair.request.responsibleUser',
+                    'latestRepair.request.reviewedBy',
                     'pendingRepairRequest.responsibleUser',
                     'pendingWriteoffRequest.responsibleUser',
                     'pendingTransferRequest.responsibleUser',
@@ -213,6 +215,7 @@ class DashboardController extends Controller
             'status' => $this->repairStatusLabel($repair->status) ?: 'Gaida',
             'type' => $repair->repair_type === 'external' ? 'Arejais' : 'Ieksejais',
             'approved_by' => $repair->acceptedBy?->full_name
+                ?: $repair->request?->reviewedBy?->full_name
                 ?: $repair->request?->responsibleUser?->full_name
                 ?: '-',
             'created_at' => $repair->created_at?->format('d.m.Y H:i') ?: '-',

@@ -16,7 +16,7 @@
             ['label' => 'Norakstitas', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
         ];
         $requestFilterLinks = [
-            ['label' => 'Remonts', 'value' => 'repair', 'icon' => 'repair-request', 'tone' => 'sky'],
+            ['label' => 'Remonts', 'value' => 'repair', 'icon' => 'repair-request', 'tone' => 'amber'],
             ['label' => 'Norakstisana', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
             ['label' => 'Nodosana', 'value' => 'transfer', 'icon' => 'transfer', 'tone' => 'emerald'],
         ];
@@ -172,8 +172,8 @@
             </label>
 
             <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
-                <div class="space-y-3">
-                    <div>
+                <div class="quick-filter-groups">
+                    <div class="quick-filter-group">
                         <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ierices statuss</div>
                         <div class="quick-status-filters">
                             @foreach ($statusFilterLinks as $statusFilter)
@@ -202,7 +202,7 @@
                         </div>
                     </div>
 
-                    <div>
+                    <div class="quick-filter-group quick-filter-group-end">
                         <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Aktivie pieprasijumi</div>
                         <div class="quick-status-filters">
                             @foreach ($requestFilterLinks as $requestFilter)

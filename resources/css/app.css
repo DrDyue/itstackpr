@@ -2693,6 +2693,18 @@ tbody td {
     @apply flex flex-wrap gap-3;
 }
 
+.quick-filter-groups {
+    @apply flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between;
+}
+
+.quick-filter-group {
+    @apply min-w-0;
+}
+
+.quick-filter-group-end {
+    @apply xl:ml-auto;
+}
+
 .quick-status-filter {
     @apply inline-flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-semibold shadow-sm transition;
 }
