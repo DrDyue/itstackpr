@@ -47,6 +47,15 @@ class LiveNotificationController extends Controller
                     accent: 'sky',
                     title: 'Jauns remonta pieprasijums',
                     message: trim(($request->responsibleUser?->full_name ?: 'Lietotajs').' iesniedza remontu iericei '.($request->device?->name ?: 'bez nosaukuma').'.'),
+                    details: [
+                        'device_name' => $request->device?->name ?: '-',
+                        'device_code' => $request->device?->code ?: '-',
+                        'serial_number' => $request->device?->serial_number ?: '-',
+                        'submitted_by' => $request->responsibleUser?->full_name ?: '-',
+                        'reason_label' => 'Problema',
+                        'reason_value' => $request->description ?: 'Apraksts nav pievienots.',
+                        'wait_label' => $this->waitLabel($request->created_at),
+                    ],
                     url: route('repair-requests.index', [
                         'statuses_filter' => 1,
                         'status' => [RepairRequest::STATUS_SUBMITTED],
@@ -73,6 +82,15 @@ class LiveNotificationController extends Controller
                     accent: 'rose',
                     title: 'Jauns norakstisanas pieprasijums',
                     message: trim(($request->responsibleUser?->full_name ?: 'Lietotajs').' iesniedza norakstisanu iericei '.($request->device?->name ?: 'bez nosaukuma').'.'),
+                    details: [
+                        'device_name' => $request->device?->name ?: '-',
+                        'device_code' => $request->device?->code ?: '-',
+                        'serial_number' => $request->device?->serial_number ?: '-',
+                        'submitted_by' => $request->responsibleUser?->full_name ?: '-',
+                        'reason_label' => 'Iemesls',
+                        'reason_value' => $request->reason ?: 'Iemesls nav pievienots.',
+                        'wait_label' => $this->waitLabel($request->created_at),
+                    ],
                     url: route('writeoff-requests.index', [
                         'statuses_filter' => 1,
                         'status' => [WriteoffRequest::STATUS_SUBMITTED],
@@ -99,6 +117,16 @@ class LiveNotificationController extends Controller
                     accent: 'emerald',
                     title: 'Jauns nodosanas pieprasijums',
                     message: trim(($transfer->responsibleUser?->full_name ?: 'Lietotajs').' velas nodot ierici '.($transfer->device?->name ?: 'bez nosaukuma').($transfer->transferTo?->full_name ? ' lietotajam '.$transfer->transferTo->full_name : '').'.'),
+                    details: [
+                        'device_name' => $transfer->device?->name ?: '-',
+                        'device_code' => $transfer->device?->code ?: '-',
+                        'serial_number' => $transfer->device?->serial_number ?: '-',
+                        'submitted_by' => $transfer->responsibleUser?->full_name ?: '-',
+                        'recipient' => $transfer->transferTo?->full_name ?: '-',
+                        'reason_label' => 'Iemesls',
+                        'reason_value' => $transfer->transfer_reason ?: 'Iemesls nav pievienots.',
+                        'wait_label' => $this->waitLabel($transfer->created_at),
+                    ],
                     url: route('device-transfers.index', [
                         'statuses_filter' => 1,
                         'status' => [DeviceTransfer::STATUS_SUBMITTED],
@@ -135,6 +163,15 @@ class LiveNotificationController extends Controller
                 accent: 'amber',
                 title: 'Jauns ienakoss nodosanas pieprasijums',
                 message: trim(($transfer->responsibleUser?->full_name ?: 'Lietotajs').' velas tev nodot ierici '.($transfer->device?->name ?: 'bez nosaukuma').'.'),
+                details: [
+                    'device_name' => $transfer->device?->name ?: '-',
+                    'device_code' => $transfer->device?->code ?: '-',
+                    'serial_number' => $transfer->device?->serial_number ?: '-',
+                    'submitted_by' => $transfer->responsibleUser?->full_name ?: '-',
+                    'reason_label' => 'Iemesls',
+                    'reason_value' => $transfer->transfer_reason ?: 'Iemesls nav pievienots.',
+                    'wait_label' => $this->waitLabel($transfer->created_at),
+                ],
                 url: route('device-transfers.index', [
                     'statuses_filter' => 1,
                     'status' => [DeviceTransfer::STATUS_SUBMITTED],
@@ -155,6 +192,7 @@ class LiveNotificationController extends Controller
         string $accent,
         string $title,
         string $message,
+        array $details,
         string $url,
         $createdAt,
         array $actions = [],
@@ -165,6 +203,7 @@ class LiveNotificationController extends Controller
             'accent' => $accent,
             'title' => $title,
             'message' => $message,
+            'details' => $details,
             'url' => $url,
             'created_at' => $createdAt?->toIso8601String(),
             'created_unix' => $createdAt?->getTimestamp() ?? 0,
@@ -180,5 +219,35 @@ class LiveNotificationController extends Controller
             'url' => $url,
             'payload' => $payload,
         ];
+    }
+
+    private function waitLabel($createdAt): string
+    {
+        if (! $createdAt) {
+            return 'tikko ienacis';
+        }
+
+        $minutes = max(0, now()->diffInMinutes($createdAt));
+
+        if ($minutes < 1) {
+            return 'gaida mazaku par 1 min';
+        }
+
+        if ($minutes < 60) {
+            return 'gaida '.$minutes.' min';
+        }
+
+        $hours = intdiv($minutes, 60);
+
+        if ($hours < 24) {
+            $remainingMinutes = $minutes % 60;
+
+            return 'gaida '.$hours.' h'.($remainingMinutes > 0 ? ' '.$remainingMinutes.' min' : '');
+        }
+
+        $days = intdiv($hours, 24);
+        $remainingHours = $hours % 24;
+
+        return 'gaida '.$days.' d'.($remainingHours > 0 ? ' '.$remainingHours.' h' : '');
     }
 }

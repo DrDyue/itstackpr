@@ -130,14 +130,16 @@ const registerAlpineData = () => {
         },
     }));
 
-    Alpine.data('liveRequestNotifications', ({ endpoint = '', storageKey = 'live-request-notifications', pollSeconds = 12 } = {}) => ({
+    Alpine.data('liveRequestNotifications', ({ endpoint = '', storageKey = 'live-request-notifications', pollSeconds = 12, pageKind = '' } = {}) => ({
         endpoint,
         storageKey,
         pollSeconds: Math.max(Number(pollSeconds) || 12, 5),
+        pageKind,
         items: [],
         seenIds: [],
         bootstrapped: false,
         timerId: null,
+        refreshTimerId: null,
         onVisibilityChange: null,
         init() {
             this.seenIds = this.readSeenIds();
@@ -152,6 +154,10 @@ const registerAlpineData = () => {
         },
         destroy() {
             this.stopPolling();
+
+            if (this.refreshTimerId) {
+                window.clearTimeout(this.refreshTimerId);
+            }
 
             if (this.onVisibilityChange) {
                 document.removeEventListener('visibilitychange', this.onVisibilityChange);
@@ -210,6 +216,10 @@ const registerAlpineData = () => {
                     this.items = [toast, ...this.items].slice(0, 4);
                     this.remember(notification.id);
                     window.setTimeout(() => this.dismiss(notification.id), 9000);
+
+                    if (this.shouldRefreshForNotification(notification)) {
+                        this.scheduleRefresh();
+                    }
                 });
             } catch (error) {
                 // Ignore transient polling errors and retry on the next cycle.
@@ -249,10 +259,41 @@ const registerAlpineData = () => {
                 });
 
                 this.dismiss(notification.id);
+                if (this.shouldRefreshForNotification(notification)) {
+                    this.scheduleRefresh(250);
+                }
                 await this.fetchNotifications(false);
             } catch (error) {
                 notification.busy = false;
             }
+        },
+        shouldRefreshForNotification(notification) {
+            if (!this.pageKind || !notification?.type) {
+                return false;
+            }
+
+            if (this.pageKind === 'repair-requests') {
+                return notification.type === 'repair';
+            }
+
+            if (this.pageKind === 'writeoff-requests') {
+                return notification.type === 'writeoff';
+            }
+
+            if (this.pageKind === 'device-transfers') {
+                return notification.type === 'transfer' || notification.type === 'incoming-transfer';
+            }
+
+            return false;
+        },
+        scheduleRefresh(delayMs = 1200) {
+            if (this.refreshTimerId) {
+                return;
+            }
+
+            this.refreshTimerId = window.setTimeout(() => {
+                window.location.reload();
+            }, delayMs);
         },
         accentClasses(accent) {
             return {

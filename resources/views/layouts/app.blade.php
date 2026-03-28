@@ -17,11 +17,19 @@
         </main>
 
         @auth
+            @php
+                $liveNotificationPageKind = request()->routeIs('repair-requests.index')
+                    ? 'repair-requests'
+                    : (request()->routeIs('writeoff-requests.index')
+                        ? 'writeoff-requests'
+                        : (request()->routeIs('device-transfers.index') ? 'device-transfers' : ''));
+            @endphp
             <div
                 x-data="liveRequestNotifications({
                     endpoint: @js(route('live-notifications.index')),
                     storageKey: @js('live-request-notifications:' . auth()->id() . ':' . (auth()->user()?->currentViewMode() ?? 'user')),
                     pollSeconds: 10,
+                    pageKind: @js($liveNotificationPageKind),
                 })"
                 class="pointer-events-none fixed bottom-4 right-4 z-[60] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-3 sm:bottom-6 sm:right-6"
             >
@@ -40,6 +48,37 @@
                             <button type="button" class="min-w-0 flex-1 text-left" @click="open(notification)">
                                 <div class="text-sm font-semibold" x-text="notification.title"></div>
                                 <div class="mt-1 text-sm leading-6 opacity-90" x-text="notification.message"></div>
+
+                                <template x-if="notification.details">
+                                    <div class="mt-3 space-y-2 rounded-[1.1rem] border border-black/5 bg-white/70 p-3 text-xs text-slate-700">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div class="min-w-0">
+                                                <div class="font-semibold text-slate-900" x-text="notification.details.device_name"></div>
+                                                <div class="mt-1 text-slate-500">
+                                                    <span x-text="'Kods: ' + (notification.details.device_code || '-')"></span>
+                                                    <span class="mx-1">|</span>
+                                                    <span x-text="'Serija: ' + (notification.details.serial_number || '-')"></span>
+                                                </div>
+                                            </div>
+                                            <span class="shrink-0 rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white" x-text="notification.details.wait_label"></span>
+                                        </div>
+                                        <div class="flex items-start justify-between gap-3">
+                                            <span class="font-semibold text-slate-500">Pieteicejs</span>
+                                            <span class="text-right font-medium text-slate-800" x-text="notification.details.submitted_by"></span>
+                                        </div>
+                                        <template x-if="notification.details.recipient">
+                                            <div class="flex items-start justify-between gap-3">
+                                                <span class="font-semibold text-slate-500">Sanemejs</span>
+                                                <span class="text-right font-medium text-slate-800" x-text="notification.details.recipient"></span>
+                                            </div>
+                                        </template>
+                                        <div>
+                                            <div class="font-semibold text-slate-500" x-text="notification.details.reason_label"></div>
+                                            <div class="mt-1 max-h-16 overflow-hidden leading-5 text-slate-800" x-text="notification.details.reason_value"></div>
+                                        </div>
+                                    </div>
+                                </template>
+
                                 <div class="mt-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] opacity-75">
                                     <span>Atvert pieprasijumu</span>
                                     <span aria-hidden="true">></span>
