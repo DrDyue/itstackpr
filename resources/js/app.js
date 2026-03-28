@@ -130,6 +130,154 @@ const registerAlpineData = () => {
         },
     }));
 
+    Alpine.data('liveRequestNotifications', ({ endpoint = '', storageKey = 'live-request-notifications', pollSeconds = 12 } = {}) => ({
+        endpoint,
+        storageKey,
+        pollSeconds: Math.max(Number(pollSeconds) || 12, 5),
+        items: [],
+        seenIds: [],
+        bootstrapped: false,
+        timerId: null,
+        onVisibilityChange: null,
+        init() {
+            this.seenIds = this.readSeenIds();
+            this.fetchNotifications(true);
+            this.startPolling();
+            this.onVisibilityChange = () => {
+                if (document.visibilityState === 'visible') {
+                    this.fetchNotifications(false);
+                }
+            };
+            document.addEventListener('visibilitychange', this.onVisibilityChange);
+        },
+        destroy() {
+            this.stopPolling();
+
+            if (this.onVisibilityChange) {
+                document.removeEventListener('visibilitychange', this.onVisibilityChange);
+            }
+        },
+        startPolling() {
+            this.stopPolling();
+            this.timerId = window.setInterval(() => {
+                if (document.visibilityState !== 'hidden') {
+                    this.fetchNotifications(false);
+                }
+            }, this.pollSeconds * 1000);
+        },
+        stopPolling() {
+            if (!this.timerId) {
+                return;
+            }
+
+            window.clearInterval(this.timerId);
+            this.timerId = null;
+        },
+        async fetchNotifications(isInitial = false) {
+            if (!this.endpoint || !window.axios) {
+                return;
+            }
+
+            try {
+                const response = await window.axios.get(this.endpoint, {
+                    headers: {
+                        Accept: 'application/json',
+                    },
+                });
+
+                const notifications = Array.isArray(response?.data?.notifications)
+                    ? response.data.notifications
+                    : [];
+
+                if (!this.bootstrapped || isInitial) {
+                    notifications.forEach((notification) => this.remember(notification.id));
+                    this.bootstrapped = true;
+
+                    return;
+                }
+
+                notifications.forEach((notification) => {
+                    if (!notification?.id || this.hasSeen(notification.id) || this.items.some((item) => item.id === notification.id)) {
+                        return;
+                    }
+
+                    const toast = {
+                        ...notification,
+                        visible: true,
+                    };
+
+                    this.items = [toast, ...this.items].slice(0, 4);
+                    this.remember(notification.id);
+                    window.setTimeout(() => this.dismiss(notification.id), 9000);
+                });
+            } catch (error) {
+                // Ignore transient polling errors and retry on the next cycle.
+            }
+        },
+        hasSeen(id) {
+            return this.seenIds.includes(String(id));
+        },
+        remember(id) {
+            const normalizedId = String(id ?? '');
+            if (!normalizedId || this.hasSeen(normalizedId)) {
+                return;
+            }
+
+            this.seenIds = [...this.seenIds, normalizedId].slice(-120);
+            this.writeSeenIds();
+        },
+        dismiss(id) {
+            this.items = this.items.filter((item) => item.id !== id);
+        },
+        open(notification) {
+            this.dismiss(notification.id);
+            window.location.href = notification.url;
+        },
+        accentClasses(accent) {
+            return {
+                amber: 'border-amber-200 bg-amber-50/95 text-amber-950',
+                emerald: 'border-emerald-200 bg-emerald-50/95 text-emerald-950',
+                rose: 'border-rose-200 bg-rose-50/95 text-rose-950',
+                sky: 'border-sky-200 bg-sky-50/95 text-sky-950',
+            }[accent] ?? 'border-slate-200 bg-white text-slate-900';
+        },
+        badgeClasses(accent) {
+            return {
+                amber: 'bg-amber-500 text-white',
+                emerald: 'bg-emerald-600 text-white',
+                rose: 'bg-rose-600 text-white',
+                sky: 'bg-sky-600 text-white',
+            }[accent] ?? 'bg-slate-700 text-white';
+        },
+        badgeText(type) {
+            return {
+                repair: 'Remonts',
+                writeoff: 'Norakstisana',
+                transfer: 'Nodosana',
+                'incoming-transfer': 'Jaizskata',
+            }[type] ?? 'Pieprasijums';
+        },
+        readSeenIds() {
+            try {
+                const raw = window.localStorage.getItem(this.storageKey);
+                const parsed = raw ? JSON.parse(raw) : [];
+
+                return Array.isArray(parsed)
+                    ? parsed.map((value) => String(value)).filter(Boolean)
+                    : [];
+            } catch (error) {
+                return [];
+            }
+        },
+        writeSeenIds() {
+            try {
+                window.localStorage.setItem(this.storageKey, JSON.stringify(this.seenIds));
+            } catch (error) {
+                // Ignore storage write issues; notifications will still work during the session.
+            }
+        },
+    }));
+
     Alpine.data('searchableSelect', ({ selected = '', query = '', options = [], placeholder = '', emptyMessage = '', identifier = '' } = {}) => ({
         open: false,
         selected: String(selected ?? ''),

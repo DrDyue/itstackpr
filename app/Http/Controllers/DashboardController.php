@@ -93,7 +93,18 @@ class DashboardController extends Controller
 
         $dashboardDevices = $deviceQuery
             ? (clone $deviceQuery)
-                ->with(['room.building', 'building', 'type', 'assignedTo', 'activeRepair', 'latestRepair'])
+                ->with([
+                    'room.building',
+                    'building',
+                    'type',
+                    'assignedTo',
+                    'activeRepair',
+                    'latestRepair',
+                    'pendingRepairRequest.responsibleUser',
+                    'pendingWriteoffRequest.responsibleUser',
+                    'pendingTransferRequest.responsibleUser',
+                    'pendingTransferRequest.transferTo',
+                ])
                 ->withExists([
                     'repairRequests as has_pending_repair_request' => fn ($query) => $query->where('status', RepairRequest::STATUS_SUBMITTED),
                     'writeoffRequests as has_pending_writeoff_request' => fn ($query) => $query->where('status', WriteoffRequest::STATUS_SUBMITTED),
@@ -190,7 +201,8 @@ class DashboardController extends Controller
                 'label' => 'Apskatit',
                 'detail_label' => 'Remonts',
                 'class' => 'border-sky-200 bg-sky-50 text-sky-700',
-                'url' => $this->requestIndexUrl($device, 'repair'),
+                'url' => $this->requestIndexUrl($device, 'repair', $device->pendingRepairRequest?->id),
+                'preview' => $this->pendingRequestPreview('repair', $device->pendingRepairRequest),
             ];
         }
 
@@ -200,7 +212,8 @@ class DashboardController extends Controller
                 'label' => 'Apskatit',
                 'detail_label' => 'Norakst.',
                 'class' => 'border-rose-200 bg-rose-50 text-rose-700',
-                'url' => $this->requestIndexUrl($device, 'writeoff'),
+                'url' => $this->requestIndexUrl($device, 'writeoff', $device->pendingWriteoffRequest?->id),
+                'preview' => $this->pendingRequestPreview('writeoff', $device->pendingWriteoffRequest),
             ];
         }
 
@@ -210,14 +223,15 @@ class DashboardController extends Controller
                 'label' => 'Apskatit',
                 'detail_label' => 'Nodosana',
                 'class' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'url' => $this->requestIndexUrl($device, 'transfer'),
+                'url' => $this->requestIndexUrl($device, 'transfer', $device->pendingTransferRequest?->id),
+                'preview' => $this->pendingRequestPreview('transfer', $device->pendingTransferRequest),
             ];
         }
 
         return null;
     }
 
-    private function requestIndexUrl(Device $device, string $type): ?string
+    private function requestIndexUrl(Device $device, string $type, ?int $requestId = null): ?string
     {
         $params = [
             'q' => $device->code ?: $device->name,
@@ -225,10 +239,58 @@ class DashboardController extends Controller
             'status' => ['submitted'],
         ];
 
-        return match ($type) {
+        $baseUrl = match ($type) {
             'repair' => Route::has('repair-requests.index') ? route('repair-requests.index', $params) : null,
             'writeoff' => Route::has('writeoff-requests.index') ? route('writeoff-requests.index', $params) : null,
             'transfer' => Route::has('device-transfers.index') ? route('device-transfers.index', $params) : null,
+            default => null,
+        };
+
+        if (! $baseUrl || ! $requestId) {
+            return $baseUrl;
+        }
+
+        $anchor = match ($type) {
+            'repair' => 'repair-request-',
+            'writeoff' => 'writeoff-request-',
+            'transfer' => 'device-transfer-',
+            default => '',
+        };
+
+        return $anchor !== '' ? $baseUrl.'#'.$anchor.$requestId : $baseUrl;
+    }
+
+    private function pendingRequestPreview(string $type, mixed $request): ?array
+    {
+        if (! $request) {
+            return null;
+        }
+
+        return match ($type) {
+            'repair' => [
+                'type_label' => 'Remonta pieprasijums',
+                'meta_label' => 'Apraksts',
+                'submitted_at' => $request->created_at?->format('d.m.Y H:i') ?: '-',
+                'submitted_by' => $request->responsibleUser?->full_name ?: '-',
+                'summary' => $request->description ?: 'Apraksts nav pievienots.',
+                'recipient' => null,
+            ],
+            'writeoff' => [
+                'type_label' => 'Norakstisanas pieprasijums',
+                'meta_label' => 'Iemesls',
+                'submitted_at' => $request->created_at?->format('d.m.Y H:i') ?: '-',
+                'submitted_by' => $request->responsibleUser?->full_name ?: '-',
+                'summary' => $request->reason ?: 'Iemesls nav pievienots.',
+                'recipient' => null,
+            ],
+            'transfer' => [
+                'type_label' => 'Nodosanas pieprasijums',
+                'meta_label' => 'Iemesls',
+                'submitted_at' => $request->created_at?->format('d.m.Y H:i') ?: '-',
+                'submitted_by' => $request->responsibleUser?->full_name ?: '-',
+                'summary' => $request->transfer_reason ?: 'Iemesls nav pievienots.',
+                'recipient' => $request->transferTo?->full_name ?: null,
+            ],
             default => null,
         };
     }

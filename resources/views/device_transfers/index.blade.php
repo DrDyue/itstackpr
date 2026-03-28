@@ -153,7 +153,7 @@
                         ->filter(fn ($value) => filled($value))
                         ->implode(' | ');
                 @endphp
-                <div class="surface-card">
+                <div id="device-transfer-{{ $transfer->id }}" class="surface-card request-notification-target scroll-mt-28">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div>
                             <div class="text-lg font-semibold text-slate-900">{{ $transfer->device?->name ?: '-' }}</div>

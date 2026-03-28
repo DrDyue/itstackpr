@@ -149,7 +149,7 @@
                         $request->device?->room?->room_name,
                     ])->filter()->implode(' | ');
                 @endphp
-                <div class="surface-card">
+                <div id="repair-request-{{ $request->id }}" class="surface-card request-notification-target scroll-mt-28">
                     <div class="flex flex-wrap items-start justify-between gap-4">
                         <div>
                             <div class="flex flex-wrap items-center gap-2">

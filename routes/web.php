@@ -12,6 +12,7 @@ use App\Http\Controllers\DeviceAssetController;
 use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\DeviceTransferController;
 use App\Http\Controllers\DeviceTypeController;
+use App\Http\Controllers\LiveNotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RepairController;
 use App\Http\Controllers\RepairRequestController;
@@ -67,6 +68,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/live-notifications', [LiveNotificationController::class, 'index'])->name('live-notifications.index');
     Route::post('/view-mode', [ViewModeController::class, 'update'])->name('view-mode.update');
     Route::get('/my-requests', [UserRequestCenterController::class, 'index'])->name('my-requests.index');
     Route::get('/my-requests/create', [UserRequestCenterController::class, 'create'])->name('my-requests.create');

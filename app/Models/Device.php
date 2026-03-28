@@ -98,14 +98,35 @@ class Device extends Model
         return $this->hasMany(RepairRequest::class);
     }
 
+    public function pendingRepairRequest(): HasOne
+    {
+        return $this->hasOne(RepairRequest::class)
+            ->where('status', RepairRequest::STATUS_SUBMITTED)
+            ->latestOfMany('id');
+    }
+
     public function writeoffRequests(): HasMany
     {
         return $this->hasMany(WriteoffRequest::class);
     }
 
+    public function pendingWriteoffRequest(): HasOne
+    {
+        return $this->hasOne(WriteoffRequest::class)
+            ->where('status', WriteoffRequest::STATUS_SUBMITTED)
+            ->latestOfMany('id');
+    }
+
     public function transfers(): HasMany
     {
         return $this->hasMany(DeviceTransfer::class);
+    }
+
+    public function pendingTransferRequest(): HasOne
+    {
+        return $this->hasOne(DeviceTransfer::class)
+            ->where('status', DeviceTransfer::STATUS_SUBMITTED)
+            ->latestOfMany('id');
     }
 
     public function deviceImageUrl(): ?string

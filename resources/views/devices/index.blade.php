@@ -13,7 +13,13 @@
             ['label' => 'Remonta', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'amber'],
             ['label' => 'Norakstitas', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
         ];
+        $requestFilterLinks = [
+            ['label' => 'Remonts', 'value' => 'repair', 'icon' => 'repair-request', 'tone' => 'sky'],
+            ['label' => 'Norakstisana', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
+            ['label' => 'Nodosana', 'value' => 'transfer', 'icon' => 'transfer', 'tone' => 'emerald'],
+        ];
         $selectedStatuses = $filters['has_status_filter'] ? $filters['statuses'] : collect($statusFilterLinks)->pluck('value')->all();
+        $selectedRequestTypes = $filters['has_request_type_filter'] ? $filters['request_types'] : collect($requestFilterLinks)->pluck('value')->all();
         $roomSelectOptions = $roomOptions->map(fn ($room) => [
             'value' => (string) $room->id,
             'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
@@ -164,30 +170,64 @@
             </label>
 
             <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
-                <div class="quick-status-filters">
-                    @foreach ($statusFilterLinks as $statusFilter)
-                        @php
-                            $query = request()->except('page', 'status');
-                            $statusValues = collect($selectedStatuses);
-                            $isActive = $statusValues->contains($statusFilter['value']);
-                            $nextStatuses = $isActive
-                                ? $statusValues->reject(fn ($value) => $value === $statusFilter['value'])->values()->all()
-                                : $statusValues->push($statusFilter['value'])->unique()->values()->all();
+                <div class="space-y-3">
+                    <div>
+                        <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ierices statuss</div>
+                        <div class="quick-status-filters">
+                            @foreach ($statusFilterLinks as $statusFilter)
+                                @php
+                                    $query = request()->except('page', 'status');
+                                    $statusValues = collect($selectedStatuses);
+                                    $isActive = $statusValues->contains($statusFilter['value']);
+                                    $nextStatuses = $isActive
+                                        ? $statusValues->reject(fn ($value) => $value === $statusFilter['value'])->values()->all()
+                                        : $statusValues->push($statusFilter['value'])->unique()->values()->all();
 
-                            if (count($nextStatuses) === 0 || count($nextStatuses) === count($statusFilterLinks)) {
-                                unset($query['status']);
-                            } else {
-                                $query['status'] = $nextStatuses;
-                            }
-                        @endphp
-                        <a
-                            href="{{ route('devices.index', $query) }}"
-                            class="quick-status-filter quick-status-filter-{{ $statusFilter['tone'] }} {{ $isActive ? 'quick-status-filter-active' : '' }}"
-                        >
-                            <x-icon :name="$statusFilter['icon']" size="h-4 w-4" />
-                            <span>{{ $statusFilter['label'] }}</span>
-                        </a>
-                    @endforeach
+                                    if (count($nextStatuses) === 0 || count($nextStatuses) === count($statusFilterLinks)) {
+                                        unset($query['status']);
+                                    } else {
+                                        $query['status'] = $nextStatuses;
+                                    }
+                                @endphp
+                                <a
+                                    href="{{ route('devices.index', $query) }}"
+                                    class="quick-status-filter quick-status-filter-{{ $statusFilter['tone'] }} {{ $isActive ? 'quick-status-filter-active' : '' }}"
+                                >
+                                    <x-icon :name="$statusFilter['icon']" size="h-4 w-4" />
+                                    <span>{{ $statusFilter['label'] }}</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Aktivie pieprasijumi</div>
+                        <div class="quick-status-filters">
+                            @foreach ($requestFilterLinks as $requestFilter)
+                                @php
+                                    $query = request()->except('page', 'request_type');
+                                    $requestValues = collect($selectedRequestTypes);
+                                    $isActive = $requestValues->contains($requestFilter['value']);
+                                    $nextRequestTypes = $isActive
+                                        ? $requestValues->reject(fn ($value) => $value === $requestFilter['value'])->values()->all()
+                                        : $requestValues->push($requestFilter['value'])->unique()->values()->all();
+
+                                    if (count($nextRequestTypes) === 0 || count($nextRequestTypes) === count($requestFilterLinks)) {
+                                        unset($query['request_type']);
+                                    } else {
+                                        $query['request_type'] = $nextRequestTypes;
+                                    }
+                                @endphp
+                                <a
+                                    href="{{ route('devices.index', $query) }}"
+                                    class="quick-status-filter quick-status-filter-{{ $requestFilter['tone'] }} {{ $isActive ? 'quick-status-filter-active' : '' }}"
+                                >
+                                    <x-icon :name="$requestFilter['icon']" size="h-4 w-4" />
+                                    <span>{{ $requestFilter['label'] }}</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
 
                 <div class="toolbar-actions justify-end">
@@ -212,6 +252,7 @@
                 ['label' => 'Telpa', 'value' => $selectedRoomLabel],
                 ['label' => 'Tips', 'value' => $selectedTypeLabel],
                 ['label' => 'Statuss', 'value' => $filters['has_status_filter'] ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ') : null],
+                ['label' => 'Pieprasijumi', 'value' => $filters['has_request_type_filter'] ? collect($filters['request_types'])->map(fn ($type) => collect($requestFilterLinks)->firstWhere('value', $type)['label'] ?? $type)->implode(', ') : null],
             ]"
             :clear-url="route('devices.index')"
         />
@@ -317,27 +358,55 @@
                                     @endif
 
                                     @if ($pendingRequestBadge)
-                                        @if (! empty($pendingRequestBadge['url']))
-                                            <a href="{{ $pendingRequestBadge['url'] }}" class="device-request-badge-link {{ $pendingRequestBadge['class'] }}">
-                                                <span class="device-status-split-main">
-                                                    <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
-                                                    <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
-                                                </span>
-                                                @if (! empty($pendingRequestBadge['detail_label']))
-                                                    <span class="device-status-split-sub">{{ $pendingRequestBadge['detail_label'] }}</span>
-                                                @endif
-                                            </a>
-                                        @else
-                                            <div class="device-request-badge-link {{ $pendingRequestBadge['class'] }}">
-                                                <span class="device-status-split-main">
-                                                    <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
-                                                    <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
-                                                </span>
-                                                @if (! empty($pendingRequestBadge['detail_label']))
-                                                    <span class="device-status-split-sub">{{ $pendingRequestBadge['detail_label'] }}</span>
-                                                @endif
-                                            </div>
-                                        @endif
+                                        <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                                            @if (! empty($pendingRequestBadge['url']))
+                                                <a href="{{ $pendingRequestBadge['url'] }}" class="device-request-badge-link {{ $pendingRequestBadge['class'] }}" @focus="open = true" @blur="open = false">
+                                                    <span class="device-status-split-main">
+                                                        <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
+                                                        <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
+                                                    </span>
+                                                    @if (! empty($pendingRequestBadge['detail_label']))
+                                                        <span class="device-status-split-sub">{{ $pendingRequestBadge['detail_label'] }}</span>
+                                                    @endif
+                                                </a>
+                                            @else
+                                                <div class="device-request-badge-link {{ $pendingRequestBadge['class'] }}">
+                                                    <span class="device-status-split-main">
+                                                        <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
+                                                        <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
+                                                    </span>
+                                                    @if (! empty($pendingRequestBadge['detail_label']))
+                                                        <span class="device-status-split-sub">{{ $pendingRequestBadge['detail_label'] }}</span>
+                                                    @endif
+                                                </div>
+                                            @endif
+
+                                            @if (! empty($pendingRequestBadge['preview']))
+                                                <div x-cloak x-show="open" x-transition.opacity.scale.origin.top.left class="device-request-popover">
+                                                    <div class="device-request-popover-head">
+                                                        <span class="device-request-popover-title">{{ $pendingRequestBadge['preview']['type_label'] }}</span>
+                                                        <span class="device-request-popover-date">{{ $pendingRequestBadge['preview']['submitted_at'] }}</span>
+                                                    </div>
+                                                    <div class="device-request-popover-row">
+                                                        <span class="device-request-popover-label">Pieteicejs</span>
+                                                        <span class="device-request-popover-value">{{ $pendingRequestBadge['preview']['submitted_by'] }}</span>
+                                                    </div>
+                                                    @if (! empty($pendingRequestBadge['preview']['recipient']))
+                                                        <div class="device-request-popover-row">
+                                                            <span class="device-request-popover-label">Sanemejs</span>
+                                                            <span class="device-request-popover-value">{{ $pendingRequestBadge['preview']['recipient'] }}</span>
+                                                        </div>
+                                                    @endif
+                                                    <div class="device-request-popover-row device-request-popover-row-stack">
+                                                        <span class="device-request-popover-label">{{ $pendingRequestBadge['preview']['meta_label'] }}</span>
+                                                        <div class="device-request-popover-copy">{{ $pendingRequestBadge['preview']['summary'] }}</div>
+                                                    </div>
+                                                    @if (! empty($pendingRequestBadge['url']))
+                                                        <div class="device-request-popover-link">Atvert pieprasijumu</div>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </div>
                                     @endif
                                 </div>
                             </td>

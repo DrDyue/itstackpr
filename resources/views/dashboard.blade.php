@@ -193,13 +193,39 @@
                                                 @endif
 
                                                 @if ($pendingRequestBadge)
-                                                    <a href="{{ $pendingRequestBadge['url'] }}" class="device-request-badge-link {{ $pendingRequestBadge['class'] }}">
-                                                        <span class="device-status-split-main">
-                                                            <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
-                                                            <span>{{ $pendingRequestBadge['label'] }}</span>
-                                                        </span>
-                                                        <span class="device-status-split-sub">{{ $pendingRequestBadge['detail_label'] }}</span>
-                                                    </a>
+                                                    <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                                                        <a href="{{ $pendingRequestBadge['url'] }}" class="device-request-badge-link {{ $pendingRequestBadge['class'] }}" @focus="open = true" @blur="open = false">
+                                                            <span class="device-status-split-main">
+                                                                <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
+                                                                <span>{{ $pendingRequestBadge['label'] }}</span>
+                                                            </span>
+                                                            <span class="device-status-split-sub">{{ $pendingRequestBadge['detail_label'] }}</span>
+                                                        </a>
+
+                                                        @if (! empty($pendingRequestBadge['preview']))
+                                                            <div x-cloak x-show="open" x-transition.opacity.scale.origin.top.left class="device-request-popover">
+                                                                <div class="device-request-popover-head">
+                                                                    <span class="device-request-popover-title">{{ $pendingRequestBadge['preview']['type_label'] }}</span>
+                                                                    <span class="device-request-popover-date">{{ $pendingRequestBadge['preview']['submitted_at'] }}</span>
+                                                                </div>
+                                                                <div class="device-request-popover-row">
+                                                                    <span class="device-request-popover-label">Pieteicejs</span>
+                                                                    <span class="device-request-popover-value">{{ $pendingRequestBadge['preview']['submitted_by'] }}</span>
+                                                                </div>
+                                                                @if (! empty($pendingRequestBadge['preview']['recipient']))
+                                                                    <div class="device-request-popover-row">
+                                                                        <span class="device-request-popover-label">Sanemejs</span>
+                                                                        <span class="device-request-popover-value">{{ $pendingRequestBadge['preview']['recipient'] }}</span>
+                                                                    </div>
+                                                                @endif
+                                                                <div class="device-request-popover-row device-request-popover-row-stack">
+                                                                    <span class="device-request-popover-label">{{ $pendingRequestBadge['preview']['meta_label'] }}</span>
+                                                                    <div class="device-request-popover-copy">{{ $pendingRequestBadge['preview']['summary'] }}</div>
+                                                                </div>
+                                                                <div class="device-request-popover-link">Atvert pieprasijumu</div>
+                                                            </div>
+                                                        @endif
+                                                    </div>
                                                 @endif
                                             </div>
                                         </td>

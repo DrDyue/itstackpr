@@ -754,6 +754,84 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->assertStringContainsString('Ienakoss piedavajums', $content);
     }
 
+    public function test_admin_live_notifications_include_new_pending_requests(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'live-notify-admin@example.com');
+        $employee = $this->createUser(role: User::ROLE_USER, email: 'live-notify-employee@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'live-notify-recipient@example.com');
+
+        $repairDevice = $this->createDevice($employee->id, Device::STATUS_ACTIVE, 'DEV-LIVE-REPAIR');
+        $writeoffDevice = $this->createDevice($employee->id, Device::STATUS_ACTIVE, 'DEV-LIVE-WRITEOFF');
+        $transferDevice = $this->createDevice($employee->id, Device::STATUS_ACTIVE, 'DEV-LIVE-TRANSFER');
+
+        $repairRequest = RepairRequest::create([
+            'device_id' => $repairDevice->id,
+            'responsible_user_id' => $employee->id,
+            'description' => 'Nepieciesams jauns remonta pieteikums.',
+            'status' => RepairRequest::STATUS_SUBMITTED,
+        ]);
+
+        $writeoffRequest = WriteoffRequest::create([
+            'device_id' => $writeoffDevice->id,
+            'responsible_user_id' => $employee->id,
+            'reason' => 'Ierice ir nolietota.',
+            'status' => WriteoffRequest::STATUS_SUBMITTED,
+        ]);
+
+        $transfer = DeviceTransfer::create([
+            'device_id' => $transferDevice->id,
+            'responsible_user_id' => $employee->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Japarvieto pie cita lietotaja.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+        ]);
+
+        $response = $this->actingAs($admin)->getJson(route('live-notifications.index'));
+
+        $response->assertOk();
+
+        $notifications = collect($response->json('notifications'));
+
+        $this->assertTrue($notifications->contains(fn (array $notification) => $notification['id'] === 'repair-request:'.$repairRequest->id));
+        $this->assertTrue($notifications->contains(fn (array $notification) => $notification['id'] === 'writeoff-request:'.$writeoffRequest->id));
+        $this->assertTrue($notifications->contains(fn (array $notification) => $notification['id'] === 'device-transfer:'.$transfer->id));
+    }
+
+    public function test_regular_user_live_notifications_show_only_incoming_transfer_requests(): void
+    {
+        $sender = $this->createUser(role: User::ROLE_USER, email: 'live-notify-sender@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'live-notify-target@example.com');
+        $otherUser = $this->createUser(role: User::ROLE_USER, email: 'live-notify-other@example.com');
+
+        $incomingDevice = $this->createDevice($sender->id, Device::STATUS_ACTIVE, 'DEV-LIVE-INCOMING');
+        $outgoingDevice = $this->createDevice($recipient->id, Device::STATUS_ACTIVE, 'DEV-LIVE-OUTGOING');
+
+        $incomingTransfer = DeviceTransfer::create([
+            'device_id' => $incomingDevice->id,
+            'responsible_user_id' => $sender->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Ienakoss nodosanas pieprasijums.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+        ]);
+
+        DeviceTransfer::create([
+            'device_id' => $outgoingDevice->id,
+            'responsible_user_id' => $recipient->id,
+            'transfered_to_id' => $otherUser->id,
+            'transfer_reason' => 'Sis ir mana izejosa nodosana.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+        ]);
+
+        $response = $this->actingAs($recipient)->getJson(route('live-notifications.index'));
+
+        $response->assertOk();
+
+        $notifications = collect($response->json('notifications'));
+
+        $this->assertCount(1, $notifications);
+        $this->assertSame('incoming-transfer:'.$incomingTransfer->id, $notifications->first()['id']);
+    }
+
     public function test_admin_can_create_transfer_request_for_any_active_assigned_device(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'admin-transfer-create@example.com');
@@ -1635,6 +1713,65 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertSee($activeDevice->name)
             ->assertSee($repairDevice->name)
             ->assertDontSee($writeoffDevice->name);
+    }
+
+    public function test_devices_index_can_filter_by_pending_request_type(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-request-filter-admin@example.com');
+        $employee = $this->createUser(role: User::ROLE_USER, email: 'device-request-filter-user@example.com');
+        $repairDevice = $this->createDevice($employee->id, Device::STATUS_ACTIVE, 'DEV-FILTER-REPAIR');
+        $writeoffDevice = $this->createDevice($employee->id, Device::STATUS_ACTIVE, 'DEV-FILTER-WRITEOFF');
+        $transferDevice = $this->createDevice($employee->id, Device::STATUS_ACTIVE, 'DEV-FILTER-TRANSFER');
+
+        RepairRequest::create([
+            'device_id' => $repairDevice->id,
+            'responsible_user_id' => $employee->id,
+            'description' => 'Gaidoss remonta pieprasijums.',
+            'status' => RepairRequest::STATUS_SUBMITTED,
+        ]);
+
+        WriteoffRequest::create([
+            'device_id' => $writeoffDevice->id,
+            'responsible_user_id' => $employee->id,
+            'reason' => 'Gaidoss norakstisanas pieprasijums.',
+            'status' => WriteoffRequest::STATUS_SUBMITTED,
+        ]);
+
+        DeviceTransfer::create([
+            'device_id' => $transferDevice->id,
+            'responsible_user_id' => $employee->id,
+            'transfered_to_id' => $admin->id,
+            'transfer_reason' => 'Gaidoss nodosanas pieprasijums.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('devices.index', ['request_type' => ['repair', 'transfer']]))
+            ->assertOk()
+            ->assertSee($repairDevice->name)
+            ->assertSee($transferDevice->name)
+            ->assertDontSee($writeoffDevice->name);
+    }
+
+    public function test_devices_index_renders_pending_request_preview_information(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'device-request-preview-user@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-REQ-PREVIEW');
+
+        DeviceTransfer::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'transfered_to_id' => $this->createUser(role: User::ROLE_USER, email: 'device-request-preview-recipient@example.com')->id,
+            'transfer_reason' => 'Japarvieto uz citu darba vietu.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('devices.index'))
+            ->assertOk()
+            ->assertSee('Nodosanas pieprasijums')
+            ->assertSee('Japarvieto uz citu darba vietu.')
+            ->assertSee('Atvert pieprasijumu');
     }
 
     public function test_regular_user_devices_index_shows_request_actions_for_active_device(): void

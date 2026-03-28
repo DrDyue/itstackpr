@@ -27,6 +27,8 @@ class DeviceController extends Controller
 {
     private const STATUSES = [Device::STATUS_ACTIVE, Device::STATUS_REPAIR, Device::STATUS_WRITEOFF];
 
+    private const REQUEST_TYPES = ['repair', 'writeoff', 'transfer'];
+
     private const DEFAULT_WAREHOUSE_ROOM_NAME = 'Noliktava';
 
     private const DEFAULT_WAREHOUSE_ROOM_NUMBER_PREFIX = 'NOL-';
@@ -55,9 +57,16 @@ class DeviceController extends Controller
                 ->unique()
                 ->values()
                 ->all(),
+            'request_types' => collect($request->query('request_type', []))
+                ->map(fn (mixed $type) => trim((string) $type))
+                ->filter(fn (string $type) => in_array($type, self::REQUEST_TYPES, true))
+                ->unique()
+                ->values()
+                ->all(),
         ];
 
         $filters['has_status_filter'] = count($filters['statuses']) > 0 && count($filters['statuses']) < count(self::STATUSES);
+        $filters['has_request_type_filter'] = count($filters['request_types']) > 0 && count($filters['request_types']) < count(self::REQUEST_TYPES);
 
         $summaryQuery = $this->visibleDevicesQuery($user);
         $accessibleRooms = $this->accessibleRooms($user);
@@ -100,7 +109,19 @@ class DeviceController extends Controller
             ->values();
 
         $devices = $this->visibleDevicesQuery($user)
-            ->with(['type', 'building', 'room.building', 'activeRepair', 'latestRepair', 'assignedTo', 'createdBy'])
+            ->with([
+                'type',
+                'building',
+                'room.building',
+                'activeRepair',
+                'latestRepair',
+                'assignedTo',
+                'createdBy',
+                'pendingRepairRequest.responsibleUser',
+                'pendingWriteoffRequest.responsibleUser',
+                'pendingTransferRequest.responsibleUser',
+                'pendingTransferRequest.transferTo',
+            ])
             ->withExists([
                 'repairRequests as has_pending_repair_request' => fn (Builder $query) => $query->where('status', RepairRequest::STATUS_SUBMITTED),
                 'writeoffRequests as has_pending_writeoff_request' => fn (Builder $query) => $query->where('status', WriteoffRequest::STATUS_SUBMITTED),
@@ -158,6 +179,23 @@ class DeviceController extends Controller
                 $filters['has_status_filter'],
                 fn (Builder $query) => $query->whereIn('status', $filters['statuses'])
             )
+            ->when(
+                $filters['has_request_type_filter'],
+                function (Builder $query) use ($filters) {
+                    $query->where(function (Builder $requestQuery) use ($filters) {
+                        foreach (collect($filters['request_types'])->values() as $index => $type) {
+                            $method = $index === 0 ? 'whereHas' : 'orWhereHas';
+
+                            match ($type) {
+                                'repair' => $requestQuery->{$method}('pendingRepairRequest'),
+                                'writeoff' => $requestQuery->{$method}('pendingWriteoffRequest'),
+                                'transfer' => $requestQuery->{$method}('pendingTransferRequest'),
+                                default => null,
+                            };
+                        }
+                    });
+                }
+            )
             ->orderByDesc('id')
             ->paginate(20)
             ->withQueryString();
@@ -180,6 +218,9 @@ class DeviceController extends Controller
                             (bool) ($device->has_pending_repair_request ?? false),
                             (bool) ($device->has_pending_writeoff_request ?? false),
                             (bool) ($device->has_pending_transfer_request ?? false),
+                            $device->pendingRepairRequest,
+                            $device->pendingWriteoffRequest,
+                            $device->pendingTransferRequest,
                         ),
                         'repairStatusLabel' => $this->visibleRepairStatusLabel($device),
                     ],
@@ -901,7 +942,10 @@ class DeviceController extends Controller
         bool $canManageRequests,
         bool $hasPendingRepairRequest,
         bool $hasPendingWriteoffRequest,
-        bool $hasPendingTransferRequest
+        bool $hasPendingTransferRequest,
+        mixed $pendingRepairRequest = null,
+        mixed $pendingWriteoffRequest = null,
+        mixed $pendingTransferRequest = null,
     ): ?array {
         if ($hasPendingRepairRequest) {
             return [
@@ -910,7 +954,8 @@ class DeviceController extends Controller
                 'short_label' => 'Pieprasijums',
                 'detail_label' => 'Remonts',
                 'class' => 'border-sky-200 bg-sky-50 text-sky-700',
-                'url' => $this->requestIndexUrl($device, $canManageRequests, 'repair'),
+                'url' => $this->requestIndexUrl($device, $canManageRequests, 'repair', $pendingRepairRequest?->id),
+                'preview' => $this->pendingRequestPreview('repair', $pendingRepairRequest),
             ];
         }
 
@@ -921,7 +966,8 @@ class DeviceController extends Controller
                 'short_label' => 'Pieprasijums',
                 'detail_label' => 'Norakst.',
                 'class' => 'border-rose-200 bg-rose-50 text-rose-700',
-                'url' => $this->requestIndexUrl($device, $canManageRequests, 'writeoff'),
+                'url' => $this->requestIndexUrl($device, $canManageRequests, 'writeoff', $pendingWriteoffRequest?->id),
+                'preview' => $this->pendingRequestPreview('writeoff', $pendingWriteoffRequest),
             ];
         }
 
@@ -932,14 +978,15 @@ class DeviceController extends Controller
                 'short_label' => 'Pieprasijums',
                 'detail_label' => 'Nodosana',
                 'class' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                'url' => $this->requestIndexUrl($device, $canManageRequests, 'transfer'),
+                'url' => $this->requestIndexUrl($device, $canManageRequests, 'transfer', $pendingTransferRequest?->id),
+                'preview' => $this->pendingRequestPreview('transfer', $pendingTransferRequest),
             ];
         }
 
         return null;
     }
 
-    private function requestIndexUrl(Device $device, bool $canManageRequests, string $type): ?string
+    private function requestIndexUrl(Device $device, bool $canManageRequests, string $type, ?int $requestId = null): ?string
     {
         $params = [
             'q' => $device->code ?: $device->name,
@@ -947,10 +994,58 @@ class DeviceController extends Controller
             'status' => ['submitted'],
         ];
 
-        return match ($type) {
+        $baseUrl = match ($type) {
             'repair' => Route::has('repair-requests.index') ? route('repair-requests.index', $params) : null,
             'writeoff' => Route::has('writeoff-requests.index') ? route('writeoff-requests.index', $params) : null,
             'transfer' => Route::has('device-transfers.index') ? route('device-transfers.index', $params) : null,
+            default => null,
+        };
+
+        if (! $baseUrl || ! $requestId) {
+            return $baseUrl;
+        }
+
+        $anchor = match ($type) {
+            'repair' => 'repair-request-',
+            'writeoff' => 'writeoff-request-',
+            'transfer' => 'device-transfer-',
+            default => '',
+        };
+
+        return $anchor !== '' ? $baseUrl.'#'.$anchor.$requestId : $baseUrl;
+    }
+
+    private function pendingRequestPreview(string $type, mixed $request): ?array
+    {
+        if (! $request) {
+            return null;
+        }
+
+        return match ($type) {
+            'repair' => [
+                'type_label' => 'Remonta pieprasijums',
+                'meta_label' => 'Apraksts',
+                'submitted_at' => $request->created_at?->format('d.m.Y H:i') ?: '-',
+                'submitted_by' => $request->responsibleUser?->full_name ?: '-',
+                'summary' => $request->description ?: 'Apraksts nav pievienots.',
+                'recipient' => null,
+            ],
+            'writeoff' => [
+                'type_label' => 'Norakstisanas pieprasijums',
+                'meta_label' => 'Iemesls',
+                'submitted_at' => $request->created_at?->format('d.m.Y H:i') ?: '-',
+                'submitted_by' => $request->responsibleUser?->full_name ?: '-',
+                'summary' => $request->reason ?: 'Iemesls nav pievienots.',
+                'recipient' => null,
+            ],
+            'transfer' => [
+                'type_label' => 'Nodosanas pieprasijums',
+                'meta_label' => 'Iemesls',
+                'submitted_at' => $request->created_at?->format('d.m.Y H:i') ?: '-',
+                'submitted_by' => $request->responsibleUser?->full_name ?: '-',
+                'summary' => $request->transfer_reason ?: 'Iemesls nav pievienots.',
+                'recipient' => $request->transferTo?->full_name ?: null,
+            ],
             default => null,
         };
     }
