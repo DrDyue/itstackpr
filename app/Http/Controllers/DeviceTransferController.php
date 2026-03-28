@@ -234,6 +234,10 @@ class DeviceTransferController extends Controller
         abort_unless($reviewer, 403);
 
         if (! $this->featureTableExists('device_transfers')) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Iericu parsutisanas pieteikumu tabula sobrid nav pieejama.'], 503);
+            }
+
             return back()->with('error', 'Iericu parsutisanas pieteikumu tabula sobrid nav pieejama.');
         }
 
@@ -241,6 +245,10 @@ class DeviceTransferController extends Controller
         abort_unless($canReview, 403);
 
         if ($deviceTransfer->status !== DeviceTransfer::STATUS_SUBMITTED) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Sis pieteikums jau ir izskatits.'], 409);
+            }
+
             return back()->with('error', 'Sis pieteikums jau ir izskatits.');
         }
 
@@ -305,6 +313,14 @@ class DeviceTransferController extends Controller
 
         $after = $deviceTransfer->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState($reviewer->id, $deviceTransfer, $before, $after);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Ierices parsutisanas pieteikums izskatits',
+                'status' => $validated['status'],
+                'request_id' => $deviceTransfer->id,
+            ]);
+        }
 
         return back()->with('success', 'Ierices parsutisanas pieteikums izskatits');
     }

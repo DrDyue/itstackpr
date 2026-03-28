@@ -795,6 +795,8 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->assertTrue($notifications->contains(fn (array $notification) => $notification['id'] === 'repair-request:'.$repairRequest->id));
         $this->assertTrue($notifications->contains(fn (array $notification) => $notification['id'] === 'writeoff-request:'.$writeoffRequest->id));
         $this->assertTrue($notifications->contains(fn (array $notification) => $notification['id'] === 'device-transfer:'.$transfer->id));
+        $this->assertSame(2, count($notifications->firstWhere('id', 'repair-request:'.$repairRequest->id)['actions'] ?? []));
+        $this->assertSame(2, count($notifications->firstWhere('id', 'writeoff-request:'.$writeoffRequest->id)['actions'] ?? []));
     }
 
     public function test_regular_user_live_notifications_show_only_incoming_transfer_requests(): void
@@ -830,6 +832,66 @@ class AuthAndRequestFlowsTest extends TestCase
 
         $this->assertCount(1, $notifications);
         $this->assertSame('incoming-transfer:'.$incomingTransfer->id, $notifications->first()['id']);
+        $this->assertSame(2, count($notifications->first()['actions'] ?? []));
+    }
+
+    public function test_admin_can_review_repair_request_via_json_endpoint(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'json-review-admin@example.com');
+        $employee = $this->createUser(role: User::ROLE_USER, email: 'json-review-user@example.com');
+        $device = $this->createDevice($employee->id, Device::STATUS_ACTIVE, 'DEV-JSON-REPAIR');
+
+        $repairRequest = RepairRequest::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $employee->id,
+            'description' => 'Jaskata no toast paziņojuma.',
+            'status' => RepairRequest::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($admin)
+            ->postJson(route('repair-requests.review', $repairRequest), [
+                'status' => RepairRequest::STATUS_APPROVED,
+            ])
+            ->assertOk()
+            ->assertJson([
+                'status' => RepairRequest::STATUS_APPROVED,
+                'request_id' => $repairRequest->id,
+            ]);
+
+        $this->assertDatabaseHas('repair_requests', [
+            'id' => $repairRequest->id,
+            'status' => RepairRequest::STATUS_APPROVED,
+        ]);
+    }
+
+    public function test_transfer_recipient_can_review_transfer_via_json_endpoint(): void
+    {
+        $sender = $this->createUser(role: User::ROLE_USER, email: 'json-transfer-sender@example.com');
+        $recipient = $this->createUser(role: User::ROLE_USER, email: 'json-transfer-recipient@example.com');
+        $device = $this->createDevice($sender->id, Device::STATUS_ACTIVE, 'DEV-JSON-TRANSFER');
+
+        $transfer = DeviceTransfer::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $sender->id,
+            'transfered_to_id' => $recipient->id,
+            'transfer_reason' => 'Jaskata no toast paziņojuma.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($recipient)
+            ->postJson(route('device-transfers.review', $transfer), [
+                'status' => DeviceTransfer::STATUS_REJECTED,
+            ])
+            ->assertOk()
+            ->assertJson([
+                'status' => DeviceTransfer::STATUS_REJECTED,
+                'request_id' => $transfer->id,
+            ]);
+
+        $this->assertDatabaseHas('device_transfers', [
+            'id' => $transfer->id,
+            'status' => DeviceTransfer::STATUS_REJECTED,
+        ]);
     }
 
     public function test_admin_can_create_transfer_request_for_any_active_assigned_device(): void
@@ -1772,6 +1834,28 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertSee('Nodosanas pieprasijums')
             ->assertSee('Japarvieto uz citu darba vietu.')
             ->assertSee('Atvert pieprasijumu');
+    }
+
+    public function test_devices_index_renders_repair_status_preview_information(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-repair-preview-admin@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_REPAIR, 'DEV-REPAIR-PREVIEW');
+
+        Repair::create([
+            'device_id' => $device->id,
+            'description' => 'Maina detaļas un veic diagnostiku.',
+            'status' => 'in-progress',
+            'repair_type' => 'internal',
+            'priority' => 'medium',
+            'accepted_by' => $admin->id,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('devices.index'))
+            ->assertOk()
+            ->assertSee('Remonta ieraksts')
+            ->assertSee('Maina detaļas un veic diagnostiku.')
+            ->assertSee('Ieksejais');
     }
 
     public function test_regular_user_devices_index_shows_request_actions_for_active_device(): void

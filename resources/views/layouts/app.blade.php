@@ -53,6 +53,21 @@
                                 <x-icon name="x-mark" size="h-4 w-4" />
                             </button>
                         </div>
+
+                        <template x-if="Array.isArray(notification.actions) && notification.actions.length > 0">
+                            <div class="mt-4 flex flex-wrap gap-2 border-t border-black/5 pt-3">
+                                <template x-for="action in notification.actions" :key="notification.id + '-' + action.label">
+                                    <button
+                                        type="button"
+                                        :class="actionClasses(action.tone)"
+                                        class="inline-flex items-center justify-center rounded-xl border px-4 py-2 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60"
+                                        :disabled="notification.busy"
+                                        @click="runAction(notification, action)"
+                                        x-text="notification.busy ? 'Apstrada...' : action.label"
+                                    ></button>
+                                </template>
+                            </div>
+                        </template>
                     </div>
                 </template>
             </div>

@@ -52,6 +52,10 @@ class LiveNotificationController extends Controller
                         'status' => [RepairRequest::STATUS_SUBMITTED],
                     ], false).'#repair-request-'.$request->id,
                     createdAt: $request->created_at,
+                    actions: [
+                        $this->actionConfig('Apstiprinat', 'approve', route('repair-requests.review', $request), ['status' => RepairRequest::STATUS_APPROVED]),
+                        $this->actionConfig('Noraidit', 'reject', route('repair-requests.review', $request), ['status' => RepairRequest::STATUS_REJECTED]),
+                    ],
                 ))
             : collect();
 
@@ -74,6 +78,10 @@ class LiveNotificationController extends Controller
                         'status' => [WriteoffRequest::STATUS_SUBMITTED],
                     ], false).'#writeoff-request-'.$request->id,
                     createdAt: $request->created_at,
+                    actions: [
+                        $this->actionConfig('Apstiprinat', 'approve', route('writeoff-requests.review', $request), ['status' => WriteoffRequest::STATUS_APPROVED]),
+                        $this->actionConfig('Noraidit', 'reject', route('writeoff-requests.review', $request), ['status' => WriteoffRequest::STATUS_REJECTED]),
+                    ],
                 ))
             : collect();
 
@@ -96,6 +104,7 @@ class LiveNotificationController extends Controller
                         'status' => [DeviceTransfer::STATUS_SUBMITTED],
                     ], false).'#device-transfer-'.$transfer->id,
                     createdAt: $transfer->created_at,
+                    actions: [],
                 ))
             : collect();
 
@@ -131,6 +140,10 @@ class LiveNotificationController extends Controller
                     'status' => [DeviceTransfer::STATUS_SUBMITTED],
                 ], false).'#device-transfer-'.$transfer->id,
                 createdAt: $transfer->created_at,
+                actions: [
+                    $this->actionConfig('Apstiprinat', 'approve', route('device-transfers.review', $transfer), ['status' => DeviceTransfer::STATUS_APPROVED]),
+                    $this->actionConfig('Noraidit', 'reject', route('device-transfers.review', $transfer), ['status' => DeviceTransfer::STATUS_REJECTED]),
+                ],
             ))
             ->sortByDesc('created_unix')
             ->values();
@@ -144,6 +157,7 @@ class LiveNotificationController extends Controller
         string $message,
         string $url,
         $createdAt,
+        array $actions = [],
     ): array {
         return [
             'id' => $id,
@@ -154,6 +168,17 @@ class LiveNotificationController extends Controller
             'url' => $url,
             'created_at' => $createdAt?->toIso8601String(),
             'created_unix' => $createdAt?->getTimestamp() ?? 0,
+            'actions' => $actions,
+        ];
+    }
+
+    private function actionConfig(string $label, string $tone, string $url, array $payload): array
+    {
+        return [
+            'label' => $label,
+            'tone' => $tone,
+            'url' => $url,
+            'payload' => $payload,
         ];
     }
 }

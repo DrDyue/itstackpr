@@ -158,6 +158,7 @@
                                         ])->filter()->implode(' | ');
                                         $deviceState = $dashboardDeviceStates[$device->id] ?? [];
                                         $repairStatusLabel = $deviceState['repairStatusLabel'] ?? null;
+                                        $repairPreview = $deviceState['repairPreview'] ?? null;
                                         $pendingRequestBadge = $deviceState['pendingRequestBadge'] ?? null;
                                     @endphp
                                     <tr>
@@ -181,12 +182,39 @@
                                         <td>
                                             <div class="device-status-stack">
                                                 @if ($device->status === \App\Models\Device::STATUS_REPAIR && $repairStatusLabel)
-                                                    <div class="device-status-split-chip device-status-split-chip-repair">
-                                                        <span class="device-status-split-main">
-                                                            <x-icon name="repair" size="h-3.5 w-3.5" />
-                                                            <span>Remonts</span>
-                                                        </span>
-                                                        <span class="device-status-split-sub">{{ $repairStatusLabel }}</span>
+                                                    <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                                                        <div class="device-status-split-chip device-status-split-chip-repair" @focusin="open = true" @focusout="open = false" tabindex="0">
+                                                            <span class="device-status-split-main">
+                                                                <x-icon name="repair" size="h-3.5 w-3.5" />
+                                                                <span>Remonts</span>
+                                                            </span>
+                                                            <span class="device-status-split-sub">{{ $repairStatusLabel }}</span>
+                                                        </div>
+
+                                                        @if ($repairPreview)
+                                                            <div x-cloak x-show="open" x-transition.opacity.scale.origin.top.left class="device-request-popover">
+                                                                <div class="device-request-popover-head">
+                                                                    <span class="device-request-popover-title">{{ $repairPreview['title'] }}</span>
+                                                                    <span class="device-request-popover-date">{{ $repairPreview['created_at'] }}</span>
+                                                                </div>
+                                                                <div class="device-request-popover-row">
+                                                                    <span class="device-request-popover-label">Statuss</span>
+                                                                    <span class="device-request-popover-value">{{ $repairPreview['status'] }}</span>
+                                                                </div>
+                                                                <div class="device-request-popover-row">
+                                                                    <span class="device-request-popover-label">Tips</span>
+                                                                    <span class="device-request-popover-value">{{ $repairPreview['type'] }}</span>
+                                                                </div>
+                                                                <div class="device-request-popover-row">
+                                                                    <span class="device-request-popover-label">Apstiprinaja</span>
+                                                                    <span class="device-request-popover-value">{{ $repairPreview['approved_by'] }}</span>
+                                                                </div>
+                                                                <div class="device-request-popover-row device-request-popover-row-stack">
+                                                                    <span class="device-request-popover-label">Apraksts</span>
+                                                                    <div class="device-request-popover-copy">{{ $repairPreview['description'] }}</div>
+                                                                </div>
+                                                            </div>
+                                                        @endif
                                                     </div>
                                                 @else
                                                     <x-status-pill context="device" :value="$device->status" />

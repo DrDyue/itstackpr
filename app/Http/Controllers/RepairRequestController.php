@@ -165,10 +165,18 @@ class RepairRequestController extends Controller
         $manager = $this->requireManager();
 
         if (! $this->featureTableExists('repair_requests')) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Remonta pieteikumu tabula sobrid nav pieejama.'], 503);
+            }
+
             return back()->with('error', 'Remonta pieteikumu tabula sobrid nav pieejama.');
         }
 
         if ($repairRequest->status !== RepairRequest::STATUS_SUBMITTED) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Sis pieteikums jau ir izskatits.'], 409);
+            }
+
             return back()->with('error', 'Sis pieteikums jau ir izskatits.');
         }
 
@@ -232,6 +240,14 @@ class RepairRequestController extends Controller
 
         $after = $repairRequest->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState($manager->id, $repairRequest, $before, $after);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Remonta pieteikums izskatits',
+                'status' => $validated['status'],
+                'request_id' => $repairRequest->id,
+            ]);
+        }
 
         return back()->with('success', 'Remonta pieteikums izskatits');
     }

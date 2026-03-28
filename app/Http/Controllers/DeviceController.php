@@ -113,8 +113,10 @@ class DeviceController extends Controller
                 'type',
                 'building',
                 'room.building',
-                'activeRepair',
-                'latestRepair',
+                'activeRepair.acceptedBy',
+                'activeRepair.request.responsibleUser',
+                'latestRepair.acceptedBy',
+                'latestRepair.request.responsibleUser',
                 'assignedTo',
                 'createdBy',
                 'pendingRepairRequest.responsibleUser',
@@ -223,6 +225,7 @@ class DeviceController extends Controller
                             $device->pendingTransferRequest,
                         ),
                         'repairStatusLabel' => $this->visibleRepairStatusLabel($device),
+                        'repairPreview' => $this->repairPreview($device),
                     ],
                 ];
             })
@@ -293,7 +296,10 @@ class DeviceController extends Controller
             'createdBy',
             'assignedTo',
             'activeRepair',
-            'latestRepair',
+            'activeRepair.acceptedBy',
+            'activeRepair.request.responsibleUser',
+            'latestRepair.acceptedBy',
+            'latestRepair.request.responsibleUser',
             'repairs.assignee',
             'repairRequests.responsibleUser',
             'repairRequests.reviewedBy',
@@ -859,6 +865,30 @@ class DeviceController extends Controller
             ?? $this->repairStatusLabel($device->latestRepair?->status);
 
         return $label ?: 'Gaida';
+    }
+
+    private function repairPreview(Device $device): ?array
+    {
+        if ($device->status !== Device::STATUS_REPAIR) {
+            return null;
+        }
+
+        $repair = $device->activeRepair ?? $device->latestRepair;
+
+        if (! $repair) {
+            return null;
+        }
+
+        return [
+            'title' => 'Remonta ieraksts',
+            'status' => $this->repairStatusLabel($repair->status) ?: 'Gaida',
+            'type' => $repair->repair_type === 'external' ? 'Arejais' : 'Ieksejais',
+            'approved_by' => $repair->acceptedBy?->full_name
+                ?: $repair->request?->responsibleUser?->full_name
+                ?: '-',
+            'created_at' => $repair->created_at?->format('d.m.Y H:i') ?: '-',
+            'description' => $repair->description ?: 'Apraksts nav pievienots.',
+        ];
     }
 
     private function repairReasonText(Device $device): string

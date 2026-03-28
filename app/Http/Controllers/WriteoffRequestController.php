@@ -171,10 +171,18 @@ class WriteoffRequestController extends Controller
         $manager = $this->requireManager();
 
         if (! $this->featureTableExists('writeoff_requests')) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Norakstisanas pieteikumu tabula sobrid nav pieejama.'], 503);
+            }
+
             return back()->with('error', 'Norakstisanas pieteikumu tabula sobrid nav pieejama.');
         }
 
         if ($writeoffRequest->status !== WriteoffRequest::STATUS_SUBMITTED) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Sis pieteikums jau ir izskatits.'], 409);
+            }
+
             return back()->with('error', 'Sis pieteikums jau ir izskatits.');
         }
 
@@ -219,6 +227,14 @@ class WriteoffRequestController extends Controller
 
         $after = $writeoffRequest->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState($manager->id, $writeoffRequest, $before, $after);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Norakstisanas pieteikums izskatits',
+                'status' => $validated['status'],
+                'request_id' => $writeoffRequest->id,
+            ]);
+        }
 
         return back()->with('success', 'Norakstisanas pieteikums izskatits');
     }

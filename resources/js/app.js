@@ -204,6 +204,7 @@ const registerAlpineData = () => {
                     const toast = {
                         ...notification,
                         visible: true,
+                        busy: false,
                     };
 
                     this.items = [toast, ...this.items].slice(0, 4);
@@ -233,6 +234,26 @@ const registerAlpineData = () => {
             this.dismiss(notification.id);
             window.location.href = notification.url;
         },
+        async runAction(notification, action) {
+            if (!window.axios || !action?.url || notification?.busy) {
+                return;
+            }
+
+            notification.busy = true;
+
+            try {
+                await window.axios.post(action.url, action.payload ?? {}, {
+                    headers: {
+                        Accept: 'application/json',
+                    },
+                });
+
+                this.dismiss(notification.id);
+                await this.fetchNotifications(false);
+            } catch (error) {
+                notification.busy = false;
+            }
+        },
         accentClasses(accent) {
             return {
                 amber: 'border-amber-200 bg-amber-50/95 text-amber-950',
@@ -256,6 +277,12 @@ const registerAlpineData = () => {
                 transfer: 'Nodosana',
                 'incoming-transfer': 'Jaizskata',
             }[type] ?? 'Pieprasijums';
+        },
+        actionClasses(tone) {
+            return {
+                approve: 'border-emerald-200 bg-emerald-600 text-white hover:bg-emerald-700',
+                reject: 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100',
+            }[tone] ?? 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50';
         },
         readSeenIds() {
             try {
