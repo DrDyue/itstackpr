@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Device;
 use App\Models\Repair;
+use App\Models\DeviceTransfer;
+use App\Models\RepairRequest;
 use App\Models\User;
+use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -291,13 +294,18 @@ class RepairController extends Controller
 
     private function formData(?Repair $repair = null): array
     {
-        return [
-            'devices' => Device::query()
+        $devices = $repair
+            ? Device::query()
                 ->with(['assignedTo', 'building', 'room', 'type'])
                 ->where('status', '!=', Device::STATUS_WRITEOFF)
-                ->when($repair?->device_id, fn (Builder $query) => $query->orWhere('id', $repair->device_id))
+                ->when($repair->device_id, fn (Builder $query) => $query->orWhere('id', $repair->device_id))
                 ->orderBy('name')
-                ->get(),
+                ->get()
+            : $this->availableDevicesForCreate()->get();
+
+        return [
+            'devices' => $devices,
+            'deviceOptions' => $this->deviceOptions($devices),
             'users' => User::active()->orderBy('full_name')->get(),
             'statuses' => self::STATUSES,
             'repairTypes' => self::TYPES,
@@ -363,6 +371,24 @@ class RepairController extends Controller
             ]);
         }
 
+        if (! $repair && $device && RepairRequest::query()->where('device_id', $device->id)->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau ir gaidoss remonta pieteikums.'],
+            ]);
+        }
+
+        if (! $repair && $device && WriteoffRequest::query()->where('device_id', $device->id)->where('status', WriteoffRequest::STATUS_SUBMITTED)->exists()) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau ir gaidoss norakstisanas pieteikums.'],
+            ]);
+        }
+
+        if (! $repair && $device && DeviceTransfer::query()->where('device_id', $device->id)->where('status', DeviceTransfer::STATUS_SUBMITTED)->exists()) {
+            throw ValidationException::withMessages([
+                'device_id' => ['Sai iericei jau ir gaidoss nodosanas pieteikums.'],
+            ]);
+        }
+
         if ($device) {
             $activeRepairQuery = $device->repairs()->whereIn('status', ['waiting', 'in-progress']);
             if ($repair) {
@@ -407,6 +433,48 @@ class RepairController extends Controller
         }
 
         return $validated;
+    }
+
+    private function availableDevicesForCreate(): Builder
+    {
+        return Device::query()
+            ->with(['assignedTo', 'building', 'room', 'type'])
+            ->where('status', Device::STATUS_ACTIVE)
+            ->whereDoesntHave('repairs', fn (Builder $query) => $query->whereIn('status', ['waiting', 'in-progress']))
+            ->whereDoesntHave('repairRequests', fn (Builder $query) => $query->where('status', RepairRequest::STATUS_SUBMITTED))
+            ->whereDoesntHave('writeoffRequests', fn (Builder $query) => $query->where('status', WriteoffRequest::STATUS_SUBMITTED))
+            ->whereDoesntHave('transfers', fn (Builder $query) => $query->where('status', DeviceTransfer::STATUS_SUBMITTED))
+            ->orderBy('name');
+    }
+
+    private function deviceOptions($devices)
+    {
+        return collect($devices)->map(function (Device $device) {
+            $description = collect([
+                $device->type?->type_name,
+                collect([$device->manufacturer, $device->model])->filter()->implode(' '),
+                $device->assignedTo?->full_name ? 'paslaik: ' . $device->assignedTo->full_name : null,
+                $device->room?->room_number ? 'telpa ' . $device->room->room_number : null,
+                $device->building?->building_name,
+            ])->filter()->implode(' | ');
+
+            return [
+                'value' => (string) $device->id,
+                'label' => $device->name . ' (' . ($device->code ?: 'bez koda') . ')',
+                'description' => $description,
+                'search' => implode(' ', array_filter([
+                    $device->name,
+                    $device->code,
+                    $device->type?->type_name,
+                    $device->manufacturer,
+                    $device->model,
+                    $device->assignedTo?->full_name,
+                    $device->room?->room_number,
+                    $device->room?->room_name,
+                    $device->building?->building_name,
+                ])),
+            ];
+        })->values();
     }
 
     private function syncDeviceStatus(Repair $repair, ?string $previousRepairStatus = null): void

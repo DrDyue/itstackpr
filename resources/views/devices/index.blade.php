@@ -266,7 +266,8 @@
             <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
         @endif
 
-        <div class="overflow-x-auto rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+        <div class="device-table-shell">
+            <div class="device-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
             <table class="min-w-full text-sm">
                 <thead class="bg-slate-50 text-left text-slate-500">
                     <tr>
@@ -614,6 +615,7 @@
                     @endforelse
                 </tbody>
             </table>
+            </div>
         </div>
 
         {{ $devices->links() }}

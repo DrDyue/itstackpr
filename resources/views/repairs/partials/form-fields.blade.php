@@ -1,5 +1,12 @@
 @php
     $currentRepair = $repair;
+    $selectedDeviceId = (string) old('device_id', $currentRepair?->device_id ?? $preselectedDeviceId ?? '');
+    $selectedDevice = ! $currentRepair && ctype_digit($selectedDeviceId)
+        ? collect($devices ?? [])->firstWhere('id', (int) $selectedDeviceId)
+        : null;
+    $selectedDeviceLabel = $selectedDevice
+        ? $selectedDevice->name . ' (' . ($selectedDevice->code ?: 'bez koda') . ')'
+        : old('device_query', '');
     $statusHint = match ($currentRepair?->status ?? 'waiting') {
         'in-progress' => 'Remonts sobrid ir procesa. Statuss tiek mainits ar darbibu pogam, nevis ar formas lauku.',
         'completed' => 'Remonts ir pabeigts. Ja vajag turpinat, izmanto statusa darbibas virs formas.',
@@ -28,14 +35,20 @@
                             <div class="mt-2 text-xs text-slate-500">Esosam remontam ierici mainit nevar. Ja vajag citu ierici, atcel so remontu un izveido jaunu ierakstu.</div>
                         </div>
                     @else
-                        <label class="block">
+                        <div class="block">
                             <span class="crud-label">Ierice</span>
-                            <select name="device_id" class="crud-control" required>
-                                @foreach ($devices as $device)
-                                    <option value="{{ $device->id }}" @selected(old('device_id', $currentRepair?->device_id ?? $preselectedDeviceId ?? null) == $device->id)>{{ $device->name }} ({{ $device->code ?: 'bez koda' }}){{ $device->assignedTo ? ' | ' . $device->assignedTo->full_name : '' }}{{ $device->room ? ' | telpa ' . $device->room->room_number : '' }}</option>
-                                @endforeach
-                            </select>
-                        </label>
+                            <x-searchable-select
+                                name="device_id"
+                                query-name="device_query"
+                                identifier="repair-create-device"
+                                :options="$deviceOptions"
+                                :selected="$selectedDeviceId"
+                                :query="$selectedDeviceLabel"
+                                placeholder="Mekle pec nosaukuma, koda vai lietotaja"
+                                empty-message="Neviena ierice neatbilst meklejumam."
+                            />
+                            <div class="mt-2 text-xs text-slate-500">Redzamas tikai aktivās ierices bez aktiva remonta vai gaidosiem pieprasijumiem.</div>
+                        </div>
                     @endif
 
                     @if ($currentRepair && $currentRepair->status !== 'waiting')

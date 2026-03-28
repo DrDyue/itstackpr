@@ -123,7 +123,8 @@
                         </div>
                     </div>
 
-                    <div class="mt-5 overflow-x-auto rounded-[1.5rem] border border-slate-200 bg-white">
+                    <div class="device-table-shell mt-5">
+                        <div class="device-table-scroll rounded-[1.5rem] border border-slate-200 bg-white">
                         <table class="dash-table">
                             <thead class="dash-table-head">
                                 <tr>
@@ -271,6 +272,7 @@
                                 @endforelse
                             </tbody>
                         </table>
+                        </div>
                     </div>
 
                     @if ($dashboardDevices->hasPages())

@@ -1366,6 +1366,104 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertSee($recipient->full_name);
     }
 
+    public function test_admin_repair_create_form_uses_searchable_select_and_only_shows_eligible_devices(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'repair-create-admin@example.com');
+        $eligibleDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-REPAIR-ELIGIBLE');
+        $writtenOffDevice = $this->createDevice($admin->id, Device::STATUS_WRITEOFF, 'DEV-REPAIR-WRITEOFF');
+        $pendingRepairDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-REPAIR-PENDING');
+
+        DB::table('repair_requests')->insert([
+            'device_id' => $pendingRepairDevice->id,
+            'responsible_user_id' => $admin->id,
+            'description' => 'Gaida izskatisanu.',
+            'status' => RepairRequest::STATUS_SUBMITTED,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('repairs.create'))
+            ->assertOk()
+            ->assertSee('searchable-select', false)
+            ->assertSee($eligibleDevice->code)
+            ->assertDontSee($writtenOffDevice->code)
+            ->assertDontSee($pendingRepairDevice->code);
+    }
+
+    public function test_regular_user_repair_request_create_form_only_shows_eligible_owned_devices(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'repair-request-filter-admin@example.com');
+        $user = $this->createUser(role: User::ROLE_USER, email: 'repair-request-filter-user@example.com');
+        $otherUser = $this->createUser(role: User::ROLE_USER, email: 'repair-request-filter-other@example.com');
+        $eligibleDevice = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-REQ-FILTER-OK');
+        $pendingWriteoffDevice = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-REQ-FILTER-PENDING');
+        $repairDevice = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-REQ-FILTER-REPAIR');
+        $foreignDevice = $this->createDevice($otherUser->id, Device::STATUS_ACTIVE, 'DEV-REQ-FILTER-FOREIGN');
+
+        $this->actingAs($admin)
+            ->from(route('devices.index'))
+            ->post(route('devices.quick-update', $repairDevice), [
+                'action' => 'status',
+                'target_status' => Device::STATUS_REPAIR,
+            ])
+            ->assertRedirect(route('devices.index'));
+
+        DB::table('writeoff_requests')->insert([
+            'device_id' => $pendingWriteoffDevice->id,
+            'responsible_user_id' => $user->id,
+            'reason' => 'Gaida norakstisanu.',
+            'status' => WriteoffRequest::STATUS_SUBMITTED,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('repair-requests.create'))
+            ->assertOk()
+            ->assertSee($eligibleDevice->code)
+            ->assertDontSee($pendingWriteoffDevice->code)
+            ->assertDontSee($repairDevice->code)
+            ->assertDontSee($foreignDevice->code);
+    }
+
+    public function test_regular_user_writeoff_request_create_form_only_shows_eligible_owned_devices(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'writeoff-request-filter-admin@example.com');
+        $user = $this->createUser(role: User::ROLE_USER, email: 'writeoff-request-filter-user@example.com');
+        $otherUser = $this->createUser(role: User::ROLE_USER, email: 'writeoff-request-filter-other@example.com');
+        $eligibleDevice = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-WRITEOFF-FILTER-OK');
+        $pendingTransferDevice = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-WRITEOFF-FILTER-PENDING');
+        $repairDevice = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-WRITEOFF-FILTER-REPAIR');
+        $foreignDevice = $this->createDevice($otherUser->id, Device::STATUS_ACTIVE, 'DEV-WRITEOFF-FILTER-FOREIGN');
+
+        $this->actingAs($admin)
+            ->from(route('devices.index'))
+            ->post(route('devices.quick-update', $repairDevice), [
+                'action' => 'status',
+                'target_status' => Device::STATUS_REPAIR,
+            ])
+            ->assertRedirect(route('devices.index'));
+
+        DB::table('device_transfers')->insert([
+            'device_id' => $pendingTransferDevice->id,
+            'responsible_user_id' => $user->id,
+            'transfered_to_id' => $otherUser->id,
+            'transfer_reason' => 'Gaida apstiprinasanu.',
+            'status' => DeviceTransfer::STATUS_SUBMITTED,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('writeoff-requests.create'))
+            ->assertOk()
+            ->assertSee($eligibleDevice->code)
+            ->assertDontSee($pendingTransferDevice->code)
+            ->assertDontSee($repairDevice->code)
+            ->assertDontSee($foreignDevice->code);
+    }
+
     public function test_admin_request_indexes_show_all_statuses_by_default(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'request-defaults-admin@example.com');
