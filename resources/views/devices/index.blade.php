@@ -8,6 +8,8 @@
             : ($filters['room_query'] !== '' ? $filters['room_query'] : null);
         $selectedTypeLabel = $selectedType?->type_name ?: ($filters['type_query'] !== '' ? $filters['type_query'] : null);
         $selectedAssignedUserLabel = $selectedAssignedUser?->full_name ?: ($filters['assigned_to_query'] !== '' ? $filters['assigned_to_query'] : null);
+        $quickRoomSelectOptions = collect($quickRoomOptions ?? [])->values();
+        $quickAssigneeSelectOptions = collect($quickAssigneeOptions ?? [])->values();
         $statusFilterLinks = [
             ['label' => 'Aktivas', 'value' => 'active', 'icon' => 'check-circle', 'tone' => 'emerald'],
             ['label' => 'Remonta', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'amber'],
@@ -283,6 +285,10 @@
                         @php
                             $thumbUrl = $device->deviceImageThumbUrl();
                             $nameMeta = collect([$device->manufacturer, $device->model])->filter(fn ($value) => filled($value))->implode(' | ');
+                            $quickRoomLabel = $device->room
+                                ? ($device->room->room_number . ($device->room->room_name ? ' - ' . $device->room->room_name : ''))
+                                : null;
+                            $quickAssigneeLabel = $device->assignedTo?->full_name;
                             $deviceState = $deviceStates[$device->id] ?? [];
                             $requestAvailability = $deviceState['requestAvailability'] ?? [
                                 'repair' => false,
@@ -439,7 +445,7 @@
                                 </div>
                             </td>
                             <td class="px-4 py-4">
-                                <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">
+                                <div class="table-action-menu" x-data="{ open: false, panel: null }" @keydown.escape.window="open = false; panel = null">
                                     <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
                                         <span>Darbibas</span>
                                         <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
@@ -447,31 +453,31 @@
                                         </svg>
                                     </button>
 
-                                    <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
-                                        <a href="{{ route('devices.show', $device) }}" class="table-action-item" @click="open = false">
+                                    <div class="table-action-list" :class="panel ? 'table-action-list-wide' : ''" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false; panel = null">
+                                        <a href="{{ route('devices.show', $device) }}" class="table-action-item" @click="open = false; panel = null">
                                             <x-icon name="view" size="h-4 w-4" />
                                             <span>Skatit</span>
                                         </a>
 
                                         @if (! $canManageDevices)
                                             @if ($requestAvailability['can_create_any'])
-                                                <a href="{{ route('repair-requests.create', ['device_id' => $device->id]) }}" class="table-action-item text-sky-700 hover:bg-sky-50" @click="open = false">
+                                                <a href="{{ route('repair-requests.create', ['device_id' => $device->id]) }}" class="table-action-item text-sky-700 hover:bg-sky-50" @click="open = false; panel = null">
                                                     <x-icon name="repair" size="h-4 w-4" />
                                                     <span>Pieteikt remontu</span>
                                                 </a>
 
-                                                <a href="{{ route('writeoff-requests.create', ['device_id' => $device->id]) }}" class="table-action-item text-rose-700 hover:bg-rose-50" @click="open = false">
+                                                <a href="{{ route('writeoff-requests.create', ['device_id' => $device->id]) }}" class="table-action-item text-rose-700 hover:bg-rose-50" @click="open = false; panel = null">
                                                     <x-icon name="writeoff" size="h-4 w-4" />
                                                     <span>Pieteikt norakstisanu</span>
                                                 </a>
 
-                                                <a href="{{ route('device-transfers.create', ['device_id' => $device->id]) }}" class="table-action-item text-emerald-700 hover:bg-emerald-50" @click="open = false">
+                                                <a href="{{ route('device-transfers.create', ['device_id' => $device->id]) }}" class="table-action-item text-emerald-700 hover:bg-emerald-50" @click="open = false; panel = null">
                                                     <x-icon name="transfer" size="h-4 w-4" />
                                                     <span>Nodot citam</span>
                                                 </a>
                                             @elseif ($requestAvailability['reason'])
                                                 @if (! empty($pendingRequestBadge['url']))
-                                                    <a href="{{ $pendingRequestBadge['url'] }}" class="table-action-item text-sky-700 hover:bg-sky-50" @click="open = false">
+                                                    <a href="{{ $pendingRequestBadge['url'] }}" class="table-action-item text-sky-700 hover:bg-sky-50" @click="open = false; panel = null">
                                                         <x-icon :name="$pendingRequestBadge['icon'] ?? 'view'" size="h-4 w-4" />
                                                         <span>Skatit pieteikumu</span>
                                                     </a>
@@ -487,12 +493,22 @@
                                         @endif
 
                                         @if ($canManageDevices)
-                                            <a href="{{ route('devices.edit', $device) }}" class="table-action-item table-action-item-amber" @click="open = false">
+                                            <a href="{{ route('devices.edit', $device) }}" class="table-action-item table-action-item-amber" @click="open = false; panel = null">
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Rediget</span>
                                             </a>
 
                                             @if ($device->status === 'active')
+                                                <button type="button" class="table-action-item text-sky-700 hover:bg-sky-50" @click="panel = panel === 'room' ? null : 'room'">
+                                                    <x-icon name="room" size="h-4 w-4" />
+                                                    <span>Mainit telpu</span>
+                                                </button>
+
+                                                <button type="button" class="table-action-item text-violet-700 hover:bg-violet-50" @click="panel = panel === 'assignee' ? null : 'assignee'">
+                                                    <x-icon name="user" size="h-4 w-4" />
+                                                    <span>Mainit atbildigo</span>
+                                                </button>
+
                                                 <form method="POST" action="{{ route('devices.quick-update', $device) }}">
                                                     @csrf
                                                     <input type="hidden" name="action" value="status">
@@ -517,6 +533,74 @@
                                                         <span>Atdot remonta</span>
                                                     </button>
                                                 </form>
+
+                                                <div class="table-action-inline-panel" x-cloak x-show="panel === 'room'" x-transition.opacity>
+                                                    <div class="table-action-inline-head">
+                                                        <div>
+                                                            <div class="table-action-inline-title">Mainit telpu</div>
+                                                            <div class="table-action-inline-copy">Ierice tiks uzreiz parvietota uz citu telpu.</div>
+                                                        </div>
+                                                        <button type="button" class="table-action-inline-close" @click="panel = null">
+                                                            <x-icon name="x-mark" size="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+
+                                                    <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="space-y-3">
+                                                        @csrf
+                                                        <input type="hidden" name="action" value="room">
+                                                        <x-searchable-select
+                                                            name="target_room_id"
+                                                            query-name="target_room_query"
+                                                            identifier="device-quick-room-{{ $device->id }}"
+                                                            :options="$quickRoomSelectOptions"
+                                                            :selected="(string) ($device->room_id ?? '')"
+                                                            :query="$quickRoomLabel"
+                                                            placeholder="Izvelies telpu"
+                                                            empty-message="Neviena telpa neatbilst meklejumam."
+                                                        />
+                                                        <div class="table-action-inline-actions">
+                                                            <button type="button" class="btn-clear" @click="panel = null">Atcelt</button>
+                                                            <button type="submit" class="btn-search">
+                                                                <x-icon name="save" size="h-4 w-4" />
+                                                                <span>Saglabat</span>
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+
+                                                <div class="table-action-inline-panel" x-cloak x-show="panel === 'assignee'" x-transition.opacity>
+                                                    <div class="table-action-inline-head">
+                                                        <div>
+                                                            <div class="table-action-inline-title">Mainit atbildigo</div>
+                                                            <div class="table-action-inline-copy">Izvelies citu personu, kurai pieskirt ierici.</div>
+                                                        </div>
+                                                        <button type="button" class="table-action-inline-close" @click="panel = null">
+                                                            <x-icon name="x-mark" size="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+
+                                                    <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="space-y-3">
+                                                        @csrf
+                                                        <input type="hidden" name="action" value="assignee">
+                                                        <x-searchable-select
+                                                            name="target_assigned_to_id"
+                                                            query-name="target_assigned_to_query"
+                                                            identifier="device-quick-assignee-{{ $device->id }}"
+                                                            :options="$quickAssigneeSelectOptions"
+                                                            :selected="(string) ($device->assigned_to_id ?? '')"
+                                                            :query="$quickAssigneeLabel"
+                                                            placeholder="Izvelies atbildigo personu"
+                                                            empty-message="Neviena persona neatbilst meklejumam."
+                                                        />
+                                                        <div class="table-action-inline-actions">
+                                                            <button type="button" class="btn-clear" @click="panel = null">Atcelt</button>
+                                                            <button type="submit" class="btn-search">
+                                                                <x-icon name="save" size="h-4 w-4" />
+                                                                <span>Saglabat</span>
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
                                             @endif
                                         @endif
                                     </div>

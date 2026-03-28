@@ -497,6 +497,119 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->assertSame('Noliktava', DB::table('rooms')->where('id', $device->fresh()->room_id)->value('room_name'));
     }
 
+    public function test_manager_can_move_active_device_to_another_room_from_devices_table_action(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-room-action@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-QUICK-ROOM');
+
+        $targetRoomId = DB::table('rooms')->insertGetId([
+            'building_id' => $device->building_id,
+            'floor_number' => 2,
+            'room_number' => '202-DEV-QUICK-ROOM',
+            'room_name' => 'Meraparvietosanas telpa',
+            'user_id' => $admin->id,
+            'department' => 'Administracija',
+            'notes' => null,
+            'created_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->from(route('devices.index'))
+            ->post(route('devices.quick-update', $device), [
+                'action' => 'room',
+                'target_room_id' => $targetRoomId,
+            ])
+            ->assertRedirect(route('devices.index'));
+
+        $this->assertDatabaseHas('devices', [
+            'id' => $device->id,
+            'room_id' => $targetRoomId,
+            'building_id' => $device->building_id,
+        ]);
+    }
+
+    public function test_manager_can_reassign_active_device_from_devices_table_action(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-assignee-admin@example.com');
+        $newAssignee = $this->createUser(role: User::ROLE_USER, email: 'device-assignee-target@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-QUICK-ASSIGNEE');
+
+        $this->actingAs($admin)
+            ->from(route('devices.index'))
+            ->post(route('devices.quick-update', $device), [
+                'action' => 'assignee',
+                'target_assigned_to_id' => $newAssignee->id,
+            ])
+            ->assertRedirect(route('devices.index'));
+
+        $this->assertDatabaseHas('devices', [
+            'id' => $device->id,
+            'assigned_to_id' => $newAssignee->id,
+        ]);
+    }
+
+    public function test_manager_cannot_move_repair_device_to_another_room_from_devices_table_action(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-room-repair-block@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-ROOM-REPAIR-BLOCK');
+        $originalRoomId = $device->room_id;
+
+        $this->actingAs($admin)
+            ->from(route('devices.index'))
+            ->post(route('devices.quick-update', $device), [
+                'action' => 'status',
+                'target_status' => Device::STATUS_REPAIR,
+            ])
+            ->assertRedirect(route('devices.index'));
+
+        $targetRoomId = DB::table('rooms')->insertGetId([
+            'building_id' => $device->building_id,
+            'floor_number' => 3,
+            'room_number' => '303-DEV-ROOM-REPAIR-BLOCK',
+            'room_name' => 'Bloketa telpa',
+            'user_id' => $admin->id,
+            'department' => 'IT',
+            'notes' => null,
+            'created_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->from(route('devices.index'))
+            ->post(route('devices.quick-update', $device), [
+                'action' => 'room',
+                'target_room_id' => $targetRoomId,
+            ])
+            ->assertRedirect(route('devices.index'))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('devices', [
+            'id' => $device->id,
+            'room_id' => $originalRoomId,
+        ]);
+    }
+
+    public function test_manager_cannot_reassign_written_off_device_from_devices_table_action(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-assignee-writeoff-block@example.com');
+        $newAssignee = $this->createUser(role: User::ROLE_USER, email: 'device-assignee-writeoff-target@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_WRITEOFF, 'DEV-ASSIGNEE-WRITEOFF-BLOCK');
+        $originalAssigneeId = $device->assigned_to_id;
+
+        $this->actingAs($admin)
+            ->from(route('devices.index'))
+            ->post(route('devices.quick-update', $device), [
+                'action' => 'assignee',
+                'target_assigned_to_id' => $newAssignee->id,
+            ])
+            ->assertRedirect(route('devices.index'))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('devices', [
+            'id' => $device->id,
+            'assigned_to_id' => $originalAssigneeId,
+        ]);
+    }
+
     public function test_get_quick_update_route_redirects_instead_of_throwing_method_not_allowed(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'quick-update-get@example.com');

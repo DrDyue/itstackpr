@@ -39,6 +39,7 @@ class DeviceController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+        $canManageDevices = $user->canManageRequests();
 
         $filters = [
             'q' => trim((string) $request->query('q', '')),
@@ -80,7 +81,7 @@ class DeviceController extends Controller
         if (ctype_digit($filters['type'])) {
             $selectedType = $types->firstWhere('id', (int) $filters['type']);
         }
-        if ($user->canManageRequests() && ctype_digit($filters['assigned_to_id'])) {
+        if ($canManageDevices && ctype_digit($filters['assigned_to_id'])) {
             $selectedAssignedUser = User::query()->find((int) $filters['assigned_to_id']);
         }
 
@@ -249,7 +250,9 @@ class DeviceController extends Controller
             'selectedAssignedUser' => $selectedAssignedUser,
             'statuses' => self::STATUSES,
             'statusLabels' => $this->statusLabels(),
-            'canManageDevices' => $user->canManageRequests(),
+            'canManageDevices' => $canManageDevices,
+            'quickRoomOptions' => $canManageDevices ? $this->quickRoomOptions() : collect(),
+            'quickAssigneeOptions' => $canManageDevices ? $this->quickAssigneeOptions() : collect(),
         ]);
     }
 
@@ -445,13 +448,18 @@ class DeviceController extends Controller
         $this->requireManager();
 
         $validated = $this->validateInput($request, [
-            'action' => ['required', Rule::in(['status', 'room'])],
+            'action' => ['required', Rule::in(['status', 'room', 'assignee'])],
             'target_status' => [Rule::requiredIf(fn () => $request->input('action') === 'status'), Rule::in(self::STATUSES)],
             'target_room_id' => [Rule::requiredIf(fn () => $request->input('action') === 'room'), 'exists:rooms,id'],
+            'target_assigned_to_id' => [
+                Rule::requiredIf(fn () => $request->input('action') === 'assignee'),
+                Rule::exists('users', 'id')->where(fn ($query) => $query->where('is_active', true)),
+            ],
         ], [
             'action.required' => 'Izvelies darbibu, ko veikt ar ierici.',
             'target_status.required' => 'Izvelies jauno ierices statusu.',
             'target_room_id.required' => 'Izvelies telpu, uz kuru parvietot ierici.',
+            'target_assigned_to_id.required' => 'Izvelies atbildigo personu.',
         ]);
 
         $result = $this->performDeviceAction($device, $validated);
@@ -1085,6 +1093,7 @@ class DeviceController extends Controller
         return match ($data['action']) {
             'status' => $this->changeDeviceStatus($device, (string) ($data['target_status'] ?? '')),
             'room' => $this->moveDevice($device, $data['target_room_id'] ?? null),
+            'assignee' => $this->reassignDevice($device, $data['target_assigned_to_id'] ?? null),
             default => ['level' => 'error', 'message' => 'Neatbalstita darbiba.'],
         };
     }
@@ -1173,8 +1182,8 @@ class DeviceController extends Controller
 
     private function moveDevice(Device $device, mixed $roomId): array
     {
-        if ($device->status === Device::STATUS_WRITEOFF) {
-            return ['level' => 'error', 'message' => 'Norakstitu ierici vairs nevar pieskirt telpai.'];
+        if ($blockedReason = $this->quickRelationEditBlockedReason($device)) {
+            return ['level' => 'error', 'message' => $blockedReason];
         }
 
         if (! $roomId) {
@@ -1203,6 +1212,104 @@ class DeviceController extends Controller
         ]);
 
         return ['level' => 'success', 'message' => 'Ierice parvietota uz citu telpu.'];
+    }
+
+    private function reassignDevice(Device $device, mixed $assignedToId): array
+    {
+        if ($blockedReason = $this->quickRelationEditBlockedReason($device)) {
+            return ['level' => 'error', 'message' => $blockedReason];
+        }
+
+        if (! $assignedToId) {
+            return ['level' => 'error', 'message' => 'Nav izveleta atbildiga persona.'];
+        }
+
+        $assignee = User::query()
+            ->active()
+            ->find($assignedToId);
+
+        if (! $assignee) {
+            return ['level' => 'error', 'message' => 'Atbildiga persona nav atrasta.'];
+        }
+
+        if ((int) $device->assigned_to_id === (int) $assignee->id) {
+            return ['level' => 'error', 'message' => 'Ierice jau ir pieskirta sajai personai.'];
+        }
+
+        $before = $device->only(['assigned_to_id']);
+
+        $this->saveDevicePayload($device, [
+            'assigned_to_id' => $assignee->id,
+        ]);
+
+        AuditTrail::updatedFromState(auth()->id(), $device, $before, [
+            'assigned_to_id' => $assignee->id,
+        ]);
+
+        return ['level' => 'success', 'message' => 'Atbildiga persona atjauninata.'];
+    }
+
+    private function quickRelationEditBlockedReason(Device $device): ?string
+    {
+        if ($device->status === Device::STATUS_WRITEOFF) {
+            return 'Norakstitai iericei vairs nevar mainit telpu vai atbildigo personu.';
+        }
+
+        if ($device->status === Device::STATUS_REPAIR) {
+            $repairStatusLabel = $this->visibleRepairStatusLabel($device);
+
+            return 'Remonta iericei nevar mainit telpu vai atbildigo personu'.($repairStatusLabel ? ' ar statusu "'.$repairStatusLabel.'".' : '.');
+        }
+
+        return null;
+    }
+
+    private function quickRoomOptions(): Collection
+    {
+        return Room::query()
+            ->with('building')
+            ->orderBy('floor_number')
+            ->orderBy('room_number')
+            ->get()
+            ->map(fn (Room $room) => [
+                'value' => (string) $room->id,
+                'label' => $room->room_number.($room->room_name ? ' - '.$room->room_name : ''),
+                'description' => implode(' | ', array_filter([
+                    $room->building?->building_name,
+                    $room->floor_number ? $room->floor_number.'. stavs' : null,
+                    $room->department,
+                ])),
+                'search' => implode(' ', array_filter([
+                    $room->room_number,
+                    $room->room_name,
+                    $room->department,
+                    $room->building?->building_name,
+                    $room->floor_number,
+                ])),
+            ])
+            ->values();
+    }
+
+    private function quickAssigneeOptions(): Collection
+    {
+        return User::query()
+            ->active()
+            ->orderBy('full_name')
+            ->get()
+            ->map(fn (User $managedUser) => [
+                'value' => (string) $managedUser->id,
+                'label' => $managedUser->full_name,
+                'description' => implode(' | ', array_filter([
+                    $managedUser->job_title,
+                    $managedUser->email,
+                ])),
+                'search' => implode(' ', array_filter([
+                    $managedUser->full_name,
+                    $managedUser->job_title,
+                    $managedUser->email,
+                ])),
+            ])
+            ->values();
     }
 
     private function userRoomUpdateAvailability(Device $device, mixed $pendingRepairRequest, mixed $pendingWriteoffRequest, mixed $pendingTransferRequest): array
