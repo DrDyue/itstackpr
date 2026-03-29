@@ -15,6 +15,20 @@
 
         <title>IT inventra uzskaite</title>
 
+        <script>
+            (() => {
+                try {
+                    const savedTheme = window.localStorage.getItem('itstack-theme');
+                    const theme = savedTheme === 'dark' ? 'dark' : 'light';
+                    document.documentElement.dataset.theme = theme;
+                    document.documentElement.style.colorScheme = theme;
+                } catch (error) {
+                    document.documentElement.dataset.theme = 'light';
+                    document.documentElement.style.colorScheme = 'light';
+                }
+            })();
+        </script>
+
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="layout-body-reset app-bg bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),transparent_32%),radial-gradient(circle_at_top_right,_rgba(16,185,129,0.12),transparent_28%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] text-slate-900">
@@ -146,4 +160,3 @@
         @endauth
     </body>
 </html>
-

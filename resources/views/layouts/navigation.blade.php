@@ -6,7 +6,7 @@
     2. Lietotājam šeit paliek tikai tās sadaļas, kuras viņš drīkst izmantot.
     3. Navigācijā tiek rādīti arī gaidošo pieteikumu indikatori un ātrās saites.
 --}}
-<nav x-data="{ open: false }" class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur">
+<nav x-data="{ open: false }" class="app-main-nav sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur">
     @php
         $user = auth()->user();
         $isAdmin = $user?->isAdmin() ?? false;
@@ -188,6 +188,22 @@
                         </form>
                     @endif
 
+                    <button
+                        type="button"
+                        data-theme-toggle
+                        class="theme-toggle hidden lg:inline-flex"
+                        aria-label="Parslegt temu"
+                        title="Parslegt temu"
+                    >
+                        <span class="theme-toggle-icon theme-toggle-icon-sun">
+                            <x-icon name="sun" size="h-4 w-4" />
+                        </span>
+                        <span class="theme-toggle-icon theme-toggle-icon-moon">
+                            <x-icon name="moon" size="h-4 w-4" />
+                        </span>
+                        <span class="theme-toggle-label" data-theme-label>Gaisma</span>
+                    </button>
+
                     <x-dropdown align="right" width="w-64">
                     <x-slot name="trigger">
                         <button class="inline-flex min-w-0 max-w-[17rem] items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-500">
@@ -234,7 +250,7 @@
         </div>
     </div>
 
-    <div :class="{'block': open, 'hidden': !open}" class="hidden border-t border-slate-200 bg-white xl:hidden">
+    <div :class="{'block': open, 'hidden': !open}" class="app-mobile-nav-panel hidden border-t border-slate-200 bg-white xl:hidden">
         <div class="space-y-2 px-4 pb-4 pt-3">
             @if ($isAdmin)
                 <form method="POST" action="{{ route('view-mode.update') }}" class="mb-3 rounded-2xl border border-slate-200 bg-slate-50 p-2">
@@ -260,6 +276,22 @@
                     </div>
                 </form>
             @endif
+
+            <button
+                type="button"
+                data-theme-toggle
+                class="theme-toggle-mobile mb-3"
+                aria-label="Parslegt temu"
+                title="Parslegt temu"
+            >
+                <span class="theme-toggle-icon theme-toggle-icon-sun">
+                    <x-icon name="sun" size="h-4 w-4" />
+                </span>
+                <span class="theme-toggle-icon theme-toggle-icon-moon">
+                    <x-icon name="moon" size="h-4 w-4" />
+                </span>
+                <span data-theme-label>Gaisma</span>
+            </button>
 
             @foreach ($primaryNavigationItems as $item)
                 <x-responsive-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">

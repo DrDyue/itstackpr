@@ -1,6 +1,67 @@
 import './bootstrap';
 
 const Alpine = window.Alpine;
+const THEME_STORAGE_KEY = 'itstack-theme';
+
+const getStoredTheme = () => {
+    try {
+        return window.localStorage.getItem(THEME_STORAGE_KEY) === 'dark' ? 'dark' : 'light';
+    } catch (error) {
+        return 'light';
+    }
+};
+
+const applyTheme = (theme) => {
+    const normalizedTheme = theme === 'dark' ? 'dark' : 'light';
+    document.documentElement.dataset.theme = normalizedTheme;
+    document.documentElement.style.colorScheme = normalizedTheme;
+
+    if (document.body) {
+        document.body.dataset.theme = normalizedTheme;
+    }
+
+    window.dispatchEvent(new CustomEvent('app-theme-changed', {
+        detail: { theme: normalizedTheme },
+    }));
+};
+
+const syncThemeToggleUi = () => {
+    const currentTheme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+
+    document.querySelectorAll('[data-theme-label]').forEach((label) => {
+        label.textContent = currentTheme === 'dark' ? 'Tumsa' : 'Gaisma';
+    });
+
+    document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
+        button.setAttribute('aria-pressed', currentTheme === 'dark' ? 'true' : 'false');
+        button.setAttribute('title', currentTheme === 'dark' ? 'Parslegt uz gaiso temu' : 'Parslegt uz tumso temu');
+    });
+};
+
+const initializeThemeToggle = () => {
+    applyTheme(getStoredTheme());
+    syncThemeToggleUi();
+
+    document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
+        if (button.dataset.themeBound === '1') {
+            return;
+        }
+
+        button.dataset.themeBound = '1';
+        button.addEventListener('click', () => {
+            const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+
+            try {
+                window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+            } catch (error) {
+                // Ja localStorage nav pieejams, tema darbosies vismaz konkretas sesijas laika.
+            }
+
+            applyTheme(nextTheme);
+            syncThemeToggleUi();
+        });
+    });
+};
 
 const registerAlpineData = () => {
     if (!Alpine || window.__appAlpineDataRegistered) {
@@ -864,6 +925,11 @@ window.repairProcess = (config) => ({
 
 registerAlpineData();
 document.addEventListener('alpine:init', registerAlpineData);
+document.addEventListener('DOMContentLoaded', initializeThemeToggle);
+
+if (document.readyState !== 'loading') {
+    initializeThemeToggle();
+}
 
 if (Alpine && !window.__appAlpineStarted) {
     window.__appAlpineStarted = true;
