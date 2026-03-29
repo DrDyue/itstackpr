@@ -2066,6 +2066,7 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertOk()
             ->assertSee('Remonta ieraksts')
             ->assertSee('Maina detaļas un veic diagnostiku.')
+            ->assertSee($admin->full_name)
             ->assertSee('Ieksejais');
     }
 
@@ -2163,6 +2164,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->assertIsString($content);
         $this->assertMatchesRegularExpression('/DEV-DASH-PENDING.*Apskatit.*Remonts/s', $content);
         $this->assertMatchesRegularExpression('/DEV-DASH-REPAIR.*Remonts.*Procesa/s', $content);
+        $this->assertStringContainsString($admin->full_name, $content);
         $this->assertStringNotContainsString('Bez gaidosa remonta', $content);
     }
 

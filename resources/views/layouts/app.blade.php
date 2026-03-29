@@ -31,7 +31,7 @@
                     pollSeconds: 10,
                     pageKind: @js($liveNotificationPageKind),
                 })"
-                class="pointer-events-none fixed bottom-4 right-4 z-[60] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-3 sm:bottom-6 sm:right-6"
+                class="pointer-events-none fixed bottom-4 right-4 z-[60] flex w-[min(30rem,calc(100vw-1.5rem))] flex-col gap-3 sm:bottom-6 sm:right-6"
             >
                 <template x-for="notification in items" :key="notification.id">
                     <div
@@ -46,21 +46,30 @@
                         :class="accentClasses(notification.accent)"
                         class="notification-toast pointer-events-auto rounded-[1.5rem] border p-4 shadow-2xl backdrop-blur"
                     >
-                        <div class="flex items-start gap-3">
-                            <span
-                                :class="badgeClasses(notification.accent)"
-                                class="notification-toast-badge inline-flex min-h-10 min-w-10 items-center justify-center rounded-2xl px-3 text-xs font-extrabold uppercase tracking-[0.14em] shadow-sm"
-                                x-text="badgeText(notification.type)"
-                            ></span>
-                            <button type="button" class="notification-toast-main min-w-0 flex-1 text-left" @click="open(notification)">
+                        <button
+                            type="button"
+                            class="notification-toast-close inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-black/5 bg-white/80 text-slate-500 transition hover:bg-white hover:text-slate-900"
+                            @click.stop="dismiss(notification.id)"
+                        >
+                            <x-icon name="x-mark" size="h-4 w-4" />
+                        </button>
+
+                        <button type="button" class="notification-toast-main min-w-0 w-full text-left" @click="open(notification)">
                                 <div class="notification-toast-head">
-                                    <div class="min-w-0">
+                                    <div class="notification-toast-head-main min-w-0">
+                                        <div class="notification-toast-topline">
+                                            <span
+                                                :class="badgeClasses(notification.accent)"
+                                                class="notification-toast-badge inline-flex items-center justify-center rounded-2xl px-3 text-xs font-extrabold uppercase tracking-[0.14em] shadow-sm"
+                                                x-text="badgeText(notification.type)"
+                                            ></span>
+                                            <template x-if="notification.details?.wait_label">
+                                                <span class="notification-toast-wait" x-text="notification.details.wait_label"></span>
+                                            </template>
+                                        </div>
                                         <div class="notification-toast-title" x-text="notification.title"></div>
                                         <div class="notification-toast-copy" x-text="notification.message"></div>
                                     </div>
-                                    <template x-if="notification.details?.wait_label">
-                                        <span class="notification-toast-wait" x-text="notification.details.wait_label"></span>
-                                    </template>
                                 </div>
 
                                 <template x-if="notification.details">
@@ -109,15 +118,7 @@
                                         </div>
                                     </div>
                                 </template>
-                            </button>
-                            <button
-                                type="button"
-                                class="notification-toast-close inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-black/5 bg-white/80 text-slate-500 transition hover:bg-white hover:text-slate-900"
-                                @click.stop="dismiss(notification.id)"
-                            >
-                                <x-icon name="x-mark" size="h-4 w-4" />
-                            </button>
-                        </div>
+                        </button>
 
                         <template x-if="Array.isArray(notification.actions) && notification.actions.length > 0">
                             <div class="notification-toast-actions mt-4 flex flex-wrap gap-2 border-t border-black/5 pt-3">

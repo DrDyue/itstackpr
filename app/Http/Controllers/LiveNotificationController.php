@@ -47,7 +47,10 @@ class LiveNotificationController extends Controller
                     type: 'repair',
                     accent: 'sky',
                     title: 'Jauns remonta pieprasijums',
-                    message: trim(($request->responsibleUser?->full_name ?: 'Lietotajs').' iesniedza remontu iericei '.($request->device?->name ?: 'bez nosaukuma').'.'),
+                    message: $this->compactMessage(
+                        primary: $request->responsibleUser?->full_name ?: 'Lietotajs',
+                        secondary: 'Iesniegts par ierici '.($request->device?->name ?: 'bez nosaukuma')
+                    ),
                     details: $this->deviceDetails(
                         $request->device,
                         [
@@ -84,7 +87,10 @@ class LiveNotificationController extends Controller
                     type: 'writeoff',
                     accent: 'rose',
                     title: 'Jauns norakstisanas pieprasijums',
-                    message: trim(($request->responsibleUser?->full_name ?: 'Lietotajs').' iesniedza norakstisanu iericei '.($request->device?->name ?: 'bez nosaukuma').'.'),
+                    message: $this->compactMessage(
+                        primary: $request->responsibleUser?->full_name ?: 'Lietotajs',
+                        secondary: 'Iesniegts par ierici '.($request->device?->name ?: 'bez nosaukuma')
+                    ),
                     details: $this->deviceDetails(
                         $request->device,
                         [
@@ -121,7 +127,10 @@ class LiveNotificationController extends Controller
                     type: 'transfer',
                     accent: 'emerald',
                     title: 'Jauns nodosanas pieprasijums',
-                    message: trim(($transfer->responsibleUser?->full_name ?: 'Lietotajs').' velas nodot ierici '.($transfer->device?->name ?: 'bez nosaukuma').($transfer->transferTo?->full_name ? ' lietotajam '.$transfer->transferTo->full_name : '').'.'),
+                    message: $this->compactMessage(
+                        primary: $transfer->responsibleUser?->full_name ?: 'Lietotajs',
+                        secondary: 'Velas nodot '.($transfer->device?->name ?: 'ierici').($transfer->transferTo?->full_name ? ' lietotajam '.$transfer->transferTo->full_name : '')
+                    ),
                     details: $this->deviceDetails(
                         $transfer->device,
                         [
@@ -169,7 +178,10 @@ class LiveNotificationController extends Controller
                 type: 'incoming-transfer',
                 accent: 'amber',
                 title: 'Jauns ienakoss nodosanas pieprasijums',
-                message: trim(($transfer->responsibleUser?->full_name ?: 'Lietotajs').' velas tev nodot ierici '.($transfer->device?->name ?: 'bez nosaukuma').'.'),
+                message: $this->compactMessage(
+                    primary: $transfer->responsibleUser?->full_name ?: 'Lietotajs',
+                    secondary: 'Velas tev nodot '.($transfer->device?->name ?: 'ierici')
+                ),
                 details: $this->deviceDetails(
                     $transfer->device,
                     [
@@ -282,5 +294,10 @@ class LiveNotificationController extends Controller
         $remainingHours = $hours % 24;
 
         return 'gaida '.$days.' d'.($remainingHours > 0 ? ' '.$remainingHours.' h' : '');
+    }
+
+    private function compactMessage(string $primary, string $secondary): string
+    {
+        return trim($primary).' | '.trim($secondary);
     }
 }

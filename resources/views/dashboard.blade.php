@@ -207,7 +207,7 @@
                                                                     <span class="device-request-popover-value">{{ $repairPreview['type'] }}</span>
                                                                 </div>
                                                                 <div class="device-request-popover-row">
-                                                                    <span class="device-request-popover-label">Apstiprinaja</span>
+                                                                    <span class="device-request-popover-label">Pienema remontu</span>
                                                                     <span class="device-request-popover-value">{{ $repairPreview['approved_by'] }}</span>
                                                                 </div>
                                                                 <div class="device-request-popover-row device-request-popover-row-stack">

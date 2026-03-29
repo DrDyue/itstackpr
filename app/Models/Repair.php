@@ -75,6 +75,23 @@ class Repair extends Model
         return null;
     }
 
+    public function getApprovalActorNameAttribute(): ?string
+    {
+        if ($this->approval_actor?->full_name) {
+            return $this->approval_actor->full_name;
+        }
+
+        if ($this->accepted_by) {
+            return User::query()->whereKey($this->accepted_by)->value('full_name');
+        }
+
+        if ($this->request?->reviewed_by_user_id) {
+            return User::query()->whereKey($this->request->reviewed_by_user_id)->value('full_name');
+        }
+
+        return null;
+    }
+
     public function request(): BelongsTo
     {
         return $this->belongsTo(RepairRequest::class, 'request_id');
