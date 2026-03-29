@@ -16,15 +16,7 @@
             </div>
         </div>
 
-        @if ($errors->any())
-            <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
-                <ul class="list-disc pl-5">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+        <x-validation-summary />
 
         <form method="POST" action="{{ route('rooms.update', $room) }}" class="surface-card space-y-6 p-6">
             @csrf

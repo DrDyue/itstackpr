@@ -76,6 +76,10 @@ class WriteoffRequestController extends Controller
                 $query->where(function (Builder $builder) use ($term) {
                     $builder->where('reason', 'like', "%{$term}%")
                         ->orWhereHas('device', fn (Builder $deviceQuery) => $deviceQuery->where('name', 'like', "%{$term}%")->orWhere('code', 'like', "%{$term}%"));
+
+                    if (ctype_digit($term)) {
+                        $builder->orWhereKey((int) $term);
+                    }
                 });
             })
             ->orderByDesc('id')

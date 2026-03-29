@@ -209,12 +209,18 @@ const registerAlpineData = () => {
 
                     const toast = {
                         ...notification,
-                        visible: true,
+                        visible: false,
                         busy: false,
                     };
 
                     this.items = [toast, ...this.items].slice(0, 4);
                     this.remember(notification.id);
+                    window.requestAnimationFrame(() => {
+                        const createdToast = this.items.find((item) => item.id === notification.id);
+                        if (createdToast) {
+                            createdToast.visible = true;
+                        }
+                    });
                     window.setTimeout(() => this.dismiss(notification.id), 9000);
 
                     if (this.shouldRefreshForNotification(notification)) {
@@ -238,11 +244,24 @@ const registerAlpineData = () => {
             this.writeSeenIds();
         },
         dismiss(id) {
-            this.items = this.items.filter((item) => item.id !== id);
+            const notification = this.items.find((item) => item.id === id);
+
+            if (!notification) {
+                return;
+            }
+
+            notification.visible = false;
+
+            window.setTimeout(() => {
+                this.items = this.items.filter((item) => item.id !== id);
+            }, 260);
         },
         open(notification) {
-            this.dismiss(notification.id);
-            window.location.href = notification.url;
+            if (!notification?.url) {
+                return;
+            }
+
+            window.location.assign(notification.url);
         },
         async runAction(notification, action) {
             if (!window.axios || !action?.url || notification?.busy) {

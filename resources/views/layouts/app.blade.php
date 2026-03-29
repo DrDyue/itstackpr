@@ -36,72 +36,98 @@
                 <template x-for="notification in items" :key="notification.id">
                     <div
                         x-cloak
+                        x-show="notification.visible !== false"
+                        x-transition:enter="transition ease-out duration-300"
+                        x-transition:enter-start="translate-y-5 scale-[0.96] opacity-0"
+                        x-transition:enter-end="translate-y-0 scale-100 opacity-100"
+                        x-transition:leave="transition ease-in duration-250"
+                        x-transition:leave-start="translate-y-0 scale-100 opacity-100"
+                        x-transition:leave-end="translate-y-4 scale-[0.97] opacity-0"
                         :class="accentClasses(notification.accent)"
-                        class="pointer-events-auto rounded-[1.5rem] border p-4 shadow-2xl backdrop-blur"
+                        class="notification-toast pointer-events-auto rounded-[1.5rem] border p-4 shadow-2xl backdrop-blur"
                     >
                         <div class="flex items-start gap-3">
                             <span
                                 :class="badgeClasses(notification.accent)"
-                                class="inline-flex min-h-10 min-w-10 items-center justify-center rounded-2xl px-3 text-xs font-extrabold uppercase tracking-[0.14em] shadow-sm"
+                                class="notification-toast-badge inline-flex min-h-10 min-w-10 items-center justify-center rounded-2xl px-3 text-xs font-extrabold uppercase tracking-[0.14em] shadow-sm"
                                 x-text="badgeText(notification.type)"
                             ></span>
-                            <button type="button" class="min-w-0 flex-1 text-left" @click="open(notification)">
-                                <div class="text-sm font-semibold" x-text="notification.title"></div>
-                                <div class="mt-1 text-sm leading-6 opacity-90" x-text="notification.message"></div>
+                            <button type="button" class="notification-toast-main min-w-0 flex-1 text-left" @click="open(notification)">
+                                <div class="notification-toast-head">
+                                    <div class="min-w-0">
+                                        <div class="notification-toast-title" x-text="notification.title"></div>
+                                        <div class="notification-toast-copy" x-text="notification.message"></div>
+                                    </div>
+                                    <template x-if="notification.details?.wait_label">
+                                        <span class="notification-toast-wait" x-text="notification.details.wait_label"></span>
+                                    </template>
+                                </div>
 
                                 <template x-if="notification.details">
-                                    <div class="mt-3 space-y-2 rounded-[1.1rem] border border-black/5 bg-white/70 p-3 text-xs text-slate-700">
-                                        <div class="flex items-start justify-between gap-3">
-                                            <div class="min-w-0">
-                                                <div class="font-semibold text-slate-900" x-text="notification.details.device_name"></div>
-                                                <div class="mt-1 text-slate-500">
-                                                    <span x-text="'Kods: ' + (notification.details.device_code || '-')"></span>
-                                                    <span class="mx-1">|</span>
-                                                    <span x-text="'Serija: ' + (notification.details.serial_number || '-')"></span>
+                                    <div class="notification-toast-panel">
+                                        <div class="notification-toast-device">
+                                            <div class="notification-toast-section-label">Ierice</div>
+                                            <div class="notification-toast-device-name" x-text="notification.details.device_name"></div>
+                                            <div class="notification-toast-device-line">
+                                                <span x-text="'Kods: ' + (notification.details.device_code || '-')"></span>
+                                                <span aria-hidden="true">|</span>
+                                                <span x-text="'Serija: ' + (notification.details.serial_number || '-')"></span>
+                                            </div>
+                                            <div class="notification-toast-device-meta" x-text="notification.details.device_meta"></div>
+                                            <div class="notification-toast-device-meta" x-text="notification.details.device_location"></div>
+                                        </div>
+
+                                        <div class="notification-toast-grid">
+                                            <div class="notification-toast-info">
+                                                <div class="notification-toast-section-label">Pieteicejs</div>
+                                                <div class="notification-toast-info-value" x-text="notification.details.submitted_by"></div>
+                                            </div>
+
+                                            <template x-if="notification.details.recipient">
+                                                <div class="notification-toast-info">
+                                                    <div class="notification-toast-section-label">Sanemejs</div>
+                                                    <div class="notification-toast-info-value" x-text="notification.details.recipient"></div>
                                                 </div>
-                                            </div>
-                                            <span class="shrink-0 rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white" x-text="notification.details.wait_label"></span>
+                                            </template>
+
+                                            <template x-if="notification.details.submitted_at">
+                                                <div class="notification-toast-info">
+                                                    <div class="notification-toast-section-label">Iesniegts</div>
+                                                    <div class="notification-toast-info-value" x-text="notification.details.submitted_at"></div>
+                                                </div>
+                                            </template>
                                         </div>
-                                        <div class="flex items-start justify-between gap-3">
-                                            <span class="font-semibold text-slate-500">Pieteicejs</span>
-                                            <span class="text-right font-medium text-slate-800" x-text="notification.details.submitted_by"></span>
+
+                                        <div class="notification-toast-reason">
+                                            <div class="notification-toast-section-label" x-text="notification.details.reason_label"></div>
+                                            <div class="notification-toast-reason-copy" x-text="notification.details.reason_value"></div>
                                         </div>
-                                        <template x-if="notification.details.recipient">
-                                            <div class="flex items-start justify-between gap-3">
-                                                <span class="font-semibold text-slate-500">Sanemejs</span>
-                                                <span class="text-right font-medium text-slate-800" x-text="notification.details.recipient"></span>
-                                            </div>
-                                        </template>
-                                        <div>
-                                            <div class="font-semibold text-slate-500" x-text="notification.details.reason_label"></div>
-                                            <div class="mt-1 max-h-16 overflow-hidden leading-5 text-slate-800" x-text="notification.details.reason_value"></div>
+
+                                        <div class="notification-toast-footer">
+                                            <span class="notification-toast-link" x-text="notification.details.cta_label || 'Atvert pieprasijumu'"></span>
+                                            <span class="notification-toast-link-arrow" aria-hidden="true">></span>
                                         </div>
                                     </div>
                                 </template>
-
-                                <div class="mt-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] opacity-75">
-                                    <span>Atvert pieprasijumu</span>
-                                    <span aria-hidden="true">></span>
-                                </div>
                             </button>
                             <button
                                 type="button"
-                                class="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-black/5 bg-white/80 text-slate-500 transition hover:bg-white hover:text-slate-900"
-                                @click="dismiss(notification.id)"
+                                class="notification-toast-close inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-black/5 bg-white/80 text-slate-500 transition hover:bg-white hover:text-slate-900"
+                                @click.stop="dismiss(notification.id)"
                             >
                                 <x-icon name="x-mark" size="h-4 w-4" />
                             </button>
                         </div>
 
                         <template x-if="Array.isArray(notification.actions) && notification.actions.length > 0">
-                            <div class="mt-4 flex flex-wrap gap-2 border-t border-black/5 pt-3">
+                            <div class="notification-toast-actions mt-4 flex flex-wrap gap-2 border-t border-black/5 pt-3">
                                 <template x-for="action in notification.actions" :key="notification.id + '-' + action.label">
                                     <button
                                         type="button"
                                         :class="actionClasses(action.tone)"
                                         class="inline-flex items-center justify-center rounded-xl border px-4 py-2 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60"
                                         :disabled="notification.busy"
-                                        @click="runAction(notification, action)"
+                                        @click.stop="runAction(notification, action)"
                                         x-text="notification.busy ? 'Apstrada...' : action.label"
                                     ></button>
                                 </template>

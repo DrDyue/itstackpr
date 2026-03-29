@@ -70,6 +70,10 @@ class RepairRequestController extends Controller
                     $builder->where('description', 'like', "%{$term}%")
                         ->orWhereHas('device', fn (Builder $deviceQuery) => $deviceQuery->where('name', 'like', "%{$term}%")->orWhere('code', 'like', "%{$term}%"))
                         ->orWhereHas('responsibleUser', fn (Builder $userQuery) => $userQuery->where('full_name', 'like', "%{$term}%"));
+
+                    if (ctype_digit($term)) {
+                        $builder->orWhereKey((int) $term);
+                    }
                 });
             })
             ->orderByDesc('id')

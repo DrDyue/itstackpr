@@ -215,6 +215,41 @@ class AuditTrail
         };
     }
 
+    public static function entityReference(?string $entityType, ?string $entityId): string
+    {
+        $label = self::entityLabel($entityType);
+
+        if (! filled($entityId)) {
+            return $label;
+        }
+
+        return $label . ' #' . $entityId;
+    }
+
+    public static function entityUrl(?string $entityType, ?string $entityId): ?string
+    {
+        if (! filled($entityId)) {
+            return null;
+        }
+
+        try {
+            return match (self::normalizeEntityKey($entityType)) {
+                'device' => route('devices.show', $entityId),
+                'repair' => route('repairs.edit', $entityId),
+                'repair_request' => route('repair-requests.index', ['q' => $entityId]) . '#repair-request-' . $entityId,
+                'writeoff_request' => route('writeoff-requests.index', ['q' => $entityId]) . '#writeoff-request-' . $entityId,
+                'device_transfer' => route('device-transfers.index', ['q' => $entityId]) . '#device-transfer-' . $entityId,
+                'room' => route('rooms.edit', $entityId),
+                'building' => route('buildings.edit', $entityId),
+                'device_type' => route('device-types.edit', $entityId),
+                'user' => route('users.edit', $entityId),
+                default => null,
+            };
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
     public static function localizedDescription(?string $description, ?string $entityType = null): string
     {
         $text = trim((string) $description);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Device;
 use App\Models\DeviceTransfer;
 use App\Models\RepairRequest;
 use App\Models\User;
@@ -35,7 +36,7 @@ class LiveNotificationController extends Controller
     {
         $repairNotifications = $this->featureTableExists('repair_requests')
             ? RepairRequest::query()
-                ->with(['device', 'responsibleUser'])
+                ->with(['device.type', 'device.room', 'device.building', 'responsibleUser'])
                 ->where('status', RepairRequest::STATUS_SUBMITTED)
                 ->where('responsible_user_id', '!=', $user->id)
                 ->latest('id')
@@ -47,19 +48,21 @@ class LiveNotificationController extends Controller
                     accent: 'sky',
                     title: 'Jauns remonta pieprasijums',
                     message: trim(($request->responsibleUser?->full_name ?: 'Lietotajs').' iesniedza remontu iericei '.($request->device?->name ?: 'bez nosaukuma').'.'),
-                    details: [
-                        'device_name' => $request->device?->name ?: '-',
-                        'device_code' => $request->device?->code ?: '-',
-                        'serial_number' => $request->device?->serial_number ?: '-',
+                    details: $this->deviceDetails(
+                        $request->device,
+                        [
                         'submitted_by' => $request->responsibleUser?->full_name ?: '-',
                         'reason_label' => 'Problema',
                         'reason_value' => $request->description ?: 'Apraksts nav pievienots.',
                         'wait_label' => $this->waitLabel($request->created_at),
-                    ],
+                        'submitted_at' => $request->created_at?->format('d.m.Y H:i') ?: '-',
+                        'cta_label' => 'Atvert remonta pieprasijumu',
+                        ]
+                    ),
                     url: route('repair-requests.index', [
                         'statuses_filter' => 1,
                         'status' => [RepairRequest::STATUS_SUBMITTED],
-                    ], false).'#repair-request-'.$request->id,
+                    ]).'#repair-request-'.$request->id,
                     createdAt: $request->created_at,
                     actions: [
                         $this->actionConfig('Apstiprinat', 'approve', route('repair-requests.review', $request), ['status' => RepairRequest::STATUS_APPROVED]),
@@ -70,7 +73,7 @@ class LiveNotificationController extends Controller
 
         $writeoffNotifications = $this->featureTableExists('writeoff_requests')
             ? WriteoffRequest::query()
-                ->with(['device', 'responsibleUser'])
+                ->with(['device.type', 'device.room', 'device.building', 'responsibleUser'])
                 ->where('status', WriteoffRequest::STATUS_SUBMITTED)
                 ->where('responsible_user_id', '!=', $user->id)
                 ->latest('id')
@@ -82,19 +85,21 @@ class LiveNotificationController extends Controller
                     accent: 'rose',
                     title: 'Jauns norakstisanas pieprasijums',
                     message: trim(($request->responsibleUser?->full_name ?: 'Lietotajs').' iesniedza norakstisanu iericei '.($request->device?->name ?: 'bez nosaukuma').'.'),
-                    details: [
-                        'device_name' => $request->device?->name ?: '-',
-                        'device_code' => $request->device?->code ?: '-',
-                        'serial_number' => $request->device?->serial_number ?: '-',
+                    details: $this->deviceDetails(
+                        $request->device,
+                        [
                         'submitted_by' => $request->responsibleUser?->full_name ?: '-',
                         'reason_label' => 'Iemesls',
                         'reason_value' => $request->reason ?: 'Iemesls nav pievienots.',
                         'wait_label' => $this->waitLabel($request->created_at),
-                    ],
+                        'submitted_at' => $request->created_at?->format('d.m.Y H:i') ?: '-',
+                        'cta_label' => 'Atvert norakstisanas pieprasijumu',
+                        ]
+                    ),
                     url: route('writeoff-requests.index', [
                         'statuses_filter' => 1,
                         'status' => [WriteoffRequest::STATUS_SUBMITTED],
-                    ], false).'#writeoff-request-'.$request->id,
+                    ]).'#writeoff-request-'.$request->id,
                     createdAt: $request->created_at,
                     actions: [
                         $this->actionConfig('Apstiprinat', 'approve', route('writeoff-requests.review', $request), ['status' => WriteoffRequest::STATUS_APPROVED]),
@@ -105,7 +110,7 @@ class LiveNotificationController extends Controller
 
         $transferNotifications = $this->featureTableExists('device_transfers')
             ? DeviceTransfer::query()
-                ->with(['device', 'responsibleUser', 'transferTo'])
+                ->with(['device.type', 'device.room', 'device.building', 'responsibleUser', 'transferTo'])
                 ->where('status', DeviceTransfer::STATUS_SUBMITTED)
                 ->where('responsible_user_id', '!=', $user->id)
                 ->latest('id')
@@ -117,20 +122,22 @@ class LiveNotificationController extends Controller
                     accent: 'emerald',
                     title: 'Jauns nodosanas pieprasijums',
                     message: trim(($transfer->responsibleUser?->full_name ?: 'Lietotajs').' velas nodot ierici '.($transfer->device?->name ?: 'bez nosaukuma').($transfer->transferTo?->full_name ? ' lietotajam '.$transfer->transferTo->full_name : '').'.'),
-                    details: [
-                        'device_name' => $transfer->device?->name ?: '-',
-                        'device_code' => $transfer->device?->code ?: '-',
-                        'serial_number' => $transfer->device?->serial_number ?: '-',
+                    details: $this->deviceDetails(
+                        $transfer->device,
+                        [
                         'submitted_by' => $transfer->responsibleUser?->full_name ?: '-',
                         'recipient' => $transfer->transferTo?->full_name ?: '-',
                         'reason_label' => 'Iemesls',
                         'reason_value' => $transfer->transfer_reason ?: 'Iemesls nav pievienots.',
                         'wait_label' => $this->waitLabel($transfer->created_at),
-                    ],
+                        'submitted_at' => $transfer->created_at?->format('d.m.Y H:i') ?: '-',
+                        'cta_label' => 'Atvert nodosanas pieprasijumu',
+                        ]
+                    ),
                     url: route('device-transfers.index', [
                         'statuses_filter' => 1,
                         'status' => [DeviceTransfer::STATUS_SUBMITTED],
-                    ], false).'#device-transfer-'.$transfer->id,
+                    ]).'#device-transfer-'.$transfer->id,
                     createdAt: $transfer->created_at,
                     actions: [],
                 ))
@@ -151,7 +158,7 @@ class LiveNotificationController extends Controller
         }
 
         return DeviceTransfer::query()
-            ->with(['device', 'responsibleUser'])
+            ->with(['device.type', 'device.room', 'device.building', 'responsibleUser'])
             ->where('transfered_to_id', $user->id)
             ->where('status', DeviceTransfer::STATUS_SUBMITTED)
             ->latest('id')
@@ -163,19 +170,21 @@ class LiveNotificationController extends Controller
                 accent: 'amber',
                 title: 'Jauns ienakoss nodosanas pieprasijums',
                 message: trim(($transfer->responsibleUser?->full_name ?: 'Lietotajs').' velas tev nodot ierici '.($transfer->device?->name ?: 'bez nosaukuma').'.'),
-                details: [
-                    'device_name' => $transfer->device?->name ?: '-',
-                    'device_code' => $transfer->device?->code ?: '-',
-                    'serial_number' => $transfer->device?->serial_number ?: '-',
+                details: $this->deviceDetails(
+                    $transfer->device,
+                    [
                     'submitted_by' => $transfer->responsibleUser?->full_name ?: '-',
                     'reason_label' => 'Iemesls',
                     'reason_value' => $transfer->transfer_reason ?: 'Iemesls nav pievienots.',
                     'wait_label' => $this->waitLabel($transfer->created_at),
-                ],
+                    'submitted_at' => $transfer->created_at?->format('d.m.Y H:i') ?: '-',
+                    'cta_label' => 'Atvert nodosanas pieprasijumu',
+                    ]
+                ),
                 url: route('device-transfers.index', [
                     'statuses_filter' => 1,
                     'status' => [DeviceTransfer::STATUS_SUBMITTED],
-                ], false).'#device-transfer-'.$transfer->id,
+                ]).'#device-transfer-'.$transfer->id,
                 createdAt: $transfer->created_at,
                 actions: [
                     $this->actionConfig('Apstiprinat', 'approve', route('device-transfers.review', $transfer), ['status' => DeviceTransfer::STATUS_APPROVED]),
@@ -219,6 +228,30 @@ class LiveNotificationController extends Controller
             'url' => $url,
             'payload' => $payload,
         ];
+    }
+
+    private function deviceDetails(?Device $device, array $extra = []): array
+    {
+        $manufacturer = trim((string) ($device?->manufacturer ?? ''));
+        $model = trim((string) ($device?->model ?? ''));
+        $deviceMeta = collect([
+            $device?->type?->type_name,
+            trim(collect([$manufacturer, $model])->filter()->implode(' ')),
+        ])->filter()->implode(' | ');
+
+        $deviceLocation = collect([
+            $device?->room?->room_number ? 'telpa '.$device->room->room_number : null,
+            $device?->room?->room_name,
+            $device?->building?->building_name,
+        ])->filter()->implode(' | ');
+
+        return array_merge([
+            'device_name' => $device?->name ?: '-',
+            'device_code' => $device?->code ?: '-',
+            'serial_number' => $device?->serial_number ?: '-',
+            'device_meta' => $deviceMeta !== '' ? $deviceMeta : 'Tips un modelis nav noradits.',
+            'device_location' => $deviceLocation !== '' ? $deviceLocation : 'Atrasanas vieta nav noradita.',
+        ], $extra);
     }
 
     private function waitLabel($createdAt): string

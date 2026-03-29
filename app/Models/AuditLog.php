@@ -54,4 +54,14 @@ class AuditLog extends Model
     {
         return AuditTrail::severityLabel($this->severity);
     }
+
+    public function getEntityReferenceAttribute(): string
+    {
+        return AuditTrail::entityReference($this->entity_type, $this->entity_id);
+    }
+
+    public function getEntityUrlAttribute(): ?string
+    {
+        return AuditTrail::entityUrl($this->entity_type, $this->entity_id);
+    }
 }
