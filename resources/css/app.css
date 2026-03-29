@@ -3013,7 +3013,12 @@ tbody td {
 .device-request-popover {
     @apply absolute left-0 top-full z-[70] mt-2 w-80 max-w-[26rem] rounded-[1.35rem] border border-slate-200 bg-white p-4 text-left text-sm text-slate-700 shadow-2xl ring-1 ring-slate-100;
     max-height: min(24rem, calc(100vh - 8rem));
+    max-width: min(26rem, calc(100vw - 2rem));
     overflow-y: auto;
+}
+
+.device-request-popover-end {
+    @apply left-auto right-0;
 }
 
 .device-request-popover-head {

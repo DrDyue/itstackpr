@@ -193,7 +193,7 @@
                                                         </div>
 
                                                         @if ($repairPreview)
-                                                            <div x-cloak x-show="open" x-transition.opacity.scale.origin.top.left class="device-request-popover">
+                                                            <div x-cloak x-show="open" x-transition.opacity.scale.origin.top.right class="device-request-popover device-request-popover-end">
                                                                 <div class="device-request-popover-head">
                                                                     <span class="device-request-popover-title">{{ $repairPreview['title'] }}</span>
                                                                     <span class="device-request-popover-date">{{ $repairPreview['created_at'] }}</span>
@@ -232,7 +232,7 @@
                                                         </a>
 
                                                         @if (! empty($pendingRequestBadge['preview']))
-                                                            <div x-cloak x-show="open" x-transition.opacity.scale.origin.top.left class="device-request-popover">
+                                                            <div x-cloak x-show="open" x-transition.opacity.scale.origin.top.right class="device-request-popover device-request-popover-end">
                                                                 <div class="device-request-popover-head">
                                                                     <span class="device-request-popover-title">{{ $pendingRequestBadge['preview']['type_label'] }}</span>
                                                                     <span class="device-request-popover-date">{{ $pendingRequestBadge['preview']['submitted_at'] }}</span>
