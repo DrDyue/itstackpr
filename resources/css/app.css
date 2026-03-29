@@ -3206,6 +3206,14 @@ tbody td {
     color-scheme: light;
 }
 
+.app-bg,
+.guest-bg {
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+    min-height: 100vh;
+}
+
 html[data-theme='dark'] {
     color-scheme: dark;
 }
@@ -3297,6 +3305,12 @@ html[data-theme='dark'] .guest-bg {
     color: #e2e8f0;
 }
 
+html[data-theme='dark'] .app-main-nav {
+    background: rgba(2, 6, 23, 0.84) !important;
+    border-color: rgba(30, 41, 59, 0.92) !important;
+    box-shadow: 0 18px 38px -30px rgba(2, 6, 23, 0.95);
+}
+
 html[data-theme='dark'] .app-main-nav,
 html[data-theme='dark'] .app-mobile-nav-panel,
 html[data-theme='dark'] .app-dropdown-content,
@@ -3327,6 +3341,50 @@ html[data-theme='dark'] .device-file-input {
     background-color: #0f172a !important;
     border-color: rgba(51, 65, 85, 0.95) !important;
     color: #e2e8f0 !important;
+}
+
+html[data-theme='dark'] .device-table-scroll,
+html[data-theme='dark'] .dash-table-wrap,
+html[data-theme='dark'] .user-table-wrap,
+html[data-theme='dark'] .repair-table-wrap,
+html[data-theme='dark'] .table-container,
+html[data-theme='dark'] .table-card,
+html[data-theme='dark'] .dashboard-pagination,
+html[data-theme='dark'] .app-pagination {
+    background-color: #0b1220 !important;
+    border-color: rgba(51, 65, 85, 0.95) !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-theme='dark'] table thead,
+html[data-theme='dark'] .dash-table-head,
+html[data-theme='dark'] .user-table-head,
+html[data-theme='dark'] .repair-table-head {
+    background-color: #111827 !important;
+    color: #94a3b8 !important;
+    border-color: rgba(51, 65, 85, 0.92) !important;
+}
+
+html[data-theme='dark'] .dash-table-body,
+html[data-theme='dark'] .user-table-body,
+html[data-theme='dark'] .repair-table-body,
+html[data-theme='dark'] tbody {
+    color: #cbd5e1 !important;
+}
+
+html[data-theme='dark'] .dash-table-body tr,
+html[data-theme='dark'] .user-table-body tr,
+html[data-theme='dark'] .repair-table-body tr,
+html[data-theme='dark'] tr.border-t,
+html[data-theme='dark'] .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+    border-color: rgba(30, 41, 59, 0.95) !important;
+}
+
+html[data-theme='dark'] .dash-table-body tr:hover,
+html[data-theme='dark'] .user-table-body tr:hover,
+html[data-theme='dark'] .repair-table-body tr:hover,
+html[data-theme='dark'] .hover\:bg-slate-50\/80:hover {
+    background-color: rgba(30, 41, 59, 0.72) !important;
 }
 
 html[data-theme='dark'] .surface-card-muted,
@@ -3416,6 +3474,48 @@ html[data-theme='dark'] .notification-toast-close {
     color: #cbd5e1 !important;
 }
 
+html[data-theme='dark'] .page-eyebrow {
+    background-color: rgba(14, 165, 233, 0.14) !important;
+    border-color: rgba(56, 189, 248, 0.28) !important;
+    color: #bae6fd !important;
+}
+
+html[data-theme='dark'] .page-title-icon-sky {
+    background-color: rgba(14, 165, 233, 0.16) !important;
+    color: #bae6fd !important;
+    border-color: rgba(56, 189, 248, 0.28) !important;
+}
+
+html[data-theme='dark'] .page-title-icon-emerald {
+    background-color: rgba(16, 185, 129, 0.16) !important;
+    color: #a7f3d0 !important;
+    border-color: rgba(52, 211, 153, 0.26) !important;
+}
+
+html[data-theme='dark'] .page-title-icon-amber {
+    background-color: rgba(245, 158, 11, 0.16) !important;
+    color: #fde68a !important;
+    border-color: rgba(251, 191, 36, 0.28) !important;
+}
+
+html[data-theme='dark'] .page-title-icon-rose {
+    background-color: rgba(244, 63, 94, 0.14) !important;
+    color: #fecdd3 !important;
+    border-color: rgba(251, 113, 133, 0.28) !important;
+}
+
+html[data-theme='dark'] .page-title-icon-violet {
+    background-color: rgba(139, 92, 246, 0.16) !important;
+    color: #ddd6fe !important;
+    border-color: rgba(167, 139, 250, 0.28) !important;
+}
+
+html[data-theme='dark'] .page-title-icon-slate {
+    background-color: rgba(30, 41, 59, 0.95) !important;
+    color: #cbd5e1 !important;
+    border-color: rgba(71, 85, 105, 0.9) !important;
+}
+
 html[data-theme='dark'] .table-action-item,
 html[data-theme='dark'] .table-action-button,
 html[data-theme='dark'] .app-dropdown-content a,
@@ -3428,6 +3528,28 @@ html[data-theme='dark'] .table-action-button:hover,
 html[data-theme='dark'] .app-dropdown-content a:hover,
 html[data-theme='dark'] .app-dropdown-content button:hover {
     background-color: #1e293b !important;
+    color: #f8fafc !important;
+}
+
+html[data-theme='dark'] .app-main-nav a,
+html[data-theme='dark'] .app-main-nav button,
+html[data-theme='dark'] .app-mobile-nav-panel a,
+html[data-theme='dark'] .app-mobile-nav-panel button {
+    color: #cbd5e1;
+}
+
+html[data-theme='dark'] .app-main-nav .bg-sky-50,
+html[data-theme='dark'] .app-mobile-nav-panel .bg-sky-50 {
+    background-color: rgba(14, 165, 233, 0.16) !important;
+    color: #bae6fd !important;
+    border-color: rgba(56, 189, 248, 0.28) !important;
+}
+
+html[data-theme='dark'] .app-main-nav .hover\:bg-slate-100:hover,
+html[data-theme='dark'] .app-main-nav .hover\:bg-slate-50:hover,
+html[data-theme='dark'] .app-mobile-nav-panel .hover\:bg-slate-100:hover,
+html[data-theme='dark'] .app-mobile-nav-panel .hover\:bg-slate-50:hover {
+    background-color: rgba(30, 41, 59, 0.88) !important;
     color: #f8fafc !important;
 }
 
@@ -3455,6 +3577,209 @@ html[data-theme='dark'] .btn-reject {
     background-color: rgba(244, 63, 94, 0.14) !important;
     border-color: rgba(251, 113, 133, 0.28) !important;
     color: #fecdd3 !important;
+}
+
+html[data-theme='dark'] .btn-create:hover,
+html[data-theme='dark'] .btn-submit:hover,
+html[data-theme='dark'] .btn-approve:hover,
+html[data-theme='dark'] .btn-danger-solid:hover {
+    color: #ffffff !important;
+}
+
+html[data-theme='dark'] .btn-view:hover {
+    background-color: rgba(14, 165, 233, 0.24) !important;
+    color: #e0f2fe !important;
+}
+
+html[data-theme='dark'] .btn-edit:hover {
+    background-color: rgba(245, 158, 11, 0.24) !important;
+    color: #fef3c7 !important;
+}
+
+html[data-theme='dark'] .btn-danger:hover,
+html[data-theme='dark'] .btn-reject:hover {
+    background-color: rgba(244, 63, 94, 0.22) !important;
+    color: #ffe4e6 !important;
+}
+
+html[data-theme='dark'] .btn-back:hover,
+html[data-theme='dark'] .btn-clear:hover {
+    background-color: #1e293b !important;
+    color: #f8fafc !important;
+}
+
+html[data-theme='dark'] .table-action-summary:hover,
+html[data-theme='dark'] .dash-table-action-btn:hover,
+html[data-theme='dark'] .dashboard-pagination-btn:hover,
+html[data-theme='dark'] .app-pagination-btn:hover {
+    background-color: #1e293b !important;
+    color: #f8fafc !important;
+    border-color: rgba(56, 189, 248, 0.26) !important;
+}
+
+html[data-theme='dark'] .dashboard-pagination-btn,
+html[data-theme='dark'] .app-pagination-btn {
+    background-color: #111827 !important;
+    color: #cbd5e1 !important;
+    border-color: rgba(51, 65, 85, 0.95) !important;
+}
+
+html[data-theme='dark'] .dashboard-pagination-btn-active,
+html[data-theme='dark'] .app-pagination-btn-active {
+    background-color: rgba(14, 165, 233, 0.18) !important;
+    color: #bae6fd !important;
+    border-color: rgba(56, 189, 248, 0.3) !important;
+}
+
+html[data-theme='dark'] .dashboard-pagination-btn-disabled,
+html[data-theme='dark'] .app-pagination-btn-disabled {
+    background-color: #0f172a !important;
+    color: #64748b !important;
+}
+
+html[data-theme='dark'] .status-pill-success,
+html[data-theme='dark'] .audit-badge-emerald,
+html[data-theme='dark'] .inventory-inline-chip-emerald,
+html[data-theme='dark'] .metric-card-soft-emerald {
+    background-color: rgba(16, 185, 129, 0.14) !important;
+    color: #a7f3d0 !important;
+    border-color: rgba(52, 211, 153, 0.28) !important;
+    --tw-ring-color: rgba(52, 211, 153, 0.28) !important;
+}
+
+html[data-theme='dark'] .status-pill-warning,
+html[data-theme='dark'] .audit-badge-amber,
+html[data-theme='dark'] .inventory-inline-chip-amber,
+html[data-theme='dark'] .metric-card-soft-amber,
+html[data-theme='dark'] .device-status-split-chip-repair,
+html[data-theme='dark'] .device-repair-state-chip {
+    background-color: rgba(245, 158, 11, 0.14) !important;
+    color: #fde68a !important;
+    border-color: rgba(251, 191, 36, 0.28) !important;
+    --tw-ring-color: rgba(251, 191, 36, 0.28) !important;
+}
+
+html[data-theme='dark'] .status-pill-danger,
+html[data-theme='dark'] .audit-badge-rose,
+html[data-theme='dark'] .inventory-inline-chip-rose,
+html[data-theme='dark'] .metric-card-soft-rose {
+    background-color: rgba(244, 63, 94, 0.14) !important;
+    color: #fecdd3 !important;
+    border-color: rgba(251, 113, 133, 0.28) !important;
+    --tw-ring-color: rgba(251, 113, 133, 0.28) !important;
+}
+
+html[data-theme='dark'] .status-pill-info,
+html[data-theme='dark'] .audit-badge-sky,
+html[data-theme='dark'] .inventory-inline-chip-sky,
+html[data-theme='dark'] .metric-card-soft-sky {
+    background-color: rgba(14, 165, 233, 0.14) !important;
+    color: #bae6fd !important;
+    border-color: rgba(56, 189, 248, 0.28) !important;
+    --tw-ring-color: rgba(56, 189, 248, 0.28) !important;
+}
+
+html[data-theme='dark'] .status-pill-neutral,
+html[data-theme='dark'] .audit-badge-slate,
+html[data-theme='dark'] .metric-card,
+html[data-theme='dark'] .inventory-inline-chip-slate {
+    color: #cbd5e1 !important;
+}
+
+html[data-theme='dark'] .status-pill-violet,
+html[data-theme='dark'] .audit-badge-violet,
+html[data-theme='dark'] .inventory-inline-chip-violet {
+    background-color: rgba(139, 92, 246, 0.16) !important;
+    color: #ddd6fe !important;
+    border-color: rgba(167, 139, 250, 0.28) !important;
+    --tw-ring-color: rgba(167, 139, 250, 0.28) !important;
+}
+
+html[data-theme='dark'] .device-request-badge-link {
+    background-color: rgba(30, 41, 59, 0.88) !important;
+    border-color: rgba(71, 85, 105, 0.9) !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-theme='dark'] .device-request-badge-link:hover {
+    background-color: rgba(51, 65, 85, 0.96) !important;
+    color: #f8fafc !important;
+}
+
+html[data-theme='dark'] .device-status-split-sub,
+html[data-theme='dark'] .dash-table-subline,
+html[data-theme='dark'] .dash-table-link,
+html[data-theme='dark'] .device-request-popover-label,
+html[data-theme='dark'] .notification-toast-section-label {
+    color: #94a3b8 !important;
+}
+
+html[data-theme='dark'] .device-request-popover-title,
+html[data-theme='dark'] .device-request-popover-value,
+html[data-theme='dark'] .device-request-popover-link,
+html[data-theme='dark'] .notification-toast-title,
+html[data-theme='dark'] .notification-toast-meta-value,
+html[data-theme='dark'] .notification-toast-meta-copy {
+    color: #f8fafc !important;
+}
+
+html[data-theme='dark'] .device-request-popover-copy,
+html[data-theme='dark'] .notification-toast-wait,
+html[data-theme='dark'] .request-field-card,
+html[data-theme='dark'] .auth-demo-item {
+    background-color: #111827 !important;
+}
+
+html[data-theme='dark'] .notification-toast {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.94)) !important;
+    border-color: rgba(51, 65, 85, 0.95) !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-theme='dark'] .notification-toast-copy,
+html[data-theme='dark'] .notification-toast-link,
+html[data-theme='dark'] .notification-toast-link-arrow {
+    color: #cbd5e1 !important;
+}
+
+html[data-theme='dark'] .quick-status-filter-slate {
+    background-color: #111827 !important;
+    color: #cbd5e1 !important;
+    border-color: rgba(71, 85, 105, 0.9) !important;
+}
+
+html[data-theme='dark'] .quick-status-filter-slate:hover {
+    background-color: #1e293b !important;
+    color: #f8fafc !important;
+}
+
+html[data-theme='dark'] .quick-status-filter-emerald {
+    background-color: rgba(16, 185, 129, 0.14) !important;
+    color: #a7f3d0 !important;
+    border-color: rgba(52, 211, 153, 0.28) !important;
+}
+
+html[data-theme='dark'] .quick-status-filter-amber {
+    background-color: rgba(245, 158, 11, 0.14) !important;
+    color: #fde68a !important;
+    border-color: rgba(251, 191, 36, 0.28) !important;
+}
+
+html[data-theme='dark'] .quick-status-filter-rose {
+    background-color: rgba(244, 63, 94, 0.14) !important;
+    color: #fecdd3 !important;
+    border-color: rgba(251, 113, 133, 0.28) !important;
+}
+
+html[data-theme='dark'] .device-table-thumb,
+html[data-theme='dark'] .request-device-thumb {
+    border-color: rgba(51, 65, 85, 0.95) !important;
+}
+
+html[data-theme='dark'] .device-table-thumb-placeholder,
+html[data-theme='dark'] .request-device-thumb-placeholder {
+    background-color: #111827 !important;
+    color: #64748b !important;
 }
 
 html[data-theme='dark'] .device-request-popover-copy,
