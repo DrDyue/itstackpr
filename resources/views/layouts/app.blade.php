@@ -68,30 +68,48 @@
                                             </template>
                                         </div>
                                         <div class="notification-toast-title" x-text="notification.title"></div>
-                                        <div class="notification-toast-copy" x-text="notification.message"></div>
+                                        <template x-if="notification.details">
+                                            <div class="notification-toast-summary">
+                                                <span class="notification-toast-summary-chip">
+                                                    <x-icon name="profile" size="h-3.5 w-3.5" />
+                                                    <span x-text="notification.details.submitted_by || 'Lietotajs'"></span>
+                                                </span>
+                                                <span class="notification-toast-summary-chip notification-toast-summary-chip-device">
+                                                    <x-icon name="device" size="h-3.5 w-3.5" />
+                                                    <span x-text="notification.details.device_name || 'Ierice'"></span>
+                                                </span>
+                                                <template x-if="notification.details.recipient">
+                                                    <span class="notification-toast-summary-chip">
+                                                        <x-icon name="transfer" size="h-3.5 w-3.5" />
+                                                        <span x-text="notification.details.recipient"></span>
+                                                    </span>
+                                                </template>
+                                            </div>
+                                        </template>
+                                        <template x-if="!notification.details">
+                                            <div class="notification-toast-copy" x-text="notification.message"></div>
+                                        </template>
                                     </div>
                                 </div>
 
                                 <template x-if="notification.details">
                                     <div class="notification-toast-panel">
                                         <div class="notification-toast-device">
-                                            <div class="notification-toast-section-label">Ierice</div>
-                                            <div class="notification-toast-device-name" x-text="notification.details.device_name"></div>
-                                            <div class="notification-toast-device-line">
-                                                <span x-text="'Kods: ' + (notification.details.device_code || '-')"></span>
-                                                <span aria-hidden="true">|</span>
-                                                <span x-text="'Serija: ' + (notification.details.serial_number || '-')"></span>
+                                            <div class="notification-toast-device-head">
+                                                <div>
+                                                    <div class="notification-toast-section-label">Ierice</div>
+                                                    <div class="notification-toast-device-name" x-text="notification.details.device_name"></div>
+                                                </div>
+                                                <div class="notification-toast-device-code">
+                                                    <div x-text="notification.details.device_code || '-'"></div>
+                                                    <div class="notification-toast-device-serial" x-text="'Serija: ' + (notification.details.serial_number || '-')"></div>
+                                                </div>
                                             </div>
                                             <div class="notification-toast-device-meta" x-text="notification.details.device_meta"></div>
                                             <div class="notification-toast-device-meta" x-text="notification.details.device_location"></div>
                                         </div>
 
                                         <div class="notification-toast-grid">
-                                            <div class="notification-toast-info">
-                                                <div class="notification-toast-section-label">Pieteicejs</div>
-                                                <div class="notification-toast-info-value" x-text="notification.details.submitted_by"></div>
-                                            </div>
-
                                             <template x-if="notification.details.recipient">
                                                 <div class="notification-toast-info">
                                                     <div class="notification-toast-section-label">Sanemejs</div>

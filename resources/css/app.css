@@ -3085,16 +3085,45 @@ tbody td {
     @apply mt-1 text-sm leading-5 text-slate-600;
 }
 
+.notification-toast-summary {
+    @apply mt-3 flex flex-wrap gap-2;
+}
+
+.notification-toast-summary-chip {
+    @apply inline-flex min-w-0 items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm;
+}
+
+.notification-toast-summary-chip-device {
+    @apply max-w-full;
+}
+
+.notification-toast-summary-chip span:last-child {
+    @apply truncate;
+    max-width: 11rem;
+}
+
 .notification-toast-wait {
     @apply shrink-0 rounded-full bg-slate-900/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white;
 }
 
 .notification-toast-panel {
-    @apply mt-4 space-y-3 rounded-[1.1rem] border border-black/5 bg-white/80 p-3.5 text-xs text-slate-700;
+    @apply mt-4 space-y-3 rounded-[1.1rem] border border-black/5 bg-white/90 p-3.5 text-xs text-slate-700;
 }
 
 .notification-toast-device {
-    @apply rounded-[1rem] bg-white/80 p-3 shadow-sm ring-1 ring-slate-200/80;
+    @apply rounded-[1rem] bg-white/90 p-3 shadow-sm ring-1 ring-slate-200/80;
+}
+
+.notification-toast-device-head {
+    @apply flex items-start justify-between gap-3;
+}
+
+.notification-toast-device-code {
+    @apply shrink-0 text-right text-xs font-semibold leading-5 text-slate-700;
+}
+
+.notification-toast-device-serial {
+    @apply text-[11px] font-medium text-slate-500;
 }
 
 .notification-toast-section-label {
@@ -3157,6 +3186,36 @@ tbody td {
 .notification-toast-actions .btn-reject,
 .notification-toast-actions button {
     @apply min-w-[8.5rem] flex-1;
+}
+
+@media (max-width: 640px) {
+    .notification-toast-main {
+        @apply pr-10;
+    }
+
+    .notification-toast-topline {
+        @apply gap-1.5;
+    }
+
+    .notification-toast-title {
+        @apply text-[15px] leading-6;
+    }
+
+    .notification-toast-summary-chip {
+        @apply w-full justify-start;
+    }
+
+    .notification-toast-summary-chip span:last-child {
+        max-width: none;
+    }
+
+    .notification-toast-device-head {
+        @apply flex-col items-start;
+    }
+
+    .notification-toast-device-code {
+        @apply text-left;
+    }
 }
 
 .device-repair-state-chip {
