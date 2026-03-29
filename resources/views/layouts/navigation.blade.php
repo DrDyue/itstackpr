@@ -188,22 +188,6 @@
                         </form>
                     @endif
 
-                    <button
-                        type="button"
-                        data-theme-toggle
-                        class="theme-toggle hidden lg:inline-flex"
-                        aria-label="Parslegt temu"
-                        title="Parslegt temu"
-                    >
-                        <span class="theme-toggle-icon theme-toggle-icon-sun">
-                            <x-icon name="sun" size="h-4 w-4" />
-                        </span>
-                        <span class="theme-toggle-icon theme-toggle-icon-moon">
-                            <x-icon name="moon" size="h-4 w-4" />
-                        </span>
-                        <span class="theme-toggle-label" data-theme-label>Gaisma</span>
-                    </button>
-
                     <x-dropdown align="right" width="w-64">
                     <x-slot name="trigger">
                         <button class="inline-flex min-w-0 max-w-[17rem] items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-500">
@@ -223,6 +207,20 @@
                     </x-slot>
 
                     <x-slot name="content">
+                        <div class="px-4 pb-2 pt-3">
+                            <div class="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Izskats</div>
+                            <div class="theme-choice-group">
+                                <button type="button" class="theme-choice-btn" data-theme-choice data-theme-value="light" aria-pressed="false">
+                                    <x-icon name="sun" size="h-4 w-4" />
+                                    <span>Gaišā tēma</span>
+                                </button>
+                                <button type="button" class="theme-choice-btn" data-theme-choice data-theme-value="dark" aria-pressed="false">
+                                    <x-icon name="moon" size="h-4 w-4" />
+                                    <span>Tumšā tēma</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mx-4 my-2 h-px bg-slate-200"></div>
                         <x-dropdown-link :href="route('profile.edit')">
                             <x-icon name="profile" size="h-4 w-4" />
                             <span>Profils</span>
@@ -276,22 +274,6 @@
                     </div>
                 </form>
             @endif
-
-            <button
-                type="button"
-                data-theme-toggle
-                class="theme-toggle-mobile mb-3"
-                aria-label="Parslegt temu"
-                title="Parslegt temu"
-            >
-                <span class="theme-toggle-icon theme-toggle-icon-sun">
-                    <x-icon name="sun" size="h-4 w-4" />
-                </span>
-                <span class="theme-toggle-icon theme-toggle-icon-moon">
-                    <x-icon name="moon" size="h-4 w-4" />
-                </span>
-                <span data-theme-label>Gaisma</span>
-            </button>
 
             @foreach ($primaryNavigationItems as $item)
                 <x-responsive-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
@@ -377,6 +359,19 @@
             </div>
 
             <div class="mt-3 space-y-2 px-4">
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                    <div class="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Izskats</div>
+                    <div class="theme-choice-group">
+                        <button type="button" class="theme-choice-btn" data-theme-choice data-theme-value="light" aria-pressed="false">
+                            <x-icon name="sun" size="h-4 w-4" />
+                            <span>Gaišā tēma</span>
+                        </button>
+                        <button type="button" class="theme-choice-btn" data-theme-choice data-theme-value="dark" aria-pressed="false">
+                            <x-icon name="moon" size="h-4 w-4" />
+                            <span>Tumšā tēma</span>
+                        </button>
+                    </div>
+                </div>
                 <x-responsive-nav-link :href="route('profile.edit')" :active="request()->routeIs('profile.edit')">
                     <span class="inline-flex items-center gap-2.5">
                         <x-icon name="profile" size="h-5 w-5" />

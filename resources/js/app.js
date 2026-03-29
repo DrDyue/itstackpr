@@ -28,13 +28,12 @@ const applyTheme = (theme) => {
 const syncThemeToggleUi = () => {
     const currentTheme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
 
-    document.querySelectorAll('[data-theme-label]').forEach((label) => {
-        label.textContent = currentTheme === 'dark' ? 'Tumsa' : 'Gaisma';
-    });
+    document.querySelectorAll('[data-theme-choice]').forEach((button) => {
+        const buttonTheme = button.dataset.themeValue === 'dark' ? 'dark' : 'light';
+        const isActive = buttonTheme === currentTheme;
 
-    document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
-        button.setAttribute('aria-pressed', currentTheme === 'dark' ? 'true' : 'false');
-        button.setAttribute('title', currentTheme === 'dark' ? 'Parslegt uz gaiso temu' : 'Parslegt uz tumso temu');
+        button.dataset.active = isActive ? 'true' : 'false';
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
     });
 };
 
@@ -42,14 +41,14 @@ const initializeThemeToggle = () => {
     applyTheme(getStoredTheme());
     syncThemeToggleUi();
 
-    document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
+    document.querySelectorAll('[data-theme-choice]').forEach((button) => {
         if (button.dataset.themeBound === '1') {
             return;
         }
 
         button.dataset.themeBound = '1';
         button.addEventListener('click', () => {
-            const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+            const nextTheme = button.dataset.themeValue === 'dark' ? 'dark' : 'light';
 
             try {
                 window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);

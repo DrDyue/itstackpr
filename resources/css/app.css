@@ -3218,70 +3218,51 @@ html[data-theme='dark'] {
     color-scheme: dark;
 }
 
-.theme-toggle,
-.theme-toggle-mobile {
+.theme-choice-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+}
+
+.theme-choice-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.65rem;
+    gap: 0.55rem;
     border-radius: 1rem;
-    border: 1px solid rgba(148, 163, 184, 0.28);
-    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(203, 213, 225, 0.95);
+    background: rgba(248, 250, 252, 0.92);
     color: rgb(51 65 85);
-    padding: 0.7rem 0.95rem;
-    font-size: 0.8rem;
+    padding: 0.75rem 0.85rem;
+    font-size: 0.76rem;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.08em;
+    line-height: 1;
     text-transform: uppercase;
-    box-shadow: 0 10px 28px -22px rgba(15, 23, 42, 0.45);
-    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.theme-toggle:hover,
-.theme-toggle-mobile:hover {
+.theme-choice-btn:hover {
     transform: translateY(-1px);
-    background: rgba(248, 250, 252, 0.98);
+    background: rgba(241, 245, 249, 0.98);
+    color: rgb(15 23 42);
 }
 
-.theme-toggle-mobile {
-    width: 100%;
+.theme-choice-btn[data-active='true'] {
+    background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%);
+    border-color: rgba(29, 78, 216, 0.55);
+    color: #fff;
+    box-shadow: 0 14px 28px -22px rgba(29, 78, 216, 0.7);
 }
 
-.theme-toggle-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+.app-brand-title,
+.app-brand-subtitle {
+    transition: color 0.2s ease;
 }
 
-.theme-toggle-icon-moon {
-    display: none;
-}
-
-.theme-toggle-label {
-    white-space: nowrap;
-}
-
-html[data-theme='dark'] .theme-toggle,
-html[data-theme='dark'] .theme-toggle-mobile {
-    border-color: rgba(71, 85, 105, 0.9);
-    background: rgba(15, 23, 42, 0.92);
-    color: rgb(226 232 240);
-    box-shadow: 0 14px 34px -24px rgba(2, 6, 23, 0.9);
-}
-
-html[data-theme='dark'] .theme-toggle:hover,
-html[data-theme='dark'] .theme-toggle-mobile:hover {
-    background: rgba(30, 41, 59, 0.96);
-}
-
-html[data-theme='dark'] .theme-toggle-icon-sun,
-html[data-theme='dark'] .theme-toggle-mobile .theme-toggle-icon-sun {
-    display: none;
-}
-
-html[data-theme='dark'] .theme-toggle-icon-moon,
-html[data-theme='dark'] .theme-toggle-mobile .theme-toggle-icon-moon {
-    display: inline-flex;
+.app-brand-crest,
+.app-brand-fallback {
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 html[data-theme='dark'] body {
@@ -3309,6 +3290,43 @@ html[data-theme='dark'] .app-main-nav {
     background: rgba(2, 6, 23, 0.84) !important;
     border-color: rgba(30, 41, 59, 0.92) !important;
     box-shadow: 0 18px 38px -30px rgba(2, 6, 23, 0.95);
+}
+
+html[data-theme='dark'] .theme-choice-btn {
+    border-color: rgba(71, 85, 105, 0.9);
+    background: rgba(15, 23, 42, 0.92);
+    color: #cbd5e1;
+}
+
+html[data-theme='dark'] .theme-choice-btn:hover {
+    background: rgba(30, 41, 59, 0.98);
+    color: #f8fafc;
+}
+
+html[data-theme='dark'] .theme-choice-btn[data-active='true'] {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.26) 0%, rgba(37, 99, 235, 0.42) 100%);
+    border-color: rgba(56, 189, 248, 0.36);
+    color: #e0f2fe;
+    box-shadow: 0 16px 30px -24px rgba(14, 165, 233, 0.7);
+}
+
+html[data-theme='dark'] .app-brand-title {
+    color: #f8fafc !important;
+}
+
+html[data-theme='dark'] .app-brand-subtitle {
+    color: #7dd3fc !important;
+}
+
+html[data-theme='dark'] .app-brand-crest {
+    background: rgba(248, 250, 252, 0.96) !important;
+    border-color: rgba(71, 85, 105, 0.5) !important;
+    box-shadow: 0 18px 26px -24px rgba(2, 6, 23, 0.95);
+}
+
+html[data-theme='dark'] .app-brand-fallback {
+    background: linear-gradient(135deg, #0ea5e9 0%, #1d4ed8 100%) !important;
+    box-shadow: 0 18px 30px -24px rgba(14, 165, 233, 0.6);
 }
 
 html[data-theme='dark'] .app-main-nav,
@@ -3425,7 +3443,7 @@ html[data-theme='dark'] .text-slate-600 {
 
 html[data-theme='dark'] .text-slate-500,
 html[data-theme='dark'] .text-slate-400 {
-    color: #64748b !important;
+    color: #94a3b8 !important;
 }
 
 html[data-theme='dark'] .bg-white,
@@ -3721,6 +3739,103 @@ html[data-theme='dark'] .notification-toast-title,
 html[data-theme='dark'] .notification-toast-meta-value,
 html[data-theme='dark'] .notification-toast-meta-copy {
     color: #f8fafc !important;
+}
+
+html[data-theme='dark'] .repair-board-card,
+html[data-theme='dark'] .repair-board-column,
+html[data-theme='dark'] .dash-panel,
+html[data-theme='dark'] .dash-structure-card,
+html[data-theme='dark'] .dash-floor-card,
+html[data-theme='dark'] .dash-room-item,
+html[data-theme='dark'] .dash-room-link {
+    background-color: #0f172a !important;
+    border-color: rgba(51, 65, 85, 0.95) !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-theme='dark'] .repair-board-card:hover,
+html[data-theme='dark'] .dash-room-item:hover,
+html[data-theme='dark'] .dash-room-link:hover,
+html[data-theme='dark'] .dash-floor-filter:hover {
+    background-color: rgba(30, 41, 59, 0.92) !important;
+    color: #f8fafc !important;
+}
+
+html[data-theme='dark'] .repair-board-device-meta,
+html[data-theme='dark'] .repair-board-column-note,
+html[data-theme='dark'] .repair-board-meta-grid dt,
+html[data-theme='dark'] .dash-floor-sub,
+html[data-theme='dark'] .dash-floor-meta,
+html[data-theme='dark'] .dash-room-meta,
+html[data-theme='dark'] .dash-structure-meta,
+html[data-theme='dark'] .dash-activity-meta,
+html[data-theme='dark'] .dash-feed-meta,
+html[data-theme='dark'] .dash-action-item small,
+html[data-theme='dark'] .dash-device-subtitle,
+html[data-theme='dark'] .dash-device-label,
+html[data-theme='dark'] .dash-panel-chip,
+html[data-theme='dark'] .dashboard-pagination-meta,
+html[data-theme='dark'] .app-pagination-meta {
+    color: #94a3b8 !important;
+}
+
+html[data-theme='dark'] .repair-board-description,
+html[data-theme='dark'] .repair-board-meta-grid dd,
+html[data-theme='dark'] .dash-panel-title,
+html[data-theme='dark'] .dash-structure-title,
+html[data-theme='dark'] .dash-floor-title,
+html[data-theme='dark'] .dash-room-title,
+html[data-theme='dark'] .dash-device-value,
+html[data-theme='dark'] .dash-table-cell-strong {
+    color: #f8fafc !important;
+}
+
+html[data-theme='dark'] .dash-panel-chip,
+html[data-theme='dark'] .dash-floor-pill,
+html[data-theme='dark'] .dash-floor-badge {
+    background-color: #111827 !important;
+    border-color: rgba(71, 85, 105, 0.9) !important;
+    color: #cbd5e1 !important;
+}
+
+html[data-theme='dark'] .dash-floor-filter {
+    background-color: #111827 !important;
+    color: #cbd5e1 !important;
+    border-color: rgba(71, 85, 105, 0.9) !important;
+}
+
+html[data-theme='dark'] .dash-floor-filter-active,
+html[data-theme='dark'] .dash-room-link-active {
+    background-color: rgba(14, 165, 233, 0.16) !important;
+    color: #e0f2fe !important;
+    border-color: rgba(56, 189, 248, 0.3) !important;
+}
+
+html[data-theme='dark'] .table-action-item:hover,
+html[data-theme='dark'] .table-action-button:hover,
+html[data-theme='dark'] .table-action-inline-close:hover,
+html[data-theme='dark'] .searchable-select-toggle:hover,
+html[data-theme='dark'] .localized-date-trigger:hover,
+html[data-theme='dark'] .notification-toast-close:hover {
+    color: #f8fafc !important;
+}
+
+html[data-theme='dark'] .table-action-item.text-sky-700:hover,
+html[data-theme='dark'] .table-action-button-sky:hover {
+    background-color: rgba(14, 165, 233, 0.16) !important;
+    color: #e0f2fe !important;
+}
+
+html[data-theme='dark'] .table-action-item.text-amber-700:hover,
+html[data-theme='dark'] .table-action-button-amber:hover {
+    background-color: rgba(245, 158, 11, 0.16) !important;
+    color: #fde68a !important;
+}
+
+html[data-theme='dark'] .table-action-item.text-rose-700:hover,
+html[data-theme='dark'] .table-action-button-rose:hover {
+    background-color: rgba(244, 63, 94, 0.16) !important;
+    color: #fecdd3 !important;
 }
 
 html[data-theme='dark'] .device-request-popover-copy,
