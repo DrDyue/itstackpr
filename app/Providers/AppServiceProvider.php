@@ -4,10 +4,13 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 
+/**
+ * Aplikācijas servisu sniedzējs.
+ */
 class AppServiceProvider extends ServiceProvider
 {
     /**
-     * Register any application services.
+     * Reģistrē aplikācijas servisus.
      */
     public function register(): void
     {
@@ -15,7 +18,7 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Bootstrap any application services.
+     * Inicializē aplikācijas servisus pēc ielādes.
      */
     public function boot(): void
     {

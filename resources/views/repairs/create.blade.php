@@ -1,3 +1,12 @@
+{{--
+    Lapa: Jauns remonta ieraksts.
+    Atbildība: ļauj administratoram izveidot faktisko remonta darbu arī bez atsevišķa lietotāja pieteikuma.
+    Datu avots: RepairController@create, saglabāšana caur RepairController@store.
+    Galvenās daļas:
+    1. Hero zona ar remonta izveides kontekstu.
+    2. Validācijas kopsavilkums un iespējamais feature paziņojums.
+    3. Kopīgais remonta formas partialis.
+--}}
 <x-app-layout>
     <section class="app-shell max-w-5xl">
         <div class="page-hero">

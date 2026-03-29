@@ -1,3 +1,4 @@
+{{-- SVG ikonu komponents visam interfeisam. --}}
 @props(['name', 'size' => 'h-5 w-5'])
 
 @switch($name)

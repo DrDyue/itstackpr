@@ -6,6 +6,9 @@ use App\Models\DeviceType;
 use App\Support\AuditTrail;
 use Illuminate\Http\Request;
 
+/**
+ * Ierīču tipu vārdnīcas pārvaldība.
+ */
 class DeviceTypeController extends Controller
 {
     public function index(Request $request)

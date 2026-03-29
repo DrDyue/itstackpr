@@ -1,3 +1,4 @@
+{{-- Vienotais validācijas kļūdu attēlošanas komponents zem lauka. --}}
 @props(['messages'])
 
 @if ($messages)

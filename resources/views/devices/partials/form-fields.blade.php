@@ -1,3 +1,11 @@
+{{--
+    Partialis: Ierīces formas lauki.
+    Atbildiba: glabā visus ievades laukus, ko izmanto gan jaunās ierīces izveide, gan esošas ierīces rediģēšana.
+    Kāpēc tas ir svarīgi:
+    1. Viena un tā pati biznesa loģika netiek dublēta create un edit lapās.
+    2. Šeit tiek sagatavoti noklusējumi, dropdown izvēles un datu piesaistes vērtības.
+    3. Tieši šeit ir redzams, kuri lauki ir obligāti un kā tie ir sasaistīti ar backend validāciju.
+--}}
 @php
     $current = $device;
     $isCreating = ! $current;
@@ -90,6 +98,7 @@
     $selectedStatusLabel = old('status_query', $statusLabels[$selectedStatus] ?? 'Aktiva');
 @endphp
 
+{{-- Forma sadalīta pa semantiskām kartītēm: pamata dati, piesaiste, finanses, attēls un piezīmes. --}}
 <div class="device-form-grid">
     <div class="space-y-6">
         @if ($isWrittenOff)
@@ -98,6 +107,7 @@
             </div>
         @endif
 
+        {{-- Ierīces identitāte: kods, nosaukums, tips, modelis un sērijas numurs. --}}
         <section class="device-form-card">
             <div class="device-form-section-header">
                 <div class="device-form-section-icon bg-sky-50 text-sky-700 ring-sky-200">
@@ -146,6 +156,7 @@
             </div>
         </section>
 
+        {{-- Statuss, atbildīgais lietotājs un fiziskā atrašanās vieta. --}}
         <section class="device-form-card">
             <div class="device-form-section-header">
                 <div class="device-form-section-icon bg-emerald-50 text-emerald-700 ring-emerald-200">

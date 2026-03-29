@@ -13,8 +13,17 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
+/**
+ * Admina darba virsmas kontrolieris.
+ *
+ * Šeit tiek sagatavota augšējā statistika, telpu koks un maza ierīču tabula
+ * ar statusu priekšskatījumiem un ātrajām pārejām.
+ */
 class DashboardController extends Controller
 {
+    /**
+     * Parāda darba virsmu vai parasto lietotāju novirza uz viņa ierīcēm.
+     */
     public function index(Request $request): View|RedirectResponse
     {
         $user = $this->user();
@@ -143,6 +152,9 @@ class DashboardController extends Controller
         ]);
     }
 
+    /**
+     * Definē ātrās darbības kartītes darba virsmas augšdaļai.
+     */
     private function quickActions(int $pendingRepairRequestCount, int $pendingWriteoffRequestCount): array
     {
         return [
@@ -177,6 +189,9 @@ class DashboardController extends Controller
         ];
     }
 
+    /**
+     * Pārveido remonta tehnisko statusu cilvēkam saprotamā birkā.
+     */
     public function repairStatusLabel(?string $status): ?string
     {
         return match ($status) {
@@ -186,6 +201,9 @@ class DashboardController extends Controller
         };
     }
 
+    /**
+     * Aprēķina, kādu remonta apakšstatusu rādīt ierīcei dashboardā.
+     */
     public function visibleRepairStatusLabel(Device $device): ?string
     {
         if ($device->status !== Device::STATUS_REPAIR) {
@@ -198,6 +216,9 @@ class DashboardController extends Controller
         return $label ?: 'Gaida';
     }
 
+    /**
+     * Sagatavo remonta hover priekšskatījuma saturu.
+     */
     public function repairPreview(Device $device): ?array
     {
         if ($device->status !== Device::STATUS_REPAIR) {
@@ -222,6 +243,9 @@ class DashboardController extends Controller
         ];
     }
 
+    /**
+     * Sagatavo informāciju par gaidošo pieprasījumu birku dashboard tabulā.
+     */
     public function pendingRequestBadge(Device $device): ?array
     {
         if ((bool) ($device->has_pending_repair_request ?? false)) {

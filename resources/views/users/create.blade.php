@@ -1,3 +1,12 @@
+{{--
+    Lapa: Jauna lietotāja izveide.
+    Atbildība: ļauj administratoram izveidot pilnu sistēmas lietotāja kontu.
+    Datu avots: UserController@create, saglabāšana caur UserController@store.
+    Galvenās daļas:
+    1. Hero zona.
+    2. Validācijas kopsavilkums.
+    3. Lietotāja datu, lomas un paroles forma.
+--}}
 <x-app-layout>
     <section class="app-shell max-w-4xl">
         <div class="page-hero">
@@ -18,6 +27,7 @@
 
         <x-validation-summary />
 
+        {{-- Lietotāja forma apvieno kontaktus, lomu, paroli un konta statusu. --}}
         <form method="POST" action="{{ route('users.store') }}" class="surface-card space-y-6 p-6">
             @csrf
 

@@ -6,6 +6,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
+/**
+ * Lietotāja modelis ar lomām un skatīšanās režīmiem.
+ *
+ * Šeit glabājas gan autentifikācijas dati, gan arī noteikumi,
+ * kas nosaka, ko lietotājs drīkst redzēt admina un lietotāja skatā.
+ */
 class User extends Authenticatable
 {
     public const ROLE_ADMIN = 'admin';
@@ -48,16 +54,25 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Scope aktīvo lietotāju atlasīšanai.
+     */
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
     }
 
+    /**
+     * Ierīces, kuras lietotājs ir izveidojis.
+     */
     public function createdDevices(): HasMany
     {
         return $this->hasMany(Device::class, 'created_by');
     }
 
+    /**
+     * Ierīces, kas šobrīd piesaistītas lietotājam.
+     */
     public function assignedDevices(): HasMany
     {
         return $this->hasMany(Device::class, 'assigned_to_id');
@@ -123,16 +138,25 @@ class User extends Authenticatable
         return $this->hasMany(AuditLog::class);
     }
 
+    /**
+     * Admins un IT darbinieks sistēmā izmanto vienu paplašināto tiesību kopu.
+     */
     public function isAdmin(): bool
     {
         return in_array($this->role, [self::ROLE_ADMIN, self::ROLE_IT_WORKER], true);
     }
 
+    /**
+     * Projekta biznesa loģikā IT darbinieks tiek apstrādāts kā administrators.
+     */
     public function isItWorker(): bool
     {
         return $this->isAdmin();
     }
 
+    /**
+     * Nolasa pašreizējo skatīšanās režīmu no sesijas.
+     */
     public function currentViewMode(): string
     {
         if (! $this->isAdmin()) {
@@ -149,21 +173,33 @@ class User extends Authenticatable
             : self::VIEW_MODE_ADMIN;
     }
 
+    /**
+     * Vai administrators šobrīd strādā pilnajā admina skatā.
+     */
     public function isInAdminView(): bool
     {
         return $this->isAdmin() && $this->currentViewMode() === self::VIEW_MODE_ADMIN;
     }
 
+    /**
+     * Vai lietotājs darbojas kā parasts darbinieks.
+     */
     public function isInUserView(): bool
     {
         return ! $this->isAdmin() || $this->currentViewMode() === self::VIEW_MODE_USER;
     }
 
+    /**
+     * Centralizēts palīgs visām admina darbību pārbaudēm.
+     */
     public function canManageRequests(): bool
     {
         return $this->isInAdminView();
     }
 
+    /**
+     * Nosaka, vai lietotājs drīkst skatīt konkrēto ierīci.
+     */
     public function canViewDevice(Device $device): bool
     {
         return $this->canManageRequests()

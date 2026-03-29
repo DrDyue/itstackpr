@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Pieslēgšanās validācijas un throttling noteikumi.
+ */
 class LoginRequest extends FormRequest
 {
     public function authorize(): bool

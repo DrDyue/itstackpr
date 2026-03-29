@@ -1,3 +1,4 @@
+{{-- Tukšā stāvokļa komponents, ja sarakstā nav datu. --}}
 @props([
     'icon' => 'search',
     'title' => 'Sobrid nekas nav atrasts',

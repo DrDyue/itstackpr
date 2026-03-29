@@ -1,3 +1,12 @@
+{{--
+    Lapa: Audita žurnāls.
+    Atbildība: parāda sistēmas darbību vēsturi, kas noder kontrolei un demonstrācijai komisijai.
+    Datu avots: AuditLogController@index.
+    Galvenās daļas:
+    1. Hero un audita kopsavilkumi.
+    2. Filtri pēc darbības, smaguma, objekta, lietotāja un datuma.
+    3. Audita ierakstu tabula.
+--}}
 <x-app-layout>
     <section class="app-shell">
         <div class="page-hero">

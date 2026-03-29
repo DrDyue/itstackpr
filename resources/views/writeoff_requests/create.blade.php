@@ -1,3 +1,12 @@
+{{--
+    Lapa: Jauns norakstīšanas pieteikums.
+    Atbildība: ļauj lietotājam iesniegt iemeslu, kāpēc ierīci vajadzētu norakstīt.
+    Datu avots: WriteoffRequestController@create, saglabāšana caur WriteoffRequestController@store.
+    Galvenās daļas:
+    1. Hero zona ar paskaidrojumu.
+    2. Ierīces izvēles bloks.
+    3. Iemesla lauks un iesniegšanas darbības.
+--}}
 <x-app-layout>
     <section class="app-shell max-w-4xl">
         <div class="page-hero">
@@ -22,6 +31,7 @@
 
         <x-validation-summary />
 
+        {{-- Lietotājs izvēlas savas ierīces un norāda norakstīšanas iemeslu. --}}
         <form method="POST" action="{{ route('writeoff-requests.store') }}" class="surface-card space-y-6 p-6">
             @csrf
             <div class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">

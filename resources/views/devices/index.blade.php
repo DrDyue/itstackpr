@@ -1,3 +1,12 @@
+{{--
+    Lapa: Ierīču saraksts.
+    Atbildība: rāda visas lietotājam pieejamās ierīces; adminam tas ir pilnais inventārs, lietotājam - tikai viņa ierīces.
+    Datu avots: DeviceController@index.
+    Galvenās daļas:
+    1. Kopsavilkuma hero ar skaitītājiem.
+    2. Filtru rīkjosla meklēšanai, telpām, tipiem, statusiem un aktīvajiem pieprasījumiem.
+    3. Galvenā tabula ar statusiem, preview un ātrajām darbībām.
+--}}
 <x-app-layout>
     @php
         $selectedFloorLabel = $filters['floor'] !== ''
@@ -108,6 +117,7 @@
             </div>
         </div>
 
+        {{-- Filtru rīkjosla: meklēšana, telpas, tipi, statusi un aktīvie pieprasījumi. --}}
         <form
             method="GET"
             action="{{ route('devices.index') }}"
@@ -266,6 +276,7 @@
             <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
         @endif
 
+        {{-- Galvenā ierīču tabula ar statusu preview un admina ātrajām darbībām. --}}
         <div class="device-table-shell">
             <div class="device-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
             <table class="min-w-full text-sm">

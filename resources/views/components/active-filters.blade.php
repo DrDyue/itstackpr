@@ -1,3 +1,11 @@
+{{--
+    Komponents: Aktīvo filtru čipi.
+    Atbildiba: parāda, kuri filtri saraksta lapā pašlaik ir ieslēgti, un piedāvā ātru atiestatīšanu.
+    Kāpēc tas ir svarīgi:
+    1. Lietotājs nepazaudē kontekstu, kāpēc tabulā redzams tieši šāds rezultāts.
+    2. Ļauj ātri noņemt visus filtrus un atgriezties pilnajā sarakstā.
+    3. Uzlabo lietojamību garos sarakstos ar daudziem filtru nosacījumiem.
+--}}
 @props([
     'items' => [],
     'clearUrl' => null,

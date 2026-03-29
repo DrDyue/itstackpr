@@ -2,10 +2,12 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "laravel/laravel",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Ludzas novada pasvaldibas IT inventara uzskaites un pieprasijumu vadibas sistema.",
     "keywords": [
         "laravel",
-        "framework"
+        "inventory",
+        "it-asset-management",
+        "request-workflow"
     ],
     "license": "MIT",
     "require": {

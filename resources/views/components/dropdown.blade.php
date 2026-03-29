@@ -1,3 +1,4 @@
+{{-- Universāls dropdown komponents desktop un mobilajai navigācijai. --}}
 @props(['align' => 'right', 'width' => '48', 'contentClasses' => 'py-1 bg-white'])
 
 @php

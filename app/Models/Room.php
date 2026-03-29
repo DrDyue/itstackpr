@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Telpas modelis.
+ *
+ * Telpa ir piesaiste gan fiziskai atrašanās vietai, gan arī noliktavas loģikai.
+ */
 class Room extends Model
 {
     protected $table = 'rooms';
@@ -28,16 +33,25 @@ class Room extends Model
         ];
     }
 
+    /**
+     * Ēka, kurā atrodas telpa.
+     */
     public function building(): BelongsTo
     {
         return $this->belongsTo(Building::class);
     }
 
+    /**
+     * Lietotājs, kurš atbild par telpu, ja tāds piešķirts.
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Ierīces, kas novietotas šajā telpā.
+     */
     public function devices(): HasMany
     {
         return $this->hasMany(Device::class);

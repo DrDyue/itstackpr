@@ -1,3 +1,11 @@
+{{--
+    Layout daļa: Augšējā navigācija.
+    Atbildiba: parāda galvenās sistēmas sadaļas atkarībā no lietotāja lomas un izvēlētā skata režīma.
+    Kāpēc tas ir svarīgi:
+    1. Adminam šeit parādās pārvaldības sadaļas un view mode pārslēgs.
+    2. Lietotājam šeit paliek tikai tās sadaļas, kuras viņš drīkst izmantot.
+    3. Navigācijā tiek rādīti arī gaidošo pieteikumu indikatori un ātrās saites.
+--}}
 <nav x-data="{ open: false }" class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur">
     @php
         $user = auth()->user();

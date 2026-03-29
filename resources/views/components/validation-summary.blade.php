@@ -1,3 +1,11 @@
+{{--
+    Komponents: Validācijas kopsavilkums.
+    Atbildiba: vienuviet parāda galvenās formas kļūdas un palīdz lietotājam saprast, kas jāizlabo.
+    Kāpēc tas ir svarīgi:
+    1. Lietotājam nav jāmeklē kļūdas tikai pa atsevišķiem laukiem.
+    2. Komponents var tikt izmantots dažādās formās ar vienādu stilu un loģiku.
+    3. Šeit var redzēt, kā no kļūdu atslēgām tiek veidoti cilvēkam saprotami padomi.
+--}}
 @props([
     'title' => 'Parbaudi ievaditos datus',
     'bag' => null,

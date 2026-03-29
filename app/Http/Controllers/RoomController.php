@@ -10,8 +10,14 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
+/**
+ * Telpu pārvaldības CRUD kontrolieris.
+ */
 class RoomController extends Controller
 {
+    /**
+     * Parāda telpu sarakstu ar filtriem un kopsavilkumu.
+     */
     public function index(Request $request)
     {
         $this->requireManager();
@@ -67,6 +73,9 @@ class RoomController extends Controller
         ]);
     }
 
+    /**
+     * Parāda jaunas telpas izveides formu.
+     */
     public function create()
     {
         $this->requireManager();
@@ -77,6 +86,9 @@ class RoomController extends Controller
         ]);
     }
 
+    /**
+     * Saglabā jaunu telpu.
+     */
     public function store(Request $request)
     {
         $this->requireManager();
@@ -87,6 +99,9 @@ class RoomController extends Controller
         return redirect()->route('rooms.index')->with('success', 'Telpa veiksmigi pievienota');
     }
 
+    /**
+     * Parāda telpas rediģēšanas formu.
+     */
     public function edit(Room $room)
     {
         $this->requireManager();
@@ -98,6 +113,9 @@ class RoomController extends Controller
         ]);
     }
 
+    /**
+     * Atjaunina telpas datus.
+     */
     public function update(Request $request, Room $room)
     {
         $this->requireManager();
@@ -111,6 +129,9 @@ class RoomController extends Controller
         return redirect()->route('rooms.index')->with('success', 'Telpas dati atjauninati');
     }
 
+    /**
+     * Dzēš telpu tikai tad, ja tai vairs nav piesaistītu ierīču.
+     */
     public function destroy(Room $room)
     {
         $this->requireManager();
@@ -129,6 +150,9 @@ class RoomController extends Controller
         return redirect()->route('rooms.index')->with('success', 'Telpa dzesta');
     }
 
+    /**
+     * Vecais show ceļš tiek novirzīts uz telpu sarakstu.
+     */
     public function show(Room $room)
     {
         return redirect()->route('rooms.index');

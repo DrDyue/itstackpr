@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
+/**
+ * Lietotāju administrēšanas kontrolieris.
+ */
 class UserController extends Controller
 {
     private const ROLES = [User::ROLE_ADMIN, User::ROLE_USER];

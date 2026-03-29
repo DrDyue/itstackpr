@@ -1,3 +1,12 @@
+{{--
+    Lapa: Lietotāja pieprasījuma labošanas skats.
+    Atbildība: ļauj labot tikai iesniegta pieprasījuma aprakstošo lauku, kamēr admins to vēl nav izskatījis.
+    Datu avots: UserRequestCenterController@edit, saglabāšana caur UserRequestCenterController@update.
+    Galvenās daļas:
+    1. Hero ar pieprasījuma tipu.
+    2. Rediģējamais teksta lauks.
+    3. Saglabāšanas un atcelšanas darbības.
+--}}
 <x-app-layout>
     <section class="app-shell max-w-5xl">
         <div class="page-hero">

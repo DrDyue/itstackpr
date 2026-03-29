@@ -1,3 +1,12 @@
+{{--
+    Lapa: Jaunas paroles iestatīšana.
+    Atbildība: ļauj ar tokenu apstiprināt paroles nomaiņu un ievadīt jaunu paroli.
+    Datu avots: NewPasswordController@create, iesniegšana uz NewPasswordController@store.
+    Galvenās daļas:
+    1. Slēptais tokena lauks.
+    2. E-pasta un jaunās paroles ievade.
+    3. Apstiprināšanas poga.
+--}}
 <x-guest-layout>
     <form method="POST" action="{{ route('password.store') }}">
         @csrf

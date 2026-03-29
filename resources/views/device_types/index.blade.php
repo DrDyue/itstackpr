@@ -1,3 +1,12 @@
+{{--
+    Lapa: Ierīču tipu saraksts.
+    Atbildība: pārvalda tipu vārdnīcu, ko izmanto ierīču formās un filtros.
+    Datu avots: DeviceTypeController@index.
+    Galvenās daļas:
+    1. Hero un darbības.
+    2. Filtri pēc nosaukuma un kategorijas.
+    3. Tipu tabula ar piesaistīto ierīču skaitu.
+--}}
 <x-app-layout>
     @php
         $filters = $filters ?? ['q' => '', 'category' => '', 'sort' => 'type_name', 'direction' => 'asc'];

@@ -1,3 +1,4 @@
+{{-- Datuma izvēles komponents ar tekstlauku un kalendāra logiku. --}}
 @props([
     'name' => null,
     'value' => '',

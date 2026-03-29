@@ -14,12 +14,21 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Faktisko remonta darbu pārvaldība administratoram.
+ *
+ * Šeit dzīvo remonta saraksts, remonta izveide bez pieprasījuma
+ * un statusu pārejas visā remonta dzīves ciklā.
+ */
 class RepairController extends Controller
 {
     private const STATUSES = ['waiting', 'in-progress', 'completed', 'cancelled'];
     private const TYPES = ['internal', 'external'];
     private const PRIORITIES = ['low', 'medium', 'high', 'critical'];
 
+    /**
+     * Parāda remontu sarakstu un sadalījumu kolonnās.
+     */
     public function index(Request $request)
     {
         $user = $this->user();
@@ -111,6 +120,9 @@ class RepairController extends Controller
         ]);
     }
 
+    /**
+     * Parāda jauna remonta formu administratoram.
+     */
     public function create(Request $request)
     {
         $this->requireManager();
@@ -129,6 +141,9 @@ class RepairController extends Controller
         ]));
     }
 
+    /**
+     * Saglabā jaunu remonta ierakstu.
+     */
     public function store(Request $request)
     {
         $manager = $this->requireManager();
@@ -149,6 +164,9 @@ class RepairController extends Controller
         return redirect()->route('repairs.index')->with('success', 'Remonts veiksmigi pievienots');
     }
 
+    /**
+     * Parāda remonta rediģēšanas formu.
+     */
     public function edit(Repair $repair)
     {
         $this->requireManager();
@@ -164,6 +182,9 @@ class RepairController extends Controller
         ], $this->formData($repair)));
     }
 
+    /**
+     * Atjaunina remonta ierakstu.
+     */
     public function update(Request $request, Repair $repair)
     {
         $this->requireManager();
@@ -199,6 +220,9 @@ class RepairController extends Controller
         return redirect()->route('repairs.edit', $repair)->with('success', 'Remonts atjauninats');
     }
 
+    /**
+     * Dzēš remonta ierakstu un izlīdzina ierīces statusu.
+     */
     public function destroy(Repair $repair)
     {
         $this->requireManager();
@@ -215,6 +239,9 @@ class RepairController extends Controller
         return redirect()->route('repairs.index')->with('success', 'Remonts dzests');
     }
 
+    /**
+     * Veic atļautu pāreju starp remonta statusiem.
+     */
     public function transition(Request $request, Repair $repair)
     {
         $this->requireManager();
@@ -277,6 +304,9 @@ class RepairController extends Controller
         return back()->with('success', 'Remonta statuss atjauninats');
     }
 
+    /**
+     * Vecais show ceļš projektā tiek izmantots kā pāradresācija uz rediģēšanu.
+     */
     public function show(Repair $repair)
     {
         return redirect()->route('repairs.index');

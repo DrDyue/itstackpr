@@ -13,8 +13,17 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Vienotais lietotāja pieprasījumu ieejas punkts.
+ *
+ * Praktiski tas darbojas kā novirzītājs un kopīga vieta labošanai/atcelšanai,
+ * kamēr galvenās plūsmas dzīvo atsevišķos kontrolieros.
+ */
 class UserRequestCenterController extends Controller
 {
+    /**
+     * Lietotāju nosūta uz remonta pieteikumu sarakstu kā galveno ieejas punktu.
+     */
     public function index(Request $request)
     {
         $this->requireRegularUser();
@@ -22,6 +31,9 @@ class UserRequestCenterController extends Controller
         return redirect()->route('repair-requests.index');
     }
 
+    /**
+     * Novirza uz pareizo izveides formu pēc pieprasījuma tipa.
+     */
     public function create(Request $request)
     {
         $this->requireRegularUser();
@@ -38,6 +50,9 @@ class UserRequestCenterController extends Controller
         }, $params);
     }
 
+    /**
+     * Saglabā pieprasījumu caur veco vienoto ieeju, ja tā vēl tiek izmantota.
+     */
     public function store(Request $request)
     {
         $user = $this->requireRegularUser();
@@ -105,6 +120,9 @@ class UserRequestCenterController extends Controller
         return redirect()->route('device-transfers.index')->with('success', 'Nodosanas pieteikums izveidots.');
     }
 
+    /**
+     * Parāda lietotājam atļautu pieprasījuma teksta lauka labošanu.
+     */
     public function edit(string $requestType, int $requestId)
     {
         $user = $this->requireRegularUser();
@@ -124,6 +142,9 @@ class UserRequestCenterController extends Controller
         ]);
     }
 
+    /**
+     * Atļauj labot tikai aprakstošo lauku iesniegtam pieprasījumam.
+     */
     public function update(Request $request, string $requestType, int $requestId)
     {
         $user = $this->requireRegularUser();
@@ -147,6 +168,9 @@ class UserRequestCenterController extends Controller
         return redirect()->route($config['index_route'])->with('success', $config['updated_message']);
     }
 
+    /**
+     * Atceļ vēl neizskatītu pieprasījumu.
+     */
     public function destroy(string $requestType, int $requestId)
     {
         $user = $this->requireRegularUser();

@@ -1,3 +1,12 @@
+{{--
+    Lapa: Telpu saraksts.
+    Atbildība: rāda visas telpas, to ēkas, atbildīgos un ierīču skaitu.
+    Datu avots: RoomController@index.
+    Galvenās daļas:
+    1. Hero ar kopsavilkumu.
+    2. Filtri pēc ēkas, nodaļas, atbildīgā un aizpildījuma.
+    3. Galvenā telpu tabula.
+--}}
 <x-app-layout>
     @php
         $buildingOptions = $buildings->map(fn ($building) => [

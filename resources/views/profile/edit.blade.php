@@ -1,3 +1,12 @@
+{{--
+    Lapa: Mans profils.
+    Atbildība: ļauj lietotājam atjaunot savus personīgos datus un nomainīt paroli.
+    Datu avots: ProfileController@edit, saglabāšana caur ProfileController@update un PasswordController@update.
+    Galvenās daļas:
+    1. Hero ar profila kopsavilkumu.
+    2. Kreisais bloks ar personīgās informācijas formu.
+    3. Labais bloks ar paroles maiņu.
+--}}
 <x-app-layout>
     <section class="mx-auto max-w-6xl space-y-6 px-4 sm:px-6 lg:px-8">
         <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
@@ -26,6 +35,7 @@
                 </div>
             </div>
 
+            {{-- Kreisajā pusē ir profila dati, labajā pusē paroles maiņas panelis. --}}
             <div class="grid gap-5 px-5 py-5 sm:px-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.9fr)]">
                 <div class="space-y-5 rounded-[2rem] bg-slate-100/80 p-3">
                     <div class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-8">

@@ -1,3 +1,12 @@
+{{--
+    Lapa: Admina darbvirsma.
+    Atbildība: parāda administratoram vienkopus galvenos darba rīkus, telpu koku un kompaktu ierīču tabulu.
+    Datu avots: DashboardController@index.
+    Galvenās daļas:
+    1. Hero zona ar ātrajām darbībām.
+    2. Kreisā kolonna ar stāvu un telpu filtru koku.
+    3. Labā kolonna ar jaunāko ierīču tabulu un statusu priekšskatījumiem.
+--}}
 <x-app-layout>
     <section class="app-shell">
         <div class="page-hero">
@@ -39,6 +48,7 @@
             </div>
         </div>
 
+        {{-- Darba virsmas galvenais saturs sadalīts telpu kokā un ierīču tabulā. --}}
         <div class="dash-workspace-grid">
             <aside class="dash-location-panel">
                 <div class="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
@@ -97,6 +107,7 @@
             </aside>
 
             <div class="dash-main-stack">
+                {{-- Kompaktais jaunāko ierīču saraksts ar statusu un pieprasījumu preview. --}}
                 <section class="surface-card">
                     <div class="flex flex-wrap items-start justify-between gap-4">
                         <div>

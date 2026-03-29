@@ -5,6 +5,9 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Profila atjaunošanas validācijas noteikumi.
+ */
 class ProfileUpdateRequest extends FormRequest
 {
     public function rules(): array

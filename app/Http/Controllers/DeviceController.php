@@ -23,6 +23,12 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Route;
 
+/**
+ * Galvenais inventāra kontrolieris.
+ *
+ * Šī klase apvieno ierīču sarakstu, filtrus, pilno CRUD plūsmu,
+ * ātrās darbības un statusu/pieprasījumu priekšskatījumu sagatavošanu.
+ */
 class DeviceController extends Controller
 {
     private const STATUSES = [Device::STATUS_ACTIVE, Device::STATUS_REPAIR, Device::STATUS_WRITEOFF];
@@ -35,6 +41,9 @@ class DeviceController extends Controller
 
     private const DEFAULT_BUILDING_NAME = 'Ludzes novada pasvaldiba';
 
+    /**
+     * Parāda ierīču sarakstu ar lomām atkarīgu filtrēšanu un statusu palīgdatiem.
+     */
     public function index(Request $request)
     {
         $user = $this->user();
@@ -265,6 +274,9 @@ class DeviceController extends Controller
         return view('devices.create', $this->formData());
     }
 
+    /**
+     * Saglabā jaunu ierīci sistēmā.
+     */
     public function store(Request $request)
     {
         $user = $this->requireManager();
@@ -289,6 +301,9 @@ class DeviceController extends Controller
         return view('devices.edit', array_merge(['device' => $device], $this->formData()));
     }
 
+    /**
+     * Parāda detalizētu ierīces kartīti.
+     */
     public function show(Device $device)
     {
         $this->authorizeView($device);
@@ -372,6 +387,9 @@ class DeviceController extends Controller
         ]);
     }
 
+    /**
+     * Lietotāja skatā atļauj nomainīt tikai telpu savai ierīcei.
+     */
     public function updateUserRoom(Request $request, Device $device): RedirectResponse
     {
         $user = $this->user();
@@ -434,6 +452,9 @@ class DeviceController extends Controller
         return redirect()->route('devices.index')->with('success', 'Ierices dati atjauninati');
     }
 
+    /**
+     * Dzēš ierīces ierakstu.
+     */
     public function destroy(Device $device)
     {
         $this->requireManager();
@@ -445,6 +466,9 @@ class DeviceController extends Controller
         return redirect()->route('devices.index')->with('success', 'Ierice dzesta');
     }
 
+    /**
+     * Ātrā atjaunošana no tabulas dropdown darbībām.
+     */
     public function quickUpdate(Request $request, Device $device)
     {
         $this->requireManager();
@@ -469,6 +493,9 @@ class DeviceController extends Controller
         return $this->redirectAfterQuickAction($device, $result['level'], $result['message']);
     }
 
+    /**
+     * Pāradresē no vecā ātrās rediģēšanas ceļa uz pilno ierīces skatu.
+     */
     public function quickUpdateRedirect(Device $device): RedirectResponse
     {
         $this->requireManager();

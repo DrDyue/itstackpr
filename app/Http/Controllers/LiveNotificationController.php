@@ -10,8 +10,17 @@ use App\Models\WriteoffRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 
+/**
+ * Reāllaika paziņojumu API kontrolieris.
+ *
+ * Frontend polling ceļā no šīs klases saņem toast paziņojumus par jauniem
+ * pieprasījumiem, kas jāizskata administratoram vai nodošanas saņēmējam.
+ */
 class LiveNotificationController extends Controller
 {
+    /**
+     * Atgriež pašreizējam lietotājam aktuālos paziņojumus JSON formā.
+     */
     public function index(): JsonResponse
     {
         $user = $this->user();
@@ -23,6 +32,9 @@ class LiveNotificationController extends Controller
         ]);
     }
 
+    /**
+     * Izvēlas atbilstošo paziņojumu avotu pēc lietotāja lomas un skata.
+     */
     private function notificationsFor(User $user): Collection
     {
         if ($user->canManageRequests()) {
@@ -32,6 +44,9 @@ class LiveNotificationController extends Controller
         return $this->incomingTransferNotifications($user);
     }
 
+    /**
+     * Savāc administratora skatam gaidošos remonta, norakstīšanas un nodošanas pieteikumus.
+     */
     private function managerNotifications(User $user): Collection
     {
         $repairNotifications = $this->featureTableExists('repair_requests')
@@ -47,10 +62,7 @@ class LiveNotificationController extends Controller
                     type: 'repair',
                     accent: 'sky',
                     title: 'Jauns remonta pieprasijums',
-                    message: $this->compactMessage(
-                        primary: $request->responsibleUser?->full_name ?: 'Lietotajs',
-                        secondary: 'Iesniegts par ierici '.($request->device?->name ?: 'bez nosaukuma')
-                    ),
+                    message: ($request->responsibleUser?->full_name ?: 'Lietotajs').' gaida izskatisanu.',
                     details: $this->deviceDetails(
                         $request->device,
                         [
@@ -87,10 +99,7 @@ class LiveNotificationController extends Controller
                     type: 'writeoff',
                     accent: 'rose',
                     title: 'Jauns norakstisanas pieprasijums',
-                    message: $this->compactMessage(
-                        primary: $request->responsibleUser?->full_name ?: 'Lietotajs',
-                        secondary: 'Iesniegts par ierici '.($request->device?->name ?: 'bez nosaukuma')
-                    ),
+                    message: ($request->responsibleUser?->full_name ?: 'Lietotajs').' gaida izskatisanu.',
                     details: $this->deviceDetails(
                         $request->device,
                         [
@@ -127,10 +136,7 @@ class LiveNotificationController extends Controller
                     type: 'transfer',
                     accent: 'emerald',
                     title: 'Jauns nodosanas pieprasijums',
-                    message: $this->compactMessage(
-                        primary: $transfer->responsibleUser?->full_name ?: 'Lietotajs',
-                        secondary: 'Velas nodot '.($transfer->device?->name ?: 'ierici').($transfer->transferTo?->full_name ? ' lietotajam '.$transfer->transferTo->full_name : '')
-                    ),
+                    message: ($transfer->responsibleUser?->full_name ?: 'Lietotajs').' gaida lemumu par nodosanu.',
                     details: $this->deviceDetails(
                         $transfer->device,
                         [
@@ -160,6 +166,9 @@ class LiveNotificationController extends Controller
             ->values();
     }
 
+    /**
+     * Savāc parastam lietotājam ienākošos nodošanas pieprasījumus.
+     */
     private function incomingTransferNotifications(User $user): Collection
     {
         if (! $this->featureTableExists('device_transfers')) {
@@ -178,10 +187,7 @@ class LiveNotificationController extends Controller
                 type: 'incoming-transfer',
                 accent: 'amber',
                 title: 'Jauns ienakoss nodosanas pieprasijums',
-                message: $this->compactMessage(
-                    primary: $transfer->responsibleUser?->full_name ?: 'Lietotajs',
-                    secondary: 'Velas tev nodot '.($transfer->device?->name ?: 'ierici')
-                ),
+                message: 'Tev jaizlemj par ierices sanemsanu.',
                 details: $this->deviceDetails(
                     $transfer->device,
                     [
@@ -207,6 +213,9 @@ class LiveNotificationController extends Controller
             ->values();
     }
 
+    /**
+     * Vienotā formā sagatavo vienu toast paziņojuma objektu.
+     */
     private function formatNotification(
         string $id,
         string $type,
@@ -232,6 +241,9 @@ class LiveNotificationController extends Controller
         ];
     }
 
+    /**
+     * Apraksta klikšķināmu paziņojuma darbības pogu.
+     */
     private function actionConfig(string $label, string $tone, string $url, array $payload): array
     {
         return [
@@ -242,6 +254,9 @@ class LiveNotificationController extends Controller
         ];
     }
 
+    /**
+     * Sagatavo ierīces bloku, ko rāda paziņojuma kartītē.
+     */
     private function deviceDetails(?Device $device, array $extra = []): array
     {
         $manufacturer = trim((string) ($device?->manufacturer ?? ''));
@@ -266,6 +281,9 @@ class LiveNotificationController extends Controller
         ], $extra);
     }
 
+    /**
+     * Izveido īsu cilvēkam saprotamu gaidīšanas ilguma tekstu.
+     */
     private function waitLabel($createdAt): string
     {
         if (! $createdAt) {
@@ -294,10 +312,5 @@ class LiveNotificationController extends Controller
         $remainingHours = $hours % 24;
 
         return 'gaida '.$days.' d'.($remainingHours > 0 ? ' '.$remainingHours.' h' : '');
-    }
-
-    private function compactMessage(string $primary, string $secondary): string
-    {
-        return trim($primary).' | '.trim($secondary);
     }
 }

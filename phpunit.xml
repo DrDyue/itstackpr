@@ -4,6 +4,7 @@
          bootstrap="vendor/autoload.php"
          colors="true"
 >
+    <!-- Testu komplekti tiek sadalīti vienību testos un funkcionalitātes testos. -->
     <testsuites>
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
@@ -12,11 +13,13 @@
             <directory>tests/Feature</directory>
         </testsuite>
     </testsuites>
+    <!-- Coverage avots ir aplikācijas kods mapē app. -->
     <source>
         <include>
             <directory>app</directory>
         </include>
     </source>
+    <!-- Testu vide izmanto atsevišķu sqlite datubāzi un vieglākas konfigurācijas. -->
     <php>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>

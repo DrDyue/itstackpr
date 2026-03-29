@@ -1,3 +1,12 @@
+{{--
+    Lapa: Jaunas ierīces izveide.
+    Atbildība: ļauj administratoram pievienot jaunu inventāra vienību sistēmā.
+    Datu avots: DeviceController@create, saglabāšana caur DeviceController@store.
+    Galvenās daļas:
+    1. Hero ar paskaidrojumu par izveidi.
+    2. Validācijas kopsavilkums, ja forma aizpildīta kļūdaini.
+    3. Kopīgais ierīces formas partialis un saglabāšanas darbību zona.
+--}}
 <x-app-layout>
     <section class="app-shell max-w-5xl">
         <div class="page-hero">
@@ -26,6 +35,7 @@
 
         <x-validation-summary />
 
+        {{-- Forma izmanto kopīgo partiali, lai create un edit skatam būtu viena struktūra. --}}
         <form method="POST" action="{{ route('devices.store') }}" enctype="multipart/form-data" class="space-y-6">
             @csrf
             @include('devices.partials.form-fields', ['device' => null])

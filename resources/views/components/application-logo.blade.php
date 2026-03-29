@@ -1,3 +1,4 @@
+{{-- Projekta logotipa komponents navigācijai un autentifikācijas skatam. --}}
 @php
     $crestPath = public_path('images/ludzas-logo.png');
     $hasCrest = file_exists($crestPath);
@@ -20,4 +21,3 @@
         <span class="hidden truncate text-xs font-semibold text-blue-600 xl:block">IT inventra uzskaite</span>
     </div>
 </div>
-

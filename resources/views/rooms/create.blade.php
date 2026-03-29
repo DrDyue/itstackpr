@@ -1,3 +1,12 @@
+{{--
+    Lapa: Jaunas telpas izveide.
+    Atbildība: ļauj administratoram izveidot telpu, piesaistīt to ēkai un vajadzības gadījumā atbildīgajam.
+    Datu avots: RoomController@create, saglabāšana caur RoomController@store.
+    Galvenās daļas:
+    1. Hero ar lapas nozīmi.
+    2. Validācijas kopsavilkums.
+    3. Telpas datu forma.
+--}}
 <x-app-layout>
     <section class="app-shell max-w-4xl">
         <div class="page-hero">
@@ -18,6 +27,7 @@
 
         <x-validation-summary />
 
+        {{-- Telpas forma piesaista telpu ēkai, stāvam un atbildīgajam lietotājam. --}}
         <form method="POST" action="{{ route('rooms.store') }}" class="surface-card space-y-6 p-6">
             @csrf
             <div class="grid gap-4 md:grid-cols-2">

@@ -1,3 +1,11 @@
+{{--
+    Komponents: Meklējams izvēles lauks.
+    Atbildiba: aizvieto parasto HTML select ar meklējamu, stilizētu un lietotājam ērtāku izvēli.
+    Kāpēc tas ir svarīgi:
+    1. Lielos ierakstu sarakstos lietotājs var ātri atrast vajadzīgo ierīci, telpu vai personu.
+    2. Komponents tiek izmantots vairākās vietās, tāpēc vienā vietā var uzturēt vienotu UI uzvedību.
+    3. Alpine.js šeit vada atvēršanu, meklēšanu, izvēli un tastatūras navigāciju.
+--}}
 @props([
     'name',
     'queryName',

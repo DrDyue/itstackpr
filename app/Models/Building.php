@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Ēkas modelis, kas apvieno telpas un ierīces fiziskā līmenī.
+ */
 class Building extends Model
 {
     protected $table = 'buildings';
@@ -25,12 +28,17 @@ class Building extends Model
         ];
     }
 
-    // Relations
+    /**
+     * Visas telpas konkrētajā ēkā.
+     */
     public function rooms(): HasMany
     {
         return $this->hasMany(Room::class);
     }
 
+    /**
+     * Visas ierīces, kas saistītas ar šo ēku.
+     */
     public function devices(): HasMany
     {
         return $this->hasMany(Device::class);

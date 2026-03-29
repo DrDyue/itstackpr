@@ -13,6 +13,9 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
+/**
+ * Jaunas paroles iestatīšana ar tokenu.
+ */
 class NewPasswordController extends Controller
 {
     /**

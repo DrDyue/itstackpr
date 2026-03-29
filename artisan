@@ -6,15 +6,13 @@ use Symfony\Component\Console\Input\ArgvInput;
 
 define('LARAVEL_START', microtime(true));
 
-// Register the Composer autoloader...
+// Ielādē Composer autoloaderi, lai Artisan komandas redzētu visas projekta klases.
 require __DIR__.'/vendor/autoload.php';
 
-// Bootstrap Laravel and handle the command...
+// Inicializē Laravel aplikāciju un nodod tai komandrindas argumentus.
 /** @var Application $app */
 $app = require_once __DIR__.'/bootstrap/app.php';
 
 $status = $app->handleCommand(new ArgvInput);
 
 exit($status);
-
- 

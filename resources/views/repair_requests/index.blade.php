@@ -1,3 +1,12 @@
+{{--
+    Lapa: Remonta pieteikumu saraksts.
+    Atbildība: rāda remonta pieprasījumus; lietotājs redz savus, admins redz visus un var tos izskatīt.
+    Datu avots: RepairRequestController@index.
+    Galvenās daļas:
+    1. Hero ar statusu skaitītājiem.
+    2. Filtri meklēšanai un statusu atlasīšanai.
+    3. Kartīšu saraksts ar pieteikuma un ierīces informāciju.
+--}}
 <x-app-layout>
     @php
         $statusFilterOptions = collect($statuses)->map(fn ($status) => [
@@ -76,6 +85,7 @@
             </div>
         </div>
 
+        {{-- Saraksta filtrēšana pēc meklēšanas un pieprasījuma statusiem. --}}
         <form method="GET" action="{{ route('repair-requests.index') }}" class="surface-toolbar grid gap-4 xl:grid-cols-[1.2fr_1fr_auto] xl:items-end">
             <input type="hidden" name="statuses_filter" value="1">
             <label class="block">

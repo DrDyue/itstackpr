@@ -1,3 +1,12 @@
+{{--
+    Lapa: Telpas rediģēšana.
+    Atbildība: ļauj mainīt telpas datus, piesaisti ēkai vai atbildīgajam lietotājam.
+    Datu avots: RoomController@edit, saglabāšana caur RoomController@update.
+    Galvenās daļas:
+    1. Hero zona.
+    2. Validācijas paziņojumi.
+    3. Telpas rediģēšanas forma.
+--}}
 <x-app-layout>
     <section class="app-shell max-w-4xl">
         <div class="page-hero">

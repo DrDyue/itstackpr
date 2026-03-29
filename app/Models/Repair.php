@@ -5,6 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Remonta izpildes ieraksts.
+ *
+ * Atšķirībā no remonta pieprasījuma šis modelis apraksta pašu darbu,
+ * kas tiek veikts ar ierīci pēc apstiprināšanas.
+ */
 class Repair extends Model
 {
     protected $table = 'repairs';
@@ -37,11 +43,17 @@ class Repair extends Model
         ];
     }
 
+    /**
+     * Ierīce, kurai tiek veikts remonts.
+     */
     public function device(): BelongsTo
     {
         return $this->belongsTo(Device::class);
     }
 
+    /**
+     * Lietotājs, kurš sākotnēji pieteica problēmu.
+     */
     public function reporter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'issue_reported_by');
@@ -62,6 +74,9 @@ class Repair extends Model
         return $this->belongsTo(User::class, 'accepted_by');
     }
 
+    /**
+     * Apstiprinātājs tiek ņemts no remonta ieraksta vai no saistītā pieprasījuma.
+     */
     public function getApprovalActorAttribute(): ?User
     {
         if ($this->relationLoaded('acceptedBy') && $this->acceptedBy) {
@@ -75,6 +90,9 @@ class Repair extends Model
         return null;
     }
 
+    /**
+     * Ērts lasāms apstiprinātāja vārds priekš skatījumiem un tooltipiem.
+     */
     public function getApprovalActorNameAttribute(): ?string
     {
         if ($this->approval_actor?->full_name) {
@@ -92,6 +110,9 @@ class Repair extends Model
         return null;
     }
 
+    /**
+     * Pieprasījums, no kura izveidots remonts.
+     */
     public function request(): BelongsTo
     {
         return $this->belongsTo(RepairRequest::class, 'request_id');

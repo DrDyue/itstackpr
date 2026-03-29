@@ -1,3 +1,11 @@
+{{--
+    Komponents: Statusa birka.
+    Atbildiba: vienotā veidā attēlo ierīču, remonta un pieprasījumu statusus ar tekstu un krāsām.
+    Kāpēc tas ir svarīgi:
+    1. Vienā vietā tiek uzturēta statusu vizuālā loģika.
+    2. Lietotājs ātri saprot, kas ir aktīvs, gaidošs, procesā vai noraidīts.
+    3. Komisijai šis komponents labi parāda atkārtoti izmantojamu UI principu.
+--}}
 @props([
     'value',
     'context' => 'generic',

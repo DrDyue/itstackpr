@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
 
+/**
+ * Paroles atjaunošanas saites pieprasīšanas plūsma.
+ */
 class PasswordResetLinkController extends Controller
 {
     /**

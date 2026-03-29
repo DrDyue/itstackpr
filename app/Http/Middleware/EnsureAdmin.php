@@ -6,6 +6,9 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Atļauj piekļuvi tikai pilnam administratora skatam.
+ */
 class EnsureAdmin
 {
     public function handle(Request $request, Closure $next): Response

@@ -15,8 +15,17 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Lietotāju remonta pieteikumu plūsma.
+ *
+ * Kontrolieris pārvalda gan lietotāja iesniegšanu, gan administratora
+ * izskatīšanu un remonta ieraksta izveidi pēc apstiprināšanas.
+ */
 class RepairRequestController extends Controller
 {
+    /**
+     * Parāda remonta pieteikumu sarakstu atbilstoši lomai un filtriem.
+     */
     public function index(Request $request)
     {
         $user = $this->user();
@@ -95,6 +104,9 @@ class RepairRequestController extends Controller
         ]);
     }
 
+    /**
+     * Parāda jauna remonta pieteikuma formu lietotājam.
+     */
     public function create(Request $request)
     {
         $user = $this->user();
@@ -125,6 +137,9 @@ class RepairRequestController extends Controller
         ]);
     }
 
+    /**
+     * Saglabā jaunu remonta pieteikumu.
+     */
     public function store(Request $request)
     {
         $user = $this->user();
@@ -164,6 +179,9 @@ class RepairRequestController extends Controller
         return redirect()->route('repair-requests.index')->with('success', 'Remonta pieteikums nosutits izskatisanai');
     }
 
+    /**
+     * Administratora lēmums par remonta pieteikumu.
+     */
     public function review(Request $request, RepairRequest $repairRequest)
     {
         $manager = $this->requireManager();

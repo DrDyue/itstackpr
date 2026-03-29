@@ -1,3 +1,12 @@
+{{--
+    Lapa: Jauna ierīces tipa izveide.
+    Atbildība: ļauj pievienot jaunu tipu, ko vēlāk var izmantot ierīcēm.
+    Datu avots: DeviceTypeController@create, saglabāšana caur DeviceTypeController@store.
+    Galvenās daļas:
+    1. Hero.
+    2. Kļūdu kopsavilkums.
+    3. Ierīces tipa forma.
+--}}
 <x-app-layout>
     <section class="type-form-shell">
         <div class="device-page-header">

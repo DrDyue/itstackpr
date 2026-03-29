@@ -6,18 +6,30 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+/**
+ * Atbild par ierīču attēlu saglabāšanu, optimizēšanu un atdošanu.
+ */
 class DeviceAssetManager
 {
+    /**
+     * Atgriež aktīvo failu disku no konfigurācijas.
+     */
     public function disk(): string
     {
         return (string) config('devices.asset_disk', 'public');
     }
 
+    /**
+     * Saglabā augšupielādētu ierīces attēlu.
+     */
     public function storeDeviceImage(UploadedFile $file, ?string $previousPath = null): string
     {
         return $this->storeImage($file, (string) config('devices.device_image_dir', 'd'), $previousPath, true);
     }
 
+    /**
+     * Saglabā attēlu no jau ielasīta satura.
+     */
     public function storeDeviceImageContents(string $contents, ?string $extension = null, ?string $previousPath = null): string
     {
         return $this->storeImageContents(
@@ -29,6 +41,9 @@ class DeviceAssetManager
         );
     }
 
+    /**
+     * Izveido pieejamu URL gan lokāliem, gan attāliem attēliem.
+     */
     public function url(?string $path): ?string
     {
         if (! $path) {
@@ -49,6 +64,9 @@ class DeviceAssetManager
         return Storage::disk($diskName)->url($path);
     }
 
+    /**
+     * Dzēš attēlu no failu glabātuves.
+     */
     public function delete(?string $path): void
     {
         if (! $path || Str::startsWith($path, ['http://', 'https://'])) {
@@ -62,6 +80,9 @@ class DeviceAssetManager
         }
     }
 
+    /**
+     * Atgriež mazā priekšskatījuma URL.
+     */
     public function thumbUrl(?string $path): ?string
     {
         if ($path && Str::startsWith($path, ['http://', 'https://'])) {
@@ -71,6 +92,9 @@ class DeviceAssetManager
         return $this->url($this->thumbnailPath($path));
     }
 
+    /**
+     * Aprēķina thumbnails faila ceļu.
+     */
     public function thumbnailPath(?string $path): ?string
     {
         if (! $path || Str::startsWith($path, ['http://', 'https://'])) {

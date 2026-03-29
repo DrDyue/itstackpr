@@ -1,3 +1,12 @@
+{{--
+    Lapa: Reģistrācija.
+    Atbildība: ļauj administratoram izveidot jaunu sistēmas lietotāju no autentifikācijas sadaļas.
+    Datu avots: RegisteredUserController@create, saglabāšana caur RegisteredUserController@store.
+    Galvenās daļas:
+    1. Lietotāja identitātes lauki.
+    2. Lomas un konta piekļuves dati.
+    3. Reģistrācijas apstiprināšanas poga.
+--}}
 <x-guest-layout>
     <form method="POST" action="{{ route('register') }}" class="space-y-4">
         @csrf

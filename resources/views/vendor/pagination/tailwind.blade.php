@@ -1,3 +1,11 @@
+{{--
+    Vendor skats: Pielāgota lapošana.
+    Atbildiba: aizvieto Laravel noklusēto pagination attēlojumu ar projektam atbilstošu dizainu un latviskiem tekstiem.
+    Kāpēc tas ir svarīgi:
+    1. Lietotājs neredz noklusētos angļu tekstus Previous/Next/Showing.
+    2. Visās tabulās lapošana izskatās vienādi un ir vieglāk saprotama.
+    3. Šis fails centralizē pagination izskatu, tāpēc nav jālabo katra tabula atsevišķi.
+--}}
 @if ($paginator->hasPages())
     @php
         $currentPage = $paginator->currentPage();

@@ -1,4 +1,14 @@
+{{--
+    Lapa: Pieslēgšanās.
+    Atbildība: ļauj lietotājam autentificēties sistēmā ar darba e-pastu un paroli.
+    Datu avots: AuthenticatedSessionController@create, iesniegšana uz AuthenticatedSessionController@store.
+    Galvenās daļas:
+    1. Iespējamais sistēmas sagatavošanas paziņojums.
+    2. E-pasta un paroles forma.
+    3. Saite uz paroles atjaunošanu.
+--}}
 <x-guest-layout>
+    {{-- Lietotājs ievada darba e-pastu un paroli, lai ieietu sistēmā. --}}
     <form method="POST" action="{{ route('login') }}">
         @csrf
 

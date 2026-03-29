@@ -1,3 +1,12 @@
+{{--
+    Lapa: Jauns ierīces nodošanas pieprasījums.
+    Atbildība: ļauj izvēlēties ierīci, saņēmēju un nodošanas iemeslu.
+    Datu avots: DeviceTransferController@create, saglabāšana caur DeviceTransferController@store.
+    Galvenās daļas:
+    1. Hero zona ar paskaidrojumu par nodošanas loģiku.
+    2. Ierīces un saņēmēja izvēles bloki.
+    3. Iemesla lauks un saglabāšanas darbības.
+--}}
 <x-app-layout>
     <section class="app-shell max-w-4xl">
         <div class="page-hero">
@@ -22,6 +31,7 @@
 
         <x-validation-summary />
 
+        {{-- Formā tiek izvēlēta ierīce, saņēmējs un nodošanas iemesls. --}}
         <form method="POST" action="{{ route('device-transfers.store') }}" class="surface-card space-y-6 p-6">
             @csrf
             <div class="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">

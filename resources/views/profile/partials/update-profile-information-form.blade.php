@@ -1,3 +1,11 @@
+{{--
+    Profila daļa: Pamatinformācijas atjaunošana.
+    Atbildiba: ļauj lietotājam labot savu personisko informāciju, kuru sistēma izmanto ierīču piešķiršanā un pieteikumos.
+    Kāpēc tas ir svarīgi:
+    1. Vārds un amats tiek rādīti ierīču tabulās un pieteikumu kartītēs.
+    2. E-pasts un telefons palīdz identificēt lietotāju un sazināties, ja tas nepieciešams.
+    3. Šī forma ir atdalīta no paroles maiņas, lai drošības dati nesajauktos ar profila datiem.
+--}}
 <section>
     <header class="border-b border-slate-200 pb-4">
         <h2 class="text-xl font-semibold text-slate-900">Profila informacija</h2>

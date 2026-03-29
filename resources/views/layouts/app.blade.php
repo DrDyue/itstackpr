@@ -1,3 +1,11 @@
+{{--
+    Layout: Galvenais autorizetais karkass.
+    Atbildiba: nodrošina kopējo lapas ietvaru visām iekšējām sistēmas lapām pēc ielogošanās.
+    Kāpēc tas ir svarīgi:
+    1. Vienā vietā ielādē stilus un JavaScript.
+    2. Iekļauj augšējo navigāciju un vietu, kur katra lapa ievieto savu saturu.
+    3. Uztur reāllaika paziņojumu konteineru, ko izmanto admins un lietotājs.
+--}}
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
@@ -17,6 +25,7 @@
         </main>
 
         @auth
+            {{-- Šeit frontend polling režīmā saņem un attēlo toast paziņojumus. --}}
             @php
                 $liveNotificationPageKind = request()->routeIs('repair-requests.index')
                     ? 'repair-requests'
@@ -68,63 +77,45 @@
                                             </template>
                                         </div>
                                         <div class="notification-toast-title" x-text="notification.title"></div>
-                                        <template x-if="notification.details">
-                                            <div class="notification-toast-overview">
-                                                <div class="notification-toast-overview-row">
-                                                    <span class="notification-toast-overview-label">Pieteicejs</span>
-                                                    <span class="notification-toast-overview-value" x-text="notification.details.submitted_by || 'Lietotajs'"></span>
-                                                </div>
-                                                <div class="notification-toast-overview-row">
-                                                    <span class="notification-toast-overview-label">Ierice</span>
-                                                    <span class="notification-toast-overview-value" x-text="notification.details.device_name || 'Ierice'"></span>
-                                                </div>
-                                                <template x-if="notification.details.recipient">
-                                                    <div class="notification-toast-overview-row">
-                                                        <span class="notification-toast-overview-label">Sanemejs</span>
-                                                        <span class="notification-toast-overview-value" x-text="notification.details.recipient"></span>
-                                                    </div>
-                                                </template>
-                                            </div>
-                                        </template>
-                                        <template x-if="!notification.details">
-                                            <div class="notification-toast-copy" x-text="notification.message"></div>
-                                        </template>
+                                        <div class="notification-toast-copy" x-text="notification.message"></div>
                                     </div>
                                 </div>
 
                                 <template x-if="notification.details">
-                                    <div class="notification-toast-panel">
-                                        <div class="notification-toast-grid">
-                                            <div class="notification-toast-info notification-toast-info-wide">
+                                    <div class="notification-toast-body">
+                                        <div class="notification-toast-meta">
+                                            <div class="notification-toast-meta-item notification-toast-meta-item-wide">
                                                 <div class="notification-toast-section-label">Ierice</div>
-                                                <div class="notification-toast-device-name" x-text="notification.details.device_name"></div>
-                                                <div class="notification-toast-device-line">
-                                                    <span x-text="'Kods: ' + (notification.details.device_code || '-')"></span>
-                                                    <span aria-hidden="true">|</span>
-                                                    <span x-text="'Serija: ' + (notification.details.serial_number || '-')"></span>
-                                                </div>
-                                                <div class="notification-toast-device-meta" x-text="notification.details.device_meta"></div>
-                                                <div class="notification-toast-device-meta" x-text="notification.details.device_location"></div>
+                                                <div class="notification-toast-meta-value" x-text="notification.details.device_name"></div>
                                             </div>
-
-                                            <template x-if="notification.details.recipient">
-                                                <div class="notification-toast-info">
-                                                    <div class="notification-toast-section-label">Sanemejs</div>
-                                                    <div class="notification-toast-info-value" x-text="notification.details.recipient"></div>
-                                                </div>
-                                            </template>
-
-                                            <template x-if="notification.details.submitted_at">
-                                                <div class="notification-toast-info">
-                                                    <div class="notification-toast-section-label">Iesniegts</div>
-                                                    <div class="notification-toast-info-value" x-text="notification.details.submitted_at"></div>
-                                                </div>
-                                            </template>
-                                        </div>
-
-                                        <div class="notification-toast-reason">
-                                            <div class="notification-toast-section-label" x-text="notification.details.reason_label"></div>
-                                            <div class="notification-toast-reason-copy" x-text="notification.details.reason_value"></div>
+                                            <div class="notification-toast-meta-item">
+                                                <div class="notification-toast-section-label">Pieteicejs</div>
+                                                <div class="notification-toast-meta-value" x-text="notification.details.submitted_by"></div>
+                                            </div>
+                                            <div class="notification-toast-meta-item">
+                                                <div class="notification-toast-section-label">Iesniegts</div>
+                                                <div class="notification-toast-meta-value" x-text="notification.details.submitted_at || '-'"></div>
+                                            </div>
+                                            <div class="notification-toast-meta-item">
+                                                <div class="notification-toast-section-label">Kods</div>
+                                                <div class="notification-toast-meta-value" x-text="notification.details.device_code || '-'"></div>
+                                            </div>
+                                            <div class="notification-toast-meta-item">
+                                                <div class="notification-toast-section-label">Serija</div>
+                                                <div class="notification-toast-meta-value" x-text="notification.details.serial_number || '-'"></div>
+                                            </div>
+                                            <div class="notification-toast-meta-item notification-toast-meta-item-wide">
+                                                <div class="notification-toast-section-label">Vieta</div>
+                                                <div class="notification-toast-meta-value" x-text="notification.details.device_location"></div>
+                                            </div>
+                                            <div class="notification-toast-meta-item notification-toast-meta-item-wide" x-show="notification.details.recipient">
+                                                <div class="notification-toast-section-label">Sanemejs</div>
+                                                <div class="notification-toast-meta-value" x-text="notification.details.recipient"></div>
+                                            </div>
+                                            <div class="notification-toast-meta-item notification-toast-meta-item-wide">
+                                                <div class="notification-toast-section-label" x-text="notification.details.reason_label"></div>
+                                                <div class="notification-toast-meta-copy" x-text="notification.details.reason_value"></div>
+                                            </div>
                                         </div>
 
                                         <div class="notification-toast-footer">
@@ -155,5 +146,4 @@
         @endauth
     </body>
 </html>
-
 

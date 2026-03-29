@@ -14,6 +14,9 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
+/**
+ * Jauna lietotāja reģistrācija administratora vajadzībām.
+ */
 class RegisteredUserController extends Controller
 {
     public function create(): View

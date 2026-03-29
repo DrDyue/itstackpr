@@ -1,3 +1,12 @@
+{{--
+    Lapa: Ierīču nodošanas pieprasījumu saraksts.
+    Atbildība: rāda visas nodošanas plūsmas; lietotājs redz nosūtītos un saņemtos pieprasījumus, admins redz kopskatu.
+    Datu avots: DeviceTransferController@index.
+    Galvenās daļas:
+    1. Hero ar statusu skaitītājiem un gaidošajiem ienākošajiem lēmumiem.
+    2. Filtri meklēšanai un statusiem.
+    3. Kartīšu saraksts ar nodošanas kontekstu, saņēmēju un darbībām.
+--}}
 <x-app-layout>
     @php
         $statusFilterOptions = collect($statuses)->map(fn ($status) => [
@@ -73,6 +82,7 @@
             </div>
         </div>
 
+        {{-- Filtri nodošanas pieprasījumu meklēšanai un statusu atlasīšanai. --}}
         <form method="GET" action="{{ route('device-transfers.index') }}" class="surface-toolbar grid gap-4 xl:grid-cols-[1.2fr_1fr_auto] xl:items-end">
             <input type="hidden" name="statuses_filter" value="1">
             <label class="block">

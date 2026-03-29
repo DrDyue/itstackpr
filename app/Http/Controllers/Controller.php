@@ -10,8 +10,17 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 
+/**
+ * Projekta bāzes kontrolieris.
+ *
+ * Šeit glabājas kopīgie palīgmehānismi validācijai, lomu pārbaudēm,
+ * tukšajiem paginatoriem un statusu etiķetēm.
+ */
 abstract class Controller
 {
+    /**
+     * Atgriež pašreiz autorizēto lietotāju kā projekta User modeli.
+     */
     protected function user(): ?User
     {
         $user = auth()->user();
@@ -19,6 +28,9 @@ abstract class Controller
         return $user instanceof User ? $user : null;
     }
 
+    /**
+     * Pārbauda, ka darbību veic administrators.
+     */
     protected function requireAdmin(): User
     {
         $user = $this->user();
@@ -28,6 +40,9 @@ abstract class Controller
         return $user;
     }
 
+    /**
+     * Pārbauda, ka lietotājs drīkst pārvaldīt inventāru admina skatā.
+     */
     protected function requireManager(): User
     {
         $user = $this->user();
@@ -37,11 +52,17 @@ abstract class Controller
         return $user;
     }
 
+    /**
+     * Centralizēti pārbauda, vai konkrētā tabula datubāzē vispār eksistē.
+     */
     protected function featureTableExists(string $table): bool
     {
         return Schema::hasTable($table);
     }
 
+    /**
+     * Izveido tukšu paginatoru skatījumiem, kuros funkcija nav pieejama vai tabulas nav.
+     */
     protected function emptyPaginator(int $perPage = 20): LengthAwarePaginator
     {
         return new LengthAwarePaginator(
@@ -56,6 +77,9 @@ abstract class Controller
         );
     }
 
+    /**
+     * Vienotā validācijas ieeja ar lokalizētiem paziņojumiem un atribūtu nosaukumiem.
+     */
     protected function validateInput(Request $request, array $rules, array $messages = [], array $attributes = []): array
     {
         return Validator::make(
@@ -66,6 +90,9 @@ abstract class Controller
         )->validate();
     }
 
+    /**
+     * Projekta kopējie validācijas tekstu šabloni.
+     */
     protected function validationMessages(): array
     {
         return [
@@ -91,6 +118,9 @@ abstract class Controller
         ];
     }
 
+    /**
+     * Cilvēkam saprotami lauku nosaukumi validācijas kļūdām.
+     */
     protected function validationAttributes(): array
     {
         return [
@@ -150,6 +180,9 @@ abstract class Controller
         ];
     }
 
+    /**
+     * Vienoti pieprasījumu statusu nosaukumi Blade skatījumiem un filtriem.
+     */
     protected function requestStatusLabels(): array
     {
         return [
@@ -159,11 +192,17 @@ abstract class Controller
         ];
     }
 
+    /**
+     * Izveido remonta ierakstu, pirms tam izlīdzinot datumus legacy shēmām.
+     */
     protected function createRepairRecord(array $payload): Repair
     {
         return Repair::create($this->normalizeRepairPayloadForPersistence($payload));
     }
 
+    /**
+     * Remonta payload pielāgo kolonnām, kuras dažās vidēs var nepieļaut NULL datumus.
+     */
     protected function normalizeRepairPayloadForPersistence(array $payload): array
     {
         $status = (string) ($payload['status'] ?? 'waiting');
@@ -184,6 +223,9 @@ abstract class Controller
         return $payload;
     }
 
+    /**
+     * Nolasa, vai remonta tabulas konkrētā datuma kolonna atļauj NULL vērtības.
+     */
     protected function repairColumnAllowsNull(string $column): bool
     {
         static $repairsColumnNullability = null;

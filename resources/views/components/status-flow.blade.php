@@ -1,3 +1,4 @@
+{{-- Secīgo statusu attēlojums kā neliela procesa josla. --}}
 @props([
     'value',
     'context' => 'request',

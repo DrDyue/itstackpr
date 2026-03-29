@@ -1,3 +1,12 @@
+{{--
+    Lapa: Vienas ierīces detalizētais skats.
+    Atbildība: parāda pilnu informāciju par konkrētu ierīci, tās statusu, atrašanās vietu un saistītajām darbībām.
+    Datu avots: DeviceController@show.
+    Galvenās daļas:
+    1. Hero zona ar ierīces nosaukumu un pogām.
+    2. Pamata informācijas kartītes ar attēlu, identitāti un piesaisti.
+    3. Saistītā vēsture un papildu darbības atkarībā no lietotāja tiesībām.
+--}}
 <x-app-layout>
     @php
         $deviceMeta = collect([$device->manufacturer, $device->model])->filter(fn ($value) => filled($value))->implode(' | ');
@@ -55,6 +64,7 @@
             </div>
         </div>
 
+        {{-- Ierīces galvenā informācija, attēls un saistītās darbības. --}}
         <section class="surface-card p-6">
             <div class="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
                 <div class="flex flex-col gap-5 md:flex-row">

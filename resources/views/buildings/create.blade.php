@@ -1,3 +1,12 @@
+{{--
+    Lapa: Jaunas ēkas izveide.
+    Atbildība: ļauj administratoram sagatavot jaunu ēkas ierakstu telpu un ierīču piesaistei.
+    Datu avots: BuildingController@create, saglabāšana caur BuildingController@store.
+    Galvenās daļas:
+    1. Hero ar lapas skaidrojumu.
+    2. Validācijas kopsavilkums.
+    3. Ēkas datu forma.
+--}}
 <x-app-layout>
     <section class="app-shell max-w-3xl">
         <div class="page-hero">
@@ -18,6 +27,7 @@
 
         <x-validation-summary />
 
+        {{-- Ēkas forma satur pamatdatus, kurus vēlāk izmantos telpu un ierīču piesaistei. --}}
         <form method="POST" action="{{ route('buildings.store') }}" class="surface-card space-y-4">
             @csrf
 

@@ -16,6 +16,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Lietotāju norakstīšanas pieteikumu plūsma.
+ */
 class WriteoffRequestController extends Controller
 {
     private const DEFAULT_WAREHOUSE_ROOM_NAME = 'Noliktava';
@@ -24,6 +27,9 @@ class WriteoffRequestController extends Controller
 
     private const DEFAULT_BUILDING_NAME = 'Ludzes novada pasvaldiba';
 
+    /**
+     * Parāda norakstīšanas pieteikumu sarakstu.
+     */
     public function index(Request $request)
     {
         $user = $this->user();
@@ -101,6 +107,9 @@ class WriteoffRequestController extends Controller
         ]);
     }
 
+    /**
+     * Parāda jauna norakstīšanas pieteikuma formu lietotājam.
+     */
     public function create(Request $request)
     {
         $user = $this->user();
@@ -131,6 +140,9 @@ class WriteoffRequestController extends Controller
         ]);
     }
 
+    /**
+     * Saglabā jaunu norakstīšanas pieteikumu.
+     */
     public function store(Request $request)
     {
         $user = $this->user();
@@ -170,6 +182,9 @@ class WriteoffRequestController extends Controller
         return redirect()->route('writeoff-requests.index')->with('success', 'Norakstisanas pieteikums nosutits izskatisanai');
     }
 
+    /**
+     * Administratora lēmums par norakstīšanas pieprasījumu.
+     */
     public function review(Request $request, WriteoffRequest $writeoffRequest)
     {
         $manager = $this->requireManager();

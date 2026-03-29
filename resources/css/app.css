@@ -3085,72 +3085,40 @@ tbody td {
     @apply mt-1 text-sm leading-5 text-slate-600;
 }
 
-.notification-toast-overview {
-    @apply mt-3 grid gap-1.5;
-}
-
-.notification-toast-overview-row {
-    @apply flex items-baseline gap-2 text-sm leading-5;
-}
-
-.notification-toast-overview-label {
-    @apply shrink-0 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500;
-}
-
-.notification-toast-overview-value {
-    @apply min-w-0 font-medium text-slate-800;
-}
-
 .notification-toast-wait {
     @apply shrink-0 rounded-full bg-slate-900/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white;
-}
-
-.notification-toast-panel {
-    @apply mt-4 space-y-3 rounded-[1.15rem] border border-slate-200/80 bg-white/95 p-3.5 text-xs text-slate-700 shadow-sm;
 }
 
 .notification-toast-section-label {
     @apply text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500;
 }
 
-.notification-toast-device-name {
-    @apply mt-1 text-sm font-semibold text-slate-900;
+.notification-toast-body {
+    @apply mt-4 rounded-[1.15rem] border border-slate-200/80 bg-white/95 p-3.5 shadow-sm;
 }
 
-.notification-toast-device-line {
-    @apply mt-1 flex flex-wrap items-center gap-1.5 text-xs font-medium leading-5 text-slate-600;
-}
-
-.notification-toast-device-meta {
-    @apply mt-1 text-xs leading-5 text-slate-500;
-}
-
-.notification-toast-grid {
+.notification-toast-meta {
     @apply grid gap-2 sm:grid-cols-2;
 }
 
-.notification-toast-info {
+.notification-toast-meta-item {
     @apply rounded-[0.95rem] bg-slate-50/90 px-3 py-2.5 ring-1 ring-slate-200/70;
 }
 
-.notification-toast-info-wide {
+.notification-toast-meta-item-wide {
     @apply sm:col-span-2;
 }
 
-.notification-toast-info-value {
-    @apply mt-1 text-sm font-medium text-slate-800;
+.notification-toast-meta-value {
+    @apply mt-1 text-sm font-medium leading-5 text-slate-800;
 }
 
-.notification-toast-reason {
-    @apply rounded-[0.95rem] bg-slate-50/90 px-3 py-3 ring-1 ring-slate-200/70;
-}
-
-.notification-toast-reason-copy {
+.notification-toast-meta-copy {
     @apply mt-1 max-h-20 overflow-hidden text-sm leading-5 text-slate-800;
 }
 
 .notification-toast-footer {
-    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500;
+    @apply mt-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500;
 }
 
 .notification-toast-link {
@@ -3186,10 +3154,6 @@ tbody td {
 
     .notification-toast-title {
         @apply text-[15px] leading-6;
-    }
-
-    .notification-toast-overview-row {
-        @apply flex-col items-start gap-0.5;
     }
 }
 

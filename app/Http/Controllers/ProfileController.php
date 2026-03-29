@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 
+/**
+ * Lietotāja profila rediģēšana un konta dzēšana.
+ */
 class ProfileController extends Controller
 {
     public function edit(Request $request): View

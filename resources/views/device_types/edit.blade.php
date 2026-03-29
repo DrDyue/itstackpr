@@ -1,3 +1,12 @@
+{{--
+    Lapa: Ierīces tipa rediģēšana.
+    Atbildība: ļauj atjaunot tipa nosaukumu, kategoriju un aprakstu.
+    Datu avots: DeviceTypeController@edit, saglabāšana caur DeviceTypeController@update.
+    Galvenās daļas:
+    1. Hero zona.
+    2. Validācijas paziņojumi.
+    3. Rediģēšanas forma.
+--}}
 <x-app-layout>
     <section class="type-form-shell">
         <div class="device-page-header">

@@ -1,3 +1,4 @@
+{{-- Mobilās navigācijas saite ar aktīvo stāvokli. --}}
 @props(['active'])
 
 @php

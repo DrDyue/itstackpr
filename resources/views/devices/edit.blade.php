@@ -1,3 +1,12 @@
+{{--
+    Lapa: Ierīces rediģēšana.
+    Atbildība: ļauj administratoram mainīt esošas ierīces datus, piesaisti un dažos gadījumos statusu.
+    Datu avots: DeviceController@edit, saglabāšana caur DeviceController@update.
+    Galvenās daļas:
+    1. Hero ar rediģēšanas kontekstu.
+    2. Validācijas kļūdu kopsavilkums.
+    3. Kopīgais formas partialis un saglabāšanas zona.
+--}}
 <x-app-layout>
     <section class="app-shell max-w-5xl">
         <div class="page-hero">
@@ -26,6 +35,7 @@
 
         <x-validation-summary />
 
+        {{-- Rediģēšanas forma saglabā tikai maināmos laukus un respektē statusa ierobežojumus. --}}
         <form method="POST" action="{{ route('devices.update', $device) }}" enctype="multipart/form-data" class="space-y-6">
             @csrf
             @method('PUT')

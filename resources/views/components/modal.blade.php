@@ -1,3 +1,4 @@
+{{-- Universāls modāļa komponents apstiprināšanas un dzēšanas dialogiem. --}}
 @props([
     'name',
     'show' => false,

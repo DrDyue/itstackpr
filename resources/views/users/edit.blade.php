@@ -1,3 +1,12 @@
+{{--
+    Lapa: Lietotāja rediģēšana.
+    Atbildība: ļauj administratoram atjaunot lietotāja kontaktus, lomu un konta statusu.
+    Datu avots: UserController@edit, saglabāšana caur UserController@update.
+    Galvenās daļas:
+    1. Hero ar rediģēšanas kontekstu.
+    2. Kļūdu kopsavilkums.
+    3. Lietotāja rediģēšanas forma.
+--}}
 <x-app-layout>
     <section class="app-shell max-w-4xl">
         <div class="page-hero">

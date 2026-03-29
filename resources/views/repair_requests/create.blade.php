@@ -1,3 +1,12 @@
+{{--
+    Lapa: Jauns remonta pieteikums.
+    Atbildība: ļauj lietotājam izvēlēties savu ierīci un pieteikt remonta problēmu.
+    Datu avots: RepairRequestController@create, saglabāšana caur RepairRequestController@store.
+    Galvenās daļas:
+    1. Hero ar īsu paskaidrojumu.
+    2. Ierīces izvēles lauks ar meklējamu dropdown.
+    3. Apraksta lauks un iesniegšanas pogas.
+--}}
 <x-app-layout>
     <section class="app-shell max-w-4xl">
         <div class="page-hero">
@@ -20,6 +29,7 @@
             <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
         @endif
 
+        {{-- Formā lietotājs izvēlas ierīci un apraksta problēmu, ko admins vēlāk izskata. --}}
         <form method="POST" action="{{ route('repair-requests.store') }}" class="surface-card space-y-6 p-6">
             @csrf
             <div class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">

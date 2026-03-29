@@ -1,3 +1,11 @@
+{{--
+    Profila daļa: Konta dzēšana.
+    Atbildiba: ļauj lietotājam neatgriezeniski dzēst savu kontu pēc paroles apstiprinājuma.
+    Kāpēc tas ir svarīgi:
+    1. Tā ir riskanta darbība, tāpēc vizuāli un loģiski atdalīta no pārējām formām.
+    2. Papildu paroles ievade samazina nejaušas dzēšanas risku.
+    3. Komisijai šī forma labi parāda, kā projektā tiek risinātas kritiskās darbības.
+--}}
 <section class="space-y-6">
     <header class="border-b border-slate-200 pb-4">
         <h2 class="text-xl font-semibold text-slate-900">

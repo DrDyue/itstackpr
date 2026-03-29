@@ -1,3 +1,12 @@
+{{--
+    Lapa: Lietotāju saraksts.
+    Atbildība: rāda sistēmas lietotājus, viņu lomas, aktivitāti un pēdējo pieslēgšanos.
+    Datu avots: UserController@index.
+    Galvenās daļas:
+    1. Hero ar lietotāju kopsavilkumu.
+    2. Filtri pēc meklēšanas, lomas un aktivitātes.
+    3. Lietotāju tabula ar darbībām.
+--}}
 <x-app-layout>
     @php
         $roleFilterLinks = [

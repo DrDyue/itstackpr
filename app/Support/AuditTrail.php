@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Throwable;
 
+/**
+ * Vienota audita žurnāla rakstīšanas un lokalizēšanas utilītklase.
+ */
 class AuditTrail
 {
     public const ACTION_CREATE = 'CREATE';
@@ -25,6 +28,9 @@ class AuditTrail
     public const SEVERITY_ERROR = 'error';
     public const SEVERITY_CRITICAL = 'critical';
 
+    /**
+     * Zemākā līmeņa rakstītājs auditam.
+     */
     public static function write(
         ?int $userId,
         string $action,
@@ -48,6 +54,9 @@ class AuditTrail
         }
     }
 
+    /**
+     * Ērts palīgs izveides darbību pierakstam.
+     */
     public static function created(?int $userId, Model $model, ?string $description = null, ?string $severity = null): void
     {
         self::writeForModel(
@@ -59,6 +68,9 @@ class AuditTrail
         );
     }
 
+    /**
+     * Ērts palīgs atjaunošanas darbību pierakstam.
+     */
     public static function updated(
         ?int $userId,
         Model $model,
@@ -75,6 +87,9 @@ class AuditTrail
         );
     }
 
+    /**
+     * Aprēķina atšķirības starp veco un jauno stāvokli un saglabā tās auditā.
+     */
     public static function updatedFromState(
         ?int $userId,
         Model $model,
@@ -95,6 +110,9 @@ class AuditTrail
         );
     }
 
+    /**
+     * Ērts palīgs dzēšanas darbību pierakstam.
+     */
     public static function deleted(?int $userId, Model $model, ?string $description = null, ?string $severity = null): void
     {
         self::writeForModel(
@@ -106,6 +124,9 @@ class AuditTrail
         );
     }
 
+    /**
+     * Auditē veiksmīgu pieslēgšanos sistēmai.
+     */
     public static function login(?User $user): void
     {
         if (! $user) {
@@ -121,6 +142,9 @@ class AuditTrail
         );
     }
 
+    /**
+     * Auditē izrakstīšanos no sistēmas.
+     */
     public static function logout(?User $user): void
     {
         if (! $user) {
@@ -136,6 +160,9 @@ class AuditTrail
         );
     }
 
+    /**
+     * Uzraksta audita ierakstu, balstoties uz Eloquent modeli.
+     */
     public static function writeForModel(
         ?int $userId,
         string $action,
@@ -153,6 +180,9 @@ class AuditTrail
         );
     }
 
+    /**
+     * Sagatavo cilvēkam salasāmu objekta nosaukumu auditam.
+     */
     public static function labelFor(Model $model): string
     {
         return match (class_basename($model)) {
@@ -169,6 +199,9 @@ class AuditTrail
         };
     }
 
+    /**
+     * Lokalizē darbības tipu.
+     */
     public static function actionLabel(string $action): string
     {
         return match (strtoupper($action)) {
@@ -185,6 +218,9 @@ class AuditTrail
         };
     }
 
+    /**
+     * Lokalizē objektu tipu.
+     */
     public static function entityLabel(?string $entityType): string
     {
         $key = self::normalizeEntityKey($entityType);
@@ -205,6 +241,9 @@ class AuditTrail
         };
     }
 
+    /**
+     * Lokalizē audita smaguma līmeni.
+     */
     public static function severityLabel(string $severity): string
     {
         return match ($severity) {
@@ -215,6 +254,9 @@ class AuditTrail
         };
     }
 
+    /**
+     * Sagatavo īsu objekta atsauci sarakstu skatam.
+     */
     public static function entityReference(?string $entityType, ?string $entityId): string
     {
         $label = self::entityLabel($entityType);

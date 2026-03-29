@@ -7,10 +7,16 @@ use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
+/**
+ * Ēku pārvaldības CRUD kontrolieris.
+ */
 class BuildingController extends Controller
 {
     private const NOTES_DEFAULT = '';
 
+    /**
+     * Parāda ēku sarakstu ar filtriem.
+     */
     public function index(Request $request)
     {
         $this->requireManager();
@@ -48,6 +54,9 @@ class BuildingController extends Controller
         ]);
     }
 
+    /**
+     * Parāda jaunas ēkas izveides formu.
+     */
     public function create()
     {
         $this->requireManager();
@@ -55,6 +64,9 @@ class BuildingController extends Controller
         return view('buildings.create');
     }
 
+    /**
+     * Saglabā jaunu ēkas ierakstu.
+     */
     public function store(Request $request)
     {
         $this->requireManager();
@@ -65,6 +77,9 @@ class BuildingController extends Controller
         return redirect()->route('buildings.index')->with('success', 'Eka veiksmigi pievienota');
     }
 
+    /**
+     * Parāda ēkas rediģēšanas formu.
+     */
     public function edit(Building $building)
     {
         $this->requireManager();
@@ -72,6 +87,9 @@ class BuildingController extends Controller
         return view('buildings.edit', compact('building'));
     }
 
+    /**
+     * Atjaunina ēkas datus.
+     */
     public function update(Request $request, Building $building)
     {
         $this->requireManager();
@@ -84,6 +102,9 @@ class BuildingController extends Controller
         return redirect()->route('buildings.index')->with('success', 'Ekas dati atjauninati');
     }
 
+    /**
+     * Dzēš ēku tikai tad, ja tai vairs nav piesaistītu telpu un ierīču.
+     */
     public function destroy(Building $building)
     {
         $this->requireManager();
@@ -113,6 +134,9 @@ class BuildingController extends Controller
         return redirect()->route('buildings.index')->with('success', 'Eka dzesta');
     }
 
+    /**
+     * Vecais show ceļš tiek novirzīts atpakaļ uz sarakstu.
+     */
     public function show(Building $building)
     {
         $this->requireManager();

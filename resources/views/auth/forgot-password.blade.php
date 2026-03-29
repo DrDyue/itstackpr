@@ -1,3 +1,12 @@
+{{--
+    Lapa: Aizmirsta parole.
+    Atbildība: ļauj lietotājam pieprasīt paroles atjaunošanas saiti uz e-pastu.
+    Datu avots: PasswordResetLinkController@create, iesniegšana uz PasswordResetLinkController@store.
+    Galvenās daļas:
+    1. Instrukcijas lietotājam.
+    2. E-pasta ievades forma.
+    3. Paziņojums par veiksmīgu saites nosūtīšanu.
+--}}
 <x-guest-layout>
     <div class="auth-intro-text">
         Aizmirsi paroli? Bez problmm. Vienkri ievadi savu e-pasta adresi un ms nostsim paroles atiestatanas saiti.

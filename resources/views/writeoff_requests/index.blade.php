@@ -1,3 +1,12 @@
+{{--
+    Lapa: Norakstīšanas pieteikumu saraksts.
+    Atbildība: rāda norakstīšanas pieprasījumus un ļauj administratoram pieņemt gala lēmumu.
+    Datu avots: WriteoffRequestController@index.
+    Galvenās daļas:
+    1. Hero ar statusu statistiku.
+    2. Filtri meklēšanai un statusu pārslēgšanai.
+    3. Kartīšu saraksts ar pieteikuma pamatojumu un ierīces datiem.
+--}}
 <x-app-layout>
     @php
         $statusFilterOptions = collect($statuses)->map(fn ($status) => [
@@ -68,6 +77,7 @@
             </div>
         </div>
 
+        {{-- Saraksta filtrēšana pēc teksta un pieprasījuma statusiem. --}}
         <form method="GET" action="{{ route('writeoff-requests.index') }}" class="surface-toolbar grid gap-4 xl:grid-cols-[1.2fr_1fr_auto] xl:items-end">
             <input type="hidden" name="statuses_filter" value="1">
             <label class="block">

@@ -1,3 +1,12 @@
+{{--
+    Lapa: Remonta ieraksta rediģēšana.
+    Atbildība: ļauj administratoram atjaunot remonta detaļas un veikt statusa pārejas.
+    Datu avots: RepairController@edit, saglabāšana caur RepairController@update un statusa darbības caur RepairController@transition.
+    Galvenās daļas:
+    1. Hero ar remonta kontekstu.
+    2. Statusa kopsavilkuma un ātro pāreju panelis.
+    3. Pilnā remonta rediģēšanas forma.
+--}}
 <x-app-layout>
     @php
         $statusTone = match ($repair->status) {

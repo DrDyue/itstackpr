@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
+/**
+ * Pašreizējā lietotāja paroles maiņa profila sadaļā.
+ */
 class PasswordController extends Controller
 {
     /**

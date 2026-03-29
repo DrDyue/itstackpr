@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
 
+/**
+ * Autentifikācijas sagatavošanas serviss.
+ *
+ * Tas nodrošina, ka pieslēgšanās forma un demo konti darbojas arī daļēji
+ * nesinhronizētās vai legacy datubāzes vidēs.
+ */
 class AuthBootstrapper
 {
     private const DEMO_PASSWORD = 'password';
@@ -30,11 +36,17 @@ class AuthBootstrapper
         ],
     ];
 
+    /**
+     * Sagatavo pieslēgšanās ekrānu un vajadzības gadījumā demo kontus.
+     */
     public function prepareLoginScreen(): array
     {
         return $this->bootstrap(alwaysEnsureDemoUsers: true);
     }
 
+    /**
+     * Sagatavo autentifikācijas vidi pirms reālas pieteikšanās.
+     */
     public function prepareAuthentication(string $email, string $password): array
     {
         return $this->bootstrap(

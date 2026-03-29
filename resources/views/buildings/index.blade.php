@@ -1,3 +1,12 @@
+{{--
+    Lapa: Ēku saraksts.
+    Atbildība: rāda visas ēkas, kurās sistēmā tiek organizētas telpas un ierīces.
+    Datu avots: BuildingController@index.
+    Galvenās daļas:
+    1. Hero un darbības.
+    2. Filtri pēc meklēšanas un pilsētas.
+    3. Ēku tabula ar telpu un ierīču skaitu.
+--}}
 <x-app-layout>
     @php
         $cityOptions = collect($cities)->map(fn ($city) => [

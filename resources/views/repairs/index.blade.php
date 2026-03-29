@@ -1,3 +1,12 @@
+{{--
+    Lapa: Remontu saraksts.
+    Atbildība: rāda faktiskos remonta ierakstus kolonnās pēc procesa stāvokļa.
+    Datu avots: RepairController@index.
+    Galvenās daļas:
+    1. Hero ar remonta statistiku.
+    2. Filtri pēc prioritātes, remonta tipa un piederības.
+    3. Kolonnas "Gaida", "Procesā" un "Pabeigti".
+--}}
 <x-app-layout>
     @php
         $columnMeta = [
@@ -40,6 +49,7 @@
         $selectedRepairTypeLabel = $filters['repair_type'] !== '' ? ($typeLabels[$filters['repair_type']] ?? $filters['repair_type']) : null;
     @endphp
 
+    {{-- Kolonnas sadala remontus gaidīšanas, procesa un pabeigto darbu grupās. --}}
     <section class="app-shell">
         <div class="page-hero">
             <div class="page-hero-grid">

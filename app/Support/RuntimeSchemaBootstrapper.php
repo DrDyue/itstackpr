@@ -16,6 +16,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
 
+/**
+ * Runtime shēmas un legacy datu izlīdzinātājs.
+ *
+ * Šī klase ļauj projektam palaisties arī vidēs, kur datubāzes shēma nav
+ * pilnībā sinhronizēta ar aktuālo Laravel kodu.
+ */
 class RuntimeSchemaBootstrapper
 {
     private const DEFAULT_WAREHOUSE_ROOM_NAME = 'Noliktava';
@@ -25,6 +31,9 @@ class RuntimeSchemaBootstrapper
     private ?int $fallbackOwnerId = null;
     private bool $resolvedFallbackOwnerId = false;
 
+    /**
+     * Pārliecinās, ka visas kritiskās tabulas, kolonnas un pamata dati eksistē.
+     */
     public function ensure(): void
     {
         try {
@@ -43,6 +52,9 @@ class RuntimeSchemaBootstrapper
         }
     }
 
+    /**
+     * Nodrošina ēku tabulas pamata struktūru.
+     */
     private function ensureBuildingsTable(): void
     {
         if (! Schema::hasTable('buildings')) {
@@ -62,6 +74,9 @@ class RuntimeSchemaBootstrapper
         $this->addColumnIfMissing('buildings', 'updated_at', fn (Blueprint $table) => $table->timestamp('updated_at')->nullable());
     }
 
+    /**
+     * Nodrošina telpu tabulu, ko sistēma izmanto arī noliktavas loģikai.
+     */
     private function ensureRoomsTable(): void
     {
         if (! Schema::hasTable('rooms')) {
@@ -90,6 +105,9 @@ class RuntimeSchemaBootstrapper
         $this->addColumnIfMissing('rooms', 'updated_at', fn (Blueprint $table) => $table->timestamp('updated_at')->nullable());
     }
 
+    /**
+     * Nodrošina ierīču tipu vārdnīcu.
+     */
     private function ensureDeviceTypesTable(): void
     {
         if (! Schema::hasTable('device_types')) {
@@ -110,6 +128,9 @@ class RuntimeSchemaBootstrapper
         $this->addColumnIfMissing('device_types', 'updated_at', fn (Blueprint $table) => $table->timestamp('updated_at')->nullable());
     }
 
+    /**
+     * Nodrošina ierīču tabulu ar visiem biznesa loģikai vajadzīgajiem laukiem.
+     */
     private function ensureDevicesTable(): void
     {
         if (! Schema::hasTable('devices')) {
@@ -156,6 +177,9 @@ class RuntimeSchemaBootstrapper
         $this->addColumnIfMissing('devices', 'updated_at', fn (Blueprint $table) => $table->timestamp('updated_at')->nullable());
     }
 
+    /**
+     * Nodrošina remonta izpildes ierakstu tabulu.
+     */
     private function ensureRepairsTable(): void
     {
         if (! Schema::hasTable('repairs')) {
@@ -199,6 +223,9 @@ class RuntimeSchemaBootstrapper
         $this->ensureRepairsDateColumnsAllowNull();
     }
 
+    /**
+     * Nodrošina remonta pieprasījumu tabulu.
+     */
     private function ensureRepairRequestsTable(): void
     {
         if (! Schema::hasTable('repair_requests')) {
@@ -227,6 +254,9 @@ class RuntimeSchemaBootstrapper
         $this->addColumnIfMissing('repair_requests', 'updated_at', fn (Blueprint $table) => $table->timestamp('updated_at')->nullable());
     }
 
+    /**
+     * Nodrošina norakstīšanas pieprasījumu tabulu.
+     */
     private function ensureWriteoffRequestsTable(): void
     {
         if (! Schema::hasTable('writeoff_requests')) {
@@ -253,6 +283,9 @@ class RuntimeSchemaBootstrapper
         $this->addColumnIfMissing('writeoff_requests', 'updated_at', fn (Blueprint $table) => $table->timestamp('updated_at')->nullable());
     }
 
+    /**
+     * Nodrošina ierīču nodošanas pieprasījumu tabulu.
+     */
     private function ensureDeviceTransfersTable(): void
     {
         if (! Schema::hasTable('device_transfers')) {

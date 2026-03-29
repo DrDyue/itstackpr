@@ -15,8 +15,17 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Ierīču nodošanas pieprasījumu plūsma.
+ *
+ * Lietotājs iesniedz nodošanu citam lietotājam, savukārt saņēmējs
+ * pieņem vai noraida šo nodošanu.
+ */
 class DeviceTransferController extends Controller
 {
+    /**
+     * Parāda nodošanas pieprasījumu sarakstu ar lomas atkarīgu loģiku.
+     */
     public function index(Request $request)
     {
         $user = $this->user();
@@ -139,6 +148,9 @@ class DeviceTransferController extends Controller
         ]);
     }
 
+    /**
+     * Parāda jauna nodošanas pieprasījuma formu.
+     */
     public function create(Request $request)
     {
         $user = $this->user();
@@ -176,6 +188,9 @@ class DeviceTransferController extends Controller
         ]);
     }
 
+    /**
+     * Saglabā jaunu ierīces nodošanas pieprasījumu.
+     */
     public function store(Request $request)
     {
         $user = $this->user();
@@ -232,6 +247,9 @@ class DeviceTransferController extends Controller
         return redirect()->route('device-transfers.index')->with('success', 'Ierices parsutisanas pieteikums izveidots');
     }
 
+    /**
+     * Saņēmēja lēmums par ierīces pieņemšanu vai noraidīšanu.
+     */
     public function review(Request $request, DeviceTransfer $deviceTransfer)
     {
         $reviewer = $this->user();

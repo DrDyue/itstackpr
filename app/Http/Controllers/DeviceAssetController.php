@@ -8,8 +8,17 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+/**
+ * Droša ierīču attēlu atdošana.
+ *
+ * Kontrolieris pārbauda, vai lietotājs drīkst skatīt konkrēto ierīci,
+ * un tikai tad atdod lokālo vai attālo attēlu.
+ */
 class DeviceAssetController extends Controller
 {
+    /**
+     * Atgriež lokāli glabātu ierīces attēlu.
+     */
     public function show(string $path)
     {
         abort_unless($this->canViewStoredAsset($path), 404);
@@ -21,6 +30,9 @@ class DeviceAssetController extends Controller
         return $disk->response($path);
     }
 
+    /**
+     * Starpnieko attāla attēla drošu priekšskatījumu.
+     */
     public function remotePreview(Request $request)
     {
         $url = (string) $request->query('url', '');

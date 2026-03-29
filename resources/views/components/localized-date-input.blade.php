@@ -1,3 +1,4 @@
+{{-- Datuma ievades komponents ar lokalizētu formātu un Alpine palīdzloģiku. --}}
 @props([
     'name',
     'value' => '',

@@ -6,6 +6,11 @@ use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Audita žurnāla ieraksts.
+ *
+ * Šis modelis glabā sistēmas notikumu vēsturi komisijas un administrēšanas vajadzībām.
+ */
 class AuditLog extends Model
 {
     protected $table = 'audit_log';
@@ -29,12 +34,17 @@ class AuditLog extends Model
         ];
     }
 
-    // Relations
+    /**
+     * Lietotājs, kurš veica reģistrēto darbību.
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Lokalizēts apraksts cilvēkam saprotamā formā.
+     */
     public function getLocalizedDescriptionAttribute(): string
     {
         return AuditTrail::localizedDescription($this->description, $this->entity_type);

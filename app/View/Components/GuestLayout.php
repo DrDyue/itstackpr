@@ -5,6 +5,9 @@ namespace App\View\Components;
 use Illuminate\View\Component;
 use Illuminate\View\View;
 
+/**
+ * Viesu sadaļas layout komponents.
+ */
 class GuestLayout extends Component
 {
     /**

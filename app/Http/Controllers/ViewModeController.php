@@ -7,8 +7,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
+/**
+ * Pārslēdz administratoru starp admina un darbinieka skatu.
+ */
 class ViewModeController extends Controller
 {
+    /**
+     * Saglabā izvēlēto skata režīmu sesijā.
+     */
     public function update(Request $request): RedirectResponse
     {
         $user = $this->user();

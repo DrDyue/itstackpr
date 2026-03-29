@@ -6,6 +6,9 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Atļauj piekļuvi lietotājiem, kuri drīkst pārvaldīt inventāru.
+ */
 class EnsureManager
 {
     public function handle(Request $request, Closure $next): Response

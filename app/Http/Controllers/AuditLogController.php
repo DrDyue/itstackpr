@@ -7,8 +7,14 @@ use App\Support\AuditTrail;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 
+/**
+ * Audita žurnāla skats ar filtriem un kopsavilkumiem.
+ */
 class AuditLogController extends Controller
 {
+    /**
+     * Parāda auditā reģistrētās darbības administratoram.
+     */
     public function index(Request $request)
     {
         $this->requireAdmin();

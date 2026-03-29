@@ -23,6 +23,7 @@ use App\Http\Controllers\ViewModeController;
 use App\Http\Controllers\WriteoffRequestController;
 use Illuminate\Support\Facades\Route;
 
+// Viesu sadaļa: autentifikācija un paroles atjaunošana.
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
@@ -38,6 +39,7 @@ Route::middleware('guest')->group(function () {
         ->name('password.store');
 });
 
+// Tikai pilnam administratora skatam pieejamās darbības.
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');
@@ -46,6 +48,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('users', UserController::class)->except(['show']);
 });
 
+// Inventāra pārvaldības sadaļa administratoram un IT darbiniekam.
 Route::middleware(['auth', 'manager'])->group(function () {
     Route::resource('buildings', BuildingController::class)->except(['show']);
     Route::resource('rooms', RoomController::class)->except(['show']);
@@ -57,6 +60,7 @@ Route::middleware(['auth', 'manager'])->group(function () {
     Route::resource('repairs', RepairController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
 });
 
+// Vispārēji autentificētā lietotāja maršruti.
 Route::middleware('auth')->group(function () {
     Route::put('password', [PasswordController::class, 'update'])
         ->name('password.update');
@@ -99,6 +103,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/device-transfers/{deviceTransfer}/review', [DeviceTransferController::class, 'review'])->name('device-transfers.review');
 });
 
+// Saknes maršruts novirza uz atbilstošo sākuma lapu pēc pieslēgšanās stāvokļa.
 Route::get('/', function () {
     if (\Illuminate\Support\Facades\Auth::check()) {
         return redirect()->route('dashboard');

@@ -5,6 +5,9 @@ namespace App\View\Components;
 use Illuminate\View\Component;
 use Illuminate\View\View;
 
+/**
+ * Galvenais autorizētās daļas layout komponents.
+ */
 class AppLayout extends Component
 {
     /**

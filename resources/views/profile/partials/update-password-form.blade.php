@@ -1,3 +1,11 @@
+{{--
+    Profila daļa: Paroles maiņa.
+    Atbildiba: ļauj autorizētam lietotājam nomainīt savu piekļuves paroli.
+    Kāpēc tas ir svarīgi:
+    1. Drošības darbība ir atdalīta no pārējiem profila datiem.
+    2. Forma pārbauda pašreizējo paroli, lai parole netiktu nomainīta nepamatoti.
+    3. Šis ir viens no galvenajiem konta drošības uzturēšanas punktiem.
+--}}
 <section>
     <header class="border-b border-slate-200 pb-4">
         <h2 class="text-xl font-semibold text-slate-900">

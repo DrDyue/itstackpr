@@ -1,3 +1,11 @@
+{{--
+    Partialis: Remonta formas lauki.
+    Atbildiba: satur ierīces izvēli, statusa lauku un apraksta ievadi remonta ieraksta izveidei vai labošanai.
+    Kāpēc tas ir svarīgi:
+    1. Ļauj vienādi uzturēt remonta create un edit lapas.
+    2. Sagatavo atlasīto ierīci un tās parakstu meklējamajam dropdown laukam.
+    3. Paskaidro lietotājam, kad statusu drīkst mainīt formā un kad tas tiek darīts ar darbību pogām.
+--}}
 @php
     $currentRepair = $repair;
     $selectedDeviceId = (string) old('device_id', $currentRepair?->device_id ?? $preselectedDeviceId ?? '');
