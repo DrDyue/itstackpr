@@ -241,198 +241,144 @@
 
             </div>
 
-            <div class="mt-6 grid gap-6 xl:grid-cols-3">
-                <section class="surface-card p-6">
-                    <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
-                        <x-icon name="repair-request" size="h-5 w-5" class="text-sky-600" />
-                        <span>Remonta pieteikumu vesture</span>
-                    </h2>
-                    <div class="mt-4 space-y-3 text-sm">
-                        @forelse ($device->repairRequests as $request)
-                            <div class="surface-card-muted">
-                                <div class="flex flex-wrap items-start justify-between gap-2">
-                                    <div class="font-medium text-slate-900">{{ $request->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
-                                    <x-status-pill context="request" :value="$request->status" />
-                                </div>
-                                <div class="mt-2 leading-6 text-slate-600">{{ $request->description }}</div>
-                                @if ($request->reviewedBy || $request->review_notes)
-                                    <div class="mt-3 text-xs text-slate-500">
-                                        @if ($request->reviewedBy)
-                                            <div>Izskatija: {{ $request->reviewedBy->full_name }}</div>
-                                        @endif
-                                        @if ($request->review_notes)
-                                            <div>Piezimes: {{ $request->review_notes }}</div>
-                                        @endif
-                                    </div>
-                                @endif
-                                @if ($request->repair)
-                                    <div class="mt-3 rounded-2xl border border-sky-200 bg-sky-50 px-3 py-3 text-xs text-sky-900">
-                                        <div class="font-semibold">Saistitais remonts #{{ $request->repair->id }}</div>
-                                        <div class="mt-1">Statuss: {{ ['waiting' => 'Gaida', 'in-progress' => 'Procesa', 'completed' => 'Pabeigts', 'cancelled' => 'Atcelts'][$request->repair->status] ?? $request->repair->status }}</div>
-                                        <div class="mt-1">Apstiprinaja: {{ $request->repair->acceptedBy?->full_name ?: '-' }}</div>
-                                        <div class="mt-1">Izpilditajs: {{ $request->repair->executor?->full_name ?: '-' }}</div>
-                                        <div class="mt-1">Apraksts: {{ $request->repair->description }}</div>
-                                    </div>
-                                @endif
-                            </div>
-                        @empty
-                            <p class="text-slate-500">Remonta pieteikumu vel nav.</p>
-                        @endforelse
-                    </div>
-                </section>
-
-                <section class="surface-card p-6">
-                    <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
-                        <x-icon name="writeoff" size="h-5 w-5" class="text-rose-600" />
-                        <span>Norakstisanas pieteikumu vesture</span>
-                    </h2>
-                    <div class="mt-4 space-y-3 text-sm">
-                        @forelse ($visibleWriteoffRequests as $request)
-                            <div class="surface-card-muted">
-                                <div class="flex flex-wrap items-start justify-between gap-2">
-                                    <div class="font-medium text-slate-900">{{ $request->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
-                                    <x-status-pill context="request" :value="$request->status" />
-                                </div>
-                                <div class="mt-2 leading-6 text-slate-600">{{ $request->reason }}</div>
-                                @if ($request->reviewedBy || $request->review_notes)
-                                    <div class="mt-3 text-xs text-slate-500">
-                                        @if ($request->reviewedBy)
-                                            <div>Izskatija: {{ $request->reviewedBy->full_name }}</div>
-                                        @endif
-                                        @if ($request->review_notes)
-                                            <div>Piezimes: {{ $request->review_notes }}</div>
-                                        @endif
-                                    </div>
-                                @endif
-                            </div>
-                        @empty
-                            <p class="text-slate-500">Norakstisanas pieteikumu vel nav.</p>
-                        @endforelse
-                    </div>
-                </section>
-
-                <section class="surface-card p-6">
-                    <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
-                        <x-icon name="transfer" size="h-5 w-5" class="text-emerald-600" />
-                        <span>Nodosanas vesture</span>
-                    </h2>
-                    <div class="mt-4 space-y-3 text-sm">
-                        @forelse ($device->transfers as $transfer)
-                            <div class="surface-card-muted">
-                                <div class="flex flex-wrap items-start justify-between gap-2">
-                                    <div class="font-medium text-slate-900">{{ $transfer->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
-                                    <x-status-pill context="request" :value="$transfer->status" />
-                                </div>
-                                <div class="mt-2 text-slate-700">
-                                    {{ $transfer->responsibleUser?->full_name ?: '-' }} -> {{ $transfer->transferTo?->full_name ?: '-' }}
-                                </div>
-                                <div class="mt-2 leading-6 text-slate-600">{{ $transfer->transfer_reason }}</div>
-                                @if ($transfer->reviewedBy || $transfer->review_notes)
-                                    <div class="mt-3 text-xs text-slate-500">
-                                        @if ($transfer->reviewedBy)
-                                            <div>Izskatija: {{ $transfer->reviewedBy->full_name }}</div>
-                                        @endif
-                                        @if ($transfer->review_notes)
-                                            <div>Piezimes: {{ $transfer->review_notes }}</div>
-                                        @endif
-                                    </div>
-                                @endif
-                            </div>
-                        @empty
-                            <p class="text-slate-500">Nodosanas ierakstu vel nav.</p>
-                        @endforelse
-                    </div>
-                </section>
-            </div>
         @else
-            <div class="grid gap-6 xl:grid-cols-3">
-                <section class="surface-card p-6">
-                    <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
-                        <x-icon name="repair-request" size="h-5 w-5" class="text-sky-600" />
-                        <span>Remonta pieteikumi</span>
-                    </h2>
-                    <div class="mt-4 space-y-3 text-sm">
-                        @forelse ($device->repairRequests as $request)
-                            <div class="surface-card-muted">
-                                <div class="font-medium text-slate-900">{{ $request->responsibleUser?->full_name ?: '-' }}</div>
-                                <div class="mt-1 text-xs text-slate-500">{{ $request->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
-                                <div class="mt-1 text-slate-600">{{ $request->description }}</div>
-                                <div class="mt-2"><x-status-pill context="request" :value="$request->status" /></div>
-                                @if ($request->reviewedBy || $request->review_notes)
-                                    <div class="mt-2 text-xs text-slate-500">
-                                        @if ($request->reviewedBy)
-                                            <div>Izskatija: {{ $request->reviewedBy->full_name }}</div>
-                                        @endif
-                                        @if ($request->review_notes)
-                                            <div>Piezimes: {{ $request->review_notes }}</div>
-                                        @endif
-                                    </div>
-                                @endif
-                            </div>
-                        @empty
-                            <p class="text-slate-500">Nav pieteikumu.</p>
-                        @endforelse
-                    </div>
-                </section>
-
-                <section class="surface-card p-6">
-                    <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
-                        <x-icon name="writeoff" size="h-5 w-5" class="text-rose-600" />
-                        <span>Norakstisanas pieteikumi</span>
-                    </h2>
-                    <div class="mt-4 space-y-3 text-sm">
-                        @forelse ($visibleWriteoffRequests as $request)
-                            <div class="surface-card-muted">
-                                <div class="font-medium text-slate-900">{{ $request->responsibleUser?->full_name ?: '-' }}</div>
-                                <div class="mt-1 text-xs text-slate-500">{{ $request->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
-                                <div class="mt-1 text-slate-600">{{ $request->reason }}</div>
-                                <div class="mt-2"><x-status-pill context="request" :value="$request->status" /></div>
-                                @if ($request->reviewedBy || $request->review_notes)
-                                    <div class="mt-2 text-xs text-slate-500">
-                                        @if ($request->reviewedBy)
-                                            <div>Izskatija: {{ $request->reviewedBy->full_name }}</div>
-                                        @endif
-                                        @if ($request->review_notes)
-                                            <div>Piezimes: {{ $request->review_notes }}</div>
-                                        @endif
-                                    </div>
-                                @endif
-                            </div>
-                        @empty
-                            <p class="text-slate-500">Nav pieteikumu.</p>
-                        @endforelse
-                    </div>
-                </section>
-
-                <section class="surface-card p-6">
-                    <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
-                        <x-icon name="transfer" size="h-5 w-5" class="text-emerald-600" />
-                        <span>Parsutisanas</span>
-                    </h2>
-                    <div class="mt-4 space-y-3 text-sm">
-                        @forelse ($device->transfers as $transfer)
-                            <div class="surface-card-muted">
-                                <div class="font-medium text-slate-900">{{ $transfer->responsibleUser?->full_name ?: '-' }} -> {{ $transfer->transferTo?->full_name ?: '-' }}</div>
-                                <div class="mt-1 text-xs text-slate-500">{{ $transfer->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
-                                <div class="mt-1 text-slate-600">{{ $transfer->transfer_reason }}</div>
-                                <div class="mt-2"><x-status-pill context="request" :value="$transfer->status" /></div>
-                                @if ($transfer->reviewedBy || $transfer->review_notes)
-                                    <div class="mt-2 text-xs text-slate-500">
-                                        @if ($transfer->reviewedBy)
-                                            <div>Izskatija: {{ $transfer->reviewedBy->full_name }}</div>
-                                        @endif
-                                        @if ($transfer->review_notes)
-                                            <div>Piezimes: {{ $transfer->review_notes }}</div>
-                                        @endif
-                                    </div>
-                                @endif
-                            </div>
-                        @empty
-                            <p class="text-slate-500">Nav parsutisanas ierakstu.</p>
-                        @endforelse
-                    </div>
-                </section>
-            </div>
         @endif
+
+        <div class="mt-6 grid gap-6 xl:grid-cols-2">
+            <section class="surface-card p-6">
+                <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
+                    <x-icon name="repair-request" size="h-5 w-5" class="text-sky-600" />
+                    <span>Remonta pieteikumi</span>
+                </h2>
+                <p class="mt-2 text-sm leading-6 text-slate-600">Visi ierices remonta pieteikumi ar iesniedzeju, statusu un izskatisanas piezimem.</p>
+                <div class="mt-4 space-y-3 text-sm">
+                    @forelse ($visibleRepairRequests as $request)
+                        <div class="surface-card-muted">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                    <div class="font-medium text-slate-900">{{ $request->responsibleUser?->full_name ?: 'Nav noradits' }}</div>
+                                    <div class="mt-1 text-xs text-slate-500">{{ $request->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
+                                </div>
+                                <x-status-pill context="request" :value="$request->status" />
+                            </div>
+                            <div class="mt-3 leading-6 text-slate-700">{{ $request->description ?: 'Apraksts nav pievienots.' }}</div>
+                            @if ($request->reviewedBy || $request->review_notes)
+                                <div class="mt-3 rounded-2xl border border-slate-200 bg-white px-3 py-3 text-xs text-slate-600">
+                                    @if ($request->reviewedBy)
+                                        <div><span class="font-semibold text-slate-900">Izskatija:</span> {{ $request->reviewedBy->full_name }}</div>
+                                    @endif
+                                    @if ($request->review_notes)
+                                        <div class="mt-1"><span class="font-semibold text-slate-900">Piezimes:</span> {{ $request->review_notes }}</div>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    @empty
+                        <p class="text-slate-500">Remonta pieteikumu vel nav.</p>
+                    @endforelse
+                </div>
+            </section>
+
+            <section class="surface-card p-6">
+                <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
+                    <x-icon name="repair" size="h-5 w-5" class="text-amber-600" />
+                    <span>Remonta ieraksti</span>
+                </h2>
+                <p class="mt-2 text-sm leading-6 text-slate-600">Vecie un esošie remonta darbi, kas iericei jau ir veikti vai sobrid turpinās.</p>
+                <div class="mt-4 space-y-3 text-sm">
+                    @forelse ($visibleRepairs as $repair)
+                        <div class="surface-card-muted">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                    <div class="font-medium text-slate-900">Remonts #{{ $repair->id }}</div>
+                                    <div class="mt-1 text-xs text-slate-500">{{ $repair->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
+                                </div>
+                                <x-status-pill context="repair" :value="$repair->status" />
+                            </div>
+                            <div class="mt-3 grid gap-2 text-xs text-slate-600 md:grid-cols-2">
+                                <div><span class="font-semibold text-slate-900">Tips:</span> {{ $repair->repair_type ?: '-' }}</div>
+                                <div><span class="font-semibold text-slate-900">Prioritate:</span> {{ $repair->priority ?: '-' }}</div>
+                                <div><span class="font-semibold text-slate-900">Pienema:</span> {{ $repair->approval_actor_name ?: '-' }}</div>
+                                <div><span class="font-semibold text-slate-900">Izpilditajs:</span> {{ $repair->executor?->full_name ?: '-' }}</div>
+                                <div><span class="font-semibold text-slate-900">Sakums:</span> {{ $repair->start_date?->format('d.m.Y') ?: '-' }}</div>
+                                <div><span class="font-semibold text-slate-900">Beigas:</span> {{ $repair->end_date?->format('d.m.Y') ?: '-' }}</div>
+                                <div class="md:col-span-2"><span class="font-semibold text-slate-900">Saistitais pieteicejs:</span> {{ $repair->request?->responsibleUser?->full_name ?: '-' }}</div>
+                            </div>
+                            <div class="mt-3 leading-6 text-slate-700">{{ $repair->description ?: 'Apraksts nav pievienots.' }}</div>
+                        </div>
+                    @empty
+                        <p class="text-slate-500">Remonta ierakstu vel nav.</p>
+                    @endforelse
+                </div>
+            </section>
+
+            <section class="surface-card p-6">
+                <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
+                    <x-icon name="writeoff" size="h-5 w-5" class="text-rose-600" />
+                    <span>Norakstisanas pieteikumi</span>
+                </h2>
+                <p class="mt-2 text-sm leading-6 text-slate-600">Visi ierices norakstisanas pieprasijumi ar iemesliem un admina lemumiem.</p>
+                <div class="mt-4 space-y-3 text-sm">
+                    @forelse ($visibleWriteoffRequests as $request)
+                        <div class="surface-card-muted">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                    <div class="font-medium text-slate-900">{{ $request->responsibleUser?->full_name ?: 'Nav noradits' }}</div>
+                                    <div class="mt-1 text-xs text-slate-500">{{ $request->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
+                                </div>
+                                <x-status-pill context="request" :value="$request->status" />
+                            </div>
+                            <div class="mt-3 leading-6 text-slate-700">{{ $request->reason ?: 'Iemesls nav pievienots.' }}</div>
+                            @if ($request->reviewedBy || $request->review_notes)
+                                <div class="mt-3 rounded-2xl border border-slate-200 bg-white px-3 py-3 text-xs text-slate-600">
+                                    @if ($request->reviewedBy)
+                                        <div><span class="font-semibold text-slate-900">Izskatija:</span> {{ $request->reviewedBy->full_name }}</div>
+                                    @endif
+                                    @if ($request->review_notes)
+                                        <div class="mt-1"><span class="font-semibold text-slate-900">Piezimes:</span> {{ $request->review_notes }}</div>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    @empty
+                        <p class="text-slate-500">Norakstisanas pieteikumu vel nav.</p>
+                    @endforelse
+                </div>
+            </section>
+
+            <section class="surface-card p-6">
+                <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
+                    <x-icon name="transfer" size="h-5 w-5" class="text-emerald-600" />
+                    <span>Parsutisanas un nodosanas</span>
+                </h2>
+                <p class="mt-2 text-sm leading-6 text-slate-600">Ierices nodosanas vesture starp lietotajiem un saistitie izskatisanas lemumi.</p>
+                <div class="mt-4 space-y-3 text-sm">
+                    @forelse ($visibleTransfers as $transfer)
+                        <div class="surface-card-muted">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                    <div class="font-medium text-slate-900">{{ $transfer->responsibleUser?->full_name ?: '-' }} -> {{ $transfer->transferTo?->full_name ?: '-' }}</div>
+                                    <div class="mt-1 text-xs text-slate-500">{{ $transfer->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
+                                </div>
+                                <x-status-pill context="request" :value="$transfer->status" />
+                            </div>
+                            <div class="mt-3 leading-6 text-slate-700">{{ $transfer->transfer_reason ?: 'Iemesls nav pievienots.' }}</div>
+                            @if ($transfer->reviewedBy || $transfer->review_notes)
+                                <div class="mt-3 rounded-2xl border border-slate-200 bg-white px-3 py-3 text-xs text-slate-600">
+                                    @if ($transfer->reviewedBy)
+                                        <div><span class="font-semibold text-slate-900">Izskatija:</span> {{ $transfer->reviewedBy->full_name }}</div>
+                                    @endif
+                                    @if ($transfer->review_notes)
+                                        <div class="mt-1"><span class="font-semibold text-slate-900">Piezimes:</span> {{ $transfer->review_notes }}</div>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    @empty
+                        <p class="text-slate-500">Parsutisanas ierakstu vel nav.</p>
+                    @endforelse
+                </div>
+            </section>
+        </div>
     </section>
 </x-app-layout>

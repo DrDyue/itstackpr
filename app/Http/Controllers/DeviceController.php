@@ -321,6 +321,10 @@ class DeviceController extends Controller
             'latestRepair.acceptedBy',
             'latestRepair.request.responsibleUser',
             'repairs.assignee',
+            'repairs.acceptedBy',
+            'repairs.executor',
+            'repairs.request.responsibleUser',
+            'repairs.request.reviewedBy',
             'repairRequests.responsibleUser',
             'repairRequests.reviewedBy',
             'repairRequests.repair.acceptedBy',
@@ -371,11 +375,14 @@ class DeviceController extends Controller
             'deviceImageUrl' => $device->deviceImageUrl(),
             'statusLabels' => $this->statusLabels(),
             'canManageDevices' => $this->user()?->canManageRequests() ?? false,
+            'visibleRepairRequests' => $device->repairRequests->sortByDesc('created_at')->values(),
+            'visibleRepairs' => $device->repairs->sortByDesc('created_at')->values(),
             'originLabel' => $latestTransferToCurrentUser
                 ? 'Ierice tev nodota no '.($latestTransferToCurrentUser->responsibleUser?->full_name ?: 'cita lietotaja').'.'
                 : 'Ierici tev pieskira administrators.',
             'roomOptions' => $roomOptions,
-            'visibleWriteoffRequests' => $device->writeoffRequests,
+            'visibleWriteoffRequests' => $device->writeoffRequests->sortByDesc('created_at')->values(),
+            'visibleTransfers' => $device->transfers->sortByDesc('created_at')->values(),
             'requestAvailability' => $this->requestAvailabilityForDevice(
                 $device,
                 (bool) $pendingRepairRequest,
