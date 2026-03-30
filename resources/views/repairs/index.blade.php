@@ -1,67 +1,31 @@
 {{--
     Lapa: Remontu saraksts.
-    Atbildība: rāda faktiskos remonta ierakstus kolonnās pēc procesā stāvokļa.
+    Atbildība: rāda visus remonta ierakstus vienotā tabulā ar filtriem, kārtošanu un darbībām.
     Datu avots: RepairController@index.
-    Galvenās daļas:
-    1. Hero ar remonta statistiku.
-    2. Filtri pēc prioritātes, remonta tipa un piederības.
-    3. Kolonnas "Gaida", "Procesā" un "Pabeigti".
 --}}
 <x-app-layout>
     @php
-        $columnMeta = [
-            'waiting' => [
-                'title' => 'Gaida',
-                'subtitle' => 'Ierīces, kuram remonts ir apstiprināts, bet vēl nav uzsākts.',
-                'icon' => 'repair',
-                'tone' => 'amber',
-            ],
-            'in-progress' => [
-                'title' => 'Procesā',
-                'subtitle' => 'Aktīvie remonti, pie kuriem šobrīd notiek darbs.',
-                'icon' => 'stats',
-                'tone' => 'sky',
-            ],
-            'completed' => [
-                'title' => 'Pabeigti',
-                'subtitle' => 'Pabeigtie vai atceltie remonta ieraksti.',
-                'icon' => 'check-circle',
-                'tone' => 'emerald',
-            ],
-        ];
-        $mineQuery = request()->except('page', 'mine');
-        if (! $filters['mine']) {
-            $mineQuery['mine'] = 1;
-        }
-        $priorityOptions = collect($priorities)->map(fn ($priority) => [
-            'value' => (string) $priority,
-            'label' => $priorityLabels[$priority] ?? $priority,
-            'description' => 'Filtrs pēc prioritātes',
-            'search' => ($priorityLabels[$priority] ?? $priority) . ' ' . $priority,
-        ])->values();
-        $repairTypeOptions = collect($repairTypes)->map(fn ($repairType) => [
-            'value' => (string) $repairType,
-            'label' => $typeLabels[$repairType] ?? $repairType,
-            'description' => 'Filtrs pēc remonta tipa',
-            'search' => ($typeLabels[$repairType] ?? $repairType) . ' ' . $repairType,
-        ])->values();
-        $selectedPriorityLabel = $filters['priority'] !== '' ? ($priorityLabels[$filters['priority']] ?? $filters['priority']) : null;
-        $selectedRepairTypeLabel = $filters['repair_type'] !== '' ? ($typeLabels[$filters['repair_type']] ?? $filters['repair_type']) : null;
-        $prioritySort = $filters['priority_sort'] === 'asc' ? 'asc' : 'desc';
-        $prioritySortLabel = $prioritySort === 'asc' ? 'No zemas uz kritisko' : 'No kritiskas uz zemo';
+        $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
+        $selectedDeviceLabel = collect($deviceOptions)->firstWhere('value', (string) ($filters['device_id'] ?? ''))['label'] ?? ($filters['device_query'] ?: null);
+        $selectedRequesterLabel = collect($requesterOptions)->firstWhere('value', (string) ($filters['requester_id'] ?? ''))['label'] ?? ($filters['requester_query'] ?: null);
+        $activeStatusLabel = count($filters['statuses']) > 0 && count($filters['statuses']) < count($statuses)
+            ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ')
+            : null;
     @endphp
 
-    {{-- Kolonnas sadala remontus gaidīšanas, procesā un pabeigto darbu grupās. --}}
-    <section class="app-shell">
+    <section class="app-shell max-w-[96rem]">
         <div class="page-hero">
             <div class="page-hero-grid">
-                <div class="max-w-4xl">
+                <div class="max-w-5xl">
                     <div class="flex flex-wrap items-center gap-2">
-                        <div class="page-eyebrow"><x-icon name="repair" size="h-4 w-4" /><span>Serviss</span></div>
+                        <div class="page-eyebrow">
+                            <x-icon name="repair" size="h-4 w-4" />
+                            <span>Serviss</span>
+                        </div>
                         <div class="inventory-inline-metrics">
                             <span class="inventory-inline-chip inventory-inline-chip-slate">
                                 <x-icon name="repair" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Kopa</span>
+                                <span class="inventory-inline-label">Kopā</span>
                                 <span class="inventory-inline-value">{{ $repairSummary['total'] }}</span>
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-amber">
@@ -81,278 +45,309 @@
                             </span>
                         </div>
                     </div>
+
                     <div class="page-title-group mt-4">
-                        <div class="page-title-icon page-title-icon-amber"><x-icon name="repair" size="h-7 w-7" /></div>
+                        <div class="page-title-icon page-title-icon-amber">
+                            <x-icon name="repair" size="h-7 w-7" />
+                        </div>
                         <div>
                             <h1 class="page-title">Remonti</h1>
-                            <p class="page-subtitle">{{ $canManageRepairs ? 'Pārvaldi remonta rindas, procesā darbus un pabeigtos ierakstus.' : 'Tavu ierīču remontu statuss pa kolonnam.' }}</p>
+                            <p class="page-subtitle">{{ $canManageRepairs ? 'Vienota remonta tabula ar pilnu ierīces, statusa un izmaksu informāciju.' : 'Šeit redzami ar tavām ierīcēm saistītie remonta ieraksti.' }}</p>
                         </div>
                     </div>
                 </div>
+
                 @if ($canManageRepairs)
-                    <a href="{{ route('repairs.create') }}" class="btn-create"><x-icon name="plus" size="h-4 w-4" /><span>Jauns remonts</span></a>
+                    <div class="page-actions">
+                        <a href="{{ route('repairs.create') }}" class="btn-create">
+                            <x-icon name="plus" size="h-4 w-4" />
+                            <span>Jauns remonts</span>
+                        </a>
+                    </div>
                 @endif
             </div>
         </div>
 
-        <form method="GET" action="{{ route('repairs.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-4">
-            <label class="block md:col-span-2">
-                <span class="crud-label">Meklēt</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Ierīce, kods, apraksts, izpildītājs...">
-            </label>
-            <label class="block">
-                <span class="crud-label">Prioritate</span>
-                <x-searchable-select
-                    name="priority"
-                    query-name="priority_query"
-                    identifier="repair-priority-filter"
-                    :options="$priorityOptions"
-                    :selected="$filters['priority']"
-                    :query="$selectedPriorityLabel"
-                    placeholder="Izvēlies prioritāti"
-                    empty-message="Neviena prioritāte neatbilst meklējumam."
-                />
-            </label>
-            <label class="block">
-                <span class="crud-label">Tips</span>
-                <x-searchable-select
-                    name="repair_type"
-                    query-name="repair_type_query"
-                    identifier="repair-type-filter"
-                    :options="$repairTypeOptions"
-                    :selected="$filters['repair_type']"
-                    :query="$selectedRepairTypeLabel"
-                    placeholder="Izvēlies remonta tipu"
-                    empty-message="Neviens remonta tips neatbilst meklējumam."
-                />
-            </label>
+        <div id="repairs-index-root" data-async-table-root>
+            <form
+                method="GET"
+                action="{{ route('repairs.index') }}"
+                class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,0.8fr)]"
+                data-async-table-form
+                data-async-root="#repairs-index-root"
+            >
+                <input type="hidden" name="statuses_filter" value="1">
+                <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
+                <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
+                @if ($filters['mine'] ?? false)
+                    <input type="hidden" name="mine" value="1">
+                @endif
 
-            <div class="filter-toolbar-footer md:col-span-4">
-                <div class="quick-status-filters">
-                    @foreach (['' => 'Visi', 'waiting' => 'Gaida', 'in-progress' => 'Procesā', 'completed' => 'Pabeigti', 'cancelled' => 'Atcelti'] as $statusValue => $statusLabel)
-                        @php
-                            $query = request()->except('page', 'status');
-                            if ($statusValue !== '') {
-                                $query['status'] = $statusValue;
-                            }
-                        @endphp
-                        <a
-                            href="{{ route('repairs.index', array_filter($query, fn ($value) => $value !== null && $value !== '')) }}"
-                            class="quick-status-filter {{ $statusValue === '' ? 'quick-status-filter-slate' : ($statusValue === 'waiting' ? 'quick-status-filter-amber' : ($statusValue === 'in-progress' ? 'quick-status-filter-slate' : ($statusValue === 'completed' ? 'quick-status-filter-emerald' : 'quick-status-filter-rose'))) }} {{ $filters['status'] === $statusValue || ($statusValue === '' && $filters['status'] === '') ? 'quick-status-filter-active' : '' }}"
-                        >
-                            <x-icon :name="$statusValue === 'completed' ? 'check-circle' : ($statusValue === 'cancelled' ? 'clear' : 'repair')" size="h-4 w-4" />
-                            <span>{{ $statusLabel }}</span>
-                        </a>
-                    @endforeach
-                </div>
+                <label class="block">
+                    <span class="crud-label">Meklēt</span>
+                    <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Kods, nosaukums, apraksts vai pieprasītājs">
+                </label>
 
-                <div class="toolbar-actions justify-end">
-                    @php
-                        $sortQuery = request()->except('priority_sort', 'page');
-                        $descQuery = array_merge($sortQuery, ['priority_sort' => 'desc']);
-                        $ascQuery = array_merge($sortQuery, ['priority_sort' => 'asc']);
-                    @endphp
-                    <div class="flex flex-wrap gap-2">
-                        <a
-                            href="{{ route('repairs.index', $descQuery) }}"
-                            class="{{ $prioritySort === 'desc' ? 'btn-search' : 'btn-clear' }}"
-                        >
-                            Kritiska -> Zema
-                        </a>
-                        <a
-                            href="{{ route('repairs.index', $ascQuery) }}"
-                            class="{{ $prioritySort === 'asc' ? 'btn-search' : 'btn-clear' }}"
-                        >
-                            Zema -> Kritiska
-                        </a>
-                    </div>
-                    @if ($canManageRepairs)
-                        <a
-                            href="{{ route('repairs.index', $mineQuery) }}"
-                            class="quick-status-filter quick-status-filter-slate {{ $filters['mine'] ? 'quick-status-filter-active' : '' }}"
-                        >
-                            <x-icon name="user" size="h-4 w-4" />
-                            <span>Man piešķirtie</span>
-                        </a>
-                    @endif
-                    <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
-                    <a href="{{ route('repairs.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt</span></a>
-                </div>
-            </div>
-        </form>
+                <label class="block">
+                    <span class="crud-label">Ierīce</span>
+                    <x-searchable-select
+                        name="device_id"
+                        query-name="device_query"
+                        identifier="repairs-device-filter"
+                        :options="$deviceOptions"
+                        :selected="(string) ($filters['device_id'] ?? '')"
+                        :query="$selectedDeviceLabel"
+                        placeholder="Izvēlies ierīci"
+                        empty-message="Neviens remonts neatbilst izvēlētajai ierīcei."
+                    />
+                </label>
 
-        <x-active-filters
-            :items="[
-                ['label' => 'Meklēt', 'value' => $filters['q']],
-                ['label' => 'Statuss', 'value' => $filters['status'] !== '' ? ($statusLabels[$filters['status']] ?? $filters['status']) : null],
-                ['label' => 'Prioritate', 'value' => $filters['priority'] !== '' ? ($priorityLabels[$filters['priority']] ?? $filters['priority']) : null],
-                ['label' => 'Tips', 'value' => $filters['repair_type'] !== '' ? ($typeLabels[$filters['repair_type']] ?? $filters['repair_type']) : null],
-                ['label' => 'Kartosana', 'value' => $prioritySortLabel],
-                ['label' => 'Piešķirts', 'value' => $filters['mine'] && $canManageRepairs ? 'Man' : null],
-            ]"
-            :clear-url="route('repairs.index')"
-        />
+                <label class="block">
+                    <span class="crud-label">Pieprasītājs</span>
+                    <x-searchable-select
+                        name="requester_id"
+                        query-name="requester_query"
+                        identifier="repairs-requester-filter"
+                        :options="$requesterOptions"
+                        :selected="(string) ($filters['requester_id'] ?? '')"
+                        :query="$selectedRequesterLabel"
+                        placeholder="Izvēlies pieprasītāju"
+                        empty-message="Neviens pieprasītājs neatbilst meklējumam."
+                    />
+                </label>
 
-        @if (session('error'))
-            <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
-        @endif
-        @if (! empty($featureMessage))
-            <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
-        @endif
+                <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
+                <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
 
-        <div
-            class="repair-board-grid"
-            x-data="repairBoard({
-                transitionBaseUrl: @js(url('/repairs')),
-                csrfToken: @js(csrf_token()),
-            })"
-        >
-            @foreach ($columnMeta as $columnKey => $column)
-                @php
-                    $columnRepairs = $repairColumns[$columnKey] ?? collect();
-                @endphp
-                <div
-                    class="repair-board-column repair-column-drop"
-                    :class="dropTargetStatus === @js($columnKey) ? 'repair-column-drop-active' : ''"
-                    @if ($canManageRepairs)
-                        @dragover.prevent="onDragOver(@js($columnKey))"
-                        @dragleave="clearDropTarget(@js($columnKey))"
-                        @drop.prevent="handleDrop(@js($columnKey))"
-                    @endif
-                >
-                    <div class="repair-board-column-head">
-                        <div class="repair-board-column-copy">
-                            <div class="repair-board-column-icon repair-board-column-icon-{{ $column['tone'] }}">
-                                <x-icon :name="$column['icon']" size="h-5 w-5" />
-                            </div>
-                            <div>
-                                <h2 class="repair-board-column-title">{{ $column['title'] }}</h2>
-                                <p class="repair-board-column-note">{{ $column['subtitle'] }}</p>
+                <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
+                    <div class="quick-filter-groups">
+                        <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($filters['statuses']), minimum: 0 })">
+                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta statuss</div>
+                            <div class="quick-status-filters">
+                                @foreach ($statuses as $status)
+                                    @php
+                                        $toneClass = match ($status) {
+                                            'waiting' => 'quick-status-filter-amber',
+                                            'in-progress' => 'quick-status-filter-sky',
+                                            default => 'quick-status-filter-emerald',
+                                        };
+                                    @endphp
+                                    <button
+                                        type="button"
+                                        @click="toggle(@js($status)); $nextTick(() => $el.closest('form').requestSubmit())"
+                                        class="quick-status-filter {{ $toneClass }}"
+                                        :class="isSelected(@js($status)) ? 'quick-status-filter-active' : ''"
+                                    >
+                                        <x-status-pill context="repair" :value="$status" :label="$statusLabels[$status] ?? null" />
+                                    </button>
+                                @endforeach
+
+                                <template x-for="value in selected" :key="'repair-status-' + value">
+                                    <input type="hidden" name="status[]" :value="value">
+                                </template>
                             </div>
                         </div>
-                        <span class="repair-board-column-count">{{ $columnRepairs->count() }}</span>
                     </div>
 
-                    <div class="repair-board-stack">
-                        @forelse ($columnRepairs as $repair)
-                            @php
-                                $deviceThumbUrl = $repair->device?->deviceImageThumbUrl();
-                            @endphp
-                            <article
-                                class="repair-board-card {{ $canManageRepairs ? 'repair-card-draggable' : '' }}"
-                                @if ($canManageRepairs)
-                                    draggable="true"
-                                    @dragstart="startDrag({ id: {{ $repair->id }}, status: @js($repair->status), name: @js($repair->device?->name ?: ('Remonts #' . $repair->id)) }, $event)"
-                                    @dragend="clearDrag()"
-                                    :class="draggedRepair?.id === {{ $repair->id }} ? 'repair-card-dragging' : ''"
-                                @endif
-                            >
-                                <div class="repair-board-card-head">
-                                    <div class="flex items-start gap-3">
-                                        @if ($deviceThumbUrl)
-                                            <img src="{{ $deviceThumbUrl }}" alt="{{ $repair->device?->name ?: 'Ierīce' }}" class="device-table-thumb shrink-0">
+                    <div class="toolbar-actions justify-end">
+                        <button type="submit" class="btn-search">
+                            <x-icon name="search" size="h-4 w-4" />
+                            <span>Meklēt</span>
+                        </button>
+                        <a href="{{ route('repairs.index') }}" class="btn-clear" data-async-link="true">
+                            <x-icon name="clear" size="h-4 w-4" />
+                            <span>Noņemt filtrus</span>
+                        </a>
+                    </div>
+                </div>
+            </form>
+
+            <x-active-filters
+                :items="[
+                    ['label' => 'Meklēt', 'value' => $filters['q']],
+                    ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
+                    ['label' => 'Pieprasītājs', 'value' => $selectedRequesterLabel],
+                    ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
+                    ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
+                    ['label' => 'Statuss', 'value' => $activeStatusLabel],
+                    ['label' => 'Piešķirts', 'value' => ($filters['mine'] ?? false) ? 'Man' : null],
+                ]"
+                :clear-url="route('repairs.index')"
+            />
+
+            @if (session('error'))
+                <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
+            @endif
+
+            @if (! empty($featureMessage))
+                <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
+            @endif
+
+            <div class="device-table-shell">
+                <div class="device-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+                    <table class="min-w-[108rem] text-sm">
+                        <thead class="bg-slate-50 text-left text-slate-500">
+                            <tr>
+                                <th class="px-4 py-3">Attēls</th>
+                                @foreach ([
+                                    'code' => 'Kods',
+                                    'name' => 'Nosaukums',
+                                    'assigned' => 'Piešķirta',
+                                    'location' => 'Atrašanās vieta',
+                                    'status' => 'Remonta statuss',
+                                    'priority' => 'Prioritāte',
+                                    'repair_type' => 'Tips',
+                                    'cost' => 'Izmaksas',
+                                    'start_date' => 'Sākuma datums',
+                                    'end_date' => 'Beigu datums',
+                                ] as $column => $label)
+                                    @php
+                                        $isCurrentSort = $sorting['sort'] === $column;
+                                        $defaultDirection = in_array($column, ['cost', 'end_date', 'start_date'], true) ? 'desc' : 'asc';
+                                        $nextDirection = $isCurrentSort && $sorting['direction'] === 'asc' ? 'desc' : ($isCurrentSort && $sorting['direction'] === 'desc' ? 'asc' : $defaultDirection);
+                                        $sortMessage = 'Tabula "Remonti" kārtota pēc ' . ($sortOptions[$column]['label'] ?? mb_strtolower($label)) . ' ' . ($sortDirectionLabels[$nextDirection] ?? '');
+                                    @endphp
+                                    <th class="px-4 py-3">
+                                        <button
+                                            type="button"
+                                            class="device-sort-trigger {{ $isCurrentSort ? 'device-sort-trigger-active' : '' }}"
+                                            data-sort-trigger="true"
+                                            data-sort-field="{{ $column }}"
+                                            data-sort-direction="{{ $nextDirection }}"
+                                            data-sort-toast="{{ $sortMessage }}"
+                                        >
+                                            <span>{{ $label }}</span>
+                                            <span class="device-sort-icon" aria-hidden="true">
+                                                <svg class="h-[1.05em] w-[1.05em]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 9 3.75-3.75L15.75 9" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 15-3.75 3.75L8.25 15" />
+                                                </svg>
+                                            </span>
+                                        </button>
+                                    </th>
+                                @endforeach
+                                <th class="px-4 py-3 text-right">Darbības</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($repairs as $repair)
+                                @php
+                                    $device = $repair->device;
+                                    $thumbUrl = $device?->deviceImageThumbUrl();
+                                    $assignedUser = $device?->assignedTo;
+                                    $requester = $repair->request?->responsibleUser ?: $repair->reporter;
+                                    $locationPrimary = collect([
+                                        $device?->building?->building_name,
+                                        $device?->room?->room_number ? 'Telpa ' . $device->room->room_number : null,
+                                    ])->filter()->implode(' | ');
+                                    $locationSecondary = $device?->room?->room_name ?: 'Atrašanās vieta nav norādīta';
+                                    $linkedRequestUrl = $repair->request_id
+                                        ? route('repair-requests.index', [
+                                            'request_id' => $repair->request_id,
+                                            'statuses_filter' => 1,
+                                        ])
+                                        : null;
+                                @endphp
+                                <tr class="border-t border-slate-100 align-top">
+                                    <td class="px-4 py-4">
+                                        @if ($thumbUrl)
+                                            <img src="{{ $thumbUrl }}" alt="{{ $device?->name ?: 'Ierīce' }}" class="device-table-thumb">
                                         @else
-                                            <div class="device-table-thumb device-table-thumb-placeholder shrink-0">
+                                            <div class="device-table-thumb device-table-thumb-placeholder">
                                                 <x-icon name="device" size="h-4 w-4" />
                                             </div>
                                         @endif
-                                        <div>
-                                            @if ($repair->device)
-                                                <a href="{{ route('devices.show', $repair->device) }}" class="repair-board-device-link">{{ $repair->device->name }}</a>
-                                            @else
-                                                <span class="repair-board-device-link">Ierīce nav atrasta</span>
-                                            @endif
-                                            <div class="repair-board-device-meta">
-                                                <span>{{ $repair->device?->code ?: 'bez koda' }}</span>
-                                                @if ($repair->device?->room)
-                                                    <span>Telpa {{ $repair->device->room->room_number }}</span>
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <div class="font-semibold text-slate-900">{{ $device?->code ?: '-' }}</div>
+                                        <div class="mt-1 text-xs text-slate-500">Sērija: {{ $device?->serial_number ?: '-' }}</div>
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <div class="font-semibold text-slate-900">{{ $device?->name ?: 'Ierīce nav atrasta' }}</div>
+                                        <div class="mt-1 text-xs text-slate-500">{{ collect([$device?->manufacturer, $device?->model])->filter()->implode(' | ') ?: 'Ražotājs un modelis nav norādīti' }}</div>
+                                        <div class="mt-1 text-xs text-slate-400">{{ $device?->type?->type_name ?: 'Tips nav norādīts' }}</div>
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <div class="font-semibold text-slate-900">{{ $assignedUser?->full_name ?: 'Nav piešķirta' }}</div>
+                                        <div class="mt-1 text-xs text-slate-500">{{ $requester?->full_name ? 'Pieprasītājs: ' . $requester->full_name : 'Pieprasītājs nav norādīts' }}</div>
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <div class="font-semibold text-slate-900">{{ $locationPrimary !== '' ? $locationPrimary : 'Atrašanās vieta nav norādīta' }}</div>
+                                        <div class="mt-1 text-xs text-slate-500">{{ $locationSecondary }}</div>
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <x-status-pill context="repair" :value="$repair->status" :label="$statusLabels[$repair->status] ?? null" />
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <x-status-pill context="priority" :value="$repair->priority" :label="$priorityLabels[$repair->priority] ?? null" />
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <x-status-pill context="repair-type" :value="$repair->repair_type" :label="$typeLabels[$repair->repair_type] ?? null" />
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <div class="font-semibold text-slate-900">
+                                            {{ $repair->cost !== null ? number_format((float) $repair->cost, 2, '.', ' ') . ' EUR' : '-' }}
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <div class="font-semibold text-slate-900">{{ $repair->start_date?->format('d.m.Y') ?: '-' }}</div>
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <div class="font-semibold text-slate-900">{{ $repair->end_date?->format('d.m.Y') ?: '-' }}</div>
+                                    </td>
+                                    <td class="px-4 py-4 text-right">
+                                        <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">
+                                            <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
+                                                <span>Darbības</span>
+                                                <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                                </svg>
+                                            </button>
+
+                                            <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
+                                                @if ($linkedRequestUrl)
+                                                    <a href="{{ $linkedRequestUrl }}" class="table-action-item" @click="open = false">
+                                                        <x-icon name="repair-request" size="h-4 w-4" />
+                                                        <span>Skatīt saistīto pieprasījumu</span>
+                                                    </a>
+                                                @endif
+
+                                                @if ($canManageRepairs)
+                                                    <a href="{{ route('repairs.edit', $repair) }}" class="table-action-item table-action-item-amber" @click="open = false">
+                                                        <x-icon name="edit" size="h-4 w-4" />
+                                                        <span>Rediģēt</span>
+                                                    </a>
+
+                                                    <form method="POST" action="{{ route('repairs.destroy', $repair) }}" onsubmit="return confirm('Vai tiešām dzēst šo remonta ierakstu?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="table-action-button table-action-button-rose">
+                                                            <x-icon name="trash" size="h-4 w-4" />
+                                                            <span>Dzēst</span>
+                                                        </button>
+                                                    </form>
+                                                @elseif (! $linkedRequestUrl)
+                                                    <div class="px-3 py-2 text-xs font-medium text-slate-400">Nav darbību</div>
                                                 @endif
                                             </div>
                                         </div>
-                                    </div>
-                                    <x-status-pill context="repair" :value="$repair->status" :label="$statusLabels[$repair->status] ?? null" />
-                                </div>
-
-                                <div class="repair-board-description">{{ $repair->description }}</div>
-
-                                <div class="repair-board-chip-row">
-                                    <x-status-pill context="priority" :value="$repair->priority" :label="$priorityLabels[$repair->priority] ?? null" />
-                                    <x-status-pill context="repair-type" :value="$repair->repair_type" :label="$typeLabels[$repair->repair_type] ?? null" />
-                                </div>
-
-                                <dl class="repair-board-meta-grid">
-                                    <div>
-                                        <dt>Izpildītājs</dt>
-                                        <dd>{{ $repair->executor?->full_name ?: 'Nav norādīts' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt>Apstiprinaja</dt>
-                                        <dd>{{ $repair->approval_actor?->full_name ?: 'Nav norādīts' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt>Pieteikums</dt>
-                                        <dd>{{ $repair->request_id ? '#' . $repair->request_id : 'Admins bez pieteikuma' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt>Izmaksas</dt>
-                                        <dd>{{ $repair->cost !== null ? number_format((float) $repair->cost, 2, '.', ' ') . ' EUR' : '-' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt>Sākums</dt>
-                                        <dd>{{ $repair->start_date?->format('d.m.Y') ?: '-' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt>Beigas</dt>
-                                        <dd>{{ $repair->end_date?->format('d.m.Y') ?: '-' }}</dd>
-                                    </div>
-                                </dl>
-
-                                @if ($repair->request)
-                                    <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                                        <div class="font-semibold text-slate-900">Saistītais remonta pieteikums #{{ $repair->request->id }}</div>
-                                        <div class="mt-1">
-                                            <span class="font-medium text-slate-900">Pieteica:</span>
-                                            {{ $repair->request->responsibleUser?->full_name ?: 'Nav norādīts' }}
-                                        </div>
-                                        <div class="mt-1">
-                                            <span class="font-medium text-slate-900">Problēmas apraksts:</span>
-                                            {{ $repair->request->description ?: '-' }}
-                                        </div>
-                                    </div>
-                                @endif
-
-                                <div class="repair-board-actions" draggable="false" @dragstart.prevent>
-                                    <a href="{{ route('repairs.edit', $repair) }}" class="repair-action repair-action-edit" draggable="false" @mousedown.stop @click.stop>
-                                        <x-icon name="edit" size="h-4 w-4" />
-                                        <span>Atvērt</span>
-                                    </a>
-
-                                    @if ($canManageRepairs && $repair->status === 'waiting')
-                                        <button type="button" class="repair-action repair-action-start" draggable="false" @mousedown.stop @click.stop="submitTransition({{ $repair->id }}, 'in-progress')">
-                                            <x-icon name="stats" size="h-4 w-4" />
-                                            <span>Sakt</span>
-                                        </button>
-                                    @endif
-
-                                    @if ($canManageRepairs && $repair->status === 'in-progress')
-                                        <button type="button" class="repair-action repair-action-back" draggable="false" @mousedown.stop @click.stop="submitTransition({{ $repair->id }}, 'waiting')">
-                                            <x-icon name="back" size="h-4 w-4" />
-                                            <span>Atpakaļ gaida</span>
-                                        </button>
-                                        <button type="button" class="repair-action repair-action-complete" draggable="false" @mousedown.stop @click.stop="submitCompletion({ id: {{ $repair->id }}, name: @js($repair->device?->name ?: ('Remonts #' . $repair->id)) })">
-                                            <x-icon name="check-circle" size="h-4 w-4" />
-                                            <span>Pabeigt</span>
-                                        </button>
-                                    @endif
-
-                                </div>
-                            </article>
-                        @empty
-                            <div class="repair-board-empty">Šajā kolonnā šobrīd nav ierakstu.</div>
-                        @endforelse
-                    </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="12" class="px-4 py-16 text-center text-sm text-slate-500">
+                                        Remonta ieraksti netika atrasti.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
-            @endforeach
+            </div>
+
+            @if ($repairs->hasPages())
+                <div class="mt-5">{{ $repairs->links() }}</div>
+            @endif
         </div>
     </section>
 </x-app-layout>

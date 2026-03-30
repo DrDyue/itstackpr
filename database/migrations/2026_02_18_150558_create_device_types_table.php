@@ -10,12 +10,7 @@ return new class extends Migration
     {
         Schema::create('device_types', function (Blueprint $table) {
             $table->id();
-
             $table->string('type_name', 30)->unique();
-            $table->string('category', 50);
-            $table->string('icon_name', 50)->nullable();
-            $table->text('description')->nullable();
-            $table->integer('expected_lifetime_years')->nullable()->default(5);
         });
     }
 

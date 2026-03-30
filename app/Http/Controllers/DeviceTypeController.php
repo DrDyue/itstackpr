@@ -8,51 +8,34 @@ use Illuminate\Http\Request;
 
 /**
  * Ierīču tipu vārdnīcas pārvaldība.
+ *
+ * Šis kontrolieris apkalpo vienkāršotu tipu struktūru, kur katram tipam
+ * paliek tikai nosaukums un saistīto ierīču skaits.
  */
 class DeviceTypeController extends Controller
 {
+    private const SORTABLE_COLUMNS = ['type_name', 'devices_count'];
+
     public function index(Request $request)
     {
         $this->requireManager();
 
-        $filters = [
-            'q' => trim((string) $request->query('q', '')),
-            'category' => trim((string) $request->query('category', '')),
-            'sort' => (string) $request->query('sort', 'type_name'),
-            'direction' => (string) $request->query('direction', 'asc'),
-        ];
-
-        $allowedSorts = ['type_name', 'category'];
-        $sort = in_array($filters['sort'], $allowedSorts, true) ? $filters['sort'] : 'type_name';
-        $direction = $filters['direction'] === 'desc' ? 'desc' : 'asc';
+        $sorting = $this->normalizedSorting($request);
 
         $types = DeviceType::query()
             ->withCount('devices')
-            ->when($filters['q'] !== '', function ($query) use ($filters) {
-                $query->where('type_name', 'like', '%' . $filters['q'] . '%');
-            })
-            ->when($filters['category'] !== '', function ($query) use ($filters) {
-                $query->where('category', 'like', '%' . $filters['category'] . '%');
-            })
-            ->orderBy($sort, $direction)
+            ->orderBy(
+                $sorting['sort'] === 'devices_count' ? 'devices_count' : 'type_name',
+                $sorting['direction']
+            )
             ->orderBy('id')
-            ->paginate(16)
+            ->paginate(20)
             ->withQueryString();
-
-        $categoryOptions = DeviceType::query()
-            ->selectRaw('category, COUNT(*) as total')
-            ->whereNotNull('category')
-            ->where('category', '!=', '')
-            ->groupBy('category')
-            ->orderBy('category')
-            ->get();
 
         return view('device_types.index', [
             'types' => $types,
-            'filters' => $filters,
-            'sort' => $sort,
-            'direction' => $direction,
-            'categoryOptions' => $categoryOptions,
+            'sorting' => $sorting,
+            'sortOptions' => $this->sortOptions(),
         ]);
     }
 
@@ -69,14 +52,12 @@ class DeviceTypeController extends Controller
 
         $data = $request->validate([
             'type_name' => ['required', 'string', 'max:30', 'unique:device_types,type_name'],
-            'category' => ['required', 'string', 'max:50'],
-            'description' => ['nullable', 'string'],
         ]);
 
         $deviceType = DeviceType::create($data);
         AuditTrail::created(auth()->id(), $deviceType);
 
-        return redirect()->route('device-types.index')->with('success', 'Ierīces tips veiksmīgi pievienots');
+        return redirect()->route('device-types.index')->with('success', 'Ierīces tips veiksmīgi pievienots.');
     }
 
     public function edit(DeviceType $deviceType)
@@ -92,25 +73,30 @@ class DeviceTypeController extends Controller
 
         $data = $request->validate([
             'type_name' => ['required', 'string', 'max:30', 'unique:device_types,type_name,' . $deviceType->id],
-            'category' => ['required', 'string', 'max:50'],
-            'description' => ['nullable', 'string'],
         ]);
 
-        $before = $deviceType->only(['type_name', 'category', 'description']);
+        $before = $deviceType->only(['type_name']);
         $deviceType->update($data);
-        $after = $deviceType->fresh()->only(array_keys($before));
+        $after = $deviceType->fresh()->only(['type_name']);
         AuditTrail::updatedFromState(auth()->id(), $deviceType, $before, $after);
 
-        return redirect()->route('device-types.index')->with('success', 'Ierīces tips atjaunināts');
+        return redirect()->route('device-types.index')->with('success', 'Ierīces tips atjaunināts.');
     }
 
     public function destroy(DeviceType $deviceType)
     {
         $this->requireManager();
 
+        if ($deviceType->devices()->exists()) {
+            return redirect()
+                ->route('device-types.index')
+                ->with('error', 'Ierīces tipu nevar dzēst, kamēr tam vēl ir piesaistītas ierīces.');
+        }
+
         AuditTrail::deleted(auth()->id(), $deviceType);
         $deviceType->delete();
-        return redirect()->route('device-types.index')->with('success', 'Ierīces tips dzēsts');
+
+        return redirect()->route('device-types.index')->with('success', 'Ierīces tips dzēsts.');
     }
 
     public function show(DeviceType $deviceType)
@@ -118,5 +104,39 @@ class DeviceTypeController extends Controller
         $this->requireManager();
 
         return redirect()->route('device-types.index');
+    }
+
+    /**
+     * Normalizē drošu kārtošanas konfigurāciju.
+     */
+    private function normalizedSorting(Request $request): array
+    {
+        $sort = trim((string) $request->query('sort', 'type_name'));
+        $direction = trim((string) $request->query('direction', 'asc'));
+
+        if (! in_array($sort, self::SORTABLE_COLUMNS, true)) {
+            $sort = 'type_name';
+        }
+
+        if (! in_array($direction, ['asc', 'desc'], true)) {
+            $direction = $sort === 'devices_count' ? 'desc' : 'asc';
+        }
+
+        return [
+            'sort' => $sort,
+            'direction' => $direction,
+            'label' => $this->sortOptions()[$sort]['label'] ?? 'tipa nosaukuma',
+        ];
+    }
+
+    /**
+     * Lietotāja paziņojumiem un kolonnu galvām izmantojamās kārtošanas etiķetes.
+     */
+    private function sortOptions(): array
+    {
+        return [
+            'type_name' => ['label' => 'tipa nosaukuma'],
+            'devices_count' => ['label' => 'piesaistīto ierīču skaita'],
+        ];
     }
 }

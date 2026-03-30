@@ -22,6 +22,12 @@
         'description' => $type->category ?: ($type->description ?: 'Ierīces tips'),
         'search' => implode(' ', array_filter([$type->type_name, $type->category, $type->description])),
     ])->values();
+    $typeOptions = $types->map(fn ($type) => [
+        'value' => (string) $type->id,
+        'label' => $type->type_name,
+        'description' => 'Ierīces tips',
+        'search' => $type->type_name,
+    ])->values();
     $selectedAssignedToId = old('assigned_to_id', $current?->assigned_to_id ?? $defaultAssignedToId ?? null);
     $selectedBuildingId = old('building_id', $current?->building_id ?? $defaultBuildingId ?? null);
     $selectedRoomId = old('room_id', $current?->room_id ?? $defaultRoomId ?? null);

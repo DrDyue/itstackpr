@@ -126,18 +126,15 @@ class LatvianDemoDataSeeder extends Seeder
             $roomIds = DB::table('rooms')->pluck('id', 'room_number')->all();
 
             $deviceTypes = [
-                ['type_name' => 'Klepjdators', 'category' => 'Datori', 'description' => 'Parnesajami datori'],
-                ['type_name' => 'Stacionarais dators', 'category' => 'Datori', 'description' => 'Darba stacijas'],
-                ['type_name' => 'Monitors', 'category' => 'Periferija', 'description' => 'Attela monitori'],
-                ['type_name' => 'Printeris', 'category' => 'Periferija', 'description' => 'Drukas iekartas'],
-                ['type_name' => 'Komutators', 'category' => 'Tikls', 'description' => 'Tikla komutatori'],
-                ['type_name' => 'UPS', 'category' => 'Elektroapgade', 'description' => 'Barosanas rezerve'],
+                ['type_name' => 'Klepjdators'],
+                ['type_name' => 'Stacionarais dators'],
+                ['type_name' => 'Monitors'],
+                ['type_name' => 'Printeris'],
+                ['type_name' => 'Komutators'],
+                ['type_name' => 'UPS'],
             ];
 
-            DB::table('device_types')->insert(array_map(
-                fn (array $type) => array_merge($type, ['created_at' => $now]),
-                $deviceTypes
-            ));
+            DB::table('device_types')->insert($deviceTypes);
 
             $deviceTypeIds = DB::table('device_types')->pluck('id', 'type_name')->all();
 

@@ -123,6 +123,55 @@ class AuthAndRequestFlowsTest extends TestCase
         }
     }
 
+    public function test_device_type_table_is_simplified_to_single_business_field(): void
+    {
+        $this->assertTrue(Schema::hasColumn('device_types', 'type_name'));
+        $this->assertFalse(Schema::hasColumn('device_types', 'category'));
+        $this->assertFalse(Schema::hasColumn('device_types', 'description'));
+        $this->assertFalse(Schema::hasColumn('device_types', 'created_at'));
+        $this->assertFalse(Schema::hasColumn('device_types', 'updated_at'));
+    }
+
+    public function test_admin_cannot_delete_device_type_when_devices_are_linked(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-type-delete-admin@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-TYPE-LOCKED');
+        $typeId = $device->device_type_id;
+
+        $this->actingAs($admin)
+            ->delete(route('device-types.destroy', $typeId))
+            ->assertRedirect(route('device-types.index'))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('device_types', [
+            'id' => $typeId,
+        ]);
+    }
+
+    public function test_admin_can_sort_device_types_by_linked_device_count(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-type-sort-admin@example.com');
+        $firstType = DB::table('device_types')->insertGetId(['type_name' => 'Printeru tips']);
+        $secondType = DB::table('device_types')->insertGetId(['type_name' => 'Monitoru tips']);
+
+        $firstDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-TYPE-SORT-A');
+        $secondDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-TYPE-SORT-B');
+        $thirdDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-TYPE-SORT-C');
+
+        DB::table('devices')->whereIn('id', [$firstDevice->id, $secondDevice->id])->update(['device_type_id' => $firstType]);
+        DB::table('devices')->where('id', $thirdDevice->id)->update(['device_type_id' => $secondType]);
+
+        $this->actingAs($admin)
+            ->get(route('device-types.index', ['sort' => 'devices_count', 'direction' => 'desc']))
+            ->assertOk()
+            ->assertSeeInOrder(['Printeru tips', 'Monitoru tips']);
+
+        $this->actingAs($admin)
+            ->get(route('device-types.index', ['sort' => 'devices_count', 'direction' => 'asc']))
+            ->assertOk()
+            ->assertSeeInOrder(['Monitoru tips', 'Printeru tips']);
+    }
+
     public function test_regular_user_cannot_open_admin_only_routes(): void
     {
         $user = $this->createUser(role: User::ROLE_USER, email: 'admin-blocked@example.com');
@@ -170,7 +219,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->actingAs($admin)
             ->get(route('devices.index'))
             ->assertOk()
-            ->assertSee('Ierices')
+            ->assertSee('Ierīces')
             ->assertDontSee('Darbvirsma')
             ->assertSee($ownDevice->name)
             ->assertDontSee($foreignDevice->name);
@@ -268,19 +317,13 @@ class AuthAndRequestFlowsTest extends TestCase
             });
         }
 
-        if (Schema::hasColumn('device_types', 'updated_at')) {
-            Schema::table('device_types', function ($table) {
-                $table->dropColumn('updated_at');
-            });
-        }
-
         $this->actingAs($admin)
             ->get(route('devices.create'))
             ->assertOk();
 
         $this->assertTrue(Schema::hasColumn('rooms', 'updated_at'));
         $this->assertTrue(Schema::hasColumn('buildings', 'updated_at'));
-        $this->assertTrue(Schema::hasColumn('device_types', 'updated_at'));
+        $this->assertFalse(Schema::hasColumn('device_types', 'updated_at'));
         $this->assertDatabaseHas('rooms', [
             'room_name' => 'Noliktava',
         ]);
@@ -291,9 +334,6 @@ class AuthAndRequestFlowsTest extends TestCase
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-store-defaults@example.com');
         $typeId = DB::table('device_types')->insertGetId([
             'type_name' => 'Dators',
-            'category' => 'Darba vieta',
-            'description' => 'Tests',
-            'created_at' => now(),
         ]);
 
         $this->actingAs($admin)
@@ -323,9 +363,6 @@ class AuthAndRequestFlowsTest extends TestCase
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-store-force-active@example.com');
         $typeId = DB::table('device_types')->insertGetId([
             'type_name' => 'Plansete',
-            'category' => 'Mobilas ierices',
-            'description' => 'Tests',
-            'created_at' => now(),
         ]);
 
         $this->actingAs($admin)
@@ -349,9 +386,6 @@ class AuthAndRequestFlowsTest extends TestCase
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-store-empty-defaults@example.com');
         $typeId = DB::table('device_types')->insertGetId([
             'type_name' => 'Monitors',
-            'category' => 'Darba vieta',
-            'description' => 'Tests',
-            'created_at' => now(),
         ]);
 
         $this->assertDatabaseMissing('rooms', [
@@ -359,7 +393,7 @@ class AuthAndRequestFlowsTest extends TestCase
         ]);
 
         $this->assertDatabaseMissing('buildings', [
-            'building_name' => 'Ludzes novada pasvaldiba',
+            'building_name' => 'Ludzas novada pašvaldība',
         ]);
 
         $this->actingAs($admin)
@@ -389,7 +423,7 @@ class AuthAndRequestFlowsTest extends TestCase
 
         $this->assertDatabaseHas('buildings', [
             'id' => $device->building_id,
-            'building_name' => 'Ludzes novada pasvaldiba',
+            'building_name' => 'Ludzas novada pašvaldība',
         ]);
     }
 
@@ -634,7 +668,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->actingAs($user)
             ->get(route('devices.index'))
             ->assertOk()
-            ->assertSee('Ierices nav atrastas.')
+            ->assertSee('Ierīces nav atrastas.')
             ->assertDontSee(route('devices.show', $device), false);
     }
 
@@ -862,9 +896,9 @@ class AuthAndRequestFlowsTest extends TestCase
         $content = $response->getContent();
 
         $this->assertIsString($content);
-        $this->assertStringContainsString('Tev ir 1 ienakoss parsutisanas pieteikums', $content);
-        $this->assertStringContainsString('Jaizskata: 1', $content);
-        $this->assertStringContainsString('Ienakoss piedavajums', $content);
+        $this->assertStringContainsString('Tev ir 1 ienākošs pārsūtīšanas pieteikums', $content);
+        $this->assertStringContainsString('Jāizskata: 1', $content);
+        $this->assertStringContainsString('Ienākošs piedāvājums', $content);
     }
 
     public function test_admin_live_notifications_include_new_pending_requests(): void
@@ -1212,7 +1246,7 @@ class AuthAndRequestFlowsTest extends TestCase
 
         $this->assertIsString($content);
         $this->assertStringContainsString('Lapa 1 no 2', $content);
-        $this->assertStringContainsString('Nakama', $content);
+        $this->assertStringContainsString('Nākamā', $content);
         $this->assertStringNotContainsString('Showing', $content);
     }
 
@@ -1284,8 +1318,8 @@ class AuthAndRequestFlowsTest extends TestCase
             ->get(route('devices.index'))
             ->assertOk()
             ->assertSee('app-pagination', false)
-            ->assertSee('Iepriekseja')
-            ->assertSee('Nakama')
+            ->assertSee('Iepriekšējā')
+            ->assertSee('Nākamā')
             ->assertDontSee('Showing');
     }
 
@@ -1464,7 +1498,7 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertDontSee($foreignDevice->code);
     }
 
-    public function test_admin_request_indexes_show_all_statuses_by_default(): void
+    public function test_admin_request_indexes_default_to_submitted_for_repair_and_writeoff_but_show_all_transfers(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'request-defaults-admin@example.com');
         $user = $this->createUser(role: User::ROLE_USER, email: 'request-defaults-user@example.com');
@@ -1537,15 +1571,15 @@ class AuthAndRequestFlowsTest extends TestCase
             ->get(route('repair-requests.index'))
             ->assertOk()
             ->assertSee('Remonts iesniegts pec noklusejuma.')
-            ->assertSee('Remonts apstiprinats pec noklusejuma.')
-            ->assertSee('Remonts noraidits pec noklusejuma.');
+            ->assertDontSee('Remonts apstiprinats pec noklusejuma.')
+            ->assertDontSee('Remonts noraidits pec noklusejuma.');
 
         $this->actingAs($admin)
             ->get(route('writeoff-requests.index'))
             ->assertOk()
             ->assertSee('Norakstisana iesniegta pec noklusejuma.')
-            ->assertSee('Norakstisana apstiprinata pec noklusejuma.')
-            ->assertSee('Norakstisana noraidita pec noklusejuma.');
+            ->assertDontSee('Norakstisana apstiprinata pec noklusejuma.')
+            ->assertDontSee('Norakstisana noraidita pec noklusejuma.');
 
         $this->actingAs($admin)
             ->get(route('device-transfers.index'))
@@ -1635,8 +1669,8 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->actingAs($admin)
             ->get(route('device-transfers.index'))
             ->assertOk()
-            ->assertSee(route('my-requests.edit', ['requestType' => 'transfer', 'requestId' => $transfer->id]), false)
-            ->assertSee(route('my-requests.destroy', ['requestType' => 'transfer', 'requestId' => $transfer->id]), false);
+            ->assertDontSee(route('my-requests.edit', ['requestType' => 'transfer', 'requestId' => $transfer->id]), false)
+            ->assertDontSee(route('my-requests.destroy', ['requestType' => 'transfer', 'requestId' => $transfer->id]), false);
     }
 
     public function test_regular_user_can_edit_submitted_transfer_reason_without_changing_recipient(): void
@@ -1928,7 +1962,7 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertSee('DEV-FLOOR-ONE')
             ->assertSee('Testa ierice DEV-FLOOR-ONE')
             ->assertDontSee('Testa ierice DEV-FLOOR-TWO')
-            ->assertSee('Telpas filtrs ieslegts');
+            ->assertSee('Telpas filtrs ieslēgts');
     }
 
     public function test_devices_index_accepts_type_text_filter_without_exact_selection(): void
@@ -1988,42 +2022,45 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertDontSee($writeoffDevice->name);
     }
 
-    public function test_devices_index_can_filter_by_pending_request_type(): void
+    public function test_devices_index_shows_all_devices_when_all_status_filters_are_selected(): void
     {
-        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-request-filter-admin@example.com');
-        $employee = $this->createUser(role: User::ROLE_USER, email: 'device-request-filter-user@example.com');
-        $repairDevice = $this->createDevice($employee->id, Device::STATUS_ACTIVE, 'DEV-FILTER-REPAIR');
-        $writeoffDevice = $this->createDevice($employee->id, Device::STATUS_ACTIVE, 'DEV-FILTER-WRITEOFF');
-        $transferDevice = $this->createDevice($employee->id, Device::STATUS_ACTIVE, 'DEV-FILTER-TRANSFER');
-
-        RepairRequest::create([
-            'device_id' => $repairDevice->id,
-            'responsible_user_id' => $employee->id,
-            'description' => 'Gaidoss remonta pieprasijums.',
-            'status' => RepairRequest::STATUS_SUBMITTED,
-        ]);
-
-        WriteoffRequest::create([
-            'device_id' => $writeoffDevice->id,
-            'responsible_user_id' => $employee->id,
-            'reason' => 'Gaidoss norakstisanas pieprasijums.',
-            'status' => WriteoffRequest::STATUS_SUBMITTED,
-        ]);
-
-        DeviceTransfer::create([
-            'device_id' => $transferDevice->id,
-            'responsible_user_id' => $employee->id,
-            'transfered_to_id' => $admin->id,
-            'transfer_reason' => 'Gaidoss nodosanas pieprasijums.',
-            'status' => DeviceTransfer::STATUS_SUBMITTED,
-        ]);
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-status-all-admin@example.com');
+        $activeDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-STATUS-ALL-ACTIVE');
+        $repairDevice = $this->createDevice($admin->id, Device::STATUS_REPAIR, 'DEV-STATUS-ALL-REPAIR');
+        $writeoffDevice = $this->createDevice($admin->id, Device::STATUS_WRITEOFF, 'DEV-STATUS-ALL-WRITEOFF');
 
         $this->actingAs($admin)
-            ->get(route('devices.index', ['request_type' => ['repair', 'transfer']]))
+            ->get(route('devices.index', ['status' => [
+                Device::STATUS_ACTIVE,
+                Device::STATUS_REPAIR,
+                Device::STATUS_WRITEOFF,
+            ]]))
             ->assertOk()
+            ->assertSee($activeDevice->name)
             ->assertSee($repairDevice->name)
-            ->assertSee($transferDevice->name)
-            ->assertDontSee($writeoffDevice->name);
+            ->assertSee($writeoffDevice->name);
+    }
+
+    public function test_devices_index_can_sort_by_code_ascending(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-sort-code-admin@example.com');
+        $firstDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'LDZ-010');
+        $secondDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'LDZ-002');
+
+        $response = $this->actingAs($admin)
+            ->get(route('devices.index', [
+                'sort' => 'code',
+                'direction' => 'asc',
+            ]))
+            ->assertOk();
+
+        $content = $response->getContent();
+
+        $this->assertIsString($content);
+        $this->assertLessThan(
+            strpos($content, $firstDevice->code),
+            strpos($content, $secondDevice->code)
+        );
     }
 
     public function test_devices_index_renders_pending_request_preview_information(): void
@@ -2042,9 +2079,9 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->actingAs($user)
             ->get(route('devices.index'))
             ->assertOk()
-            ->assertSee('Nodosanas pieprasijums')
+            ->assertSee('Nodošanas pieprasījums')
             ->assertSee('Japarvieto uz citu darba vietu.')
-            ->assertSee('Atvert pieprasijumu');
+            ->assertSee('Atvērt pieprasījumu');
     }
 
     public function test_devices_index_renders_repair_status_preview_information(): void
@@ -2067,7 +2104,7 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertSee('Remonta ieraksts')
             ->assertSee('Maina detaļas un veic diagnostiku.')
             ->assertSee($admin->full_name)
-            ->assertSee('Ieksejais');
+            ->assertSee('Iekšējais');
     }
 
     public function test_regular_user_devices_index_shows_request_actions_for_active_device(): void
@@ -2080,7 +2117,7 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertOk()
             ->assertSee($device->name)
             ->assertSee('Pieteikt remontu')
-            ->assertSee('Pieteikt norakstisanu')
+            ->assertSee('Pieteikt norakstīšanu')
             ->assertSee('Nodot citam');
     }
 
@@ -2100,9 +2137,9 @@ class AuthAndRequestFlowsTest extends TestCase
             ->get(route('devices.index'))
             ->assertOk()
             ->assertSee($device->name)
-            ->assertSee('Pieprasijums')
+            ->assertSee('Pieprasījums')
             ->assertDontSee('Pieteikt remontu')
-            ->assertDontSee('Pieteikt norakstisanu')
+            ->assertDontSee('Pieteikt norakstīšanu')
             ->assertDontSee('Nodot citam');
     }
 
@@ -2125,9 +2162,9 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertOk()
             ->assertSee($device->name)
             ->assertSee('Remonts')
-            ->assertSee('Procesa')
+            ->assertSee('Procesā')
             ->assertDontSee('Pieteikt remontu')
-            ->assertDontSee('Pieteikt norakstisanu')
+            ->assertDontSee('Pieteikt norakstīšanu')
             ->assertDontSee('Nodot citam');
     }
 
@@ -2162,8 +2199,8 @@ class AuthAndRequestFlowsTest extends TestCase
         $content = $response->getContent();
 
         $this->assertIsString($content);
-        $this->assertMatchesRegularExpression('/DEV-DASH-PENDING.*Apskatit.*Remonts/s', $content);
-        $this->assertMatchesRegularExpression('/DEV-DASH-REPAIR.*Remonts.*Procesa/s', $content);
+        $this->assertMatchesRegularExpression('/DEV-DASH-PENDING.*Apskatīt.*Remonts/s', $content);
+        $this->assertMatchesRegularExpression('/DEV-DASH-REPAIR.*Remonts.*Procesā/s', $content);
         $this->assertStringContainsString($admin->full_name, $content);
         $this->assertStringNotContainsString('Bez gaidosa remonta', $content);
     }
@@ -2213,7 +2250,7 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertDontSee('Remonta statuss:');
     }
 
-    public function test_repairs_index_shows_related_request_author_problem_and_approver(): void
+    public function test_repairs_index_shows_related_request_link_and_requester(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'repair-board-admin@example.com');
         $user = $this->createUser(role: User::ROLE_USER, email: 'repair-board-user@example.com');
@@ -2243,10 +2280,9 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->actingAs($admin)
             ->get(route('repairs.index'))
             ->assertOk()
-            ->assertSee('Saistitais remonta pieteikums #'.$requestId)
-            ->assertSee($user->full_name)
-            ->assertSee('Ekrans mirgo un dators izsledzas.')
-            ->assertSee($admin->full_name);
+            ->assertSee('Skatīt saistīto pieprasījumu')
+            ->assertSee('Pieprasītājs: '.$user->full_name)
+            ->assertSee('request_id='.$requestId, false);
     }
 
     public function test_repairs_index_can_filter_only_repairs_assigned_to_current_admin(): void
@@ -2364,9 +2400,6 @@ class AuthAndRequestFlowsTest extends TestCase
 
         $typeId = DB::table('device_types')->insertGetId([
             'type_name' => 'Klepjdators '.$code,
-            'category' => 'Datori',
-            'description' => 'Tests',
-            'created_at' => now(),
         ]);
 
         return Device::create([

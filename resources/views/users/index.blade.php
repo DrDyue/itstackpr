@@ -63,7 +63,8 @@
             </div>
         </div>
 
-        <form method="GET" action="{{ route('users.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-3 xl:grid-cols-4">
+        <div id="users-index-root" data-async-table-root>
+        <form method="GET" action="{{ route('users.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-3 xl:grid-cols-4" data-async-table-form data-async-root="#users-index-root">
             <label class="block">
                 <span class="crud-label">Meklēt</span>
                 <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Vārds, e-pasts, tālrunis, amats...">
@@ -124,7 +125,7 @@
 
                 <div class="toolbar-actions justify-end">
                 <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
-                <a href="{{ route('users.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt</span></a>
+                <a href="{{ route('users.index') }}" class="btn-clear" data-async-link="true"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt</span></a>
                 </div>
             </div>
         </form>
@@ -219,5 +220,6 @@
         </div>
 
         {{ $users->links() }}
+        </div>
     </section>
 </x-app-layout>

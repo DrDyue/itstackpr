@@ -19,9 +19,9 @@
 
         <div class="app-pagination-links">
             @if ($paginator->onFirstPage())
-                <span class="app-pagination-btn app-pagination-btn-disabled">Iepriekšēja</span>
+                <span class="app-pagination-btn app-pagination-btn-disabled">Iepriekšējā</span>
             @else
-                <a href="{{ $paginator->previousPageUrl() }}" rel="prev" class="app-pagination-btn">Iepriekšēja</a>
+                <a href="{{ $paginator->previousPageUrl() }}" rel="prev" class="app-pagination-btn" data-async-link="true">Iepriekšējā</a>
             @endif
 
             @foreach ($elements as $element)
@@ -34,16 +34,16 @@
                         @if ($page == $currentPage)
                             <span aria-current="page" class="app-pagination-btn app-pagination-btn-active">{{ $page }}</span>
                         @else
-                            <a href="{{ $url }}" class="app-pagination-btn">{{ $page }}</a>
+                            <a href="{{ $url }}" class="app-pagination-btn" data-async-link="true">{{ $page }}</a>
                         @endif
                     @endforeach
                 @endif
             @endforeach
 
             @if ($paginator->hasMorePages())
-                <a href="{{ $paginator->nextPageUrl() }}" rel="next" class="app-pagination-btn">Nakama</a>
+                <a href="{{ $paginator->nextPageUrl() }}" rel="next" class="app-pagination-btn" data-async-link="true">Nākamā</a>
             @else
-                <span class="app-pagination-btn app-pagination-btn-disabled">Nakama</span>
+                <span class="app-pagination-btn app-pagination-btn-disabled">Nākamā</span>
             @endif
         </div>
     </nav>

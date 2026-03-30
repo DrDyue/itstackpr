@@ -114,18 +114,16 @@ class RuntimeSchemaBootstrapper
             Schema::create('device_types', function (Blueprint $table) {
                 $table->id();
                 $table->string('type_name', 30)->nullable();
-                $table->string('category', 50)->nullable();
-                $table->text('description')->nullable();
-                $table->timestamp('created_at')->nullable();
-                $table->timestamp('updated_at')->nullable();
             });
         }
 
         $this->addColumnIfMissing('device_types', 'type_name', fn (Blueprint $table) => $table->string('type_name', 30)->nullable());
-        $this->addColumnIfMissing('device_types', 'category', fn (Blueprint $table) => $table->string('category', 50)->nullable());
-        $this->addColumnIfMissing('device_types', 'description', fn (Blueprint $table) => $table->text('description')->nullable());
-        $this->addColumnIfMissing('device_types', 'created_at', fn (Blueprint $table) => $table->timestamp('created_at')->nullable());
-        $this->addColumnIfMissing('device_types', 'updated_at', fn (Blueprint $table) => $table->timestamp('updated_at')->nullable());
+        $this->dropColumnIfPresent('device_types', 'category');
+        $this->dropColumnIfPresent('device_types', 'description');
+        $this->dropColumnIfPresent('device_types', 'icon_name');
+        $this->dropColumnIfPresent('device_types', 'expected_lifetime_years');
+        $this->dropColumnIfPresent('device_types', 'created_at');
+        $this->dropColumnIfPresent('device_types', 'updated_at');
     }
 
     /**
@@ -810,6 +808,17 @@ class RuntimeSchemaBootstrapper
 
         Schema::table($tableName, function (Blueprint $table) use ($definition) {
             $definition($table);
+        });
+    }
+
+    private function dropColumnIfPresent(string $tableName, string $column): void
+    {
+        if (! Schema::hasTable($tableName) || ! Schema::hasColumn($tableName, $column)) {
+            return;
+        }
+
+        Schema::table($tableName, function (Blueprint $table) use ($column) {
+            $table->dropColumn($column);
         });
     }
 }

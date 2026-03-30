@@ -1,165 +1,168 @@
 {{--
     Lapa: Ierīču tipu saraksts.
-    Atbildība: pārvalda tipu vārdnīcu, ko izmanto ierīču formās un filtros.
+    Atbildība: rāda visu tipu vārdnīcu klasiskā tabulā un ļauj to pārvaldīt bez lapas pārlādes.
     Datu avots: DeviceTypeController@index.
     Galvenās daļas:
-    1. Hero un darbības.
-    2. Filtri pēc nosaukuma un kategorijas.
-    3. Tipu tabula ar piesaistīto ierīču skaitu.
+    1. Hero un ātrā darbība tipa pievienošanai.
+    2. Vienkārša tabula ar kārtošanu pēc nosaukuma un piesaistīto ierīču skaita.
+    3. Darbības ar rediģēšanu un drošu dzēšanas bloķēšanu.
 --}}
 <x-app-layout>
     @php
-        $filters = $filters ?? ['q' => '', 'category' => '', 'sort' => 'type_name', 'direction' => 'asc'];
-
-        $sortUrl = function (string $column) use ($filters, $sort, $direction) {
-            $nextDirection = $sort === $column && $direction === 'asc' ? 'desc' : 'asc';
-
-            return route('device-types.index', array_filter([
-                'q' => $filters['q'] ?: null,
-                'category' => $filters['category'] ?: null,
-                'sort' => $column,
-                'direction' => $nextDirection,
-            ]));
-        };
+        $sorting = $sorting ?? ['sort' => 'type_name', 'direction' => 'asc'];
+        $sortOptions = $sortOptions ?? [
+            'type_name' => ['label' => 'tipa nosaukuma'],
+            'devices_count' => ['label' => 'piesaistīto ierīču skaita'],
+        ];
+        $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
     @endphp
 
-    <section class="type-shell">
-        <div class="type-header">
-            <div>
-                <h1 class="device-page-title">Ierīču tipi</h1>
-                <p class="device-page-subtitle">Klasifikators ar meklēsanu un skirosanu.</p>
-            </div>
-            <a href="{{ route('device-types.create') }}" class="btn-create">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-                </svg>
-                Pievienot tipu
-            </a>
-        </div>
-
-        <div class="type-toolbar">
-            <form method="GET" action="{{ route('device-types.index') }}" class="space-y-4">
-                <div class="type-category-chips">
-                    <a href="{{ route('device-types.index', array_filter([
-                        'q' => $filters['q'] ?: null,
-                        'sort' => $sort,
-                        'direction' => $direction,
-                    ])) }}"
-                       class="type-category-chip {{ $filters['category'] === '' ? 'type-category-chip-active' : 'type-category-chip-idle' }}">
-                        Visas kategorijas
-                    </a>
-                    @foreach ($categoryOptions as $categoryOption)
-                        <a href="{{ route('device-types.index', array_filter([
-                            'q' => $filters['q'] ?: null,
-                            'category' => $categoryOption->category,
-                            'sort' => $sort,
-                            'direction' => $direction,
-                        ])) }}"
-                           class="type-category-chip {{ $filters['category'] === $categoryOption->category ? 'type-category-chip-active' : 'type-category-chip-idle' }}">
-                            {{ $categoryOption->category }}
-                            <span class="type-category-count">{{ $categoryOption->total }}</span>
-                        </a>
-                    @endforeach
-                </div>
-
-                <div class="type-search-grid">
-                    <label class="block">
-                        <span class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Meklēt pēc tipa nosaukuma</span>
-                        <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Piem. Monitors" class="crud-control">
-                    </label>
-                    <label class="block">
-                        <span class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Meklēt pēc kategorijas</span>
-                        <input type="text" name="category" value="{{ $filters['category'] }}" placeholder="Piem. Periferija" class="crud-control">
-                    </label>
-                    <div class="flex items-end gap-2">
-                        <button type="submit" class="btn-search">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35m1.85-5.15a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/>
-                            </svg>
-                            Meklēt
-                        </button>
-                        <a href="{{ route('device-types.index') }}" class="btn-clear">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
-                            </svg>
-                            Notīrīt
-                        </a>
-                    </div>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-4">
-                    <a href="{{ $sortUrl('type_name') }}" class="type-sort-link">
-                        Tipa nosaukums
-                        <span>{{ $sort === 'type_name' ? ($direction === 'asc' ? 'ASC' : 'DESC') : 'SORT' }}</span>
-                    </a>
-                    <a href="{{ $sortUrl('category') }}" class="type-sort-link">
-                        Kategorija
-                        <span>{{ $sort === 'category' ? ($direction === 'asc' ? 'ASC' : 'DESC') : 'SORT' }}</span>
-                    </a>
-                    <span class="rounded-full bg-white px-3 py-1 text-sm font-medium text-slate-600 ring-1 ring-slate-200">
-                        Atrasti tipi: {{ $types->total() }}
-                    </span>
-                </div>
-            </form>
-        </div>
-
-
-        <div class="type-results-grid">
-            @forelse ($types as $type)
-                <article class="type-card">
-                    <div class="type-card-grid">
-                        <div class="min-w-0">
-                            <div class="type-card-top">
-                                <div class="min-w-0">
-                                    <div class="type-card-header">
-                                        <span class="type-chip bg-sky-100 text-sky-800 ring-sky-200">ID {{ $type->id }}</span>
-                                        <span class="type-chip bg-blue-100 text-blue-800 ring-blue-200">Kategorija: {{ $type->category }}</span>
-                                        <span class="type-chip bg-emerald-100 text-emerald-800 ring-emerald-200">Ar šo tipu: {{ $type->devices_count }} ierīces</span>
-                                    </div>
-                                    <h2 class="mt-2 text-lg font-semibold text-slate-900">{{ $type->type_name }}</h2>
-                                </div>
-
-                                <div class="flex items-start justify-end gap-2">
-                                    <a href="{{ route('device-types.edit', $type) }}" class="inline-flex items-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-700 transition hover:bg-sky-100">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 7.125 16.875 4.5"/></svg>
-                                        Rediģēt
-                                    </a>
-                                    <form method="POST" action="{{ route('device-types.destroy', $type) }}">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" onclick="return confirm('Dzēst šo tipu?')" class="inline-flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673A2.25 2.25 0 0 1 15.916 21.75H8.084a2.25 2.25 0 0 1-2.245-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 0 0 1 3.478-.397m7.5 0V4.875A2.25 2.25 0 0 0 13.5 2.625h-3a2.25 2.25 0 0 0-2.25 2.25V5.79m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
-                                            Dzēst
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-
-                            <p class="mt-3 text-sm leading-6 text-slate-600">{{ $type->description ?: 'Apraksts nav pievienots.' }}</p>
-
-                            <div class="type-meta-row">
-                                <div class="type-metric">
-                                    <div class="type-inline-meta"><strong>Kategorija:</strong> {{ $type->category }}</div>
-                                </div>
-                                <div class="type-metric">
-                                    <div class="type-inline-meta"><strong>Izveidots:</strong> {{ $type->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
-                                </div>
-                                <div class="type-metric">
-                                    <div class="type-inline-meta"><strong>Ierīces:</strong> {{ $type->devices_count }}</div>
-                                </div>
-                            </div>
+    <section class="app-shell">
+        <div class="page-hero">
+            <div class="page-hero-grid">
+                <div class="max-w-4xl">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="page-eyebrow">
+                            <x-icon name="type" size="h-4 w-4" />
+                            <span>Ierīču tipi</span>
+                        </div>
+                        <div class="inventory-inline-metrics">
+                            <span class="inventory-inline-chip inventory-inline-chip-slate">
+                                <x-icon name="type" size="h-3.5 w-3.5" />
+                                <span class="inventory-inline-label">Kopā</span>
+                                <span class="inventory-inline-value">{{ $types->total() }}</span>
+                            </span>
                         </div>
                     </div>
-                </article>
-            @empty
-                <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-6 py-14 text-center text-sm text-slate-500">
-                    Neviens ierīces tips neatbilst atlasītajiem filtriem.
+
+                    <div class="page-title-group mt-4">
+                        <div class="page-title-icon page-title-icon-sky">
+                            <x-icon name="type" size="h-7 w-7" />
+                        </div>
+                        <div>
+                            <h1 class="page-title">Ierīču tipi</h1>
+                            <p class="page-subtitle">Vienkāršota tipu vārdnīca ar saistīto ierīču skaitu un pārvaldības darbībām.</p>
+                        </div>
+                    </div>
                 </div>
-            @endforelse
+
+                <div class="page-actions">
+                    <a href="{{ route('device-types.create') }}" class="btn-create">
+                        <x-icon name="plus" size="h-4 w-4" />
+                        <span>Pievienot tipu</span>
+                    </a>
+                </div>
+            </div>
         </div>
 
-        @if ($types->hasPages())
-            <div class="mt-5">{{ $types->links() }}</div>
-        @endif
+        <div id="device-types-index-root" data-async-table-root>
+            <form method="GET" action="{{ route('device-types.index') }}" data-async-table-form data-async-root="#device-types-index-root">
+                <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
+                <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
+            </form>
+
+            @if (session('error'))
+                <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
+            @endif
+
+            <div class="device-table-shell">
+                <div class="device-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-slate-50 text-left text-slate-500">
+                            <tr>
+                                @foreach ([
+                                    'type_name' => 'Ierīces tips',
+                                    'devices_count' => 'Piesaistītās ierīces',
+                                ] as $column => $label)
+                                    @php
+                                        $isCurrentSort = $sorting['sort'] === $column;
+                                        $defaultDirection = $column === 'devices_count' ? 'desc' : 'asc';
+                                        $nextDirection = $isCurrentSort && $sorting['direction'] === 'asc' ? 'desc' : ($isCurrentSort && $sorting['direction'] === 'desc' ? 'asc' : $defaultDirection);
+                                        $sortMessage = 'Tabula "Ierīču tipi" kārtota pēc ' . ($sortOptions[$column]['label'] ?? mb_strtolower($label)) . ' ' . ($sortDirectionLabels[$nextDirection] ?? '');
+                                    @endphp
+                                    <th class="px-4 py-3">
+                                        <button
+                                            type="button"
+                                            class="device-sort-trigger {{ $isCurrentSort ? 'device-sort-trigger-active' : '' }}"
+                                            data-sort-trigger="true"
+                                            data-sort-field="{{ $column }}"
+                                            data-sort-direction="{{ $nextDirection }}"
+                                            data-sort-toast="{{ $sortMessage }}"
+                                        >
+                                            <span>{{ $label }}</span>
+                                            <span class="device-sort-icon" aria-hidden="true">
+                                                <svg class="h-[1.05em] w-[1.05em]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 9 3.75-3.75L15.75 9" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 15-3.75 3.75L8.25 15" />
+                                                </svg>
+                                            </span>
+                                        </button>
+                                    </th>
+                                @endforeach
+                                <th class="px-4 py-3 text-right">Darbības</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($types as $type)
+                                @php
+                                    $canDelete = (int) $type->devices_count === 0;
+                                    $deleteTooltip = 'Šo ierīces tipu nevar dzēst, kamēr nav atbrīvoti visi ieraksti, kas ir saistīti ar šo ierīces tipu.';
+                                @endphp
+                                <tr class="border-t border-slate-100 align-middle">
+                                    <td class="px-4 py-4">
+                                        <div class="font-semibold text-slate-900">{{ $type->type_name }}</div>
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <a
+                                            href="{{ route('devices.index', ['type' => $type->id, 'type_query' => $type->type_name]) }}"
+                                            class="device-type-count-link"
+                                        >
+                                            <x-icon name="device" size="h-4 w-4" />
+                                            <span>{{ $type->devices_count }}</span>
+                                        </a>
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <div class="flex justify-end gap-2">
+                                            <a href="{{ route('device-types.edit', $type) }}" class="btn-edit px-4 py-2 text-sm">
+                                                <x-icon name="edit" size="h-4 w-4" />
+                                                <span>Rediģēt</span>
+                                            </a>
+
+                                            @if ($canDelete)
+                                                <form method="POST" action="{{ route('device-types.destroy', $type) }}">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn-clear border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100" onclick="return confirm('Vai tiešām dzēst šo ierīces tipu?')">
+                                                        <x-icon name="trash" size="h-4 w-4" />
+                                                        <span>Dzēst</span>
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <span class="inline-flex" title="{{ $deleteTooltip }}">
+                                                    <button type="button" class="btn-clear cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 opacity-80" disabled aria-disabled="true">
+                                                        <x-icon name="trash" size="h-4 w-4" />
+                                                        <span>Dzēst</span>
+                                                    </button>
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="px-4 py-16 text-center text-sm text-slate-500">
+                                        Ierīču tipu saraksts pašlaik ir tukšs.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            @if ($types->hasPages())
+                <div class="mt-5">{{ $types->links() }}</div>
+            @endif
+        </div>
     </section>
 </x-app-layout>

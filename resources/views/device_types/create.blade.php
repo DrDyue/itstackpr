@@ -1,18 +1,18 @@
 {{--
     Lapa: Jauna ierīces tipa izveide.
-    Atbildība: ļauj pievienot jaunu tipu, ko vēlāk var izmantot ierīcēm.
+    Atbildība: ļauj pievienot jaunu tipu, ko vēlāk izmanto ierīces formās un filtros.
     Datu avots: DeviceTypeController@create, saglabāšana caur DeviceTypeController@store.
     Galvenās daļas:
     1. Hero.
     2. Kļūdu kopsavilkums.
-    3. Ierīces tipa forma.
+    3. Vienkāršota forma ar viena lauka ievadi.
 --}}
 <x-app-layout>
     <section class="type-form-shell">
         <div class="device-page-header">
             <div>
                 <h1 class="device-page-title">Jauns ierīces tips</h1>
-                <p class="device-page-subtitle">Pievieno jaunu klasifikatora ierakstu.</p>
+                <p class="device-page-subtitle">Pievieno jaunu ierīces tipa nosaukumu klasifikatoram.</p>
             </div>
             <a href="{{ route('device-types.index') }}" class="type-back-link inline-flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -26,24 +26,15 @@
 
         <form method="POST" action="{{ route('device-types.store') }}" class="type-form-grid">
             @csrf
+
             <div class="space-y-4">
                 <div class="type-form-card">
                     <div class="type-form-section-head">
                         <div class="device-form-section-name">Pamata informācija</div>
                     </div>
-                    <div class="mt-4 grid gap-4 sm:grid-cols-2">
-                        <div>
-                            <label class="crud-label">Tipa nosaukums *</label>
-                            <input type="text" name="type_name" value="{{ old('type_name') }}" class="crud-control" required>
-                        </div>
-                        <div>
-                            <label class="crud-label">Kategorija *</label>
-                            <input type="text" name="category" value="{{ old('category') }}" class="crud-control" required>
-                        </div>
-                    </div>
                     <div class="mt-4">
-                        <label class="crud-label">Apraksts</label>
-                        <textarea name="description" rows="4" class="crud-control">{{ old('description') }}</textarea>
+                        <label class="crud-label">Tipa nosaukums *</label>
+                        <input type="text" name="type_name" value="{{ old('type_name') }}" class="crud-control" required>
                     </div>
                 </div>
             </div>

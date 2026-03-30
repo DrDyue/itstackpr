@@ -18,16 +18,16 @@
     $maps = [
         'device' => [
             'active' => ['label' => 'Aktīva', 'tone' => 'success', 'icon' => 'check-circle'],
-            'repair' => ['label' => 'Remonta', 'tone' => 'warning', 'icon' => 'repair'],
+            'repair' => ['label' => 'Remontā', 'tone' => 'warning', 'icon' => 'repair'],
             'writeoff' => ['label' => 'Norakstīta', 'tone' => 'danger', 'icon' => 'writeoff'],
         ],
         'request' => [
-            'submitted' => ['label' => 'Iesniegts', 'tone' => 'info', 'icon' => 'clock'],
+            'submitted' => ['label' => 'Iesniegts', 'tone' => 'warning', 'icon' => 'clock'],
             'approved' => ['label' => 'Apstiprināts', 'tone' => 'success', 'icon' => 'check-circle'],
             'rejected' => ['label' => 'Noraidīts', 'tone' => 'danger', 'icon' => 'x-circle'],
         ],
         'repair' => [
-            'waiting' => ['label' => 'Gaida', 'tone' => 'info', 'icon' => 'clock'],
+            'waiting' => ['label' => 'Gaida', 'tone' => 'warning', 'icon' => 'clock'],
             'in-progress' => ['label' => 'Procesā', 'tone' => 'warning', 'icon' => 'repair'],
             'completed' => ['label' => 'Pabeigts', 'tone' => 'success', 'icon' => 'check-circle'],
             'cancelled' => ['label' => 'Atcelts', 'tone' => 'danger', 'icon' => 'x-circle'],
@@ -50,8 +50,8 @@
         ],
         'severity' => [
             'info' => ['label' => 'Info', 'tone' => 'neutral', 'icon' => 'audit'],
-            'warning' => ['label' => 'Bridinajums', 'tone' => 'warning', 'icon' => 'exclamation-triangle'],
-            'error' => ['label' => 'Kluda', 'tone' => 'danger', 'icon' => 'x-circle'],
+            'warning' => ['label' => 'Brīdinājums', 'tone' => 'warning', 'icon' => 'exclamation-triangle'],
+            'error' => ['label' => 'Kļūda', 'tone' => 'danger', 'icon' => 'x-circle'],
             'critical' => ['label' => 'Kritisks', 'tone' => 'danger', 'icon' => 'exclamation-triangle'],
         ],
         'repair-type' => [

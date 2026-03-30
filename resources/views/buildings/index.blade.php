@@ -36,7 +36,8 @@
             </div>
         </div>
 
-        <form method="GET" action="{{ route('buildings.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-2">
+        <div id="buildings-index-root" data-async-table-root>
+        <form method="GET" action="{{ route('buildings.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-2" data-async-table-form data-async-root="#buildings-index-root">
             <label class="block">
                 <span class="crud-label">Meklēt</span>
                 <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, adrese vai piezīmes...">
@@ -56,7 +57,7 @@
             </label>
             <div class="toolbar-actions md:col-span-2">
                 <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
-                <a href="{{ route('buildings.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt</span></a>
+                <a href="{{ route('buildings.index') }}" class="btn-clear" data-async-link="true"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt</span></a>
             </div>
         </form>
 
@@ -122,5 +123,6 @@
         </div>
 
         {{ $buildings->links() }}
+        </div>
     </section>
 </x-app-layout>

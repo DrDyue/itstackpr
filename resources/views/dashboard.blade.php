@@ -301,9 +301,9 @@
 
                             <div class="dashboard-pagination-links">
                                 @if ($dashboardDevices->onFirstPage())
-                                    <span class="dashboard-pagination-btn dashboard-pagination-btn-disabled">Iepriekšēja</span>
+                                    <span class="dashboard-pagination-btn dashboard-pagination-btn-disabled">Iepriekšējā</span>
                                 @else
-                                    <a href="{{ $dashboardDevices->previousPageUrl() }}" class="dashboard-pagination-btn">Iepriekšēja</a>
+                                    <a href="{{ $dashboardDevices->previousPageUrl() }}" class="dashboard-pagination-btn">Iepriekšējā</a>
                                 @endif
 
                                 @for ($page = $startPage; $page <= $endPage; $page++)
@@ -315,9 +315,9 @@
                                 @endfor
 
                                 @if ($dashboardDevices->hasMorePages())
-                                    <a href="{{ $dashboardDevices->nextPageUrl() }}" class="dashboard-pagination-btn">Nakama</a>
+                                    <a href="{{ $dashboardDevices->nextPageUrl() }}" class="dashboard-pagination-btn">Nākamā</a>
                                 @else
-                                    <span class="dashboard-pagination-btn dashboard-pagination-btn-disabled">Nakama</span>
+                                    <span class="dashboard-pagination-btn dashboard-pagination-btn-disabled">Nākamā</span>
                                 @endif
                             </div>
                         </div>

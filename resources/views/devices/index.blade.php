@@ -4,7 +4,7 @@
     Datu avots: DeviceController@index.
     Galvenās daļas:
     1. Kopsavilkuma hero ar skaitītājiem.
-    2. Filtru rīkjosla meklēšanai, telpām, tipiem, statusiem un aktīvajiem pieprasījumiem.
+    2. Filtru rīkjosla meklēšanai, telpām, tipiem un statusiem.
     3. Galvenā tabula ar statusiem, preview un ātrajām darbībām.
 --}}
 <x-app-layout>
@@ -16,7 +16,7 @@
             ? ($selectedRoom->room_number . ($selectedRoom->room_name ? ' - ' . $selectedRoom->room_name : ''))
             : ($filters['room_query'] !== '' ? $filters['room_query'] : null);
         $selectedTypeLabel = $selectedType?->type_name ?: ($filters['type_query'] !== '' ? $filters['type_query'] : null);
-        $selectedAssignedUserLabel = $selectedAssignedUser?->full_name ?: ($filters['assigned_to_query'] !== '' ? $filters['assigned_to_query'] : null);
+        $selectedAssignedUserLabel = $selectedAssignedUser?->full_name;
         $quickRoomSelectOptions = collect($quickRoomOptions ?? [])->values();
         $quickAssigneeSelectOptions = collect($quickAssigneeOptions ?? [])->values();
         $statusFilterLinks = [
@@ -24,13 +24,7 @@
             ['label' => 'Remonta', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'amber'],
             ['label' => 'Norakstītas', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
         ];
-        $requestFilterLinks = [
-            ['label' => 'Remonts', 'value' => 'repair', 'icon' => 'repair-request', 'tone' => 'amber'],
-            ['label' => 'Norakstīšana', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
-            ['label' => 'Nodošana', 'value' => 'transfer', 'icon' => 'transfer', 'tone' => 'emerald'],
-        ];
-        $selectedStatuses = $filters['has_status_filter'] ? $filters['statuses'] : collect($statusFilterLinks)->pluck('value')->all();
-        $selectedRequestTypes = $filters['request_types'];
+        $selectedStatuses = $filters['statuses'];
         $roomSelectOptions = $roomOptions->map(fn ($room) => [
             'value' => (string) $room->id,
             'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
@@ -44,11 +38,20 @@
         $typeSelectOptions = $types->map(fn ($type) => [
             'value' => (string) $type->id,
             'label' => $type->type_name,
-            'description' => $type->category ?: '',
+            'description' => 'Ierīces tips',
+            'search' => $type->type_name,
+        ])->values();
+        $assignedUserSelectOptions = collect($assignableUsers ?? [])->map(fn ($managedUser) => [
+            'value' => (string) $managedUser->id,
+            'label' => $managedUser->full_name,
+            'description' => implode(' | ', array_filter([
+                $managedUser->job_title,
+                $managedUser->email,
+            ])),
             'search' => implode(' ', array_filter([
-                $type->type_name,
-                $type->category,
-                $type->description,
+                $managedUser->full_name,
+                $managedUser->job_title,
+                $managedUser->email,
             ])),
         ])->values();
         $floorSelectOptions = collect($floorOptions)->map(fn ($floor) => [
@@ -60,6 +63,7 @@
         $toolbarGridClass = $canManageDevices
             ? 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.85fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,1fr)]'
             : 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,1fr)]';
+        $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
     @endphp
 
     <section class="app-shell">
@@ -117,161 +121,137 @@
             </div>
         </div>
 
-        {{-- Filtru rīkjosla: meklēšana, telpas, tipi, statusi un aktīvie pieprasījumi. --}}
-        <form
-            method="GET"
-            action="{{ route('devices.index') }}"
-            class="{{ $toolbarGridClass }}"
-            x-data="{}"
-            @searchable-select-updated.window="if ($event.detail.identifier === 'device-floor-filter') { $dispatch('searchable-select-clear', { target: 'device-room-filter' }) }"
-        >
-            <label class="block">
-                <span class="crud-label">Meklēt</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, ražotājs...">
-            </label>
-            <label class="block">
-                <span class="crud-label">Kods</span>
-                <input type="text" name="code" value="{{ $filters['code'] }}" class="crud-control">
-            </label>
-            @if ($canManageDevices)
+        <div id="devices-index-root" data-async-table-root>
+            {{-- Filtru rīkjosla: meklēšana, telpas, tipi un statusi bez lapas pārlādes. --}}
+            <form
+                method="GET"
+                action="{{ route('devices.index') }}"
+                class="{{ $toolbarGridClass }}"
+                x-data="{}"
+                data-async-table-form
+                data-async-root="#devices-index-root"
+                @searchable-select-updated.window="if ($event.detail.identifier === 'device-floor-filter') { $dispatch('searchable-select-clear', { target: 'device-room-filter' }) }"
+            >
+                <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
+                <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
+
                 <label class="block">
-                    <span class="crud-label">Piešķirta</span>
-                    <input type="text" name="assigned_to_query" value="{{ $filters['assigned_to_query'] }}" class="crud-control" placeholder="Lietotāja vārds">
-                    @if ($filters['assigned_to_id'] !== '')
-                        <input type="hidden" name="assigned_to_id" value="{{ $filters['assigned_to_id'] }}">
-                    @endif
+                    <span class="crud-label">Meklēt</span>
+                    <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, ražotājs...">
                 </label>
+                <label class="block">
+                    <span class="crud-label">Kods</span>
+                    <input type="text" name="code" value="{{ $filters['code'] }}" class="crud-control">
+                </label>
+                @if ($canManageDevices)
+                    <label class="block">
+                        <span class="crud-label">Piešķirta</span>
+                        <x-searchable-select
+                            name="assigned_to_id"
+                            query-name="assigned_to_query"
+                            identifier="device-assignee-filter"
+                            :options="$assignedUserSelectOptions"
+                            :selected="$filters['assigned_to_id']"
+                            :query="$selectedAssignedUserLabel"
+                            placeholder="Izvēlies darbinieku"
+                            empty-message="Neviens darbinieks neatbilst meklējumam."
+                        />
+                    </label>
+                @endif
+                <label class="block">
+                    <span class="crud-label">Stāvs</span>
+                    <x-searchable-select
+                        name="floor"
+                        query-name="floor_query"
+                        identifier="device-floor-filter"
+                        :options="$floorSelectOptions"
+                        :selected="$filters['floor']"
+                        :query="$selectedFloorLabel"
+                        placeholder="Izvēlies vai raksti stāvu"
+                        empty-message="Neviens stāvs neatbilst meklējumam."
+                    />
+                </label>
+                <label class="block">
+                    <span class="crud-label">Telpa</span>
+                    <x-searchable-select
+                        name="room_id"
+                        query-name="room_query"
+                        identifier="device-room-filter"
+                        :options="$roomSelectOptions"
+                        :selected="$filters['room_id']"
+                        :query="$selectedRoomLabel"
+                        placeholder="Raksti telpas numuru vai nosaukumu"
+                        empty-message="Neviena telpa neatbilst meklējumam."
+                    />
+                </label>
+                <label class="block">
+                    <span class="crud-label">Tips</span>
+                    <x-searchable-select
+                        name="type"
+                        query-name="type_query"
+                        identifier="device-type-filter"
+                        :options="$typeSelectOptions"
+                        :selected="$filters['type']"
+                        :query="$selectedTypeLabel"
+                        placeholder="Raksti tipa nosaukumu"
+                        empty-message="Neviens tips neatbilst meklējumam."
+                    />
+                </label>
+
+                <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
+                    <div class="quick-filter-groups">
+                        <div class="quick-filter-group">
+                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ierīces statuss</div>
+                            <div class="quick-status-filters">
+                                @foreach ($statusFilterLinks as $statusFilter)
+                                    @php
+                                        $isActive = in_array($statusFilter['value'], $selectedStatuses, true);
+                                    @endphp
+                                    <label class="quick-status-filter quick-status-filter-{{ $statusFilter['tone'] }} {{ $isActive ? 'quick-status-filter-active' : '' }}">
+                                        <input
+                                            type="checkbox"
+                                            name="status[]"
+                                            value="{{ $statusFilter['value'] }}"
+                                            class="sr-only"
+                                            @checked($isActive)
+                                        >
+                                        <x-icon :name="$statusFilter['icon']" size="h-4 w-4" />
+                                        <span>{{ $statusFilter['label'] }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="toolbar-actions justify-end">
+                        <button type="submit" class="btn-search">
+                            <x-icon name="search" size="h-4 w-4" />
+                            <span>Meklēt</span>
+                        </button>
+                        <a href="{{ route('devices.index') }}" class="btn-clear" data-async-link="true">
+                            <x-icon name="clear" size="h-4 w-4" />
+                            <span>Notīrīt</span>
+                        </a>
+                    </div>
+                </div>
+            </form>
+
+            <x-active-filters
+                :items="[
+                    ['label' => 'Meklēt', 'value' => $filters['q']],
+                    ['label' => 'Kods', 'value' => $filters['code']],
+                    ['label' => 'Piešķirta', 'value' => $canManageDevices ? $selectedAssignedUserLabel : null],
+                    ['label' => 'Stāvs', 'value' => $selectedFloorLabel],
+                    ['label' => 'Telpa', 'value' => $selectedRoomLabel],
+                    ['label' => 'Tips', 'value' => $selectedTypeLabel],
+                    ['label' => 'Statuss', 'value' => $filters['has_status_filter'] ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ') : null],
+                ]"
+                :clear-url="route('devices.index')"
+            />
+
+            @if (session('error'))
+                <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
             @endif
-            <label class="block">
-                <span class="crud-label">Stavs</span>
-                <x-searchable-select
-                    name="floor"
-                    query-name="floor_query"
-                    identifier="device-floor-filter"
-                    :options="$floorSelectOptions"
-                    :selected="$filters['floor']"
-                    :query="$selectedFloorLabel"
-                    placeholder="Izvēlies vai raksti stāvu"
-                    empty-message="Neviens stāvs neatbilst meklējumam."
-                />
-            </label>
-            <label class="block">
-                <span class="crud-label">Telpa</span>
-                <x-searchable-select
-                    name="room_id"
-                    query-name="room_query"
-                    identifier="device-room-filter"
-                    :options="$roomSelectOptions"
-                    :selected="$filters['room_id']"
-                    :query="$selectedRoomLabel"
-                    placeholder="Raksti telpas numuru vai nosaukumu"
-                    empty-message="Neviena telpa neatbilst meklējumam."
-                />
-            </label>
-            <label class="block">
-                <span class="crud-label">Tips</span>
-                <x-searchable-select
-                    name="type"
-                    query-name="type_query"
-                    :options="$typeSelectOptions"
-                    :selected="$filters['type']"
-                    :query="$selectedTypeLabel"
-                    placeholder="Raksti tipa nosaukumu"
-                    empty-message="Neviens tips neatbilst meklējumam."
-                />
-            </label>
-
-            <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
-                <div class="quick-filter-groups">
-                    <div class="quick-filter-group">
-                        <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ierīces statuss</div>
-                        <div class="quick-status-filters">
-                            @foreach ($statusFilterLinks as $statusFilter)
-                                @php
-                                    $query = request()->except('page', 'status');
-                                    $statusValues = collect($selectedStatuses);
-                                    $isActive = $statusValues->contains($statusFilter['value']);
-                                    $nextStatuses = $isActive
-                                        ? $statusValues->reject(fn ($value) => $value === $statusFilter['value'])->values()->all()
-                                        : $statusValues->push($statusFilter['value'])->unique()->values()->all();
-
-                                    if (count($nextStatuses) === 0 || count($nextStatuses) === count($statusFilterLinks)) {
-                                        unset($query['status']);
-                                    } else {
-                                        $query['status'] = $nextStatuses;
-                                    }
-                                @endphp
-                                <a
-                                    href="{{ route('devices.index', $query) }}"
-                                    class="quick-status-filter quick-status-filter-{{ $statusFilter['tone'] }} {{ $isActive ? 'quick-status-filter-active' : '' }}"
-                                >
-                                    <x-icon :name="$statusFilter['icon']" size="h-4 w-4" />
-                                    <span>{{ $statusFilter['label'] }}</span>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <div class="quick-filter-group quick-filter-group-end">
-                        <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Aktīvie pieprasījumi</div>
-                        <div class="quick-status-filters">
-                            @foreach ($requestFilterLinks as $requestFilter)
-                                @php
-                                    $query = request()->except('page', 'request_type');
-                                    $requestValues = collect($selectedRequestTypes);
-                                    $isActive = $requestValues->contains($requestFilter['value']);
-                                    $nextRequestTypes = $isActive
-                                        ? $requestValues->reject(fn ($value) => $value === $requestFilter['value'])->values()->all()
-                                        : $requestValues->push($requestFilter['value'])->unique()->values()->all();
-
-                                    if (count($nextRequestTypes) === 0) {
-                                        unset($query['request_type']);
-                                    } else {
-                                        $query['request_type'] = $nextRequestTypes;
-                                    }
-                                @endphp
-                                <a
-                                    href="{{ route('devices.index', $query) }}"
-                                    class="quick-status-filter quick-status-filter-{{ $requestFilter['tone'] }} {{ $isActive ? 'quick-status-filter-active' : '' }}"
-                                >
-                                    <x-icon :name="$requestFilter['icon']" size="h-4 w-4" />
-                                    <span>{{ $requestFilter['label'] }}</span>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-
-                <div class="toolbar-actions justify-end">
-                    <button type="submit" class="btn-search">
-                        <x-icon name="search" size="h-4 w-4" />
-                        <span>Meklēt</span>
-                    </button>
-                    <a href="{{ route('devices.index') }}" class="btn-clear">
-                        <x-icon name="clear" size="h-4 w-4" />
-                        <span>Notīrīt</span>
-                    </a>
-                </div>
-            </div>
-        </form>
-
-        <x-active-filters
-            :items="[
-                ['label' => 'Meklēt', 'value' => $filters['q']],
-                ['label' => 'Kods', 'value' => $filters['code']],
-                ['label' => 'Piešķirta', 'value' => $canManageDevices ? $selectedAssignedUserLabel : null],
-                ['label' => 'Stavs', 'value' => $selectedFloorLabel],
-                ['label' => 'Telpa', 'value' => $selectedRoomLabel],
-                ['label' => 'Tips', 'value' => $selectedTypeLabel],
-                ['label' => 'Statuss', 'value' => $filters['has_status_filter'] ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ') : null],
-                ['label' => 'Pieprasījumi', 'value' => $filters['has_request_type_filter'] ? collect($filters['request_types'])->map(fn ($type) => collect($requestFilterLinks)->firstWhere('value', $type)['label'] ?? $type)->implode(', ') : null],
-            ]"
-            :clear-url="route('devices.index')"
-        />
-
-        @if (session('error'))
-            <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
-        @endif
 
         {{-- Galvenā ierīču tabula ar statusu preview un admina ātrajām darbībām. --}}
         <div class="device-table-shell">
@@ -280,12 +260,38 @@
                 <thead class="bg-slate-50 text-left text-slate-500">
                     <tr>
                         <th class="px-4 py-3">Attēls</th>
-                        <th class="px-4 py-3">Kods</th>
-                        <th class="px-4 py-3">Nosaukums</th>
-                        <th class="px-4 py-3">Atrašanās vieta</th>
-                        <th class="px-4 py-3">Izveidots</th>
-                        <th class="px-4 py-3">Piešķirta</th>
-                        <th class="px-4 py-3">Statuss</th>
+                        @foreach ([
+                            'code' => 'Kods',
+                            'name' => 'Nosaukums',
+                            'location' => 'Atrašanās vieta',
+                            'created_at' => 'Izveidots',
+                            'assigned_to' => 'Piešķirta',
+                            'status' => 'Statuss',
+                        ] as $column => $label)
+                            @php
+                                $isCurrentSort = $sorting['sort'] === $column;
+                                $nextDirection = $isCurrentSort && $sorting['direction'] === 'asc' ? 'desc' : 'asc';
+                                $sortMessage = 'Kārtots pēc ' . ($sortOptions[$column]['label'] ?? mb_strtolower($label)) . ' ' . ($sortDirectionLabels[$nextDirection] ?? '');
+                            @endphp
+                            <th class="px-4 py-3">
+                                <button
+                                    type="button"
+                                    class="device-sort-trigger {{ $isCurrentSort ? 'device-sort-trigger-active' : '' }}"
+                                    data-sort-trigger="true"
+                                    data-sort-field="{{ $column }}"
+                                    data-sort-direction="{{ $nextDirection }}"
+                                    data-sort-toast="{{ $sortMessage }}"
+                                >
+                                    <span>{{ $label }}</span>
+                                    <span class="device-sort-icon" aria-hidden="true">
+                                        <svg class="h-[1.05em] w-[1.05em]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 9 3.75-3.75L15.75 9" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 15-3.75 3.75L8.25 15" />
+                                        </svg>
+                                    </span>
+                                </button>
+                            </th>
+                        @endforeach
                         <th class="px-4 py-3">Darbības</th>
                     </tr>
                 </thead>
@@ -396,11 +402,7 @@
                                                 </div>
                                             @endif
                                         </div>
-                                    @else
-                                        <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
-                                    @endif
-
-                                    @if ($pendingRequestBadge)
+                                    @elseif ($pendingRequestBadge)
                                         <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
                                             @if (! empty($pendingRequestBadge['url']))
                                                 <a href="{{ $pendingRequestBadge['url'] }}" class="device-request-badge-link {{ $pendingRequestBadge['class'] }}" @focus="open = true" @blur="open = false">
@@ -450,6 +452,8 @@
                                                 </div>
                                             @endif
                                         </div>
+                                    @else
+                                        <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
                                     @endif
                                 </div>
                             </td>
@@ -626,6 +630,7 @@
             </div>
         </div>
 
-        {{ $devices->links() }}
+            {{ $devices->links() }}
+        </div>
     </section>
 </x-app-layout>

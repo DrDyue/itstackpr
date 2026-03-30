@@ -23,6 +23,8 @@ use Illuminate\Validation\ValidationException;
  */
 class RepairRequestController extends Controller
 {
+    private const SORTABLE_COLUMNS = ['code', 'name', 'requester', 'created_at', 'status'];
+
     /**
      * Parāda remonta pieteikumu sarakstu atbilstoši lomai un filtriem.
      */
@@ -30,24 +32,15 @@ class RepairRequestController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+
+        $canReview = $user->canManageRequests();
         $availableStatuses = [
             RepairRequest::STATUS_SUBMITTED,
             RepairRequest::STATUS_APPROVED,
             RepairRequest::STATUS_REJECTED,
         ];
-        $statusFilterTouched = $request->has('statuses_filter');
-        $selectedStatuses = collect($request->query('status', $statusFilterTouched ? [] : $availableStatuses))
-            ->map(fn (mixed $status) => trim((string) $status))
-            ->filter(fn (string $status) => in_array($status, $availableStatuses, true))
-            ->unique()
-            ->values()
-            ->all();
-
-        $filters = [
-            'q' => trim((string) $request->query('q', '')),
-            'statuses' => $selectedStatuses === [] ? $availableStatuses : $selectedStatuses,
-            'has_status_filter' => true,
-        ];
+        $filters = $this->normalizedIndexFilters($request, $availableStatuses, $canReview);
+        $sorting = $this->normalizedSorting($request);
 
         if (! $this->featureTableExists('repair_requests')) {
             return view('repair_requests.index', [
@@ -61,31 +54,38 @@ class RepairRequestController extends Controller
                 'filters' => $filters,
                 'statuses' => $availableStatuses,
                 'statusLabels' => $this->requestStatusLabels(),
-                'canReview' => $user->canManageRequests(),
+                'canReview' => $canReview,
+                'sorting' => $sorting,
+                'sortOptions' => $this->sortOptions(),
+                'deviceOptions' => collect(),
+                'requesterOptions' => collect(),
                 'featureMessage' => 'Tabula repair_requests šobrīd nav pieejama.',
             ]);
         }
 
         $baseQuery = RepairRequest::query()
-            ->when(! $user->canManageRequests(), fn (Builder $query) => $query->where('responsible_user_id', $user->id));
+            ->when(! $canReview, fn (Builder $query) => $query->where('responsible_user_id', $user->id));
 
-        $requests = (clone $baseQuery)
-            ->with(['device.assignedTo', 'responsibleUser', 'reviewedBy', 'repair'])
-            ->whereIn('status', $filters['statuses'] === [] ? ['__none__'] : $filters['statuses'])
-            ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
-                $term = $filters['q'];
+        $deviceOptions = $this->repairDeviceOptions(
+            (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['device_id']))
+                ->with(['device.type'])
+                ->get()
+        );
 
-                $query->where(function (Builder $builder) use ($term) {
-                    $builder->where('description', 'like', "%{$term}%")
-                        ->orWhereHas('device', fn (Builder $deviceQuery) => $deviceQuery->where('name', 'like', "%{$term}%")->orWhere('code', 'like', "%{$term}%"))
-                        ->orWhereHas('responsibleUser', fn (Builder $userQuery) => $userQuery->where('full_name', 'like', "%{$term}%"));
+        $requesterOptions = $this->repairRequesterOptions(
+            (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['requester_id']))
+                ->with('responsibleUser')
+                ->get()
+        );
 
-                    if (ctype_digit($term)) {
-                        $builder->orWhereKey((int) $term);
-                    }
-                });
-            })
-            ->orderByDesc('id')
+        $requestsQuery = (clone $baseQuery)
+            ->with(['device.type', 'responsibleUser', 'reviewedBy', 'repair'])
+            ->select('repair_requests.*');
+
+        $this->applyIndexFilters($requestsQuery, $filters);
+        $this->applySorting($requestsQuery, $sorting);
+
+        $requests = $requestsQuery
             ->paginate(20)
             ->withQueryString();
 
@@ -100,7 +100,11 @@ class RepairRequestController extends Controller
             'filters' => $filters,
             'statuses' => $availableStatuses,
             'statusLabels' => $this->requestStatusLabels(),
-            'canReview' => $user->canManageRequests(),
+            'canReview' => $canReview,
+            'sorting' => $sorting,
+            'sortOptions' => $this->sortOptions(),
+            'deviceOptions' => $deviceOptions,
+            'requesterOptions' => $requesterOptions,
         ]);
     }
 
@@ -293,13 +297,13 @@ class RepairRequestController extends Controller
             $description = collect([
                 $device->type?->type_name,
                 collect([$device->manufacturer, $device->model])->filter()->implode(' '),
-                $device->room?->room_number ? 'telpa ' . $device->room->room_number : null,
+                $device->room?->room_number ? 'telpa '.$device->room->room_number : null,
                 $device->building?->building_name,
             ])->filter()->implode(' | ');
 
             return [
                 'value' => (string) $device->id,
-                'label' => $device->name . ' (' . ($device->code ?: 'bez koda') . ')',
+                'label' => $device->name.' ('.($device->code ?: 'bez koda').')',
                 'description' => $description,
                 'search' => implode(' ', array_filter([
                     $device->name,
@@ -319,7 +323,7 @@ class RepairRequestController extends Controller
     {
         if ($device->status === Device::STATUS_REPAIR) {
             throw ValidationException::withMessages([
-                'device_id' => ['Šai ierīcei jau notiek remonts (' . $this->repairStatusLabel($device->activeRepair?->status) . '), tāpēc jaunu remonta pieteikumu veidot nevar.'],
+                'device_id' => ['Šai ierīcei jau notiek remonts ('.$this->repairStatusLabel($device->activeRepair?->status).'), tāpēc jaunu remonta pieteikumu veidot nevar.'],
             ]);
         }
 
@@ -351,5 +355,225 @@ class RepairRequestController extends Controller
             'cancelled' => 'Atcelts',
             default => 'Remonta',
         };
+    }
+
+    /**
+     * Sakārto saraksta filtru stāvokli, ieskaitot admina noklusēto "iesniegts".
+     */
+    private function normalizedIndexFilters(Request $request, array $availableStatuses, bool $canReview): array
+    {
+        $statusFilterTouched = $request->has('statuses_filter');
+        $defaultStatuses = $canReview ? [RepairRequest::STATUS_SUBMITTED] : [];
+        $selectedStatuses = collect($request->query('status', $statusFilterTouched ? [] : $defaultStatuses))
+            ->map(fn (mixed $status) => trim((string) $status))
+            ->filter(fn (string $status) => in_array($status, $availableStatuses, true))
+            ->unique()
+            ->values()
+            ->all();
+
+        return [
+            'q' => trim((string) $request->query('q', '')),
+            'request_id' => ctype_digit((string) $request->query('request_id', '')) ? (int) $request->query('request_id') : null,
+            'device_id' => ctype_digit((string) $request->query('device_id', '')) ? (int) $request->query('device_id') : null,
+            'device_query' => trim((string) $request->query('device_query', '')),
+            'requester_id' => ctype_digit((string) $request->query('requester_id', '')) ? (int) $request->query('requester_id') : null,
+            'requester_query' => trim((string) $request->query('requester_query', '')),
+            'date_from' => trim((string) $request->query('date_from', '')),
+            'date_to' => trim((string) $request->query('date_to', '')),
+            'statuses' => $selectedStatuses,
+            'status_filter_touched' => $statusFilterTouched,
+        ];
+    }
+
+    /**
+     * Pielieto meklēšanu un filtrus pieteikumu vaicājumam.
+     */
+    private function applyIndexFilters(Builder $query, array $filters, array $skip = []): Builder
+    {
+        $skipLookup = array_flip($skip);
+
+        if (! isset($skipLookup['q']) && $filters['q'] !== '') {
+            $term = $filters['q'];
+
+            $query->where(function (Builder $builder) use ($term) {
+                $builder->where('repair_requests.description', 'like', "%{$term}%")
+                    ->orWhereHas('device', function (Builder $deviceQuery) use ($term) {
+                        $deviceQuery
+                            ->where('name', 'like', "%{$term}%")
+                            ->orWhere('code', 'like', "%{$term}%")
+                            ->orWhere('serial_number', 'like', "%{$term}%")
+                            ->orWhere('manufacturer', 'like', "%{$term}%")
+                            ->orWhere('model', 'like', "%{$term}%")
+                            ->orWhereHas('type', fn (Builder $typeQuery) => $typeQuery->where('type_name', 'like', "%{$term}%"));
+                    })
+                    ->orWhereHas('responsibleUser', fn (Builder $userQuery) => $userQuery->where('full_name', 'like', "%{$term}%"));
+
+                if (ctype_digit($term)) {
+                    $builder->orWhereKey((int) $term);
+                }
+            });
+        }
+
+        if (! isset($skipLookup['request_id']) && filled($filters['request_id'])) {
+            $query->whereKey($filters['request_id']);
+        }
+
+        if (! isset($skipLookup['device_id']) && filled($filters['device_id'])) {
+            $query->where('repair_requests.device_id', $filters['device_id']);
+        }
+
+        if (! isset($skipLookup['requester_id']) && filled($filters['requester_id'])) {
+            $query->where('repair_requests.responsible_user_id', $filters['requester_id']);
+        }
+
+        if (! isset($skipLookup['date_from']) && filled($filters['date_from'])) {
+            $query->whereDate('repair_requests.created_at', '>=', $filters['date_from']);
+        }
+
+        if (! isset($skipLookup['date_to']) && filled($filters['date_to'])) {
+            $query->whereDate('repair_requests.created_at', '<=', $filters['date_to']);
+        }
+
+        if (! isset($skipLookup['statuses'])) {
+            $selectedStatuses = $filters['statuses'] ?? [];
+
+            if ($selectedStatuses !== [] && count($selectedStatuses) < 3) {
+                $query->whereIn('repair_requests.status', $selectedStatuses);
+            }
+        }
+
+        return $query;
+    }
+
+    /**
+     * Pielieto drošu kārtošanu pēc atļautajām kolonnām.
+     */
+    private function applySorting(Builder $query, array $sorting): void
+    {
+        $query
+            ->leftJoin('devices as sortable_devices', 'repair_requests.device_id', '=', 'sortable_devices.id')
+            ->leftJoin('users as sortable_requesters', 'repair_requests.responsible_user_id', '=', 'sortable_requesters.id');
+
+        switch ($sorting['sort']) {
+            case 'code':
+                $query->orderByRaw('LOWER(COALESCE(sortable_devices.code, "")) '.$sorting['direction']);
+                break;
+            case 'name':
+                $query->orderByRaw('LOWER(COALESCE(sortable_devices.name, "")) '.$sorting['direction']);
+                break;
+            case 'requester':
+                $query->orderByRaw('LOWER(COALESCE(sortable_requesters.full_name, "")) '.$sorting['direction']);
+                break;
+            case 'status':
+                $query->orderByRaw("
+                    CASE repair_requests.status
+                        WHEN 'submitted' THEN 1
+                        WHEN 'approved' THEN 2
+                        WHEN 'rejected' THEN 3
+                        ELSE 4
+                    END {$sorting['direction']}
+                ");
+                break;
+            case 'created_at':
+            default:
+                $query->orderBy('repair_requests.created_at', $sorting['direction']);
+                break;
+        }
+
+        $query->orderBy('repair_requests.id', $sorting['direction'] === 'asc' ? 'asc' : 'desc');
+    }
+
+    /**
+     * Normalizē kārtošanas parametrus tabulas galvenei un toast paziņojumiem.
+     */
+    private function normalizedSorting(Request $request): array
+    {
+        $sort = trim((string) $request->query('sort', 'created_at'));
+        $direction = trim((string) $request->query('direction', 'desc'));
+
+        if (! in_array($sort, self::SORTABLE_COLUMNS, true)) {
+            $sort = 'created_at';
+        }
+
+        if (! in_array($direction, ['asc', 'desc'], true)) {
+            $direction = $sort === 'created_at' ? 'desc' : 'asc';
+        }
+
+        return [
+            'sort' => $sort,
+            'direction' => $direction,
+            'label' => $this->sortOptions()[$sort]['label'] ?? 'iesniegšanas datuma',
+        ];
+    }
+
+    /**
+     * Lietotāja paziņojumiem izmantojamās kārtošanas etiķetes.
+     */
+    private function sortOptions(): array
+    {
+        return [
+            'code' => ['label' => 'koda'],
+            'name' => ['label' => 'nosaukuma'],
+            'requester' => ['label' => 'pieteicēja'],
+            'created_at' => ['label' => 'iesniegšanas datuma'],
+            'status' => ['label' => 'statusa'],
+        ];
+    }
+
+    /**
+     * Sagatavo ierīču dropdown opcijas remonta pieteikumu filtram.
+     */
+    private function repairDeviceOptions($requests)
+    {
+        return collect($requests)
+            ->pluck('device')
+            ->filter()
+            ->unique('id')
+            ->sortBy(fn (Device $device) => mb_strtolower($device->name.' '.$device->code))
+            ->values()
+            ->map(function (Device $device) {
+                return [
+                    'value' => (string) $device->id,
+                    'label' => $device->name.' ('.($device->code ?: 'bez koda').')',
+                    'description' => collect([
+                        $device->type?->type_name,
+                        collect([$device->manufacturer, $device->model])->filter()->implode(' '),
+                    ])->filter()->implode(' | '),
+                    'search' => implode(' ', array_filter([
+                        $device->name,
+                        $device->code,
+                        $device->serial_number,
+                        $device->manufacturer,
+                        $device->model,
+                        $device->type?->type_name,
+                    ])),
+                ];
+            });
+    }
+
+    /**
+     * Sagatavo pieteicēju dropdown opcijas remonta pieteikumu filtram.
+     */
+    private function repairRequesterOptions($requests)
+    {
+        return collect($requests)
+            ->pluck('responsibleUser')
+            ->filter()
+            ->unique('id')
+            ->sortBy(fn (User $requester) => mb_strtolower($requester->full_name))
+            ->values()
+            ->map(fn (User $requester) => [
+                'value' => (string) $requester->id,
+                'label' => $requester->full_name,
+                'description' => implode(' | ', array_filter([
+                    $requester->job_title,
+                    $requester->email,
+                ])),
+                'search' => implode(' ', array_filter([
+                    $requester->full_name,
+                    $requester->job_title,
+                    $requester->email,
+                ])),
+            ]);
     }
 }

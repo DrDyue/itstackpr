@@ -33,7 +33,7 @@ class DeviceController extends Controller
 {
     private const STATUSES = [Device::STATUS_ACTIVE, Device::STATUS_REPAIR, Device::STATUS_WRITEOFF];
 
-    private const REQUEST_TYPES = ['repair', 'writeoff', 'transfer'];
+    private const SORTABLE_COLUMNS = ['code', 'name', 'location', 'created_at', 'assigned_to', 'status'];
 
     private const DEFAULT_WAREHOUSE_ROOM_NAME = 'Noliktava';
 
@@ -48,66 +48,52 @@ class DeviceController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+        return view('devices.index', $this->devicesIndexViewData($request, $user));
+    }
+
+    /**
+     * Sagatavo visus datus ierīču saraksta lapai.
+     *
+     * Šī metode centralizē filtru normalizēšanu, ierīču atlasi, kārtošanu
+     * un arī papildu palīgdatus, ko izmanto Blade skats.
+     */
+    private function devicesIndexViewData(Request $request, User $user): array
+    {
         $canManageDevices = $user->canManageRequests();
-
-        $filters = [
-            'q' => trim((string) $request->query('q', '')),
-            'code' => trim((string) $request->query('code', '')),
-            'assigned_to_id' => trim((string) $request->query('assigned_to_id', '')),
-            'assigned_to_query' => trim((string) $request->query('assigned_to_query', '')),
-            'floor' => trim((string) $request->query('floor', '')),
-            'floor_query' => trim((string) $request->query('floor_query', '')),
-            'room_query' => trim((string) $request->query('room_query', '')),
-            'room_id' => trim((string) $request->query('room_id', '')),
-            'type' => trim((string) $request->query('type', '')),
-            'type_query' => trim((string) $request->query('type_query', '')),
-            'statuses' => collect($request->query('status', []))
-                ->map(fn (mixed $status) => trim((string) $status))
-                ->filter(fn (string $status) => in_array($status, self::STATUSES, true))
-                ->unique()
-                ->values()
-                ->all(),
-            'request_types' => collect($request->query('request_type', []))
-                ->map(fn (mixed $type) => trim((string) $type))
-                ->filter(fn (string $type) => in_array($type, self::REQUEST_TYPES, true))
-                ->unique()
-                ->values()
-                ->all(),
-        ];
-
-        $filters['has_status_filter'] = count($filters['statuses']) > 0 && count($filters['statuses']) < count(self::STATUSES);
-        // Aktīvo pieprasījumu filtri darbojas tikai tad, kad lietotājs pats ieslēdz vismaz vienu tipu.
-        $filters['has_request_type_filter'] = count($filters['request_types']) > 0;
+        $filters = $this->normalizedIndexFilters($request);
+        $sorting = $this->normalizedDeviceSorting($request);
 
         $summaryQuery = $this->visibleDevicesQuery($user);
         $accessibleRooms = $this->accessibleRooms($user);
         $types = DeviceType::query()->orderBy('type_name')->get();
-        $selectedRoom = null;
-        $selectedType = null;
-        $selectedAssignedUser = null;
-        if (ctype_digit($filters['room_id'])) {
-            $selectedRoom = $accessibleRooms->firstWhere('id', (int) $filters['room_id']);
-        }
-        if (ctype_digit($filters['type'])) {
-            $selectedType = $types->firstWhere('id', (int) $filters['type']);
-        }
-        if ($canManageDevices && ctype_digit($filters['assigned_to_id'])) {
-            $selectedAssignedUser = User::query()->find((int) $filters['assigned_to_id']);
-        }
+        $assignableUsers = $canManageDevices
+            ? User::query()->active()->orderBy('full_name')->get()
+            : collect();
+
+        $selectedRoom = ctype_digit($filters['room_id'])
+            ? $accessibleRooms->firstWhere('id', (int) $filters['room_id'])
+            : null;
+        $selectedType = ctype_digit($filters['type'])
+            ? $types->firstWhere('id', (int) $filters['type'])
+            : null;
+        $selectedAssignedUser = $canManageDevices && ctype_digit($filters['assigned_to_id'])
+            ? $assignableUsers->firstWhere('id', (int) $filters['assigned_to_id'])
+            : null;
 
         if ($selectedRoom) {
             $filters['floor'] = (string) $selectedRoom->floor_number;
-            $filters['room_query'] = $selectedRoom->room_number.($selectedRoom->room_name ? ' - '.$selectedRoom->room_name : '');
+            $filters['floor_query'] = $selectedRoom->floor_number . '. stāvs';
+            $filters['room_query'] = $selectedRoom->room_number . ($selectedRoom->room_name ? ' - ' . $selectedRoom->room_name : '');
         }
+
         if ($selectedType) {
             $filters['type_query'] = $selectedType->type_name;
         }
+
         if ($selectedAssignedUser) {
             $filters['assigned_to_query'] = $selectedAssignedUser->full_name;
-        }
-
-        if ($filters['floor'] !== '') {
-            $filters['floor_query'] = $filters['floor'].'. stāvs';
+        } elseif ($canManageDevices) {
+            $filters['assigned_to_query'] = '';
         }
 
         $maxFloor = (int) ($accessibleRooms->max('floor_number') ?? 0);
@@ -115,11 +101,17 @@ class DeviceController extends Controller
         $roomOptions = $accessibleRooms
             ->when(
                 $filters['floor'] !== '' && ctype_digit($filters['floor']),
-                fn (Collection $rooms) => $rooms->filter(fn (Room $room) => (int) $room->floor_number === (int) $filters['floor'])
+                fn (Collection $rooms) => $rooms->filter(
+                    fn (Room $room) => (int) $room->floor_number === (int) $filters['floor']
+                )
             )
             ->values();
 
-        $devices = $this->visibleDevicesQuery($user)
+        $devicesQuery = $this->visibleDevicesQuery($user)
+            ->select('devices.*')
+            ->leftJoin('rooms as sort_rooms', 'sort_rooms.id', '=', 'devices.room_id')
+            ->leftJoin('buildings as sort_buildings', 'sort_buildings.id', '=', 'devices.building_id')
+            ->leftJoin('users as sort_users', 'sort_users.id', '=', 'devices.assigned_to_id')
             ->with([
                 'type',
                 'building',
@@ -142,76 +134,27 @@ class DeviceController extends Controller
                 'writeoffRequests as has_pending_writeoff_request' => fn (Builder $query) => $query->where('status', WriteoffRequest::STATUS_SUBMITTED),
                 'transfers as has_pending_transfer_request' => fn (Builder $query) => $query->where('status', DeviceTransfer::STATUS_SUBMITTED),
             ])
-            ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
-                $term = $filters['q'];
+            ->selectSub(
+                DB::table('repairs')
+                    ->select('status')
+                    ->whereColumn('repairs.device_id', 'devices.id')
+                    ->whereIn('status', ['waiting', 'in-progress'])
+                    ->orderByDesc('id')
+                    ->limit(1),
+                'sort_repair_progress'
+            );
 
-                $query->where(function (Builder $deviceQuery) use ($term) {
-                    $deviceQuery->where('name', 'like', "%{$term}%")
-                        ->orWhere('serial_number', 'like', "%{$term}%")
-                        ->orWhere('manufacturer', 'like', "%{$term}%")
-                        ->orWhere('model', 'like', "%{$term}%");
-                });
-            })
-            ->when($filters['code'] !== '', fn (Builder $query) => $query->where('code', 'like', '%'.$filters['code'].'%'))
-            ->when($selectedAssignedUser instanceof User, fn (Builder $query) => $query->where('assigned_to_id', $selectedAssignedUser->id))
-            ->when(! ($selectedAssignedUser instanceof User) && $user->canManageRequests() && $filters['assigned_to_query'] !== '', function (Builder $query) use ($filters) {
-                $term = $filters['assigned_to_query'];
+        $this->applyDeviceIndexFilters(
+            $devicesQuery,
+            $filters,
+            $selectedAssignedUser,
+            $selectedRoom,
+            $selectedType
+        );
 
-                $query->whereHas('assignedTo', fn (Builder $userQuery) => $userQuery->where('full_name', 'like', "%{$term}%"));
-            })
-            ->when($filters['floor'] !== '' && ctype_digit($filters['floor']), function (Builder $query) use ($filters) {
-                $query->whereHas('room', fn (Builder $roomQuery) => $roomQuery->where('floor_number', (int) $filters['floor']));
-            })
-            ->when($filters['floor'] === '' && $filters['floor_query'] !== '', function (Builder $query) use ($filters) {
-                $normalizedFloor = preg_replace('/\D+/', '', $filters['floor_query']);
+        $this->applyDeviceIndexSorting($devicesQuery, $sorting);
 
-                if (! is_string($normalizedFloor) || $normalizedFloor === '' || ! ctype_digit($normalizedFloor)) {
-                    return;
-                }
-
-                $query->whereHas('room', fn (Builder $roomQuery) => $roomQuery->where('floor_number', (int) $normalizedFloor));
-            })
-            ->when($selectedRoom instanceof Room, fn (Builder $query) => $query->where('room_id', $selectedRoom->id))
-            ->when(! ($selectedRoom instanceof Room) && $filters['room_query'] !== '', function (Builder $query) use ($filters) {
-                $term = $filters['room_query'];
-
-                $query->whereHas('room', function (Builder $roomQuery) use ($term) {
-                    $roomQuery->where('room_number', 'like', "%{$term}%")
-                        ->orWhere('room_name', 'like', "%{$term}%")
-                        ->orWhere('department', 'like', "%{$term}%");
-                });
-            })
-            ->when($selectedType instanceof DeviceType, fn (Builder $query) => $query->where('device_type_id', $selectedType->id))
-            ->when(! ($selectedType instanceof DeviceType) && $filters['type_query'] !== '', function (Builder $query) use ($filters) {
-                $term = $filters['type_query'];
-
-                $query->whereHas('type', function (Builder $typeQuery) use ($term) {
-                    $typeQuery->where('type_name', 'like', "%{$term}%")
-                        ->orWhere('category', 'like', "%{$term}%");
-                });
-            })
-            ->when(
-                $filters['has_status_filter'],
-                fn (Builder $query) => $query->whereIn('status', $filters['statuses'])
-            )
-            ->when(
-                $filters['has_request_type_filter'],
-                function (Builder $query) use ($filters) {
-                    $query->where(function (Builder $requestQuery) use ($filters) {
-                        foreach (collect($filters['request_types'])->values() as $index => $type) {
-                            $method = $index === 0 ? 'whereHas' : 'orWhereHas';
-
-                            match ($type) {
-                                'repair' => $requestQuery->{$method}('pendingRepairRequest'),
-                                'writeoff' => $requestQuery->{$method}('pendingWriteoffRequest'),
-                                'transfer' => $requestQuery->{$method}('pendingTransferRequest'),
-                                default => null,
-                            };
-                        }
-                    });
-                }
-            )
-            ->orderByDesc('id')
+        $devices = $devicesQuery
             ->paginate(20)
             ->withQueryString();
 
@@ -244,10 +187,11 @@ class DeviceController extends Controller
             })
             ->all();
 
-        return view('devices.index', [
+        return [
             'devices' => $devices,
             'deviceStates' => $deviceStates,
             'filters' => $filters,
+            'sorting' => $sorting,
             'deviceSummary' => [
                 'total' => (clone $summaryQuery)->count(),
                 'active' => (clone $summaryQuery)->where('status', Device::STATUS_ACTIVE)->count(),
@@ -260,12 +204,193 @@ class DeviceController extends Controller
             'types' => $types,
             'selectedType' => $selectedType,
             'selectedAssignedUser' => $selectedAssignedUser,
+            'assignableUsers' => $assignableUsers,
             'statuses' => self::STATUSES,
             'statusLabels' => $this->statusLabels(),
             'canManageDevices' => $canManageDevices,
             'quickRoomOptions' => $canManageDevices ? $this->quickRoomOptions() : collect(),
             'quickAssigneeOptions' => $canManageDevices ? $this->quickAssigneeOptions() : collect(),
-        ]);
+            'sortOptions' => $this->deviceSortOptions(),
+        ];
+    }
+
+    /**
+     * Normalizē visus ierīču saraksta filtrus vienotā formā.
+     */
+    private function normalizedIndexFilters(Request $request): array
+    {
+        $statuses = collect($request->query('status', []))
+            ->map(fn (mixed $status) => trim((string) $status))
+            ->filter(fn (string $status) => in_array($status, self::STATUSES, true))
+            ->unique()
+            ->values()
+            ->all();
+
+        return [
+            'q' => trim((string) $request->query('q', '')),
+            'code' => trim((string) $request->query('code', '')),
+            'assigned_to_id' => trim((string) $request->query('assigned_to_id', '')),
+            'assigned_to_query' => trim((string) $request->query('assigned_to_query', '')),
+            'floor' => trim((string) $request->query('floor', '')),
+            'floor_query' => trim((string) $request->query('floor_query', '')),
+            'room_query' => trim((string) $request->query('room_query', '')),
+            'room_id' => trim((string) $request->query('room_id', '')),
+            'type' => trim((string) $request->query('type', '')),
+            'type_query' => trim((string) $request->query('type_query', '')),
+            'statuses' => $statuses,
+            'has_status_filter' => count($statuses) > 0 && count($statuses) < count(self::STATUSES),
+        ];
+    }
+
+    /**
+     * Sagatavo drošu kārtošanas konfigurāciju no query string.
+     */
+    private function normalizedDeviceSorting(Request $request): array
+    {
+        $sort = trim((string) $request->query('sort', 'created_at'));
+        $direction = trim((string) $request->query('direction', 'desc'));
+
+        if (! in_array($sort, self::SORTABLE_COLUMNS, true)) {
+            $sort = 'created_at';
+        }
+
+        if (! in_array($direction, ['asc', 'desc'], true)) {
+            $direction = 'desc';
+        }
+
+        return [
+            'sort' => $sort,
+            'direction' => $direction,
+            'label' => $this->deviceSortOptions()[$sort]['label'] ?? 'Izveidots',
+            'direction_label' => $direction === 'asc' ? 'augošajā secībā' : 'dilstošajā secībā',
+        ];
+    }
+
+    /**
+     * Uzliek atlasītajam ierīču saraksta query visus filtru nosacījumus.
+     */
+    private function applyDeviceIndexFilters(
+        Builder $query,
+        array $filters,
+        ?User $selectedAssignedUser,
+        ?Room $selectedRoom,
+        ?DeviceType $selectedType
+    ): void {
+        $query
+            ->when($filters['q'] !== '', function (Builder $deviceQuery) use ($filters) {
+                $term = $filters['q'];
+
+                $deviceQuery->where(function (Builder $nestedQuery) use ($term) {
+                    $nestedQuery->where('devices.name', 'like', "%{$term}%")
+                        ->orWhere('devices.serial_number', 'like', "%{$term}%")
+                        ->orWhere('devices.manufacturer', 'like', "%{$term}%")
+                        ->orWhere('devices.model', 'like', "%{$term}%");
+                });
+            })
+            ->when($filters['code'] !== '', fn (Builder $deviceQuery) => $deviceQuery->where('devices.code', 'like', '%' . $filters['code'] . '%'))
+            ->when($selectedAssignedUser instanceof User, fn (Builder $deviceQuery) => $deviceQuery->where('devices.assigned_to_id', $selectedAssignedUser->id))
+            ->when($filters['floor'] !== '' && ctype_digit($filters['floor']), function (Builder $deviceQuery) use ($filters) {
+                $deviceQuery->whereHas('room', fn (Builder $roomQuery) => $roomQuery->where('floor_number', (int) $filters['floor']));
+            })
+            ->when($filters['floor'] === '' && $filters['floor_query'] !== '', function (Builder $deviceQuery) use ($filters) {
+                $normalizedFloor = preg_replace('/\D+/', '', $filters['floor_query']);
+
+                if (! is_string($normalizedFloor) || $normalizedFloor === '' || ! ctype_digit($normalizedFloor)) {
+                    return;
+                }
+
+                $deviceQuery->whereHas('room', fn (Builder $roomQuery) => $roomQuery->where('floor_number', (int) $normalizedFloor));
+            })
+            ->when($selectedRoom instanceof Room, fn (Builder $deviceQuery) => $deviceQuery->where('devices.room_id', $selectedRoom->id))
+            ->when(! ($selectedRoom instanceof Room) && $filters['room_query'] !== '', function (Builder $deviceQuery) use ($filters) {
+                $term = $filters['room_query'];
+
+                $deviceQuery->whereHas('room', function (Builder $roomQuery) use ($term) {
+                    $roomQuery->where('room_number', 'like', "%{$term}%")
+                        ->orWhere('room_name', 'like', "%{$term}%")
+                        ->orWhere('department', 'like', "%{$term}%");
+                });
+            })
+            ->when($selectedType instanceof DeviceType, fn (Builder $deviceQuery) => $deviceQuery->where('devices.device_type_id', $selectedType->id))
+            ->when(! ($selectedType instanceof DeviceType) && $filters['type_query'] !== '', function (Builder $deviceQuery) use ($filters) {
+                $term = $filters['type_query'];
+
+                $deviceQuery->whereHas('type', function (Builder $typeQuery) use ($term) {
+                    $typeQuery->where('type_name', 'like', "%{$term}%");
+                });
+            })
+            ->when(
+                $filters['has_status_filter'],
+                fn (Builder $deviceQuery) => $deviceQuery->whereIn('devices.status', $filters['statuses'])
+            );
+    }
+
+    /**
+     * Uzliek query vajadzīgo kārtošanas kārtību.
+     */
+    private function applyDeviceIndexSorting(Builder $query, array $sorting): void
+    {
+        $direction = $sorting['direction'] === 'asc' ? 'asc' : 'desc';
+
+        match ($sorting['sort']) {
+            'code' => $query
+                ->orderByRaw('LOWER(COALESCE(devices.code, \'\')) ' . $direction)
+                ->orderBy('devices.id'),
+            'name' => $query
+                ->orderByRaw('LOWER(COALESCE(devices.name, \'\')) ' . $direction)
+                ->orderBy('devices.id'),
+            'location' => $query
+                ->orderByRaw('LOWER(COALESCE(sort_buildings.building_name, \'\')) ' . $direction)
+                ->orderBy('sort_rooms.floor_number', $direction)
+                ->orderByRaw('LOWER(COALESCE(sort_rooms.room_number, \'\')) ' . $direction)
+                ->orderByRaw('LOWER(COALESCE(sort_rooms.room_name, \'\')) ' . $direction)
+                ->orderBy('devices.id'),
+            'assigned_to' => $query
+                ->orderByRaw('LOWER(COALESCE(sort_users.full_name, \'\')) ' . $direction)
+                ->orderBy('devices.id'),
+            'status' => $query
+                ->orderByRaw($this->deviceStatusSortExpression() . ' ' . $direction)
+                ->orderBy('devices.id', $direction),
+            default => $query
+                ->orderBy('devices.created_at', $direction)
+                ->orderBy('devices.id', $direction),
+        };
+    }
+
+    /**
+     * Atgriež statusa kolonnas prioritāšu secību SQL CASE formā.
+     */
+    private function deviceStatusSortExpression(): string
+    {
+        return <<<'SQL'
+CASE
+    WHEN devices.status = 'active' AND (
+        COALESCE(has_pending_repair_request, 0) = 1
+        OR COALESCE(has_pending_writeoff_request, 0) = 1
+        OR COALESCE(has_pending_transfer_request, 0) = 1
+    ) THEN 1
+    WHEN devices.status = 'active' THEN 2
+    WHEN devices.status = 'repair' AND sort_repair_progress = 'waiting' THEN 3
+    WHEN devices.status = 'repair' AND sort_repair_progress = 'in-progress' THEN 4
+    WHEN devices.status = 'writeoff' THEN 5
+    ELSE 6
+END
+SQL;
+    }
+
+    /**
+     * Apraksta, kādi lauki lietotājam ir kārtojami un kā saucas paziņojumos.
+     */
+    private function deviceSortOptions(): array
+    {
+        return [
+            'code' => ['label' => 'koda'],
+            'name' => ['label' => 'nosaukuma'],
+            'location' => ['label' => 'atrašanās vietas'],
+            'created_at' => ['label' => 'izveides datuma'],
+            'assigned_to' => ['label' => 'piešķirtās personas'],
+            'status' => ['label' => 'statusa'],
+        ];
     }
 
     public function create()

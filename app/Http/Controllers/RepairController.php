@@ -25,32 +25,23 @@ class RepairController extends Controller
     private const STATUSES = ['waiting', 'in-progress', 'completed', 'cancelled'];
     private const TYPES = ['internal', 'external'];
     private const PRIORITIES = ['low', 'medium', 'high', 'critical'];
+    private const SORTABLE_COLUMNS = ['code', 'name', 'assigned', 'location', 'status', 'priority', 'repair_type', 'cost', 'start_date', 'end_date'];
 
     /**
-     * Parāda remontu sarakstu un sadalījumu kolonnās.
+     * Parāda remontu sarakstu vienotā tabulā ar filtriem un kārtošanu.
      */
     public function index(Request $request)
     {
         $user = $this->user();
         abort_unless($user, 403);
 
-        $filters = [
-            'q' => trim((string) $request->query('q', '')),
-            'status' => trim((string) $request->query('status', '')),
-            'priority' => trim((string) $request->query('priority', '')),
-            'repair_type' => trim((string) $request->query('repair_type', '')),
-            'priority_sort' => trim((string) $request->query('priority_sort', '')),
-            'mine' => $request->boolean('mine'),
-        ];
+        $canManageRepairs = $user->canManageRequests();
+        $filters = $this->normalizedIndexFilters($request, $canManageRepairs);
+        $sorting = $this->normalizedSorting($request);
 
         if (! $this->featureTableExists('repairs')) {
             return view('repairs.index', [
-                'repairs' => collect(),
-                'repairColumns' => [
-                    'waiting' => collect(),
-                    'in-progress' => collect(),
-                    'completed' => collect(),
-                ],
+                'repairs' => $this->emptyPaginator(),
                 'repairSummary' => [
                     'total' => 0,
                     'waiting' => 0,
@@ -58,76 +49,77 @@ class RepairController extends Controller
                     'completed' => 0,
                 ],
                 'filters' => $filters,
-                'statuses' => self::STATUSES,
-                'repairTypes' => self::TYPES,
-                'priorities' => self::PRIORITIES,
+                'statuses' => ['waiting', 'in-progress', 'completed'],
                 'statusLabels' => $this->statusLabels(),
                 'priorityLabels' => $this->priorityLabels(),
                 'typeLabels' => $this->typeLabels(),
-                'canManageRepairs' => $user->canManageRequests(),
+                'canManageRepairs' => $canManageRepairs,
+                'sorting' => $sorting,
+                'sortOptions' => $this->sortOptions(),
+                'deviceOptions' => collect(),
+                'requesterOptions' => collect(),
                 'featureMessage' => 'Tabula repairs šobrīd nav pieejama.',
             ]);
         }
 
-        $summaryQuery = $this->visibleRepairsQuery($user)
-            ->when($filters['mine'] && $user->canManageRequests(), fn (Builder $query) => $query->where('accepted_by', $user->id));
+        $baseQuery = $this->visibleRepairsQuery($user)
+            ->when($filters['mine'] && $canManageRepairs, fn (Builder $query) => $query->where('accepted_by', $user->id));
 
-        $repairs = $this->visibleRepairsQuery($user)
-            ->with(['device.building', 'device.room', 'executor', 'acceptedBy', 'request.responsibleUser', 'request.reviewedBy'])
-            ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
-                $term = $filters['q'];
+        $deviceOptions = $this->repairDeviceOptions(
+            (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['device_id']))
+                ->with(['device.type', 'device.room', 'device.building'])
+                ->get()
+        );
 
-                $query->where(function (Builder $searchQuery) use ($term) {
-                    $searchQuery->where('description', 'like', "%{$term}%")
-                        ->orWhere('invoice_number', 'like', "%{$term}%")
-                        ->orWhere('vendor_name', 'like', "%{$term}%")
-                        ->orWhereHas('device', function (Builder $deviceQuery) use ($term) {
-                            $deviceQuery->where('code', 'like', "%{$term}%")
-                                ->orWhere('name', 'like', "%{$term}%");
-                        });
-                });
-            })
-            ->when($filters['status'] !== '' && in_array($filters['status'], self::STATUSES, true), fn (Builder $query) => $query->where('status', $filters['status']))
-            ->when($filters['priority'] !== '' && in_array($filters['priority'], self::PRIORITIES, true), fn (Builder $query) => $query->where('priority', $filters['priority']))
-            ->when($filters['repair_type'] !== '' && in_array($filters['repair_type'], self::TYPES, true), fn (Builder $query) => $query->where('repair_type', $filters['repair_type']))
-            ->when($filters['mine'] && $user->canManageRequests(), fn (Builder $query) => $query->where('accepted_by', $user->id))
-            ->orderByRaw(
-                ($filters['priority_sort'] === 'asc')
-                    ? "case priority when 'low' then 0 when 'medium' then 1 when 'high' then 2 when 'critical' then 3 else 4 end"
-                    : "case priority when 'critical' then 0 when 'high' then 1 when 'medium' then 2 when 'low' then 3 else 4 end"
-            )
-            ->orderByRaw("case when status = 'waiting' then 0 when status = 'in-progress' then 1 when status = 'completed' then 2 else 3 end")
-            ->orderByDesc('id')
-            ->get();
+        $requesterOptions = $this->repairRequesterOptions(
+            (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['requester_id']))
+                ->with(['request.responsibleUser', 'reporter'])
+                ->get()
+        );
 
-        $repairColumns = [
-            'waiting' => $repairs->where('status', 'waiting')->values(),
-            'in-progress' => $repairs->where('status', 'in-progress')->values(),
-            'completed' => $repairs->filter(fn (Repair $repair) => in_array($repair->status, ['completed', 'cancelled'], true))->values(),
-        ];
+        $repairsQuery = (clone $baseQuery)
+            ->with([
+                'device.assignedTo',
+                'device.building',
+                'device.room',
+                'device.type',
+                'reporter',
+                'acceptedBy',
+                'request.responsibleUser',
+                'request.reviewedBy',
+            ])
+            ->select('repairs.*');
+
+        $this->applyIndexFilters($repairsQuery, $filters);
+        $this->applySorting($repairsQuery, $sorting);
+
+        $repairs = $repairsQuery
+            ->paginate(20)
+            ->withQueryString();
 
         return view('repairs.index', [
             'repairs' => $repairs,
-            'repairColumns' => $repairColumns,
             'repairSummary' => [
-                'total' => (clone $summaryQuery)->count(),
-                'waiting' => (clone $summaryQuery)->where('status', 'waiting')->count(),
-                'in_progress' => (clone $summaryQuery)->where('status', 'in-progress')->count(),
-                'completed' => (clone $summaryQuery)->whereIn('status', ['completed', 'cancelled'])->count(),
+                'total' => (clone $baseQuery)->count(),
+                'waiting' => (clone $baseQuery)->where('status', 'waiting')->count(),
+                'in_progress' => (clone $baseQuery)->where('status', 'in-progress')->count(),
+                'completed' => (clone $baseQuery)->whereIn('status', ['completed', 'cancelled'])->count(),
             ],
             'filters' => $filters,
-            'statuses' => self::STATUSES,
-            'repairTypes' => self::TYPES,
-            'priorities' => self::PRIORITIES,
+            'statuses' => ['waiting', 'in-progress', 'completed'],
             'statusLabels' => $this->statusLabels(),
             'priorityLabels' => $this->priorityLabels(),
             'typeLabels' => $this->typeLabels(),
-            'canManageRepairs' => $user->canManageRequests(),
+            'canManageRepairs' => $canManageRepairs,
+            'sorting' => $sorting,
+            'sortOptions' => $this->sortOptions(),
+            'deviceOptions' => $deviceOptions,
+            'requesterOptions' => $requesterOptions,
         ]);
     }
 
     /**
-     * Parāda jauna remonta formu administratoram.
+     * Par?da jauna remonta formu administratoram.
      */
     public function create(Request $request)
     {
@@ -557,6 +549,230 @@ class RepairController extends Controller
         if ($previousRepairStatus === 'waiting' || $previousRepairStatus === 'in-progress' || $device->status === 'repair') {
             $device->forceFill(['status' => Device::STATUS_ACTIVE])->save();
         }
+    }
+
+    private function normalizedIndexFilters(Request $request, bool $canManageRepairs): array
+    {
+        $availableStatuses = ['waiting', 'in-progress', 'completed'];
+        $rawStatuses = $request->query('status', []);
+        $selectedStatuses = collect(is_array($rawStatuses) ? $rawStatuses : [$rawStatuses])
+            ->map(fn ($status) => strtolower(trim((string) $status)))
+            ->filter(fn ($status) => in_array($status, $availableStatuses, true))
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($canManageRepairs && ! $request->has('statuses_filter')) {
+            $selectedStatuses = ['waiting'];
+        }
+
+        return [
+            'q' => trim((string) $request->query('q', '')),
+            'device_id' => ctype_digit((string) $request->query('device_id', '')) ? (int) $request->query('device_id') : null,
+            'device_query' => trim((string) $request->query('device_query', '')),
+            'requester_id' => ctype_digit((string) $request->query('requester_id', '')) ? (int) $request->query('requester_id') : null,
+            'requester_query' => trim((string) $request->query('requester_query', '')),
+            'statuses' => $selectedStatuses,
+            'date_from' => trim((string) $request->query('date_from', '')),
+            'date_to' => trim((string) $request->query('date_to', '')),
+            'mine' => $request->boolean('mine'),
+        ];
+    }
+
+    private function applyIndexFilters(Builder $query, array $filters, array $skip = []): Builder
+    {
+        if ($filters['q'] !== '' && ! in_array('q', $skip, true)) {
+            $term = $filters['q'];
+
+            $query->where(function (Builder $searchQuery) use ($term) {
+                $searchQuery->where('description', 'like', "%{$term}%")
+                    ->orWhere('invoice_number', 'like', "%{$term}%")
+                    ->orWhere('vendor_name', 'like', "%{$term}%")
+                    ->orWhereHas('device', function (Builder $deviceQuery) use ($term) {
+                        $deviceQuery->where('code', 'like', "%{$term}%")
+                            ->orWhere('serial_number', 'like', "%{$term}%")
+                            ->orWhere('name', 'like', "%{$term}%")
+                            ->orWhere('manufacturer', 'like', "%{$term}%")
+                            ->orWhere('model', 'like', "%{$term}%");
+                    })
+                    ->orWhereHas('device.assignedTo', fn (Builder $userQuery) => $userQuery->where('full_name', 'like', "%{$term}%"))
+                    ->orWhereHas('request.responsibleUser', fn (Builder $userQuery) => $userQuery->where('full_name', 'like', "%{$term}%"))
+                    ->orWhereHas('reporter', fn (Builder $userQuery) => $userQuery->where('full_name', 'like', "%{$term}%"));
+            });
+        }
+
+        if ($filters['device_id'] && ! in_array('device_id', $skip, true)) {
+            $query->where('device_id', $filters['device_id']);
+        }
+
+        if ($filters['requester_id'] && ! in_array('requester_id', $skip, true)) {
+            $requesterId = $filters['requester_id'];
+
+            $query->where(function (Builder $requesterQuery) use ($requesterId) {
+                $requesterQuery->whereHas('request', fn (Builder $builder) => $builder->where('responsible_user_id', $requesterId))
+                    ->orWhere('issue_reported_by', $requesterId);
+            });
+        }
+
+        if (! in_array('status', $skip, true) && count($filters['statuses']) > 0 && count($filters['statuses']) < 3) {
+            $query->whereIn('status', $filters['statuses']);
+        }
+
+        if ($filters['date_from'] !== '' && ! in_array('date_from', $skip, true)) {
+            $query->whereDate('created_at', '>=', $filters['date_from']);
+        }
+
+        if ($filters['date_to'] !== '' && ! in_array('date_to', $skip, true)) {
+            $query->whereDate('created_at', '<=', $filters['date_to']);
+        }
+
+        return $query;
+    }
+
+    private function applySorting(Builder $query, array $sorting): void
+    {
+        $direction = $sorting['direction'] === 'asc' ? 'asc' : 'desc';
+
+        switch ($sorting['sort']) {
+            case 'code':
+                $query->leftJoin('devices as repair_sort_device', 'repair_sort_device.id', '=', 'repairs.device_id')
+                    ->orderBy('repair_sort_device.code', $direction)
+                    ->orderBy('repair_sort_device.serial_number', $direction);
+                break;
+            case 'name':
+                $query->leftJoin('devices as repair_sort_device', 'repair_sort_device.id', '=', 'repairs.device_id')
+                    ->orderBy('repair_sort_device.name', $direction)
+                    ->orderBy('repair_sort_device.manufacturer', $direction)
+                    ->orderBy('repair_sort_device.model', $direction);
+                break;
+            case 'assigned':
+                $query->leftJoin('devices as repair_sort_device', 'repair_sort_device.id', '=', 'repairs.device_id')
+                    ->leftJoin('users as repair_sort_assigned', 'repair_sort_assigned.id', '=', 'repair_sort_device.assigned_to_id')
+                    ->orderBy('repair_sort_assigned.full_name', $direction);
+                break;
+            case 'location':
+                $query->leftJoin('devices as repair_sort_device', 'repair_sort_device.id', '=', 'repairs.device_id')
+                    ->leftJoin('rooms as repair_sort_room', 'repair_sort_room.id', '=', 'repair_sort_device.room_id')
+                    ->leftJoin('buildings as repair_sort_building', 'repair_sort_building.id', '=', 'repair_sort_device.building_id')
+                    ->orderBy('repair_sort_building.building_name', $direction)
+                    ->orderBy('repair_sort_room.room_number', $direction)
+                    ->orderBy('repair_sort_room.room_name', $direction);
+                break;
+            case 'status':
+                $query->orderByRaw(
+                    $direction === 'asc'
+                        ? "case repairs.status when 'waiting' then 0 when 'in-progress' then 1 when 'completed' then 2 when 'cancelled' then 3 else 4 end"
+                        : "case repairs.status when 'cancelled' then 0 when 'completed' then 1 when 'in-progress' then 2 when 'waiting' then 3 else 4 end"
+                );
+                break;
+            case 'priority':
+                $query->orderByRaw(
+                    $direction === 'asc'
+                        ? "case repairs.priority when 'low' then 0 when 'medium' then 1 when 'high' then 2 when 'critical' then 3 else 4 end"
+                        : "case repairs.priority when 'critical' then 0 when 'high' then 1 when 'medium' then 2 when 'low' then 3 else 4 end"
+                );
+                break;
+            case 'repair_type':
+                $query->orderBy('repairs.repair_type', $direction);
+                break;
+            case 'cost':
+                $query->orderBy('repairs.cost', $direction);
+                break;
+            case 'start_date':
+                $query->orderBy('repairs.start_date', $direction);
+                break;
+            case 'end_date':
+                $query->orderBy('repairs.end_date', $direction);
+                break;
+            default:
+                $query->orderByRaw("case repairs.priority when 'critical' then 0 when 'high' then 1 when 'medium' then 2 when 'low' then 3 else 4 end")
+                    ->orderByDesc('repairs.id');
+                return;
+        }
+
+        $query->orderByDesc('repairs.id');
+    }
+
+    private function normalizedSorting(Request $request): array
+    {
+        $sort = strtolower(trim((string) $request->query('sort', 'priority')));
+        $direction = strtolower(trim((string) $request->query('direction', 'desc')));
+
+        if (! in_array($sort, self::SORTABLE_COLUMNS, true)) {
+            $sort = 'priority';
+        }
+
+        return [
+            'sort' => $sort,
+            'direction' => $direction === 'asc' ? 'asc' : 'desc',
+            'label' => $this->sortOptions()[$sort]['label'] ?? 'prioritātes',
+        ];
+    }
+
+    private function sortOptions(): array
+    {
+        return [
+            'code' => ['label' => 'koda'],
+            'name' => ['label' => 'nosaukuma'],
+            'assigned' => ['label' => 'piešķirtās personas'],
+            'location' => ['label' => 'atrašanās vietas'],
+            'status' => ['label' => 'remonta statusa'],
+            'priority' => ['label' => 'prioritātes'],
+            'repair_type' => ['label' => 'remonta tipa'],
+            'cost' => ['label' => 'izmaksām'],
+            'start_date' => ['label' => 'sākuma datuma'],
+            'end_date' => ['label' => 'beigu datuma'],
+        ];
+    }
+
+    private function repairDeviceOptions($repairs)
+    {
+        return collect($repairs)
+            ->pluck('device')
+            ->filter()
+            ->unique('id')
+            ->map(function (Device $device) {
+                $description = collect([
+                    $device->type?->type_name,
+                    collect([$device->manufacturer, $device->model])->filter()->implode(' '),
+                    $device->room?->room_number ? 'telpa '.$device->room->room_number : null,
+                    $device->building?->building_name,
+                ])->filter()->implode(' | ');
+
+                return [
+                    'value' => (string) $device->id,
+                    'label' => $device->name.' ('.($device->code ?: 'bez koda').')',
+                    'description' => $description,
+                    'search' => implode(' ', array_filter([
+                        $device->name,
+                        $device->code,
+                        $device->serial_number,
+                        $device->manufacturer,
+                        $device->model,
+                        $device->type?->type_name,
+                        $device->room?->room_number,
+                        $device->room?->room_name,
+                        $device->building?->building_name,
+                    ])),
+                ];
+            })
+            ->values();
+    }
+
+    private function repairRequesterOptions($repairs)
+    {
+        return collect($repairs)
+            ->map(fn (Repair $repair) => $repair->request?->responsibleUser ?: $repair->reporter)
+            ->filter()
+            ->unique('id')
+            ->sortBy('full_name')
+            ->values()
+            ->map(fn (User $user) => [
+                'value' => (string) $user->id,
+                'label' => $user->full_name,
+                'description' => $user->job_title ?: $user->email,
+                'search' => implode(' ', array_filter([$user->full_name, $user->job_title, $user->email])),
+            ]);
     }
 
     private function statusLabels(): array

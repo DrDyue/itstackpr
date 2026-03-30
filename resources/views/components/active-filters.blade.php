@@ -31,7 +31,7 @@
                 </span>
             @endforeach
             @if ($clearUrl)
-                <a href="{{ $clearUrl }}" class="filter-chip filter-chip-link">
+                <a href="{{ $clearUrl }}" class="filter-chip filter-chip-link" data-async-link="true">
                     <x-icon name="clear" size="h-3.5 w-3.5" />
                     <span>Notīrīt filtrus</span>
                 </a>

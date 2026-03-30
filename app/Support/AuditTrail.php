@@ -603,7 +603,6 @@ class AuditTrail
             'manufacturer' => 'ražotājs',
             'notes' => 'piezīmes',
             'device_image_url' => 'ierīces attēls',
-            'category' => 'kategorija',
             default => str_replace('_', ' ', Str::lower($field)),
         };
     }

@@ -62,6 +62,347 @@ const initializeThemeToggle = () => {
     });
 };
 
+const createToastIcon = (tone) => {
+    if (tone === 'success') {
+        return `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m6 2.25a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+        `;
+    }
+
+    return `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25 12 11.25v4.5m0-8.25h.008v.008H12V7.5ZM21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+    `;
+};
+
+const ensureAppToastRoot = () => {
+    let root = document.querySelector('[data-app-toast-root]');
+
+    if (root) {
+        return root;
+    }
+
+    root = document.createElement('div');
+    root.dataset.appToastRoot = 'true';
+    root.className = 'pointer-events-none fixed bottom-4 right-4 z-[68] flex w-[min(26rem,calc(100vw-1.5rem))] flex-col gap-3 sm:bottom-6 sm:right-6';
+    document.body.appendChild(root);
+
+    return root;
+};
+
+const dismissAppToast = (toast) => {
+    if (!toast || toast.dataset.closing === '1') {
+        return;
+    }
+
+    toast.dataset.closing = '1';
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(16px) scale(0.97)';
+
+    window.setTimeout(() => {
+        toast.remove();
+    }, 240);
+};
+
+window.dispatchAppToast = ({ message = '', tone = 'info', title = '' } = {}) => {
+    if (!message) {
+        return;
+    }
+
+    const root = ensureAppToastRoot();
+    const toast = document.createElement('div');
+    const normalizedTone = tone === 'success' ? 'success' : 'info';
+
+    toast.className = `flash-toast flash-toast-${normalizedTone} pointer-events-auto`;
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(16px) scale(0.96)';
+    toast.style.transition = 'opacity 260ms ease, transform 260ms ease';
+    toast.innerHTML = `
+        <div class="flash-toast-icon">${createToastIcon(normalizedTone)}</div>
+        <div class="flash-toast-body">
+            <div class="flash-toast-title">${title || (normalizedTone === 'success' ? 'Veiksmīgi' : 'Paziņojums')}</div>
+            <div class="flash-toast-message">${message}</div>
+        </div>
+        <button type="button" class="flash-toast-close" aria-label="Aizvērt">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+        </button>
+    `;
+
+    toast.querySelector('.flash-toast-close')?.addEventListener('click', () => dismissAppToast(toast));
+    root.prepend(toast);
+
+    window.requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0) scale(1)';
+    });
+
+    window.setTimeout(() => dismissAppToast(toast), 3800);
+};
+
+const asyncTableControllers = new Map();
+const asyncTableDebounceTimers = new WeakMap();
+
+const findAsyncTableRoot = (element) => {
+    if (!element) {
+        return null;
+    }
+
+    if (element.matches?.('[data-async-table-root]')) {
+        return element;
+    }
+
+    return element.closest?.('[data-async-table-root]') ?? null;
+};
+
+const findAsyncTableForm = (element) => {
+    if (!element) {
+        return null;
+    }
+
+    if (element.matches?.('[data-async-table-form]')) {
+        return element;
+    }
+
+    return element.closest?.('[data-async-table-form]') ?? null;
+};
+
+const buildAsyncTableUrl = (form, { resetPage = true } = {}) => {
+    const action = form.getAttribute('action') || window.location.href;
+    const url = new URL(action, window.location.origin);
+    const formData = new window.FormData(form);
+
+    url.search = '';
+
+    for (const [key, value] of formData.entries()) {
+        if (key === 'page' && resetPage) {
+            continue;
+        }
+
+        if (typeof value === 'string' && value.trim() === '') {
+            continue;
+        }
+
+        url.searchParams.append(key, value);
+    }
+
+    return url;
+};
+
+const swapAsyncTableRoot = (rootSelector, html) => {
+    const parser = new DOMParser();
+    const nextDocument = parser.parseFromString(html, 'text/html');
+    const nextRoot = nextDocument.querySelector(rootSelector);
+    const currentRoot = document.querySelector(rootSelector);
+
+    if (!nextRoot || !currentRoot) {
+        return false;
+    }
+
+    currentRoot.outerHTML = nextRoot.outerHTML;
+
+    return true;
+};
+
+const submitAsyncTableForm = async (form, { url = null, resetPage = true, toastMessage = '' } = {}) => {
+    const rootSelector = form?.dataset?.asyncRoot;
+
+    if (!form || !rootSelector) {
+        return;
+    }
+
+    const targetUrl = url instanceof URL ? url : buildAsyncTableUrl(form, { resetPage });
+    const requestKey = rootSelector;
+
+    if (asyncTableControllers.has(requestKey)) {
+        asyncTableControllers.get(requestKey)?.abort();
+    }
+
+    const controller = new AbortController();
+    asyncTableControllers.set(requestKey, controller);
+    form.dataset.asyncLoading = 'true';
+
+    try {
+        const response = await window.fetch(targetUrl.toString(), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            signal: controller.signal,
+        });
+
+        if (!response.ok) {
+            throw new Error('Async table request failed.');
+        }
+
+        const html = await response.text();
+        const swapped = swapAsyncTableRoot(rootSelector, html);
+
+        if (!swapped) {
+            window.location.assign(targetUrl.toString());
+            return;
+        }
+
+        window.history.replaceState({}, '', `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`);
+
+        if (toastMessage) {
+            window.dispatchAppToast({
+                message: toastMessage,
+                tone: 'info',
+            });
+        }
+    } catch (error) {
+        if (error.name !== 'AbortError') {
+            window.location.assign(targetUrl.toString());
+        }
+    } finally {
+        if (asyncTableControllers.get(requestKey) === controller) {
+            asyncTableControllers.delete(requestKey);
+        }
+
+        form.dataset.asyncLoading = 'false';
+    }
+};
+
+const debounceAsyncTableSubmit = (form, delay = 260) => {
+    if (asyncTableDebounceTimers.has(form)) {
+        window.clearTimeout(asyncTableDebounceTimers.get(form));
+    }
+
+    const timerId = window.setTimeout(() => {
+        submitAsyncTableForm(form, { resetPage: true });
+        asyncTableDebounceTimers.delete(form);
+    }, delay);
+
+    asyncTableDebounceTimers.set(form, timerId);
+};
+
+const initializeAsyncTableFilters = () => {
+    if (window.__asyncTableFiltersInitialized) {
+        return;
+    }
+
+    window.__asyncTableFiltersInitialized = true;
+
+    document.addEventListener('submit', (event) => {
+        const form = findAsyncTableForm(event.target);
+
+        if (!form) {
+            return;
+        }
+
+        event.preventDefault();
+        submitAsyncTableForm(form, { resetPage: true });
+    });
+
+    document.addEventListener('input', (event) => {
+        const target = event.target;
+        const form = findAsyncTableForm(target);
+
+        if (!form) {
+            return;
+        }
+
+        if (target.closest('.searchable-select')) {
+            return;
+        }
+
+        if (!target.matches('input[type=\"text\"], input[type=\"search\"], input[type=\"number\"], textarea')) {
+            return;
+        }
+
+        debounceAsyncTableSubmit(form, 280);
+    });
+
+    document.addEventListener('change', (event) => {
+        const target = event.target;
+        const form = findAsyncTableForm(target);
+
+        if (!form) {
+            return;
+        }
+
+        if (target.matches('[data-sort-hidden]')) {
+            return;
+        }
+
+        submitAsyncTableForm(form, { resetPage: true });
+    });
+
+    document.addEventListener('click', (event) => {
+        const sortTrigger = event.target.closest('[data-sort-trigger]');
+        if (sortTrigger) {
+            const root = findAsyncTableRoot(sortTrigger);
+            const form = findAsyncTableForm(sortTrigger) || root?.querySelector('[data-async-table-form]');
+
+            if (!form) {
+                return;
+            }
+
+            event.preventDefault();
+
+            const fieldInput = form.querySelector('[data-sort-hidden=\"field\"]');
+            const directionInput = form.querySelector('[data-sort-hidden=\"direction\"]');
+
+            if (fieldInput) {
+                fieldInput.value = sortTrigger.dataset.sortField || '';
+            }
+
+            if (directionInput) {
+                directionInput.value = sortTrigger.dataset.sortDirection || 'asc';
+            }
+
+            submitAsyncTableForm(form, {
+                resetPage: true,
+                toastMessage: sortTrigger.dataset.sortToast || '',
+            });
+
+            return;
+        }
+
+        const asyncLink = event.target.closest('a[data-async-link=\"true\"], a.quick-status-filter');
+        if (!asyncLink) {
+            return;
+        }
+
+        const root = findAsyncTableRoot(asyncLink);
+        if (!root) {
+            return;
+        }
+
+        const form = root.querySelector('[data-async-table-form]');
+        if (!form) {
+            return;
+        }
+
+        const href = asyncLink.getAttribute('href');
+        if (!href) {
+            return;
+        }
+
+        event.preventDefault();
+        submitAsyncTableForm(form, {
+            url: new URL(href, window.location.origin),
+            resetPage: false,
+        });
+    });
+
+    document.addEventListener('searchable-select-updated', (event) => {
+        const form = findAsyncTableForm(event.target);
+
+        if (!form) {
+            return;
+        }
+
+        window.setTimeout(() => {
+            submitAsyncTableForm(form, { resetPage: true });
+        }, 0);
+    });
+};
+
 const registerAlpineData = () => {
     if (!Alpine || window.__appAlpineDataRegistered) {
         return;
@@ -169,7 +510,7 @@ const registerAlpineData = () => {
 
     Alpine.data('filterChipGroup', ({ selected = [], minimum = 1 } = {}) => ({
         selected: Array.from(new Set((selected ?? []).map((value) => String(value)))),
-        minimum: Math.max(Number(minimum) || 1, 1),
+        minimum: Math.max(Number.isFinite(Number(minimum)) ? Number(minimum) : 1, 0),
         isSelected(value) {
             return this.selected.includes(String(value));
         },
@@ -925,9 +1266,11 @@ window.repairProcess = (config) => ({
 registerAlpineData();
 document.addEventListener('alpine:init', registerAlpineData);
 document.addEventListener('DOMContentLoaded', initializeThemeToggle);
+document.addEventListener('DOMContentLoaded', initializeAsyncTableFilters);
 
 if (document.readyState !== 'loading') {
     initializeThemeToggle();
+    initializeAsyncTableFilters();
 }
 
 if (Alpine && !window.__appAlpineStarted) {

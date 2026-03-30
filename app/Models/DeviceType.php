@@ -14,17 +14,8 @@ class DeviceType extends Model
 
     protected $fillable = [
         'type_name',
-        'category',
-        'description',
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'created_at' => 'datetime',
-            'updated_at' => 'datetime',
-        ];
-    }
+    public $timestamps = false;
 
     /**
      * Visas ierīces, kurām piešķirts šis tips.

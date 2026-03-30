@@ -23,6 +23,8 @@ use Illuminate\Validation\ValidationException;
  */
 class DeviceTransferController extends Controller
 {
+    private const SORTABLE_COLUMNS = ['code', 'name', 'requester', 'recipient', 'created_at', 'status'];
+
     /**
      * Parāda nodošanas pieprasījumu sarakstu ar lomas atkarīgu loģiku.
      */
@@ -30,25 +32,15 @@ class DeviceTransferController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+
         $canManageTransfers = $user->canManageRequests();
         $availableStatuses = [
             DeviceTransfer::STATUS_SUBMITTED,
             DeviceTransfer::STATUS_APPROVED,
             DeviceTransfer::STATUS_REJECTED,
         ];
-        $statusFilterTouched = $request->has('statuses_filter');
-        $selectedStatuses = collect($request->query('status', $statusFilterTouched ? [] : $availableStatuses))
-            ->map(fn (mixed $status) => trim((string) $status))
-            ->filter(fn (string $status) => in_array($status, $availableStatuses, true))
-            ->unique()
-            ->values()
-            ->all();
-
-        $filters = [
-            'q' => trim((string) $request->query('q', '')),
-            'statuses' => $selectedStatuses === [] ? $availableStatuses : $selectedStatuses,
-            'has_status_filter' => true,
-        ];
+        $filters = $this->normalizedIndexFilters($request, $availableStatuses);
+        $sorting = $this->normalizedSorting($request);
 
         if (! $this->featureTableExists('device_transfers')) {
             return view('device_transfers.index', [
@@ -63,6 +55,13 @@ class DeviceTransferController extends Controller
                 'statuses' => $availableStatuses,
                 'statusLabels' => $this->requestStatusLabels(),
                 'isAdmin' => $canManageTransfers,
+                'sorting' => $sorting,
+                'sortOptions' => $this->sortOptions(),
+                'deviceOptions' => collect(),
+                'requesterOptions' => collect(),
+                'recipientOptions' => collect(),
+                'currentUserId' => $user->id,
+                'incomingPendingCount' => 0,
                 'featureMessage' => 'Tabula device_transfers šobrīd nav pieejama.',
             ]);
         }
@@ -82,28 +81,41 @@ class DeviceTransferController extends Controller
                 ->count()
             : 0;
 
-        $transfers = (clone $baseQuery)
-            ->with(['device.building', 'device.room.building', 'responsibleUser', 'transferTo', 'reviewedBy'])
-            ->whereIn('status', $filters['statuses'] === [] ? ['__none__'] : $filters['statuses'])
-            ->when(! $canManageTransfers, fn (Builder $query) => $query->orderByRaw(
-                'case when transfered_to_id = ? and status = ? then 0 else 1 end',
-                [$user->id, DeviceTransfer::STATUS_SUBMITTED]
-            ))
-            ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
-                $term = $filters['q'];
+        $deviceOptions = $this->transferDeviceOptions(
+            (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['device_id']))
+                ->with(['device.type'])
+                ->get()
+        );
 
-                $query->where(function (Builder $builder) use ($term) {
-                    $builder->where('transfer_reason', 'like', "%{$term}%")
-                        ->orWhereHas('device', fn (Builder $deviceQuery) => $deviceQuery->where('name', 'like', "%{$term}%")->orWhere('code', 'like', "%{$term}%"))
-                        ->orWhereHas('responsibleUser', fn (Builder $userQuery) => $userQuery->where('full_name', 'like', "%{$term}%"))
-                        ->orWhereHas('transferTo', fn (Builder $userQuery) => $userQuery->where('full_name', 'like', "%{$term}%"));
+        $requesterOptions = $this->transferUserOptions(
+            (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['requester_id']))
+                ->with('responsibleUser')
+                ->get()
+                ->pluck('responsibleUser')
+                ->filter()
+                ->unique('id')
+                ->values()
+        );
 
-                    if (ctype_digit($term)) {
-                        $builder->orWhereKey((int) $term);
-                    }
-                });
-            })
-            ->orderByDesc('id')
+        $recipientOptions = $this->transferUserOptions(
+            (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['recipient_id']))
+                ->with('transferTo')
+                ->get()
+                ->pluck('transferTo')
+                ->filter()
+                ->unique('id')
+                ->reject(fn (User $recipient) => filled($filters['requester_id']) && $recipient->id === $filters['requester_id'])
+                ->values()
+        );
+
+        $transfersQuery = (clone $baseQuery)
+            ->with(['device.type', 'responsibleUser', 'transferTo', 'reviewedBy'])
+            ->select('device_transfers.*');
+
+        $this->applyIndexFilters($transfersQuery, $filters);
+        $this->applySorting($transfersQuery, $sorting);
+
+        $transfers = $transfersQuery
             ->paginate(20)
             ->withQueryString();
 
@@ -119,32 +131,13 @@ class DeviceTransferController extends Controller
             'statuses' => $availableStatuses,
             'statusLabels' => $this->requestStatusLabels(),
             'isAdmin' => $canManageTransfers,
+            'sorting' => $sorting,
+            'sortOptions' => $this->sortOptions(),
+            'deviceOptions' => $deviceOptions,
+            'requesterOptions' => $requesterOptions,
+            'recipientOptions' => $recipientOptions,
             'currentUserId' => $user->id,
             'incomingPendingCount' => $incomingPendingCount,
-            'roomOptions' => $canManageTransfers
-                ? collect()
-                : Room::query()
-                    ->with('building')
-                    ->orderBy('floor_number')
-                    ->orderBy('room_number')
-                    ->get()
-                    ->map(fn (Room $room) => [
-                        'value' => (string) $room->id,
-                        'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
-                        'description' => collect([
-                            $room->building?->building_name,
-                            $room->floor_number !== null ? $room->floor_number . '. stāvs' : null,
-                            $room->department,
-                        ])->filter()->implode(' | '),
-                        'search' => implode(' ', array_filter([
-                            $room->room_number,
-                            $room->room_name,
-                            $room->building?->building_name,
-                            $room->department,
-                            $room->floor_number,
-                        ])),
-                    ])
-                    ->values(),
         ]);
     }
 
@@ -222,7 +215,7 @@ class DeviceTransferController extends Controller
         $ownerId = $this->transferOwnerId($user, $device);
         if (! $ownerId) {
             throw ValidationException::withMessages([
-                'device_id' => ['Izvēlētājai ierīcei nav piešķirta atbildīgā persona.'],
+                'device_id' => ['Izvēlētajai ierīcei nav piešķirta atbildīgā persona.'],
             ]);
         }
 
@@ -306,7 +299,7 @@ class DeviceTransferController extends Controller
 
             if (! $device || $device->status !== Device::STATUS_ACTIVE) {
                 throw ValidationException::withMessages([
-            'status' => ['Ierīci nevar nodot, jo tās statuss kopš pieteikuma izveides ir mainījies.'],
+                    'status' => ['Ierīci nevar nodot, jo tās statuss kopš pieteikuma izveides ir mainījies.'],
                 ]);
             }
 
@@ -367,14 +360,14 @@ class DeviceTransferController extends Controller
             $description = collect([
                 $device->type?->type_name,
                 collect([$device->manufacturer, $device->model])->filter()->implode(' '),
-                $device->assignedTo?->full_name ? 'pašlaik: ' . $device->assignedTo->full_name : null,
-                $device->room?->room_number ? 'telpa ' . $device->room->room_number : null,
+                $device->assignedTo?->full_name ? 'pašlaik: '.$device->assignedTo->full_name : null,
+                $device->room?->room_number ? 'telpa '.$device->room->room_number : null,
                 $device->building?->building_name,
             ])->filter()->implode(' | ');
 
             return [
                 'value' => (string) $device->id,
-                'label' => $device->name . ' (' . ($device->code ?: 'bez koda') . ')',
+                'label' => $device->name.' ('.($device->code ?: 'bez koda').')',
                 'description' => $description,
                 'search' => implode(' ', array_filter([
                     $device->name,
@@ -409,7 +402,7 @@ class DeviceTransferController extends Controller
     {
         if ($device->status === Device::STATUS_REPAIR) {
             throw ValidationException::withMessages([
-                'device_id' => ['Šai ierīcei jau notiek remonts (' . $this->repairStatusLabel($device->activeRepair?->status) . '), tāpēc nodošanas pieteikumu veidot nevar.'],
+                'device_id' => ['Šai ierīcei jau notiek remonts ('.$this->repairStatusLabel($device->activeRepair?->status).'), tāpēc nodošanas pieteikumu veidot nevar.'],
             ]);
         }
 
@@ -450,5 +443,228 @@ class DeviceTransferController extends Controller
         }
 
         return $actor->id;
+    }
+
+    /**
+     * Sakārto saraksta filtru stāvokli nodošanas pieprasījumiem.
+     */
+    private function normalizedIndexFilters(Request $request, array $availableStatuses): array
+    {
+        $statusFilterTouched = $request->has('statuses_filter');
+        $selectedStatuses = collect($request->query('status', $statusFilterTouched ? [] : []))
+            ->map(fn (mixed $status) => trim((string) $status))
+            ->filter(fn (string $status) => in_array($status, $availableStatuses, true))
+            ->unique()
+            ->values()
+            ->all();
+
+        return [
+            'q' => trim((string) $request->query('q', '')),
+            'device_id' => ctype_digit((string) $request->query('device_id', '')) ? (int) $request->query('device_id') : null,
+            'device_query' => trim((string) $request->query('device_query', '')),
+            'requester_id' => ctype_digit((string) $request->query('requester_id', '')) ? (int) $request->query('requester_id') : null,
+            'requester_query' => trim((string) $request->query('requester_query', '')),
+            'recipient_id' => ctype_digit((string) $request->query('recipient_id', '')) ? (int) $request->query('recipient_id') : null,
+            'recipient_query' => trim((string) $request->query('recipient_query', '')),
+            'date_from' => trim((string) $request->query('date_from', '')),
+            'date_to' => trim((string) $request->query('date_to', '')),
+            'statuses' => $selectedStatuses,
+            'status_filter_touched' => $statusFilterTouched,
+        ];
+    }
+
+    /**
+     * Pielieto meklēšanu un filtrus pārsūtīšanas pieprasījumu vaicājumam.
+     */
+    private function applyIndexFilters(Builder $query, array $filters, array $skip = []): Builder
+    {
+        $skipLookup = array_flip($skip);
+
+        if (! isset($skipLookup['q']) && $filters['q'] !== '') {
+            $term = $filters['q'];
+
+            $query->where(function (Builder $builder) use ($term) {
+                $builder->where('device_transfers.transfer_reason', 'like', "%{$term}%")
+                    ->orWhereHas('device', function (Builder $deviceQuery) use ($term) {
+                        $deviceQuery
+                            ->where('name', 'like', "%{$term}%")
+                            ->orWhere('code', 'like', "%{$term}%")
+                            ->orWhere('serial_number', 'like', "%{$term}%")
+                            ->orWhere('manufacturer', 'like', "%{$term}%")
+                            ->orWhere('model', 'like', "%{$term}%")
+                            ->orWhereHas('type', fn (Builder $typeQuery) => $typeQuery->where('type_name', 'like', "%{$term}%"));
+                    })
+                    ->orWhereHas('responsibleUser', fn (Builder $userQuery) => $userQuery->where('full_name', 'like', "%{$term}%"))
+                    ->orWhereHas('transferTo', fn (Builder $userQuery) => $userQuery->where('full_name', 'like', "%{$term}%"));
+
+                if (ctype_digit($term)) {
+                    $builder->orWhereKey((int) $term);
+                }
+            });
+        }
+
+        if (! isset($skipLookup['device_id']) && filled($filters['device_id'])) {
+            $query->where('device_transfers.device_id', $filters['device_id']);
+        }
+
+        if (! isset($skipLookup['requester_id']) && filled($filters['requester_id'])) {
+            $query->where('device_transfers.responsible_user_id', $filters['requester_id']);
+        }
+
+        if (! isset($skipLookup['recipient_id']) && filled($filters['recipient_id'])) {
+            $query->where('device_transfers.transfered_to_id', $filters['recipient_id']);
+        }
+
+        if (! isset($skipLookup['date_from']) && filled($filters['date_from'])) {
+            $query->whereDate('device_transfers.created_at', '>=', $filters['date_from']);
+        }
+
+        if (! isset($skipLookup['date_to']) && filled($filters['date_to'])) {
+            $query->whereDate('device_transfers.created_at', '<=', $filters['date_to']);
+        }
+
+        if (! isset($skipLookup['statuses'])) {
+            $selectedStatuses = $filters['statuses'] ?? [];
+
+            if ($selectedStatuses !== [] && count($selectedStatuses) < 3) {
+                $query->whereIn('device_transfers.status', $selectedStatuses);
+            }
+        }
+
+        return $query;
+    }
+
+    /**
+     * Pielieto drošu kārtošanu pēc atļautajām kolonnām.
+     */
+    private function applySorting(Builder $query, array $sorting): void
+    {
+        $query
+            ->leftJoin('devices as sortable_devices', 'device_transfers.device_id', '=', 'sortable_devices.id')
+            ->leftJoin('users as sortable_requesters', 'device_transfers.responsible_user_id', '=', 'sortable_requesters.id')
+            ->leftJoin('users as sortable_recipients', 'device_transfers.transfered_to_id', '=', 'sortable_recipients.id');
+
+        switch ($sorting['sort']) {
+            case 'code':
+                $query->orderByRaw('LOWER(COALESCE(sortable_devices.code, "")) '.$sorting['direction']);
+                break;
+            case 'name':
+                $query->orderByRaw('LOWER(COALESCE(sortable_devices.name, "")) '.$sorting['direction']);
+                break;
+            case 'requester':
+                $query->orderByRaw('LOWER(COALESCE(sortable_requesters.full_name, "")) '.$sorting['direction']);
+                break;
+            case 'recipient':
+                $query->orderByRaw('LOWER(COALESCE(sortable_recipients.full_name, "")) '.$sorting['direction']);
+                break;
+            case 'status':
+                $query->orderByRaw("
+                    CASE device_transfers.status
+                        WHEN 'submitted' THEN 1
+                        WHEN 'approved' THEN 2
+                        WHEN 'rejected' THEN 3
+                        ELSE 4
+                    END {$sorting['direction']}
+                ");
+                break;
+            case 'created_at':
+            default:
+                $query->orderBy('device_transfers.created_at', $sorting['direction']);
+                break;
+        }
+
+        $query->orderBy('device_transfers.id', $sorting['direction'] === 'asc' ? 'asc' : 'desc');
+    }
+
+    /**
+     * Normalizē kārtošanas parametrus tabulas galvenei un toast paziņojumiem.
+     */
+    private function normalizedSorting(Request $request): array
+    {
+        $sort = trim((string) $request->query('sort', 'created_at'));
+        $direction = trim((string) $request->query('direction', 'desc'));
+
+        if (! in_array($sort, self::SORTABLE_COLUMNS, true)) {
+            $sort = 'created_at';
+        }
+
+        if (! in_array($direction, ['asc', 'desc'], true)) {
+            $direction = $sort === 'created_at' ? 'desc' : 'asc';
+        }
+
+        return [
+            'sort' => $sort,
+            'direction' => $direction,
+            'label' => $this->sortOptions()[$sort]['label'] ?? 'iesniegšanas datuma',
+        ];
+    }
+
+    /**
+     * Lietotāja paziņojumiem izmantojamās kārtošanas etiķetes.
+     */
+    private function sortOptions(): array
+    {
+        return [
+            'code' => ['label' => 'koda'],
+            'name' => ['label' => 'nosaukuma'],
+            'requester' => ['label' => 'pieteicēja'],
+            'recipient' => ['label' => 'saņēmēja'],
+            'created_at' => ['label' => 'iesniegšanas datuma'],
+            'status' => ['label' => 'statusa'],
+        ];
+    }
+
+    /**
+     * Sagatavo ierīču dropdown opcijas nodošanas pieteikumu filtram.
+     */
+    private function transferDeviceOptions($transfers)
+    {
+        return collect($transfers)
+            ->pluck('device')
+            ->filter()
+            ->unique('id')
+            ->sortBy(fn (Device $device) => mb_strtolower($device->name.' '.$device->code))
+            ->values()
+            ->map(function (Device $device) {
+                return [
+                    'value' => (string) $device->id,
+                    'label' => $device->name.' ('.($device->code ?: 'bez koda').')',
+                    'description' => collect([
+                        $device->type?->type_name,
+                        collect([$device->manufacturer, $device->model])->filter()->implode(' '),
+                    ])->filter()->implode(' | '),
+                    'search' => implode(' ', array_filter([
+                        $device->name,
+                        $device->code,
+                        $device->serial_number,
+                        $device->manufacturer,
+                        $device->model,
+                        $device->type?->type_name,
+                    ])),
+                ];
+            });
+    }
+
+    /**
+     * Sagatavo lietotāju dropdown opcijas pieprasījumu filtriem.
+     */
+    private function transferUserOptions($users)
+    {
+        return collect($users)
+            ->sortBy(fn (User $person) => mb_strtolower($person->full_name))
+            ->values()
+            ->map(fn (User $person) => [
+                'value' => (string) $person->id,
+                'label' => $person->full_name,
+                'description' => implode(' | ', array_filter([
+                    $person->job_title,
+                    $person->email,
+                ])),
+                'search' => implode(' ', array_filter([
+                    $person->full_name,
+                    $person->job_title,
+                    $person->email,
+                ])),
+            ]);
     }
 }

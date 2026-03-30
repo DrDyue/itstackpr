@@ -1066,6 +1066,10 @@ tbody td {
     @apply sticky top-4 rounded-3xl border border-sky-100 bg-white p-4 shadow-sm;
 }
 
+.device-type-count-link {
+    @apply inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-sm font-semibold text-sky-700 transition hover:bg-sky-100 hover:text-sky-900;
+}
+
 .user-shell {
     @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
 }
@@ -1274,102 +1278,6 @@ tbody td {
     @apply flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3;
 }
 
-.repair-column-drop {
-    @apply transition duration-200;
-}
-
-.repair-column-drop-active {
-    @apply ring-2 ring-sky-300 ring-offset-2 ring-offset-white;
-}
-
-.repair-board-grid {
-    @apply grid gap-5 xl:grid-cols-3;
-}
-
-.repair-board-column {
-    @apply rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm;
-}
-
-.repair-board-column-head {
-    @apply flex items-start justify-between gap-3 border-b border-slate-200 pb-4;
-}
-
-.repair-board-column-copy {
-    @apply flex items-start gap-3;
-}
-
-.repair-board-column-icon {
-    @apply inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ring-1;
-}
-
-.repair-board-column-icon-amber {
-    @apply bg-amber-100 text-amber-700 ring-amber-200;
-}
-
-.repair-board-column-icon-sky {
-    @apply bg-sky-100 text-sky-700 ring-sky-200;
-}
-
-.repair-board-column-icon-emerald {
-    @apply bg-emerald-100 text-emerald-700 ring-emerald-200;
-}
-
-.repair-board-column-title {
-    @apply text-base font-semibold text-slate-900;
-}
-
-.repair-board-column-note {
-    @apply mt-1 text-sm leading-6 text-slate-500;
-}
-
-.repair-board-column-count {
-    @apply inline-flex min-w-10 items-center justify-center rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700 ring-1 ring-slate-200;
-}
-
-.repair-board-stack {
-    @apply mt-4 space-y-4;
-}
-
-.repair-board-card {
-    @apply rounded-[1.4rem] border border-slate-200 bg-slate-50/70 p-4 shadow-sm transition hover:border-slate-300 hover:bg-white;
-}
-
-.repair-board-card-head {
-    @apply flex items-start justify-between gap-3;
-}
-
-.repair-board-device-link {
-    @apply text-sm font-semibold text-slate-900 hover:text-sky-700;
-}
-
-.repair-board-device-meta {
-    @apply mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500;
-}
-
-.repair-board-description {
-    @apply mt-4 text-sm leading-6 text-slate-700;
-}
-
-.repair-board-chip-row {
-    @apply mt-4 flex flex-wrap gap-2;
-}
-
-.repair-board-meta-grid {
-    @apply mt-4 grid gap-3 sm:grid-cols-2;
-}
-
-.repair-board-meta-grid dt {
-    @apply text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500;
-}
-
-.repair-board-meta-grid dd {
-    @apply mt-1 text-sm text-slate-700;
-}
-
-.repair-board-actions {
-    @apply mt-4 flex flex-wrap gap-2 border-t border-slate-200 pt-4;
-}
-
 .repair-action-start {
     @apply border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100;
 }
@@ -1380,22 +1288,6 @@ tbody td {
 
 .repair-action-complete {
     @apply border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100;
-}
-
-.repair-board-empty {
-    @apply rounded-[1.25rem] border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500;
-}
-
-.repair-card-draggable {
-    @apply cursor-grab;
-}
-
-.repair-card-draggable:active {
-    @apply cursor-grabbing;
-}
-
-.repair-card-dragging {
-    @apply scale-[0.99] opacity-60 shadow-lg;
 }
 
 /* Guest layout page */
@@ -2706,7 +2598,7 @@ tbody td {
 }
 
 .quick-status-filter {
-    @apply inline-flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-semibold shadow-sm transition;
+    @apply inline-flex cursor-pointer select-none items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-semibold shadow-sm transition;
 }
 
 .quick-status-filter-active {
@@ -2984,6 +2876,23 @@ tbody td {
 
 .device-table-scroll {
     @apply overflow-x-auto overflow-y-visible;
+}
+
+.device-sort-trigger {
+    @apply inline-flex items-center gap-2 font-semibold text-slate-500 transition hover:text-slate-900;
+}
+
+.device-sort-trigger-active {
+    @apply text-slate-900;
+}
+
+.device-sort-icon {
+    @apply inline-flex items-center justify-center rounded-full border border-slate-200 bg-white p-1 text-slate-400 shadow-sm transition;
+}
+
+.device-sort-trigger:hover .device-sort-icon,
+.device-sort-trigger-active .device-sort-icon {
+    @apply border-sky-200 bg-sky-50 text-sky-600;
 }
 
 .device-status-stack {
@@ -3883,8 +3792,6 @@ html[data-theme='dark'] .notification-toast-meta-copy {
     color: #f8fafc !important;
 }
 
-html[data-theme='dark'] .repair-board-card,
-html[data-theme='dark'] .repair-board-column,
 html[data-theme='dark'] .dash-panel,
 html[data-theme='dark'] .dash-structure-card,
 html[data-theme='dark'] .dash-floor-card,
@@ -3895,7 +3802,6 @@ html[data-theme='dark'] .dash-room-link {
     color: #e2e8f0 !important;
 }
 
-html[data-theme='dark'] .repair-board-card:hover,
 html[data-theme='dark'] .dash-room-item:hover,
 html[data-theme='dark'] .dash-room-link:hover,
 html[data-theme='dark'] .dash-floor-filter:hover {
@@ -3903,9 +3809,6 @@ html[data-theme='dark'] .dash-floor-filter:hover {
     color: #f8fafc !important;
 }
 
-html[data-theme='dark'] .repair-board-device-meta,
-html[data-theme='dark'] .repair-board-column-note,
-html[data-theme='dark'] .repair-board-meta-grid dt,
 html[data-theme='dark'] .dash-floor-sub,
 html[data-theme='dark'] .dash-floor-meta,
 html[data-theme='dark'] .dash-room-meta,
@@ -3921,8 +3824,6 @@ html[data-theme='dark'] .app-pagination-meta {
     color: #94a3b8 !important;
 }
 
-html[data-theme='dark'] .repair-board-description,
-html[data-theme='dark'] .repair-board-meta-grid dd,
 html[data-theme='dark'] .dash-panel-title,
 html[data-theme='dark'] .dash-structure-title,
 html[data-theme='dark'] .dash-floor-title,
@@ -4071,10 +3972,38 @@ html[data-theme='dark'] .quick-status-filter-amber {
     border-color: rgba(251, 191, 36, 0.28) !important;
 }
 
+html[data-theme='dark'] .device-type-count-link {
+    background-color: rgba(14, 165, 233, 0.14) !important;
+    color: #bae6fd !important;
+    border-color: rgba(56, 189, 248, 0.28) !important;
+}
+
 html[data-theme='dark'] .quick-status-filter-rose {
     background-color: rgba(244, 63, 94, 0.14) !important;
     color: #fecdd3 !important;
     border-color: rgba(251, 113, 133, 0.28) !important;
+}
+
+html[data-theme='dark'] .device-sort-trigger {
+    color: #cbd5e1 !important;
+}
+
+html[data-theme='dark'] .device-sort-trigger:hover,
+html[data-theme='dark'] .device-sort-trigger-active {
+    color: #f8fafc !important;
+}
+
+html[data-theme='dark'] .device-sort-icon {
+    background-color: rgba(15, 23, 42, 0.88) !important;
+    color: #94a3b8 !important;
+    border-color: rgba(71, 85, 105, 0.8) !important;
+}
+
+html[data-theme='dark'] .device-sort-trigger:hover .device-sort-icon,
+html[data-theme='dark'] .device-sort-trigger-active .device-sort-icon {
+    background-color: rgba(14, 165, 233, 0.15) !important;
+    color: #e0f2fe !important;
+    border-color: rgba(56, 189, 248, 0.32) !important;
 }
 
 html[data-theme='dark'] .device-table-thumb,
