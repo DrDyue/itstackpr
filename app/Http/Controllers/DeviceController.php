@@ -287,7 +287,9 @@ class DeviceController extends Controller
                         ->orWhere('devices.model', 'like', "%{$term}%");
                 });
             })
-            ->when($filters['code'] !== '', fn (Builder $deviceQuery) => $deviceQuery->where('devices.code', 'like', '%' . $filters['code'] . '%'))
+            ->when($filters['code'] !== '', function (Builder $deviceQuery) use ($filters) {
+                $deviceQuery->whereRaw('LOWER(devices.code) = ?', [mb_strtolower($filters['code'])]);
+            })
             ->when($selectedAssignedUser instanceof User, fn (Builder $deviceQuery) => $deviceQuery->where('devices.assigned_to_id', $selectedAssignedUser->id))
             ->when($filters['floor'] !== '' && ctype_digit($filters['floor']), function (Builder $deviceQuery) use ($filters) {
                 $deviceQuery->whereHas('room', fn (Builder $roomQuery) => $roomQuery->where('floor_number', (int) $filters['floor']));
@@ -1153,7 +1155,7 @@ SQL;
                 'label' => 'Gaida remonta pieteikumu',
                 'short_label' => 'Pieprasījums',
                 'detail_label' => 'Remonts',
-                'class' => 'border-sky-200 bg-sky-50 text-sky-700',
+                'class' => 'border-amber-200 bg-amber-50 text-amber-800',
                 'url' => $this->requestIndexUrl($device, $canManageRequests, 'repair', $pendingRepairRequest?->id),
                 'preview' => $this->pendingRequestPreview('repair', $pendingRepairRequest),
             ];

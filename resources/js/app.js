@@ -310,6 +310,10 @@ const initializeAsyncTableFilters = () => {
             return;
         }
 
+        if (target.matches('[data-async-manual=\"true\"]')) {
+            return;
+        }
+
         if (!target.matches('input[type=\"text\"], input[type=\"search\"], input[type=\"number\"], textarea')) {
             return;
         }

@@ -13,7 +13,7 @@
             : null;
     @endphp
 
-    <section class="app-shell max-w-[96rem]">
+    <section class="app-shell max-w-[112rem]">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-5xl">
@@ -72,7 +72,7 @@
             <form
                 method="GET"
                 action="{{ route('repairs.index') }}"
-                class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,0.8fr)]"
+                class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,0.8fr)]"
                 data-async-table-form
                 data-async-root="#repairs-index-root"
             >
@@ -84,8 +84,19 @@
                 @endif
 
                 <label class="block">
-                    <span class="crud-label">Meklēt</span>
-                    <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Kods, nosaukums, apraksts vai pieprasītājs">
+                    <span class="crud-label">Meklēt pēc koda</span>
+                    <div class="flex items-center gap-2">
+                        <input type="text" name="code" value="{{ $filters['code'] }}" class="crud-control" placeholder="Ievadi precīzu kodu" data-async-manual="true">
+                        <button type="submit" class="btn-search shrink-0">
+                            <x-icon name="search" size="h-4 w-4" />
+                            <span>Meklēt</span>
+                        </button>
+                    </div>
+                </label>
+
+                <label class="block">
+                    <span class="crud-label">Filtrēt pēc teksta</span>
+                    <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, apraksts vai pieprasītājs">
                 </label>
 
                 <label class="block">
@@ -150,10 +161,6 @@
                     </div>
 
                     <div class="toolbar-actions justify-end">
-                        <button type="submit" class="btn-search">
-                            <x-icon name="search" size="h-4 w-4" />
-                            <span>Meklēt</span>
-                        </button>
                         <a href="{{ route('repairs.index') }}" class="btn-clear" data-async-link="true">
                             <x-icon name="clear" size="h-4 w-4" />
                             <span>Noņemt filtrus</span>
@@ -162,9 +169,11 @@
                 </div>
             </form>
 
+            <div class="mt-5">
             <x-active-filters
                 :items="[
-                    ['label' => 'Meklēt', 'value' => $filters['q']],
+                    ['label' => 'Kods', 'value' => $filters['code']],
+                    ['label' => 'Teksts', 'value' => $filters['q']],
                     ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
                     ['label' => 'Pieprasītājs', 'value' => $selectedRequesterLabel],
                     ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
@@ -174,6 +183,7 @@
                 ]"
                 :clear-url="route('repairs.index')"
             />
+            </div>
 
             @if (session('error'))
                 <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
@@ -183,9 +193,8 @@
                 <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
             @endif
 
-            <div class="device-table-shell">
-                <div class="device-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
-                    <table class="min-w-[108rem] text-sm">
+            <div class="mt-5 rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+                    <table class="w-full min-w-full text-sm">
                         <thead class="bg-slate-50 text-left text-slate-500">
                             <tr>
                                 <th class="px-4 py-3">Attēls</th>
@@ -313,6 +322,26 @@
                                                 @endif
 
                                                 @if ($canManageRepairs)
+                                                    @if ($repair->status === 'waiting')
+                                                        <form method="POST" action="{{ route('repairs.transition', $repair) }}">
+                                                            @csrf
+                                                            <input type="hidden" name="target_status" value="in-progress">
+                                                            <button type="submit" class="table-action-button table-action-button-sky">
+                                                                <x-icon name="stats" size="h-4 w-4" />
+                                                                <span>Pārvietot uz procesu</span>
+                                                            </button>
+                                                        </form>
+                                                    @elseif ($repair->status === 'in-progress')
+                                                        <form method="POST" action="{{ route('repairs.transition', $repair) }}">
+                                                            @csrf
+                                                            <input type="hidden" name="target_status" value="completed">
+                                                            <button type="submit" class="table-action-button table-action-button-emerald">
+                                                                <x-icon name="check-circle" size="h-4 w-4" />
+                                                                <span>Pabeigt</span>
+                                                            </button>
+                                                        </form>
+                                                    @endif
+
                                                     <a href="{{ route('repairs.edit', $repair) }}" class="table-action-item table-action-item-amber" @click="open = false">
                                                         <x-icon name="edit" size="h-4 w-4" />
                                                         <span>Rediģēt</span>
@@ -342,7 +371,6 @@
                             @endforelse
                         </tbody>
                     </table>
-                </div>
             </div>
 
             @if ($repairs->hasPages())

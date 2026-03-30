@@ -136,12 +136,12 @@
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
 
                 <label class="block">
-                    <span class="crud-label">Meklēt</span>
-                    <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, ražotājs...">
+                    <span class="crud-label">Filtrēt pēc teksta</span>
+                    <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, ražotājs, sērija...">
                 </label>
                 <label class="block">
-                    <span class="crud-label">Kods</span>
-                    <input type="text" name="code" value="{{ $filters['code'] }}" class="crud-control">
+                    <span class="crud-label">Meklēt pēc koda</span>
+                    <input type="text" name="code" value="{{ $filters['code'] }}" class="crud-control" placeholder="Ievadi precīzu kodu" data-async-manual="true">
                 </label>
                 @if ($canManageDevices)
                     <label class="block">
@@ -226,7 +226,7 @@
                     <div class="toolbar-actions justify-end">
                         <button type="submit" class="btn-search">
                             <x-icon name="search" size="h-4 w-4" />
-                            <span>Meklēt</span>
+                            <span>Meklēt kodu</span>
                         </button>
                         <a href="{{ route('devices.index') }}" class="btn-clear" data-async-link="true">
                             <x-icon name="clear" size="h-4 w-4" />
@@ -238,7 +238,7 @@
 
             <x-active-filters
                 :items="[
-                    ['label' => 'Meklēt', 'value' => $filters['q']],
+                    ['label' => 'Teksts', 'value' => $filters['q']],
                     ['label' => 'Kods', 'value' => $filters['code']],
                     ['label' => 'Piešķirta', 'value' => $canManageDevices ? $selectedAssignedUserLabel : null],
                     ['label' => 'Stāvs', 'value' => $selectedFloorLabel],

@@ -1294,7 +1294,7 @@ tbody td {
 .auth-wrapper {
     display: flex;
     min-height: 100vh;
-    background: #f5f5f7;
+    background: transparent;
 }
 
 .auth-left {
@@ -1304,11 +1304,14 @@ tbody td {
     justify-content: center;
     align-items: center;
     padding: 40px;
+    background: transparent;
 }
 
 .auth-right {
     flex: 1;
-    background: #1d4ed8;
+    background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.18), transparent 34%),
+        linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #0ea5e9 100%);
     display: none;
     align-items: center;
     justify-content: center;
@@ -3232,6 +3235,18 @@ html[data-theme='dark'] .guest-bg {
     color: #e2e8f0;
 }
 
+html[data-theme='dark'] .auth-wrapper,
+html[data-theme='dark'] .auth-left {
+    background: transparent !important;
+}
+
+html[data-theme='dark'] .auth-right {
+    background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 34%),
+        linear-gradient(160deg, rgba(2, 6, 23, 0.92) 0%, rgba(15, 23, 42, 0.96) 38%, rgba(29, 78, 216, 0.78) 100%) !important;
+    border-left: 1px solid rgba(51, 65, 85, 0.72);
+}
+
 html[data-theme='dark'] .app-bg::before,
 html[data-theme='dark'] .guest-bg::before {
     content: '';
@@ -3404,6 +3419,24 @@ html[data-theme='dark'] .text-slate-900 {
     color: #f8fafc !important;
 }
 
+html[data-theme='dark'] .auth-header h1,
+html[data-theme='dark'] .auth-card-header h2,
+html[data-theme='dark'] .auth-right-content h2 {
+    color: #f8fafc !important;
+}
+
+html[data-theme='dark'] .auth-header p,
+html[data-theme='dark'] .auth-info,
+html[data-theme='dark'] .checkbox-label,
+html[data-theme='dark'] .auth-footer p,
+html[data-theme='dark'] .auth-intro-text {
+    color: #94a3b8 !important;
+}
+
+html[data-theme='dark'] .auth-link-row {
+    border-color: rgba(51, 65, 85, 0.85) !important;
+}
+
 html[data-theme='dark'] .text-slate-800 {
     color: #e2e8f0 !important;
 }
@@ -3453,6 +3486,14 @@ html[data-theme='dark'] .hover\:text-slate-900:hover {
 
 html[data-theme='dark'] .hover\:text-slate-700:hover {
     color: #e2e8f0 !important;
+}
+
+html[data-theme='dark'] .auth-link {
+    color: #7dd3fc !important;
+}
+
+html[data-theme='dark'] .auth-link:hover {
+    color: #bae6fd !important;
 }
 
 html[data-theme='dark'] .page-eyebrow,

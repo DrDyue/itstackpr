@@ -28,7 +28,7 @@
         ],
         'repair' => [
             'waiting' => ['label' => 'Gaida', 'tone' => 'warning', 'icon' => 'clock'],
-            'in-progress' => ['label' => 'Procesā', 'tone' => 'warning', 'icon' => 'repair'],
+            'in-progress' => ['label' => 'Procesā', 'tone' => 'info', 'icon' => 'repair'],
             'completed' => ['label' => 'Pabeigts', 'tone' => 'success', 'icon' => 'check-circle'],
             'cancelled' => ['label' => 'Atcelts', 'tone' => 'danger', 'icon' => 'x-circle'],
         ],

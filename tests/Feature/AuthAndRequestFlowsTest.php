@@ -2063,6 +2063,19 @@ class AuthAndRequestFlowsTest extends TestCase
         );
     }
 
+    public function test_devices_index_code_search_matches_exact_device_code(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-code-search-admin@example.com');
+        $matchingDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'LDZ-001');
+        $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'LDZ-001-EXTRA');
+
+        $this->actingAs($admin)
+            ->get(route('devices.index', ['code' => 'ldz-001']))
+            ->assertOk()
+            ->assertSee($matchingDevice->code)
+            ->assertDontSee('Testa ierice LDZ-001-EXTRA');
+    }
+
     public function test_devices_index_renders_pending_request_preview_information(): void
     {
         $user = $this->createUser(role: User::ROLE_USER, email: 'device-request-preview-user@example.com');
@@ -2082,6 +2095,24 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertSee('Nodošanas pieprasījums')
             ->assertSee('Japarvieto uz citu darba vietu.')
             ->assertSee('Atvērt pieprasījumu');
+    }
+
+    public function test_devices_index_uses_amber_pending_repair_request_badge(): void
+    {
+        $user = $this->createUser(role: User::ROLE_USER, email: 'device-pending-repair-badge-user@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-REQ-AMBER');
+
+        RepairRequest::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'description' => 'Nepieciesams remonts.',
+            'status' => RepairRequest::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('devices.index'))
+            ->assertOk()
+            ->assertSee('border-amber-200 bg-amber-50 text-amber-800', false);
     }
 
     public function test_devices_index_renders_repair_status_preview_information(): void

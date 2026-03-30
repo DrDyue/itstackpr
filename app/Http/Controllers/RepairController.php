@@ -63,7 +63,7 @@ class RepairController extends Controller
         }
 
         $baseQuery = $this->visibleRepairsQuery($user)
-            ->when($filters['mine'] && $canManageRepairs, fn (Builder $query) => $query->where('accepted_by', $user->id));
+            ->when($filters['mine'] && $canManageRepairs, fn (Builder $query) => $query->where('repairs.accepted_by', $user->id));
 
         $deviceOptions = $this->repairDeviceOptions(
             (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['device_id']))
@@ -101,9 +101,9 @@ class RepairController extends Controller
             'repairs' => $repairs,
             'repairSummary' => [
                 'total' => (clone $baseQuery)->count(),
-                'waiting' => (clone $baseQuery)->where('status', 'waiting')->count(),
-                'in_progress' => (clone $baseQuery)->where('status', 'in-progress')->count(),
-                'completed' => (clone $baseQuery)->whereIn('status', ['completed', 'cancelled'])->count(),
+                'waiting' => (clone $baseQuery)->where('repairs.status', 'waiting')->count(),
+                'in_progress' => (clone $baseQuery)->where('repairs.status', 'in-progress')->count(),
+                'completed' => (clone $baseQuery)->whereIn('repairs.status', ['completed', 'cancelled'])->count(),
             ],
             'filters' => $filters,
             'statuses' => ['waiting', 'in-progress', 'completed'],
@@ -257,6 +257,14 @@ class RepairController extends Controller
 
         if (! in_array($validated['target_status'], $this->allowedTransitionTargets($repair->status), true)) {
             return back()->with('error', 'Sadu remonta statusa mainu veikt nevar.');
+        }
+
+        if (
+            $validated['target_status'] === 'in-progress'
+            && $repair->repair_type === 'external'
+            && (! filled($repair->vendor_name) || ! filled($repair->vendor_contact))
+        ) {
+            return back()->with('error', 'Lai sāktu ārējo remontu, vispirms aizpildi pakalpojuma sniedzēju un kontaktu remonta kartītē.');
         }
 
         $before = $repair->only([
@@ -563,11 +571,12 @@ class RepairController extends Controller
             ->all();
 
         if ($canManageRepairs && ! $request->has('statuses_filter')) {
-            $selectedStatuses = ['waiting'];
+            $selectedStatuses = ['waiting', 'in-progress'];
         }
 
         return [
             'q' => trim((string) $request->query('q', '')),
+            'code' => trim((string) $request->query('code', '')),
             'device_id' => ctype_digit((string) $request->query('device_id', '')) ? (int) $request->query('device_id') : null,
             'device_query' => trim((string) $request->query('device_query', '')),
             'requester_id' => ctype_digit((string) $request->query('requester_id', '')) ? (int) $request->query('requester_id') : null,
@@ -585,9 +594,9 @@ class RepairController extends Controller
             $term = $filters['q'];
 
             $query->where(function (Builder $searchQuery) use ($term) {
-                $searchQuery->where('description', 'like', "%{$term}%")
-                    ->orWhere('invoice_number', 'like', "%{$term}%")
-                    ->orWhere('vendor_name', 'like', "%{$term}%")
+                $searchQuery->where('repairs.description', 'like', "%{$term}%")
+                    ->orWhere('repairs.invoice_number', 'like', "%{$term}%")
+                    ->orWhere('repairs.vendor_name', 'like', "%{$term}%")
                     ->orWhereHas('device', function (Builder $deviceQuery) use ($term) {
                         $deviceQuery->where('code', 'like', "%{$term}%")
                             ->orWhere('serial_number', 'like', "%{$term}%")
@@ -601,8 +610,14 @@ class RepairController extends Controller
             });
         }
 
+        if ($filters['code'] !== '' && ! in_array('code', $skip, true)) {
+            $query->whereHas('device', function (Builder $deviceQuery) use ($filters) {
+                $deviceQuery->whereRaw('LOWER(code) = ?', [mb_strtolower($filters['code'])]);
+            });
+        }
+
         if ($filters['device_id'] && ! in_array('device_id', $skip, true)) {
-            $query->where('device_id', $filters['device_id']);
+            $query->where('repairs.device_id', $filters['device_id']);
         }
 
         if ($filters['requester_id'] && ! in_array('requester_id', $skip, true)) {
@@ -610,20 +625,20 @@ class RepairController extends Controller
 
             $query->where(function (Builder $requesterQuery) use ($requesterId) {
                 $requesterQuery->whereHas('request', fn (Builder $builder) => $builder->where('responsible_user_id', $requesterId))
-                    ->orWhere('issue_reported_by', $requesterId);
+                    ->orWhere('repairs.issue_reported_by', $requesterId);
             });
         }
 
         if (! in_array('status', $skip, true) && count($filters['statuses']) > 0 && count($filters['statuses']) < 3) {
-            $query->whereIn('status', $filters['statuses']);
+            $query->whereIn('repairs.status', $filters['statuses']);
         }
 
         if ($filters['date_from'] !== '' && ! in_array('date_from', $skip, true)) {
-            $query->whereDate('created_at', '>=', $filters['date_from']);
+            $query->whereDate('repairs.created_at', '>=', $filters['date_from']);
         }
 
         if ($filters['date_to'] !== '' && ! in_array('date_to', $skip, true)) {
-            $query->whereDate('created_at', '<=', $filters['date_to']);
+            $query->whereDate('repairs.created_at', '<=', $filters['date_to']);
         }
 
         return $query;
