@@ -3314,6 +3314,22 @@ html[data-theme='dark'] body {
 }
 
 html[data-theme='dark'] .app-bg {
+    background: transparent !important;
+    color: #e2e8f0;
+}
+
+html[data-theme='dark'] .guest-bg {
+    background: transparent !important;
+    color: #e2e8f0;
+}
+
+html[data-theme='dark'] .app-bg::before,
+html[data-theme='dark'] .guest-bg::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
     background:
         radial-gradient(52rem 30rem at 8% 0%, rgba(14, 165, 233, 0.20), transparent 68%),
         radial-gradient(44rem 24rem at 92% 8%, rgba(16, 185, 129, 0.14), transparent 66%),
@@ -3321,24 +3337,19 @@ html[data-theme='dark'] .app-bg {
         radial-gradient(40rem 24rem at 86% 58%, rgba(14, 165, 233, 0.12), transparent 68%),
         radial-gradient(44rem 26rem at 20% 84%, rgba(37, 99, 235, 0.14), transparent 70%),
         radial-gradient(38rem 22rem at 88% 98%, rgba(14, 165, 233, 0.10), transparent 72%),
-        linear-gradient(180deg, #020617 0%, #0f172a 46%, #111827 100%) !important;
-    background-repeat: no-repeat !important;
-    background-position: center top !important;
-    background-size: auto !important;
-    color: #e2e8f0;
+        linear-gradient(180deg, #020617 0%, #0f172a 46%, #111827 100%);
+    background-repeat: no-repeat;
+    background-size: auto;
+    background-position: center top;
 }
 
-html[data-theme='dark'] .guest-bg {
+html[data-theme='dark'] .guest-bg::before {
     background:
         radial-gradient(48rem 28rem at 8% 0%, rgba(14, 165, 233, 0.22), transparent 68%),
         radial-gradient(42rem 24rem at 90% 12%, rgba(16, 185, 129, 0.14), transparent 66%),
         radial-gradient(44rem 26rem at 15% 48%, rgba(37, 99, 235, 0.16), transparent 70%),
         radial-gradient(40rem 22rem at 86% 88%, rgba(14, 165, 233, 0.10), transparent 72%),
-        linear-gradient(180deg, #020617 0%, #0f172a 55%, #111827 100%) !important;
-    background-repeat: no-repeat !important;
-    background-position: center top !important;
-    background-size: auto !important;
-    color: #e2e8f0;
+        linear-gradient(180deg, #020617 0%, #0f172a 55%, #111827 100%);
 }
 
 html[data-theme='dark'] .app-main-nav {
