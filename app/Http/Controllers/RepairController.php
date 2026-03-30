@@ -255,6 +255,10 @@ class RepairController extends Controller
             'target_status.required' => 'Izvēlies jauno remonta statusu.',
         ]);
 
+        if ($validated['target_status'] === 'in-progress' && !filled($repair->description)) {
+             return back()->with('error', 'Pirms remonta sākšanas ir nepieciešams aizpildīt remonta aprakstu.');
+        }
+
         if (! in_array($validated['target_status'], $this->allowedTransitionTargets($repair->status), true)) {
             return back()->with('error', 'Sadu remonta statusa mainu veikt nevar.');
         }
