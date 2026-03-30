@@ -3581,6 +3581,48 @@ html[data-theme='dark'] .page-title-icon-slate {
     border-color: rgba(71, 85, 105, 0.9) !important;
 }
 
+html[data-theme='dark'] .page-title {
+    color: #f8fafc !important;
+}
+
+html[data-theme='dark'] .page-subtitle {
+    color: #94a3b8 !important;
+}
+
+html[data-theme='dark'] .crud-label {
+    color: #cbd5e1 !important;
+}
+
+html[data-theme='dark'] .crud-control {
+    background-color: #0f172a !important;
+    color: #e2e8f0 !important;
+    border-color: rgba(51, 65, 85, 0.95) !important;
+}
+
+html[data-theme='dark'] .crud-control::placeholder {
+    color: #64748b !important;
+}
+
+html[data-theme='dark'] .crud-form-card {
+    background-color: #0f172a !important;
+    border-color: rgba(51, 65, 85, 0.95) !important;
+}
+
+html[data-theme='dark'] .device-table-scroll thead th,
+html[data-theme='dark'] .device-table-scroll thead {
+    background-color: #111827 !important;
+    color: #94a3b8 !important;
+    border-color: rgba(51, 65, 85, 0.92) !important;
+}
+
+html[data-theme='dark'] .device-table-scroll td {
+    color: #cbd5e1 !important;
+}
+
+html[data-theme='dark'] .quick-status-filter-active {
+    --tw-ring-color: rgba(148, 163, 184, 0.35) !important;
+}
+
 html[data-theme='dark'] .table-action-item,
 html[data-theme='dark'] .table-action-button,
 html[data-theme='dark'] .app-dropdown-content a,
