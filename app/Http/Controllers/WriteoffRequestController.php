@@ -25,7 +25,7 @@ class WriteoffRequestController extends Controller
 
     private const DEFAULT_WAREHOUSE_ROOM_NUMBER_PREFIX = 'NOL-';
 
-    private const DEFAULT_BUILDING_NAME = 'Ludzēs novada pasvaldiba';
+    private const DEFAULT_BUILDING_NAME = 'Ludzas novada pašvaldība';
 
     /**
      * Parāda norakstīšanas pieteikumu sarakstu.
@@ -157,14 +157,14 @@ class WriteoffRequestController extends Controller
             'device_id' => ['required', 'exists:devices,id'],
             'reason' => ['required', 'string'],
         ], [
-            'device_id.required' => 'Izvēlies ierīci, kuru velies norakstīt.',
+            'device_id.required' => 'Izvēlies ierīci, kuru vēlies norakstīt.',
             'reason.required' => 'Apraksti norakstīšanas iemeslu.',
         ]);
 
         $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
         if (! $device) {
             throw ValidationException::withMessages([
-                'device_id' => ['Vari pieteikt norakstisanu tikai savai piešaistītai ierīcei.'],
+                'device_id' => ['Vari pieteikt norakstīšanu tikai savai piesaistītai ierīcei.'],
             ]);
         }
 
@@ -179,7 +179,7 @@ class WriteoffRequestController extends Controller
 
         AuditTrail::created($user->id, $writeoffRequest);
 
-        return redirect()->route('writeoff-requests.index')->with('success', 'Norakstīšanas pieteikums nosutits izskatīšanai');
+        return redirect()->route('writeoff-requests.index')->with('success', 'Norakstīšanas pieteikums nosūtīts izskatīšanai');
     }
 
     /**
@@ -199,10 +199,10 @@ class WriteoffRequestController extends Controller
 
         if ($writeoffRequest->status !== WriteoffRequest::STATUS_SUBMITTED) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Sis pieteikums jau ir izskatīts.'], 409);
+                return response()->json(['message' => 'Šis pieteikums jau ir izskatīts.'], 409);
             }
 
-            return back()->with('error', 'Sis pieteikums jau ir izskatīts.');
+            return back()->with('error', 'Šis pieteikums jau ir izskatīts.');
         }
 
         $validated = $this->validateInput($request, [
@@ -275,25 +275,25 @@ class WriteoffRequestController extends Controller
     {
         if ($device->status === Device::STATUS_REPAIR) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai ierīcei jau notiek remonts ('.$this->repairStatusLabel($device->activeRepair?->status).'), tāpēc norakstīšanas pieteikumu veidot nevar.'],
+                'device_id' => ['Šai ierīcei jau notiek remonts ('.$this->repairStatusLabel($device->activeRepair?->status).'), tāpēc norakstīšanas pieteikumu veidot nevar.'],
             ]);
         }
 
         if (WriteoffRequest::query()->where('device_id', $device->id)->where('status', WriteoffRequest::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai ierīcei jau ir gaidošs norakstīšanas pieteikums.'],
+                'device_id' => ['Šai ierīcei jau ir gaidošs norakstīšanas pieteikums.'],
             ]);
         }
 
         if (RepairRequest::query()->where('device_id', $device->id)->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai ierīcei jau ir gaidošs remonta pieteikums, tāpēc norakstīšanas pieteikumu veidot nevar.'],
+                'device_id' => ['Šai ierīcei jau ir gaidošs remonta pieteikums, tāpēc norakstīšanas pieteikumu veidot nevar.'],
             ]);
         }
 
         if (DeviceTransfer::query()->where('device_id', $device->id)->where('status', DeviceTransfer::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai ierīcei jau ir gaidošs nodošanas pieteikums, tāpēc norakstīšanas pieteikumu veidot nevar.'],
+                'device_id' => ['Šai ierīcei jau ir gaidošs nodošanas pieteikums, tāpēc norakstīšanas pieteikumu veidot nevar.'],
             ]);
         }
     }

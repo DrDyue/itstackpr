@@ -41,7 +41,7 @@
                     <input type="email" name="email" value="{{ old('email') }}" class="crud-control" required>
                 </label>
                 <label class="block">
-                    <span class="crud-label">Talrunis</span>
+                    <span class="crud-label">Tālrunis</span>
                     <input type="text" name="phone" value="{{ old('phone') }}" class="crud-control">
                 </label>
                 <label class="block">

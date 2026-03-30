@@ -67,8 +67,8 @@
             </div>
 
             <div class="mt-3 flex items-center justify-between gap-3">
-                <button type="button" class="text-sm text-slate-500 hover:text-slate-700" @click="clear()">Notirit datumu</button>
-                <button type="button" class="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800" @click="open = false">Aizvert</button>
+                <button type="button" class="text-sm text-slate-500 hover:text-slate-700" @click="clear()">Notīrīt datumu</button>
+                <button type="button" class="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800" @click="open = false">Aizvērt</button>
             </div>
         </div>
     </div>

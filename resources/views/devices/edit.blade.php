@@ -1,6 +1,6 @@
 {{--
     Lapa: Ierīces rediģēšana.
-    Atbildība: ļauj administratoram mainīt esošas ierīces datus, piešaisti un dažos gadījumos statusu.
+    Atbildība: ļauj administratoram mainīt esošas ierīces datus, piesaisti un dažos gadījumos statusu.
     Datu avots: DeviceController@edit, saglabāšana caur DeviceController@update.
     Galvenās daļas:
     1. Hero ar rediģēšanas kontekstu.
@@ -22,7 +22,7 @@
                         </div>
                         <div>
                             <h1 class="page-title">Rediģēt ierīci</h1>
-                            <p class="page-subtitle">Atjauno ierīces datus, statusu un piešaisti.</p>
+                            <p class="page-subtitle">Atjauno ierīces datus, statusu un piesaisti.</p>
                         </div>
                     </div>
                 </div>
@@ -43,7 +43,7 @@
             <div class="surface-card flex flex-wrap items-center justify-between gap-4 p-6">
                 <div>
                     <div class="text-sm font-semibold text-slate-900">Saglabāšanas zona</div>
-                    <div class="mt-1 text-sm text-slate-500">Atjauno tikai izmainītos laukus. Ja ierīce ir norakstīta, piešaistes lauki paliek bloķeti.</div>
+                    <div class="mt-1 text-sm text-slate-500">Atjauno tikai izmainītos laukus. Ja ierīce ir norakstīta, piesaistes lauki paliek bloķeti.</div>
                 </div>
                 <div class="flex flex-wrap gap-3">
                     <button type="submit" class="btn-edit">

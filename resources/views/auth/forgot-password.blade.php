@@ -1,15 +1,15 @@
 {{--
     Lapa: Aizmirsta parole.
-    Atbildība: ļauj lietotājam pieprasīt paroles atjaunošanas šaiti uz e-pastu.
+    Atbildība: ļauj lietotājam pieprasīt paroles atjaunošanas saiti uz e-pastu.
     Datu avots: PasswordResetLinkController@create, iesniegšana uz PasswordResetLinkController@store.
     Galvenās daļas:
     1. Instrukcijas lietotājam.
     2. E-pasta ievades forma.
-    3. Paziņojums par veiksmīgu šaites nosūtīšanu.
+    3. Paziņojums par veiksmīgu saites nosūtīšanu.
 --}}
 <x-guest-layout>
     <div class="auth-intro-text">
-        Aizmirsi paroli? Bez problmm. Vienkri ievadi savu e-pasta adresi un ms nostsim paroles atiestatanas šaiti.
+        Aizmirsi paroli? Bez problēmām. Vienkārši ievadi savu e-pasta adresi un mēs nosūtīsim paroles atiestatīšanas saiti.
     </div>
 
     <form method="POST" action="{{ route('password.email') }}">
@@ -24,7 +24,7 @@
 
         <div class="form-actions-end">
             <button type="submit" class="btn-primary btn-auto-inline">
-                Stt paroles atiestatanas šaiti
+                Sūtīt paroles atiestatīšanas saiti
             </button>
         </div>
     </form>

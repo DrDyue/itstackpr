@@ -204,7 +204,7 @@ class UserRequestCenterController extends Controller
     {
         if ($device->status === Device::STATUS_REPAIR) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai ierīcei jau notiek remonts (' . $this->repairStatusLabel($device->activeRepair?->status) . '), tāpēc jaunus pieteikumus veidot nevar.'],
+                'device_id' => ['Šai ierīcei jau notiek remonts (' . $this->repairStatusLabel($device->activeRepair?->status) . '), tāpēc jaunus pieteikumus veidot nevar.'],
             ]);
         }
 
@@ -226,19 +226,19 @@ class UserRequestCenterController extends Controller
         if ($requestType === 'repair') {
             if ($hasPendingRepair) {
                 throw ValidationException::withMessages([
-                    'device_id' => ['Sai ierīcei jau ir gaidošs remonta pieteikums.'],
+                    'device_id' => ['Šai ierīcei jau ir gaidošs remonta pieteikums.'],
                 ]);
             }
 
             if ($hasPendingWriteoff) {
                 throw ValidationException::withMessages([
-                    'device_id' => ['Sai ierīcei jau ir gaidošs norakstīšanas pieteikums, tāpēc remonta pieteikumu veidot nevar.'],
+                    'device_id' => ['Šai ierīcei jau ir gaidošs norakstīšanas pieteikums, tāpēc remonta pieteikumu veidot nevar.'],
                 ]);
             }
 
             if ($hasPendingTransfer) {
                 throw ValidationException::withMessages([
-                    'device_id' => ['Sai ierīcei jau ir gaidošs nodošanas pieteikums, tāpēc remonta pieteikumu veidot nevar.'],
+                    'device_id' => ['Šai ierīcei jau ir gaidošs nodošanas pieteikums, tāpēc remonta pieteikumu veidot nevar.'],
                 ]);
             }
         }
@@ -246,19 +246,19 @@ class UserRequestCenterController extends Controller
         if ($requestType === 'writeoff') {
             if ($hasPendingWriteoff) {
                 throw ValidationException::withMessages([
-                    'device_id' => ['Sai ierīcei jau ir gaidošs norakstīšanas pieteikums.'],
+                    'device_id' => ['Šai ierīcei jau ir gaidošs norakstīšanas pieteikums.'],
                 ]);
             }
 
             if ($hasPendingRepair) {
                 throw ValidationException::withMessages([
-                    'device_id' => ['Sai ierīcei jau ir gaidošs remonta pieteikums, tāpēc norakstīšanas pieteikumu veidot nevar.'],
+                    'device_id' => ['Šai ierīcei jau ir gaidošs remonta pieteikums, tāpēc norakstīšanas pieteikumu veidot nevar.'],
                 ]);
             }
 
             if ($hasPendingTransfer) {
                 throw ValidationException::withMessages([
-                    'device_id' => ['Sai ierīcei jau ir gaidošs nodošanas pieteikums, tāpēc norakstīšanas pieteikumu veidot nevar.'],
+                    'device_id' => ['Šai ierīcei jau ir gaidošs nodošanas pieteikums, tāpēc norakstīšanas pieteikumu veidot nevar.'],
                 ]);
             }
         }
@@ -266,19 +266,19 @@ class UserRequestCenterController extends Controller
         if ($requestType === 'transfer') {
             if ($hasPendingTransfer) {
                 throw ValidationException::withMessages([
-                    'device_id' => ['Sai ierīcei jau ir gaidošs nodošanas pieteikums.'],
+                    'device_id' => ['Šai ierīcei jau ir gaidošs nodošanas pieteikums.'],
                 ]);
             }
 
             if ($hasPendingRepair) {
                 throw ValidationException::withMessages([
-                    'device_id' => ['Sai ierīcei jau ir gaidošs remonta pieteikums, tāpēc nodošanas pieteikumu veidot nevar.'],
+                    'device_id' => ['Šai ierīcei jau ir gaidošs remonta pieteikums, tāpēc nodošanas pieteikumu veidot nevar.'],
                 ]);
             }
 
             if ($hasPendingWriteoff) {
                 throw ValidationException::withMessages([
-                    'device_id' => ['Sai ierīcei jau ir gaidošs norakstīšanas pieteikums, tāpēc nodošanas pieteikumu veidot nevar.'],
+                    'device_id' => ['Šai ierīcei jau ir gaidošs norakstīšanas pieteikums, tāpēc nodošanas pieteikumu veidot nevar.'],
                 ]);
             }
         }
@@ -323,7 +323,7 @@ class UserRequestCenterController extends Controller
                 'required_message' => 'Apraksti remonta problēmu.',
                 'updated_message' => 'Remonta pieteikums atjaunots.',
                 'deleted_message' => 'Remonta pieteikums atcelts.',
-                'deleted_audit_message' => 'Lietotājs atcela iesniegtu remonta pieteikumu.',
+                'deleted_audit_message' => 'Lietotājs atcēla iesniegtu remonta pieteikumu.',
                 'index_route' => 'repair-requests.index',
                 'submitted_status' => RepairRequest::STATUS_SUBMITTED,
             ],
@@ -338,7 +338,7 @@ class UserRequestCenterController extends Controller
                 'required_message' => 'Apraksti norakstīšanas iemeslu.',
                 'updated_message' => 'Norakstīšanas pieteikums atjaunots.',
                 'deleted_message' => 'Norakstīšanas pieteikums atcelts.',
-                'deleted_audit_message' => 'Lietotājs atcela iesniegtu norakstīšanas pieteikumu.',
+                'deleted_audit_message' => 'Lietotājs atcēla iesniegtu norakstīšanas pieteikumu.',
                 'index_route' => 'writeoff-requests.index',
                 'submitted_status' => WriteoffRequest::STATUS_SUBMITTED,
             ],
@@ -353,7 +353,7 @@ class UserRequestCenterController extends Controller
                 'required_message' => 'Apraksti nodošanas iemeslu.',
                 'updated_message' => 'Nodošanas pieteikums atjaunots.',
                 'deleted_message' => 'Nodošanas pieteikums atcelts.',
-                'deleted_audit_message' => 'Lietotājs atcela iesniegtu nodošanas pieteikumu.',
+                'deleted_audit_message' => 'Lietotājs atcēla iesniegtu nodošanas pieteikumu.',
                 'index_route' => 'device-transfers.index',
                 'submitted_status' => DeviceTransfer::STATUS_SUBMITTED,
             ],

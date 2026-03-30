@@ -88,7 +88,7 @@
                                 <x-icon name="repair-request" size="h-4 w-4" />
                                 <span>Pieteikumi</span>
                                 @if ($incomingTransferReviewCount > 0)
-                                    <span title="Jaizskata: {{ $incomingTransferReviewCount }}" class="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
+                                    <span title="Jāizskata: {{ $incomingTransferReviewCount }}" class="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
                                         <x-icon name="exclamation-triangle" size="h-3 w-3" />
                                         <span>{{ $incomingTransferReviewCount }}</span>
                                     </span>
@@ -105,7 +105,7 @@
                                     <x-icon :name="$item['icon']" size="h-4 w-4" />
                                     <span>{{ $item['label'] }}</span>
                                     @if (($item['pending_review_count'] ?? 0) > 0)
-                                        <span title="Jaizskata: {{ $item['pending_review_count'] }}" class="ml-auto inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
+                                        <span title="Jāizskata: {{ $item['pending_review_count'] }}" class="ml-auto inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
                                             <x-icon name="exclamation-triangle" size="h-3 w-3" />
                                             <span>{{ $item['pending_review_count'] }}</span>
                                         </span>
@@ -138,7 +138,7 @@
                                     ? 'inline-flex items-center gap-2.5 whitespace-nowrap rounded-xl bg-sky-50 px-3.5 py-2.5 text-sm font-semibold text-sky-800 ring-1 ring-sky-200 shadow-sm transition duration-200'
                                     : 'inline-flex items-center gap-2.5 whitespace-nowrap rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-600 transition duration-200 hover:bg-slate-100 hover:text-slate-900' }}">
                                     <x-icon name="view" size="h-4 w-4" />
-                                    <span>Vairak</span>
+                                    <span>Vairāk</span>
                                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                     </svg>
@@ -147,7 +147,7 @@
 
                             <x-slot name="content">
                                 <div class="px-4 pb-2 pt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                    Mazak svarigais
+                                    Mazāk svarīgās
                                 </div>
                                 @foreach ($lessImportantNavigationItems as $item)
                                     <x-dropdown-link :href="route($item['route'])">
@@ -197,7 +197,7 @@
                             <div class="min-w-0 text-left leading-tight">
                                 <div class="truncate font-semibold text-slate-900">{{ $user?->full_name ?? 'Lietotājs' }}</div>
                                 <div class="mt-1 inline-flex max-w-full items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                                    <span class="truncate">{{ $isAdmin ? ($canManageRequests ? 'admin view' : 'user view') : ($user?->role ?? '') }}</span>
+                                    <span class="truncate">{{ $isAdmin ? ($canManageRequests ? 'admina skats' : 'darbinieka skats') : ($user?->role ?? '') }}</span>
                                 </div>
                             </div>
                             <svg class="ms-1 h-4 w-4 fill-current text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -253,7 +253,7 @@
             @if ($isAdmin)
                 <form method="POST" action="{{ route('view-mode.update') }}" class="mb-3 rounded-2xl border border-slate-200 bg-slate-50 p-2">
                     @csrf
-                    <div class="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Skata rezims</div>
+                    <div class="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Skata režīms</div>
                     <div class="grid grid-cols-2 gap-2">
                         <label class="cursor-pointer">
                             <input type="radio" name="mode" value="{{ \App\Models\User::VIEW_MODE_ADMIN }}" class="sr-only" onchange="this.form.submit()" @checked($currentViewMode === \App\Models\User::VIEW_MODE_ADMIN)>
@@ -304,7 +304,7 @@
                                     <span>{{ $item['label'] }}</span>
                                 </span>
                                 @if (($item['pending_review_count'] ?? 0) > 0)
-                                    <span title="Jaizskata: {{ $item['pending_review_count'] }}" class="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
+                                    <span title="Jāizskata: {{ $item['pending_review_count'] }}" class="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
                                         <x-icon name="exclamation-triangle" size="h-3 w-3" />
                                         <span>{{ $item['pending_review_count'] }}</span>
                                     </span>
@@ -337,7 +337,7 @@
 
             @if ($lessImportantNavigationItems !== [])
                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-2">
-                    <div class="px-3 pb-2 pt-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Vairak</div>
+                    <div class="px-3 pb-2 pt-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Vairāk</div>
                     <div class="space-y-1">
                         @foreach ($lessImportantNavigationItems as $item)
                             <x-responsive-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">

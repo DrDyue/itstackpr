@@ -30,7 +30,7 @@
             ['label' => 'Nodošana', 'value' => 'transfer', 'icon' => 'transfer', 'tone' => 'emerald'],
         ];
         $selectedStatuses = $filters['has_status_filter'] ? $filters['statuses'] : collect($statusFilterLinks)->pluck('value')->all();
-        $selectedRequestTypes = $filters['has_request_type_filter'] ? $filters['request_types'] : collect($requestFilterLinks)->pluck('value')->all();
+        $selectedRequestTypes = $filters['request_types'];
         $roomSelectOptions = $roomOptions->map(fn ($room) => [
             'value' => (string) $room->id,
             'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
@@ -102,7 +102,7 @@
                         </div>
                         <div>
                             <h1 class="page-title">Ierīces</h1>
-                            <p class="page-subtitle">{{ $canManageDevices ? 'Pilns ierīču saraksts un pārvaldiba.' : 'Tavas piešaistītas ierīces.' }}</p>
+                            <p class="page-subtitle">{{ $canManageDevices ? 'Pilns ierīču saraksts un pārvaldība.' : 'Tavas piesaistītās ierīces.' }}</p>
                         </div>
                     </div>
                 </div>
@@ -135,8 +135,8 @@
             </label>
             @if ($canManageDevices)
                 <label class="block">
-                    <span class="crud-label">Piesķirta</span>
-                    <input type="text" name="assigned_to_query" value="{{ $filters['assigned_to_query'] }}" class="crud-control" placeholder="Lietotāja vards">
+                    <span class="crud-label">Piešķirta</span>
+                    <input type="text" name="assigned_to_query" value="{{ $filters['assigned_to_query'] }}" class="crud-control" placeholder="Lietotāja vārds">
                     @if ($filters['assigned_to_id'] !== '')
                         <input type="hidden" name="assigned_to_id" value="{{ $filters['assigned_to_id'] }}">
                     @endif
@@ -224,7 +224,7 @@
                                         ? $requestValues->reject(fn ($value) => $value === $requestFilter['value'])->values()->all()
                                         : $requestValues->push($requestFilter['value'])->unique()->values()->all();
 
-                                    if (count($nextRequestTypes) === 0 || count($nextRequestTypes) === count($requestFilterLinks)) {
+                                    if (count($nextRequestTypes) === 0) {
                                         unset($query['request_type']);
                                     } else {
                                         $query['request_type'] = $nextRequestTypes;
@@ -249,7 +249,7 @@
                     </button>
                     <a href="{{ route('devices.index') }}" class="btn-clear">
                         <x-icon name="clear" size="h-4 w-4" />
-                        <span>Notirit</span>
+                        <span>Notīrīt</span>
                     </a>
                 </div>
             </div>
@@ -259,7 +259,7 @@
             :items="[
                 ['label' => 'Meklēt', 'value' => $filters['q']],
                 ['label' => 'Kods', 'value' => $filters['code']],
-                ['label' => 'Piesķirta', 'value' => $canManageDevices ? $selectedAssignedUserLabel : null],
+                ['label' => 'Piešķirta', 'value' => $canManageDevices ? $selectedAssignedUserLabel : null],
                 ['label' => 'Stavs', 'value' => $selectedFloorLabel],
                 ['label' => 'Telpa', 'value' => $selectedRoomLabel],
                 ['label' => 'Tips', 'value' => $selectedTypeLabel],
@@ -284,7 +284,7 @@
                         <th class="px-4 py-3">Nosaukums</th>
                         <th class="px-4 py-3">Atrašanās vieta</th>
                         <th class="px-4 py-3">Izveidots</th>
-                        <th class="px-4 py-3">Piesķirta</th>
+                        <th class="px-4 py-3">Piešķirta</th>
                         <th class="px-4 py-3">Statuss</th>
                         <th class="px-4 py-3">Darbības</th>
                     </tr>
@@ -323,7 +323,7 @@
                             <td class="px-4 py-4">
                                 <div class="font-semibold text-slate-900">{{ $device->code ?: '-' }}</div>
                                 @if ($device->serial_number)
-                                    <div class="mt-1 text-xs text-slate-500">Serija: {{ $device->serial_number }}</div>
+                                    <div class="mt-1 text-xs text-slate-500">Sērija: {{ $device->serial_number }}</div>
                                 @endif
                             </td>
                             <td class="px-4 py-4">
@@ -354,7 +354,7 @@
                                 <div class="mt-2 text-xs text-slate-400">{{ $device->createdBy?->full_name ?: 'Sistēma' }}</div>
                             </td>
                             <td class="px-4 py-4">
-                                <div class="font-medium text-slate-900">{{ $device->assignedTo?->full_name ?: 'Nav piesķirts' }}</div>
+                                <div class="font-medium text-slate-900">{{ $device->assignedTo?->full_name ?: 'Nav piešķirts' }}</div>
                                 @if ($device->assignedTo?->job_title)
                                     <div class="mt-1 text-xs text-slate-500">{{ $device->assignedTo->job_title }}</div>
                                 @endif

@@ -1,5 +1,5 @@
 {{--
-    Layout: Galvenais autorizetais karkass.
+    Layout: Galvenais autorizētais karkass.
     Atbildība: nodrošina kopējo lapas ietvaru visām iekšējām sistēmas lapām pēc ielogošanās.
     Kāpēc tas ir svarīgi:
     1. Vienā vietā ielādē stilus un JavaScript.
@@ -13,7 +13,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>IT inventra uzskaite</title>
+        <title>IT inventāra uzskaite</title>
 
         <script>
             (() => {
@@ -63,10 +63,10 @@
                         @endif
                     </div>
                     <div class="flash-toast-body">
-                        <div class="flash-toast-title">{{ $flashTone === 'success' ? 'Veiksmīgi' : 'Pazinojums' }}</div>
+                        <div class="flash-toast-title">{{ $flashTone === 'success' ? 'Veiksmīgi' : 'Paziņojums' }}</div>
                         <div class="flash-toast-message">{{ $flashMessage }}</div>
                     </div>
-                    <button type="button" class="flash-toast-close" @click="open = false" aria-label="Aizvert">
+                    <button type="button" class="flash-toast-close" @click="open = false" aria-label="Aizvērt">
                         <x-icon name="x-mark" size="h-4 w-4" />
                     </button>
                 </div>
@@ -150,7 +150,7 @@
                                                 <div class="notification-toast-meta-value" x-text="notification.details.device_code || '-'"></div>
                                             </div>
                                             <div class="notification-toast-meta-item">
-                                                <div class="notification-toast-section-label">Serija</div>
+                                                <div class="notification-toast-section-label">Sērija</div>
                                                 <div class="notification-toast-meta-value" x-text="notification.details.serial_number || '-'"></div>
                                             </div>
                                             <div class="notification-toast-meta-item notification-toast-meta-item-wide">
@@ -184,7 +184,7 @@
                                         class="inline-flex items-center justify-center rounded-xl border px-4 py-2 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60"
                                         :disabled="notification.busy"
                                         @click.stop="runAction(notification, action)"
-                                        x-text="notification.busy ? 'Apstrada...' : action.label"
+                                        x-text="notification.busy ? 'Apstrādā...' : action.label"
                                     ></button>
                                 </template>
                             </div>

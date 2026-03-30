@@ -13,7 +13,7 @@
         </h2>
 
         <p class="mt-2 text-sm text-slate-600">
-            Ja konts vairs nav vajadzīgs, to var neatgriezeniski dzēst. Pirms tam pārliecinies, kā tiešām gribi liegt piekļuvi šai lietotāja vietai.
+            Ja konts vairs nav vajadzīgs, to var neatgriezeniski dzēst. Pirms tam pārliecinies, ka tiešām gribi liegt piekļuvi šī lietotāja kontam.
         </p>
     </header>
 

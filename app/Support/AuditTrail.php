@@ -637,7 +637,7 @@ class AuditTrail
             'system' => 'sistēma',
             'info' => 'informācija',
             'warning' => 'brīdinajums',
-            'error' => 'kluda',
+            'error' => 'kļūda',
         ];
 
         if (array_key_exists($normalized, $map)) {

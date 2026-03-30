@@ -23,7 +23,7 @@ class ViewModeController extends Controller
         $validated = $this->validateInput($request, [
             'mode' => ['required', Rule::in([User::VIEW_MODE_ADMIN, User::VIEW_MODE_USER])],
         ], [
-            'mode.required' => 'Izvēlies skata rezimu.',
+            'mode.required' => 'Izvēlies skata režīmu.',
         ]);
 
         $request->session()->put(User::VIEW_MODE_SESSION_KEY, $validated['mode']);

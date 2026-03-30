@@ -64,7 +64,7 @@
                             @if (($incomingPendingCount ?? 0) > 0)
                                 <span class="inventory-inline-chip inventory-inline-chip-amber ring-1 ring-amber-300">
                                     <x-icon name="exclamation-triangle" size="h-3.5 w-3.5" />
-                                    <span class="inventory-inline-label">Jaizskata</span>
+                                    <span class="inventory-inline-label">Jāizskata</span>
                                     <span class="inventory-inline-value">{{ $incomingPendingCount }}</span>
                                 </span>
                             @endif
@@ -73,8 +73,8 @@
                     <div class="page-title-group mt-4">
                         <div class="page-title-icon page-title-icon-emerald"><x-icon name="transfer" size="h-7 w-7" /></div>
                         <div>
-                            <h1 class="page-title">Ierīču pārsūtīšanas</h1>
-                            <p class="page-subtitle">{{ $isAdmin ? 'Visi pārsūtīšanas pieteikumi. Lēmumu par apstiprinasanu pienem norādītais saņēmējs.' : 'Tavi nosutitie un sanemtie pārsūtīšanas pieteikumi.' }}</p>
+                            <h1 class="page-title">Ierīču pārsūtīšanas pieteikumi</h1>
+                            <p class="page-subtitle">{{ $isAdmin ? 'Visi pārsūtīšanas pieteikumi. Lēmumu par apstiprināšanu pieņem norādītais saņēmējs.' : 'Tavi nosūtītie un saņemtie pārsūtīšanas pieteikumi.' }}</p>
                         </div>
                     </div>
                 </div>
@@ -115,7 +115,7 @@
             </div>
             <div class="toolbar-actions xl:justify-end">
                 <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
-                <a href="{{ route('device-transfers.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notirit</span></a>
+                <a href="{{ route('device-transfers.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt</span></a>
             </div>
         </form>
 
@@ -292,9 +292,9 @@
 
                     @if ($isIncomingPending)
                         <div class="mt-5 rounded-[1.5rem] border border-emerald-200 bg-emerald-50/80 p-4">
-                            <div class="text-sm font-semibold text-emerald-900">Tu vari sanemt šo ierīci</div>
+                            <div class="text-sm font-semibold text-emerald-900">Tu vari saņemt šo ierīci</div>
                             <div class="mt-1 text-sm text-emerald-800">
-                                Ja apstiprinasi, ierīce uzreiz tiks piesķirta tev. Ja noraidisi, ta paliks pie esoša lietotāja.
+                                Ja apstiprināsi, ierīce uzreiz tiks piešķirta tev. Ja noraidīsi, tā paliks pie esošā lietotāja.
                             </div>
 
                             <form method="POST" action="{{ route('device-transfers.review', $transfer) }}" class="mt-4">

@@ -103,7 +103,7 @@ class BuildingController extends Controller
     }
 
     /**
-     * Dzēš ēku tikai tad, ja tai vairs nav piešaistītu telpu un ierīču.
+     * Dzēš ēku tikai tad, ja tai vairs nav piesaistītu telpu un ierīču.
      */
     public function destroy(Building $building)
     {
@@ -116,16 +116,16 @@ class BuildingController extends Controller
             $parts = [];
 
             if ($roomsCount > 0) {
-                $parts[] = "ēka joprojam satur {$roomsCount} telpu" . ($roomsCount === 1 ? '' : 's');
+                $parts[] = "ēka joprojām satur {$roomsCount} telpu" . ($roomsCount === 1 ? '' : 's');
             }
 
             if ($devicesCount > 0) {
-                $parts[] = "tai piešaistītas {$devicesCount} ierīce" . ($devicesCount === 1 ? '' : 's');
+                $parts[] = "tai piesaistītas {$devicesCount} ierīce" . ($devicesCount === 1 ? '' : 's');
             }
 
             return redirect()
                 ->route('buildings.index')
-                ->with('error', 'Ēku nevar dzēst, jo ' . implode(' un ', $parts) . '. Vispirms pārvieto vai dzēs piešaistītas telpas un ierīces, tad mēģiniet vēlreiz.');
+                ->with('error', 'Ēku nevar dzēst, jo ' . implode(' un ', $parts) . '. Vispirms pārvieto vai dzēs piesaistītas telpas un ierīces, tad mēģiniet vēlreiz.');
         }
 
         AuditTrail::deleted(auth()->id(), $building);
@@ -153,7 +153,7 @@ class BuildingController extends Controller
             'total_floors' => ['nullable', 'integer', 'min:0', 'max:200'],
             'notes' => ['nullable', 'string', 'max:200'],
         ], [
-            'building_name.required' => 'Noradi ēkas nosaukumu.',
+            'building_name.required' => 'Norādi ēkas nosaukumu.',
         ]);
 
         $data['notes'] = $data['notes'] ?? self::NOTES_DEFAULT;

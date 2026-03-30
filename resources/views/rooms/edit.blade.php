@@ -1,6 +1,6 @@
 {{--
     Lapa: Telpas rediģēšana.
-    Atbildība: ļauj mainīt telpas datus, piešaisti ēkai vai atbildīgajam lietotājam.
+    Atbildība: ļauj mainīt telpas datus, piesaisti ēkai vai atbildīgajam lietotājam.
     Datu avots: RoomController@edit, saglabāšana caur RoomController@update.
     Galvenās daļas:
     1. Hero zona.
@@ -54,7 +54,7 @@
                 <label class="block">
                     <span class="crud-label">Atbildīgais lietotājs</span>
                     <select name="user_id" class="crud-control">
-                        <option value="">Nav piešaistīts</option>
+                        <option value="">Nav piesaistīts</option>
                         @foreach ($users as $roomUser)
                             <option value="{{ $roomUser->id }}" @selected(old('user_id', $room->user_id) == $roomUser->id)>{{ $roomUser->full_name }}</option>
                         @endforeach

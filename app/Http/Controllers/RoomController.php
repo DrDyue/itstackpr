@@ -130,7 +130,7 @@ class RoomController extends Controller
     }
 
     /**
-     * Dzēš telpu tikai tad, ja tai vairs nav piešaistītu ierīču.
+     * Dzēš telpu tikai tad, ja tai vairs nav piesaistītu ierīču.
      */
     public function destroy(Room $room)
     {
@@ -141,7 +141,7 @@ class RoomController extends Controller
         if ($devicesCount > 0) {
             return redirect()
                 ->route('rooms.index')
-                ->with('error', 'Telpu nevar dzēst, jo tai piešaistītas ' . $devicesCount . ' ierīce' . ($devicesCount === 1 ? '' : 's') . '. Vispirms pārvieto vai atsien ierīces no si ieraksta, tad mēģiniet vēlreiz.');
+                ->with('error', 'Telpu nevar dzēst, jo tai piesaistītas ' . $devicesCount . ' ierīce' . ($devicesCount === 1 ? '' : 's') . '. Vispirms pārvieto vai atsien ierīces no šī ieraksta, tad mēģiniet vēlreiz.');
         }
 
         AuditTrail::deleted(auth()->id(), $room);
@@ -177,7 +177,7 @@ class RoomController extends Controller
             'notes' => ['nullable', 'string', 'max:200'],
         ], [
             'building_id.required' => 'Izvēlies ēku, kurai telpa pieder.',
-            'room_number.required' => 'Noradi telpas numuru.',
+            'room_number.required' => 'Norādi telpas numuru.',
         ]);
 
         $data['user_id'] = $data['user_id'] ?: null;

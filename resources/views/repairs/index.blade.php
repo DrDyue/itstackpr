@@ -172,11 +172,11 @@
                             class="quick-status-filter quick-status-filter-slate {{ $filters['mine'] ? 'quick-status-filter-active' : '' }}"
                         >
                             <x-icon name="user" size="h-4 w-4" />
-                            <span>Man piesķirtie</span>
+                            <span>Man piešķirtie</span>
                         </a>
                     @endif
                     <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
-                    <a href="{{ route('repairs.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notirit</span></a>
+                    <a href="{{ route('repairs.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt</span></a>
                 </div>
             </div>
         </form>
@@ -188,7 +188,7 @@
                 ['label' => 'Prioritate', 'value' => $filters['priority'] !== '' ? ($priorityLabels[$filters['priority']] ?? $filters['priority']) : null],
                 ['label' => 'Tips', 'value' => $filters['repair_type'] !== '' ? ($typeLabels[$filters['repair_type']] ?? $filters['repair_type']) : null],
                 ['label' => 'Kartosana', 'value' => $prioritySortLabel],
-                ['label' => 'Piesķirts', 'value' => $filters['mine'] && $canManageRepairs ? 'Man' : null],
+                ['label' => 'Piešķirts', 'value' => $filters['mine'] && $canManageRepairs ? 'Man' : null],
             ]"
             :clear-url="route('repairs.index')"
         />

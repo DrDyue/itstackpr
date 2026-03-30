@@ -205,7 +205,7 @@ class DeviceTransferController extends Controller
             'transfered_to_id' => ['required', 'exists:users,id', Rule::notIn([$user->id])],
             'transfer_reason' => ['required', 'string'],
         ], [
-            'device_id.required' => 'Izvēlies ierīci, kuru velies nodot.',
+            'device_id.required' => 'Izvēlies ierīci, kuru vēlies nodot.',
             'transfered_to_id.required' => 'Izvēlies saņēmēju.',
             'transfer_reason.required' => 'Apraksti pārsūtīšanas iemeslu.',
         ]);
@@ -215,20 +215,20 @@ class DeviceTransferController extends Controller
             throw ValidationException::withMessages([
                 'device_id' => [$user->canManageRequests()
                     ? 'Admins var pieteikt pārsūtīšanu tikai aktīvai un piešķirtai ierīcei.'
-                    : 'Vari pieteikt nodošanu tikai savai piešaistītai ierīcei.'],
+                    : 'Vari pieteikt nodošanu tikai savai piesaistītai ierīcei.'],
             ]);
         }
 
         $ownerId = $this->transferOwnerId($user, $device);
         if (! $ownerId) {
             throw ValidationException::withMessages([
-                'device_id' => ['Izvēlētājai ierīcei nav piesķirta atbildīgā persona.'],
+                'device_id' => ['Izvēlētājai ierīcei nav piešķirta atbildīgā persona.'],
             ]);
         }
 
         if ((int) $validated['transfered_to_id'] === (int) $ownerId) {
             throw ValidationException::withMessages([
-                'transfered_to_id' => ['Saņēmējs nevar būt tas pats lietotājs, kam ierīce jau ir piesķirta.'],
+                'transfered_to_id' => ['Saņēmējs nevar būt tas pats lietotājs, kam ierīce jau ir piešķirta.'],
             ]);
         }
 
@@ -268,10 +268,10 @@ class DeviceTransferController extends Controller
 
         if ($deviceTransfer->status !== DeviceTransfer::STATUS_SUBMITTED) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Sis pieteikums jau ir izskatīts.'], 409);
+                return response()->json(['message' => 'Šis pieteikums jau ir izskatīts.'], 409);
             }
 
-            return back()->with('error', 'Sis pieteikums jau ir izskatīts.');
+            return back()->with('error', 'Šis pieteikums jau ir izskatīts.');
         }
 
         $keepCurrentRoom = ! $request->exists('keep_current_room') || $request->boolean('keep_current_room');
@@ -306,7 +306,7 @@ class DeviceTransferController extends Controller
 
             if (! $device || $device->status !== Device::STATUS_ACTIVE) {
                 throw ValidationException::withMessages([
-                    'status' => ['Ierīci nevar nodot, jo tas statuss kops pieteikuma izveides ir mainijies.'],
+            'status' => ['Ierīci nevar nodot, jo tās statuss kopš pieteikuma izveides ir mainījies.'],
                 ]);
             }
 
@@ -367,7 +367,7 @@ class DeviceTransferController extends Controller
             $description = collect([
                 $device->type?->type_name,
                 collect([$device->manufacturer, $device->model])->filter()->implode(' '),
-                $device->assignedTo?->full_name ? 'paslaik: ' . $device->assignedTo->full_name : null,
+                $device->assignedTo?->full_name ? 'pašlaik: ' . $device->assignedTo->full_name : null,
                 $device->room?->room_number ? 'telpa ' . $device->room->room_number : null,
                 $device->building?->building_name,
             ])->filter()->implode(' | ');
@@ -409,25 +409,25 @@ class DeviceTransferController extends Controller
     {
         if ($device->status === Device::STATUS_REPAIR) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai ierīcei jau notiek remonts (' . $this->repairStatusLabel($device->activeRepair?->status) . '), tāpēc nodošanas pieteikumu veidot nevar.'],
+                'device_id' => ['Šai ierīcei jau notiek remonts (' . $this->repairStatusLabel($device->activeRepair?->status) . '), tāpēc nodošanas pieteikumu veidot nevar.'],
             ]);
         }
 
         if (DeviceTransfer::query()->where('device_id', $device->id)->where('status', DeviceTransfer::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai ierīcei jau ir gaidošs nodošanas pieteikums.'],
+                'device_id' => ['Šai ierīcei jau ir gaidošs nodošanas pieteikums.'],
             ]);
         }
 
         if (RepairRequest::query()->where('device_id', $device->id)->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai ierīcei jau ir gaidošs remonta pieteikums, tāpēc nodošanas pieteikumu veidot nevar.'],
+                'device_id' => ['Šai ierīcei jau ir gaidošs remonta pieteikums, tāpēc nodošanas pieteikumu veidot nevar.'],
             ]);
         }
 
         if (WriteoffRequest::query()->where('device_id', $device->id)->where('status', WriteoffRequest::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai ierīcei jau ir gaidošs norakstīšanas pieteikums, tāpēc nodošanas pieteikumu veidot nevar.'],
+                'device_id' => ['Šai ierīcei jau ir gaidošs norakstīšanas pieteikums, tāpēc nodošanas pieteikumu veidot nevar.'],
             ]);
         }
     }

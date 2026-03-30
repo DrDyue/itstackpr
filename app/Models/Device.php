@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 /**
  * Galvenais inventāra modelis.
  *
- * Šis modelis apvieno ierīces pamatdatus, piešaisti telpai un lietotājam,
+ * Šis modelis apvieno ierīces pamatdatus, piesaisti telpai un lietotājam,
  * kā arī šaites uz remontiem un dažādu tipu pieprasījumiem.
  */
 class Device extends Model

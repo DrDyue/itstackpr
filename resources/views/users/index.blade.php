@@ -46,7 +46,7 @@
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-sky">
                                 <x-icon name="profile" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Useri</span>
+                                <span class="inventory-inline-label">Darbinieki</span>
                                 <span class="inventory-inline-value">{{ $userSummary['user'] }}</span>
                             </span>
                         </div>
@@ -55,7 +55,7 @@
                         <div class="page-title-icon page-title-icon-violet"><x-icon name="users" size="h-7 w-7" /></div>
                         <div>
                             <h1 class="page-title">Lietotāji</h1>
-                            <p class="page-subtitle">Pārvaldi sistēmas lietotājus, lomas un piekluves statusus.</p>
+                            <p class="page-subtitle">Pārvaldi sistēmas lietotājus, lomas un piekļuves statusus.</p>
                         </div>
                     </div>
                 </div>
@@ -124,7 +124,7 @@
 
                 <div class="toolbar-actions justify-end">
                 <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
-                <a href="{{ route('users.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notirit</span></a>
+                <a href="{{ route('users.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt</span></a>
                 </div>
             </div>
         </form>
@@ -149,7 +149,7 @@
                     <tr>
                         <th class="px-4 py-3">Vārds</th>
                         <th class="px-4 py-3">E-pasts</th>
-                        <th class="px-4 py-3">Talrunis</th>
+                        <th class="px-4 py-3">Tālrunis</th>
                         <th class="px-4 py-3">Loma</th>
                         <th class="px-4 py-3">Amats</th>
                         <th class="px-4 py-3">Statuss</th>
@@ -194,7 +194,7 @@
                                             @click="open = false"
                                         >
                                             <x-icon name="device" size="h-4 w-4" />
-                                            <span>Apskatīt piešaistītas ierīces</span>
+                                            <span>Apskatīt piesaistītās ierīces</span>
                                         </a>
 
                                         <form method="POST" action="{{ route('users.destroy', $managedUser) }}" onsubmit="return confirm('Dzēst šo lietotāju?')" class="contents">

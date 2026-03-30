@@ -1,10 +1,10 @@
 {{--
     Lapa: Vienas ierīces detalizētais skats.
-    Atbildība: parāda pilnu informāciju par konkrētu ierīci, tās statusu, atrašanās vietu un šaistītajām darbībām.
+    Atbildība: parāda pilnu informāciju par konkrētu ierīci, tās statusu, atrašanās vietu un saistītajām darbībām.
     Datu avots: DeviceController@show.
     Galvenās daļas:
     1. Hero zona ar ierīces nosaukumu un pogām.
-    2. Pamata informācijas kartītes ar attēlu, identitāti un piešaisti.
+    2. Pamata informācijas kartītes ar attēlu, identitāti un piesaisti.
     3. Saistītā vēsture un papildu darbības atkarībā no lietotāja tiesībām.
 --}}
 <x-app-layout>
@@ -64,7 +64,7 @@
             </div>
         </div>
 
-        {{-- Ierīces galvenā informācija, attēls un šaistītās darbības. --}}
+        {{-- Ierīces galvenā informācija, attēls un saistītās darbības. --}}
         <section class="surface-card p-6">
             <div class="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
                 <div class="flex flex-col gap-5 md:flex-row">
@@ -104,9 +104,9 @@
                                 </div>
                             </div>
                             <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
-                                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Piešaiste</div>
+                                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Piesaiste</div>
                                 <div class="mt-3 space-y-2 text-sm text-slate-700">
-                                    <div><strong class="text-slate-900">Lietotājs:</strong> {{ $device->assignedTo?->full_name ?: 'Nav piesķirts' }}</div>
+                                    <div><strong class="text-slate-900">Lietotājs:</strong> {{ $device->assignedTo?->full_name ?: 'Nav piešķirts' }}</div>
                                     <div><strong class="text-slate-900">Ēka:</strong> {{ $device->building?->building_name ?: 'Nav norādīta' }}</div>
                                     <div><strong class="text-slate-900">Telpa:</strong> {{ $device->room?->room_number ?: 'Nav norādīta' }}@if ($device->room?->room_name) | {{ $device->room->room_name }} @endif</div>
                                     <div><strong class="text-slate-900">Izveidoja:</strong> {{ $device->createdBy?->full_name ?: 'Sistēma' }}</div>
@@ -250,7 +250,7 @@
                     <x-icon name="repair-request" size="h-5 w-5" class="text-sky-600" />
                     <span>Remonta pieteikumi</span>
                 </h2>
-                <p class="mt-2 text-sm leading-6 text-slate-600">Visi ierīces remonta pieteikumi ar iesniedzeju, statusu un izskatīšanas piezīmem.</p>
+                <p class="mt-2 text-sm leading-6 text-slate-600">Visi ierīces remonta pieteikumi ar iesniedzēju, statusu un izskatīšanas piezīmēm.</p>
                 <div class="mt-4 space-y-3 text-sm">
                     @forelse ($visibleRepairRequests as $request)
                         <div class="surface-card-muted">
@@ -351,7 +351,7 @@
                     <x-icon name="transfer" size="h-5 w-5" class="text-emerald-600" />
                     <span>Pārsūtīšanas un nodošanas</span>
                 </h2>
-                <p class="mt-2 text-sm leading-6 text-slate-600">Ierīces nodošanas vēsture starp lietotājiem un šaistitie izskatīšanas lēmumi.</p>
+                <p class="mt-2 text-sm leading-6 text-slate-600">Ierīces nodošanas vēsture starp lietotājiem un saistītie izskatīšanas lēmumi.</p>
                 <div class="mt-4 space-y-3 text-sm">
                     @forelse ($visibleTransfers as $transfer)
                         <div class="surface-card-muted">

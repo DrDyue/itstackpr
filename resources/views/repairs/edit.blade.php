@@ -19,7 +19,7 @@
         $statusMessage = match ($repair->status) {
             'in-progress' => 'Remonts šobrīd atrodas procesā. Statusu no šī skata nevar rediģēt tieši, izmanto zemāk redzamās darbības.',
             'completed' => 'Remonts ir pabeigts. Ja vajag turpināt darbu, vari to atgriezt atpakaļ uz procesa statusu.',
-            'cancelled' => 'Remonts ir atcelts. Ja darbs tomer jatjauno, vari to pārslēgt atpakaļ uz gaida vai procesā statusu.',
+            'cancelled' => 'Remonts ir atcelts. Ja darbs tomēr jāatjauno, vari to pārslēgt atpakaļ uz gaida vai procesa statusu.',
             default => 'Remonts šobrīd gaida uzsākšanu. Kad darbs sākts, pārslēdz to uz procesā statusu.',
         };
     @endphp

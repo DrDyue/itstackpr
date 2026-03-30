@@ -18,12 +18,12 @@
         ->flatMap(function (string $field) {
             return match (true) {
                 str_contains($field, 'device') => ['Izvēlies ierīci no saraksta vēlreiz. Ja tā vairs nav pieejama, atsvaidzini lapu vai nomaini darbību.'],
-                str_contains($field, 'room') || str_contains($field, 'building') => ['Pārbaudi atrašanās vietu. Aktīvai ierīcei jābūt piešaistītai telpai, un telpai jābūt derīgai izvēlētajai ēkai.'],
+                str_contains($field, 'room') || str_contains($field, 'building') => ['Pārbaudi atrašanās vietu. Aktīvai ierīcei jābūt piesaistītai telpai, un telpai jābūt derīgai izvēlētajai ēkai.'],
                 str_contains($field, 'assigned') || $field === 'user_id' || $field === 'transfered_to_id' => ['Pārbaudi atbildīgo personu vai saņēmēju un izvēlies ierakstu no meklējamā saraksta vēlreiz.'],
                 str_contains($field, 'status') => ['Izvēlies vienu no piedāvātajiem statusiem. Ja ieraksts jau ir apstrādāts, atver sarakstu no jauna un pārbaudi aktīvo stāvokli.'],
                 str_contains($field, 'image') || str_contains($field, 'file') => ['Pārbaudi failu. Drīkst izmantot tikai atbalstītu faila tipu, un failam jābūt pietiekami mazam augšupielādei.'],
                 str_contains($field, 'date') => ['Pārbaudi datumus. Ja aizpildi vairākus datumus, tiem savstarpēji jāsaskan.'],
-                default => ['Izlabo iezīmēto lauku un mēģini vēlreiz. Ja problēma atkārtojas, atver ierakstu no jauna un pārbaudi, vai šaistītie dati vēl ir pieejami.'],
+                default => ['Izlabo iezīmēto lauku un mēģini vēlreiz. Ja problēma atkārtojas, atver ierakstu no jauna un pārbaudi, vai saistītie dati vēl ir pieejami.'],
             };
         })
         ->unique()

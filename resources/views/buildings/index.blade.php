@@ -25,7 +25,7 @@
                         <div class="page-title-icon page-title-icon-slate"><x-icon name="building" size="h-7 w-7" /></div>
                         <div>
                             <h1 class="page-title">Ēkas</h1>
-                            <p class="page-subtitle">Ēku saraksts un pamata dati ar atru pieeju telpu pārvaldibai.</p>
+                            <p class="page-subtitle">Ēku saraksts un pamata dati ar ātru pieeju telpu pārvaldībai.</p>
                         </div>
                     </div>
                 </div>
@@ -56,7 +56,7 @@
             </label>
             <div class="toolbar-actions md:col-span-2">
                 <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
-                <a href="{{ route('buildings.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notirit</span></a>
+                <a href="{{ route('buildings.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt</span></a>
             </div>
         </form>
 

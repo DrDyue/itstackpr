@@ -17,7 +17,7 @@
                         <div class="page-title-icon page-title-icon-emerald"><x-icon name="room" size="h-7 w-7" /></div>
                         <div>
                             <h1 class="page-title">Jauna telpa</h1>
-                            <p class="page-subtitle">Pievieno telpu un, ja vajag, piešaisti atbildīgo lietotāju.</p>
+                            <p class="page-subtitle">Pievieno telpu un, ja vajag, piesaisti atbildīgo lietotāju.</p>
                         </div>
                     </div>
                 </div>
@@ -27,7 +27,7 @@
 
         <x-validation-summary />
 
-        {{-- Telpas forma piešaista telpu ēkai, stāvam un atbildīgajam lietotājam. --}}
+        {{-- Telpas forma piesaista telpu ēkai, stāvam un atbildīgajam lietotājam. --}}
         <form method="POST" action="{{ route('rooms.store') }}" class="surface-card space-y-6 p-6">
             @csrf
             <div class="grid gap-4 md:grid-cols-2">
@@ -54,7 +54,7 @@
                 <label class="block">
                     <span class="crud-label">Atbildīgais lietotājs</span>
                     <select name="user_id" class="crud-control">
-                        <option value="">Nav piešaistīts</option>
+                        <option value="">Nav piesaistīts</option>
                         @foreach ($users as $roomUser)
                             <option value="{{ $roomUser->id }}" @selected(old('user_id') == $roomUser->id)>{{ $roomUser->full_name }}</option>
                         @endforeach

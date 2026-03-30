@@ -5,7 +5,7 @@
     Galvenās daļas:
     1. Hero un darbības.
     2. Filtri pēc nosaukuma un kategorijas.
-    3. Tipu tabula ar piešaistīto ierīču skaitu.
+    3. Tipu tabula ar piesaistīto ierīču skaitu.
 --}}
 <x-app-layout>
     @php
@@ -82,7 +82,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
                             </svg>
-                            Notirit
+                            Notīrīt
                         </a>
                     </div>
                 </div>
@@ -153,7 +153,7 @@
                 </article>
             @empty
                 <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-6 py-14 text-center text-sm text-slate-500">
-                    Neviens ierīces tips neatbilst atlasitajiem filtriem.
+                    Neviens ierīces tips neatbilst atlasītajiem filtriem.
                 </div>
             @endforelse
         </div>

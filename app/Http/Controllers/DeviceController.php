@@ -39,7 +39,7 @@ class DeviceController extends Controller
 
     private const DEFAULT_WAREHOUSE_ROOM_NUMBER_PREFIX = 'NOL-';
 
-    private const DEFAULT_BUILDING_NAME = 'Ludzēs novada pasvaldiba';
+    private const DEFAULT_BUILDING_NAME = 'Ludzas novada pašvaldība';
 
     /**
      * Parāda ierīču sarakstu ar lomām atkarīgu filtrēšanu un statusu palīgdatiem.
@@ -76,7 +76,8 @@ class DeviceController extends Controller
         ];
 
         $filters['has_status_filter'] = count($filters['statuses']) > 0 && count($filters['statuses']) < count(self::STATUSES);
-        $filters['has_request_type_filter'] = count($filters['request_types']) > 0 && count($filters['request_types']) < count(self::REQUEST_TYPES);
+        // Aktīvo pieprasījumu filtri darbojas tikai tad, kad lietotājs pats ieslēdz vismaz vienu tipu.
+        $filters['has_request_type_filter'] = count($filters['request_types']) > 0;
 
         $summaryQuery = $this->visibleDevicesQuery($user);
         $accessibleRooms = $this->accessibleRooms($user);
@@ -543,7 +544,7 @@ class DeviceController extends Controller
             }
         }
 
-        $flash = $processed > 0 ? 'Apstradatas ierīces: '.$processed.'.' : 'Neviena ierīce netika apstradata.';
+        $flash = $processed > 0 ? 'Apstrādātās ierīces: '.$processed.'.' : 'Neviena ierīce netika apstrādāta.';
         if ($messages !== []) {
             $flash .= ' '.implode(' ', array_slice($messages, 0, 3));
         }
@@ -649,10 +650,10 @@ class DeviceController extends Controller
                 'device_image' => ['nullable', 'image', 'max:'.(int) config('devices.max_upload_kb', 5120)],
             ],
             [
-                'code.required' => 'Noradi ierīces kodu.',
-                'name.required' => 'Noradi ierīces nosaukumu.',
+                'code.required' => 'Norādi ierīces kodu.',
+                'name.required' => 'Norādi ierīces nosaukumu.',
                 'device_type_id.required' => 'Izvēlies ierīces tipu.',
-                'model.required' => 'Noradi ierīces modeli.',
+                'model.required' => 'Norādi ierīces modeli.',
                 'status.required' => 'Izvēlies ierīces statusu.',
                 'assigned_to_id.required' => 'Izvēlies atbildīgo personu.',
                 'room_id.required' => 'Izvēlies telpu.',
@@ -940,7 +941,7 @@ class DeviceController extends Controller
         $repairStatusLabel = $this->repairStatusLabel($device->activeRepair?->status);
 
         if ($repairStatusLabel) {
-            return 'Ierīce šobrīd ir remonta ar statusu "'.$repairStatusLabel.'".';
+            return 'Ierīce šobrīd ir remontā ar statusu "'.$repairStatusLabel.'".';
         }
 
         return 'Ierīce šobrīd ir remonta.';
@@ -978,7 +979,7 @@ class DeviceController extends Controller
                 'writeoff' => false,
                 'transfer' => false,
                 'can_create_any' => false,
-                'reason' => 'Sai ierīcei jau ir gaidošs remonta pieteikums.',
+                'reason' => 'Šai ierīcei jau ir gaidošs remonta pieteikums.',
             ];
         }
 
@@ -988,7 +989,7 @@ class DeviceController extends Controller
                 'writeoff' => false,
                 'transfer' => false,
                 'can_create_any' => false,
-                'reason' => 'Sai ierīcei jau ir gaidošs norakstīšanas pieteikums.',
+                'reason' => 'Šai ierīcei jau ir gaidošs norakstīšanas pieteikums.',
             ];
         }
 
@@ -998,7 +999,7 @@ class DeviceController extends Controller
                 'writeoff' => false,
                 'transfer' => false,
                 'can_create_any' => false,
-                'reason' => 'Sai ierīcei jau ir gaidošs nodošanas pieteikums.',
+                'reason' => 'Šai ierīcei jau ir gaidošs nodošanas pieteikums.',
             ];
         }
 
@@ -1137,7 +1138,7 @@ class DeviceController extends Controller
     private function changeDeviceStatus(Device $device, string $status): array
     {
         if (! in_array($status, self::STATUSES, true)) {
-            return ['level' => 'error', 'message' => 'Nav izvēlets korekts statuss.'];
+            return ['level' => 'error', 'message' => 'Nav izvēlēts korekts statuss.'];
         }
 
         if ($status === Device::STATUS_REPAIR && $device->status !== Device::STATUS_ACTIVE) {
@@ -1145,7 +1146,7 @@ class DeviceController extends Controller
         }
 
         if ($status === Device::STATUS_REPAIR && $device->repairs()->whereIn('status', ['waiting', 'in-progress'])->exists()) {
-            return ['level' => 'error', 'message' => 'Sai ierīcei jau ir aktīvs remonta ieraksts.'];
+            return ['level' => 'error', 'message' => 'Šai ierīcei jau ir aktīvs remonta ieraksts.'];
         }
 
         if ($status === Device::STATUS_WRITEOFF && $device->status !== Device::STATUS_ACTIVE) {
@@ -1172,7 +1173,7 @@ class DeviceController extends Controller
                     'device_id' => $device->id,
                     'issue_reported_by' => null,
                     'accepted_by' => auth()->id(),
-                    'description' => 'Ierīce nodota remonta no ierīču saraksta.',
+                    'description' => 'Ierīce nodota remontā no ierīču saraksta.',
                     'status' => 'waiting',
                     'repair_type' => 'internal',
                     'priority' => 'medium',
@@ -1190,7 +1191,7 @@ class DeviceController extends Controller
                 AuditTrail::updatedFromState(auth()->id(), $device, $before, ['status' => $device->status]);
             });
 
-            return ['level' => 'success', 'message' => 'Ierīce nodota remonta. Izveidots remonta ieraksts #'.$repair->id.'.'];
+            return ['level' => 'success', 'message' => 'Ierīce nodota remontā. Izveidots remonta ieraksts #'.$repair->id.'.'];
         }
 
         $before = [
@@ -1223,7 +1224,7 @@ class DeviceController extends Controller
         }
 
         if (! $roomId) {
-            return ['level' => 'error', 'message' => 'Nav izvēleta telpa.'];
+            return ['level' => 'error', 'message' => 'Nav izvēlēta telpa.'];
         }
 
         $room = Room::query()->with('building')->find($roomId);
@@ -1257,7 +1258,7 @@ class DeviceController extends Controller
         }
 
         if (! $assignedToId) {
-            return ['level' => 'error', 'message' => 'Nav izvēleta atbildīgā persona.'];
+            return ['level' => 'error', 'message' => 'Nav izvēlēta atbildīgā persona.'];
         }
 
         $assignee = User::query()
@@ -1269,7 +1270,7 @@ class DeviceController extends Controller
         }
 
         if ((int) $device->assigned_to_id === (int) $assignee->id) {
-            return ['level' => 'error', 'message' => 'Ierīce jau ir piesķirta šai personai.'];
+            return ['level' => 'error', 'message' => 'Ierīce jau ir piešķirta šai personai.'];
         }
 
         $before = $device->only(['assigned_to_id']);

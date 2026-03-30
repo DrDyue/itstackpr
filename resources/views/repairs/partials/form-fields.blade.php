@@ -63,7 +63,7 @@
                         <div class="block">
                             <span class="crud-label">Izpildītājs</span>
                             <input type="text" class="crud-control bg-slate-50 text-slate-600" value="{{ $currentRepair->executor?->full_name ?: 'Nav norādīts' }}" readonly>
-                            <div class="mt-2 text-xs text-slate-500">Izpildītājs tiek piesķirts automātiski brīdi, kad remonts no gaida pariet uz procesā statusu.</div>
+                            <div class="mt-2 text-xs text-slate-500">Izpildītājs tiek piešķirts automātiski brīdī, kad remonts no gaida pāriet uz procesa statusu.</div>
                         </div>
                     @endif
 
@@ -77,7 +77,7 @@
             <div class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
                 <div>
                     <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta iestatijumi</div>
-                    <div class="mt-1 text-sm text-slate-500">Izvēlies remonta tipu, prioritati un izmaksu informāciju.</div>
+                    <div class="mt-1 text-sm text-slate-500">Izvēlies remonta tipu, prioritāti un izmaksu informāciju.</div>
                 </div>
                 <div class="mt-4 grid gap-4 md:grid-cols-2">
                     <div class="md:col-span-2">

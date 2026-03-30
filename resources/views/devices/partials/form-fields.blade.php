@@ -3,8 +3,8 @@
     Atbildība: glabā visus ievades laukus, ko izmanto gan jaunās ierīces izveide, gan esošas ierīces rediģēšana.
     Kāpēc tas ir svarīgi:
     1. Viena un tā pati biznesa loģika netiek dublēta create un edit lapās.
-    2. Šeit tiek sagatavoti noklusējumi, dropdown izvēles un datu piešaistes vērtības.
-    3. Tieši šeit ir redzams, kuri lauki ir obligāti un kā tie ir sašaistīti ar backend validāciju.
+    2. Šeit tiek sagatavoti noklusējumi, dropdown izvēles un datu piesaistes vērtības.
+    3. Tieši šeit ir redzams, kuri lauki ir obligāti un kā tie ir sasaistīti ar backend validāciju.
 --}}
 @php
     $current = $device;
@@ -98,12 +98,12 @@
     $selectedStatusLabel = old('status_query', $statusLabels[$selectedStatus] ?? 'Aktīva');
 @endphp
 
-{{-- Forma sadalīta pa semantiskām kartītēm: pamata dati, piešaiste, finanses, attēls un piezīmes. --}}
+{{-- Forma sadalīta pa semantiskām kartītēm: pamata dati, piesaiste, finanses, attēls un piezīmes. --}}
 <div class="device-form-grid">
     <div class="space-y-6">
         @if ($isWrittenOff)
             <div class="rounded-[1.75rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-6 text-amber-900">
-                Norakstītai ierīcei var labot tikai informācijas laukus. Statuss, piešaiste lietotājam un telpa vairs netiek mainīti.
+                Norakstītai ierīcei var labot tikai informācijas laukus. Statuss, piesaiste lietotājam un telpa vairs netiek mainīti.
             </div>
         @endif
 
@@ -115,7 +115,7 @@
                 </div>
                 <div class="device-form-section-copy">
                     <div class="device-form-section-name">Pamata dati</div>
-                    <div class="device-form-section-note">Ievadi galveno informāciju, pēc kuras ierīci atradis un atpazis sistēma.</div>
+                    <div class="device-form-section-note">Ievadi galveno informāciju, pēc kuras ierīci atradīsi un atpazīsi sistēmā.</div>
                 </div>
             </div>
 
@@ -163,7 +163,7 @@
                     <x-icon name="users" size="h-5 w-5" />
                 </div>
                 <div class="device-form-section-copy">
-                    <div class="device-form-section-name">Statuss un piešaiste</div>
+                    <div class="device-form-section-name">Statuss un piesaiste</div>
                     <div class="device-form-section-note">Norādi, kam ierīce piešķirta un kurā telpā tā atrodas ikdienā.</div>
                 </div>
             </div>
@@ -208,7 +208,7 @@
                     @if ($isWrittenOff)
                         <input type="hidden" name="assigned_to_id" value="">
                         <div class="crud-control flex items-center bg-slate-50 text-slate-700">
-                            <span>Nav piesķirts</span>
+                            <span>Nav piešķirts</span>
                         </div>
                     @else
                         <x-searchable-select
@@ -229,7 +229,7 @@
                         @if ($isWrittenOff)
                             <input type="hidden" name="building_id" value="">
                             <div class="crud-control flex items-center bg-slate-50 text-slate-700">
-                                <span>Nav piesķirta ēkai</span>
+                                <span>Nav piešķirta ēkai</span>
                             </div>
                         @else
                             <x-searchable-select
@@ -252,7 +252,7 @@
                     @if ($isWrittenOff)
                         <input type="hidden" name="room_id" value="">
                         <div class="crud-control flex items-center bg-slate-50 text-slate-700">
-                            <span>Nav piesķirta telpai</span>
+                            <span>Nav piešķirta telpai</span>
                         </div>
                     @else
                         <x-searchable-select
@@ -276,8 +276,8 @@
                     <x-icon name="calendar" size="h-5 w-5" />
                 </div>
                 <div class="device-form-section-copy">
-                    <div class="device-form-section-name">Iegade, garantija un piezīmes</div>
-                    <div class="device-form-section-note">Papildini datumu, cenu, attēla un piezīmju laukus, ja tie ir zinami.</div>
+                    <div class="device-form-section-name">Iegāde, garantija un piezīmes</div>
+                    <div class="device-form-section-note">Papildini datumu, cenu, attēla un piezīmju laukus, ja tie ir zināmi.</div>
                 </div>
             </div>
 
@@ -325,7 +325,7 @@
                         <li>Kods, nosaukums, tips un modelis ir obligāti lauki.</li>
                         <li>Atbildīgā persona un telpa ir obligātas un pēc noklusējuma tiek aizpildītas automātiski.</li>
                         <li>Jauna ierīce vienmēr tiek saglabāta ar aktīvu statusu.</li>
-                        <li>Datumi, cena un piezīmes var palikt tuksi, ja tie nav zinami.</li>
+                        <li>Datumi, cena un piezīmes var palikt tukši, ja tie nav zināmi.</li>
                     </ul>
                 </div>
 
@@ -348,7 +348,7 @@
                         <div class="mt-3 space-y-2">
                             <div><strong class="text-slate-900">Statuss:</strong> {{ $statusLabels[$current->status] ?? $current->status }}</div>
                             <div><strong class="text-slate-900">Kods:</strong> {{ $current->code ?: '-' }}</div>
-                            <div><strong class="text-slate-900">Lietotājs:</strong> {{ $current->assignedTo?->full_name ?: 'Nav piesķirts' }}</div>
+                            <div><strong class="text-slate-900">Lietotājs:</strong> {{ $current->assignedTo?->full_name ?: 'Nav piešķirts' }}</div>
                             <div><strong class="text-slate-900">Atrašanās vieta:</strong> {{ $current->building?->building_name ?: 'Bez ēkas' }} / {{ $current->room?->room_number ?: 'Bez telpas' }}</div>
                         </div>
                     </div>

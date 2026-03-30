@@ -13,7 +13,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>IT Inventara uzskaites sistēma</title>
+        <title>IT inventāra uzskaites sistēma</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/cssfamily=figtree:400,500,600&display=swap" rel="stylesheet" />
@@ -42,12 +42,12 @@
                         <a href="/" class="auth-logo-link">
                             <x-application-logo />
                         </a>
-                        <h1>IT Inventara uzskaites sistēma</h1>
+                        <h1>IT inventāra uzskaites sistēma</h1>
                         <p>
                             @if (request()->routeIs('login'))
-                                Laipni ludzam atpakaļ
+                                Laipni lūdzam atpakaļ
                             @elseif (request()->routeIs('register'))
-                                Izveidojiet darbiniēka kontu
+                                    Izveidojiet darbinieka kontu
                             @else
                                 Atiestatiet savu paroli
                             @endif
@@ -58,11 +58,11 @@
                         <div class="auth-card-header">
                             <h2>
                                 @if (request()->routeIs('login'))
-                                    Pierakstisanas
+                                    Pierakstīšanās
                                 @elseif (request()->routeIs('register'))
-                                    Registracija
+                                    Reģistrācija
                                 @elseif (request()->routeIs('password.reset'))
-                                    Atiestatit paroli
+                                    Atiestatīt paroli
                                 @else
                                     Aizmirsta parole
                                 @endif
@@ -74,14 +74,14 @@
                         </div>
 
                         <div class="auth-footer">
-                            <p>IT Inventara uzskaites sistēma 2026</p>
+                            <p>IT inventāra uzskaites sistēma 2026</p>
                         </div>
                     </div>
 
                     <div class="auth-info space-y-1">
                         @if (request()->routeIs('login'))
-                            <p>Demo admin: artis.berzins@ludzas.lv | Parole: password</p>
-                            <p>Demo user: ilze.strautina@ludzas.lv | Parole: password</p>
+                            <p>Demo admins: artis.berzins@ludzas.lv | Parole: password</p>
+                            <p>Demo darbinieks: ilze.strautina@ludzas.lv | Parole: password</p>
                         @else
                             <p>Jaunu lietotāju izveido administrators.</p>
                         @endif
@@ -91,7 +91,7 @@
 
             <div class="auth-right">
                 <div class="auth-right-content max-w-md">
-                    <h2>IT inventara sistēma</h2>
+                    <h2>IT inventāra sistēma</h2>
                 </div>
             </div>
         </div>
@@ -121,10 +121,10 @@
                         @endif
                     </div>
                     <div class="flash-toast-body">
-                        <div class="flash-toast-title">{{ $flashTone === 'success' ? 'Veiksmīgi' : 'Pazinojums' }}</div>
+                        <div class="flash-toast-title">{{ $flashTone === 'success' ? 'Veiksmīgi' : 'Paziņojums' }}</div>
                         <div class="flash-toast-message">{{ $flashMessage }}</div>
                     </div>
-                    <button type="button" class="flash-toast-close" @click="open = false" aria-label="Aizvert">
+                    <button type="button" class="flash-toast-close" @click="open = false" aria-label="Aizvērt">
                         <x-icon name="x-mark" size="h-4 w-4" />
                     </button>
                 </div>

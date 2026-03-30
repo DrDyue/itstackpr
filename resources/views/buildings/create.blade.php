@@ -1,6 +1,6 @@
 {{--
     Lapa: Jaunas ēkas izveide.
-    Atbildība: ļauj administratoram sagatavot jaunu ēkas ierakstu telpu un ierīču piešaistei.
+    Atbildība: ļauj administratoram sagatavot jaunu ēkas ierakstu telpu un ierīču piesaistei.
     Datu avots: BuildingController@create, saglabāšana caur BuildingController@store.
     Galvenās daļas:
     1. Hero ar lapas skaidrojumu.
@@ -17,7 +17,7 @@
                         <div class="page-title-icon page-title-icon-emerald"><x-icon name="building" size="h-7 w-7" /></div>
                         <div>
                             <h1 class="page-title">Jauna ēka</h1>
-                            <p class="page-subtitle">Pievieno jaunu ēku un sagatavo to telpu piešaistei.</p>
+                            <p class="page-subtitle">Pievieno jaunu ēku un sagatavo to telpu piesaistei.</p>
                         </div>
                     </div>
                 </div>

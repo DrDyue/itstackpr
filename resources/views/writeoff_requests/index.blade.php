@@ -67,7 +67,7 @@
                         <div class="page-title-icon page-title-icon-rose"><x-icon name="writeoff" size="h-7 w-7" /></div>
                         <div>
                             <h1 class="page-title">Norakstīšanas pieteikumi</h1>
-                            <p class="page-subtitle">{{ $canReview ? 'Visi lietotāju norakstīšanas pieteikumi. Admins pienem gala lēmumu.' : 'Tavi norakstīšanas pieteikumi.' }}</p>
+                            <p class="page-subtitle">{{ $canReview ? 'Visi lietotāju norakstīšanas pieteikumi. Admins pieņem gala lēmumu.' : 'Tavi norakstīšanas pieteikumi.' }}</p>
                         </div>
                     </div>
                 </div>
@@ -110,7 +110,7 @@
             </div>
             <div class="toolbar-actions xl:justify-end">
                 <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
-                <a href="{{ route('writeoff-requests.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notirit</span></a>
+                <a href="{{ route('writeoff-requests.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt</span></a>
             </div>
         </form>
 

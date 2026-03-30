@@ -29,7 +29,7 @@
                         </div>
                         <div>
                             <h1 class="page-title">Darbvirsma</h1>
-                            <p class="page-subtitle">Vienuviet redzi telpu strukturu, atri filtre ierīces un pārvaldi galvenas darbības.</p>
+                            <p class="page-subtitle">Vienuviet redzi telpu struktūru, ātri filtrē ierīces un pārvaldi galvenās darbības.</p>
                         </div>
                     </div>
                 </div>
@@ -101,7 +101,7 @@
                             </div>
                         </details>
                     @empty
-                        <div class="dash-empty-block">Pieejamu telpu paslaik nav.</div>
+                        <div class="dash-empty-block">Pieejamu telpu pašlaik nav.</div>
                     @endforelse
                 </div>
             </aside>
@@ -128,7 +128,7 @@
                                 </div>
                                 <a href="{{ route('dashboard') }}" class="btn-clear">
                                     <x-icon name="x-circle" size="h-4 w-4" />
-                                    <span>Notirit filtru</span>
+                                    <span>Notīrīt filtru</span>
                                 </a>
                             @endif
                         </div>
@@ -142,7 +142,7 @@
                                     <th>Kods</th>
                                     <th>Ierīce</th>
                                     <th>Atrašanās vieta</th>
-                                    <th>Piesķirta</th>
+                                    <th>Piešķirta</th>
                                     <th>Statuss</th>
                                     <th>Darbības</th>
                                 </tr>
@@ -188,7 +188,7 @@
                                             <div class="dash-table-subline">{{ $roomLabel !== '' ? $roomLabel : 'Telpa nav norādīta' }}</div>
                                         </td>
                                         <td>
-                                            <div class="dash-table-cell-strong">{{ $device->assignedTo?->full_name ?: 'Nav piesķirts' }}</div>
+                                            <div class="dash-table-cell-strong">{{ $device->assignedTo?->full_name ?: 'Nav piešķirts' }}</div>
                                             <div class="dash-table-subline">{{ $assignedJobTitle }}</div>
                                         </td>
                                         <td>

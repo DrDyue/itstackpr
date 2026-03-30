@@ -26,13 +26,13 @@ class RuntimeSchemaBootstrapper
 {
     private const DEFAULT_WAREHOUSE_ROOM_NAME = 'Noliktava';
     private const DEFAULT_WAREHOUSE_ROOM_NUMBER_PREFIX = 'NOL-';
-    private const DEFAULT_BUILDING_NAME = 'Ludzēs novada pasvaldiba';
+    private const DEFAULT_BUILDING_NAME = 'Ludzas novada pašvaldība';
 
     private ?int $fallbackOwnerId = null;
     private bool $resolvedFallbackOwnerId = false;
 
     /**
-     * Pārliecinās, kā visas kritiskās tabulas, kolonnas un pamata dati eksistē.
+     * Pārliecinās, ka visas kritiskās tabulas, kolonnas un pamata dati eksistē.
      */
     public function ensure(): void
     {

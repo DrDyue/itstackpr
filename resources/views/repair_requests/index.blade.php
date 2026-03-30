@@ -123,7 +123,7 @@
                 </button>
                 <a href="{{ route('repair-requests.index') }}" class="btn-clear">
                     <x-icon name="clear" size="h-4 w-4" />
-                    <span>Notirit</span>
+                    <span>Notīrīt</span>
                 </a>
             </div>
         </form>

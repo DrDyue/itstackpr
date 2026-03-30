@@ -141,14 +141,14 @@ class UserController extends Controller
         }
 
         $blockingRelations = collect([
-            'piešaistītas ierīces' => $user->assignedDevices()->count(),
+            'piesaistītas ierīces' => $user->assignedDevices()->count(),
             'atbildētās telpas' => $user->responsibleRooms()->count(),
             'izveidoti remonta pieteikumi' => $user->repairRequests()->count(),
             'izskatīti remonta pieteikumi' => $user->reviewedRepairRequests()->count(),
             'izveidoti norakstīšanas pieteikumi' => $user->writeoffRequests()->count(),
             'izskatīti norakstīšanas pieteikumi' => $user->reviewedWriteoffRequests()->count(),
             'izveidotas nodošanas' => $user->outgoingTransfers()->count(),
-            'sanemtas nodošanas' => $user->incomingTransfers()->count(),
+            'saņemtas nodošanas' => $user->incomingTransfers()->count(),
             'izskatītas nodošanas' => $user->reviewedTransfers()->count(),
             'izveidotas ierīces' => $user->createdDevices()->count(),
             'pieteikti remonti' => $user->reportedRepairs()->count(),
@@ -163,7 +163,7 @@ class UserController extends Controller
 
             return redirect()->route('users.index')->with(
                 'error',
-                'Lietotāju nevar izdzēst, jo viņam vēl ir piešaistīti ieraksti: ' . $summary . '. Vispirms atsien vai pārvieto sos ierakstus.'
+                'Lietotāju nevar izdzēst, jo viņam vēl ir piesaistīti ieraksti: ' . $summary . '. Vispirms atsien vai pārvieto šos ierakstus.'
             );
         }
 
@@ -184,10 +184,10 @@ class UserController extends Controller
             'role' => ['required', Rule::in(self::ROLES)],
             'is_active' => ['nullable', 'boolean'],
         ], [
-            'full_name.required' => 'Noradi lietotāja vardu un uzvardu.',
-            'email.required' => 'Noradi lietotāja e-pastu.',
-            'password.required' => 'Jaunam lietotājam parole ir obligata.',
-            'password.min' => 'Parolei jabūt vismaz :min simbolus garai.',
+            'full_name.required' => 'Norādi lietotāja vārdu un uzvārdu.',
+            'email.required' => 'Norādi lietotāja e-pastu.',
+            'password.required' => 'Jaunam lietotājam parole ir obligāta.',
+            'password.min' => 'Parolei jābūt vismaz :min simbolus garai.',
         ]);
 
         $validated['phone'] = $validated['phone'] ?: null;

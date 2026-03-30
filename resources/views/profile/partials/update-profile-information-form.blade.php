@@ -4,7 +4,7 @@
     Kāpēc tas ir svarīgi:
     1. Vārds un amats tiek rādīti ierīču tabulās un pieteikumu kartītēs.
     2. E-pasts un telefons palīdz identificēt lietotāju un sazināties, ja tas nepieciešams.
-    3. Šī forma ir atdalīta no paroles maiņas, lai drošības dati nešajāuktos ar profila datiem.
+    3. Šī forma ir atdalīta no paroles maiņas, lai drošības dati nesajauktos ar profila datiem.
 --}}
 <section>
     <header class="border-b border-slate-200 pb-4">
@@ -30,7 +30,7 @@
             </div>
 
             <div>
-                <x-input-label for="phone" value="Talrunis" />
+                <x-input-label for="phone" value="Tālrunis" />
                 <x-text-input id="phone" name="phone" type="text" class="mt-2 block w-full" :value="old('phone', $user?->phone)" autocomplete="tel" />
                 <x-input-error class="mt-2" :messages="$errors->get('phone')" />
             </div>

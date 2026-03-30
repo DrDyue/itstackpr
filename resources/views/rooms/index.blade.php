@@ -28,8 +28,8 @@
             'search' => implode(' ', array_filter([$responsibleUser->full_name, $responsibleUser->job_title, $responsibleUser->email])),
         ])->values();
         $hasDeviceOptions = [
-            ['value' => '1', 'label' => 'Ar ierīcem', 'description' => 'Telpas ar ierīcem', 'search' => 'Ar ierīcem'],
-            ['value' => '0', 'label' => 'Bez ierīcem', 'description' => 'Telpas bez ierīcem', 'search' => 'Bez ierīcem'],
+            ['value' => '1', 'label' => 'Ar ierīcēm', 'description' => 'Telpas ar ierīcēm', 'search' => 'Ar ierīcēm'],
+            ['value' => '0', 'label' => 'Bez ierīcēm', 'description' => 'Telpas bez ierīcēm', 'search' => 'Bez ierīcēm'],
         ];
         $selectedBuildingLabel = optional($buildings->firstWhere('id', (int) $filters['building_id']))->building_name;
         $selectedDepartmentLabel = $filters['department'] !== '' ? $filters['department'] : null;
@@ -41,7 +41,7 @@
             <div class="page-hero-grid">
                 <div class="max-w-3xl">
                     <div class="flex flex-wrap items-center gap-2">
-                        <div class="page-eyebrow"><x-icon name="room" size="h-4 w-4" /><span>Telpu pārvaldiba</span></div>
+                        <div class="page-eyebrow"><x-icon name="room" size="h-4 w-4" /><span>Telpu pārvaldība</span></div>
                         <div class="inventory-inline-metrics">
                             <span class="inventory-inline-chip inventory-inline-chip-slate">
                                 <x-icon name="room" size="h-3.5 w-3.5" />
@@ -54,7 +54,7 @@
                         <div class="page-title-icon page-title-icon-slate"><x-icon name="room" size="h-7 w-7" /></div>
                         <div>
                             <h1 class="page-title">Telpas</h1>
-                            <p class="page-subtitle">Telpu saraksts ar atbildīgajiem lietotājiem un piešaisti ēkam.</p>
+                            <p class="page-subtitle">Telpu saraksts ar atbildīgajiem lietotājiem un piesaisti ēkām.</p>
                         </div>
                     </div>
                 </div>
@@ -121,7 +121,7 @@
             </label>
             <div class="toolbar-actions md:col-span-5">
                 <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
-                <a href="{{ route('rooms.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notirit</span></a>
+                <a href="{{ route('rooms.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt</span></a>
             </div>
         </form>
 
@@ -131,7 +131,7 @@
                 ['label' => 'Ēka', 'value' => $filters['building_id'] !== '' ? optional($buildings->firstWhere('id', (int) $filters['building_id']))->building_name : null],
                 ['label' => 'Nodaļa', 'value' => $filters['department']],
                 ['label' => 'Atbildīgais', 'value' => $filters['user_id'] !== '' ? optional($responsibleUsers->firstWhere('id', (int) $filters['user_id']))->full_name : null],
-                ['label' => 'Ierīces telpa', 'value' => $filters['has_devices'] === '1' ? 'Ar ierīcem' : ($filters['has_devices'] === '0' ? 'Bez ierīcem' : null)],
+                ['label' => 'Ierīces telpa', 'value' => $filters['has_devices'] === '1' ? 'Ar ierīcēm' : ($filters['has_devices'] === '0' ? 'Bez ierīcēm' : null)],
             ]"
             :clear-url="route('rooms.index')"
         />
@@ -145,7 +145,7 @@
                 <thead class="bg-slate-50 text-left text-slate-500">
                     <tr>
                         <th class="px-4 py-3">Ēka</th>
-                        <th class="px-4 py-3">Stavs</th>
+                        <th class="px-4 py-3">Stāvs</th>
                         <th class="px-4 py-3">Numurs</th>
                         <th class="px-4 py-3">Nosaukums</th>
                         <th class="px-4 py-3">Nodaļa</th>

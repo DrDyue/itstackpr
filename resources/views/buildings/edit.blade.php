@@ -1,6 +1,6 @@
 {{--
     Lapa: Ēkas rediģēšana.
-    Atbildība: ļauj atjaunot ēkas pamatdatus, kuri ietekmē telpu un ierīču piešaisti.
+    Atbildība: ļauj atjaunot ēkas pamatdatus, kuri ietekmē telpu un ierīču piesaisti.
     Datu avots: BuildingController@edit, saglabāšana caur BuildingController@update.
     Galvenās daļas:
     1. Hero ar rediģēšanas kontekstu.

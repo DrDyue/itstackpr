@@ -397,7 +397,7 @@ class RepairController extends Controller
         $device = Device::query()->find($validated['device_id']);
         if ($device && $device->status === Device::STATUS_WRITEOFF && (! $repair || (int) $repair->device_id !== (int) $device->id)) {
             throw ValidationException::withMessages([
-                'device_id' => ['So ierīci nevar nodot remonta, jo ta ir norakstīta.'],
+                'device_id' => ['Šo ierīci nevar nodot remontā, jo tā ir norakstīta.'],
             ]);
         }
 
@@ -409,19 +409,19 @@ class RepairController extends Controller
 
         if (! $repair && $device && RepairRequest::query()->where('device_id', $device->id)->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai ierīcei jau ir gaidošs remonta pieteikums.'],
+                'device_id' => ['Šai ierīcei jau ir gaidošs remonta pieteikums.'],
             ]);
         }
 
         if (! $repair && $device && WriteoffRequest::query()->where('device_id', $device->id)->where('status', WriteoffRequest::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai ierīcei jau ir gaidošs norakstīšanas pieteikums.'],
+                'device_id' => ['Šai ierīcei jau ir gaidošs norakstīšanas pieteikums.'],
             ]);
         }
 
         if (! $repair && $device && DeviceTransfer::query()->where('device_id', $device->id)->where('status', DeviceTransfer::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai ierīcei jau ir gaidošs nodošanas pieteikums.'],
+                'device_id' => ['Šai ierīcei jau ir gaidošs nodošanas pieteikums.'],
             ]);
         }
 
@@ -433,7 +433,7 @@ class RepairController extends Controller
 
             if ($activeRepairQuery->exists()) {
                 throw ValidationException::withMessages([
-                    'device_id' => ['Sai ierīcei jau ir aktīvs remonta ieraksts.'],
+                    'device_id' => ['Šai ierīcei jau ir aktīvs remonta ieraksts.'],
                 ]);
             }
         }
@@ -489,7 +489,7 @@ class RepairController extends Controller
             $description = collect([
                 $device->type?->type_name,
                 collect([$device->manufacturer, $device->model])->filter()->implode(' '),
-                $device->assignedTo?->full_name ? 'paslaik: ' . $device->assignedTo->full_name : null,
+                $device->assignedTo?->full_name ? 'pašlaik: ' . $device->assignedTo->full_name : null,
                 $device->room?->room_number ? 'telpa ' . $device->room->room_number : null,
                 $device->building?->building_name,
             ])->filter()->implode(' | ');

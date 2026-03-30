@@ -33,7 +33,7 @@
             @if ($clearUrl)
                 <a href="{{ $clearUrl }}" class="filter-chip filter-chip-link">
                     <x-icon name="clear" size="h-3.5 w-3.5" />
-                    <span>Notirit filtrus</span>
+                    <span>Notīrīt filtrus</span>
                 </a>
             @endif
         </div>

@@ -161,7 +161,7 @@ class RepairRequestController extends Controller
         $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
         if (! $device) {
             throw ValidationException::withMessages([
-                'device_id' => ['Vari pieteikt remontu tikai savai piešaistītai ierīcei.'],
+                'device_id' => ['Vari pieteikt remontu tikai savai piesaistītai ierīcei.'],
             ]);
         }
 
@@ -176,7 +176,7 @@ class RepairRequestController extends Controller
 
         AuditTrail::created($user->id, $repairRequest);
 
-        return redirect()->route('repair-requests.index')->with('success', 'Remonta pieteikums nosutits izskatīšanai');
+        return redirect()->route('repair-requests.index')->with('success', 'Remonta pieteikums nosūtīts izskatīšanai');
     }
 
     /**
@@ -196,10 +196,10 @@ class RepairRequestController extends Controller
 
         if ($repairRequest->status !== RepairRequest::STATUS_SUBMITTED) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Sis pieteikums jau ir izskatīts.'], 409);
+                return response()->json(['message' => 'Šis pieteikums jau ir izskatīts.'], 409);
             }
 
-            return back()->with('error', 'Sis pieteikums jau ir izskatīts.');
+            return back()->with('error', 'Šis pieteikums jau ir izskatīts.');
         }
 
         $validated = $this->validateInput($request, [
@@ -229,7 +229,7 @@ class RepairRequestController extends Controller
 
                 if ($device->repairs()->whereIn('status', ['waiting', 'in-progress'])->exists()) {
                     throw ValidationException::withMessages([
-                        'status' => ['Sai ierīcei jau ir aktīvs remonta ieraksts.'],
+                        'status' => ['Šai ierīcei jau ir aktīvs remonta ieraksts.'],
                     ]);
                 }
 
@@ -319,25 +319,25 @@ class RepairRequestController extends Controller
     {
         if ($device->status === Device::STATUS_REPAIR) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai ierīcei jau notiek remonts (' . $this->repairStatusLabel($device->activeRepair?->status) . '), tāpēc jaunu remonta pieteikumu veidot nevar.'],
+                'device_id' => ['Šai ierīcei jau notiek remonts (' . $this->repairStatusLabel($device->activeRepair?->status) . '), tāpēc jaunu remonta pieteikumu veidot nevar.'],
             ]);
         }
 
         if (RepairRequest::query()->where('device_id', $device->id)->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai ierīcei jau ir gaidošs remonta pieteikums.'],
+                'device_id' => ['Šai ierīcei jau ir gaidošs remonta pieteikums.'],
             ]);
         }
 
         if (WriteoffRequest::query()->where('device_id', $device->id)->where('status', 'submitted')->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai ierīcei jau ir gaidošs norakstīšanas pieteikums, tāpēc remonta pieteikumu veidot nevar.'],
+                'device_id' => ['Šai ierīcei jau ir gaidošs norakstīšanas pieteikums, tāpēc remonta pieteikumu veidot nevar.'],
             ]);
         }
 
         if (DeviceTransfer::query()->where('device_id', $device->id)->where('status', 'submitted')->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai ierīcei jau ir gaidošs nodošanas pieteikums, tāpēc remonta pieteikumu veidot nevar.'],
+                'device_id' => ['Šai ierīcei jau ir gaidošs nodošanas pieteikums, tāpēc remonta pieteikumu veidot nevar.'],
             ]);
         }
     }

@@ -68,7 +68,7 @@
             </div>
 
             <div>
-                <span class="mb-2 block text-sm font-medium text-slate-700">Svarigums</span>
+                <span class="mb-2 block text-sm font-medium text-slate-700">Svarīgums</span>
                 <x-searchable-select
                     name="severity"
                     queryName="severity_query"
@@ -112,7 +112,7 @@
                 </button>
                 <a href="{{ route('audit-log.index') }}" class="btn-clear">
                     <x-icon name="clear" size="h-4 w-4" />
-                    <span>Notirit</span>
+                    <span>Notīrīt</span>
                 </a>
             </div>
         </form>
@@ -125,7 +125,7 @@
                         <th class="px-4 py-3">Lietotājs</th>
                         <th class="px-4 py-3">Darbība</th>
                         <th class="px-4 py-3">Objekts</th>
-                        <th class="px-4 py-3">Svarigums</th>
+                        <th class="px-4 py-3">Svarīgums</th>
                         <th class="px-4 py-3">Apraksts</th>
                     </tr>
                 </thead>

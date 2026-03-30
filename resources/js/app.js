@@ -395,7 +395,7 @@ const registerAlpineData = () => {
                 repair: 'Remonts',
                 writeoff: 'Norakstīšana',
                 transfer: 'Nodošana',
-                'incoming-transfer': 'Jaizskata',
+                'incoming-transfer': 'Jāizskata',
             }[type] ?? 'Pieprasījums';
         },
         actionClasses(tone) {

@@ -19,7 +19,7 @@
         @endif
 
         <div class="form-group">
-            <x-input-label for="email">Darbiniēka e-pasts</x-input-label>
+            <x-input-label for="email">Darbinieka e-pasts</x-input-label>
             <x-text-input
                 id="email"
                 type="email"
@@ -54,13 +54,13 @@
                 name="remember"
             >
             <label for="remember_me" class="checkbox-label">
-                Atcereties mani
+                Atcerēties mani
             </label>
         </div>
 
         <button type="submit" class="btn-primary">
             <x-icon name="profile" size="h-5 w-5" />
-            Pierakstities
+            Pierakstīties
         </button>
 
         @if (Route::has('password.request'))

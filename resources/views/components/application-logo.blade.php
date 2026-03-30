@@ -18,6 +18,6 @@
     @endif
     <div class="min-w-0 leading-tight">
         <span class="app-brand-title block truncate text-lg font-bold text-gray-900">Ludzas novads</span>
-        <span class="app-brand-subtitle hidden truncate text-xs font-semibold text-blue-600 xl:block">IT inventra uzskaite</span>
+        <span class="app-brand-subtitle hidden truncate text-xs font-semibold text-blue-600 xl:block">IT inventāra uzskaite</span>
     </div>
 </div>
