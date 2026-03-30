@@ -126,7 +126,7 @@ class RoomController extends Controller
 
         AuditTrail::updatedFromState(auth()->id(), $room, $before, $after);
 
-        return redirect()->route('rooms.index')->with('success', 'Telpas dati atjauninati');
+        return redirect()->route('rooms.index')->with('success', 'Telpas dati atjaunināti');
     }
 
     /**

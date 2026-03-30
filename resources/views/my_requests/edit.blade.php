@@ -50,7 +50,7 @@
                 <div class="rounded-[1.5rem] border border-sky-200 bg-sky-50/80 px-5 py-4">
                     <div class="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Piezīme</div>
                     <div class="mt-2 text-sm leading-6 text-sky-900">
-                        Šeit vari mainīt tikai tekstu. Ierīci un citas šaistitas vērtības sistēma saglaba nemainigas.
+                        Šeit vari mainīt tikai tekstu. Ierīci un citas saistītās vērtības sistēma saglabā nemainīgas.
                     </div>
                 </div>
             </div>

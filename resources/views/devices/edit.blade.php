@@ -42,7 +42,7 @@
             @include('devices.partials.form-fields', ['device' => $device])
             <div class="surface-card flex flex-wrap items-center justify-between gap-4 p-6">
                 <div>
-                    <div class="text-sm font-semibold text-slate-900">Saglabasanas zona</div>
+                    <div class="text-sm font-semibold text-slate-900">Saglabāšanas zona</div>
                     <div class="mt-1 text-sm text-slate-500">Atjauno tikai izmainītos laukus. Ja ierīce ir norakstīta, piešaistes lauki paliek bloķeti.</div>
                 </div>
                 <div class="flex flex-wrap gap-3">

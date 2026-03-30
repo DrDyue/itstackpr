@@ -1,6 +1,6 @@
 {{--
     Vendor skats: Pielāgota lapošana.
-    Atbildiba: aizvieto Laravel noklusēto pagination attēlojumu ar projektam atbilstošu dizainu un latviskiem tekstiem.
+    Atbildība: aizvieto Laravel noklusēto pagination attēlojumu ar projektam atbilstošu dizainu un latviskiem tekstiem.
     Kāpēc tas ir svarīgi:
     1. Lietotājs neredz noklusētos angļu tekstus Previous/Next/Showing.
     2. Visās tabulās lapošana izskatās vienādi un ir vieglāk saprotama.

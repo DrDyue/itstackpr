@@ -396,7 +396,7 @@ const registerAlpineData = () => {
                 writeoff: 'Norakstīšana',
                 transfer: 'Nodošana',
                 'incoming-transfer': 'Jaizskata',
-            }[type] ?? 'Pieprasijums';
+            }[type] ?? 'Pieprasījums';
         },
         actionClasses(tone) {
             return {
@@ -898,7 +898,7 @@ window.repairBoard = (config) => ({
             return;
         }
 
-        const repairName = repair.name ?? 'so remontu';
+        const repairName = repair.name ?? 'šo remontu';
         if (!window.confirm(`Vai tiešām gribat pabeigt ierīces remontu "${repairName}"?`)) {
             return;
         }
@@ -914,7 +914,7 @@ window.repairProcess = (config) => ({
         window.submitRepairTransition(config.transitionBaseUrl, config.csrfToken, repairId, targetStatus, extra);
     },
     submitCompletion() {
-        if (!window.confirm('Vai tiešām gribat pabeigt so ierīces remontu?')) {
+        if (!window.confirm('Vai tiešām gribat pabeigt šo ierīces remontu?')) {
             return;
         }
 

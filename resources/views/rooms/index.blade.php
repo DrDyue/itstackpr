@@ -65,7 +65,7 @@
         <form method="GET" action="{{ route('rooms.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-5">
             <label class="block">
                 <span class="crud-label">Meklēt</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Telpa, ēka, nodala, atbildīgais...">
+                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Telpa, ēka, nodaļa, atbildīgais...">
             </label>
             <label class="block">
                 <span class="crud-label">Ēka</span>
@@ -81,7 +81,7 @@
                 />
             </label>
             <label class="block">
-                <span class="crud-label">Nodala</span>
+                <span class="crud-label">Nodaļa</span>
                 <x-searchable-select
                     name="department"
                     query-name="department_query"
@@ -89,8 +89,8 @@
                     :options="$departmentOptions"
                     :selected="$filters['department']"
                     :query="$selectedDepartmentLabel"
-                    placeholder="Izvēlies nodalu"
-                    empty-message="Neviena nodala neatbilst meklējumam."
+                    placeholder="Izvēlies nodaļu"
+                    empty-message="Neviena nodaļa neatbilst meklējumam."
                 />
             </label>
             <label class="block">
@@ -129,7 +129,7 @@
             :items="[
                 ['label' => 'Meklēt', 'value' => $filters['q']],
                 ['label' => 'Ēka', 'value' => $filters['building_id'] !== '' ? optional($buildings->firstWhere('id', (int) $filters['building_id']))->building_name : null],
-                ['label' => 'Nodala', 'value' => $filters['department']],
+                ['label' => 'Nodaļa', 'value' => $filters['department']],
                 ['label' => 'Atbildīgais', 'value' => $filters['user_id'] !== '' ? optional($responsibleUsers->firstWhere('id', (int) $filters['user_id']))->full_name : null],
                 ['label' => 'Ierīces telpa', 'value' => $filters['has_devices'] === '1' ? 'Ar ierīcem' : ($filters['has_devices'] === '0' ? 'Bez ierīcem' : null)],
             ]"
@@ -148,7 +148,7 @@
                         <th class="px-4 py-3">Stavs</th>
                         <th class="px-4 py-3">Numurs</th>
                         <th class="px-4 py-3">Nosaukums</th>
-                        <th class="px-4 py-3">Nodala</th>
+                        <th class="px-4 py-3">Nodaļa</th>
                         <th class="px-4 py-3">Atbildīgais</th>
                         <th class="px-4 py-3">Ierīces</th>
                         <th class="px-4 py-3">Piezīmes</th>
@@ -169,7 +169,7 @@
                             <td class="px-4 py-3">
                                 <div class="flex flex-wrap gap-2">
                                     <a href="{{ route('rooms.edit', $room) }}" class="btn-edit"><x-icon name="edit" size="h-4 w-4" /><span>Rediģēt</span></a>
-                                    <form method="POST" action="{{ route('rooms.destroy', $room) }}" onsubmit="return confirm('Dzēst so telpu?')">
+                                    <form method="POST" action="{{ route('rooms.destroy', $room) }}" onsubmit="return confirm('Dzēst šo telpu?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn-danger"><x-icon name="trash" size="h-4 w-4" /><span>Dzēst</span></button>

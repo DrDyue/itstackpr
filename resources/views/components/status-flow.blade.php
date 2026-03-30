@@ -46,7 +46,7 @@
             'rejected' => [
                 ['label' => 'Iesniegts', 'icon' => 'clock', 'state' => 'done'],
                 ['label' => 'Izskatīts', 'icon' => 'audit', 'state' => 'done'],
-                ['label' => 'Noraidits', 'icon' => 'x-circle', 'state' => 'danger'],
+                ['label' => 'Noraidīts', 'icon' => 'x-circle', 'state' => 'danger'],
             ],
             default => [],
         };

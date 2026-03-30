@@ -61,7 +61,7 @@
                     </select>
                 </label>
                 <label class="block">
-                    <span class="crud-label">Nodala</span>
+                    <span class="crud-label">Nodaļa</span>
                     <input type="text" name="department" value="{{ old('department', $room->department) }}" class="crud-control">
                 </label>
                 <label class="block md:col-span-2">

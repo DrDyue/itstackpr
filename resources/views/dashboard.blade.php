@@ -249,7 +249,7 @@
                                                                     <span class="device-request-popover-date">{{ $pendingRequestBadge['preview']['submitted_at'] }}</span>
                                                                 </div>
                                                                 <div class="device-request-popover-row">
-                                                                    <span class="device-request-popover-label">Pieteicejs</span>
+                                                                    <span class="device-request-popover-label">Pieteicējs</span>
                                                                     <span class="device-request-popover-value">{{ $pendingRequestBadge['preview']['submitted_by'] }}</span>
                                                                 </div>
                                                                 @if (! empty($pendingRequestBadge['preview']['recipient']))
@@ -262,7 +262,7 @@
                                                                     <span class="device-request-popover-label">{{ $pendingRequestBadge['preview']['meta_label'] }}</span>
                                                                     <div class="device-request-popover-copy">{{ $pendingRequestBadge['preview']['summary'] }}</div>
                                                                 </div>
-                                                                <div class="device-request-popover-link">Atvērt pieprasijumu</div>
+                                                                <div class="device-request-popover-link">Atvērt pieprasījumu</div>
                                                             </div>
                                                         @endif
                                                     </div>

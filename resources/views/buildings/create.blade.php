@@ -27,7 +27,7 @@
 
         <x-validation-summary />
 
-        {{-- Ēkas forma satur pamatdatus, kurus vēlāk izmantos telpu un ierīču piešaistei. --}}
+        {{-- Ēkas forma satur pamatdatus, kurus vēlāk izmantos telpu un ierīču piesaistei. --}}
         <form method="POST" action="{{ route('buildings.store') }}" class="surface-card space-y-4">
             @csrf
 
@@ -38,7 +38,7 @@
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="crud-label">Pilseta</label>
+                    <label class="crud-label">Pilsēta</label>
                     <input type="text" name="city" value="{{ old('city') }}" class="crud-control">
                 </div>
                 <div>

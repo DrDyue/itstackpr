@@ -1,6 +1,6 @@
 {{--
     Profila daļa: Paroles maiņa.
-    Atbildiba: ļauj autorizētam lietotājam nomainīt savu piekļuves paroli.
+    Atbildība: ļauj autorizētam lietotājam nomainīt savu piekļuves paroli.
     Kāpēc tas ir svarīgi:
     1. Drošības darbība ir atdalīta no pārējiem profila datiem.
     2. Forma pārbauda pašreizējo paroli, lai parole netiktu nomainīta nepamatoti.
@@ -13,7 +13,7 @@
         </h2>
 
         <p class="mt-2 text-sm text-slate-600">
-            Nomaini savu piekļuves paroli. Ja ievadi jaunu paroli, izmanto stipru kombinaciju.
+            Nomaini savu piekļuves paroli. Ja ievadi jaunu paroli, izmanto stipru kombināciju.
         </p>
     </header>
 

@@ -1,6 +1,6 @@
 {{--
     Profila daļa: Konta dzēšana.
-    Atbildiba: ļauj lietotājam neatgriezeniski dzēst savu kontu pēc paroles apstiprinājuma.
+    Atbildība: ļauj lietotājam neatgriezeniski dzēst savu kontu pēc paroles apstiprinājuma.
     Kāpēc tas ir svarīgi:
     1. Tā ir riskanta darbība, tāpēc vizuāli un loģiski atdalīta no pārējām formām.
     2. Papildu paroles ievade samazina nejaušas dzēšanas risku.

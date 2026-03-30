@@ -1,6 +1,6 @@
 {{--
     Layout daļa: Augšējā navigācija.
-    Atbildiba: parāda galvenās sistēmas sadaļas atkarībā no lietotāja lomas un izvēlētā skata režīma.
+    Atbildība: parāda galvenās sistēmas sadaļas atkarībā no lietotāja lomas un izvēlētā skata režīma.
     Kāpēc tas ir svarīgi:
     1. Adminam šeit parādās pārvaldības sadaļas un view mode pārslēgs.
     2. Lietotājam šeit paliek tikai tās sadaļas, kuras viņš drīkst izmantot.

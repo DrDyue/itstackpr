@@ -42,7 +42,7 @@
                 <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, adrese vai piezīmes...">
             </label>
             <label class="block">
-                <span class="crud-label">Pilseta</span>
+                <span class="crud-label">Pilsēta</span>
                 <x-searchable-select
                     name="city"
                     query-name="city_query"
@@ -63,7 +63,7 @@
         <x-active-filters
             :items="[
                 ['label' => 'Meklēt', 'value' => $filters['q']],
-                ['label' => 'Pilseta', 'value' => $filters['city']],
+                ['label' => 'Pilsēta', 'value' => $filters['city']],
             ]"
             :clear-url="route('buildings.index')"
         />
@@ -79,7 +79,7 @@
                         <tr>
                             <th class="px-4 py-3 text-left">Nosaukums</th>
                             <th class="px-4 py-3 text-left">Resursi</th>
-                            <th class="px-4 py-3 text-left">Pilseta</th>
+                            <th class="px-4 py-3 text-left">Pilsēta</th>
                             <th class="px-4 py-3 text-left">Adrese</th>
                             <th class="px-4 py-3 text-left">Stavu skaits</th>
                             <th class="px-4 py-3 text-left">Piezīmes</th>
@@ -106,7 +106,7 @@
                                         <form method="POST" action="{{ route('buildings.destroy', $building) }}">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" onclick="return confirm('Dzēst so ēku?')" class="btn-danger"><x-icon name="trash" size="h-4 w-4" /><span>Dzēst</span></button>
+                                            <button type="submit" onclick="return confirm('Dzēst šo ēku?')" class="btn-danger"><x-icon name="trash" size="h-4 w-4" /><span>Dzēst</span></button>
                                         </form>
                                     </div>
                                 </td>

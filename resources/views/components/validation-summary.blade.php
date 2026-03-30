@@ -1,6 +1,6 @@
 {{--
     Komponents: Validācijas kopsavilkums.
-    Atbildiba: vienuviet parāda galvenās formas kļūdas un palīdz lietotājam saprast, kas jāizlabo.
+    Atbildība: vienuviet parāda galvenās formas kļūdas un palīdz lietotājam saprast, kas jāizlabo.
     Kāpēc tas ir svarīgi:
     1. Lietotājam nav jāmeklē kļūdas tikai pa atsevišķiem laukiem.
     2. Komponents var tikt izmantots dažādās formās ar vienādu stilu un loģiku.
@@ -39,14 +39,14 @@
             <div>
                 <div class="validation-summary-title">{{ $title }}</div>
                 <div class="validation-summary-subtitle">
-                    Atrastas {{ $errorBag->count() }} {{ \Illuminate\Support\Str::plural('problēma', $errorBag->count()) }}. Zemāk redzams, kas janolabo un ko darit tālāk.
+                    Atrastas {{ $errorBag->count() }} {{ \Illuminate\Support\Str::plural('problēma', $errorBag->count()) }}. Zemāk redzams, kas jāizlabo un ko darīt tālāk.
                 </div>
             </div>
         </div>
 
         <div class="validation-summary-grid">
             <div>
-                <div class="validation-summary-section">Kadas kludas atrastas</div>
+                <div class="validation-summary-section">Kādas kļūdas atrastas</div>
                 <ul class="validation-summary-list">
                     @foreach ($errorBag->all() as $error)
                         <li>{{ $error }}</li>
@@ -56,7 +56,7 @@
 
             @if ($tips->isNotEmpty())
                 <div>
-                    <div class="validation-summary-section">Ko darit tālāk</div>
+                    <div class="validation-summary-section">Ko darīt tālāk</div>
                     <ul class="validation-summary-tips">
                         @foreach ($tips as $tip)
                             <li>{{ $tip }}</li>

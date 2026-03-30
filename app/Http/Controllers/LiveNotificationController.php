@@ -61,7 +61,7 @@ class LiveNotificationController extends Controller
                     id: 'repair-request:'.$request->id,
                     type: 'repair',
                     accent: 'sky',
-                    title: 'Jauns remonta pieprasijums',
+                    title: 'Jauns remonta pieprasījums',
                     message: ($request->responsibleUser?->full_name ?: 'Lietotājs').' gaida izskatīšanu.',
                     details: $this->deviceDetails(
                         $request->device,
@@ -71,7 +71,7 @@ class LiveNotificationController extends Controller
                         'reason_value' => $request->description ?: 'Apraksts nav pievienots.',
                         'wait_label' => $this->waitLabel($request->created_at),
                         'submitted_at' => $request->created_at?->format('d.m.Y H:i') ?: '-',
-                        'cta_label' => 'Atvērt remonta pieprasijumu',
+                        'cta_label' => 'Atvērt remonta pieprasījumu',
                         ]
                     ),
                     url: route('repair-requests.index', [
@@ -81,7 +81,7 @@ class LiveNotificationController extends Controller
                     createdAt: $request->created_at,
                     actions: [
                         $this->actionConfig('Apstiprināt', 'approve', route('repair-requests.review', $request), ['status' => RepairRequest::STATUS_APPROVED]),
-                        $this->actionConfig('Noraidit', 'reject', route('repair-requests.review', $request), ['status' => RepairRequest::STATUS_REJECTED]),
+                        $this->actionConfig('Noraidīt', 'reject', route('repair-requests.review', $request), ['status' => RepairRequest::STATUS_REJECTED]),
                     ],
                 ))
             : collect();
@@ -98,7 +98,7 @@ class LiveNotificationController extends Controller
                     id: 'writeoff-request:'.$request->id,
                     type: 'writeoff',
                     accent: 'rose',
-                    title: 'Jauns norakstīšanas pieprasijums',
+                    title: 'Jauns norakstīšanas pieprasījums',
                     message: ($request->responsibleUser?->full_name ?: 'Lietotājs').' gaida izskatīšanu.',
                     details: $this->deviceDetails(
                         $request->device,
@@ -108,7 +108,7 @@ class LiveNotificationController extends Controller
                         'reason_value' => $request->reason ?: 'Iemesls nav pievienots.',
                         'wait_label' => $this->waitLabel($request->created_at),
                         'submitted_at' => $request->created_at?->format('d.m.Y H:i') ?: '-',
-                        'cta_label' => 'Atvērt norakstīšanas pieprasijumu',
+                        'cta_label' => 'Atvērt norakstīšanas pieprasījumu',
                         ]
                     ),
                     url: route('writeoff-requests.index', [
@@ -118,7 +118,7 @@ class LiveNotificationController extends Controller
                     createdAt: $request->created_at,
                     actions: [
                         $this->actionConfig('Apstiprināt', 'approve', route('writeoff-requests.review', $request), ['status' => WriteoffRequest::STATUS_APPROVED]),
-                        $this->actionConfig('Noraidit', 'reject', route('writeoff-requests.review', $request), ['status' => WriteoffRequest::STATUS_REJECTED]),
+                        $this->actionConfig('Noraidīt', 'reject', route('writeoff-requests.review', $request), ['status' => WriteoffRequest::STATUS_REJECTED]),
                     ],
                 ))
             : collect();
@@ -135,7 +135,7 @@ class LiveNotificationController extends Controller
                     id: 'device-transfer:'.$transfer->id,
                     type: 'transfer',
                     accent: 'emerald',
-                    title: 'Jauns nodošanas pieprasijums',
+                    title: 'Jauns nodošanas pieprasījums',
                     message: ($transfer->responsibleUser?->full_name ?: 'Lietotājs').' gaida lēmumu par nodošanu.',
                     details: $this->deviceDetails(
                         $transfer->device,
@@ -146,7 +146,7 @@ class LiveNotificationController extends Controller
                         'reason_value' => $transfer->transfer_reason ?: 'Iemesls nav pievienots.',
                         'wait_label' => $this->waitLabel($transfer->created_at),
                         'submitted_at' => $transfer->created_at?->format('d.m.Y H:i') ?: '-',
-                        'cta_label' => 'Atvērt nodošanas pieprasijumu',
+                        'cta_label' => 'Atvērt nodošanas pieprasījumu',
                         ]
                     ),
                     url: route('device-transfers.index', [
@@ -186,7 +186,7 @@ class LiveNotificationController extends Controller
                 id: 'incoming-transfer:'.$transfer->id,
                 type: 'incoming-transfer',
                 accent: 'amber',
-                title: 'Jauns ienakoss nodošanas pieprasijums',
+                title: 'Jauns ienākošs nodošanas pieprasījums',
                 message: 'Tev jaizlemj par ierīces saņemšanu.',
                 details: $this->deviceDetails(
                     $transfer->device,
@@ -196,7 +196,7 @@ class LiveNotificationController extends Controller
                     'reason_value' => $transfer->transfer_reason ?: 'Iemesls nav pievienots.',
                     'wait_label' => $this->waitLabel($transfer->created_at),
                     'submitted_at' => $transfer->created_at?->format('d.m.Y H:i') ?: '-',
-                    'cta_label' => 'Atvērt nodošanas pieprasijumu',
+                    'cta_label' => 'Atvērt nodošanas pieprasījumu',
                     ]
                 ),
                 url: route('device-transfers.index', [
@@ -206,7 +206,7 @@ class LiveNotificationController extends Controller
                 createdAt: $transfer->created_at,
                 actions: [
                     $this->actionConfig('Apstiprināt', 'approve', route('device-transfers.review', $transfer), ['status' => DeviceTransfer::STATUS_APPROVED]),
-                    $this->actionConfig('Noraidit', 'reject', route('device-transfers.review', $transfer), ['status' => DeviceTransfer::STATUS_REJECTED]),
+                    $this->actionConfig('Noraidīt', 'reject', route('device-transfers.review', $transfer), ['status' => DeviceTransfer::STATUS_REJECTED]),
                 ],
             ))
             ->sortByDesc('created_unix')

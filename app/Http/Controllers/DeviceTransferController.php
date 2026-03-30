@@ -133,7 +133,7 @@ class DeviceTransferController extends Controller
                         'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
                         'description' => collect([
                             $room->building?->building_name,
-                            $room->floor_number !== null ? $room->floor_number . '. stavs' : null,
+                            $room->floor_number !== null ? $room->floor_number . '. stāvs' : null,
                             $room->department,
                         ])->filter()->implode(' | '),
                         'search' => implode(' ', array_filter([

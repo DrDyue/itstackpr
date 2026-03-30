@@ -37,7 +37,7 @@ class Building extends Model
     }
 
     /**
-     * Visas ierīces, kas šaistītas ar šo ēku.
+     * Visas ierīces, kas saistītas ar šo ēku.
      */
     public function devices(): HasMany
     {

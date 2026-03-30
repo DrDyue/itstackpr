@@ -1,6 +1,6 @@
 {{--
     Layout: Galvenais autorizetais karkass.
-    Atbildiba: nodrošina kopējo lapas ietvaru visām iekšējām sistēmas lapām pēc ielogošanās.
+    Atbildība: nodrošina kopējo lapas ietvaru visām iekšējām sistēmas lapām pēc ielogošanās.
     Kāpēc tas ir svarīgi:
     1. Vienā vietā ielādē stilus un JavaScript.
     2. Iekļauj augšējo navigāciju un vietu, kur katra lapa ievieto savu saturu.
@@ -138,7 +138,7 @@
                                                 <div class="notification-toast-meta-value" x-text="notification.details.device_name"></div>
                                             </div>
                                             <div class="notification-toast-meta-item">
-                                                <div class="notification-toast-section-label">Pieteicejs</div>
+                                                <div class="notification-toast-section-label">Pieteicējs</div>
                                                 <div class="notification-toast-meta-value" x-text="notification.details.submitted_by"></div>
                                             </div>
                                             <div class="notification-toast-meta-item">
@@ -168,7 +168,7 @@
                                         </div>
 
                                         <div class="notification-toast-footer">
-                                            <span class="notification-toast-link" x-text="notification.details.cta_label || 'Atvērt pieprasijumu'"></span>
+                                            <span class="notification-toast-link" x-text="notification.details.cta_label || 'Atvērt pieprasījumu'"></span>
                                             <span class="notification-toast-link-arrow" aria-hidden="true">></span>
                                         </div>
                                     </div>

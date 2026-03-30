@@ -1,6 +1,6 @@
 {{--
     Layout: Viesu sadaļas karkass.
-    Atbildiba: apkalpo autorizācijas, paroles atjaunošanas un citas lapas, kur lietotājs vēl nav ielogojies.
+    Atbildība: apkalpo autorizācijas, paroles atjaunošanas un citas lapas, kur lietotājs vēl nav ielogojies.
     Kāpēc tas ir svarīgi:
     1. Uztur vieglāku vizuālo izkārtojumu bez iekšējās navigācijas.
     2. Vienā vietā definē visu auth lapu kopējo stilu un fonu.

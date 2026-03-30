@@ -1,6 +1,6 @@
 {{--
     Partialis: Remonta formas lauki.
-    Atbildiba: satur ierīces izvēli, statusa lauku un apraksta ievadi remonta ieraksta izveidei vai labošanai.
+    Atbildība: satur ierīces izvēli, statusa lauku un apraksta ievadi remonta ieraksta izveidei vai labošanai.
     Kāpēc tas ir svarīgi:
     1. Ļauj vienādi uzturēt remonta create un edit lapas.
     2. Sagatavo atlasīto ierīci un tās parakstu meklējamajam dropdown laukam.
@@ -17,7 +17,7 @@
         : old('device_query', '');
     $statusHint = match ($currentRepair?->status ?? 'waiting') {
         'in-progress' => 'Remonts šobrīd ir procesā. Statuss tiek mainīts ar darbību pogām, nevis ar formas lauku.',
-        'completed' => 'Remonts ir pabeigts. Ja vajag turpinat, izmanto statusa darbības virs formas.',
+        'completed' => 'Remonts ir pabeigts. Ja vajag turpināt, izmanto statusa darbības virs formas.',
         'cancelled' => 'Remonts ir atcelts. To var atjaunot ar statusa darbību pogām.',
         default => 'Remonts šobrīd gaida uzsākšanu. Statuss automātiski tiek mainīts no remonta darbību pogām.',
     };
@@ -40,7 +40,7 @@
                             <span class="crud-label">Ierīce</span>
                             <input type="text" class="crud-control bg-slate-50 text-slate-600" value="{{ $currentRepair->device?->name ?: 'Ierīce nav atrasta' }} ({{ $currentRepair->device?->code ?: 'bez koda' }})" readonly>
                             <input type="hidden" name="device_id" value="{{ old('device_id', $currentRepair->device_id) }}">
-                            <div class="mt-2 text-xs text-slate-500">Esosam remontam ierīci mainīt nevar. Ja vajag citu ierīci, atcel so remontu un izveido jaunu ierakstu.</div>
+                            <div class="mt-2 text-xs text-slate-500">Esošam remontam ierīci mainīt nevar. Ja vajag citu ierīci, atcel šo remontu un izveido jaunu ierakstu.</div>
                         </div>
                     @else
                         <div class="block">
@@ -55,7 +55,7 @@
                                 placeholder="Meklē pēc nosaukuma, koda vai lietotāja"
                                 empty-message="Neviena ierīce neatbilst meklējumam."
                             />
-                            <div class="mt-2 text-xs text-slate-500">Redzamas tikai aktivās ierīces bez aktiva remonta vai gaidosiem pieprasijumiem.</div>
+                            <div class="mt-2 text-xs text-slate-500">Redzamas tikai aktīvās ierīces bez aktīva remonta vai gaidošiem pieprasījumiem.</div>
                         </div>
                     @endif
 
@@ -156,7 +156,7 @@
                 <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ārējā remonta dati</div>
                 <div class="mt-1 text-sm text-slate-500">Vendoru informācija tiek izmantota tikai ārējam remontam.</div>
                 <div class="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600" x-show="repairStatus !== 'in-progress'">
-                    Vendora lauki aktivizejas un ir obligati tikai tad, kad remonts ir procesā statusa.
+                    Vendora lauki aktivizējas un ir obligāti tikai tad, kad remonts ir procesa statusā.
                 </div>
                 <div class="mt-4 grid gap-4 md:grid-cols-3" x-show="repairStatus === 'in-progress'">
                     <label class="block">

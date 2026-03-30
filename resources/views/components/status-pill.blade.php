@@ -1,6 +1,6 @@
 {{--
     Komponents: Statusa birka.
-    Atbildiba: vienotā veidā attēlo ierīču, remonta un pieprasījumu statusus ar tekstu un krāsām.
+    Atbildība: vienotā veidā attēlo ierīču, remonta un pieprasījumu statusus ar tekstu un krāsām.
     Kāpēc tas ir svarīgi:
     1. Vienā vietā tiek uzturēta statusu vizuālā loģika.
     2. Lietotājs ātri saprot, kas ir aktīvs, gaidošs, procesā vai noraidīts.
@@ -17,14 +17,14 @@
 
     $maps = [
         'device' => [
-            'active' => ['label' => 'Aktiva', 'tone' => 'success', 'icon' => 'check-circle'],
+            'active' => ['label' => 'Aktīva', 'tone' => 'success', 'icon' => 'check-circle'],
             'repair' => ['label' => 'Remonta', 'tone' => 'warning', 'icon' => 'repair'],
             'writeoff' => ['label' => 'Norakstīta', 'tone' => 'danger', 'icon' => 'writeoff'],
         ],
         'request' => [
             'submitted' => ['label' => 'Iesniegts', 'tone' => 'info', 'icon' => 'clock'],
             'approved' => ['label' => 'Apstiprināts', 'tone' => 'success', 'icon' => 'check-circle'],
-            'rejected' => ['label' => 'Noraidits', 'tone' => 'danger', 'icon' => 'x-circle'],
+            'rejected' => ['label' => 'Noraidīts', 'tone' => 'danger', 'icon' => 'x-circle'],
         ],
         'repair' => [
             'waiting' => ['label' => 'Gaida', 'tone' => 'info', 'icon' => 'clock'],

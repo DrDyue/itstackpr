@@ -73,7 +73,7 @@ class DashboardController extends Controller
             ->map(function ($rooms, $floorKey) use ($filters) {
                 return [
                     'id' => (string) $floorKey,
-                    'label' => ((int) $floorKey).'. stavs',
+                    'label' => ((int) $floorKey).'. stāvs',
                     'room_count' => $rooms->count(),
                     'device_count' => (int) $rooms->sum('devices_count'),
                     'rooms' => $rooms->map(function (Room $room) use ($filters) {
@@ -321,7 +321,7 @@ class DashboardController extends Controller
 
         return match ($type) {
             'repair' => [
-                'type_label' => 'Remonta pieprasijums',
+                'type_label' => 'Remonta pieprasījums',
                 'meta_label' => 'Apraksts',
                 'submitted_at' => $request->created_at?->format('d.m.Y H:i') ?: '-',
                 'submitted_by' => $request->responsibleUser?->full_name ?: '-',
@@ -329,7 +329,7 @@ class DashboardController extends Controller
                 'recipient' => null,
             ],
             'writeoff' => [
-                'type_label' => 'Norakstīšanas pieprasijums',
+                'type_label' => 'Norakstīšanas pieprasījums',
                 'meta_label' => 'Iemesls',
                 'submitted_at' => $request->created_at?->format('d.m.Y H:i') ?: '-',
                 'submitted_by' => $request->responsibleUser?->full_name ?: '-',
@@ -337,7 +337,7 @@ class DashboardController extends Controller
                 'recipient' => null,
             ],
             'transfer' => [
-                'type_label' => 'Nodošanas pieprasijums',
+                'type_label' => 'Nodošanas pieprasījums',
                 'meta_label' => 'Iemesls',
                 'submitted_at' => $request->created_at?->format('d.m.Y H:i') ?: '-',
                 'submitted_by' => $request->responsibleUser?->full_name ?: '-',

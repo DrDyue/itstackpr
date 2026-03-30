@@ -36,7 +36,7 @@
         $priorityOptions = collect($priorities)->map(fn ($priority) => [
             'value' => (string) $priority,
             'label' => $priorityLabels[$priority] ?? $priority,
-            'description' => 'Filtrs pēc prioritates',
+            'description' => 'Filtrs pēc prioritātes',
             'search' => ($priorityLabels[$priority] ?? $priority) . ' ' . $priority,
         ])->values();
         $repairTypeOptions = collect($repairTypes)->map(fn ($repairType) => [
@@ -109,8 +109,8 @@
                     :options="$priorityOptions"
                     :selected="$filters['priority']"
                     :query="$selectedPriorityLabel"
-                    placeholder="Izvēlies prioritate"
-                    empty-message="Neviena prioritate neatbilst meklējumam."
+                    placeholder="Izvēlies prioritāti"
+                    empty-message="Neviena prioritāte neatbilst meklējumam."
                 />
             </label>
             <label class="block">
@@ -309,7 +309,7 @@
 
                                 @if ($repair->request)
                                     <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                                        <div class="font-semibold text-slate-900">Saistitais remonta pieteikums #{{ $repair->request->id }}</div>
+                                        <div class="font-semibold text-slate-900">Saistītais remonta pieteikums #{{ $repair->request->id }}</div>
                                         <div class="mt-1">
                                             <span class="font-medium text-slate-900">Pieteica:</span>
                                             {{ $repair->request->responsibleUser?->full_name ?: 'Nav norādīts' }}

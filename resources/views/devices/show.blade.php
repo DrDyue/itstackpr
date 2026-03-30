@@ -162,7 +162,7 @@
                                     <span>Atrašanās vieta un darbība</span>
                                 </h2>
                                 <p class="mt-2 text-sm leading-6 text-slate-600">
-                                    Šeit ir tikai ta informācija, kas papildina augšējo ierīces kartīti: kur ierīce atrodas šobrīd,
+                                    Šeit ir tikai tā informācija, kas papildina augšējo ierīces kartīti: kur ierīce atrodas šobrīd,
                                     kā ta nonaca pie tevis un ko vari izdarīt tālāk.
                                 </p>
                             </div>
@@ -302,7 +302,7 @@
                                 <div><span class="font-semibold text-slate-900">Izpildītājs:</span> {{ $repair->executor?->full_name ?: '-' }}</div>
                                 <div><span class="font-semibold text-slate-900">Sākums:</span> {{ $repair->start_date?->format('d.m.Y') ?: '-' }}</div>
                                 <div><span class="font-semibold text-slate-900">Beigas:</span> {{ $repair->end_date?->format('d.m.Y') ?: '-' }}</div>
-                                <div class="md:col-span-2"><span class="font-semibold text-slate-900">Saistitais pieteicejs:</span> {{ $repair->request?->responsibleUser?->full_name ?: '-' }}</div>
+                                <div class="md:col-span-2"><span class="font-semibold text-slate-900">Saistītais pieteicējs:</span> {{ $repair->request?->responsibleUser?->full_name ?: '-' }}</div>
                             </div>
                             <div class="mt-3 leading-6 text-slate-700">{{ $repair->description ?: 'Apraksts nav pievienots.' }}</div>
                         </div>
@@ -317,7 +317,7 @@
                     <x-icon name="writeoff" size="h-5 w-5" class="text-rose-600" />
                     <span>Norakstīšanas pieteikumi</span>
                 </h2>
-                <p class="mt-2 text-sm leading-6 text-slate-600">Visi ierīces norakstīšanas pieprasijumi ar iemesliem un admina lēmumiem.</p>
+                <p class="mt-2 text-sm leading-6 text-slate-600">Visi ierīces norakstīšanas pieprasījumi ar iemesliem un admina lēmumiem.</p>
                 <div class="mt-4 space-y-3 text-sm">
                     @forelse ($visibleWriteoffRequests as $request)
                         <div class="surface-card-muted">

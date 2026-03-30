@@ -62,7 +62,7 @@ class AuthBootstrapper
             if (! Schema::hasTable('users')) {
                 return [
                     'ready' => false,
-                    'message' => 'Datubaze nav gatava autentifikacijai: tabula users nav atrasta.',
+                    'message' => 'Datubāze nav gatava autentifikācijai: tabula users nav atrasta.',
                 ];
             }
 
@@ -83,7 +83,7 @@ class AuthBootstrapper
             'ready' => $ready,
             'message' => $ready
                 ? null
-                : 'Autentifikacija nav pieejama, jo users tabula nav pilniba sinhronizeta ar aplikaciju.',
+                : 'Autentifikācija nav pieejama, jo users tabula nav pilnībā sinhronizēta ar aplikāciju.',
         ];
     }
 

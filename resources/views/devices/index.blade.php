@@ -10,7 +10,7 @@
 <x-app-layout>
     @php
         $selectedFloorLabel = $filters['floor'] !== ''
-            ? ($filters['floor'] . '. stavs')
+            ? ($filters['floor'] . '. stāvs')
             : ($filters['floor_query'] !== '' ? $filters['floor_query'] : null);
         $selectedRoomLabel = $selectedRoom
             ? ($selectedRoom->room_number . ($selectedRoom->room_name ? ' - ' . $selectedRoom->room_name : ''))
@@ -20,7 +20,7 @@
         $quickRoomSelectOptions = collect($quickRoomOptions ?? [])->values();
         $quickAssigneeSelectOptions = collect($quickAssigneeOptions ?? [])->values();
         $statusFilterLinks = [
-            ['label' => 'Aktivas', 'value' => 'active', 'icon' => 'check-circle', 'tone' => 'emerald'],
+            ['label' => 'Aktīvas', 'value' => 'active', 'icon' => 'check-circle', 'tone' => 'emerald'],
             ['label' => 'Remonta', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'amber'],
             ['label' => 'Norakstītas', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
         ];
@@ -53,9 +53,9 @@
         ])->values();
         $floorSelectOptions = collect($floorOptions)->map(fn ($floor) => [
             'value' => (string) $floor,
-            'label' => $floor . '. stavs',
-            'description' => 'Filtrs pēc stava',
-            'search' => $floor . ' ' . $floor . '. stavs',
+            'label' => $floor . '. stāvs',
+            'description' => 'Filtrs pēc stāva',
+            'search' => $floor . ' ' . $floor . '. stāvs',
         ])->values();
         $toolbarGridClass = $canManageDevices
             ? 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.85fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,1fr)]'
@@ -80,7 +80,7 @@
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-emerald">
                                 <x-icon name="check-circle" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Aktivas</span>
+                                <span class="inventory-inline-label">Aktīvas</span>
                                 <span class="inventory-inline-value">{{ $deviceSummary['active'] }}</span>
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-amber">
@@ -152,7 +152,7 @@
                     :selected="$filters['floor']"
                     :query="$selectedFloorLabel"
                     placeholder="Izvēlies vai raksti stāvu"
-                    empty-message="Neviens stavs neatbilst meklējumam."
+                    empty-message="Neviens stāvs neatbilst meklējumam."
                 />
             </label>
             <label class="block">
@@ -213,7 +213,7 @@
                     </div>
 
                     <div class="quick-filter-group quick-filter-group-end">
-                        <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Aktīvie pieprasijumi</div>
+                        <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Aktīvie pieprasījumi</div>
                         <div class="quick-status-filters">
                             @foreach ($requestFilterLinks as $requestFilter)
                                 @php
@@ -264,7 +264,7 @@
                 ['label' => 'Telpa', 'value' => $selectedRoomLabel],
                 ['label' => 'Tips', 'value' => $selectedTypeLabel],
                 ['label' => 'Statuss', 'value' => $filters['has_status_filter'] ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ') : null],
-                ['label' => 'Pieprasijumi', 'value' => $filters['has_request_type_filter'] ? collect($filters['request_types'])->map(fn ($type) => collect($requestFilterLinks)->firstWhere('value', $type)['label'] ?? $type)->implode(', ') : null],
+                ['label' => 'Pieprasījumi', 'value' => $filters['has_request_type_filter'] ? collect($filters['request_types'])->map(fn ($type) => collect($requestFilterLinks)->firstWhere('value', $type)['label'] ?? $type)->implode(', ') : null],
             ]"
             :clear-url="route('devices.index')"
         />
@@ -279,7 +279,7 @@
             <table class="min-w-full text-sm">
                 <thead class="bg-slate-50 text-left text-slate-500">
                     <tr>
-                        <th class="px-4 py-3">Attels</th>
+                        <th class="px-4 py-3">Attēls</th>
                         <th class="px-4 py-3">Kods</th>
                         <th class="px-4 py-3">Nosaukums</th>
                         <th class="px-4 py-3">Atrašanās vieta</th>
@@ -431,7 +431,7 @@
                                                         <span class="device-request-popover-date">{{ $pendingRequestBadge['preview']['submitted_at'] }}</span>
                                                     </div>
                                                     <div class="device-request-popover-row">
-                                                        <span class="device-request-popover-label">Pieteicejs</span>
+                                                        <span class="device-request-popover-label">Pieteicējs</span>
                                                         <span class="device-request-popover-value">{{ $pendingRequestBadge['preview']['submitted_by'] }}</span>
                                                     </div>
                                                     @if (! empty($pendingRequestBadge['preview']['recipient']))
@@ -445,7 +445,7 @@
                                                         <div class="device-request-popover-copy">{{ $pendingRequestBadge['preview']['summary'] }}</div>
                                                     </div>
                                                     @if (! empty($pendingRequestBadge['url']))
-                                                        <div class="device-request-popover-link">Atvērt pieprasijumu</div>
+                                                        <div class="device-request-popover-link">Atvērt pieprasījumu</div>
                                                     @endif
                                                 </div>
                                             @endif

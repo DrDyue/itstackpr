@@ -38,7 +38,7 @@
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="crud-label">Pilseta</label>
+                    <label class="crud-label">Pilsēta</label>
                     <input type="text" name="city" value="{{ old('city', $building->city) }}" class="crud-control">
                 </div>
                 <div>

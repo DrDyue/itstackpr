@@ -1,6 +1,6 @@
 {{--
     Lapa: Jaunas telpas izveide.
-    Atbildība: ļauj administratoram izveidot telpu, piešaistīt to ēkai un vajadzības gadījumā atbildīgajam.
+    Atbildība: ļauj administratoram izveidot telpu, piesaistīt to ēkai un vajadzības gadījumā atbildīgajam.
     Datu avots: RoomController@create, saglabāšana caur RoomController@store.
     Galvenās daļas:
     1. Hero ar lapas nozīmi.
@@ -61,7 +61,7 @@
                     </select>
                 </label>
                 <label class="block">
-                    <span class="crud-label">Nodala</span>
+                    <span class="crud-label">Nodaļa</span>
                     <input type="text" name="department" value="{{ old('department') }}" class="crud-control">
                 </label>
                 <label class="block md:col-span-2">

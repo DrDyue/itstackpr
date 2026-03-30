@@ -66,7 +66,7 @@
         <form method="GET" action="{{ route('users.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-3 xl:grid-cols-4">
             <label class="block">
                 <span class="crud-label">Meklēt</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Vards, e-pasts, talrunis, amats...">
+                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Vārds, e-pasts, tālrunis, amats...">
             </label>
             <label class="block">
                 <span class="crud-label">Statuss</span>
@@ -147,7 +147,7 @@
             <table class="min-w-full text-sm">
                 <thead class="bg-slate-50 text-left text-slate-500">
                     <tr>
-                        <th class="px-4 py-3">Vards</th>
+                        <th class="px-4 py-3">Vārds</th>
                         <th class="px-4 py-3">E-pasts</th>
                         <th class="px-4 py-3">Talrunis</th>
                         <th class="px-4 py-3">Loma</th>
@@ -197,7 +197,7 @@
                                             <span>Apskatīt piešaistītas ierīces</span>
                                         </a>
 
-                                        <form method="POST" action="{{ route('users.destroy', $managedUser) }}" onsubmit="return confirm('Dzēst so lietotāju?')" class="contents">
+                                        <form method="POST" action="{{ route('users.destroy', $managedUser) }}" onsubmit="return confirm('Dzēst šo lietotāju?')" class="contents">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="table-action-button table-action-button-rose" @disabled(auth()->id() === $managedUser->id)">

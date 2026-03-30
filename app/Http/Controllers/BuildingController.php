@@ -99,7 +99,7 @@ class BuildingController extends Controller
         $after = $building->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState(auth()->id(), $building, $before, $after);
 
-        return redirect()->route('buildings.index')->with('success', 'Ēkas dati atjauninati');
+        return redirect()->route('buildings.index')->with('success', 'Ēkas dati atjaunināti');
     }
 
     /**

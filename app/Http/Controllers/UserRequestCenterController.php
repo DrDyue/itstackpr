@@ -75,7 +75,7 @@ class UserRequestCenterController extends Controller
         $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
         if (! $device) {
             throw ValidationException::withMessages([
-                'device_id' => ['Vari veidot pieteikumus tikai savai aktivajai ierīcei.'],
+                'device_id' => ['Vari veidot pieteikumus tikai savai aktīvajai ierīcei.'],
             ]);
         }
 
@@ -317,7 +317,7 @@ class UserRequestCenterController extends Controller
                 'field' => 'description',
                 'label' => 'Apraksts',
                 'title' => 'Labot remonta pieteikumu',
-                'subtitle' => 'Vari mainīt tikai problēmu aprakstu, kamer pieteikums vēl nav izskatīts.',
+                'subtitle' => 'Vari mainīt tikai problēmu aprakstu, kamēr pieteikums vēl nav izskatīts.',
                 'type_label' => 'Remonta pieteikums',
                 'icon' => 'repair-request',
                 'required_message' => 'Apraksti remonta problēmu.',
@@ -332,7 +332,7 @@ class UserRequestCenterController extends Controller
                 'field' => 'reason',
                 'label' => 'Iemesls',
                 'title' => 'Labot norakstīšanas pieteikumu',
-                'subtitle' => 'Vari mainīt tikai norakstīšanas iemeslu, kamer pieteikums vēl nav izskatīts.',
+                'subtitle' => 'Vari mainīt tikai norakstīšanas iemeslu, kamēr pieteikums vēl nav izskatīts.',
                 'type_label' => 'Norakstīšanas pieteikums',
                 'icon' => 'writeoff',
                 'required_message' => 'Apraksti norakstīšanas iemeslu.',
@@ -347,7 +347,7 @@ class UserRequestCenterController extends Controller
                 'field' => 'transfer_reason',
                 'label' => 'Nodošanas iemesls',
                 'title' => 'Labot nodošanas pieteikumu',
-                'subtitle' => 'Vari mainīt tikai nodošanas iemeslu, kamer saņēmējs vēl nav izskatījis pieteikumu.',
+                'subtitle' => 'Vari mainīt tikai nodošanas iemeslu, kamēr saņēmējs vēl nav izskatījis pieteikumu.',
                 'type_label' => 'Nodošanas pieteikums',
                 'icon' => 'transfer',
                 'required_message' => 'Apraksti nodošanas iemeslu.',

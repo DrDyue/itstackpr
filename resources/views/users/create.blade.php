@@ -33,7 +33,7 @@
 
             <div class="grid gap-4 md:grid-cols-2">
                 <label class="block md:col-span-2">
-                    <span class="crud-label">Vards un uzvards</span>
+                    <span class="crud-label">Vārds un uzvārds</span>
                     <input type="text" name="full_name" value="{{ old('full_name') }}" class="crud-control" required>
                 </label>
                 <label class="block">

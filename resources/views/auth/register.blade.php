@@ -12,7 +12,7 @@
         @csrf
 
         <div>
-            <x-input-label for="full_name" value="Vards un uzvards" />
+            <x-input-label for="full_name" value="Vārds un uzvārds" />
             <x-text-input id="full_name" class="mt-1 block w-full" type="text" name="full_name" :value="old('full_name')" required autofocus />
             <x-input-error :messages="$errors->get('full_name')" class="mt-2" />
         </div>

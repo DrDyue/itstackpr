@@ -234,7 +234,7 @@ class WriteoffRequestController extends Controller
 
             if ($device->status !== Device::STATUS_ACTIVE || $device->activeRepair()->exists()) {
                 throw ValidationException::withMessages([
-                    'status' => ['Norakstīt var tikai aktivu ierīci bez aktiva remonta procesā.'],
+                    'status' => ['Norakstīt var tikai aktīvu ierīci bez aktīva remonta procesā.'],
                 ]);
             }
 

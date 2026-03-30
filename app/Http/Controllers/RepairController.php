@@ -390,7 +390,7 @@ class RepairController extends Controller
 
         if ($repair && (int) $validated['device_id'] !== (int) $repair->device_id) {
             throw ValidationException::withMessages([
-                'device_id' => ['Esosam remontam ierīci mainīt nevar. Atcel so remontu un izveido jaunu ierakstu pareizajai ierīcei.'],
+                'device_id' => ['Esošam remontam ierīci mainīt nevar. Atcel šo remontu un izveido jaunu ierakstu pareizajai ierīcei.'],
             ]);
         }
 

@@ -44,7 +44,7 @@ class ProfileController extends Controller
             $user,
             $before,
             $after,
-            description: 'Profila dati atjauninati: ' . AuditTrail::labelFor($user)
+            description: 'Profila dati atjaunināti: ' . AuditTrail::labelFor($user)
         );
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');

@@ -1,6 +1,6 @@
 {{--
     Partialis: Ierīces formas lauki.
-    Atbildiba: glabā visus ievades laukus, ko izmanto gan jaunās ierīces izveide, gan esošas ierīces rediģēšana.
+    Atbildība: glabā visus ievades laukus, ko izmanto gan jaunās ierīces izveide, gan esošas ierīces rediģēšana.
     Kāpēc tas ir svarīgi:
     1. Viena un tā pati biznesa loģika netiek dublēta create un edit lapās.
     2. Šeit tiek sagatavoti noklusējumi, dropdown izvēles un datu piešaistes vērtības.
@@ -33,7 +33,7 @@
         'description' => collect([
             $building->city,
             $building->address,
-            $building->total_floors ? $building->total_floors . ' stavi' : null,
+            $building->total_floors ? $building->total_floors . ' stāvi' : null,
         ])->filter()->implode(' | '),
         'search' => implode(' ', array_filter([
             $building->building_name,
@@ -46,7 +46,7 @@
         'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
         'description' => collect([
             $room->building?->building_name,
-            $room->floor_number !== null ? $room->floor_number . '. stavs' : null,
+            $room->floor_number !== null ? $room->floor_number . '. stāvs' : null,
             $room->department,
         ])->filter()->implode(' | '),
         'search' => implode(' ', array_filter([
@@ -95,7 +95,7 @@
             ? optional($rooms->firstWhere('id', (int) $selectedRoomId))->room_number . (optional($rooms->firstWhere('id', (int) $selectedRoomId))->room_name ? ' - ' . optional($rooms->firstWhere('id', (int) $selectedRoomId))->room_name : '')
             : ''
     );
-    $selectedStatusLabel = old('status_query', $statusLabels[$selectedStatus] ?? 'Aktiva');
+    $selectedStatusLabel = old('status_query', $statusLabels[$selectedStatus] ?? 'Aktīva');
 @endphp
 
 {{-- Forma sadalīta pa semantiskām kartītēm: pamata dati, piešaiste, finanses, attēls un piezīmes. --}}
@@ -174,10 +174,10 @@
                         <span class="crud-label">Statuss</span>
                         <input type="hidden" name="status" value="{{ \App\Models\Device::STATUS_ACTIVE }}">
                         <div class="crud-control flex items-center justify-between bg-slate-50 text-slate-700">
-                            <span>Aktiva</span>
-                            <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">Noklusets</span>
+                            <span>Aktīva</span>
+                            <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">Noklusēts</span>
                         </div>
-                        <div class="mt-2 text-xs text-slate-500">Jauna ierīce vienmer tiek izveidota ar aktivu statusu.</div>
+                        <div class="mt-2 text-xs text-slate-500">Jauna ierīce vienmēr tiek izveidota ar aktīvu statusu.</div>
                     </div>
                 @else
                     <label class="block">
@@ -297,13 +297,13 @@
                     :value="old('warranty_until', $current?->warranty_until?->format('Y-m-d'))"
                 />
                 <div class="block">
-                    <span class="crud-label">Ierīces attels</span>
+                    <span class="crud-label">Ierīces attēls</span>
                     <input type="file" name="device_image" class="device-file-input">
                     <div class="mt-2 text-xs text-slate-500">PNG, JPG vai WEBP līdz {{ (int) config('devices.max_upload_kb', 5120) / 1024 }} MB.</div>
                     @if ($current)
                         <label class="mt-3 inline-flex items-center gap-3">
                             <input type="checkbox" name="remove_device_image" value="1" class="rounded border-gray-300 text-blue-600">
-                            <span class="text-sm text-slate-700">Nonemt ierīces attelu</span>
+                            <span class="text-sm text-slate-700">Noņemt ierīces attēlu</span>
                         </label>
                     @endif
                 </div>
@@ -320,23 +320,23 @@
             <div class="device-form-section-title">Kopsavilkums</div>
             <div class="space-y-4 text-sm text-slate-600">
                 <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
-                    <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Kas ir obligati</div>
+                    <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Kas ir obligāti</div>
                     <ul class="mt-3 space-y-2 leading-6">
-                        <li>Kods, nosaukums, tips un modelis ir obligati lauki.</li>
+                        <li>Kods, nosaukums, tips un modelis ir obligāti lauki.</li>
                         <li>Atbildīgā persona un telpa ir obligātas un pēc noklusējuma tiek aizpildītas automātiski.</li>
-                        <li>Jauna ierīce vienmer tiek saglabāta ar aktivu statusu.</li>
+                        <li>Jauna ierīce vienmēr tiek saglabāta ar aktīvu statusu.</li>
                         <li>Datumi, cena un piezīmes var palikt tuksi, ja tie nav zinami.</li>
                     </ul>
                 </div>
 
                 <div class="rounded-[1.5rem] border border-slate-200 bg-white p-4">
-                    <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Attela priekskats</div>
+                    <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Attēla priekšskats</div>
                     <div class="mt-3">
                         @if ($deviceImageUrl)
                             <img src="{{ $deviceImageUrl }}" alt="{{ $current?->name ?: 'Ierīce' }}" class="w-full rounded-[1.25rem] border border-slate-200 object-contain">
                         @else
                             <div class="rounded-[1.25rem] border border-dashed border-slate-300 px-4 py-12 text-center text-sm text-slate-500">
-                                Attels tiks paradits pēc pievienosanas.
+                                Attēls tiks parādīts pēc pievienošanas.
                             </div>
                         @endif
                     </div>

@@ -207,7 +207,7 @@ class AuditTrail
         return match (strtoupper($action)) {
             self::ACTION_CREATE => 'Izveide',
             self::ACTION_UPDATE => 'Atjaunosana',
-            self::ACTION_DELETE => 'Dzesana',
+            self::ACTION_DELETE => 'Dzēšana',
             self::ACTION_LOGIN => 'Pieslegsanas',
             self::ACTION_LOGOUT => 'Izrakstisanas',
             self::ACTION_EXPORT => 'Eksports',
@@ -235,7 +235,7 @@ class AuditTrail
             'repair_request' => 'Remonta pieteikums',
             'writeoff_request' => 'Norakstīšanas pieteikums',
             'device_transfer' => 'Ierīces pārsūtīšana',
-            'database_backup' => 'Datubazes kopija',
+            'database_backup' => 'Datubāzes kopija',
             'backup_setting' => 'Kopiju iestatijumi',
             default => Str::headline((string) $entityType),
         };
@@ -317,7 +317,7 @@ class AuditTrail
         }
 
         if (preg_match('/^Database backup created: (?<label>.+)$/i', $text, $matches)) {
-            return 'Datubazes kopija izveidota: ' . $matches['label'];
+            return 'Datubāzes kopija izveidota: ' . $matches['label'];
         }
 
         if (preg_match('/^Backup file uploaded from computer: (?<label>.+)$/i', $text, $matches)) {
@@ -325,7 +325,7 @@ class AuditTrail
         }
 
         if (preg_match('/^Database restored from backup: (?<label>.+)$/i', $text, $matches)) {
-            return 'Datubaze atjaunota no kopijas: ' . $matches['label'];
+            return 'Datubāze atjaunota no kopijas: ' . $matches['label'];
         }
 
         if (preg_match('/^Backup deleted: (?<label>.+)$/i', $text, $matches)) {
@@ -577,32 +577,32 @@ class AuditTrail
             'device_type_id' => 'ierīces tips',
             'device_id' => 'ierīce',
             'repair_type' => 'remonta tips',
-            'priority' => 'prioritate',
-            'start_date' => 'sakuma datums',
+            'priority' => 'prioritāte',
+            'start_date' => 'sākuma datums',
             'end_date' => 'beigu datums',
             'cost' => 'izmaksas',
             'vendor_name' => 'pakalpojuma sniedzējs',
             'vendor_contact' => 'kontakts',
-            'invoice_number' => 'rekina numurs',
+            'invoice_number' => 'rēķina numurs',
             'issue_reported_by' => 'izpildītājs',
-            'accepted_by' => 'apstiprinātajs',
+            'accepted_by' => 'apstiprinātājs',
             'responsible_user_id' => 'atbildīgais lietotājs',
             'reviewed_by_user_id' => 'izskatīja',
             'repair_id' => 'izveidotais remonts',
-            'request_id' => 'šaiste ar pieteikumu',
-            'transfered_to_id' => 'saemejs',
+            'request_id' => 'saiste ar pieteikumu',
+            'transfered_to_id' => 'saņēmējs',
             'transfer_reason' => 'nodošanas iemesls',
             'review_notes' => 'izskatīšanas piezīmes',
             'assigned_to_id' => 'piešķirtais lietotājs',
             'building_id' => 'ēka',
             'room_id' => 'telpa',
-            'purchase_date' => 'iegades datums',
-            'purchase_price' => 'iegades cena',
+            'purchase_date' => 'iegādes datums',
+            'purchase_price' => 'iegādes cena',
             'warranty_until' => 'garantija līdz',
             'serial_number' => 'sērijas numurs',
             'manufacturer' => 'ražotājs',
             'notes' => 'piezīmes',
-            'device_image_url' => 'ierīces attels',
+            'device_image_url' => 'ierīces attēls',
             'category' => 'kategorija',
             default => str_replace('_', ' ', Str::lower($field)),
         };
@@ -613,12 +613,12 @@ class AuditTrail
         $normalized = Str::lower(trim($value));
 
         $map = [
-            'active' => 'Aktiva',
+            'active' => 'Aktīva',
             'repair' => 'Remonta',
             'writeoff' => 'Norakstīta',
             'submitted' => 'Iesniegts',
             'approved' => 'Apstiprināts',
-            'rejected' => 'Noraidits',
+            'rejected' => 'Noraidīts',
             'waiting' => 'Gaida',
             'in-progress' => 'Procesā',
             'completed' => 'Pabeigts',

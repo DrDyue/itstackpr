@@ -58,7 +58,7 @@
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-rose">
                                 <x-icon name="x-circle" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Noraiditi</span>
+                                <span class="inventory-inline-label">Noraidīti</span>
                                 <span class="inventory-inline-value">{{ $requestSummary['rejected'] }}</span>
                             </span>
                         </div>
@@ -173,7 +173,7 @@
 
                             <div class="request-field-grid">
                                 <div class="request-field-card">
-                                    <div class="request-field-label"><x-icon name="profile" size="h-4 w-4" /><span>Pieteicejs</span></div>
+                                    <div class="request-field-label"><x-icon name="profile" size="h-4 w-4" /><span>Pieteicējs</span></div>
                                     <div class="request-field-value">{{ $request->responsibleUser?->full_name ?: '-' }}</div>
                                 </div>
                                 <div class="request-field-card">
@@ -242,7 +242,7 @@
                                         <x-status-pill
                                             context="device"
                                             :value="$request->device?->status ?: 'active'"
-                                            :label="$request->device?->status === 'active' ? 'Aktiva' : ($request->device?->status === 'repair' ? 'Remonta' : 'Norakstīta')"
+                                            :label="$request->device?->status === 'active' ? 'Aktīva' : ($request->device?->status === 'repair' ? 'Remonta' : 'Norakstīta')"
                                         />
                                     </div>
                                 </div>
@@ -256,7 +256,7 @@
                                 <x-icon name="view" size="h-4 w-4" />
                                 <span>Labot iemeslu</span>
                             </a>
-                            <form method="POST" action="{{ route('my-requests.destroy', ['requestType' => 'writeoff', 'requestId' => $request->id]) }}" onsubmit="return confirm('Vai tiešām atcelt so pieteikumu?');">
+                            <form method="POST" action="{{ route('my-requests.destroy', ['requestType' => 'writeoff', 'requestId' => $request->id]) }}" onsubmit="return confirm('Vai tiešām atcelt šo pieteikumu?');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn-danger">
@@ -283,7 +283,7 @@
                                 <input type="hidden" name="status" value="rejected">
                                 <button type="submit" class="btn-reject">
                                     <x-icon name="x-circle" size="h-4 w-4" />
-                                    <span>Noraidit</span>
+                                    <span>Noraidīt</span>
                                 </button>
                             </form>
                         </div>

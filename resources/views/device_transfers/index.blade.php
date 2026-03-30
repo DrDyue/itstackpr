@@ -58,7 +58,7 @@
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-rose">
                                 <x-icon name="x-circle" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Noraiditi</span>
+                                <span class="inventory-inline-label">Noraidīti</span>
                                 <span class="inventory-inline-value">{{ $transferSummary['rejected'] }}</span>
                             </span>
                             @if (($incomingPendingCount ?? 0) > 0)
@@ -87,7 +87,7 @@
             <input type="hidden" name="statuses_filter" value="1">
             <label class="block">
                 <span class="crud-label">Meklēt</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Ierīce, pieteicejs, saņēmējs...">
+                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Ierīce, pieteicējs, saņēmējs...">
             </label>
             <div x-data="filterChipGroup({ selected: @js($filters['statuses']), minimum: 1 })">
                 <span class="crud-label">Statuss</span>
@@ -140,8 +140,8 @@
                         <x-icon name="exclamation-triangle" size="h-5 w-5" />
                     </span>
                     <div>
-                        <div class="text-sm font-semibold text-amber-950">Tev ir {{ $incomingPendingCount }} ienakoss pārsūtīšanas pieteikums{{ $incomingPendingCount > 1 ? 'i' : '' }}</div>
-                        <div class="mt-1 text-sm text-amber-900">Atver zemāk redzamos ierakstus un pie katra lem, vai apstiprināt vai noraidit ierīces saņemšanu.</div>
+                        <div class="text-sm font-semibold text-amber-950">Tev ir {{ $incomingPendingCount }} ienākošs pārsūtīšanas pieteikums{{ $incomingPendingCount > 1 ? 'i' : '' }}</div>
+                        <div class="mt-1 text-sm text-amber-900">Atver zemāk redzamos ierakstus un pieņem lēmumu par katras ierīces saņemšanu.</div>
                     </div>
                 </div>
             </div>
@@ -175,7 +175,7 @@
                             @elseif ($isIncomingPending)
                                 <span class="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-sky-700 ring-1 ring-sky-200">
                                     <x-icon name="transfer" size="h-3.5 w-3.5" />
-                                    <span>Ienakoss piedavajums</span>
+                                    <span>Ienākošs piedāvājums</span>
                                 </span>
                             @endif
                             <x-status-pill context="request" :value="$transfer->status" :label="$statusLabels[$transfer->status] ?? null" />
@@ -190,7 +190,7 @@
 
                             <div class="request-field-grid">
                                 <div class="request-field-card">
-                                    <div class="request-field-label"><x-icon name="profile" size="h-4 w-4" /><span>Pieteicejs</span></div>
+                                    <div class="request-field-label"><x-icon name="profile" size="h-4 w-4" /><span>Pieteicējs</span></div>
                                     <div class="request-field-value">{{ $transfer->responsibleUser?->full_name ?: '-' }}</div>
                                 </div>
                                 <div class="request-field-card">
@@ -279,7 +279,7 @@
                                 <x-icon name="view" size="h-4 w-4" />
                                 <span>Labot iemeslu</span>
                             </a>
-                            <form method="POST" action="{{ route('my-requests.destroy', ['requestType' => 'transfer', 'requestId' => $transfer->id]) }}" onsubmit="return confirm('Vai tiešām atcelt so pieteikumu?');">
+                            <form method="POST" action="{{ route('my-requests.destroy', ['requestType' => 'transfer', 'requestId' => $transfer->id]) }}" onsubmit="return confirm('Vai tiešām atcelt šo pieteikumu?');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn-danger">
@@ -313,7 +313,7 @@
                                 <input type="hidden" name="status" value="rejected">
                                 <button type="submit" class="btn-danger">
                                     <x-icon name="x-mark" size="h-4 w-4" />
-                                    <span>Noraidit</span>
+                                    <span>Noraidīt</span>
                                 </button>
                             </form>
                         </div>

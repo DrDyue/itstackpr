@@ -54,7 +54,7 @@
                 <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
                     <div class="font-semibold text-slate-900">Pirms iesniegsanas</div>
                     <div class="mt-2 leading-6">
-                        Izvēlejoties ierīci, redzēsi tipu, ražotāju ar modeli un telpu, lai norakstīšanas pieteikums tiktu piešaistīts pareizajam inventaram.
+                        Izvēloties ierīci, redzēsi tipu, ražotāju ar modeli un telpu, lai norakstīšanas pieteikums tiktu piesaistīts pareizajam inventāram.
                     </div>
                 </div>
             </div>

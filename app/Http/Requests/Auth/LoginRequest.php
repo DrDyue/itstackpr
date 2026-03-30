@@ -59,7 +59,7 @@ class LoginRequest extends FormRequest
 
         if (! ($bootstrapStatus['ready'] ?? false)) {
             throw ValidationException::withMessages([
-                'email' => [$bootstrapStatus['message'] ?? 'Autentifikacija nav pieejama, jo datubaze nav pilniba sagatavota.'],
+                'email' => [$bootstrapStatus['message'] ?? 'Autentifikācija nav pieejama, jo datubāze nav pilnībā sagatavota.'],
             ]);
         }
 

@@ -41,7 +41,7 @@
             @include('devices.partials.form-fields', ['device' => null])
             <div class="surface-card flex flex-wrap items-center justify-between gap-4 p-6">
                 <div>
-                    <div class="text-sm font-semibold text-slate-900">Pirms saglabasanas parbaudi pamatdatus</div>
+                    <div class="text-sm font-semibold text-slate-900">Pirms saglabāšanas pārbaudi pamata datus</div>
                     <div class="mt-1 text-sm text-slate-500">Svarigakais ir kods, nosaukums, tips un modelis. Pārējo informāciju vari papildinat ari velak.</div>
                 </div>
                 <div class="flex flex-wrap gap-3">

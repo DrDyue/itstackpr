@@ -61,7 +61,7 @@
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-rose">
                                 <x-icon name="x-circle" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Noraiditi</span>
+                                <span class="inventory-inline-label">Noraidīti</span>
                                 <span class="inventory-inline-value">{{ $requestSummary['rejected'] }}</span>
                             </span>
                         </div>
@@ -90,7 +90,7 @@
             <input type="hidden" name="statuses_filter" value="1">
             <label class="block">
                 <span class="crud-label">Meklēt</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Ierīce, kods, pieteicejs...">
+                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Ierīce, kods, pieteicējs...">
             </label>
             <div x-data="filterChipGroup({ selected: @js($filters['statuses']), minimum: 1 })">
                 <span class="crud-label">Statuss</span>
@@ -187,7 +187,7 @@
 
                             <div class="request-field-grid">
                                 <div class="request-field-card">
-                                    <div class="request-field-label"><x-icon name="profile" size="h-4 w-4" /><span>Pieteicejs</span></div>
+                                    <div class="request-field-label"><x-icon name="profile" size="h-4 w-4" /><span>Pieteicējs</span></div>
                                     <div class="request-field-value">{{ $request->responsibleUser?->full_name ?: '-' }}</div>
                                 </div>
                                 <div class="request-field-card">
@@ -201,7 +201,7 @@
                                     <div class="request-field-value">{{ $request->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
                                 </div>
                                 <div class="request-field-card">
-                                    <div class="request-field-label"><x-icon name="repair" size="h-4 w-4" /><span>Saistitais remonts</span></div>
+                                    <div class="request-field-label"><x-icon name="repair" size="h-4 w-4" /><span>Saistītais remonts</span></div>
                                     <div class="request-field-value">
                                         @if ($request->repair)
                                             Izveidots remonts #{{ $request->repair->id }}
@@ -297,7 +297,7 @@
                                 <input type="hidden" name="status" value="rejected">
                                 <button type="submit" class="btn-reject">
                                     <x-icon name="x-circle" size="h-4 w-4" />
-                                    <span>Noraidit</span>
+                                    <span>Noraidīt</span>
                                 </button>
                             </form>
                         </div>

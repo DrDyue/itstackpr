@@ -1,6 +1,6 @@
 {{--
     Profila daļa: Pamatinformācijas atjaunošana.
-    Atbildiba: ļauj lietotājam labot savu personisko informāciju, kuru sistēma izmanto ierīču piešķiršanā un pieteikumos.
+    Atbildība: ļauj lietotājam labot savu personisko informāciju, kuru sistēma izmanto ierīču piešķiršanā un pieteikumos.
     Kāpēc tas ir svarīgi:
     1. Vārds un amats tiek rādīti ierīču tabulās un pieteikumu kartītēs.
     2. E-pasts un telefons palīdz identificēt lietotāju un sazināties, ja tas nepieciešams.
@@ -18,7 +18,7 @@
 
         <div class="grid gap-6 md:grid-cols-2">
             <div class="md:col-span-2">
-                <x-input-label for="full_name" value="Vards un uzvards" />
+                <x-input-label for="full_name" value="Vārds un uzvārds" />
                 <x-text-input id="full_name" name="full_name" type="text" class="mt-2 block w-full" :value="old('full_name', $user?->full_name)" required autofocus autocomplete="name" />
                 <x-input-error class="mt-2" :messages="$errors->get('full_name')" />
             </div>
