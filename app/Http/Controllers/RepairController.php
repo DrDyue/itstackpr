@@ -39,6 +39,7 @@ class RepairController extends Controller
             'status' => trim((string) $request->query('status', '')),
             'priority' => trim((string) $request->query('priority', '')),
             'repair_type' => trim((string) $request->query('repair_type', '')),
+            'priority_sort' => trim((string) $request->query('priority_sort', '')),
             'mine' => $request->boolean('mine'),
         ];
 
@@ -90,6 +91,11 @@ class RepairController extends Controller
             ->when($filters['priority'] !== '' && in_array($filters['priority'], self::PRIORITIES, true), fn (Builder $query) => $query->where('priority', $filters['priority']))
             ->when($filters['repair_type'] !== '' && in_array($filters['repair_type'], self::TYPES, true), fn (Builder $query) => $query->where('repair_type', $filters['repair_type']))
             ->when($filters['mine'] && $user->canManageRequests(), fn (Builder $query) => $query->where('accepted_by', $user->id))
+            ->orderByRaw(
+                ($filters['priority_sort'] === 'asc')
+                    ? "case priority when 'low' then 0 when 'medium' then 1 when 'high' then 2 when 'critical' then 3 else 4 end"
+                    : "case priority when 'critical' then 0 when 'high' then 1 when 'medium' then 2 when 'low' then 3 else 4 end"
+            )
             ->orderByRaw("case when status = 'waiting' then 0 when status = 'in-progress' then 1 when status = 'completed' then 2 else 3 end")
             ->orderByDesc('id')
             ->get();

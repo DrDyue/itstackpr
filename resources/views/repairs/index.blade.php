@@ -47,6 +47,8 @@
         ])->values();
         $selectedPriorityLabel = $filters['priority'] !== '' ? ($priorityLabels[$filters['priority']] ?? $filters['priority']) : null;
         $selectedRepairTypeLabel = $filters['repair_type'] !== '' ? ($typeLabels[$filters['repair_type']] ?? $filters['repair_type']) : null;
+        $prioritySort = $filters['priority_sort'] === 'asc' ? 'asc' : 'desc';
+        $prioritySortLabel = $prioritySort === 'asc' ? 'No zemas uz kritisko' : 'No kritiskas uz zemo';
     @endphp
 
     {{-- Kolonnas sadala remontus gaidīšanas, procesa un pabeigto darbu grupās. --}}
@@ -145,6 +147,25 @@
                 </div>
 
                 <div class="toolbar-actions justify-end">
+                    @php
+                        $sortQuery = request()->except('priority_sort', 'page');
+                        $descQuery = array_merge($sortQuery, ['priority_sort' => 'desc']);
+                        $ascQuery = array_merge($sortQuery, ['priority_sort' => 'asc']);
+                    @endphp
+                    <div class="flex flex-wrap gap-2">
+                        <a
+                            href="{{ route('repairs.index', $descQuery) }}"
+                            class="{{ $prioritySort === 'desc' ? 'btn-search' : 'btn-clear' }}"
+                        >
+                            Kritiska -> Zema
+                        </a>
+                        <a
+                            href="{{ route('repairs.index', $ascQuery) }}"
+                            class="{{ $prioritySort === 'asc' ? 'btn-search' : 'btn-clear' }}"
+                        >
+                            Zema -> Kritiska
+                        </a>
+                    </div>
                     @if ($canManageRepairs)
                         <a
                             href="{{ route('repairs.index', $mineQuery) }}"
@@ -166,6 +187,7 @@
                 ['label' => 'Statuss', 'value' => $filters['status'] !== '' ? ($statusLabels[$filters['status']] ?? $filters['status']) : null],
                 ['label' => 'Prioritate', 'value' => $filters['priority'] !== '' ? ($priorityLabels[$filters['priority']] ?? $filters['priority']) : null],
                 ['label' => 'Tips', 'value' => $filters['repair_type'] !== '' ? ($typeLabels[$filters['repair_type']] ?? $filters['repair_type']) : null],
+                ['label' => 'Kartosana', 'value' => $prioritySortLabel],
                 ['label' => 'Pieskirts', 'value' => $filters['mine'] && $canManageRepairs ? 'Man' : null],
             ]"
             :clear-url="route('repairs.index')"
