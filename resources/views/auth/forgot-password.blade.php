@@ -12,12 +12,6 @@
         Aizmirsi paroli? Bez problmm. Vienkri ievadi savu e-pasta adresi un ms nostsim paroles atiestatanas saiti.
     </div>
 
-    @if (session('status'))
-        <div class="success-message">
-            {{ session('status') }}
-        </div>
-    @endif
-
     <form method="POST" action="{{ route('password.email') }}">
         @csrf
 

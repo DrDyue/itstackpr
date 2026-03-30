@@ -52,9 +52,6 @@
 
         <x-validation-summary />
 
-        @if (session('success'))
-            <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
-        @endif
 
         <div class="grid gap-4 xl:grid-cols-[1.35fr_0.95fr]">
             <div class="surface-card space-y-4 p-6">

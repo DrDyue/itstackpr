@@ -48,11 +48,6 @@
                 <span>Saglabat</span>
             </x-primary-button>
 
-            @if (session('status') === 'profile-updated')
-                <p x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 2000)" class="text-sm text-slate-600">
-                    Saglabats.
-                </p>
-            @endif
         </div>
     </form>
 </section>

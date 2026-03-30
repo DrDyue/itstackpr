@@ -208,6 +208,14 @@
         </svg>
         @break
 
+    @case('information-circle')
+        <svg xmlns="http://www.w3.org/2000/svg" {{ $attributes->class($size) }} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9h.008v.008H12V9Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 12h.75v4.5h.75" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+        @break
+
     @case('stats')
         <svg xmlns="http://www.w3.org/2000/svg" {{ $attributes->class($size) }} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v18m16.5-9-4.5-4.5-4.5 4.5-3-3L3.75 12" />
