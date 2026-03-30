@@ -278,14 +278,7 @@ class DeviceController extends Controller
     ): void {
         $query
             ->when($filters['q'] !== '', function (Builder $deviceQuery) use ($filters) {
-                $term = $filters['q'];
-
-                $deviceQuery->where(function (Builder $nestedQuery) use ($term) {
-                    $nestedQuery->where('devices.name', 'like', "%{$term}%")
-                        ->orWhere('devices.serial_number', 'like', "%{$term}%")
-                        ->orWhere('devices.manufacturer', 'like', "%{$term}%")
-                        ->orWhere('devices.model', 'like', "%{$term}%");
-                });
+                $deviceQuery->where('devices.code', $filters['q']);
             })
             ->when($filters['code'] !== '', function (Builder $deviceQuery) use ($filters) {
                 $deviceQuery->whereRaw('LOWER(devices.code) = ?', [mb_strtolower($filters['code'])]);

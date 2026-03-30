@@ -49,7 +49,7 @@ class RepairController extends Controller
                     'completed' => 0,
                 ],
                 'filters' => $filters,
-                'statuses' => ['waiting', 'in-progress', 'completed'],
+                'statuses' => ['waiting', 'in-progress', 'completed', 'cancelled'],
                 'statusLabels' => $this->statusLabels(),
                 'priorityLabels' => $this->priorityLabels(),
                 'typeLabels' => $this->typeLabels(),
@@ -106,7 +106,7 @@ class RepairController extends Controller
                 'completed' => (clone $baseQuery)->whereIn('repairs.status', ['completed', 'cancelled'])->count(),
             ],
             'filters' => $filters,
-            'statuses' => ['waiting', 'in-progress', 'completed'],
+            'statuses' => ['waiting', 'in-progress', 'completed', 'cancelled'],
             'statusLabels' => $this->statusLabels(),
             'priorityLabels' => $this->priorityLabels(),
             'typeLabels' => $this->typeLabels(),
@@ -265,6 +265,14 @@ class RepairController extends Controller
             && (! filled($repair->vendor_name) || ! filled($repair->vendor_contact))
         ) {
             return back()->with('error', 'Lai sāktu ārējo remontu, vispirms aizpildi pakalpojuma sniedzēju un kontaktu remonta kartītē.');
+        }
+
+        if (
+            $validated['target_status'] === 'completed'
+            && $repair->repair_type === 'external'
+            && (empty($repair->invoice_number) || (empty($repair->cost) && empty($validated['cost'])))
+        ) {
+            return back()->with('error', 'Lai pabeigtu ārējo remontu, jābūt norādītam rēķina numuram un izmaksām.');
         }
 
         $before = $repair->only([
@@ -561,7 +569,7 @@ class RepairController extends Controller
 
     private function normalizedIndexFilters(Request $request, bool $canManageRepairs): array
     {
-        $availableStatuses = ['waiting', 'in-progress', 'completed'];
+        $availableStatuses = ['waiting', 'in-progress', 'completed', 'cancelled'];
         $rawStatuses = $request->query('status', []);
         $selectedStatuses = collect(is_array($rawStatuses) ? $rawStatuses : [$rawStatuses])
             ->map(fn ($status) => strtolower(trim((string) $status)))
@@ -593,20 +601,8 @@ class RepairController extends Controller
         if ($filters['q'] !== '' && ! in_array('q', $skip, true)) {
             $term = $filters['q'];
 
-            $query->where(function (Builder $searchQuery) use ($term) {
-                $searchQuery->where('repairs.description', 'like', "%{$term}%")
-                    ->orWhere('repairs.invoice_number', 'like', "%{$term}%")
-                    ->orWhere('repairs.vendor_name', 'like', "%{$term}%")
-                    ->orWhereHas('device', function (Builder $deviceQuery) use ($term) {
-                        $deviceQuery->where('code', 'like', "%{$term}%")
-                            ->orWhere('serial_number', 'like', "%{$term}%")
-                            ->orWhere('name', 'like', "%{$term}%")
-                            ->orWhere('manufacturer', 'like', "%{$term}%")
-                            ->orWhere('model', 'like', "%{$term}%");
-                    })
-                    ->orWhereHas('device.assignedTo', fn (Builder $userQuery) => $userQuery->where('full_name', 'like', "%{$term}%"))
-                    ->orWhereHas('request.responsibleUser', fn (Builder $userQuery) => $userQuery->where('full_name', 'like', "%{$term}%"))
-                    ->orWhereHas('reporter', fn (Builder $userQuery) => $userQuery->where('full_name', 'like', "%{$term}%"));
+            $query->whereHas('device', function (Builder $deviceQuery) use ($term) {
+                $deviceQuery->where('code', $term);
             });
         }
 

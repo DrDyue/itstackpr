@@ -483,23 +483,8 @@ class DeviceTransferController extends Controller
         if (! isset($skipLookup['q']) && $filters['q'] !== '') {
             $term = $filters['q'];
 
-            $query->where(function (Builder $builder) use ($term) {
-                $builder->where('device_transfers.transfer_reason', 'like', "%{$term}%")
-                    ->orWhereHas('device', function (Builder $deviceQuery) use ($term) {
-                        $deviceQuery
-                            ->where('name', 'like', "%{$term}%")
-                            ->orWhere('code', 'like', "%{$term}%")
-                            ->orWhere('serial_number', 'like', "%{$term}%")
-                            ->orWhere('manufacturer', 'like', "%{$term}%")
-                            ->orWhere('model', 'like', "%{$term}%")
-                            ->orWhereHas('type', fn (Builder $typeQuery) => $typeQuery->where('type_name', 'like', "%{$term}%"));
-                    })
-                    ->orWhereHas('responsibleUser', fn (Builder $userQuery) => $userQuery->where('full_name', 'like', "%{$term}%"))
-                    ->orWhereHas('transferTo', fn (Builder $userQuery) => $userQuery->where('full_name', 'like', "%{$term}%"));
-
-                if (ctype_digit($term)) {
-                    $builder->orWhereKey((int) $term);
-                }
+            $query->whereHas('device', function (Builder $deviceQuery) use ($term) {
+                $deviceQuery->where('code', $term);
             });
         }
 
