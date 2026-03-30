@@ -39,7 +39,7 @@
             <div class="page-hero-grid">
                 <div class="max-w-3xl">
                     <div class="flex flex-wrap items-center gap-2">
-                        <div class="page-eyebrow"><x-icon name="transfer" size="h-4 w-4" /><span>Nodosana</span></div>
+                        <div class="page-eyebrow"><x-icon name="transfer" size="h-4 w-4" /><span>Nodošana</span></div>
                         <div class="inventory-inline-metrics">
                             <span class="inventory-inline-chip inventory-inline-chip-slate">
                                 <x-icon name="transfer" size="h-3.5 w-3.5" />
@@ -53,7 +53,7 @@
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-emerald">
                                 <x-icon name="check-circle" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Apstiprinati</span>
+                                <span class="inventory-inline-label">Apstiprināti</span>
                                 <span class="inventory-inline-value">{{ $transferSummary['approved'] }}</span>
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-rose">
@@ -73,8 +73,8 @@
                     <div class="page-title-group mt-4">
                         <div class="page-title-icon page-title-icon-emerald"><x-icon name="transfer" size="h-7 w-7" /></div>
                         <div>
-                            <h1 class="page-title">Iericu parsutisanas</h1>
-                            <p class="page-subtitle">{{ $isAdmin ? 'Visi parsutisanas pieteikumi. Lemumu par apstiprinasanu pienem noraditais sanemejs.' : 'Tavi nosutitie un sanemtie parsutisanas pieteikumi.' }}</p>
+                            <h1 class="page-title">Ierīču pārsūtīšanas</h1>
+                            <p class="page-subtitle">{{ $isAdmin ? 'Visi pārsūtīšanas pieteikumi. Lēmumu par apstiprinasanu pienem norādītais saņēmējs.' : 'Tavi nosutitie un sanemtie pārsūtīšanas pieteikumi.' }}</p>
                         </div>
                     </div>
                 </div>
@@ -86,8 +86,8 @@
         <form method="GET" action="{{ route('device-transfers.index') }}" class="surface-toolbar grid gap-4 xl:grid-cols-[1.2fr_1fr_auto] xl:items-end">
             <input type="hidden" name="statuses_filter" value="1">
             <label class="block">
-                <span class="crud-label">Meklet</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Ierice, pieteicejs, sanemejs...">
+                <span class="crud-label">Meklēt</span>
+                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Ierīce, pieteicejs, saņēmējs...">
             </label>
             <div x-data="filterChipGroup({ selected: @js($filters['statuses']), minimum: 1 })">
                 <span class="crud-label">Statuss</span>
@@ -114,14 +114,14 @@
                 </div>
             </div>
             <div class="toolbar-actions xl:justify-end">
-                <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklet</span></button>
+                <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
                 <a href="{{ route('device-transfers.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notirit</span></a>
             </div>
         </form>
 
         <x-active-filters
             :items="[
-                ['label' => 'Meklet', 'value' => $filters['q']],
+                ['label' => 'Meklēt', 'value' => $filters['q']],
                 ['label' => 'Statuss', 'value' => collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ')],
             ]"
             :clear-url="route('device-transfers.index')"
@@ -140,8 +140,8 @@
                         <x-icon name="exclamation-triangle" size="h-5 w-5" />
                     </span>
                     <div>
-                        <div class="text-sm font-semibold text-amber-950">Tev ir {{ $incomingPendingCount }} ienakoss parsutisanas pieteikums{{ $incomingPendingCount > 1 ? 'i' : '' }}</div>
-                        <div class="mt-1 text-sm text-amber-900">Atver zemak redzamos ierakstus un pie katra lem, vai apstiprinat vai noraidit ierices sanemsanu.</div>
+                        <div class="text-sm font-semibold text-amber-950">Tev ir {{ $incomingPendingCount }} ienakoss pārsūtīšanas pieteikums{{ $incomingPendingCount > 1 ? 'i' : '' }}</div>
+                        <div class="mt-1 text-sm text-amber-900">Atver zemāk redzamos ierakstus un pie katra lem, vai apstiprināt vai noraidit ierīces saņemšanu.</div>
                     </div>
                 </div>
             </div>
@@ -152,10 +152,10 @@
                     $isIncomingPending = ! $isAdmin
                         && (int) $currentUserId === (int) $transfer->transfered_to_id
                         && $transfer->status === 'submitted';
-                    $currentRoomLabel = $transfer->device?->room?->room_number ?: 'telpa nav noradita';
+                    $currentRoomLabel = $transfer->device?->room?->room_number ?: 'telpa nav norādīta';
                     $currentBuildingLabel = $transfer->device?->building?->building_name ?: null;
                     $deviceThumbUrl = $transfer->device?->deviceImageThumbUrl();
-                    $deviceTypeName = $transfer->device?->type?->type_name ?: 'Ierice';
+                    $deviceTypeName = $transfer->device?->type?->type_name ?: 'Ierīce';
                     $deviceMeta = collect([$transfer->device?->manufacturer, $transfer->device?->model])
                         ->filter(fn ($value) => filled($value))
                         ->implode(' | ');
@@ -170,7 +170,7 @@
                             @if ($isAdmin)
                                 <span class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700 ring-1 ring-emerald-200">
                                     <x-icon name="view" size="h-3.5 w-3.5" />
-                                    <span>Vesture</span>
+                                    <span>Vēsture</span>
                                 </span>
                             @elseif ($isIncomingPending)
                                 <span class="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-sky-700 ring-1 ring-sky-200">
@@ -194,7 +194,7 @@
                                     <div class="request-field-value">{{ $transfer->responsibleUser?->full_name ?: '-' }}</div>
                                 </div>
                                 <div class="request-field-card">
-                                    <div class="request-field-label"><x-icon name="user" size="h-4 w-4" /><span>Sanemejs</span></div>
+                                    <div class="request-field-label"><x-icon name="user" size="h-4 w-4" /><span>Saņēmējs</span></div>
                                     <div class="request-field-value">{{ $transfer->transferTo?->full_name ?: '-' }}</div>
                                 </div>
                                 <div class="request-field-card">
@@ -209,17 +209,17 @@
                                 </div>
                                 @if ($transfer->reviewedBy)
                                     <div class="request-field-card">
-                                        <div class="request-field-label"><x-icon name="audit" size="h-4 w-4" /><span>Izskatija</span></div>
+                                        <div class="request-field-label"><x-icon name="audit" size="h-4 w-4" /><span>Izskatīja</span></div>
                                         <div class="request-field-value">{{ $transfer->reviewedBy->full_name }}</div>
                                     </div>
                                 @endif
                                 <div class="request-field-card request-field-card-wide">
-                                    <div class="request-field-label"><x-icon name="transfer" size="h-4 w-4" /><span>Parsutisanas iemesls</span></div>
+                                    <div class="request-field-label"><x-icon name="transfer" size="h-4 w-4" /><span>Pārsūtīšanas iemesls</span></div>
                                     <div class="request-description-box">{{ $transfer->transfer_reason }}</div>
                                 </div>
                                 @if ($transfer->review_notes)
                                     <div class="request-field-card request-field-card-wide">
-                                        <div class="request-field-label"><x-icon name="view" size="h-4 w-4" /><span>Piezimes</span></div>
+                                        <div class="request-field-label"><x-icon name="view" size="h-4 w-4" /><span>Piezīmes</span></div>
                                         <div class="request-field-value">{{ $transfer->review_notes }}</div>
                                     </div>
                                 @endif
@@ -229,7 +229,7 @@
                         <div class="request-device-panel">
                             <div class="request-panel-heading">
                                 <span class="request-panel-heading-icon"><x-icon name="device" size="h-4 w-4" /></span>
-                                <span>Ierice</span>
+                                <span>Ierīce</span>
                             </div>
 
                             <div class="request-device-hero mt-4">
@@ -239,10 +239,10 @@
                                         <span>{{ $deviceTypeName }}</span>
                                     </span>
                                     <div class="mt-3 text-lg font-semibold text-slate-900">{{ $transfer->device?->name ?: '-' }}</div>
-                                    <div class="mt-2 text-sm leading-6 text-slate-500">{{ $deviceMeta !== '' ? $deviceMeta : 'Razotajs un modelis nav noraditi.' }}</div>
+                                    <div class="mt-2 text-sm leading-6 text-slate-500">{{ $deviceMeta !== '' ? $deviceMeta : 'Ražotājs un modelis nav norādīti.' }}</div>
                                 </div>
                                 @if ($deviceThumbUrl)
-                                    <img src="{{ $deviceThumbUrl }}" alt="{{ $transfer->device?->name ?: 'Ierice' }}" class="request-device-thumb shrink-0">
+                                    <img src="{{ $deviceThumbUrl }}" alt="{{ $transfer->device?->name ?: 'Ierīce' }}" class="request-device-thumb shrink-0">
                                 @else
                                     <div class="request-device-thumb request-device-thumb-placeholder shrink-0">
                                         <x-icon name="device" size="h-6 w-6" />
@@ -256,15 +256,15 @@
                                     <div class="request-field-value">{{ $transfer->device?->code ?: '-' }}</div>
                                 </div>
                                 <div class="request-field-card">
-                                    <div class="request-field-label"><x-icon name="key" size="h-4 w-4" /><span>Serijas numurs</span></div>
+                                    <div class="request-field-label"><x-icon name="key" size="h-4 w-4" /><span>Sērijas numurs</span></div>
                                     <div class="request-field-value">{{ $transfer->device?->serial_number ?: '-' }}</div>
                                 </div>
                                 <div class="request-field-card">
-                                    <div class="request-field-label"><x-icon name="room" size="h-4 w-4" /><span>Pasreizeja telpa</span></div>
+                                    <div class="request-field-label"><x-icon name="room" size="h-4 w-4" /><span>Pašreizējā telpa</span></div>
                                     <div class="request-field-value">{{ $currentRoomLabel }}</div>
                                 </div>
                                 <div class="request-field-card md:col-span-2">
-                                    <div class="request-field-label"><x-icon name="building" size="h-4 w-4" /><span>Atrasanas vieta</span></div>
+                                    <div class="request-field-label"><x-icon name="building" size="h-4 w-4" /><span>Atrašanās vieta</span></div>
                                     <div class="request-field-value">
                                         {{ $currentBuildingLabel ? $currentBuildingLabel . ' | ' . $currentRoomLabel : $currentRoomLabel }}
                                     </div>
@@ -279,7 +279,7 @@
                                 <x-icon name="view" size="h-4 w-4" />
                                 <span>Labot iemeslu</span>
                             </a>
-                            <form method="POST" action="{{ route('my-requests.destroy', ['requestType' => 'transfer', 'requestId' => $transfer->id]) }}" onsubmit="return confirm('Vai tiesam atcelt so pieteikumu?');">
+                            <form method="POST" action="{{ route('my-requests.destroy', ['requestType' => 'transfer', 'requestId' => $transfer->id]) }}" onsubmit="return confirm('Vai tiešām atcelt so pieteikumu?');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn-danger">
@@ -292,9 +292,9 @@
 
                     @if ($isIncomingPending)
                         <div class="mt-5 rounded-[1.5rem] border border-emerald-200 bg-emerald-50/80 p-4">
-                            <div class="text-sm font-semibold text-emerald-900">Tu vari sanemt so ierici</div>
+                            <div class="text-sm font-semibold text-emerald-900">Tu vari sanemt šo ierīci</div>
                             <div class="mt-1 text-sm text-emerald-800">
-                                Ja apstiprinasi, ierice uzreiz tiks pieskirta tev. Ja noraidisi, ta paliks pie esoša lietotaja.
+                                Ja apstiprinasi, ierīce uzreiz tiks piesķirta tev. Ja noraidisi, ta paliks pie esoša lietotāja.
                             </div>
 
                             <form method="POST" action="{{ route('device-transfers.review', $transfer) }}" class="mt-4">
@@ -303,7 +303,7 @@
                                 <div class="flex flex-wrap gap-2">
                                     <button type="submit" class="btn-create">
                                         <x-icon name="check" size="h-4 w-4" />
-                                        <span>Apstiprinat</span>
+                                        <span>Apstiprināt</span>
                                     </button>
                                 </div>
                             </form>
@@ -320,7 +320,7 @@
                     @endif
                 </div>
             @empty
-                <div class="surface-empty">Pieteikumu vel nav.</div>
+                <div class="surface-empty">Pieteikumu vēl nav.</div>
             @endforelse
         </div>
 

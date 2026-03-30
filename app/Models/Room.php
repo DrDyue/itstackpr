@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * Telpas modelis.
  *
- * Telpa ir piesaiste gan fiziskai atrašanās vietai, gan arī noliktavas loģikai.
+ * Telpa ir piešaiste gan fiziskai atrašanās vietai, gan arī noliktavas loģikai.
  */
 class Room extends Model
 {

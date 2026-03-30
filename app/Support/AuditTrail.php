@@ -50,7 +50,7 @@ class AuditTrail
                 'severity' => self::normalizeSeverity($severity),
             ]);
         } catch (Throwable) {
-            // Rezerves kopijam un citam kritiskam darbibam nav jauzluzt, ja audits uz bridi nav pieejams.
+            // Rezerves kopijām un citām kritiskām darbībām nav jāuzlūzt, ja audits uz brīdi nav pieejams.
         }
     }
 
@@ -137,7 +137,7 @@ class AuditTrail
             $user->id,
             self::ACTION_LOGIN,
             $user,
-            'Lietotajs piesledzas: ' . self::labelFor($user),
+            'Lietotājs pieslēdzas: ' . self::labelFor($user),
             self::SEVERITY_INFO
         );
     }
@@ -155,7 +155,7 @@ class AuditTrail
             $user->id,
             self::ACTION_LOGOUT,
             $user,
-            'Lietotajs izrakstijas: ' . self::labelFor($user),
+            'Lietotājs izrakstijas: ' . self::labelFor($user),
             self::SEVERITY_INFO
         );
     }
@@ -186,15 +186,15 @@ class AuditTrail
     public static function labelFor(Model $model): string
     {
         return match (class_basename($model)) {
-            'Building' => (string) ($model->building_name ?? ('Eka #' . $model->getKey())),
+            'Building' => (string) ($model->building_name ?? ('Ēka #' . $model->getKey())),
             'Room' => trim((string) (($model->room_number ?? 'Telpa #' . $model->getKey()) . ' ' . ($model->room_name ?? ''))),
-            'DeviceType' => (string) ($model->type_name ?? ('Ierices tips #' . $model->getKey())),
-            'Device' => trim((string) (($model->code ? '[' . $model->code . '] ' : '') . ($model->name ?? ('Ierice #' . $model->getKey())))),
-            'Repair' => trim((string) (($model->device?->name ?? 'Ierice') . ' | ' . Str::limit((string) ($model->description ?? 'Remonts #' . $model->getKey()), 70))),
-            'User' => (string) ($model->full_name ?? ('Lietotajs #' . $model->getKey())),
-            'RepairRequest' => trim((string) (($model->device?->name ?? 'Ierice') . ' | ' . Str::limit((string) ($model->description ?? 'Remonta pieteikums #' . $model->getKey()), 70))),
-            'WriteoffRequest' => trim((string) (($model->device?->name ?? 'Ierice') . ' | ' . Str::limit((string) ($model->reason ?? 'Norakstisanas pieteikums #' . $model->getKey()), 70))),
-            'DeviceTransfer' => trim((string) (($model->device?->name ?? 'Ierice') . ' | ' . Str::limit((string) ($model->transfer_reason ?? 'Parsutisanas pieteikums #' . $model->getKey()), 70))),
+            'DeviceType' => (string) ($model->type_name ?? ('Ierīces tips #' . $model->getKey())),
+            'Device' => trim((string) (($model->code ? '[' . $model->code . '] ' : '') . ($model->name ?? ('Ierīce #' . $model->getKey())))),
+            'Repair' => trim((string) (($model->device?->name ?? 'Ierīce') . ' | ' . Str::limit((string) ($model->description ?? 'Remonts #' . $model->getKey()), 70))),
+            'User' => (string) ($model->full_name ?? ('Lietotājs #' . $model->getKey())),
+            'RepairRequest' => trim((string) (($model->device?->name ?? 'Ierīce') . ' | ' . Str::limit((string) ($model->description ?? 'Remonta pieteikums #' . $model->getKey()), 70))),
+            'WriteoffRequest' => trim((string) (($model->device?->name ?? 'Ierīce') . ' | ' . Str::limit((string) ($model->reason ?? 'Norakstīšanas pieteikums #' . $model->getKey()), 70))),
+            'DeviceTransfer' => trim((string) (($model->device?->name ?? 'Ierīce') . ' | ' . Str::limit((string) ($model->transfer_reason ?? 'Pārsūtīšanas pieteikums #' . $model->getKey()), 70))),
             default => self::entityLabel(class_basename($model)) . ' #' . $model->getKey(),
         };
     }
@@ -226,15 +226,15 @@ class AuditTrail
         $key = self::normalizeEntityKey($entityType);
 
         return match ($key) {
-            'building' => 'Eka',
+            'building' => 'Ēka',
             'room' => 'Telpa',
-            'device_type' => 'Ierices tips',
-            'device' => 'Ierice',
+            'device_type' => 'Ierīces tips',
+            'device' => 'Ierīce',
             'repair' => 'Remonts',
-            'user' => 'Lietotajs',
+            'user' => 'Lietotājs',
             'repair_request' => 'Remonta pieteikums',
-            'writeoff_request' => 'Norakstisanas pieteikums',
-            'device_transfer' => 'Ierices parsutisana',
+            'writeoff_request' => 'Norakstīšanas pieteikums',
+            'device_transfer' => 'Ierīces pārsūtīšana',
             'database_backup' => 'Datubazes kopija',
             'backup_setting' => 'Kopiju iestatijumi',
             default => Str::headline((string) $entityType),
@@ -250,7 +250,7 @@ class AuditTrail
             self::SEVERITY_WARNING => 'Bridinajums',
             self::SEVERITY_ERROR => 'Kluda',
             self::SEVERITY_CRITICAL => 'Kritisks',
-            default => 'Informacija',
+            default => 'Informācija',
         };
     }
 
@@ -301,19 +301,19 @@ class AuditTrail
         }
 
         if (preg_match('/^User logged in: (?<label>.+)$/i', $text, $matches)) {
-            return 'Lietotajs piesledzas: ' . $matches['label'];
+            return 'Lietotājs pieslēdzas: ' . $matches['label'];
         }
 
         if (preg_match('/^User logged out: (?<label>.+)$/i', $text, $matches)) {
-            return 'Lietotajs izrakstijas: ' . $matches['label'];
+            return 'Lietotājs izrakstijas: ' . $matches['label'];
         }
 
         if (preg_match('/^User account deleted: (?<label>.+)$/i', $text, $matches)) {
-            return 'Lietotaja konts dzests: ' . $matches['label'];
+            return 'Lietotāja konts dzēsts: ' . $matches['label'];
         }
 
         if (preg_match('/^User password changed: (?<label>.+)$/i', $text, $matches)) {
-            return 'Lietotaja parole nomainita: ' . $matches['label'];
+            return 'Lietotāja parole nomainīta: ' . $matches['label'];
         }
 
         if (preg_match('/^Database backup created: (?<label>.+)$/i', $text, $matches)) {
@@ -321,7 +321,7 @@ class AuditTrail
         }
 
         if (preg_match('/^Backup file uploaded from computer: (?<label>.+)$/i', $text, $matches)) {
-            return 'Kopijas fails augshupladets no datora: ' . $matches['label'];
+            return 'Kopijas fails augšupielādēts no datora: ' . $matches['label'];
         }
 
         if (preg_match('/^Database restored from backup: (?<label>.+)$/i', $text, $matches)) {
@@ -329,41 +329,41 @@ class AuditTrail
         }
 
         if (preg_match('/^Backup deleted: (?<label>.+)$/i', $text, $matches)) {
-            return 'Rezerves kopija dzesta: ' . $matches['label'];
+            return 'Rezerves kopija dzēsta: ' . $matches['label'];
         }
 
         if (preg_match('/^Backup schedule updated: (?<frequency>[^ ]+) at (?<time>.+)$/i', $text, $matches)) {
-            return 'Kopiju grafiks atjauninats: '
+            return 'Kopiju grafiks atjaunināts: '
                 . self::translateValue($matches['frequency'])
                 . ' plkst. '
                 . trim($matches['time']);
         }
 
         if (preg_match('/^Repair status changed: (?<states>.+)$/i', $text, $matches)) {
-            return 'Remonta statuss mainits: ' . self::translateArrowText($matches['states']);
+            return 'Remonta statuss mainīts: ' . self::translateArrowText($matches['states']);
         }
 
         if (preg_match('/^Device status changed: (?<label>.+?) \| (?<states>.+)$/i', $text, $matches)) {
-            return 'Ierices statuss mainits: ' . $matches['label'] . ' | ' . self::translateArrowText($matches['states']);
+            return 'Ierīces statuss mainīts: ' . $matches['label'] . ' | ' . self::translateArrowText($matches['states']);
         }
 
         if (preg_match('/^Device status synced from repair #(?<repair>\d+): (?<states>.+)$/i', $text, $matches)) {
-            return 'Ierices statuss saskanots no remonta #' . $matches['repair'] . ': ' . self::translateArrowText($matches['states']);
+            return 'Ierīces statuss saskanots no remonta #' . $matches['repair'] . ': ' . self::translateArrowText($matches['states']);
         }
 
         if (preg_match('/^Device moved: (?<label>.+?) -> room (?<room>.+)$/i', $text, $matches)) {
-            return 'Ierice parvietota: ' . $matches['label'] . ' -> telpa ' . trim($matches['room']);
+            return 'Ierīce pārvietota: ' . $matches['label'] . ' -> telpa ' . trim($matches['room']);
         }
 
         if (preg_match('/^(?<entity>.+?) updated: (?<label>.+?) \| details: (?<details>.+)$/i', $text, $matches)) {
-            return self::entityLabel($matches['entity']) . ' atjauninats: '
+            return self::entityLabel($matches['entity']) . ' atjaunināts: '
                 . $matches['label']
                 . ' | detalas: '
                 . self::translateDetails($matches['details']);
         }
 
         if (preg_match('/^(?<entity>.+?) updated: (?<label>.+?) \| fields: (?<fields>.+)$/i', $text, $matches)) {
-            return self::entityLabel($matches['entity']) . ' atjauninats: '
+            return self::entityLabel($matches['entity']) . ' atjaunināts: '
                 . $matches['label']
                 . ' | lauki: '
                 . self::translateFieldList($matches['fields']);
@@ -374,15 +374,15 @@ class AuditTrail
         }
 
         if (preg_match('/^(?<entity>.+?) updated: (?<label>.+)$/i', $text, $matches)) {
-            return self::entityLabel($matches['entity']) . ' atjauninats: ' . $matches['label'];
+            return self::entityLabel($matches['entity']) . ' atjaunināts: ' . $matches['label'];
         }
 
         if (preg_match('/^(?<entity>.+?) deleted: (?<label>.+)$/i', $text, $matches)) {
-            return self::entityLabel($matches['entity']) . ' dzests: ' . $matches['label'];
+            return self::entityLabel($matches['entity']) . ' dzēsts: ' . $matches['label'];
         }
 
         if (preg_match('/^(?<entity>.+?) changed: (?<label>.+)$/i', $text, $matches)) {
-            return self::entityLabel($matches['entity']) . ' mainits: ' . $matches['label'];
+            return self::entityLabel($matches['entity']) . ' mainīts: ' . $matches['label'];
         }
 
         $fallbackEntity = $entityType ? self::entityLabel($entityType) : null;
@@ -400,9 +400,9 @@ class AuditTrail
 
         return match ($action) {
             self::ACTION_CREATE => $entity . ' izveidots: ' . $label,
-            self::ACTION_UPDATE => $entity . ' atjauninats: ' . $label . ($changedFields !== [] ? ' | lauki: ' . self::translateFieldList(implode(', ', $changedFields)) : ''),
-            self::ACTION_DELETE => $entity . ' dzests: ' . $label,
-            default => $entity . ' mainits: ' . $label,
+            self::ACTION_UPDATE => $entity . ' atjaunināts: ' . $label . ($changedFields !== [] ? ' | lauki: ' . self::translateFieldList(implode(', ', $changedFields)) : ''),
+            self::ACTION_DELETE => $entity . ' dzēsts: ' . $label,
+            default => $entity . ' mainīts: ' . $label,
         };
     }
 
@@ -412,7 +412,7 @@ class AuditTrail
         $label = self::labelFor($model);
 
         if ($changes === []) {
-            return $entity . ' atjauninats: ' . $label;
+            return $entity . ' atjaunināts: ' . $label;
         }
 
         $details = collect($changes)
@@ -424,7 +424,7 @@ class AuditTrail
             })
             ->implode('; ');
 
-        return $entity . ' atjauninats: ' . $label . ' | detalas: ' . $details;
+        return $entity . ' atjaunināts: ' . $label . ' | detalas: ' . $details;
     }
 
     private static function severityFor(string $action, ?Model $model = null): string
@@ -518,7 +518,7 @@ class AuditTrail
         }
 
         if ($value === null || $value === '') {
-            return 'tukss';
+            return 'tukšs';
         }
 
         if (is_array($value)) {
@@ -574,35 +574,35 @@ class AuditTrail
             'name' => 'nosaukums',
             'description' => 'apraksts',
             'status' => 'statuss',
-            'device_type_id' => 'ierices tips',
-            'device_id' => 'ierice',
+            'device_type_id' => 'ierīces tips',
+            'device_id' => 'ierīce',
             'repair_type' => 'remonta tips',
             'priority' => 'prioritate',
             'start_date' => 'sakuma datums',
             'end_date' => 'beigu datums',
             'cost' => 'izmaksas',
-            'vendor_name' => 'pakalpojuma sniedzejs',
+            'vendor_name' => 'pakalpojuma sniedzējs',
             'vendor_contact' => 'kontakts',
             'invoice_number' => 'rekina numurs',
-            'issue_reported_by' => 'izpilditajs',
-            'accepted_by' => 'apstiprinatajs',
-            'responsible_user_id' => 'atbildigais lietotajs',
-            'reviewed_by_user_id' => 'izskatija',
+            'issue_reported_by' => 'izpildītājs',
+            'accepted_by' => 'apstiprinātajs',
+            'responsible_user_id' => 'atbildīgais lietotājs',
+            'reviewed_by_user_id' => 'izskatīja',
             'repair_id' => 'izveidotais remonts',
-            'request_id' => 'saiste ar pieteikumu',
+            'request_id' => 'šaiste ar pieteikumu',
             'transfered_to_id' => 'saemejs',
-            'transfer_reason' => 'nodosanas iemesls',
-            'review_notes' => 'izskatisanas piezimes',
-            'assigned_to_id' => 'pieskirtais lietotajs',
-            'building_id' => 'eka',
+            'transfer_reason' => 'nodošanas iemesls',
+            'review_notes' => 'izskatīšanas piezīmes',
+            'assigned_to_id' => 'piešķirtais lietotājs',
+            'building_id' => 'ēka',
             'room_id' => 'telpa',
             'purchase_date' => 'iegades datums',
             'purchase_price' => 'iegades cena',
-            'warranty_until' => 'garantija lidz',
-            'serial_number' => 'serijas numurs',
-            'manufacturer' => 'razotajs',
-            'notes' => 'piezimes',
-            'device_image_url' => 'ierices attels',
+            'warranty_until' => 'garantija līdz',
+            'serial_number' => 'sērijas numurs',
+            'manufacturer' => 'ražotājs',
+            'notes' => 'piezīmes',
+            'device_image_url' => 'ierīces attels',
             'category' => 'kategorija',
             default => str_replace('_', ' ', Str::lower($field)),
         };
@@ -615,28 +615,28 @@ class AuditTrail
         $map = [
             'active' => 'Aktiva',
             'repair' => 'Remonta',
-            'writeoff' => 'Norakstita',
+            'writeoff' => 'Norakstīta',
             'submitted' => 'Iesniegts',
-            'approved' => 'Apstiprinats',
+            'approved' => 'Apstiprināts',
             'rejected' => 'Noraidits',
             'waiting' => 'Gaida',
-            'in-progress' => 'Procesa',
+            'in-progress' => 'Procesā',
             'completed' => 'Pabeigts',
             'cancelled' => 'Atcelts',
-            'internal' => 'Ieksejais',
-            'external' => 'Arejais',
+            'internal' => 'Iekšējais',
+            'external' => 'Ārējais',
             'low' => 'Zema',
-            'medium' => 'Videja',
+            'medium' => 'Vidēja',
             'high' => 'Augsta',
             'critical' => 'Kritiska',
             'daily' => 'katru dienu',
             'weekly' => 'katru nedelu',
             'monthly' => 'katru menesi',
             'manual' => 'manuali',
-            'uploaded' => 'augshupladets',
-            'system' => 'sistema',
-            'info' => 'informacija',
-            'warning' => 'bridinajums',
+            'uploaded' => 'augšupielādēts',
+            'system' => 'sistēma',
+            'info' => 'informācija',
+            'warning' => 'brīdinajums',
             'error' => 'kluda',
         ];
 

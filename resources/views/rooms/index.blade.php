@@ -18,7 +18,7 @@
         $departmentOptions = collect($departments)->map(fn ($department) => [
             'value' => (string) $department,
             'label' => (string) $department,
-            'description' => 'Filtrs pec nodalas',
+            'description' => 'Filtrs pēc nodaļas',
             'search' => (string) $department,
         ])->values();
         $userOptions = $responsibleUsers->map(fn ($responsibleUser) => [
@@ -28,8 +28,8 @@
             'search' => implode(' ', array_filter([$responsibleUser->full_name, $responsibleUser->job_title, $responsibleUser->email])),
         ])->values();
         $hasDeviceOptions = [
-            ['value' => '1', 'label' => 'Ar iericem', 'description' => 'Telpas ar iericem', 'search' => 'Ar iericem'],
-            ['value' => '0', 'label' => 'Bez iericem', 'description' => 'Telpas bez iericem', 'search' => 'Bez iericem'],
+            ['value' => '1', 'label' => 'Ar ierīcem', 'description' => 'Telpas ar ierīcem', 'search' => 'Ar ierīcem'],
+            ['value' => '0', 'label' => 'Bez ierīcem', 'description' => 'Telpas bez ierīcem', 'search' => 'Bez ierīcem'],
         ];
         $selectedBuildingLabel = optional($buildings->firstWhere('id', (int) $filters['building_id']))->building_name;
         $selectedDepartmentLabel = $filters['department'] !== '' ? $filters['department'] : null;
@@ -41,7 +41,7 @@
             <div class="page-hero-grid">
                 <div class="max-w-3xl">
                     <div class="flex flex-wrap items-center gap-2">
-                        <div class="page-eyebrow"><x-icon name="room" size="h-4 w-4" /><span>Telpu parvaldiba</span></div>
+                        <div class="page-eyebrow"><x-icon name="room" size="h-4 w-4" /><span>Telpu pārvaldiba</span></div>
                         <div class="inventory-inline-metrics">
                             <span class="inventory-inline-chip inventory-inline-chip-slate">
                                 <x-icon name="room" size="h-3.5 w-3.5" />
@@ -54,7 +54,7 @@
                         <div class="page-title-icon page-title-icon-slate"><x-icon name="room" size="h-7 w-7" /></div>
                         <div>
                             <h1 class="page-title">Telpas</h1>
-                            <p class="page-subtitle">Telpu saraksts ar atbildigajiem lietotajiem un piesaisti ekam.</p>
+                            <p class="page-subtitle">Telpu saraksts ar atbildīgajiem lietotājiem un piešaisti ēkam.</p>
                         </div>
                     </div>
                 </div>
@@ -64,11 +64,11 @@
 
         <form method="GET" action="{{ route('rooms.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-5">
             <label class="block">
-                <span class="crud-label">Meklet</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Telpa, eka, nodala, atbildigais...">
+                <span class="crud-label">Meklēt</span>
+                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Telpa, ēka, nodala, atbildīgais...">
             </label>
             <label class="block">
-                <span class="crud-label">Eka</span>
+                <span class="crud-label">Ēka</span>
                 <x-searchable-select
                     name="building_id"
                     query-name="building_query"
@@ -76,8 +76,8 @@
                     :options="$buildingOptions"
                     :selected="$filters['building_id']"
                     :query="$selectedBuildingLabel"
-                    placeholder="Izvelies eku"
-                    empty-message="Neviena eka neatbilst meklejumam."
+                    placeholder="Izvēlies ēku"
+                    empty-message="Neviena ēka neatbilst meklējumam."
                 />
             </label>
             <label class="block">
@@ -89,12 +89,12 @@
                     :options="$departmentOptions"
                     :selected="$filters['department']"
                     :query="$selectedDepartmentLabel"
-                    placeholder="Izvelies nodalu"
-                    empty-message="Neviena nodala neatbilst meklejumam."
+                    placeholder="Izvēlies nodalu"
+                    empty-message="Neviena nodala neatbilst meklējumam."
                 />
             </label>
             <label class="block">
-                <span class="crud-label">Atbildigais</span>
+                <span class="crud-label">Atbildīgais</span>
                 <x-searchable-select
                     name="user_id"
                     query-name="user_query"
@@ -102,12 +102,12 @@
                     :options="$userOptions"
                     :selected="$filters['user_id']"
                     :query="$selectedUserLabel"
-                    placeholder="Izvelies atbildigo"
-                    empty-message="Neviens lietotajs neatbilst meklejumam."
+                    placeholder="Izvēlies atbildīgo"
+                    empty-message="Neviens lietotājs neatbilst meklējumam."
                 />
             </label>
             <label class="block">
-                <span class="crud-label">Ierices telpa</span>
+                <span class="crud-label">Ierīces telpa</span>
                 <x-searchable-select
                     name="has_devices"
                     query-name="has_devices_query"
@@ -115,23 +115,23 @@
                     :options="$hasDeviceOptions"
                     :selected="$filters['has_devices']"
                     :query="$selectedHasDevicesLabel"
-                    placeholder="Izvelies telpas tipu"
-                    empty-message="Neviens variants neatbilst meklejumam."
+                    placeholder="Izvēlies telpas tipu"
+                    empty-message="Neviens variants neatbilst meklējumam."
                 />
             </label>
             <div class="toolbar-actions md:col-span-5">
-                <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklet</span></button>
+                <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
                 <a href="{{ route('rooms.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notirit</span></a>
             </div>
         </form>
 
         <x-active-filters
             :items="[
-                ['label' => 'Meklet', 'value' => $filters['q']],
-                ['label' => 'Eka', 'value' => $filters['building_id'] !== '' ? optional($buildings->firstWhere('id', (int) $filters['building_id']))->building_name : null],
+                ['label' => 'Meklēt', 'value' => $filters['q']],
+                ['label' => 'Ēka', 'value' => $filters['building_id'] !== '' ? optional($buildings->firstWhere('id', (int) $filters['building_id']))->building_name : null],
                 ['label' => 'Nodala', 'value' => $filters['department']],
-                ['label' => 'Atbildigais', 'value' => $filters['user_id'] !== '' ? optional($responsibleUsers->firstWhere('id', (int) $filters['user_id']))->full_name : null],
-                ['label' => 'Ierices telpa', 'value' => $filters['has_devices'] === '1' ? 'Ar iericem' : ($filters['has_devices'] === '0' ? 'Bez iericem' : null)],
+                ['label' => 'Atbildīgais', 'value' => $filters['user_id'] !== '' ? optional($responsibleUsers->firstWhere('id', (int) $filters['user_id']))->full_name : null],
+                ['label' => 'Ierīces telpa', 'value' => $filters['has_devices'] === '1' ? 'Ar ierīcem' : ($filters['has_devices'] === '0' ? 'Bez ierīcem' : null)],
             ]"
             :clear-url="route('rooms.index')"
         />
@@ -144,15 +144,15 @@
             <table class="min-w-full text-sm">
                 <thead class="bg-slate-50 text-left text-slate-500">
                     <tr>
-                        <th class="px-4 py-3">Eka</th>
+                        <th class="px-4 py-3">Ēka</th>
                         <th class="px-4 py-3">Stavs</th>
                         <th class="px-4 py-3">Numurs</th>
                         <th class="px-4 py-3">Nosaukums</th>
                         <th class="px-4 py-3">Nodala</th>
-                        <th class="px-4 py-3">Atbildigais</th>
-                        <th class="px-4 py-3">Ierices</th>
-                        <th class="px-4 py-3">Piezimes</th>
-                        <th class="px-4 py-3">Darbibas</th>
+                        <th class="px-4 py-3">Atbildīgais</th>
+                        <th class="px-4 py-3">Ierīces</th>
+                        <th class="px-4 py-3">Piezīmes</th>
+                        <th class="px-4 py-3">Darbības</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -168,18 +168,18 @@
                             <td class="px-4 py-3 text-slate-600">{{ $room->notes ?: '-' }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex flex-wrap gap-2">
-                                    <a href="{{ route('rooms.edit', $room) }}" class="btn-edit"><x-icon name="edit" size="h-4 w-4" /><span>Rediget</span></a>
-                                    <form method="POST" action="{{ route('rooms.destroy', $room) }}" onsubmit="return confirm('Dzest so telpu?')">
+                                    <a href="{{ route('rooms.edit', $room) }}" class="btn-edit"><x-icon name="edit" size="h-4 w-4" /><span>Rediģēt</span></a>
+                                    <form method="POST" action="{{ route('rooms.destroy', $room) }}" onsubmit="return confirm('Dzēst so telpu?')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn-danger"><x-icon name="trash" size="h-4 w-4" /><span>Dzest</span></button>
+                                        <button type="submit" class="btn-danger"><x-icon name="trash" size="h-4 w-4" /><span>Dzēst</span></button>
                                     </form>
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="px-4 py-8 text-center text-slate-500">Telpas vel nav pievienotas.</td>
+                            <td colspan="9" class="px-4 py-8 text-center text-slate-500">Telpas vēl nav pievienotas.</td>
                         </tr>
                     @endforelse
                 </tbody>

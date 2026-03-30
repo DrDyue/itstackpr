@@ -56,7 +56,7 @@
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-emerald">
                                 <x-icon name="check-circle" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Apstiprinati</span>
+                                <span class="inventory-inline-label">Apstiprināti</span>
                                 <span class="inventory-inline-value">{{ $requestSummary['approved'] }}</span>
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-rose">
@@ -72,7 +72,7 @@
                         </div>
                         <div>
                             <h1 class="page-title">Remonta pieteikumi</h1>
-                            <p class="page-subtitle">{{ $canReview ? 'Visi lietotaju remonta pieteikumi. Admins apstiprina vai noraida katru iesniegumu.' : 'Tavi remonta pieteikumi.' }}</p>
+                            <p class="page-subtitle">{{ $canReview ? 'Visi lietotāju remonta pieteikumi. Admins apstiprina vai noraida katru iesniegumu.' : 'Tavi remonta pieteikumi.' }}</p>
                         </div>
                     </div>
                 </div>
@@ -89,8 +89,8 @@
         <form method="GET" action="{{ route('repair-requests.index') }}" class="surface-toolbar grid gap-4 xl:grid-cols-[1.2fr_1fr_auto] xl:items-end">
             <input type="hidden" name="statuses_filter" value="1">
             <label class="block">
-                <span class="crud-label">Meklet</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Ierice, kods, pieteicejs...">
+                <span class="crud-label">Meklēt</span>
+                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Ierīce, kods, pieteicejs...">
             </label>
             <div x-data="filterChipGroup({ selected: @js($filters['statuses']), minimum: 1 })">
                 <span class="crud-label">Statuss</span>
@@ -119,7 +119,7 @@
             <div class="toolbar-actions xl:justify-end">
                 <button type="submit" class="btn-search">
                     <x-icon name="search" size="h-4 w-4" />
-                    <span>Meklet</span>
+                    <span>Meklēt</span>
                 </button>
                 <a href="{{ route('repair-requests.index') }}" class="btn-clear">
                     <x-icon name="clear" size="h-4 w-4" />
@@ -130,7 +130,7 @@
 
         <x-active-filters
             :items="[
-                ['label' => 'Meklet', 'value' => $filters['q']],
+                ['label' => 'Meklēt', 'value' => $filters['q']],
                 ['label' => 'Statuss', 'value' => collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ')],
             ]"
             :clear-url="route('repair-requests.index')"
@@ -147,7 +147,7 @@
             @forelse ($requests as $request)
                 @php
                     $deviceThumbUrl = $request->device?->deviceImageThumbUrl();
-                    $deviceTypeName = $request->device?->type?->type_name ?: 'Ierice';
+                    $deviceTypeName = $request->device?->type?->type_name ?: 'Ierīce';
                     $deviceMeta = collect([$request->device?->manufacturer, $request->device?->model])
                         ->filter(fn ($value) => filled($value))
                         ->implode(' | ');
@@ -172,7 +172,7 @@
                             @if ($request->device)
                                 <a href="{{ route('devices.show', $request->device) }}" class="btn-view">
                                     <x-icon name="view" size="h-4 w-4" />
-                                    <span>Apskatit ierici</span>
+                                    <span>Apskatīt ierīci</span>
                                 </a>
                             @endif
                         </div>
@@ -206,12 +206,12 @@
                                         @if ($request->repair)
                                             Izveidots remonts #{{ $request->repair->id }}
                                         @else
-                                            Vel nav izveidots
+                                            Vēl nav izveidots
                                         @endif
                                     </div>
                                 </div>
                                 <div class="request-field-card request-field-card-wide">
-                                    <div class="request-field-label"><x-icon name="repair-request" size="h-4 w-4" /><span>Problemas apraksts</span></div>
+                                    <div class="request-field-label"><x-icon name="repair-request" size="h-4 w-4" /><span>Problēmas apraksts</span></div>
                                     <div class="request-description-box">{{ $request->description }}</div>
                                 </div>
                             </div>
@@ -220,7 +220,7 @@
                         <div class="request-device-panel">
                             <div class="request-panel-heading">
                                 <span class="request-panel-heading-icon"><x-icon name="device" size="h-4 w-4" /></span>
-                                <span>Ierice</span>
+                                <span>Ierīce</span>
                             </div>
 
                             <div class="request-device-hero mt-4">
@@ -230,10 +230,10 @@
                                         <span>{{ $deviceTypeName }}</span>
                                     </span>
                                     <div class="mt-3 text-lg font-semibold text-slate-900">{{ $request->device?->name ?: '-' }}</div>
-                                    <div class="mt-2 text-sm leading-6 text-slate-500">{{ $deviceMeta !== '' ? $deviceMeta : 'Razotajs un modelis nav noraditi.' }}</div>
+                                    <div class="mt-2 text-sm leading-6 text-slate-500">{{ $deviceMeta !== '' ? $deviceMeta : 'Ražotājs un modelis nav norādīti.' }}</div>
                                 </div>
                                 @if ($deviceThumbUrl)
-                                    <img src="{{ $deviceThumbUrl }}" alt="{{ $request->device?->name ?: 'Ierice' }}" class="request-device-thumb shrink-0">
+                                    <img src="{{ $deviceThumbUrl }}" alt="{{ $request->device?->name ?: 'Ierīce' }}" class="request-device-thumb shrink-0">
                                 @else
                                     <div class="request-device-thumb request-device-thumb-placeholder shrink-0">
                                         <x-icon name="device" size="h-6 w-6" />
@@ -247,16 +247,16 @@
                                     <div class="request-field-value">{{ $request->device?->code ?: '-' }}</div>
                                 </div>
                                 <div class="request-field-card">
-                                    <div class="request-field-label"><x-icon name="key" size="h-4 w-4" /><span>Serijas numurs</span></div>
+                                    <div class="request-field-label"><x-icon name="key" size="h-4 w-4" /><span>Sērijas numurs</span></div>
                                     <div class="request-field-value">{{ $request->device?->serial_number ?: '-' }}</div>
                                 </div>
                                 <div class="request-field-card md:col-span-2">
                                     <div class="request-field-label"><x-icon name="building" size="h-4 w-4" /><span>Vieta</span></div>
-                                    <div class="request-field-value">{{ $deviceRoom !== '' ? $deviceRoom : 'Telpa nav noradita' }}</div>
+                                    <div class="request-field-value">{{ $deviceRoom !== '' ? $deviceRoom : 'Telpa nav norādīta' }}</div>
                                 </div>
                                 @if ($request->reviewedBy)
                                     <div class="request-field-card md:col-span-2">
-                                        <div class="request-field-label"><x-icon name="user" size="h-4 w-4" /><span>Izskatija</span></div>
+                                        <div class="request-field-label"><x-icon name="user" size="h-4 w-4" /><span>Izskatīja</span></div>
                                         <div class="request-field-value">{{ $request->reviewedBy->full_name }}</div>
                                     </div>
                                 @endif
@@ -270,7 +270,7 @@
                                 <x-icon name="view" size="h-4 w-4" />
                                 <span>Labot aprakstu</span>
                             </a>
-                            <form method="POST" action="{{ route('my-requests.destroy', ['requestType' => 'repair', 'requestId' => $request->id]) }}" onsubmit="return confirm('Vai tiesam atcelt so pieteikumu?');">
+                            <form method="POST" action="{{ route('my-requests.destroy', ['requestType' => 'repair', 'requestId' => $request->id]) }}" onsubmit="return confirm('Vai tiešām atcelt šo pieteikumu?');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn-danger">
@@ -288,7 +288,7 @@
                                 <input type="hidden" name="status" value="approved">
                                 <button type="submit" class="btn-approve">
                                     <x-icon name="check-circle" size="h-4 w-4" />
-                                    <span>Apstiprinat</span>
+                                    <span>Apstiprināt</span>
                                 </button>
                             </form>
 
@@ -304,7 +304,7 @@
                     @endif
                 </div>
             @empty
-                <div class="surface-empty">Pieteikumu vel nav.</div>
+                <div class="surface-empty">Pieteikumu vēl nav.</div>
             @endforelse
         </div>
 

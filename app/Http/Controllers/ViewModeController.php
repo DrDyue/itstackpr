@@ -23,7 +23,7 @@ class ViewModeController extends Controller
         $validated = $this->validateInput($request, [
             'mode' => ['required', Rule::in([User::VIEW_MODE_ADMIN, User::VIEW_MODE_USER])],
         ], [
-            'mode.required' => 'Izvelies skata rezimu.',
+            'mode.required' => 'Izvēlies skata rezimu.',
         ]);
 
         $request->session()->put(User::VIEW_MODE_SESSION_KEY, $validated['mode']);
@@ -33,8 +33,8 @@ class ViewModeController extends Controller
         )->with(
             'success',
             $validated['mode'] === User::VIEW_MODE_ADMIN
-                ? 'Ieslegts admina skats.'
-                : 'Ieslegts darbinieka skats.'
+                ? 'Ieslēgts admina skats.'
+                : 'Ieslēgts darbinieka skats.'
         );
     }
 }

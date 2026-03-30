@@ -22,7 +22,7 @@
         @method('put')
 
         <div>
-            <x-input-label for="update_password_current_password" value="Pasreizeja parole" />
+            <x-input-label for="update_password_current_password" value="Pašreizējā parole" />
             <x-text-input id="update_password_current_password" name="current_password" type="password" class="mt-2 block w-full" autocomplete="current-password" />
             <x-input-error :messages="$errors->updatePassword->get('current_password')" class="mt-2" />
         </div>
@@ -42,7 +42,7 @@
         <div class="flex items-center gap-4">
             <x-primary-button>
                 <x-icon name="save" size="h-4 w-4" />
-                <span>Saglabat</span>
+                <span>Saglabāt</span>
             </x-primary-button>
 
         </div>

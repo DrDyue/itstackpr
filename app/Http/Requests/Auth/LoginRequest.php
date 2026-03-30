@@ -43,9 +43,9 @@ class LoginRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.required' => 'Lauks "E-pasts" ir obligats.',
-            'email.email' => 'Lauks "E-pasts" nav deriga e-pasta adrese.',
-            'password.required' => 'Lauks "Parole" ir obligats.',
+            'email.required' => 'Lauks "E-pasts" ir obligāts.',
+            'email.email' => 'Lauks "E-pasts" nav derīga e-pasta adrese.',
+            'password.required' => 'Lauks "Parole" ir obligāts.',
         ];
     }
 

@@ -39,7 +39,7 @@
             <div class="page-hero-grid">
                 <div class="max-w-3xl">
                     <div class="flex flex-wrap items-center gap-2">
-                        <div class="page-eyebrow"><x-icon name="writeoff" size="h-4 w-4" /><span>Norakstisana</span></div>
+                        <div class="page-eyebrow"><x-icon name="writeoff" size="h-4 w-4" /><span>Norakstīšana</span></div>
                         <div class="inventory-inline-metrics">
                             <span class="inventory-inline-chip inventory-inline-chip-slate">
                                 <x-icon name="writeoff" size="h-3.5 w-3.5" />
@@ -53,7 +53,7 @@
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-emerald">
                                 <x-icon name="check-circle" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Apstiprinati</span>
+                                <span class="inventory-inline-label">Apstiprināti</span>
                                 <span class="inventory-inline-value">{{ $requestSummary['approved'] }}</span>
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-rose">
@@ -66,8 +66,8 @@
                     <div class="page-title-group mt-4">
                         <div class="page-title-icon page-title-icon-rose"><x-icon name="writeoff" size="h-7 w-7" /></div>
                         <div>
-                            <h1 class="page-title">Norakstisanas pieteikumi</h1>
-                            <p class="page-subtitle">{{ $canReview ? 'Visi lietotaju norakstisanas pieteikumi. Admins pienem gala lemumu.' : 'Tavi norakstisanas pieteikumi.' }}</p>
+                            <h1 class="page-title">Norakstīšanas pieteikumi</h1>
+                            <p class="page-subtitle">{{ $canReview ? 'Visi lietotāju norakstīšanas pieteikumi. Admins pienem gala lēmumu.' : 'Tavi norakstīšanas pieteikumi.' }}</p>
                         </div>
                     </div>
                 </div>
@@ -81,8 +81,8 @@
         <form method="GET" action="{{ route('writeoff-requests.index') }}" class="surface-toolbar grid gap-4 xl:grid-cols-[1.2fr_1fr_auto] xl:items-end">
             <input type="hidden" name="statuses_filter" value="1">
             <label class="block">
-                <span class="crud-label">Meklet</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Ierice, kods vai iemesls...">
+                <span class="crud-label">Meklēt</span>
+                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Ierīce, kods vai iemesls...">
             </label>
             <div x-data="filterChipGroup({ selected: @js($filters['statuses']), minimum: 1 })">
                 <span class="crud-label">Statuss</span>
@@ -109,14 +109,14 @@
                 </div>
             </div>
             <div class="toolbar-actions xl:justify-end">
-                <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklet</span></button>
+                <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
                 <a href="{{ route('writeoff-requests.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notirit</span></a>
             </div>
         </form>
 
         <x-active-filters
             :items="[
-                ['label' => 'Meklet', 'value' => $filters['q']],
+                ['label' => 'Meklēt', 'value' => $filters['q']],
                 ['label' => 'Statuss', 'value' => collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ')],
             ]"
             :clear-url="route('writeoff-requests.index')"
@@ -133,7 +133,7 @@
             @forelse ($requests as $request)
                 @php
                     $deviceThumbUrl = $request->device?->deviceImageThumbUrl();
-                    $deviceTypeName = $request->device?->type?->type_name ?: 'Ierice';
+                    $deviceTypeName = $request->device?->type?->type_name ?: 'Ierīce';
                     $deviceMeta = collect([$request->device?->manufacturer, $request->device?->model])
                         ->filter(fn ($value) => filled($value))
                         ->implode(' | ');
@@ -158,7 +158,7 @@
                             @if ($request->device)
                                 <a href="{{ route('devices.show', $request->device) }}" class="btn-view">
                                     <x-icon name="view" size="h-4 w-4" />
-                                    <span>Apskatit ierici</span>
+                                    <span>Apskatīt ierīci</span>
                                 </a>
                             @endif
                         </div>
@@ -188,12 +188,12 @@
                                 </div>
                                 @if ($request->reviewedBy)
                                     <div class="request-field-card">
-                                        <div class="request-field-label"><x-icon name="user" size="h-4 w-4" /><span>Izskatija</span></div>
+                                        <div class="request-field-label"><x-icon name="user" size="h-4 w-4" /><span>Izskatīja</span></div>
                                         <div class="request-field-value">{{ $request->reviewedBy->full_name }}</div>
                                     </div>
                                 @endif
                                 <div class="request-field-card request-field-card-wide">
-                                    <div class="request-field-label"><x-icon name="writeoff" size="h-4 w-4" /><span>Norakstisanas iemesls</span></div>
+                                    <div class="request-field-label"><x-icon name="writeoff" size="h-4 w-4" /><span>Norakstīšanas iemesls</span></div>
                                     <div class="request-description-box">{{ $request->reason }}</div>
                                 </div>
                             </div>
@@ -202,7 +202,7 @@
                         <div class="request-device-panel">
                             <div class="request-panel-heading">
                                 <span class="request-panel-heading-icon"><x-icon name="device" size="h-4 w-4" /></span>
-                                <span>Ierice</span>
+                                <span>Ierīce</span>
                             </div>
 
                             <div class="request-device-hero mt-4">
@@ -212,10 +212,10 @@
                                         <span>{{ $deviceTypeName }}</span>
                                     </span>
                                     <div class="mt-3 text-lg font-semibold text-slate-900">{{ $request->device?->name ?: '-' }}</div>
-                                    <div class="mt-2 text-sm leading-6 text-slate-500">{{ $deviceMeta !== '' ? $deviceMeta : 'Razotajs un modelis nav noraditi.' }}</div>
+                                    <div class="mt-2 text-sm leading-6 text-slate-500">{{ $deviceMeta !== '' ? $deviceMeta : 'Ražotājs un modelis nav norādīti.' }}</div>
                                 </div>
                                 @if ($deviceThumbUrl)
-                                    <img src="{{ $deviceThumbUrl }}" alt="{{ $request->device?->name ?: 'Ierice' }}" class="request-device-thumb shrink-0">
+                                    <img src="{{ $deviceThumbUrl }}" alt="{{ $request->device?->name ?: 'Ierīce' }}" class="request-device-thumb shrink-0">
                                 @else
                                     <div class="request-device-thumb request-device-thumb-placeholder shrink-0">
                                         <x-icon name="device" size="h-6 w-6" />
@@ -229,20 +229,20 @@
                                     <div class="request-field-value">{{ $request->device?->code ?: '-' }}</div>
                                 </div>
                                 <div class="request-field-card">
-                                    <div class="request-field-label"><x-icon name="key" size="h-4 w-4" /><span>Serijas numurs</span></div>
+                                    <div class="request-field-label"><x-icon name="key" size="h-4 w-4" /><span>Sērijas numurs</span></div>
                                     <div class="request-field-value">{{ $request->device?->serial_number ?: '-' }}</div>
                                 </div>
                                 <div class="request-field-card md:col-span-2">
                                     <div class="request-field-label"><x-icon name="building" size="h-4 w-4" /><span>Vieta</span></div>
-                                    <div class="request-field-value">{{ $deviceRoom !== '' ? $deviceRoom : 'Telpa nav noradita' }}</div>
+                                    <div class="request-field-value">{{ $deviceRoom !== '' ? $deviceRoom : 'Telpa nav norādīta' }}</div>
                                 </div>
                                 <div class="request-field-card md:col-span-2">
-                                    <div class="request-field-label"><x-icon name="stats" size="h-4 w-4" /><span>Pasreizejais statuss</span></div>
+                                    <div class="request-field-label"><x-icon name="stats" size="h-4 w-4" /><span>Pašreizējāis statuss</span></div>
                                     <div class="request-field-value">
                                         <x-status-pill
                                             context="device"
                                             :value="$request->device?->status ?: 'active'"
-                                            :label="$request->device?->status === 'active' ? 'Aktiva' : ($request->device?->status === 'repair' ? 'Remonta' : 'Norakstita')"
+                                            :label="$request->device?->status === 'active' ? 'Aktiva' : ($request->device?->status === 'repair' ? 'Remonta' : 'Norakstīta')"
                                         />
                                     </div>
                                 </div>
@@ -256,7 +256,7 @@
                                 <x-icon name="view" size="h-4 w-4" />
                                 <span>Labot iemeslu</span>
                             </a>
-                            <form method="POST" action="{{ route('my-requests.destroy', ['requestType' => 'writeoff', 'requestId' => $request->id]) }}" onsubmit="return confirm('Vai tiesam atcelt so pieteikumu?');">
+                            <form method="POST" action="{{ route('my-requests.destroy', ['requestType' => 'writeoff', 'requestId' => $request->id]) }}" onsubmit="return confirm('Vai tiešām atcelt so pieteikumu?');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn-danger">
@@ -274,7 +274,7 @@
                                 <input type="hidden" name="status" value="approved">
                                 <button type="submit" class="btn-approve">
                                     <x-icon name="check-circle" size="h-4 w-4" />
-                                    <span>Apstiprinat</span>
+                                    <span>Apstiprināt</span>
                                 </button>
                             </form>
 
@@ -290,7 +290,7 @@
                     @endif
                 </div>
             @empty
-                <div class="surface-empty">Pieteikumu vel nav.</div>
+                <div class="surface-empty">Pieteikumu vēl nav.</div>
             @endforelse
         </div>
 

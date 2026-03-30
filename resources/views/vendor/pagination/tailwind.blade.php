@@ -19,9 +19,9 @@
 
         <div class="app-pagination-links">
             @if ($paginator->onFirstPage())
-                <span class="app-pagination-btn app-pagination-btn-disabled">Iepriekseja</span>
+                <span class="app-pagination-btn app-pagination-btn-disabled">Iepriekšēja</span>
             @else
-                <a href="{{ $paginator->previousPageUrl() }}" rel="prev" class="app-pagination-btn">Iepriekseja</a>
+                <a href="{{ $paginator->previousPageUrl() }}" rel="prev" class="app-pagination-btn">Iepriekšēja</a>
             @endif
 
             @foreach ($elements as $element)

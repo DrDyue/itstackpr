@@ -1,10 +1,10 @@
 {{--
     Lapa: Vienas ierīces detalizētais skats.
-    Atbildība: parāda pilnu informāciju par konkrētu ierīci, tās statusu, atrašanās vietu un saistītajām darbībām.
+    Atbildība: parāda pilnu informāciju par konkrētu ierīci, tās statusu, atrašanās vietu un šaistītajām darbībām.
     Datu avots: DeviceController@show.
     Galvenās daļas:
     1. Hero zona ar ierīces nosaukumu un pogām.
-    2. Pamata informācijas kartītes ar attēlu, identitāti un piesaisti.
+    2. Pamata informācijas kartītes ar attēlu, identitāti un piešaisti.
     3. Saistītā vēsture un papildu darbības atkarībā no lietotāja tiesībām.
 --}}
 <x-app-layout>
@@ -18,7 +18,7 @@
                 <div class="max-w-3xl">
                     <div class="page-eyebrow">
                         <x-icon name="device" size="h-4 w-4" />
-                        <span>{{ $canManageDevices ? 'Ierices kartite' : 'Mana ierice' }}</span>
+                        <span>{{ $canManageDevices ? 'Ierīces kartīte' : 'Mana ierīce' }}</span>
                     </div>
                     <div class="page-title-group mt-4">
                         <div class="page-title-icon page-title-icon-sky">
@@ -34,7 +34,7 @@
                     @if ($canManageDevices)
                         <a href="{{ route('devices.edit', $device) }}" class="btn-edit">
                             <x-icon name="edit" size="h-4 w-4" />
-                            <span>Rediget</span>
+                            <span>Rediģēt</span>
                         </a>
                     @else
                         @if ($requestAvailability['repair'])
@@ -46,7 +46,7 @@
                         @if ($requestAvailability['writeoff'])
                             <a href="{{ route('writeoff-requests.create', ['device_id' => $device->id]) }}" class="btn-danger">
                                 <x-icon name="writeoff" size="h-4 w-4" />
-                                <span>Pieteikt norakstisanu</span>
+                                <span>Pieteikt norakstīšanu</span>
                             </a>
                         @endif
                         @if ($requestAvailability['transfer'])
@@ -58,13 +58,13 @@
                     @endif
                     <a href="{{ route('devices.index') }}" class="btn-back">
                         <x-icon name="back" size="h-4 w-4" />
-                        <span>Atpakal</span>
+                        <span>Atpakaļ</span>
                     </a>
                 </div>
             </div>
         </div>
 
-        {{-- Ierīces galvenā informācija, attēls un saistītās darbības. --}}
+        {{-- Ierīces galvenā informācija, attēls un šaistītās darbības. --}}
         <section class="surface-card p-6">
             <div class="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
                 <div class="flex flex-col gap-5 md:flex-row">
@@ -95,21 +95,21 @@
 
                         <div class="mt-4 grid gap-4 md:grid-cols-2">
                             <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
-                                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Identitate</div>
+                                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Identitāte</div>
                                 <div class="mt-3 space-y-2 text-sm text-slate-700">
                                     <div><strong class="text-slate-900">Kods:</strong> {{ $device->code ?: '-' }}</div>
                                     <div><strong class="text-slate-900">Nosaukums:</strong> {{ $device->name }}</div>
-                                    <div><strong class="text-slate-900">Razotajs un modelis:</strong> {{ $deviceMeta !== '' ? $deviceMeta : '-' }}</div>
-                                    <div><strong class="text-slate-900">Serijas numurs:</strong> {{ $device->serial_number ?: '-' }}</div>
+                                    <div><strong class="text-slate-900">Ražotājs un modelis:</strong> {{ $deviceMeta !== '' ? $deviceMeta : '-' }}</div>
+                                    <div><strong class="text-slate-900">Sērijas numurs:</strong> {{ $device->serial_number ?: '-' }}</div>
                                 </div>
                             </div>
                             <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
-                                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Piesaiste</div>
+                                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Piešaiste</div>
                                 <div class="mt-3 space-y-2 text-sm text-slate-700">
-                                    <div><strong class="text-slate-900">Lietotajs:</strong> {{ $device->assignedTo?->full_name ?: 'Nav pieskirts' }}</div>
-                                    <div><strong class="text-slate-900">Eka:</strong> {{ $device->building?->building_name ?: 'Nav noradita' }}</div>
-                                    <div><strong class="text-slate-900">Telpa:</strong> {{ $device->room?->room_number ?: 'Nav noradita' }}@if ($device->room?->room_name) | {{ $device->room->room_name }} @endif</div>
-                                    <div><strong class="text-slate-900">Izveidoja:</strong> {{ $device->createdBy?->full_name ?: 'Sistema' }}</div>
+                                    <div><strong class="text-slate-900">Lietotājs:</strong> {{ $device->assignedTo?->full_name ?: 'Nav piesķirts' }}</div>
+                                    <div><strong class="text-slate-900">Ēka:</strong> {{ $device->building?->building_name ?: 'Nav norādīta' }}</div>
+                                    <div><strong class="text-slate-900">Telpa:</strong> {{ $device->room?->room_number ?: 'Nav norādīta' }}@if ($device->room?->room_name) | {{ $device->room->room_name }} @endif</div>
+                                    <div><strong class="text-slate-900">Izveidoja:</strong> {{ $device->createdBy?->full_name ?: 'Sistēma' }}</div>
                                 </div>
                             </div>
                         </div>
@@ -122,21 +122,21 @@
                         <div class="mt-3 space-y-2 text-sm text-slate-700">
                             <div><strong class="text-slate-900">Iegades datums:</strong> {{ $device->purchase_date?->format('d.m.Y') ?: '-' }}</div>
                             <div><strong class="text-slate-900">Iegades cena:</strong> {{ $device->purchase_price !== null ? number_format((float) $device->purchase_price, 2, '.', ' ') . ' EUR' : '-' }}</div>
-                            <div><strong class="text-slate-900">Garantija lidz:</strong> {{ $device->warranty_until?->format('d.m.Y') ?: '-' }}</div>
+                            <div><strong class="text-slate-900">Garantija līdz:</strong> {{ $device->warranty_until?->format('d.m.Y') ?: '-' }}</div>
                             <div><strong class="text-slate-900">Izveidots:</strong> {{ $device->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
                         </div>
                     </div>
 
                     @if (! $canManageDevices)
                         <div class="rounded-[1.5rem] border border-slate-200 bg-white p-5">
-                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ka ierice nonaca pie tevis</div>
+                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Kā ierīce nonaca pie tevis</div>
                             <div class="mt-3 text-sm leading-6 text-slate-700">{{ $originLabel }}</div>
                         </div>
                     @endif
 
                     @if ($requestAvailability['reason'])
                         <div class="rounded-[1.5rem] border border-amber-200 bg-amber-50 p-5">
-                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">Svarigs ierobezojums</div>
+                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">Svarīgs ierobežojums</div>
                             <div class="mt-3 text-sm leading-6 text-amber-900">{{ $requestAvailability['reason'] }}</div>
                         </div>
                     @endif
@@ -145,7 +145,7 @@
 
             @if ($device->notes)
                 <div class="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
-                    <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Piezimes</div>
+                    <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Piezīmes</div>
                     <div class="mt-3 text-sm leading-6 text-slate-700">{{ $device->notes }}</div>
                 </div>
             @endif
@@ -159,11 +159,11 @@
                             <div class="max-w-2xl">
                                 <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
                                     <x-icon name="room" size="h-5 w-5" class="text-emerald-600" />
-                                    <span>Atrasanas vieta un darbiba</span>
+                                    <span>Atrašanās vieta un darbība</span>
                                 </h2>
                                 <p class="mt-2 text-sm leading-6 text-slate-600">
-                                    Seit ir tikai ta informacija, kas papildina augsejo ierices kartiti: kur ierice atrodas sobrid,
-                                    ka ta nonaca pie tevis un ko vari izdarit talak.
+                                    Šeit ir tikai ta informācija, kas papildina augšējo ierīces kartīti: kur ierīce atrodas šobrīd,
+                                    kā ta nonaca pie tevis un ko vari izdarīt tālāk.
                                 </p>
                             </div>
                         </div>
@@ -171,10 +171,10 @@
                         <div class="mt-5 grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
                             <div class="space-y-4">
                                 <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
-                                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Pasreizeja atrasanas vieta</div>
-                                    <div class="mt-2 text-sm font-semibold text-slate-900">{{ $device->building?->building_name ?: 'Bez ekas' }}</div>
+                                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Pašreizējā atrašanās vieta</div>
+                                    <div class="mt-2 text-sm font-semibold text-slate-900">{{ $device->building?->building_name ?: 'Bez ēkas' }}</div>
                                     <div class="mt-1 text-sm text-slate-600">
-                                        {{ $device->room?->room_number ?: 'Telpa nav noradita' }}
+                                        {{ $device->room?->room_number ?: 'Telpa nav norādīta' }}
                                         @if ($device->room?->room_name)
                                             | {{ $device->room->room_name }}
                                         @endif
@@ -182,13 +182,13 @@
                                 </div>
 
                                 <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
-                                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Ka ierice nonaca pie tevis</div>
+                                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Kā ierīce nonaca pie tevis</div>
                                     <div class="mt-2 text-sm leading-6 text-slate-700">{{ $originLabel }}</div>
                                 </div>
 
                                 @if ($requestAvailability['reason'])
                                     <div class="rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4">
-                                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Pieteikumu ierobezojums</div>
+                                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Pieteikumu ierobežojums</div>
                                         <div class="mt-2 text-sm leading-6 text-amber-900">{{ $requestAvailability['reason'] }}</div>
                                     </div>
                                 @endif
@@ -199,10 +199,10 @@
                                     <div class="max-w-xl">
                                         <h3 class="inline-flex items-center gap-2 text-base font-semibold text-slate-900">
                                             <x-icon name="room" size="h-4.5 w-4.5" class="text-emerald-600" />
-                                            <span>Mainit ierices telpu</span>
+                                            <span>Mainīt ierīces telpu</span>
                                         </h3>
                                         <p class="mt-2 text-sm leading-6 text-slate-600">
-                                            Ja ierice reali atrodas cita telpa, atjauno to seit bez iešanas uz citu lapu.
+                                            Ja ierīce reāli atrodas citā telpā, atjauno to šeit bez iešanas uz citu lapu.
                                         </p>
                                     </div>
                                 </div>
@@ -218,7 +218,7 @@
                                                 :selected="old('room_id', (string) $device->room_id)"
                                                 :query="''"
                                                 identifier="device-user-room"
-                                                placeholder="Izvelies telpu"
+                                                placeholder="Izvēlies telpu"
                                             />
                                             @error('room_id')
                                                 <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
@@ -250,13 +250,13 @@
                     <x-icon name="repair-request" size="h-5 w-5" class="text-sky-600" />
                     <span>Remonta pieteikumi</span>
                 </h2>
-                <p class="mt-2 text-sm leading-6 text-slate-600">Visi ierices remonta pieteikumi ar iesniedzeju, statusu un izskatisanas piezimem.</p>
+                <p class="mt-2 text-sm leading-6 text-slate-600">Visi ierīces remonta pieteikumi ar iesniedzeju, statusu un izskatīšanas piezīmem.</p>
                 <div class="mt-4 space-y-3 text-sm">
                     @forelse ($visibleRepairRequests as $request)
                         <div class="surface-card-muted">
                             <div class="flex flex-wrap items-start justify-between gap-3">
                                 <div>
-                                    <div class="font-medium text-slate-900">{{ $request->responsibleUser?->full_name ?: 'Nav noradits' }}</div>
+                                    <div class="font-medium text-slate-900">{{ $request->responsibleUser?->full_name ?: 'Nav norādīts' }}</div>
                                     <div class="mt-1 text-xs text-slate-500">{{ $request->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
                                 </div>
                                 <x-status-pill context="request" :value="$request->status" />
@@ -265,16 +265,16 @@
                             @if ($request->reviewedBy || $request->review_notes)
                                 <div class="mt-3 rounded-2xl border border-slate-200 bg-white px-3 py-3 text-xs text-slate-600">
                                     @if ($request->reviewedBy)
-                                        <div><span class="font-semibold text-slate-900">Izskatija:</span> {{ $request->reviewedBy->full_name }}</div>
+                                        <div><span class="font-semibold text-slate-900">Izskatīja:</span> {{ $request->reviewedBy->full_name }}</div>
                                     @endif
                                     @if ($request->review_notes)
-                                        <div class="mt-1"><span class="font-semibold text-slate-900">Piezimes:</span> {{ $request->review_notes }}</div>
+                                        <div class="mt-1"><span class="font-semibold text-slate-900">Piezīmes:</span> {{ $request->review_notes }}</div>
                                     @endif
                                 </div>
                             @endif
                         </div>
                     @empty
-                        <p class="text-slate-500">Remonta pieteikumu vel nav.</p>
+                        <p class="text-slate-500">Remonta pieteikumu vēl nav.</p>
                     @endforelse
                 </div>
             </section>
@@ -284,7 +284,7 @@
                     <x-icon name="repair" size="h-5 w-5" class="text-amber-600" />
                     <span>Remonta ieraksti</span>
                 </h2>
-                <p class="mt-2 text-sm leading-6 text-slate-600">Vecie un esošie remonta darbi, kas iericei jau ir veikti vai sobrid turpinās.</p>
+                <p class="mt-2 text-sm leading-6 text-slate-600">Vecie un esošie remonta darbi, kas ierīcei jau ir veikti vai šobrīd turpinās.</p>
                 <div class="mt-4 space-y-3 text-sm">
                     @forelse ($visibleRepairs as $repair)
                         <div class="surface-card-muted">
@@ -298,16 +298,16 @@
                             <div class="mt-3 grid gap-2 text-xs text-slate-600 md:grid-cols-2">
                                 <div><span class="font-semibold text-slate-900">Tips:</span> {{ $repair->repair_type ?: '-' }}</div>
                                 <div><span class="font-semibold text-slate-900">Prioritate:</span> {{ $repair->priority ?: '-' }}</div>
-                                <div><span class="font-semibold text-slate-900">Pienema:</span> {{ $repair->approval_actor_name ?: '-' }}</div>
-                                <div><span class="font-semibold text-slate-900">Izpilditajs:</span> {{ $repair->executor?->full_name ?: '-' }}</div>
-                                <div><span class="font-semibold text-slate-900">Sakums:</span> {{ $repair->start_date?->format('d.m.Y') ?: '-' }}</div>
+                                <div><span class="font-semibold text-slate-900">Pieņēma:</span> {{ $repair->approval_actor_name ?: '-' }}</div>
+                                <div><span class="font-semibold text-slate-900">Izpildītājs:</span> {{ $repair->executor?->full_name ?: '-' }}</div>
+                                <div><span class="font-semibold text-slate-900">Sākums:</span> {{ $repair->start_date?->format('d.m.Y') ?: '-' }}</div>
                                 <div><span class="font-semibold text-slate-900">Beigas:</span> {{ $repair->end_date?->format('d.m.Y') ?: '-' }}</div>
                                 <div class="md:col-span-2"><span class="font-semibold text-slate-900">Saistitais pieteicejs:</span> {{ $repair->request?->responsibleUser?->full_name ?: '-' }}</div>
                             </div>
                             <div class="mt-3 leading-6 text-slate-700">{{ $repair->description ?: 'Apraksts nav pievienots.' }}</div>
                         </div>
                     @empty
-                        <p class="text-slate-500">Remonta ierakstu vel nav.</p>
+                        <p class="text-slate-500">Remonta ierakstu vēl nav.</p>
                     @endforelse
                 </div>
             </section>
@@ -315,15 +315,15 @@
             <section class="surface-card p-6">
                 <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
                     <x-icon name="writeoff" size="h-5 w-5" class="text-rose-600" />
-                    <span>Norakstisanas pieteikumi</span>
+                    <span>Norakstīšanas pieteikumi</span>
                 </h2>
-                <p class="mt-2 text-sm leading-6 text-slate-600">Visi ierices norakstisanas pieprasijumi ar iemesliem un admina lemumiem.</p>
+                <p class="mt-2 text-sm leading-6 text-slate-600">Visi ierīces norakstīšanas pieprasijumi ar iemesliem un admina lēmumiem.</p>
                 <div class="mt-4 space-y-3 text-sm">
                     @forelse ($visibleWriteoffRequests as $request)
                         <div class="surface-card-muted">
                             <div class="flex flex-wrap items-start justify-between gap-3">
                                 <div>
-                                    <div class="font-medium text-slate-900">{{ $request->responsibleUser?->full_name ?: 'Nav noradits' }}</div>
+                                    <div class="font-medium text-slate-900">{{ $request->responsibleUser?->full_name ?: 'Nav norādīts' }}</div>
                                     <div class="mt-1 text-xs text-slate-500">{{ $request->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
                                 </div>
                                 <x-status-pill context="request" :value="$request->status" />
@@ -332,16 +332,16 @@
                             @if ($request->reviewedBy || $request->review_notes)
                                 <div class="mt-3 rounded-2xl border border-slate-200 bg-white px-3 py-3 text-xs text-slate-600">
                                     @if ($request->reviewedBy)
-                                        <div><span class="font-semibold text-slate-900">Izskatija:</span> {{ $request->reviewedBy->full_name }}</div>
+                                        <div><span class="font-semibold text-slate-900">Izskatīja:</span> {{ $request->reviewedBy->full_name }}</div>
                                     @endif
                                     @if ($request->review_notes)
-                                        <div class="mt-1"><span class="font-semibold text-slate-900">Piezimes:</span> {{ $request->review_notes }}</div>
+                                        <div class="mt-1"><span class="font-semibold text-slate-900">Piezīmes:</span> {{ $request->review_notes }}</div>
                                     @endif
                                 </div>
                             @endif
                         </div>
                     @empty
-                        <p class="text-slate-500">Norakstisanas pieteikumu vel nav.</p>
+                        <p class="text-slate-500">Norakstīšanas pieteikumu vēl nav.</p>
                     @endforelse
                 </div>
             </section>
@@ -349,9 +349,9 @@
             <section class="surface-card p-6">
                 <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
                     <x-icon name="transfer" size="h-5 w-5" class="text-emerald-600" />
-                    <span>Parsutisanas un nodosanas</span>
+                    <span>Pārsūtīšanas un nodošanas</span>
                 </h2>
-                <p class="mt-2 text-sm leading-6 text-slate-600">Ierices nodosanas vesture starp lietotajiem un saistitie izskatisanas lemumi.</p>
+                <p class="mt-2 text-sm leading-6 text-slate-600">Ierīces nodošanas vēsture starp lietotājiem un šaistitie izskatīšanas lēmumi.</p>
                 <div class="mt-4 space-y-3 text-sm">
                     @forelse ($visibleTransfers as $transfer)
                         <div class="surface-card-muted">
@@ -366,16 +366,16 @@
                             @if ($transfer->reviewedBy || $transfer->review_notes)
                                 <div class="mt-3 rounded-2xl border border-slate-200 bg-white px-3 py-3 text-xs text-slate-600">
                                     @if ($transfer->reviewedBy)
-                                        <div><span class="font-semibold text-slate-900">Izskatija:</span> {{ $transfer->reviewedBy->full_name }}</div>
+                                        <div><span class="font-semibold text-slate-900">Izskatīja:</span> {{ $transfer->reviewedBy->full_name }}</div>
                                     @endif
                                     @if ($transfer->review_notes)
-                                        <div class="mt-1"><span class="font-semibold text-slate-900">Piezimes:</span> {{ $transfer->review_notes }}</div>
+                                        <div class="mt-1"><span class="font-semibold text-slate-900">Piezīmes:</span> {{ $transfer->review_notes }}</div>
                                     @endif
                                 </div>
                             @endif
                         </div>
                     @empty
-                        <p class="text-slate-500">Parsutisanas ierakstu vel nav.</p>
+                        <p class="text-slate-500">Pārsūtīšanas ierakstu vēl nav.</p>
                     @endforelse
                 </div>
             </section>

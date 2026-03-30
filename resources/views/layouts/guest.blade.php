@@ -13,7 +13,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>IT Inventara uzskaites sistema</title>
+        <title>IT Inventara uzskaites sistēma</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/cssfamily=figtree:400,500,600&display=swap" rel="stylesheet" />
@@ -42,12 +42,12 @@
                         <a href="/" class="auth-logo-link">
                             <x-application-logo />
                         </a>
-                        <h1>IT Inventara uzskaites sistema</h1>
+                        <h1>IT Inventara uzskaites sistēma</h1>
                         <p>
                             @if (request()->routeIs('login'))
-                                Laipni ludzam atpakal
+                                Laipni ludzam atpakaļ
                             @elseif (request()->routeIs('register'))
-                                Izveidojiet darbinieka kontu
+                                Izveidojiet darbiniēka kontu
                             @else
                                 Atiestatiet savu paroli
                             @endif
@@ -74,7 +74,7 @@
                         </div>
 
                         <div class="auth-footer">
-                            <p>IT Inventara uzskaites sistema 2026</p>
+                            <p>IT Inventara uzskaites sistēma 2026</p>
                         </div>
                     </div>
 
@@ -83,7 +83,7 @@
                             <p>Demo admin: artis.berzins@ludzas.lv | Parole: password</p>
                             <p>Demo user: ilze.strautina@ludzas.lv | Parole: password</p>
                         @else
-                            <p>Jaunu lietotaju izveido administrators.</p>
+                            <p>Jaunu lietotāju izveido administrators.</p>
                         @endif
                     </div>
                 </div>
@@ -91,7 +91,7 @@
 
             <div class="auth-right">
                 <div class="auth-right-content max-w-md">
-                    <h2>IT inventara sistema</h2>
+                    <h2>IT inventara sistēma</h2>
                 </div>
             </div>
         </div>
@@ -121,7 +121,7 @@
                         @endif
                     </div>
                     <div class="flash-toast-body">
-                        <div class="flash-toast-title">{{ $flashTone === 'success' ? 'Veiksmigi' : 'Pazinojums' }}</div>
+                        <div class="flash-toast-title">{{ $flashTone === 'success' ? 'Veiksmīgi' : 'Pazinojums' }}</div>
                         <div class="flash-toast-message">{{ $flashMessage }}</div>
                     </div>
                     <button type="button" class="flash-toast-close" @click="open = false" aria-label="Aizvert">

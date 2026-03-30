@@ -1,4 +1,4 @@
-{{-- Desktop navigācijas saite ar aktīvā stāvokļa noformējumu. --}}
+{{-- Desktop navigācijas šaite ar aktīvā stāvokļa noformējumu. --}}
 @props(['active'])
 
 @php

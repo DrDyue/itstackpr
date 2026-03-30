@@ -4,7 +4,7 @@
     Datu avots: ProfileController@edit, saglabāšana caur ProfileController@update un PasswordController@update.
     Galvenās daļas:
     1. Hero ar profila kopsavilkumu.
-    2. Kreisais bloks ar personīgās informācijas formu.
+    2. Kreišais bloks ar personīgās informācijas formu.
     3. Labais bloks ar paroles maiņu.
 --}}
 <x-app-layout>
@@ -29,7 +29,7 @@
                     <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
                         <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Statuss</div>
                         <div class="mt-2 text-base font-semibold {{ $user->is_active ? 'text-emerald-700' : 'text-rose-700' }}">
-                            {{ $user->is_active ? 'Aktivs' : 'Neaktivs' }}
+                            {{ $user->is_active ? 'Aktīvs' : 'Neaktīvs' }}
                         </div>
                     </div>
                 </div>

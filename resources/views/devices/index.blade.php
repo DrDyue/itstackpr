@@ -22,12 +22,12 @@
         $statusFilterLinks = [
             ['label' => 'Aktivas', 'value' => 'active', 'icon' => 'check-circle', 'tone' => 'emerald'],
             ['label' => 'Remonta', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'amber'],
-            ['label' => 'Norakstitas', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
+            ['label' => 'Norakstītas', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
         ];
         $requestFilterLinks = [
             ['label' => 'Remonts', 'value' => 'repair', 'icon' => 'repair-request', 'tone' => 'amber'],
-            ['label' => 'Norakstisana', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
-            ['label' => 'Nodosana', 'value' => 'transfer', 'icon' => 'transfer', 'tone' => 'emerald'],
+            ['label' => 'Norakstīšana', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
+            ['label' => 'Nodošana', 'value' => 'transfer', 'icon' => 'transfer', 'tone' => 'emerald'],
         ];
         $selectedStatuses = $filters['has_status_filter'] ? $filters['statuses'] : collect($statusFilterLinks)->pluck('value')->all();
         $selectedRequestTypes = $filters['has_request_type_filter'] ? $filters['request_types'] : collect($requestFilterLinks)->pluck('value')->all();
@@ -54,7 +54,7 @@
         $floorSelectOptions = collect($floorOptions)->map(fn ($floor) => [
             'value' => (string) $floor,
             'label' => $floor . '. stavs',
-            'description' => 'Filtrs pec stava',
+            'description' => 'Filtrs pēc stava',
             'search' => $floor . ' ' . $floor . '. stavs',
         ])->values();
         $toolbarGridClass = $canManageDevices
@@ -69,7 +69,7 @@
                     <div class="flex flex-wrap items-center gap-2">
                         <div class="page-eyebrow">
                             <x-icon name="device" size="h-4 w-4" />
-                            <span>Inventars</span>
+                            <span>Inventārs</span>
                         </div>
 
                         <div class="inventory-inline-metrics">
@@ -90,7 +90,7 @@
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-rose">
                                 <x-icon name="writeoff" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Norakstitas</span>
+                                <span class="inventory-inline-label">Norakstītas</span>
                                 <span class="inventory-inline-value">{{ $deviceSummary['writeoff'] }}</span>
                             </span>
                         </div>
@@ -101,8 +101,8 @@
                             <x-icon name="device" size="h-7 w-7" />
                         </div>
                         <div>
-                            <h1 class="page-title">Ierices</h1>
-                            <p class="page-subtitle">{{ $canManageDevices ? 'Pilns iericu saraksts un parvaldiba.' : 'Tavas piesaistitas ierices.' }}</p>
+                            <h1 class="page-title">Ierīces</h1>
+                            <p class="page-subtitle">{{ $canManageDevices ? 'Pilns ierīču saraksts un pārvaldiba.' : 'Tavas piešaistītas ierīces.' }}</p>
                         </div>
                     </div>
                 </div>
@@ -110,7 +110,7 @@
                     <div class="page-actions">
                         <a href="{{ route('devices.create') }}" class="btn-create">
                             <x-icon name="plus" size="h-4 w-4" />
-                            <span>Jauna ierice</span>
+                            <span>Jauna ierīce</span>
                         </a>
                     </div>
                 @endif
@@ -126,8 +126,8 @@
             @searchable-select-updated.window="if ($event.detail.identifier === 'device-floor-filter') { $dispatch('searchable-select-clear', { target: 'device-room-filter' }) }"
         >
             <label class="block">
-                <span class="crud-label">Meklet</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, razotajs...">
+                <span class="crud-label">Meklēt</span>
+                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, ražotājs...">
             </label>
             <label class="block">
                 <span class="crud-label">Kods</span>
@@ -135,8 +135,8 @@
             </label>
             @if ($canManageDevices)
                 <label class="block">
-                    <span class="crud-label">Pieskirta</span>
-                    <input type="text" name="assigned_to_query" value="{{ $filters['assigned_to_query'] }}" class="crud-control" placeholder="Lietotaja vards">
+                    <span class="crud-label">Piesķirta</span>
+                    <input type="text" name="assigned_to_query" value="{{ $filters['assigned_to_query'] }}" class="crud-control" placeholder="Lietotāja vards">
                     @if ($filters['assigned_to_id'] !== '')
                         <input type="hidden" name="assigned_to_id" value="{{ $filters['assigned_to_id'] }}">
                     @endif
@@ -151,8 +151,8 @@
                     :options="$floorSelectOptions"
                     :selected="$filters['floor']"
                     :query="$selectedFloorLabel"
-                    placeholder="Izvelies vai raksti stavu"
-                    empty-message="Neviens stavs neatbilst meklejumam."
+                    placeholder="Izvēlies vai raksti stāvu"
+                    empty-message="Neviens stavs neatbilst meklējumam."
                 />
             </label>
             <label class="block">
@@ -165,7 +165,7 @@
                     :selected="$filters['room_id']"
                     :query="$selectedRoomLabel"
                     placeholder="Raksti telpas numuru vai nosaukumu"
-                    empty-message="Neviena telpa neatbilst meklejumam."
+                    empty-message="Neviena telpa neatbilst meklējumam."
                 />
             </label>
             <label class="block">
@@ -177,14 +177,14 @@
                     :selected="$filters['type']"
                     :query="$selectedTypeLabel"
                     placeholder="Raksti tipa nosaukumu"
-                    empty-message="Neviens tips neatbilst meklejumam."
+                    empty-message="Neviens tips neatbilst meklējumam."
                 />
             </label>
 
             <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
                 <div class="quick-filter-groups">
                     <div class="quick-filter-group">
-                        <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ierices statuss</div>
+                        <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ierīces statuss</div>
                         <div class="quick-status-filters">
                             @foreach ($statusFilterLinks as $statusFilter)
                                 @php
@@ -213,7 +213,7 @@
                     </div>
 
                     <div class="quick-filter-group quick-filter-group-end">
-                        <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Aktivie pieprasijumi</div>
+                        <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Aktīvie pieprasijumi</div>
                         <div class="quick-status-filters">
                             @foreach ($requestFilterLinks as $requestFilter)
                                 @php
@@ -245,7 +245,7 @@
                 <div class="toolbar-actions justify-end">
                     <button type="submit" class="btn-search">
                         <x-icon name="search" size="h-4 w-4" />
-                        <span>Meklet</span>
+                        <span>Meklēt</span>
                     </button>
                     <a href="{{ route('devices.index') }}" class="btn-clear">
                         <x-icon name="clear" size="h-4 w-4" />
@@ -257,9 +257,9 @@
 
         <x-active-filters
             :items="[
-                ['label' => 'Meklet', 'value' => $filters['q']],
+                ['label' => 'Meklēt', 'value' => $filters['q']],
                 ['label' => 'Kods', 'value' => $filters['code']],
-                ['label' => 'Pieskirta', 'value' => $canManageDevices ? $selectedAssignedUserLabel : null],
+                ['label' => 'Piesķirta', 'value' => $canManageDevices ? $selectedAssignedUserLabel : null],
                 ['label' => 'Stavs', 'value' => $selectedFloorLabel],
                 ['label' => 'Telpa', 'value' => $selectedRoomLabel],
                 ['label' => 'Tips', 'value' => $selectedTypeLabel],
@@ -282,11 +282,11 @@
                         <th class="px-4 py-3">Attels</th>
                         <th class="px-4 py-3">Kods</th>
                         <th class="px-4 py-3">Nosaukums</th>
-                        <th class="px-4 py-3">Atrasanas vieta</th>
+                        <th class="px-4 py-3">Atrašanās vieta</th>
                         <th class="px-4 py-3">Izveidots</th>
-                        <th class="px-4 py-3">Pieskirta</th>
+                        <th class="px-4 py-3">Piesķirta</th>
                         <th class="px-4 py-3">Statuss</th>
-                        <th class="px-4 py-3">Darbibas</th>
+                        <th class="px-4 py-3">Darbības</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -345,16 +345,16 @@
                                         <div class="mt-2 text-xs text-slate-400">{{ $device->room->department }}</div>
                                     @endif
                                 @else
-                                    <div class="font-medium text-slate-900">Vieta nav noradita</div>
+                                    <div class="font-medium text-slate-900">Vieta nav norādīta</div>
                                 @endif
                             </td>
                             <td class="px-4 py-4">
                                 <div class="font-medium text-slate-900">{{ $device->created_at?->format('d.m.Y') ?: '-' }}</div>
                                 <div class="mt-1 text-xs text-slate-500">{{ $device->created_at?->format('H:i') ?: '-' }}</div>
-                                <div class="mt-2 text-xs text-slate-400">{{ $device->createdBy?->full_name ?: 'Sistema' }}</div>
+                                <div class="mt-2 text-xs text-slate-400">{{ $device->createdBy?->full_name ?: 'Sistēma' }}</div>
                             </td>
                             <td class="px-4 py-4">
-                                <div class="font-medium text-slate-900">{{ $device->assignedTo?->full_name ?: 'Nav pieskirts' }}</div>
+                                <div class="font-medium text-slate-900">{{ $device->assignedTo?->full_name ?: 'Nav piesķirts' }}</div>
                                 @if ($device->assignedTo?->job_title)
                                     <div class="mt-1 text-xs text-slate-500">{{ $device->assignedTo->job_title }}</div>
                                 @endif
@@ -386,7 +386,7 @@
                                                         <span class="device-request-popover-value">{{ $repairPreview['type'] }}</span>
                                                     </div>
                                                     <div class="device-request-popover-row">
-                                                        <span class="device-request-popover-label">Pienema remontu</span>
+                                                        <span class="device-request-popover-label">Pieņēma remontu</span>
                                                         <span class="device-request-popover-value">{{ $repairPreview['approved_by'] }}</span>
                                                     </div>
                                                     <div class="device-request-popover-row device-request-popover-row-stack">
@@ -436,7 +436,7 @@
                                                     </div>
                                                     @if (! empty($pendingRequestBadge['preview']['recipient']))
                                                         <div class="device-request-popover-row">
-                                                            <span class="device-request-popover-label">Sanemejs</span>
+                                                            <span class="device-request-popover-label">Saņēmējs</span>
                                                             <span class="device-request-popover-value">{{ $pendingRequestBadge['preview']['recipient'] }}</span>
                                                         </div>
                                                     @endif
@@ -445,7 +445,7 @@
                                                         <div class="device-request-popover-copy">{{ $pendingRequestBadge['preview']['summary'] }}</div>
                                                     </div>
                                                     @if (! empty($pendingRequestBadge['url']))
-                                                        <div class="device-request-popover-link">Atvert pieprasijumu</div>
+                                                        <div class="device-request-popover-link">Atvērt pieprasijumu</div>
                                                     @endif
                                                 </div>
                                             @endif
@@ -456,7 +456,7 @@
                             <td class="px-4 py-4">
                                 <div class="table-action-menu" x-data="{ open: false, panel: null }" @keydown.escape.window="open = false; panel = null">
                                     <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
-                                        <span>Darbibas</span>
+                                        <span>Darbības</span>
                                         <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                         </svg>
@@ -465,7 +465,7 @@
                                     <div class="table-action-list" :class="panel ? 'table-action-list-wide' : ''" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false; panel = null">
                                         <a href="{{ route('devices.show', $device) }}" class="table-action-item" @click="open = false; panel = null">
                                             <x-icon name="view" size="h-4 w-4" />
-                                            <span>Skatit</span>
+                                            <span>Skatīt</span>
                                         </a>
 
                                         @if (! $canManageDevices)
@@ -477,7 +477,7 @@
 
                                                 <a href="{{ route('writeoff-requests.create', ['device_id' => $device->id]) }}" class="table-action-item text-rose-700 hover:bg-rose-50" @click="open = false; panel = null">
                                                     <x-icon name="writeoff" size="h-4 w-4" />
-                                                    <span>Pieteikt norakstisanu</span>
+                                                    <span>Pieteikt norakstīšanu</span>
                                                 </a>
 
                                                 <a href="{{ route('device-transfers.create', ['device_id' => $device->id]) }}" class="table-action-item text-emerald-700 hover:bg-emerald-50" @click="open = false; panel = null">
@@ -488,7 +488,7 @@
                                                 @if (! empty($pendingRequestBadge['url']))
                                                     <a href="{{ $pendingRequestBadge['url'] }}" class="table-action-item text-sky-700 hover:bg-sky-50" @click="open = false; panel = null">
                                                         <x-icon :name="$pendingRequestBadge['icon'] ?? 'view'" size="h-4 w-4" />
-                                                        <span>Skatit pieteikumu</span>
+                                                        <span>Skatīt pieteikumu</span>
                                                     </a>
                                                 @endif
                                                 <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">
@@ -504,18 +504,18 @@
                                         @if ($canManageDevices)
                                             <a href="{{ route('devices.edit', $device) }}" class="table-action-item table-action-item-amber" @click="open = false; panel = null">
                                                 <x-icon name="edit" size="h-4 w-4" />
-                                                <span>Rediget</span>
+                                                <span>Rediģēt</span>
                                             </a>
 
                                             @if ($device->status === 'active')
                                                 <button type="button" class="table-action-item text-sky-700 hover:bg-sky-50" @click="panel = panel === 'room' ? null : 'room'">
                                                     <x-icon name="room" size="h-4 w-4" />
-                                                    <span>Mainit telpu</span>
+                                                    <span>Mainīt telpu</span>
                                                 </button>
 
                                                 <button type="button" class="table-action-item text-violet-700 hover:bg-violet-50" @click="panel = panel === 'assignee' ? null : 'assignee'">
                                                     <x-icon name="user" size="h-4 w-4" />
-                                                    <span>Mainit atbildigo</span>
+                                                    <span>Mainīt atbildīgo</span>
                                                 </button>
 
                                                 <form method="POST" action="{{ route('devices.quick-update', $device) }}">
@@ -526,10 +526,10 @@
                                                         type="submit"
                                                         class="table-action-button table-action-button-rose"
                                                         formmethod="POST"
-                                                        onclick="return confirm('Vai tiesam norakstit so ierici? Pec norakstisanas ta vairs nebus pieskirta lietotajam vai telpai.')"
+                                                        onclick="return confirm('Vai tiešām norakstīt šo ierīci? Pēc norakstīšanas tā vairs nebūs piešķirta lietotājam vai telpai.')"
                                                     >
                                                         <x-icon name="writeoff" size="h-4 w-4" />
-                                                        <span>Norakstit</span>
+                                                        <span>Norakstīt</span>
                                                     </button>
                                                 </form>
 
@@ -546,8 +546,8 @@
                                                 <div class="table-action-inline-panel" x-cloak x-show="panel === 'room'" x-transition.opacity>
                                                     <div class="table-action-inline-head">
                                                         <div>
-                                                            <div class="table-action-inline-title">Mainit telpu</div>
-                                                            <div class="table-action-inline-copy">Ierice tiks uzreiz parvietota uz citu telpu.</div>
+                                                            <div class="table-action-inline-title">Mainīt telpu</div>
+                                                            <div class="table-action-inline-copy">Ierīce tiks uzreiz pārvietota uz citu telpu.</div>
                                                         </div>
                                                         <button type="button" class="table-action-inline-close" @click="panel = null">
                                                             <x-icon name="x-mark" size="h-4 w-4" />
@@ -564,14 +564,14 @@
                                                             :options="$quickRoomSelectOptions"
                                                             :selected="(string) ($device->room_id ?? '')"
                                                             :query="$quickRoomLabel"
-                                                            placeholder="Izvelies telpu"
-                                                            empty-message="Neviena telpa neatbilst meklejumam."
+                                                            placeholder="Izvēlies telpu"
+                                                            empty-message="Neviena telpa neatbilst meklējumam."
                                                         />
                                                         <div class="table-action-inline-actions">
                                                             <button type="button" class="btn-clear" @click="panel = null">Atcelt</button>
                                                             <button type="submit" class="btn-search">
                                                                 <x-icon name="save" size="h-4 w-4" />
-                                                                <span>Saglabat</span>
+                                                                <span>Saglabāt</span>
                                                             </button>
                                                         </div>
                                                     </form>
@@ -580,8 +580,8 @@
                                                 <div class="table-action-inline-panel" x-cloak x-show="panel === 'assignee'" x-transition.opacity>
                                                     <div class="table-action-inline-head">
                                                         <div>
-                                                            <div class="table-action-inline-title">Mainit atbildigo</div>
-                                                            <div class="table-action-inline-copy">Izvelies citu personu, kurai pieskirt ierici.</div>
+                                                            <div class="table-action-inline-title">Mainīt atbildīgo</div>
+                                                            <div class="table-action-inline-copy">Izvēlies citu personu, kurai piešķirt ierīci.</div>
                                                         </div>
                                                         <button type="button" class="table-action-inline-close" @click="panel = null">
                                                             <x-icon name="x-mark" size="h-4 w-4" />
@@ -598,14 +598,14 @@
                                                             :options="$quickAssigneeSelectOptions"
                                                             :selected="(string) ($device->assigned_to_id ?? '')"
                                                             :query="$quickAssigneeLabel"
-                                                            placeholder="Izvelies atbildigo personu"
-                                                            empty-message="Neviena persona neatbilst meklejumam."
+                                                            placeholder="Izvēlies atbildīgo personu"
+                                                            empty-message="Neviena persona neatbilst meklējumam."
                                                         />
                                                         <div class="table-action-inline-actions">
                                                             <button type="button" class="btn-clear" @click="panel = null">Atcelt</button>
                                                             <button type="submit" class="btn-search">
                                                                 <x-icon name="save" size="h-4 w-4" />
-                                                                <span>Saglabat</span>
+                                                                <span>Saglabāt</span>
                                                             </button>
                                                         </div>
                                                     </form>
@@ -618,7 +618,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-4 py-8 text-center text-slate-500">Ierices nav atrastas.</td>
+                            <td colspan="8" class="px-4 py-8 text-center text-slate-500">Ierīces nav atrastas.</td>
                         </tr>
                     @endforelse
                 </tbody>

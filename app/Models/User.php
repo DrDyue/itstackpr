@@ -71,7 +71,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Ierīces, kas šobrīd piesaistītas lietotājam.
+     * Ierīces, kas šobrīd piešaistītas lietotājam.
      */
     public function assignedDevices(): HasMany
     {

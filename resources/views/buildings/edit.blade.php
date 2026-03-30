@@ -1,6 +1,6 @@
 {{--
     Lapa: Ēkas rediģēšana.
-    Atbildība: ļauj atjaunot ēkas pamatdatus, kuri ietekmē telpu un ierīču piesaisti.
+    Atbildība: ļauj atjaunot ēkas pamatdatus, kuri ietekmē telpu un ierīču piešaisti.
     Datu avots: BuildingController@edit, saglabāšana caur BuildingController@update.
     Galvenās daļas:
     1. Hero ar rediģēšanas kontekstu.
@@ -16,12 +16,12 @@
                     <div class="page-title-group mt-4">
                         <div class="page-title-icon page-title-icon-amber"><x-icon name="building" size="h-7 w-7" /></div>
                         <div>
-                            <h1 class="page-title">Rediget eku</h1>
-                            <p class="page-subtitle">Atjauno ekas pamata datus un piezimes.</p>
+                            <h1 class="page-title">Rediģēt ēku</h1>
+                            <p class="page-subtitle">Atjauno ēkas pamata datus un piezīmes.</p>
                         </div>
                     </div>
                 </div>
-                <a href="{{ route('buildings.index') }}" class="btn-back"><x-icon name="back" size="h-4 w-4" /><span>Atpakal uz sarakstu</span></a>
+                <a href="{{ route('buildings.index') }}" class="btn-back"><x-icon name="back" size="h-4 w-4" /><span>Atpakaļ uz sarakstu</span></a>
             </div>
         </div>
 
@@ -53,7 +53,7 @@
             </div>
 
             <div>
-                <label class="crud-label">Piezimes</label>
+                <label class="crud-label">Piezīmes</label>
                 <textarea name="notes" rows="3" class="crud-control">{{ old('notes', $building->notes) }}</textarea>
             </div>
 

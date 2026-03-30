@@ -72,7 +72,7 @@
 
             <div class="localized-date-actions">
                 <button type="button" class="btn-clear" @click="clear()">Notirit</button>
-                <button type="button" class="btn-view" @click="select(toIso(new Date()))">Sodien</button>
+                <button type="button" class="btn-view" @click="select(toIso(new Date()))">Šodien</button>
                 <button type="button" class="btn-back" @click="open = false">Aizvert</button>
             </div>
         </div>

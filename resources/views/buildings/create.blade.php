@@ -1,6 +1,6 @@
 {{--
     Lapa: Jaunas ēkas izveide.
-    Atbildība: ļauj administratoram sagatavot jaunu ēkas ierakstu telpu un ierīču piesaistei.
+    Atbildība: ļauj administratoram sagatavot jaunu ēkas ierakstu telpu un ierīču piešaistei.
     Datu avots: BuildingController@create, saglabāšana caur BuildingController@store.
     Galvenās daļas:
     1. Hero ar lapas skaidrojumu.
@@ -12,22 +12,22 @@
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-3xl">
-                    <div class="page-eyebrow"><x-icon name="building" size="h-4 w-4" /><span>Jauna eka</span></div>
+                    <div class="page-eyebrow"><x-icon name="building" size="h-4 w-4" /><span>Jauna ēka</span></div>
                     <div class="page-title-group mt-4">
                         <div class="page-title-icon page-title-icon-emerald"><x-icon name="building" size="h-7 w-7" /></div>
                         <div>
-                            <h1 class="page-title">Jauna eka</h1>
-                            <p class="page-subtitle">Pievieno jaunu eku un sagatavo to telpu piesaistei.</p>
+                            <h1 class="page-title">Jauna ēka</h1>
+                            <p class="page-subtitle">Pievieno jaunu ēku un sagatavo to telpu piešaistei.</p>
                         </div>
                     </div>
                 </div>
-                <a href="{{ route('buildings.index') }}" class="btn-back"><x-icon name="back" size="h-4 w-4" /><span>Atpakal uz sarakstu</span></a>
+                <a href="{{ route('buildings.index') }}" class="btn-back"><x-icon name="back" size="h-4 w-4" /><span>Atpakaļ uz sarakstu</span></a>
             </div>
         </div>
 
         <x-validation-summary />
 
-        {{-- Ēkas forma satur pamatdatus, kurus vēlāk izmantos telpu un ierīču piesaistei. --}}
+        {{-- Ēkas forma satur pamatdatus, kurus vēlāk izmantos telpu un ierīču piešaistei. --}}
         <form method="POST" action="{{ route('buildings.store') }}" class="surface-card space-y-4">
             @csrf
 
@@ -53,12 +53,12 @@
             </div>
 
             <div>
-                <label class="crud-label">Piezimes</label>
+                <label class="crud-label">Piezīmes</label>
                 <textarea name="notes" rows="3" class="crud-control">{{ old('notes') }}</textarea>
             </div>
 
             <div class="flex gap-3 pt-2">
-                <button type="submit" class="btn-create"><x-icon name="save" size="h-4 w-4" /><span>Saglabat</span></button>
+                <button type="submit" class="btn-create"><x-icon name="save" size="h-4 w-4" /><span>Saglabāt</span></button>
                 <a href="{{ route('buildings.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Atcelt</span></a>
             </div>
         </form>

@@ -16,12 +16,12 @@
                     <div class="page-title-group mt-4">
                         <div class="page-title-icon page-title-icon-emerald"><x-icon name="transfer" size="h-7 w-7" /></div>
                         <div>
-                            <h1 class="page-title">Jauna ierices parsutisana</h1>
-                            <p class="page-subtitle">{{ ($isAdmin ?? false) ? 'Admins var izveidot parsutisanu jebkurai aktivai un pieskirtai iericei. Apstiprina sanemejs.' : 'Izvelies savu ierici un sanemeju.' }}</p>
+                            <h1 class="page-title">Jauna ierīces pārsūtīšana</h1>
+                            <p class="page-subtitle">{{ ($isAdmin ?? false) ? 'Admins var izveidot pārsūtīšanu jebkurai aktīvai un piešķirtai ierīcei. Apstiprina saņēmējs.' : 'Izvēlies savu ierīci un saņēmēju.' }}</p>
                         </div>
                     </div>
                 </div>
-                <a href="{{ route('device-transfers.index') }}" class="btn-back"><x-icon name="back" size="h-4 w-4" /><span>Atpakal</span></a>
+                <a href="{{ route('device-transfers.index') }}" class="btn-back"><x-icon name="back" size="h-4 w-4" /><span>Atpakaļ</span></a>
             </div>
         </div>
 
@@ -36,7 +36,7 @@
             @csrf
             <div class="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
                 <div>
-                    <span class="crud-label">Ierice</span>
+                    <span class="crud-label">Ierīce</span>
                     <x-searchable-select
                         name="device_id"
                         query-name="device_query"
@@ -44,8 +44,8 @@
                         :options="$deviceOptions"
                         :selected="old('device_id', $selectedDeviceId ?? '')"
                         :query="old('device_query', $selectedDeviceLabel ?? '')"
-                        placeholder="Mekle pec nosaukuma, koda vai lietotaja"
-                        empty-message="Neviena ierice neatbilst meklejumam."
+                        placeholder="Meklē pēc nosaukuma, koda vai lietotāja"
+                        empty-message="Neviena ierīce neatbilst meklējumam."
                     />
                     @error('device_id')
                         <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
@@ -60,8 +60,8 @@
                         :options="$recipientOptions"
                         :selected="old('transfered_to_id')"
                         :query="old('transfered_to_query', '')"
-                        placeholder="Mekle lietotaju"
-                        empty-message="Neviens lietotajs neatbilst meklejumam."
+                        placeholder="Meklē lietotāju"
+                        empty-message="Neviens lietotājs neatbilst meklējumam."
                     />
                     @error('transfered_to_id')
                         <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>

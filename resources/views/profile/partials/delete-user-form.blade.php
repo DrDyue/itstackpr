@@ -9,11 +9,11 @@
 <section class="space-y-6">
     <header class="border-b border-slate-200 pb-4">
         <h2 class="text-xl font-semibold text-slate-900">
-            Dzest kontu
+            Dzēst kontu
         </h2>
 
         <p class="mt-2 text-sm text-slate-600">
-            Ja konts vairs nav vajadzigs, to var neatgriezeniski dzest. Pirms tam parliecinies, ka tiesam gribi liegt piekluvi sajai lietotaja vietai.
+            Ja konts vairs nav vajadzīgs, to var neatgriezeniski dzēst. Pirms tam pārliecinies, kā tiešām gribi liegt piekļuvi šai lietotāja vietai.
         </p>
     </header>
 
@@ -22,7 +22,7 @@
         x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
     >
         <x-icon name="trash" size="h-4 w-4" />
-        <span>Dzest kontu</span>
+        <span>Dzēst kontu</span>
     </x-danger-button>
 
     <x-modal name="confirm-user-deletion" :show="$errors->userDeletion->isNotEmpty()" focusable>
@@ -31,11 +31,11 @@
             @method('delete')
 
             <h2 class="text-lg font-medium text-gray-900">
-                Vai tiesam dzest kontu?
+                Vai tiešām dzēst kontu?
             </h2>
 
             <p class="mt-1 text-sm text-gray-600">
-                Konta dzesana ir neatgriezeniska. Ievadi savu paroli, lai apstiprinatu darbibu.
+                Konta dzēšana ir neatgriezeniska. Ievadi savu paroli, lai apstiprinātu darbību.
             </p>
 
             <div class="mt-6">
@@ -60,7 +60,7 @@
 
                 <x-danger-button class="ms-3">
                     <x-icon name="trash" size="h-4 w-4" />
-                    Dzest kontu
+                    Dzēst kontu
                 </x-danger-button>
             </div>
         </form>

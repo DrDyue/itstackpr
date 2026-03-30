@@ -65,17 +65,17 @@ class UserRequestCenterController extends Controller
             'transfered_to_id' => [Rule::requiredIf(fn () => $request->input('request_type') === 'transfer'), 'nullable', 'exists:users,id', Rule::notIn([$user->id])],
             'transfer_reason' => [Rule::requiredIf(fn () => $request->input('request_type') === 'transfer'), 'nullable', 'string'],
         ], [
-            'request_type.required' => 'Izvelies pieteikuma tipu.',
-            'description.required' => 'Apraksti remonta problemu.',
-            'reason.required' => 'Apraksti norakstisanas iemeslu.',
-            'transfered_to_id.required' => 'Izvelies lietotaju, kam nodot ierici.',
-            'transfer_reason.required' => 'Apraksti nodosanas iemeslu.',
+            'request_type.required' => 'Izvēlies pieteikuma tipu.',
+            'description.required' => 'Apraksti remonta problēmu.',
+            'reason.required' => 'Apraksti norakstīšanas iemeslu.',
+            'transfered_to_id.required' => 'Izvēlies lietotāju, kam nodot ierīci.',
+            'transfer_reason.required' => 'Apraksti nodošanas iemeslu.',
         ]);
 
         $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
         if (! $device) {
             throw ValidationException::withMessages([
-                'device_id' => ['Vari veidot pieteikumus tikai savai aktivajai iericei.'],
+                'device_id' => ['Vari veidot pieteikumus tikai savai aktivajai ierīcei.'],
             ]);
         }
 
@@ -104,7 +104,7 @@ class UserRequestCenterController extends Controller
 
             AuditTrail::created($user->id, $writeoffRequest);
 
-            return redirect()->route('writeoff-requests.index')->with('success', 'Norakstisanas pieteikums izveidots.');
+            return redirect()->route('writeoff-requests.index')->with('success', 'Norakstīšanas pieteikums izveidots.');
         }
 
         $transfer = DeviceTransfer::create([
@@ -117,7 +117,7 @@ class UserRequestCenterController extends Controller
 
         AuditTrail::created($user->id, $transfer);
 
-        return redirect()->route('device-transfers.index')->with('success', 'Nodosanas pieteikums izveidots.');
+        return redirect()->route('device-transfers.index')->with('success', 'Nodošanas pieteikums izveidots.');
     }
 
     /**
@@ -204,7 +204,7 @@ class UserRequestCenterController extends Controller
     {
         if ($device->status === Device::STATUS_REPAIR) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai iericei jau notiek remonts (' . $this->repairStatusLabel($device->activeRepair?->status) . '), tapec jaunus pieteikumus veidot nevar.'],
+                'device_id' => ['Sai ierīcei jau notiek remonts (' . $this->repairStatusLabel($device->activeRepair?->status) . '), tāpēc jaunus pieteikumus veidot nevar.'],
             ]);
         }
 
@@ -226,19 +226,19 @@ class UserRequestCenterController extends Controller
         if ($requestType === 'repair') {
             if ($hasPendingRepair) {
                 throw ValidationException::withMessages([
-                    'device_id' => ['Sai iericei jau ir gaidoss remonta pieteikums.'],
+                    'device_id' => ['Sai ierīcei jau ir gaidošs remonta pieteikums.'],
                 ]);
             }
 
             if ($hasPendingWriteoff) {
                 throw ValidationException::withMessages([
-                    'device_id' => ['Sai iericei jau ir gaidoss norakstisanas pieteikums, tapec remonta pieteikumu veidot nevar.'],
+                    'device_id' => ['Sai ierīcei jau ir gaidošs norakstīšanas pieteikums, tāpēc remonta pieteikumu veidot nevar.'],
                 ]);
             }
 
             if ($hasPendingTransfer) {
                 throw ValidationException::withMessages([
-                    'device_id' => ['Sai iericei jau ir gaidoss nodosanas pieteikums, tapec remonta pieteikumu veidot nevar.'],
+                    'device_id' => ['Sai ierīcei jau ir gaidošs nodošanas pieteikums, tāpēc remonta pieteikumu veidot nevar.'],
                 ]);
             }
         }
@@ -246,19 +246,19 @@ class UserRequestCenterController extends Controller
         if ($requestType === 'writeoff') {
             if ($hasPendingWriteoff) {
                 throw ValidationException::withMessages([
-                    'device_id' => ['Sai iericei jau ir gaidoss norakstisanas pieteikums.'],
+                    'device_id' => ['Sai ierīcei jau ir gaidošs norakstīšanas pieteikums.'],
                 ]);
             }
 
             if ($hasPendingRepair) {
                 throw ValidationException::withMessages([
-                    'device_id' => ['Sai iericei jau ir gaidoss remonta pieteikums, tapec norakstisanas pieteikumu veidot nevar.'],
+                    'device_id' => ['Sai ierīcei jau ir gaidošs remonta pieteikums, tāpēc norakstīšanas pieteikumu veidot nevar.'],
                 ]);
             }
 
             if ($hasPendingTransfer) {
                 throw ValidationException::withMessages([
-                    'device_id' => ['Sai iericei jau ir gaidoss nodosanas pieteikums, tapec norakstisanas pieteikumu veidot nevar.'],
+                    'device_id' => ['Sai ierīcei jau ir gaidošs nodošanas pieteikums, tāpēc norakstīšanas pieteikumu veidot nevar.'],
                 ]);
             }
         }
@@ -266,19 +266,19 @@ class UserRequestCenterController extends Controller
         if ($requestType === 'transfer') {
             if ($hasPendingTransfer) {
                 throw ValidationException::withMessages([
-                    'device_id' => ['Sai iericei jau ir gaidoss nodosanas pieteikums.'],
+                    'device_id' => ['Sai ierīcei jau ir gaidošs nodošanas pieteikums.'],
                 ]);
             }
 
             if ($hasPendingRepair) {
                 throw ValidationException::withMessages([
-                    'device_id' => ['Sai iericei jau ir gaidoss remonta pieteikums, tapec nodosanas pieteikumu veidot nevar.'],
+                    'device_id' => ['Sai ierīcei jau ir gaidošs remonta pieteikums, tāpēc nodošanas pieteikumu veidot nevar.'],
                 ]);
             }
 
             if ($hasPendingWriteoff) {
                 throw ValidationException::withMessages([
-                    'device_id' => ['Sai iericei jau ir gaidoss norakstisanas pieteikums, tapec nodosanas pieteikumu veidot nevar.'],
+                    'device_id' => ['Sai ierīcei jau ir gaidošs norakstīšanas pieteikums, tāpēc nodošanas pieteikumu veidot nevar.'],
                 ]);
             }
         }
@@ -288,7 +288,7 @@ class UserRequestCenterController extends Controller
     {
         return match ($status) {
             'waiting' => 'Gaida',
-            'in-progress' => 'Procesa',
+            'in-progress' => 'Procesā',
             'completed' => 'Pabeigts',
             'cancelled' => 'Atcelts',
             default => 'Remonta',
@@ -317,13 +317,13 @@ class UserRequestCenterController extends Controller
                 'field' => 'description',
                 'label' => 'Apraksts',
                 'title' => 'Labot remonta pieteikumu',
-                'subtitle' => 'Vari mainit tikai problemu aprakstu, kamer pieteikums vel nav izskatits.',
+                'subtitle' => 'Vari mainīt tikai problēmu aprakstu, kamer pieteikums vēl nav izskatīts.',
                 'type_label' => 'Remonta pieteikums',
                 'icon' => 'repair-request',
-                'required_message' => 'Apraksti remonta problemu.',
+                'required_message' => 'Apraksti remonta problēmu.',
                 'updated_message' => 'Remonta pieteikums atjaunots.',
                 'deleted_message' => 'Remonta pieteikums atcelts.',
-                'deleted_audit_message' => 'Lietotajs atcela iesniegtu remonta pieteikumu.',
+                'deleted_audit_message' => 'Lietotājs atcela iesniegtu remonta pieteikumu.',
                 'index_route' => 'repair-requests.index',
                 'submitted_status' => RepairRequest::STATUS_SUBMITTED,
             ],
@@ -331,29 +331,29 @@ class UserRequestCenterController extends Controller
                 'model' => WriteoffRequest::class,
                 'field' => 'reason',
                 'label' => 'Iemesls',
-                'title' => 'Labot norakstisanas pieteikumu',
-                'subtitle' => 'Vari mainit tikai norakstisanas iemeslu, kamer pieteikums vel nav izskatits.',
-                'type_label' => 'Norakstisanas pieteikums',
+                'title' => 'Labot norakstīšanas pieteikumu',
+                'subtitle' => 'Vari mainīt tikai norakstīšanas iemeslu, kamer pieteikums vēl nav izskatīts.',
+                'type_label' => 'Norakstīšanas pieteikums',
                 'icon' => 'writeoff',
-                'required_message' => 'Apraksti norakstisanas iemeslu.',
-                'updated_message' => 'Norakstisanas pieteikums atjaunots.',
-                'deleted_message' => 'Norakstisanas pieteikums atcelts.',
-                'deleted_audit_message' => 'Lietotajs atcela iesniegtu norakstisanas pieteikumu.',
+                'required_message' => 'Apraksti norakstīšanas iemeslu.',
+                'updated_message' => 'Norakstīšanas pieteikums atjaunots.',
+                'deleted_message' => 'Norakstīšanas pieteikums atcelts.',
+                'deleted_audit_message' => 'Lietotājs atcela iesniegtu norakstīšanas pieteikumu.',
                 'index_route' => 'writeoff-requests.index',
                 'submitted_status' => WriteoffRequest::STATUS_SUBMITTED,
             ],
             'transfer' => [
                 'model' => DeviceTransfer::class,
                 'field' => 'transfer_reason',
-                'label' => 'Nodosanas iemesls',
-                'title' => 'Labot nodosanas pieteikumu',
-                'subtitle' => 'Vari mainit tikai nodosanas iemeslu, kamer sanemejs vel nav izskatijis pieteikumu.',
-                'type_label' => 'Nodosanas pieteikums',
+                'label' => 'Nodošanas iemesls',
+                'title' => 'Labot nodošanas pieteikumu',
+                'subtitle' => 'Vari mainīt tikai nodošanas iemeslu, kamer saņēmējs vēl nav izskatījis pieteikumu.',
+                'type_label' => 'Nodošanas pieteikums',
                 'icon' => 'transfer',
-                'required_message' => 'Apraksti nodosanas iemeslu.',
-                'updated_message' => 'Nodosanas pieteikums atjaunots.',
-                'deleted_message' => 'Nodosanas pieteikums atcelts.',
-                'deleted_audit_message' => 'Lietotajs atcela iesniegtu nodosanas pieteikumu.',
+                'required_message' => 'Apraksti nodošanas iemeslu.',
+                'updated_message' => 'Nodošanas pieteikums atjaunots.',
+                'deleted_message' => 'Nodošanas pieteikums atcelts.',
+                'deleted_audit_message' => 'Lietotājs atcela iesniegtu nodošanas pieteikumu.',
                 'index_route' => 'device-transfers.index',
                 'submitted_status' => DeviceTransfer::STATUS_SUBMITTED,
             ],

@@ -32,7 +32,7 @@
                     'transfer' => 'device-transfers.index',
                 }) }}" class="btn-back">
                     <x-icon name="back" size="h-4 w-4" />
-                    <span>Atpakal</span>
+                    <span>Atpakaļ</span>
                 </a>
             </div>
         </div>
@@ -43,14 +43,14 @@
 
             <div class="grid gap-4 md:grid-cols-2">
                 <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-4">
-                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Ierice</div>
-                    <div class="mt-2 text-base font-semibold text-slate-900">{{ $editableRequest->device?->name ?: 'Ierice nav atrasta' }}</div>
+                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Ierīce</div>
+                    <div class="mt-2 text-base font-semibold text-slate-900">{{ $editableRequest->device?->name ?: 'Ierīce nav atrasta' }}</div>
                     <div class="mt-1 text-sm text-slate-500">{{ $editableRequest->device?->code ?: 'bez koda' }}</div>
                 </div>
                 <div class="rounded-[1.5rem] border border-sky-200 bg-sky-50/80 px-5 py-4">
-                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Piezime</div>
+                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Piezīme</div>
                     <div class="mt-2 text-sm leading-6 text-sky-900">
-                        Seit vari mainit tikai tekstu. Ierici un citas saistitas vertibas sistema saglaba nemainigas.
+                        Šeit vari mainīt tikai tekstu. Ierīci un citas šaistitas vērtības sistēma saglaba nemainigas.
                     </div>
                 </div>
             </div>
@@ -66,7 +66,7 @@
             <div class="flex flex-wrap gap-3">
                 <button type="submit" class="btn-create">
                     <x-icon name="check" size="h-4 w-4" />
-                    <span>Saglabat izmainas</span>
+                    <span>Saglabāt izmainas</span>
                 </button>
                 <a href="{{ route(match ($requestType) {
                     'repair' => 'repair-requests.index',

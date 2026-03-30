@@ -54,6 +54,6 @@ class RegisteredUserController extends Controller
         AuditTrail::created(Auth::id(), $user);
         event(new Registered($user));
 
-        return redirect(route('users.index'))->with('success', 'Lietotajs veiksmigi izveidots');
+        return redirect(route('users.index'))->with('success', 'Lietotājs veiksmīgi izveidots');
     }
 }

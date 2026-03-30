@@ -19,7 +19,7 @@
         @endif
 
         <div class="form-group">
-            <x-input-label for="email">Darbinieka e-pasts</x-input-label>
+            <x-input-label for="email">Darbiniēka e-pasts</x-input-label>
             <x-text-input
                 id="email"
                 type="email"

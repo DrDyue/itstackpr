@@ -1,7 +1,7 @@
 {{-- Tukšā stāvokļa komponents, ja sarakstā nav datu. --}}
 @props([
     'icon' => 'search',
-    'title' => 'Sobrid nekas nav atrasts',
+    'title' => 'Šobrīd nēkas nav atrasts',
     'description' => null,
     'actionHref' => null,
     'actionLabel' => null,

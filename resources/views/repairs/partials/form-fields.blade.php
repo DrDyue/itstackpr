@@ -16,10 +16,10 @@
         ? $selectedDevice->name . ' (' . ($selectedDevice->code ?: 'bez koda') . ')'
         : old('device_query', '');
     $statusHint = match ($currentRepair?->status ?? 'waiting') {
-        'in-progress' => 'Remonts sobrid ir procesa. Statuss tiek mainits ar darbibu pogam, nevis ar formas lauku.',
-        'completed' => 'Remonts ir pabeigts. Ja vajag turpinat, izmanto statusa darbibas virs formas.',
-        'cancelled' => 'Remonts ir atcelts. To var atjaunot ar statusa darbibu pogam.',
-        default => 'Remonts sobrid gaida uzsaksanu. Statuss automatiski tiek mainits no remonta darbibu pogam.',
+        'in-progress' => 'Remonts šobrīd ir procesā. Statuss tiek mainīts ar darbību pogām, nevis ar formas lauku.',
+        'completed' => 'Remonts ir pabeigts. Ja vajag turpinat, izmanto statusa darbības virs formas.',
+        'cancelled' => 'Remonts ir atcelts. To var atjaunot ar statusa darbību pogām.',
+        default => 'Remonts šobrīd gaida uzsākšanu. Statuss automātiski tiek mainīts no remonta darbību pogām.',
     };
 @endphp
 
@@ -31,20 +31,20 @@
         <div class="space-y-6">
             <div class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
                 <div>
-                    <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pamata informacija</div>
-                    <div class="mt-1 text-sm text-slate-500">Galvenie lauki par ierici, remonta saturu un darba izpildi.</div>
+                    <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pamata informācija</div>
+                    <div class="mt-1 text-sm text-slate-500">Galvenie lauki par ierīci, remonta saturu un darba izpildi.</div>
                 </div>
                 <div class="mt-4 grid gap-4 md:grid-cols-2">
                     @if ($currentRepair)
                         <div class="block">
-                            <span class="crud-label">Ierice</span>
-                            <input type="text" class="crud-control bg-slate-50 text-slate-600" value="{{ $currentRepair->device?->name ?: 'Ierice nav atrasta' }} ({{ $currentRepair->device?->code ?: 'bez koda' }})" readonly>
+                            <span class="crud-label">Ierīce</span>
+                            <input type="text" class="crud-control bg-slate-50 text-slate-600" value="{{ $currentRepair->device?->name ?: 'Ierīce nav atrasta' }} ({{ $currentRepair->device?->code ?: 'bez koda' }})" readonly>
                             <input type="hidden" name="device_id" value="{{ old('device_id', $currentRepair->device_id) }}">
-                            <div class="mt-2 text-xs text-slate-500">Esosam remontam ierici mainit nevar. Ja vajag citu ierici, atcel so remontu un izveido jaunu ierakstu.</div>
+                            <div class="mt-2 text-xs text-slate-500">Esosam remontam ierīci mainīt nevar. Ja vajag citu ierīci, atcel so remontu un izveido jaunu ierakstu.</div>
                         </div>
                     @else
                         <div class="block">
-                            <span class="crud-label">Ierice</span>
+                            <span class="crud-label">Ierīce</span>
                             <x-searchable-select
                                 name="device_id"
                                 query-name="device_query"
@@ -52,18 +52,18 @@
                                 :options="$deviceOptions"
                                 :selected="$selectedDeviceId"
                                 :query="$selectedDeviceLabel"
-                                placeholder="Mekle pec nosaukuma, koda vai lietotaja"
-                                empty-message="Neviena ierice neatbilst meklejumam."
+                                placeholder="Meklē pēc nosaukuma, koda vai lietotāja"
+                                empty-message="Neviena ierīce neatbilst meklējumam."
                             />
-                            <div class="mt-2 text-xs text-slate-500">Redzamas tikai aktivās ierices bez aktiva remonta vai gaidosiem pieprasijumiem.</div>
+                            <div class="mt-2 text-xs text-slate-500">Redzamas tikai aktivās ierīces bez aktiva remonta vai gaidosiem pieprasijumiem.</div>
                         </div>
                     @endif
 
                     @if ($currentRepair && $currentRepair->status !== 'waiting')
                         <div class="block">
-                            <span class="crud-label">Izpilditajs</span>
-                            <input type="text" class="crud-control bg-slate-50 text-slate-600" value="{{ $currentRepair->executor?->full_name ?: 'Nav noradits' }}" readonly>
-                            <div class="mt-2 text-xs text-slate-500">Izpilditajs tiek pieskirts automatiski bridi, kad remonts no gaida pariet uz procesa statusu.</div>
+                            <span class="crud-label">Izpildītājs</span>
+                            <input type="text" class="crud-control bg-slate-50 text-slate-600" value="{{ $currentRepair->executor?->full_name ?: 'Nav norādīts' }}" readonly>
+                            <div class="mt-2 text-xs text-slate-500">Izpildītājs tiek piesķirts automātiski brīdi, kad remonts no gaida pariet uz procesā statusu.</div>
                         </div>
                     @endif
 
@@ -77,7 +77,7 @@
             <div class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
                 <div>
                     <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta iestatijumi</div>
-                    <div class="mt-1 text-sm text-slate-500">Izvelies remonta tipu, prioritati un izmaksu informaciju.</div>
+                    <div class="mt-1 text-sm text-slate-500">Izvēlies remonta tipu, prioritati un izmaksu informāciju.</div>
                 </div>
                 <div class="mt-4 grid gap-4 md:grid-cols-2">
                     <div class="md:col-span-2">
@@ -92,18 +92,18 @@
                                     <input type="radio" name="repair_type" value="internal" class="sr-only" x-model="repairType">
                                     <span class="flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition" :class="repairType === 'internal' ? 'text-white' : 'text-slate-600'">
                                         <x-icon name="repair" size="h-4 w-4" />
-                                        <span>Ieksejais</span>
+                                        <span>Iekšējais</span>
                                     </span>
                                 </label>
                                 <label class="relative z-10 cursor-pointer">
                                     <input type="radio" name="repair_type" value="external" class="sr-only" x-model="repairType">
                                     <span class="flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition" :class="repairType === 'external' ? 'text-white' : 'text-slate-600'">
                                         <x-icon name="repair-request" size="h-4 w-4" />
-                                        <span>Arejais</span>
+                                        <span>Ārējais</span>
                                     </span>
                                 </label>
                             </div>
-                            <div class="mt-3 text-sm text-slate-500" x-text="repairType === 'internal' ? 'Ieksejais remonts tiek veikts uz vietas bez vendora datiem.' : 'Arejais remonts paredz vendora informaciju, kad darbs nonak procesa statusa.'"></div>
+                            <div class="mt-3 text-sm text-slate-500" x-text="repairType === 'internal' ? 'Iekšējais remonts tiek veikts uz vietas bez vendora datiem.' : 'Ārējais remonts paredz vendora informāciju, kad darbs nonak procesā statusa.'"></div>
                         </div>
                     </div>
 
@@ -153,10 +153,10 @@
                 x-cloak
                 x-show="repairType === 'external'"
             >
-                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Areja remonta dati</div>
-                <div class="mt-1 text-sm text-slate-500">Vendoru informacija tiek izmantota tikai arejam remontam.</div>
+                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ārējā remonta dati</div>
+                <div class="mt-1 text-sm text-slate-500">Vendoru informācija tiek izmantota tikai ārējam remontam.</div>
                 <div class="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600" x-show="repairStatus !== 'in-progress'">
-                    Vendora lauki aktivizejas un ir obligati tikai tad, kad remonts ir procesa statusa.
+                    Vendora lauki aktivizejas un ir obligati tikai tad, kad remonts ir procesā statusa.
                 </div>
                 <div class="mt-4 grid gap-4 md:grid-cols-3" x-show="repairStatus === 'in-progress'">
                     <label class="block">
@@ -185,7 +185,7 @@
                 <div class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
                     <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Laika dati</div>
                     <div class="mt-4 space-y-3 text-sm text-slate-600">
-                        <div><strong class="text-slate-900">Pasreizejais statuss:</strong> {{ $statusLabels[$currentRepair->status] ?? $currentRepair->status }}</div>
+                        <div><strong class="text-slate-900">Pašreizējāis statuss:</strong> {{ $statusLabels[$currentRepair->status] ?? $currentRepair->status }}</div>
                         <div><strong class="text-slate-900">Sakuma datums:</strong> {{ $currentRepair->start_date?->format('d.m.Y') ?: 'Tiks ielikts, kad remonts saksies' }}</div>
                         <div><strong class="text-slate-900">Beigu datums:</strong> {{ $currentRepair->end_date?->format('d.m.Y') ?: 'Tiks ielikts, kad remonts tiks pabeigts' }}</div>
                     </div>

@@ -48,7 +48,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('users', UserController::class)->except(['show']);
 });
 
-// Inventāra pārvaldības sadaļa administratoram un IT darbiniekam.
+// Inventāra pārvaldības sadaļa administratoram un IT darbiniēkam.
 Route::middleware(['auth', 'manager'])->group(function () {
     Route::resource('buildings', BuildingController::class)->except(['show']);
     Route::resource('rooms', RoomController::class)->except(['show']);

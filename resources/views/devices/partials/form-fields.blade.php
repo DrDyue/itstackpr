@@ -3,8 +3,8 @@
     Atbildiba: glabā visus ievades laukus, ko izmanto gan jaunās ierīces izveide, gan esošas ierīces rediģēšana.
     Kāpēc tas ir svarīgi:
     1. Viena un tā pati biznesa loģika netiek dublēta create un edit lapās.
-    2. Šeit tiek sagatavoti noklusējumi, dropdown izvēles un datu piesaistes vērtības.
-    3. Tieši šeit ir redzams, kuri lauki ir obligāti un kā tie ir sasaistīti ar backend validāciju.
+    2. Šeit tiek sagatavoti noklusējumi, dropdown izvēles un datu piešaistes vērtības.
+    3. Tieši šeit ir redzams, kuri lauki ir obligāti un kā tie ir sašaistīti ar backend validāciju.
 --}}
 @php
     $current = $device;
@@ -19,7 +19,7 @@
     $typeOptions = $types->map(fn ($type) => [
         'value' => (string) $type->id,
         'label' => $type->type_name,
-        'description' => $type->category ?: ($type->description ?: 'Ierices tips'),
+        'description' => $type->category ?: ($type->description ?: 'Ierīces tips'),
         'search' => implode(' ', array_filter([$type->type_name, $type->category, $type->description])),
     ])->values();
     $selectedAssignedToId = old('assigned_to_id', $current?->assigned_to_id ?? $defaultAssignedToId ?? null);
@@ -71,9 +71,9 @@
         'value' => (string) $status,
         'label' => $statusLabels[$status] ?? ucfirst($status),
         'description' => match ($status) {
-            \App\Models\Device::STATUS_ACTIVE => 'Ierice ir lietosana',
-            \App\Models\Device::STATUS_REPAIR => 'Ierice atrodas remonta',
-            \App\Models\Device::STATUS_WRITEOFF => 'Ierice ir norakstita',
+            \App\Models\Device::STATUS_ACTIVE => 'Ierīce ir lietosana',
+            \App\Models\Device::STATUS_REPAIR => 'Ierīce atrodas remonta',
+            \App\Models\Device::STATUS_WRITEOFF => 'Ierīce ir norakstīta',
             default => '',
         },
         'search' => implode(' ', array_filter([
@@ -98,12 +98,12 @@
     $selectedStatusLabel = old('status_query', $statusLabels[$selectedStatus] ?? 'Aktiva');
 @endphp
 
-{{-- Forma sadalīta pa semantiskām kartītēm: pamata dati, piesaiste, finanses, attēls un piezīmes. --}}
+{{-- Forma sadalīta pa semantiskām kartītēm: pamata dati, piešaiste, finanses, attēls un piezīmes. --}}
 <div class="device-form-grid">
     <div class="space-y-6">
         @if ($isWrittenOff)
             <div class="rounded-[1.75rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-6 text-amber-900">
-                Norakstitai iericei var labot tikai informacijas laukus. Statuss, piesaiste lietotajam un telpa vairs netiek mainiti.
+                Norakstītai ierīcei var labot tikai informācijas laukus. Statuss, piešaiste lietotājam un telpa vairs netiek mainīti.
             </div>
         @endif
 
@@ -115,7 +115,7 @@
                 </div>
                 <div class="device-form-section-copy">
                     <div class="device-form-section-name">Pamata dati</div>
-                    <div class="device-form-section-note">Ievadi galveno informaciju, pec kuras ierici atradis un atpazis sistema.</div>
+                    <div class="device-form-section-note">Ievadi galveno informāciju, pēc kuras ierīci atradis un atpazis sistēma.</div>
                 </div>
             </div>
 
@@ -137,8 +137,8 @@
                         :options="$typeOptions"
                         :selected="$selectedTypeId"
                         :query="$selectedTypeLabel"
-                        placeholder="Izvelies ierices tipu"
-                        empty-message="Neviens ierices tips neatbilst meklejumam."
+                        placeholder="Izvēlies ierīces tipu"
+                        empty-message="Neviens ierīces tips neatbilst meklējumam."
                     />
                 </label>
                 <label class="block">
@@ -146,11 +146,11 @@
                     <input type="text" name="model" value="{{ old('model', $current?->model) }}" class="crud-control" required>
                 </label>
                 <label class="block">
-                    <span class="crud-label">Razotajs</span>
+                    <span class="crud-label">Ražotājs</span>
                     <input type="text" name="manufacturer" value="{{ old('manufacturer', $current?->manufacturer) }}" class="crud-control">
                 </label>
                 <label class="block">
-                    <span class="crud-label">Serijas numurs</span>
+                    <span class="crud-label">Sērijas numurs</span>
                     <input type="text" name="serial_number" value="{{ old('serial_number', $current?->serial_number) }}" class="crud-control">
                 </label>
             </div>
@@ -163,8 +163,8 @@
                     <x-icon name="users" size="h-5 w-5" />
                 </div>
                 <div class="device-form-section-copy">
-                    <div class="device-form-section-name">Statuss un piesaiste</div>
-                    <div class="device-form-section-note">Noradi, kam ierice pieskirta un kura telpa ta atrodas ikdiena.</div>
+                    <div class="device-form-section-name">Statuss un piešaiste</div>
+                    <div class="device-form-section-note">Norādi, kam ierīce piešķirta un kurā telpā tā atrodas ikdienā.</div>
                 </div>
             </div>
 
@@ -177,7 +177,7 @@
                             <span>Aktiva</span>
                             <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">Noklusets</span>
                         </div>
-                        <div class="mt-2 text-xs text-slate-500">Jauna ierice vienmer tiek izveidota ar aktivu statusu.</div>
+                        <div class="mt-2 text-xs text-slate-500">Jauna ierīce vienmer tiek izveidota ar aktivu statusu.</div>
                     </div>
                 @else
                     <label class="block">
@@ -187,7 +187,7 @@
                         @endif
                         @if ($isWrittenOff)
                             <div class="crud-control flex items-center bg-slate-50 text-slate-700">
-                                <span>{{ $statusLabels[$current?->status] ?? 'Norakstita' }}</span>
+                                <span>{{ $statusLabels[$current?->status] ?? 'Norakstīta' }}</span>
                             </div>
                         @else
                             <x-searchable-select
@@ -197,18 +197,18 @@
                                 :options="$statusOptions"
                                 :selected="(string) $selectedStatus"
                                 :query="$selectedStatusLabel"
-                                placeholder="Izvelies statusu"
-                                empty-message="Neviens statuss neatbilst meklejumam."
+                                placeholder="Izvēlies statusu"
+                                empty-message="Neviens statuss neatbilst meklējumam."
                             />
                         @endif
                     </label>
                 @endif
                 <label class="block">
-                    <span class="crud-label">Atbildiga persona *</span>
+                    <span class="crud-label">Atbildīgā persona *</span>
                     @if ($isWrittenOff)
                         <input type="hidden" name="assigned_to_id" value="">
                         <div class="crud-control flex items-center bg-slate-50 text-slate-700">
-                            <span>Nav pieskirts</span>
+                            <span>Nav piesķirts</span>
                         </div>
                     @else
                         <x-searchable-select
@@ -218,18 +218,18 @@
                             :options="$assignedUserOptions"
                             :selected="(string) $selectedAssignedToId"
                             :query="$selectedAssignedToLabel"
-                            placeholder="Mekle atbildigo personu"
-                            empty-message="Neviens lietotajs neatbilst meklejumam."
+                            placeholder="Meklē atbildīgo personu"
+                            empty-message="Neviens lietotājs neatbilst meklējumam."
                         />
                     @endif
                 </label>
                 @if ($showBuildingField)
                     <label class="block">
-                        <span class="crud-label">Eka</span>
+                        <span class="crud-label">Ēka</span>
                         @if ($isWrittenOff)
                             <input type="hidden" name="building_id" value="">
                             <div class="crud-control flex items-center bg-slate-50 text-slate-700">
-                                <span>Nav pieskirta ekai</span>
+                                <span>Nav piesķirta ēkai</span>
                             </div>
                         @else
                             <x-searchable-select
@@ -239,8 +239,8 @@
                                 :options="$buildingOptions"
                                 :selected="(string) $selectedBuildingId"
                                 :query="$selectedBuildingLabel"
-                                placeholder="Mekle eku"
-                                empty-message="Neviena eka neatbilst meklejumam."
+                                placeholder="Meklē ēku"
+                                empty-message="Neviena ēka neatbilst meklējumam."
                             />
                         @endif
                     </label>
@@ -252,7 +252,7 @@
                     @if ($isWrittenOff)
                         <input type="hidden" name="room_id" value="">
                         <div class="crud-control flex items-center bg-slate-50 text-slate-700">
-                            <span>Nav pieskirta telpai</span>
+                            <span>Nav piesķirta telpai</span>
                         </div>
                     @else
                         <x-searchable-select
@@ -262,8 +262,8 @@
                             :options="$roomOptions"
                             :selected="(string) $selectedRoomId"
                             :query="$selectedRoomLabel"
-                            placeholder="Mekle telpu"
-                            empty-message="Neviena telpa neatbilst meklejumam."
+                            placeholder="Meklē telpu"
+                            empty-message="Neviena telpa neatbilst meklējumam."
                         />
                     @endif
                 </label>
@@ -276,8 +276,8 @@
                     <x-icon name="calendar" size="h-5 w-5" />
                 </div>
                 <div class="device-form-section-copy">
-                    <div class="device-form-section-name">Iegade, garantija un piezimes</div>
-                    <div class="device-form-section-note">Papildini datumu, cenu, attela un piezimju laukus, ja tie ir zinami.</div>
+                    <div class="device-form-section-name">Iegade, garantija un piezīmes</div>
+                    <div class="device-form-section-note">Papildini datumu, cenu, attēla un piezīmju laukus, ja tie ir zinami.</div>
                 </div>
             </div>
 
@@ -293,22 +293,22 @@
                 </label>
                 <x-localized-date-input
                     name="warranty_until"
-                    label="Garantija lidz"
+                    label="Garantija līdz"
                     :value="old('warranty_until', $current?->warranty_until?->format('Y-m-d'))"
                 />
                 <div class="block">
-                    <span class="crud-label">Ierices attels</span>
+                    <span class="crud-label">Ierīces attels</span>
                     <input type="file" name="device_image" class="device-file-input">
-                    <div class="mt-2 text-xs text-slate-500">PNG, JPG vai WEBP lidz {{ (int) config('devices.max_upload_kb', 5120) / 1024 }} MB.</div>
+                    <div class="mt-2 text-xs text-slate-500">PNG, JPG vai WEBP līdz {{ (int) config('devices.max_upload_kb', 5120) / 1024 }} MB.</div>
                     @if ($current)
                         <label class="mt-3 inline-flex items-center gap-3">
                             <input type="checkbox" name="remove_device_image" value="1" class="rounded border-gray-300 text-blue-600">
-                            <span class="text-sm text-slate-700">Nonemt ierices attelu</span>
+                            <span class="text-sm text-slate-700">Nonemt ierīces attelu</span>
                         </label>
                     @endif
                 </div>
                 <label class="block md:col-span-2">
-                    <span class="crud-label">Piezimes</span>
+                    <span class="crud-label">Piezīmes</span>
                     <textarea name="notes" rows="5" class="crud-control">{{ old('notes', $current?->notes) }}</textarea>
                 </label>
             </div>
@@ -323,9 +323,9 @@
                     <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Kas ir obligati</div>
                     <ul class="mt-3 space-y-2 leading-6">
                         <li>Kods, nosaukums, tips un modelis ir obligati lauki.</li>
-                        <li>Atbildiga persona un telpa ir obligatas un pec noklusejuma tiek aizpilditas automatiski.</li>
-                        <li>Jauna ierice vienmer tiek saglabata ar aktivu statusu.</li>
-                        <li>Datumi, cena un piezimes var palikt tuksi, ja tie nav zinami.</li>
+                        <li>Atbildīgā persona un telpa ir obligātas un pēc noklusējuma tiek aizpildītas automātiski.</li>
+                        <li>Jauna ierīce vienmer tiek saglabāta ar aktivu statusu.</li>
+                        <li>Datumi, cena un piezīmes var palikt tuksi, ja tie nav zinami.</li>
                     </ul>
                 </div>
 
@@ -333,10 +333,10 @@
                     <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Attela priekskats</div>
                     <div class="mt-3">
                         @if ($deviceImageUrl)
-                            <img src="{{ $deviceImageUrl }}" alt="{{ $current?->name ?: 'Ierice' }}" class="w-full rounded-[1.25rem] border border-slate-200 object-contain">
+                            <img src="{{ $deviceImageUrl }}" alt="{{ $current?->name ?: 'Ierīce' }}" class="w-full rounded-[1.25rem] border border-slate-200 object-contain">
                         @else
                             <div class="rounded-[1.25rem] border border-dashed border-slate-300 px-4 py-12 text-center text-sm text-slate-500">
-                                Attels tiks paradits pec pievienosanas.
+                                Attels tiks paradits pēc pievienosanas.
                             </div>
                         @endif
                     </div>
@@ -344,12 +344,12 @@
 
                 @if ($current)
                     <div class="rounded-[1.5rem] border border-slate-200 bg-white p-4">
-                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Esosais ieraksts</div>
+                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Esošais ieraksts</div>
                         <div class="mt-3 space-y-2">
                             <div><strong class="text-slate-900">Statuss:</strong> {{ $statusLabels[$current->status] ?? $current->status }}</div>
                             <div><strong class="text-slate-900">Kods:</strong> {{ $current->code ?: '-' }}</div>
-                            <div><strong class="text-slate-900">Lietotajs:</strong> {{ $current->assignedTo?->full_name ?: 'Nav pieskirts' }}</div>
-                            <div><strong class="text-slate-900">Atrasanas vieta:</strong> {{ $current->building?->building_name ?: 'Bez ekas' }} / {{ $current->room?->room_number ?: 'Bez telpas' }}</div>
+                            <div><strong class="text-slate-900">Lietotājs:</strong> {{ $current->assignedTo?->full_name ?: 'Nav piesķirts' }}</div>
+                            <div><strong class="text-slate-900">Atrašanās vieta:</strong> {{ $current->building?->building_name ?: 'Bez ēkas' }} / {{ $current->room?->room_number ?: 'Bez telpas' }}</div>
                         </div>
                     </div>
                 @endif

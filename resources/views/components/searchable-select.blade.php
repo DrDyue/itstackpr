@@ -13,7 +13,7 @@
     'selected' => '',
     'query' => '',
     'identifier' => '',
-    'placeholder' => 'Izvelies vertibu',
+    'placeholder' => 'Izvēlies vērtību',
     'emptyMessage' => 'Ieraksti nav atrasti.',
 ])
 
@@ -63,7 +63,7 @@
             x-show="!open"
             type="button"
             class="searchable-select-surface"
-            title="Klikskini, lai atvertu. Turi un velc uz augsu vai leju, lai atri izveletos."
+            title="Klikšķini, lai atvērtu. Turi un velc uz augšu vai leju, lai ātri izvēlētos."
             @pointerdown.prevent.stop="beginScrub($event)"
             @pointermove.stop="handleSurfacePointerMove($event)"
             @pointerup.stop="finishSurfacePointer($event)"
@@ -95,7 +95,7 @@
             type="button"
             class="searchable-select-toggle"
             :class="pointerMode === 'scrub' ? 'searchable-select-toggle-active' : ''"
-            title="Turi un velc uz augsu vai leju, lai atri izveletos vertibu"
+            title="Turi un velc uz augšu vai leju, lai ātri izvēlētos vērtību"
             @click="togglePanel()"
             @keydown.enter.prevent="togglePanel()"
             @keydown.space.prevent="togglePanel()"

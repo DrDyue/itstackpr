@@ -96,7 +96,7 @@ class RoomController extends Controller
         $room = Room::create($this->validatedData($request));
         AuditTrail::created(auth()->id(), $room);
 
-        return redirect()->route('rooms.index')->with('success', 'Telpa veiksmigi pievienota');
+        return redirect()->route('rooms.index')->with('success', 'Telpa veiksmīgi pievienota');
     }
 
     /**
@@ -130,7 +130,7 @@ class RoomController extends Controller
     }
 
     /**
-     * Dzēš telpu tikai tad, ja tai vairs nav piesaistītu ierīču.
+     * Dzēš telpu tikai tad, ja tai vairs nav piešaistītu ierīču.
      */
     public function destroy(Room $room)
     {
@@ -141,13 +141,13 @@ class RoomController extends Controller
         if ($devicesCount > 0) {
             return redirect()
                 ->route('rooms.index')
-                ->with('error', 'Telpu nevar dzest, jo tai piesaistitas ' . $devicesCount . ' ierice' . ($devicesCount === 1 ? '' : 's') . '. Vispirms parvieto vai atsien ierices no si ieraksta, tad meginiet velreiz.');
+                ->with('error', 'Telpu nevar dzēst, jo tai piešaistītas ' . $devicesCount . ' ierīce' . ($devicesCount === 1 ? '' : 's') . '. Vispirms pārvieto vai atsien ierīces no si ieraksta, tad mēģiniet vēlreiz.');
         }
 
         AuditTrail::deleted(auth()->id(), $room);
         $room->delete();
 
-        return redirect()->route('rooms.index')->with('success', 'Telpa dzesta');
+        return redirect()->route('rooms.index')->with('success', 'Telpa dzēsta');
     }
 
     /**
@@ -176,7 +176,7 @@ class RoomController extends Controller
             'department' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:200'],
         ], [
-            'building_id.required' => 'Izvelies eku, kurai telpa pieder.',
+            'building_id.required' => 'Izvēlies ēku, kurai telpa pieder.',
             'room_number.required' => 'Noradi telpas numuru.',
         ]);
 

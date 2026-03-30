@@ -12,7 +12,7 @@
         $cityOptions = collect($cities)->map(fn ($city) => [
             'value' => (string) $city,
             'label' => (string) $city,
-            'description' => 'Filtrs pec pilsetas',
+            'description' => 'Filtrs pēc pilsētas',
             'search' => (string) $city,
         ])->values();
     @endphp
@@ -24,22 +24,22 @@
                     <div class="page-title-group mt-4">
                         <div class="page-title-icon page-title-icon-slate"><x-icon name="building" size="h-7 w-7" /></div>
                         <div>
-                            <h1 class="page-title">Ekas</h1>
-                            <p class="page-subtitle">Eku saraksts un pamata dati ar atru pieeju telpu parvaldibai.</p>
+                            <h1 class="page-title">Ēkas</h1>
+                            <p class="page-subtitle">Ēku saraksts un pamata dati ar atru pieeju telpu pārvaldibai.</p>
                         </div>
                     </div>
                 </div>
                 <div class="page-actions">
                     <a href="{{ route('rooms.create') }}" class="btn-view"><x-icon name="room" size="h-4 w-4" /><span>Pievienot telpu</span></a>
-                    <a href="{{ route('buildings.create') }}" class="btn-create"><x-icon name="plus" size="h-4 w-4" /><span>Pievienot eku</span></a>
+                    <a href="{{ route('buildings.create') }}" class="btn-create"><x-icon name="plus" size="h-4 w-4" /><span>Pievienot ēku</span></a>
                 </div>
             </div>
         </div>
 
         <form method="GET" action="{{ route('buildings.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-2">
             <label class="block">
-                <span class="crud-label">Meklet</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, adrese vai piezimes...">
+                <span class="crud-label">Meklēt</span>
+                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, adrese vai piezīmes...">
             </label>
             <label class="block">
                 <span class="crud-label">Pilseta</span>
@@ -50,19 +50,19 @@
                     :options="$cityOptions"
                     :selected="$filters['city']"
                     :query="$filters['city']"
-                    placeholder="Izvelies pilsetu"
-                    empty-message="Neviena pilseta neatbilst meklejumam."
+                    placeholder="Izvēlies pilsētu"
+                    empty-message="Neviena pilsēta neatbilst meklējumam."
                 />
             </label>
             <div class="toolbar-actions md:col-span-2">
-                <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklet</span></button>
+                <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
                 <a href="{{ route('buildings.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notirit</span></a>
             </div>
         </form>
 
         <x-active-filters
             :items="[
-                ['label' => 'Meklet', 'value' => $filters['q']],
+                ['label' => 'Meklēt', 'value' => $filters['q']],
                 ['label' => 'Pilseta', 'value' => $filters['city']],
             ]"
             :clear-url="route('buildings.index')"
@@ -82,9 +82,9 @@
                             <th class="px-4 py-3 text-left">Pilseta</th>
                             <th class="px-4 py-3 text-left">Adrese</th>
                             <th class="px-4 py-3 text-left">Stavu skaits</th>
-                            <th class="px-4 py-3 text-left">Piezimes</th>
+                            <th class="px-4 py-3 text-left">Piezīmes</th>
                             <th class="px-4 py-3 text-left">Izveidots</th>
-                            <th class="px-4 py-3 text-left">Darbibas</th>
+                            <th class="px-4 py-3 text-left">Darbības</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -93,7 +93,7 @@
                                 <td class="px-4 py-3 font-medium text-slate-900">{{ $building->building_name }}</td>
                                 <td class="px-4 py-3 text-slate-600">
                                     <div>Telpas: {{ $building->rooms_count }}</div>
-                                    <div>Ierices: {{ $building->devices_count }}</div>
+                                    <div>Ierīces: {{ $building->devices_count }}</div>
                                 </td>
                                 <td class="px-4 py-3">{{ $building->city ?: '-' }}</td>
                                 <td class="px-4 py-3">{{ $building->address ?: '-' }}</td>
@@ -102,18 +102,18 @@
                                 <td class="px-4 py-3">{{ $building->created_at?->format('d.m.Y H:i') ?: '-' }}</td>
                                 <td class="px-4 py-3">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <a href="{{ route('buildings.edit', $building) }}" class="btn-edit"><x-icon name="edit" size="h-4 w-4" /><span>Rediget</span></a>
+                                        <a href="{{ route('buildings.edit', $building) }}" class="btn-edit"><x-icon name="edit" size="h-4 w-4" /><span>Rediģēt</span></a>
                                         <form method="POST" action="{{ route('buildings.destroy', $building) }}">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" onclick="return confirm('Dzest so eku?')" class="btn-danger"><x-icon name="trash" size="h-4 w-4" /><span>Dzest</span></button>
+                                            <button type="submit" onclick="return confirm('Dzēst so ēku?')" class="btn-danger"><x-icon name="trash" size="h-4 w-4" /><span>Dzēst</span></button>
                                         </form>
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-4 py-8 text-center text-slate-500">Ekas vel nav pievienotas.</td>
+                                <td colspan="8" class="px-4 py-8 text-center text-slate-500">Ēkas vēl nav pievienotas.</td>
                             </tr>
                         @endforelse
                     </tbody>

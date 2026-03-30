@@ -25,7 +25,7 @@ class WriteoffRequestController extends Controller
 
     private const DEFAULT_WAREHOUSE_ROOM_NUMBER_PREFIX = 'NOL-';
 
-    private const DEFAULT_BUILDING_NAME = 'Ludzes novada pasvaldiba';
+    private const DEFAULT_BUILDING_NAME = 'Ludzēs novada pasvaldiba';
 
     /**
      * Parāda norakstīšanas pieteikumu sarakstu.
@@ -66,7 +66,7 @@ class WriteoffRequestController extends Controller
                 'statuses' => $availableStatuses,
                 'statusLabels' => $this->requestStatusLabels(),
                 'canReview' => $user->canManageRequests(),
-                'featureMessage' => 'Tabula writeoff_requests sobrid nav pieejama.',
+                'featureMessage' => 'Tabula writeoff_requests šobrīd nav pieejama.',
             ]);
         }
 
@@ -120,7 +120,7 @@ class WriteoffRequestController extends Controller
             return view('writeoff_requests.create', [
                 'devices' => collect(),
                 'deviceOptions' => collect(),
-                'featureMessage' => 'Tabula writeoff_requests sobrid nav pieejama.',
+                'featureMessage' => 'Tabula writeoff_requests šobrīd nav pieejama.',
             ]);
         }
 
@@ -150,21 +150,21 @@ class WriteoffRequestController extends Controller
         abort_if($user->canManageRequests(), 403);
 
         if (! $this->featureTableExists('writeoff_requests')) {
-            return redirect()->route('writeoff-requests.index')->with('error', 'Norakstisanas pieteikumus sobrid nevar saglabat, jo tabula writeoff_requests nav pieejama.');
+            return redirect()->route('writeoff-requests.index')->with('error', 'Norakstīšanas pieteikumus šobrīd nevar saglabāt, jo tabula writeoff_requests nav pieejama.');
         }
 
         $validated = $this->validateInput($request, [
             'device_id' => ['required', 'exists:devices,id'],
             'reason' => ['required', 'string'],
         ], [
-            'device_id.required' => 'Izvelies ierici, kuru velies norakstit.',
-            'reason.required' => 'Apraksti norakstisanas iemeslu.',
+            'device_id.required' => 'Izvēlies ierīci, kuru velies norakstīt.',
+            'reason.required' => 'Apraksti norakstīšanas iemeslu.',
         ]);
 
         $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
         if (! $device) {
             throw ValidationException::withMessages([
-                'device_id' => ['Vari pieteikt norakstisanu tikai savai piesaistitai iericei.'],
+                'device_id' => ['Vari pieteikt norakstisanu tikai savai piešaistītai ierīcei.'],
             ]);
         }
 
@@ -179,7 +179,7 @@ class WriteoffRequestController extends Controller
 
         AuditTrail::created($user->id, $writeoffRequest);
 
-        return redirect()->route('writeoff-requests.index')->with('success', 'Norakstisanas pieteikums nosutits izskatisanai');
+        return redirect()->route('writeoff-requests.index')->with('success', 'Norakstīšanas pieteikums nosutits izskatīšanai');
     }
 
     /**
@@ -191,24 +191,24 @@ class WriteoffRequestController extends Controller
 
         if (! $this->featureTableExists('writeoff_requests')) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Norakstisanas pieteikumu tabula sobrid nav pieejama.'], 503);
+                return response()->json(['message' => 'Norakstīšanas pieteikumu tabula šobrīd nav pieejama.'], 503);
             }
 
-            return back()->with('error', 'Norakstisanas pieteikumu tabula sobrid nav pieejama.');
+            return back()->with('error', 'Norakstīšanas pieteikumu tabula šobrīd nav pieejama.');
         }
 
         if ($writeoffRequest->status !== WriteoffRequest::STATUS_SUBMITTED) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Sis pieteikums jau ir izskatits.'], 409);
+                return response()->json(['message' => 'Sis pieteikums jau ir izskatīts.'], 409);
             }
 
-            return back()->with('error', 'Sis pieteikums jau ir izskatits.');
+            return back()->with('error', 'Sis pieteikums jau ir izskatīts.');
         }
 
         $validated = $this->validateInput($request, [
             'status' => ['required', Rule::in([WriteoffRequest::STATUS_APPROVED, WriteoffRequest::STATUS_REJECTED])],
         ], [
-            'status.required' => 'Izvelies lemumu norakstisanas pieteikumam.',
+            'status.required' => 'Izvēlies lēmumu norakstīšanas pieteikumam.',
         ]);
 
         $before = $writeoffRequest->only(['status', 'reviewed_by_user_id', 'review_notes']);
@@ -228,13 +228,13 @@ class WriteoffRequestController extends Controller
 
             if (! $device) {
                 throw ValidationException::withMessages([
-                    'status' => ['Ierice norakstisanai vairs nav atrasta.'],
+                    'status' => ['Ierīce norakstīšanai vairs nav atrasta.'],
                 ]);
             }
 
             if ($device->status !== Device::STATUS_ACTIVE || $device->activeRepair()->exists()) {
                 throw ValidationException::withMessages([
-                    'status' => ['Norakstit var tikai aktivu ierici bez aktiva remonta procesa.'],
+                    'status' => ['Norakstīt var tikai aktivu ierīci bez aktiva remonta procesā.'],
                 ]);
             }
 
@@ -249,13 +249,13 @@ class WriteoffRequestController extends Controller
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'Norakstisanas pieteikums izskatits',
+                'message' => 'Norakstīšanas pieteikums izskatīts',
                 'status' => $validated['status'],
                 'request_id' => $writeoffRequest->id,
             ]);
         }
 
-        return back()->with('success', 'Norakstisanas pieteikums izskatits');
+        return back()->with('success', 'Norakstīšanas pieteikums izskatīts');
     }
 
     private function availableDevicesForUser(User $user): Builder
@@ -275,25 +275,25 @@ class WriteoffRequestController extends Controller
     {
         if ($device->status === Device::STATUS_REPAIR) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai iericei jau notiek remonts ('.$this->repairStatusLabel($device->activeRepair?->status).'), tapec norakstisanas pieteikumu veidot nevar.'],
+                'device_id' => ['Sai ierīcei jau notiek remonts ('.$this->repairStatusLabel($device->activeRepair?->status).'), tāpēc norakstīšanas pieteikumu veidot nevar.'],
             ]);
         }
 
         if (WriteoffRequest::query()->where('device_id', $device->id)->where('status', WriteoffRequest::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai iericei jau ir gaidoss norakstisanas pieteikums.'],
+                'device_id' => ['Sai ierīcei jau ir gaidošs norakstīšanas pieteikums.'],
             ]);
         }
 
         if (RepairRequest::query()->where('device_id', $device->id)->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai iericei jau ir gaidoss remonta pieteikums, tapec norakstisanas pieteikumu veidot nevar.'],
+                'device_id' => ['Sai ierīcei jau ir gaidošs remonta pieteikums, tāpēc norakstīšanas pieteikumu veidot nevar.'],
             ]);
         }
 
         if (DeviceTransfer::query()->where('device_id', $device->id)->where('status', DeviceTransfer::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai iericei jau ir gaidoss nodosanas pieteikums, tapec norakstisanas pieteikumu veidot nevar.'],
+                'device_id' => ['Sai ierīcei jau ir gaidošs nodošanas pieteikums, tāpēc norakstīšanas pieteikumu veidot nevar.'],
             ]);
         }
     }
@@ -302,7 +302,7 @@ class WriteoffRequestController extends Controller
     {
         return match ($status) {
             'waiting' => 'Gaida',
-            'in-progress' => 'Procesa',
+            'in-progress' => 'Procesā',
             'completed' => 'Pabeigts',
             'cancelled' => 'Atcelts',
             default => 'Remonta',
@@ -371,8 +371,8 @@ class WriteoffRequestController extends Controller
             'room_number' => $this->nextWarehouseRoomNumber($building->id),
             'room_name' => self::DEFAULT_WAREHOUSE_ROOM_NAME,
             'user_id' => $preferredUserId,
-            'department' => 'Inventars',
-            'notes' => 'Automatiski izveidota nokluseta noliktavas telpa.',
+            'department' => 'Inventārs',
+            'notes' => 'Automātiski izveidota noklusētā noliktavas telpa.',
         ])->load('building');
     }
 
@@ -397,7 +397,7 @@ class WriteoffRequestController extends Controller
             'building_name' => self::DEFAULT_BUILDING_NAME,
             'city' => 'Ludza',
             'total_floors' => 1,
-            'notes' => 'Automatiski izveidota nokluseta eka noliktavas telpai.',
+            'notes' => 'Automātiski izveidota noklusētā ēka noliktavas telpai.',
         ]);
     }
 

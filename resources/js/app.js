@@ -393,8 +393,8 @@ const registerAlpineData = () => {
         badgeText(type) {
             return {
                 repair: 'Remonts',
-                writeoff: 'Norakstisana',
-                transfer: 'Nodosana',
+                writeoff: 'Norakstīšana',
+                transfer: 'Nodošana',
                 'incoming-transfer': 'Jaizskata',
             }[type] ?? 'Pieprasijums';
         },
@@ -899,7 +899,7 @@ window.repairBoard = (config) => ({
         }
 
         const repairName = repair.name ?? 'so remontu';
-        if (!window.confirm(`Vai tiesam gribat pabeigt ierices remontu "${repairName}"?`)) {
+        if (!window.confirm(`Vai tiešām gribat pabeigt ierīces remontu "${repairName}"?`)) {
             return;
         }
 
@@ -914,7 +914,7 @@ window.repairProcess = (config) => ({
         window.submitRepairTransition(config.transitionBaseUrl, config.csrfToken, repairId, targetStatus, extra);
     },
     submitCompletion() {
-        if (!window.confirm('Vai tiesam gribat pabeigt so ierices remontu?')) {
+        if (!window.confirm('Vai tiešām gribat pabeigt so ierīces remontu?')) {
             return;
         }
 

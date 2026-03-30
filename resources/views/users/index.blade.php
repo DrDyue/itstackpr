@@ -15,13 +15,13 @@
         ];
         $selectedRoles = $filters['has_role_filter'] ? $filters['roles'] : collect($roleFilterLinks)->pluck('value')->all();
         $statusOptions = [
-            ['value' => '1', 'label' => 'Aktivi', 'description' => 'Rada tikai aktivus lietotajus', 'search' => 'Aktivi aktivi lietotaji'],
-            ['value' => '0', 'label' => 'Neaktivi', 'description' => 'Rada tikai neaktivus lietotajus', 'search' => 'Neaktivi neaktivie lietotaji'],
+            ['value' => '1', 'label' => 'Aktīvi', 'description' => 'Rāda tikai aktīvus lietotājus', 'search' => 'Aktīvi aktīvi lietotāji'],
+            ['value' => '0', 'label' => 'Neaktīvi', 'description' => 'Rāda tikai neaktīvus lietotājus', 'search' => 'Neaktīvi neaktīvie lietotāji'],
         ];
         $lastLoginOptions = [
-            ['value' => 'today', 'label' => 'Sodien', 'description' => 'Piesledzas sodien', 'search' => 'Sodien pedeja pieslegsanas'],
-            ['value' => 'recent', 'label' => 'Pedejas 7 dienas', 'description' => 'Aktivi pedeja nedela', 'search' => 'Pedejas 7 dienas nesen'],
-            ['value' => 'never', 'label' => 'Nav piesledzies', 'description' => 'Lietotajs vel nav piesledzies', 'search' => 'Nav piesledzies nekad'],
+            ['value' => 'today', 'label' => 'Šodien', 'description' => 'Pieslēdzas šodien', 'search' => 'Šodien pēdējā pieslēgšanās'],
+            ['value' => 'recent', 'label' => 'Pēdējās 7 dienas', 'description' => 'Aktīvi pēdējā nedēļā', 'search' => 'Pēdējās 7 dienas nesen'],
+            ['value' => 'never', 'label' => 'Nav pieslēdzies', 'description' => 'Lietotājs vēl nav pieslēdzies', 'search' => 'Nav pieslēdzies nēkad'],
         ];
         $selectedStatusLabel = collect($statusOptions)->firstWhere('value', $filters['is_active'])['label'] ?? null;
         $selectedLastLoginLabel = collect($lastLoginOptions)->firstWhere('value', $filters['last_login'])['label'] ?? null;
@@ -32,7 +32,7 @@
             <div class="page-hero-grid">
                 <div class="max-w-3xl">
                     <div class="flex flex-wrap items-center gap-2">
-                        <div class="page-eyebrow"><x-icon name="users" size="h-4 w-4" /><span>Lietotaji</span></div>
+                        <div class="page-eyebrow"><x-icon name="users" size="h-4 w-4" /><span>Lietotāji</span></div>
                         <div class="inventory-inline-metrics">
                             <span class="inventory-inline-chip inventory-inline-chip-slate">
                                 <x-icon name="users" size="h-3.5 w-3.5" />
@@ -54,18 +54,18 @@
                     <div class="page-title-group mt-4">
                         <div class="page-title-icon page-title-icon-violet"><x-icon name="users" size="h-7 w-7" /></div>
                         <div>
-                            <h1 class="page-title">Lietotaji</h1>
-                            <p class="page-subtitle">Parvaldi sistemas lietotajus, lomas un piekluves statusus.</p>
+                            <h1 class="page-title">Lietotāji</h1>
+                            <p class="page-subtitle">Pārvaldi sistēmas lietotājus, lomas un piekluves statusus.</p>
                         </div>
                     </div>
                 </div>
-                <a href="{{ route('users.create') }}" class="btn-create"><x-icon name="plus" size="h-4 w-4" /><span>Jauns lietotajs</span></a>
+                <a href="{{ route('users.create') }}" class="btn-create"><x-icon name="plus" size="h-4 w-4" /><span>Jauns lietotājs</span></a>
             </div>
         </div>
 
         <form method="GET" action="{{ route('users.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-3 xl:grid-cols-4">
             <label class="block">
-                <span class="crud-label">Meklet</span>
+                <span class="crud-label">Meklēt</span>
                 <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Vards, e-pasts, talrunis, amats...">
             </label>
             <label class="block">
@@ -77,12 +77,12 @@
                     :options="$statusOptions"
                     :selected="$filters['is_active']"
                     :query="$selectedStatusLabel"
-                    placeholder="Izvelies statusu"
-                    empty-message="Neviens statuss neatbilst meklejumam."
+                    placeholder="Izvēlies statusu"
+                    empty-message="Neviens statuss neatbilst meklējumam."
                 />
             </label>
             <label class="block">
-                <span class="crud-label">Pedeja pieslegsanas</span>
+                <span class="crud-label">Pēdējā pieslēgšanās</span>
                 <x-searchable-select
                     name="last_login"
                     query-name="last_login_query"
@@ -90,8 +90,8 @@
                     :options="$lastLoginOptions"
                     :selected="$filters['last_login']"
                     :query="$selectedLastLoginLabel"
-                    placeholder="Izvelies periodu"
-                    empty-message="Neviens periods neatbilst meklejumam."
+                    placeholder="Izvēlies periodu"
+                    empty-message="Neviens periods neatbilst meklējumam."
                 />
             </label>
 
@@ -123,7 +123,7 @@
                 </div>
 
                 <div class="toolbar-actions justify-end">
-                <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklet</span></button>
+                <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
                 <a href="{{ route('users.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Notirit</span></a>
                 </div>
             </div>
@@ -131,10 +131,10 @@
 
         <x-active-filters
             :items="[
-                ['label' => 'Meklet', 'value' => $filters['q']],
+                ['label' => 'Meklēt', 'value' => $filters['q']],
                 ['label' => 'Loma', 'value' => $filters['has_role_filter'] ? collect($filters['roles'])->map(fn ($role) => $roleLabels[$role] ?? $role)->implode(', ') : null],
-                ['label' => 'Statuss', 'value' => $filters['is_active'] === '1' ? 'Aktivs' : ($filters['is_active'] === '0' ? 'Neaktivs' : null)],
-                ['label' => 'Pedeja pieslegsanas', 'value' => $filters['last_login'] === 'today' ? 'Sodien' : ($filters['last_login'] === 'recent' ? 'Pedejas 7 dienas' : ($filters['last_login'] === 'never' ? 'Nav piesledzies' : null))],
+                ['label' => 'Statuss', 'value' => $filters['is_active'] === '1' ? 'Aktīvs' : ($filters['is_active'] === '0' ? 'Neaktīvs' : null)],
+                ['label' => 'Pēdējā pieslēgšanās', 'value' => $filters['last_login'] === 'today' ? 'Šodien' : ($filters['last_login'] === 'recent' ? 'Pēdējās 7 dienas' : ($filters['last_login'] === 'never' ? 'Nav pieslēdzies' : null))],
             ]"
             :clear-url="route('users.index')"
         />
@@ -153,8 +153,8 @@
                         <th class="px-4 py-3">Loma</th>
                         <th class="px-4 py-3">Amats</th>
                         <th class="px-4 py-3">Statuss</th>
-                        <th class="px-4 py-3">Pedeja pieslegsanas</th>
-                        <th class="px-4 py-3">Darbibas</th>
+                        <th class="px-4 py-3">Pēdējā pieslēgšanās</th>
+                        <th class="px-4 py-3">Darbības</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -176,7 +176,7 @@
                             <td class="px-4 py-3">
                                 <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">
                                     <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
-                                        <span>Darbibas</span>
+                                        <span>Darbības</span>
                                         <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                         </svg>
@@ -185,7 +185,7 @@
                                     <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
                                         <a href="{{ route('users.edit', $managedUser) }}" class="table-action-item table-action-item-amber" @click="open = false">
                                             <x-icon name="edit" size="h-4 w-4" />
-                                            <span>Rediget</span>
+                                            <span>Rediģēt</span>
                                         </a>
 
                                         <a
@@ -194,15 +194,15 @@
                                             @click="open = false"
                                         >
                                             <x-icon name="device" size="h-4 w-4" />
-                                            <span>Apskatit piesaistitas ierices</span>
+                                            <span>Apskatīt piešaistītas ierīces</span>
                                         </a>
 
-                                        <form method="POST" action="{{ route('users.destroy', $managedUser) }}" onsubmit="return confirm('Dzest so lietotaju?')" class="contents">
+                                        <form method="POST" action="{{ route('users.destroy', $managedUser) }}" onsubmit="return confirm('Dzēst so lietotāju?')" class="contents">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="table-action-button table-action-button-rose" @disabled(auth()->id() === $managedUser->id)">
                                                 <x-icon name="trash" size="h-4 w-4" />
-                                                <span>Dzest</span>
+                                                <span>Dzēst</span>
                                             </button>
                                         </form>
                                     </div>
@@ -211,7 +211,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-4 py-8 text-center text-slate-500">Lietotaji vel nav pievienoti.</td>
+                            <td colspan="8" class="px-4 py-8 text-center text-slate-500">Lietotāji vēl nav pievienoti.</td>
                         </tr>
                     @endforelse
                 </tbody>

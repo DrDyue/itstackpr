@@ -12,16 +12,16 @@
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-3xl">
-                    <div class="page-eyebrow"><x-icon name="users" size="h-4 w-4" /><span>Jauns lietotajs</span></div>
+                    <div class="page-eyebrow"><x-icon name="users" size="h-4 w-4" /><span>Jauns lietotājs</span></div>
                     <div class="page-title-group mt-4">
                         <div class="page-title-icon page-title-icon-emerald"><x-icon name="user" size="h-7 w-7" /></div>
                         <div>
-                            <h1 class="page-title">Jauns lietotajs</h1>
-                            <p class="page-subtitle">Izveido pilnu lietotaja ierakstu viena tabula.</p>
+                            <h1 class="page-title">Jauns lietotājs</h1>
+                            <p class="page-subtitle">Izveido pilnu lietotāja ierakstu viena tabula.</p>
                         </div>
                     </div>
                 </div>
-                <a href="{{ route('users.index') }}" class="btn-back"><x-icon name="back" size="h-4 w-4" /><span>Atpakal</span></a>
+                <a href="{{ route('users.index') }}" class="btn-back"><x-icon name="back" size="h-4 w-4" /><span>Atpakaļ</span></a>
             </div>
         </div>
 
@@ -61,18 +61,18 @@
                     <input type="password" name="password" class="crud-control" required>
                 </label>
                 <label class="block">
-                    <span class="crud-label">Apstiprinat paroli</span>
+                    <span class="crud-label">Apstiprināt paroli</span>
                     <input type="password" name="password_confirmation" class="crud-control" required>
                 </label>
             </div>
 
             <label class="inline-flex items-center gap-3">
                 <input type="checkbox" name="is_active" value="1" @checked(old('is_active', true)) class="rounded border-gray-300 text-blue-600">
-                <span class="text-sm text-slate-700">Konts aktivs</span>
+                <span class="text-sm text-slate-700">Konts aktīvs</span>
             </label>
 
             <div class="flex flex-wrap gap-3">
-                <button type="submit" class="btn-create"><x-icon name="save" size="h-4 w-4" /><span>Saglabat</span></button>
+                <button type="submit" class="btn-create"><x-icon name="save" size="h-4 w-4" /><span>Saglabāt</span></button>
                 <a href="{{ route('users.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Atcelt</span></a>
             </div>
         </form>

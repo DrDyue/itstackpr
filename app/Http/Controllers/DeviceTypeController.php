@@ -76,7 +76,7 @@ class DeviceTypeController extends Controller
         $deviceType = DeviceType::create($data);
         AuditTrail::created(auth()->id(), $deviceType);
 
-        return redirect()->route('device-types.index')->with('success', 'Ierices tips veiksmigi pievienots');
+        return redirect()->route('device-types.index')->with('success', 'Ierīces tips veiksmīgi pievienots');
     }
 
     public function edit(DeviceType $deviceType)
@@ -101,7 +101,7 @@ class DeviceTypeController extends Controller
         $after = $deviceType->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState(auth()->id(), $deviceType, $before, $after);
 
-        return redirect()->route('device-types.index')->with('success', 'Ierices tips atjauninats');
+        return redirect()->route('device-types.index')->with('success', 'Ierīces tips atjaunināts');
     }
 
     public function destroy(DeviceType $deviceType)
@@ -110,7 +110,7 @@ class DeviceTypeController extends Controller
 
         AuditTrail::deleted(auth()->id(), $deviceType);
         $deviceType->delete();
-        return redirect()->route('device-types.index')->with('success', 'Ierices tips dzests');
+        return redirect()->route('device-types.index')->with('success', 'Ierīces tips dzēsts');
     }
 
     public function show(DeviceType $deviceType)

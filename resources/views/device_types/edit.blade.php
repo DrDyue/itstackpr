@@ -11,14 +11,14 @@
     <section class="type-form-shell">
         <div class="device-page-header">
             <div>
-                <h1 class="device-page-title">Rediget ierices tipu</h1>
+                <h1 class="device-page-title">Rediģēt ierīces tipu</h1>
                 <p class="device-page-subtitle">Atjauno klasifikatora ierakstu.</p>
             </div>
             <a href="{{ route('device-types.index') }}" class="type-back-link inline-flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
                 </svg>
-                Atpakal uz sarakstu
+                Atpakaļ uz sarakstu
             </a>
         </div>
 
@@ -30,7 +30,7 @@
             <div class="space-y-4">
                 <div class="type-form-card">
                     <div class="type-form-section-head">
-                        <div class="device-form-section-name">Pamata informacija</div>
+                        <div class="device-form-section-name">Pamata informācija</div>
                     </div>
                     <div class="mt-4 grid gap-4 sm:grid-cols-2">
                         <div>
@@ -52,7 +52,7 @@
             <div class="space-y-4">
                 <div class="type-form-actions">
                     <div class="type-form-section-head">
-                        <div class="device-form-section-name">Darbibas</div>
+                        <div class="device-form-section-name">Darbības</div>
                     </div>
                     <div class="mt-4 flex flex-wrap gap-3">
                         <button type="submit" class="btn-edit">

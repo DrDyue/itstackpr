@@ -7,7 +7,7 @@
     3. Šeit var redzēt, kā no kļūdu atslēgām tiek veidoti cilvēkam saprotami padomi.
 --}}
 @props([
-    'title' => 'Parbaudi ievaditos datus',
+    'title' => 'Pārbaudi ievadītos datus',
     'bag' => null,
 ])
 
@@ -17,13 +17,13 @@
     $tips = $errorKeys
         ->flatMap(function (string $field) {
             return match (true) {
-                str_contains($field, 'device') => ['Izvelies ierici no saraksta velreiz. Ja ta vairs nav pieejama, atsvaidzini lapu vai nomaini darbibu.'],
-                str_contains($field, 'room') || str_contains($field, 'building') => ['Parbaudi atrasanas vietu. Aktivai iericei jabut piesaistitai telpai, un telpai jabut derigai izveletajai ekai.'],
-                str_contains($field, 'assigned') || $field === 'user_id' || $field === 'transfered_to_id' => ['Parbaudi atbildigo personu vai sanemeju un izvelies ierakstu no meklejama saraksta velreiz.'],
-                str_contains($field, 'status') => ['Izvelies vienu no piedavatajiem statusiem. Ja ieraksts jau ir apstradats, atver sarakstu no jauna un parbaudi aktivo stavokli.'],
-                str_contains($field, 'image') || str_contains($field, 'file') => ['Parbaudi failu. Drikst izmantot tikai atbalstitu faila tipu, un failam jabut pietiekami mazam augshupladei.'],
-                str_contains($field, 'date') => ['Parbaudi datumus. Ja aizpildi vairakus datumus, tiem savstarpeji jasaskan.'],
-                default => ['Izlabo iezimeto lauku un megini velreiz. Ja problema atkartoas, atver ierakstu no jauna un parbaudi, vai saistitie dati vel ir pieejami.'],
+                str_contains($field, 'device') => ['Izvēlies ierīci no saraksta vēlreiz. Ja tā vairs nav pieejama, atsvaidzini lapu vai nomaini darbību.'],
+                str_contains($field, 'room') || str_contains($field, 'building') => ['Pārbaudi atrašanās vietu. Aktīvai ierīcei jābūt piešaistītai telpai, un telpai jābūt derīgai izvēlētajai ēkai.'],
+                str_contains($field, 'assigned') || $field === 'user_id' || $field === 'transfered_to_id' => ['Pārbaudi atbildīgo personu vai saņēmēju un izvēlies ierakstu no meklējamā saraksta vēlreiz.'],
+                str_contains($field, 'status') => ['Izvēlies vienu no piedāvātajiem statusiem. Ja ieraksts jau ir apstrādāts, atver sarakstu no jauna un pārbaudi aktīvo stāvokli.'],
+                str_contains($field, 'image') || str_contains($field, 'file') => ['Pārbaudi failu. Drīkst izmantot tikai atbalstītu faila tipu, un failam jābūt pietiekami mazam augšupielādei.'],
+                str_contains($field, 'date') => ['Pārbaudi datumus. Ja aizpildi vairākus datumus, tiem savstarpēji jāsaskan.'],
+                default => ['Izlabo iezīmēto lauku un mēģini vēlreiz. Ja problēma atkārtojas, atver ierakstu no jauna un pārbaudi, vai šaistītie dati vēl ir pieejami.'],
             };
         })
         ->unique()
@@ -39,7 +39,7 @@
             <div>
                 <div class="validation-summary-title">{{ $title }}</div>
                 <div class="validation-summary-subtitle">
-                    Atrastas {{ $errorBag->count() }} {{ \Illuminate\Support\Str::plural('problema', $errorBag->count()) }}. Zemak redzams, kas janolabo un ko darit talak.
+                    Atrastas {{ $errorBag->count() }} {{ \Illuminate\Support\Str::plural('problēma', $errorBag->count()) }}. Zemāk redzams, kas janolabo un ko darit tālāk.
                 </div>
             </div>
         </div>
@@ -56,7 +56,7 @@
 
             @if ($tips->isNotEmpty())
                 <div>
-                    <div class="validation-summary-section">Ko darit talak</div>
+                    <div class="validation-summary-section">Ko darit tālāk</div>
                     <ul class="validation-summary-tips">
                         @foreach ($tips as $tip)
                             <li>{{ $tip }}</li>

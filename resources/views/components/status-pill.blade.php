@@ -19,30 +19,30 @@
         'device' => [
             'active' => ['label' => 'Aktiva', 'tone' => 'success', 'icon' => 'check-circle'],
             'repair' => ['label' => 'Remonta', 'tone' => 'warning', 'icon' => 'repair'],
-            'writeoff' => ['label' => 'Norakstita', 'tone' => 'danger', 'icon' => 'writeoff'],
+            'writeoff' => ['label' => 'Norakstīta', 'tone' => 'danger', 'icon' => 'writeoff'],
         ],
         'request' => [
             'submitted' => ['label' => 'Iesniegts', 'tone' => 'info', 'icon' => 'clock'],
-            'approved' => ['label' => 'Apstiprinats', 'tone' => 'success', 'icon' => 'check-circle'],
+            'approved' => ['label' => 'Apstiprināts', 'tone' => 'success', 'icon' => 'check-circle'],
             'rejected' => ['label' => 'Noraidits', 'tone' => 'danger', 'icon' => 'x-circle'],
         ],
         'repair' => [
             'waiting' => ['label' => 'Gaida', 'tone' => 'info', 'icon' => 'clock'],
-            'in-progress' => ['label' => 'Procesa', 'tone' => 'warning', 'icon' => 'repair'],
+            'in-progress' => ['label' => 'Procesā', 'tone' => 'warning', 'icon' => 'repair'],
             'completed' => ['label' => 'Pabeigts', 'tone' => 'success', 'icon' => 'check-circle'],
             'cancelled' => ['label' => 'Atcelts', 'tone' => 'danger', 'icon' => 'x-circle'],
         ],
         'priority' => [
             'low' => ['label' => 'Zema', 'tone' => 'neutral', 'icon' => 'tag'],
-            'medium' => ['label' => 'Videja', 'tone' => 'info', 'icon' => 'tag'],
+            'medium' => ['label' => 'Vidēja', 'tone' => 'info', 'icon' => 'tag'],
             'high' => ['label' => 'Augsta', 'tone' => 'warning', 'icon' => 'exclamation-triangle'],
             'critical' => ['label' => 'Kritiska', 'tone' => 'danger', 'icon' => 'exclamation-triangle'],
         ],
         'user-active' => [
-            '1' => ['label' => 'Aktivs', 'tone' => 'success', 'icon' => 'check-circle'],
-            '0' => ['label' => 'Neaktivs', 'tone' => 'danger', 'icon' => 'x-circle'],
-            'active' => ['label' => 'Aktivs', 'tone' => 'success', 'icon' => 'check-circle'],
-            'inactive' => ['label' => 'Neaktivs', 'tone' => 'danger', 'icon' => 'x-circle'],
+            '1' => ['label' => 'Aktīvs', 'tone' => 'success', 'icon' => 'check-circle'],
+            '0' => ['label' => 'Neaktīvs', 'tone' => 'danger', 'icon' => 'x-circle'],
+            'active' => ['label' => 'Aktīvs', 'tone' => 'success', 'icon' => 'check-circle'],
+            'inactive' => ['label' => 'Neaktīvs', 'tone' => 'danger', 'icon' => 'x-circle'],
         ],
         'user-role' => [
             'admin' => ['label' => 'Admins', 'tone' => 'violet', 'icon' => 'users'],
@@ -55,8 +55,8 @@
             'critical' => ['label' => 'Kritisks', 'tone' => 'danger', 'icon' => 'exclamation-triangle'],
         ],
         'repair-type' => [
-            'internal' => ['label' => 'Ieksejais', 'tone' => 'neutral', 'icon' => 'repair'],
-            'external' => ['label' => 'Arejais', 'tone' => 'violet', 'icon' => 'repair-request'],
+            'internal' => ['label' => 'Iekšējais', 'tone' => 'neutral', 'icon' => 'repair'],
+            'external' => ['label' => 'Ārējais', 'tone' => 'violet', 'icon' => 'repair-request'],
         ],
     ];
 

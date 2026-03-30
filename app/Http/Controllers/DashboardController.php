@@ -159,7 +159,7 @@ class DashboardController extends Controller
     {
         return [
             [
-                'label' => 'Jauna ierice',
+                'label' => 'Jauna ierīce',
                 'url' => route('devices.create'),
                 'icon' => 'plus',
                 'class' => 'btn-create',
@@ -180,7 +180,7 @@ class DashboardController extends Controller
                 'count' => $pendingRepairRequestCount,
             ],
             [
-                'label' => 'Norakstisanas pieteikumi',
+                'label' => 'Norakstīšanas pieteikumi',
                 'url' => route('writeoff-requests.index'),
                 'icon' => 'writeoff',
                 'class' => 'btn-danger',
@@ -196,7 +196,7 @@ class DashboardController extends Controller
     {
         return match ($status) {
             'waiting' => 'Gaida',
-            'in-progress' => 'Procesa',
+            'in-progress' => 'Procesā',
             default => null,
         };
     }
@@ -234,7 +234,7 @@ class DashboardController extends Controller
         return [
             'title' => 'Remonta ieraksts',
             'status' => $this->repairStatusLabel($repair->status) ?: 'Gaida',
-            'type' => $repair->repair_type === 'external' ? 'Arejais' : 'Ieksejais',
+            'type' => $repair->repair_type === 'external' ? 'Ārējais' : 'Iekšējais',
             'approved_by' => $repair->approval_actor_name
                 ?: $repair->request?->responsibleUser?->full_name
                 ?: '-',
@@ -251,7 +251,7 @@ class DashboardController extends Controller
         if ((bool) ($device->has_pending_repair_request ?? false)) {
             return [
                 'icon' => 'repair-request',
-                'label' => 'Apskatit',
+                'label' => 'Apskatīt',
                 'detail_label' => 'Remonts',
                 'class' => 'border-sky-200 bg-sky-50 text-sky-700',
                 'url' => $this->requestIndexUrl($device, 'repair', $device->pendingRepairRequest?->id),
@@ -262,7 +262,7 @@ class DashboardController extends Controller
         if ((bool) ($device->has_pending_writeoff_request ?? false)) {
             return [
                 'icon' => 'writeoff',
-                'label' => 'Apskatit',
+                'label' => 'Apskatīt',
                 'detail_label' => 'Norakst.',
                 'class' => 'border-rose-200 bg-rose-50 text-rose-700',
                 'url' => $this->requestIndexUrl($device, 'writeoff', $device->pendingWriteoffRequest?->id),
@@ -273,8 +273,8 @@ class DashboardController extends Controller
         if ((bool) ($device->has_pending_transfer_request ?? false)) {
             return [
                 'icon' => 'transfer',
-                'label' => 'Apskatit',
-                'detail_label' => 'Nodosana',
+                'label' => 'Apskatīt',
+                'detail_label' => 'Nodošana',
                 'class' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
                 'url' => $this->requestIndexUrl($device, 'transfer', $device->pendingTransferRequest?->id),
                 'preview' => $this->pendingRequestPreview('transfer', $device->pendingTransferRequest),
@@ -329,7 +329,7 @@ class DashboardController extends Controller
                 'recipient' => null,
             ],
             'writeoff' => [
-                'type_label' => 'Norakstisanas pieprasijums',
+                'type_label' => 'Norakstīšanas pieprasijums',
                 'meta_label' => 'Iemesls',
                 'submitted_at' => $request->created_at?->format('d.m.Y H:i') ?: '-',
                 'submitted_by' => $request->responsibleUser?->full_name ?: '-',
@@ -337,7 +337,7 @@ class DashboardController extends Controller
                 'recipient' => null,
             ],
             'transfer' => [
-                'type_label' => 'Nodosanas pieprasijums',
+                'type_label' => 'Nodošanas pieprasijums',
                 'meta_label' => 'Iemesls',
                 'submitted_at' => $request->created_at?->format('d.m.Y H:i') ?: '-',
                 'submitted_by' => $request->responsibleUser?->full_name ?: '-',

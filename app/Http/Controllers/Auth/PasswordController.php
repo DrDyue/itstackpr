@@ -32,7 +32,7 @@ class PasswordController extends Controller
             $request->user()->id,
             $request->user()->fresh(),
             ['password'],
-            'Lietotaja parole nomainita: ' . AuditTrail::labelFor($request->user()),
+            'Lietotāja parole nomainīta: ' . AuditTrail::labelFor($request->user()),
             AuditTrail::SEVERITY_WARNING
         );
 

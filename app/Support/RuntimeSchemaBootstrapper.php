@@ -26,13 +26,13 @@ class RuntimeSchemaBootstrapper
 {
     private const DEFAULT_WAREHOUSE_ROOM_NAME = 'Noliktava';
     private const DEFAULT_WAREHOUSE_ROOM_NUMBER_PREFIX = 'NOL-';
-    private const DEFAULT_BUILDING_NAME = 'Ludzes novada pasvaldiba';
+    private const DEFAULT_BUILDING_NAME = 'Ludzēs novada pasvaldiba';
 
     private ?int $fallbackOwnerId = null;
     private bool $resolvedFallbackOwnerId = false;
 
     /**
-     * Pārliecinās, ka visas kritiskās tabulas, kolonnas un pamata dati eksistē.
+     * Pārliecinās, kā visas kritiskās tabulas, kolonnas un pamata dati eksistē.
      */
     public function ensure(): void
     {
@@ -709,8 +709,8 @@ class RuntimeSchemaBootstrapper
             'room_number' => $this->nextWarehouseRoomNumber($building->id),
             'room_name' => self::DEFAULT_WAREHOUSE_ROOM_NAME,
             'user_id' => $preferredUserId,
-            'department' => 'Inventars',
-            'notes' => 'Automatiski izveidota nokluseta noliktavas telpa.',
+            'department' => 'Inventārs',
+            'notes' => 'Automātiski izveidota noklusētā noliktavas telpa.',
         ])->load('building');
     }
 
@@ -735,7 +735,7 @@ class RuntimeSchemaBootstrapper
             'building_name' => self::DEFAULT_BUILDING_NAME,
             'city' => 'Ludza',
             'total_floors' => 1,
-            'notes' => 'Automatiski izveidota nokluseta eka noliktavas telpai.',
+            'notes' => 'Automātiski izveidota noklusētā ēka noliktavas telpai.',
         ]);
     }
 

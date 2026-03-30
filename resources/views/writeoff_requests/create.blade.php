@@ -16,12 +16,12 @@
                     <div class="page-title-group mt-4">
                         <div class="page-title-icon page-title-icon-rose"><x-icon name="writeoff" size="h-7 w-7" /></div>
                         <div>
-                            <h1 class="page-title">Jauns norakstisanas pieteikums</h1>
-                            <p class="page-subtitle">Izvelies savu ierici un noradi iemeslu.</p>
+                            <h1 class="page-title">Jauns norakstīšanas pieteikums</h1>
+                            <p class="page-subtitle">Izvēlies savu ierīci un norādi iemeslu.</p>
                         </div>
                     </div>
                 </div>
-                <a href="{{ route('writeoff-requests.index') }}" class="btn-back"><x-icon name="back" size="h-4 w-4" /><span>Atpakal</span></a>
+                <a href="{{ route('writeoff-requests.index') }}" class="btn-back"><x-icon name="back" size="h-4 w-4" /><span>Atpakaļ</span></a>
             </div>
         </div>
 
@@ -36,7 +36,7 @@
             @csrf
             <div class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
                 <div>
-                    <span class="crud-label">Ierice</span>
+                    <span class="crud-label">Ierīce</span>
                     <x-searchable-select
                         name="device_id"
                         query-name="device_query"
@@ -44,8 +44,8 @@
                         :options="$deviceOptions"
                         :selected="old('device_id', $selectedDeviceId ?? '')"
                         :query="old('device_query', $selectedDeviceLabel ?? '')"
-                        placeholder="Mekle pec nosaukuma, koda vai telpas"
-                        empty-message="Neviena ierice neatbilst meklejumam."
+                        placeholder="Meklē pēc nosaukuma, koda vai telpas"
+                        empty-message="Neviena ierīce neatbilst meklējumam."
                     />
                     @error('device_id')
                         <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
@@ -54,7 +54,7 @@
                 <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
                     <div class="font-semibold text-slate-900">Pirms iesniegsanas</div>
                     <div class="mt-2 leading-6">
-                        Izvelejoties ierici, redzesi tipu, razotaju ar modeli un telpu, lai norakstisanas pieteikums tiktu piesaistits pareizajam inventaram.
+                        Izvēlejoties ierīci, redzēsi tipu, ražotāju ar modeli un telpu, lai norakstīšanas pieteikums tiktu piešaistīts pareizajam inventaram.
                     </div>
                 </div>
             </div>

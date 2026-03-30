@@ -1,6 +1,6 @@
 {{--
     Lapa: Ierīces rediģēšana.
-    Atbildība: ļauj administratoram mainīt esošas ierīces datus, piesaisti un dažos gadījumos statusu.
+    Atbildība: ļauj administratoram mainīt esošas ierīces datus, piešaisti un dažos gadījumos statusu.
     Datu avots: DeviceController@edit, saglabāšana caur DeviceController@update.
     Galvenās daļas:
     1. Hero ar rediģēšanas kontekstu.
@@ -21,14 +21,14 @@
                             <x-icon name="device" size="h-7 w-7" />
                         </div>
                         <div>
-                            <h1 class="page-title">Rediget ierici</h1>
-                            <p class="page-subtitle">Atjauno ierices datus, statusu un piesaisti.</p>
+                            <h1 class="page-title">Rediģēt ierīci</h1>
+                            <p class="page-subtitle">Atjauno ierīces datus, statusu un piešaisti.</p>
                         </div>
                     </div>
                 </div>
                 <a href="{{ route('devices.index') }}" class="btn-back">
                     <x-icon name="back" size="h-4 w-4" />
-                    <span>Atpakal</span>
+                    <span>Atpakaļ</span>
                 </a>
             </div>
         </div>
@@ -43,12 +43,12 @@
             <div class="surface-card flex flex-wrap items-center justify-between gap-4 p-6">
                 <div>
                     <div class="text-sm font-semibold text-slate-900">Saglabasanas zona</div>
-                    <div class="mt-1 text-sm text-slate-500">Atjauno tikai izmainitos laukus. Ja ierice ir norakstita, piesaistes lauki paliek bloķeti.</div>
+                    <div class="mt-1 text-sm text-slate-500">Atjauno tikai izmainītos laukus. Ja ierīce ir norakstīta, piešaistes lauki paliek bloķeti.</div>
                 </div>
                 <div class="flex flex-wrap gap-3">
                     <button type="submit" class="btn-edit">
                         <x-icon name="save" size="h-4 w-4" />
-                        <span>Saglabat</span>
+                        <span>Saglabāt</span>
                     </button>
                     <a href="{{ route('devices.index') }}" class="btn-clear">
                         <x-icon name="clear" size="h-4 w-4" />

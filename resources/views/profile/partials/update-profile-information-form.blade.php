@@ -4,11 +4,11 @@
     Kāpēc tas ir svarīgi:
     1. Vārds un amats tiek rādīti ierīču tabulās un pieteikumu kartītēs.
     2. E-pasts un telefons palīdz identificēt lietotāju un sazināties, ja tas nepieciešams.
-    3. Šī forma ir atdalīta no paroles maiņas, lai drošības dati nesajauktos ar profila datiem.
+    3. Šī forma ir atdalīta no paroles maiņas, lai drošības dati nešajāuktos ar profila datiem.
 --}}
 <section>
     <header class="border-b border-slate-200 pb-4">
-        <h2 class="text-xl font-semibold text-slate-900">Profila informacija</h2>
+        <h2 class="text-xl font-semibold text-slate-900">Profila informācija</h2>
         <p class="mt-2 text-sm text-slate-600">Atjauno savu vārdu, kontaktinformāciju un amatu.</p>
     </header>
 
@@ -45,7 +45,7 @@
         <div class="flex items-center gap-4">
             <x-primary-button>
                 <x-icon name="save" size="h-4 w-4" />
-                <span>Saglabat</span>
+                <span>Saglabāt</span>
             </x-primary-button>
 
         </div>

@@ -22,7 +22,7 @@
                         </div>
                         <div>
                             <h1 class="page-title">Audita zurnals</h1>
-                            <p class="page-subtitle">Sistemas darbibu vesture ar lokalizetiem filtriem un skaidru aktivitatu tabulu.</p>
+                            <p class="page-subtitle">Sistēmas darbību vēsture ar lokalizētiem filtriem un skaidru aktivitāšu tabulu.</p>
                         </div>
                     </div>
                 </div>
@@ -33,7 +33,7 @@
                         <span class="inventory-inline-value">{{ $summary['total'] }}</span>
                     </div>
                     <div class="inventory-inline-chip inventory-inline-chip-amber">
-                        <span class="inventory-inline-label">Sodien</span>
+                        <span class="inventory-inline-label">Šodien</span>
                         <span class="inventory-inline-value">{{ $summary['today'] }}</span>
                     </div>
                     <div class="inventory-inline-chip inventory-inline-chip-rose">
@@ -50,12 +50,12 @@
 
         <form method="GET" action="{{ route('audit-log.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[1.1fr_0.8fr_0.8fr_0.8fr_0.7fr_0.7fr]">
             <label class="block">
-                <span class="mb-2 block text-sm font-medium text-slate-700">Meklet</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Mekle pec apraksta vai ID">
+                <span class="mb-2 block text-sm font-medium text-slate-700">Meklēt</span>
+                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Meklē pēc apraksta vai ID">
             </label>
 
             <div>
-                <span class="mb-2 block text-sm font-medium text-slate-700">Darbiba</span>
+                <span class="mb-2 block text-sm font-medium text-slate-700">Darbība</span>
                 <x-searchable-select
                     name="action"
                     queryName="action_query"
@@ -63,7 +63,7 @@
                     :selected="$filters['action']"
                     :query="collect($actionOptions)->firstWhere('value', $filters['action'])['label'] ?? ''"
                     identifier="audit-action"
-                    placeholder="Visas darbibas"
+                    placeholder="Visas darbības"
                 />
             </div>
 
@@ -101,7 +101,7 @@
 
             <x-localized-date-input
                 name="date_to"
-                label="Lidz datumam"
+                label="Līdz datumam"
                 :value="$filters['date_to']"
             />
 
@@ -122,8 +122,8 @@
                 <thead class="bg-slate-50 text-left text-slate-500">
                     <tr>
                         <th class="px-4 py-3">Laiks</th>
-                        <th class="px-4 py-3">Lietotajs</th>
-                        <th class="px-4 py-3">Darbiba</th>
+                        <th class="px-4 py-3">Lietotājs</th>
+                        <th class="px-4 py-3">Darbība</th>
                         <th class="px-4 py-3">Objekts</th>
                         <th class="px-4 py-3">Svarigums</th>
                         <th class="px-4 py-3">Apraksts</th>
@@ -162,7 +162,7 @@
                                 <div class="font-medium text-slate-900">{{ $log->timestamp?->format('d.m.Y') ?: '-' }}</div>
                                 <div class="text-xs text-slate-500">{{ $log->timestamp?->format('H:i:s') ?: '-' }}</div>
                             </td>
-                            <td class="px-4 py-3">{{ $log->user?->full_name ?: 'Sistema' }}</td>
+                            <td class="px-4 py-3">{{ $log->user?->full_name ?: 'Sistēma' }}</td>
                             <td class="px-4 py-3">
                                 <span class="{{ $actionStyles['class'] }}">
                                     <x-icon :name="$actionStyles['icon']" size="h-3.5 w-3.5" />

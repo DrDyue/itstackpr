@@ -41,7 +41,7 @@ class DeviceTransfer extends Model
     }
 
     /**
-     * Pašreizējais ierīces īpašnieks jeb nodošanas iniciators.
+     * Pašreizējāis ierīces īpašnieks jeb nodošanas iniciators.
      */
     public function responsibleUser(): BelongsTo
     {

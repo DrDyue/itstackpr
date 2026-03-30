@@ -42,7 +42,7 @@ class AuditLogController extends Controller
                 'severityOptions' => collect(),
                 'entityOptions' => collect(),
                 'actorOptions' => collect(),
-                'featureMessage' => 'Tabula audit_log sobrid nav pieejama.',
+                'featureMessage' => 'Tabula audit_log šobrīd nav pieejama.',
             ]);
         }
 

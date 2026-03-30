@@ -75,7 +75,7 @@ class Repair extends Model
     }
 
     /**
-     * Apstiprinātājs tiek ņemts no remonta ieraksta vai no saistītā pieprasījuma.
+     * Apstiprinātājs tiek ņemts no remonta ieraksta vai no šaistītā pieprasījuma.
      */
     public function getApprovalActorAttribute(): ?User
     {

@@ -92,7 +92,7 @@ class UserController extends Controller
         $user = User::create($validated);
         AuditTrail::created(auth()->id(), $user);
 
-        return redirect()->route('users.index')->with('success', 'Lietotajs veiksmigi izveidots');
+        return redirect()->route('users.index')->with('success', 'Lietotājs veiksmīgi izveidots');
     }
 
     public function edit(User $user)
@@ -129,7 +129,7 @@ class UserController extends Controller
 
         AuditTrail::updatedFromState(auth()->id(), $user, $before, $after);
 
-        return redirect()->route('users.index')->with('success', 'Lietotajs veiksmigi atjauninats');
+        return redirect()->route('users.index')->with('success', 'Lietotājs veiksmīgi atjaunināts');
     }
 
     public function destroy(User $user)
@@ -137,22 +137,22 @@ class UserController extends Controller
         $this->requireAdmin();
 
         if (auth()->id() === $user->id) {
-            return redirect()->route('users.index')->with('error', 'Nevar dzest savu lietotaja kontu.');
+            return redirect()->route('users.index')->with('error', 'Nevar dzēst savu lietotāja kontu.');
         }
 
         $blockingRelations = collect([
-            'piesaistitas ierices' => $user->assignedDevices()->count(),
-            'atbildetas telpas' => $user->responsibleRooms()->count(),
+            'piešaistītas ierīces' => $user->assignedDevices()->count(),
+            'atbildētās telpas' => $user->responsibleRooms()->count(),
             'izveidoti remonta pieteikumi' => $user->repairRequests()->count(),
-            'izskatiti remonta pieteikumi' => $user->reviewedRepairRequests()->count(),
-            'izveidoti norakstisanas pieteikumi' => $user->writeoffRequests()->count(),
-            'izskatiti norakstisanas pieteikumi' => $user->reviewedWriteoffRequests()->count(),
-            'izveidotas nodosanas' => $user->outgoingTransfers()->count(),
-            'sanemtas nodosanas' => $user->incomingTransfers()->count(),
-            'izskatitas nodosanas' => $user->reviewedTransfers()->count(),
-            'izveidotas ierices' => $user->createdDevices()->count(),
+            'izskatīti remonta pieteikumi' => $user->reviewedRepairRequests()->count(),
+            'izveidoti norakstīšanas pieteikumi' => $user->writeoffRequests()->count(),
+            'izskatīti norakstīšanas pieteikumi' => $user->reviewedWriteoffRequests()->count(),
+            'izveidotas nodošanas' => $user->outgoingTransfers()->count(),
+            'sanemtas nodošanas' => $user->incomingTransfers()->count(),
+            'izskatītas nodošanas' => $user->reviewedTransfers()->count(),
+            'izveidotas ierīces' => $user->createdDevices()->count(),
             'pieteikti remonti' => $user->reportedRepairs()->count(),
-            'apstiprinati remonti' => $user->acceptedRepairs()->count(),
+            'apstiprināti remonti' => $user->acceptedRepairs()->count(),
             'audita ieraksti' => $user->auditLogs()->count(),
         ])->filter(fn (int $count) => $count > 0);
 
@@ -163,14 +163,14 @@ class UserController extends Controller
 
             return redirect()->route('users.index')->with(
                 'error',
-                'Lietotaju nevar izdzest, jo vinam vel ir piesaistiti ieraksti: ' . $summary . '. Vispirms atsien vai parvieto sos ierakstus.'
+                'Lietotāju nevar izdzēst, jo viņam vēl ir piešaistīti ieraksti: ' . $summary . '. Vispirms atsien vai pārvieto sos ierakstus.'
             );
         }
 
         AuditTrail::deleted(auth()->id(), $user, severity: AuditTrail::SEVERITY_WARNING);
         $user->delete();
 
-        return redirect()->route('users.index')->with('success', 'Lietotajs dzests');
+        return redirect()->route('users.index')->with('success', 'Lietotājs dzēsts');
     }
 
     private function validatedData(Request $request, ?User $user = null): array
@@ -184,10 +184,10 @@ class UserController extends Controller
             'role' => ['required', Rule::in(self::ROLES)],
             'is_active' => ['nullable', 'boolean'],
         ], [
-            'full_name.required' => 'Noradi lietotaja vardu un uzvardu.',
-            'email.required' => 'Noradi lietotaja e-pastu.',
-            'password.required' => 'Jaunam lietotajam parole ir obligata.',
-            'password.min' => 'Parolei jabut vismaz :min simbolus garai.',
+            'full_name.required' => 'Noradi lietotāja vardu un uzvardu.',
+            'email.required' => 'Noradi lietotāja e-pastu.',
+            'password.required' => 'Jaunam lietotājam parole ir obligata.',
+            'password.min' => 'Parolei jabūt vismaz :min simbolus garai.',
         ]);
 
         $validated['phone'] = $validated['phone'] ?: null;

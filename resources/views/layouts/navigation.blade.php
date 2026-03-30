@@ -4,7 +4,7 @@
     Kāpēc tas ir svarīgi:
     1. Adminam šeit parādās pārvaldības sadaļas un view mode pārslēgs.
     2. Lietotājam šeit paliek tikai tās sadaļas, kuras viņš drīkst izmantot.
-    3. Navigācijā tiek rādīti arī gaidošo pieteikumu indikatori un ātrās saites.
+    3. Navigācijā tiek rādīti arī gaidošo pieteikumu indikatori un ātrās šaites.
 --}}
 <nav x-data="{ open: false }" class="app-main-nav sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur">
     @php
@@ -20,12 +20,12 @@
             : 0;
         $primaryNavigationItems = array_values(array_filter([
             $canManageRequests ? ['route' => 'dashboard', 'pattern' => 'dashboard', 'label' => 'Darbvirsma', 'icon' => 'dashboard'] : null,
-            ['route' => 'devices.index', 'pattern' => 'devices*', 'label' => 'Ierices', 'icon' => 'device'],
+            ['route' => 'devices.index', 'pattern' => 'devices*', 'label' => 'Ierīces', 'icon' => 'device'],
         ]));
         $requestNavigationItems = [
             ['route' => 'repair-requests.index', 'pattern' => 'repair-requests*', 'label' => 'Remonta pieteikumi', 'icon' => 'repair-request'],
-            ['route' => 'writeoff-requests.index', 'pattern' => 'writeoff-requests*', 'label' => 'Norakstisanas pieteikumi', 'icon' => 'writeoff'],
-            ['route' => 'device-transfers.index', 'pattern' => 'device-transfers*', 'label' => 'Parsutisanas pieteikumi', 'icon' => 'transfer', 'pending_review_count' => $incomingTransferReviewCount],
+            ['route' => 'writeoff-requests.index', 'pattern' => 'writeoff-requests*', 'label' => 'Norakstīšanas pieteikumi', 'icon' => 'writeoff'],
+            ['route' => 'device-transfers.index', 'pattern' => 'device-transfers*', 'label' => 'Pārsūtīšanas pieteikumi', 'icon' => 'transfer', 'pending_review_count' => $incomingTransferReviewCount],
         ];
         $requestReviewNavigationItems = $canManageRequests ? collect($requestNavigationItems)->take(2)->values()->all() : $requestNavigationItems;
         $requestHistoryNavigationItems = $canManageRequests ? collect($requestNavigationItems)->slice(2)->values()->all() : [];
@@ -40,13 +40,13 @@
 
             $lessImportantNavigationItems = [
                 ['route' => 'rooms.index', 'pattern' => 'rooms*', 'label' => 'Telpas', 'icon' => 'room'],
-                ['route' => 'buildings.index', 'pattern' => 'buildings*', 'label' => 'Ekas', 'icon' => 'building'],
-                ['route' => 'device-types.index', 'pattern' => 'device-types*', 'label' => 'Iericu tipi', 'icon' => 'tag'],
+                ['route' => 'buildings.index', 'pattern' => 'buildings*', 'label' => 'Ēkas', 'icon' => 'building'],
+                ['route' => 'device-types.index', 'pattern' => 'device-types*', 'label' => 'Ierīču tipi', 'icon' => 'tag'],
             ];
         }
 
         if ($isAdmin && $canManageRequests) {
-            $usersNavigationItem = ['route' => 'users.index', 'pattern' => 'users*', 'label' => 'Lietotaji', 'icon' => 'users'];
+            $usersNavigationItem = ['route' => 'users.index', 'pattern' => 'users*', 'label' => 'Lietotāji', 'icon' => 'users'];
 
             $lessImportantNavigationItems[] = ['route' => 'audit-log.index', 'pattern' => 'audit-log*', 'label' => 'Audits', 'icon' => 'audit'];
         }
@@ -181,7 +181,7 @@
                                     <span class="{{ $currentViewMode === \App\Models\User::VIEW_MODE_USER
                                         ? 'inline-flex min-w-[6.5rem] items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white'
                                         : 'inline-flex min-w-[6.5rem] items-center justify-center rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 transition hover:bg-slate-100 hover:text-slate-900' }}">
-                                        Lietotajs
+                                        Lietotājs
                                     </span>
                                 </label>
                             </div>
@@ -195,7 +195,7 @@
                                 {{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($user?->full_name ?? 'L', 0, 1)) }}
                             </div>
                             <div class="min-w-0 text-left leading-tight">
-                                <div class="truncate font-semibold text-slate-900">{{ $user?->full_name ?? 'Lietotajs' }}</div>
+                                <div class="truncate font-semibold text-slate-900">{{ $user?->full_name ?? 'Lietotājs' }}</div>
                                 <div class="mt-1 inline-flex max-w-full items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
                                     <span class="truncate">{{ $isAdmin ? ($canManageRequests ? 'admin view' : 'user view') : ($user?->role ?? '') }}</span>
                                 </div>
@@ -229,7 +229,7 @@
                             @csrf
                             <button type="submit" class="flex w-full items-center gap-2.5 rounded-xl px-4 py-2.5 text-start text-sm font-medium text-rose-600 transition duration-150 ease-in-out hover:bg-rose-50 focus:bg-rose-50 focus:outline-none">
                                 <x-icon name="logout" size="h-4 w-4" />
-                                <span>Izrakstities</span>
+                                <span>Izrakstīties</span>
                             </button>
                         </form>
                     </x-slot>
@@ -268,7 +268,7 @@
                             <span class="{{ $currentViewMode === \App\Models\User::VIEW_MODE_USER
                                 ? 'flex items-center justify-center rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white'
                                 : 'flex items-center justify-center rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-600 ring-1 ring-slate-200' }}">
-                                Lietotajs
+                                Lietotājs
                             </span>
                         </label>
                     </div>
@@ -354,7 +354,7 @@
 
         <div class="border-t border-slate-200 pb-4 pt-4">
             <div class="px-4">
-                <div class="text-base font-semibold text-slate-900">{{ $user?->full_name ?? 'Lietotajs' }}</div>
+                <div class="text-base font-semibold text-slate-900">{{ $user?->full_name ?? 'Lietotājs' }}</div>
                 <div class="text-sm text-slate-500">{{ $user?->email ?? '' }}</div>
             </div>
 
@@ -383,7 +383,7 @@
                     <x-responsive-nav-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">
                         <span class="inline-flex items-center gap-2.5">
                             <x-icon name="logout" size="h-5 w-5" />
-                            <span>Izrakstities</span>
+                            <span>Izrakstīties</span>
                         </span>
                     </x-responsive-nav-link>
                 </form>

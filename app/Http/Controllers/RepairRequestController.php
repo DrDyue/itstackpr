@@ -62,7 +62,7 @@ class RepairRequestController extends Controller
                 'statuses' => $availableStatuses,
                 'statusLabels' => $this->requestStatusLabels(),
                 'canReview' => $user->canManageRequests(),
-                'featureMessage' => 'Tabula repair_requests sobrid nav pieejama.',
+                'featureMessage' => 'Tabula repair_requests šobrīd nav pieejama.',
             ]);
         }
 
@@ -117,7 +117,7 @@ class RepairRequestController extends Controller
             return view('repair_requests.create', [
                 'devices' => collect(),
                 'deviceOptions' => collect(),
-                'featureMessage' => 'Tabula repair_requests sobrid nav pieejama.',
+                'featureMessage' => 'Tabula repair_requests šobrīd nav pieejama.',
             ]);
         }
 
@@ -147,21 +147,21 @@ class RepairRequestController extends Controller
         abort_if($user->canManageRequests(), 403);
 
         if (! $this->featureTableExists('repair_requests')) {
-            return redirect()->route('repair-requests.index')->with('error', 'Remonta pieteikumus sobrid nevar saglabat, jo tabula repair_requests nav pieejama.');
+            return redirect()->route('repair-requests.index')->with('error', 'Remonta pieteikumus šobrīd nevar saglabāt, jo tabula repair_requests nav pieejama.');
         }
 
         $validated = $this->validateInput($request, [
             'device_id' => ['required', 'exists:devices,id'],
             'description' => ['required', 'string'],
         ], [
-            'device_id.required' => 'Izvelies ierici, kurai piesaki remontu.',
-            'description.required' => 'Apraksti remonta problemu.',
+            'device_id.required' => 'Izvēlies ierīci, kurai piesaki remontu.',
+            'description.required' => 'Apraksti remonta problēmu.',
         ]);
 
         $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
         if (! $device) {
             throw ValidationException::withMessages([
-                'device_id' => ['Vari pieteikt remontu tikai savai piesaistitai iericei.'],
+                'device_id' => ['Vari pieteikt remontu tikai savai piešaistītai ierīcei.'],
             ]);
         }
 
@@ -176,7 +176,7 @@ class RepairRequestController extends Controller
 
         AuditTrail::created($user->id, $repairRequest);
 
-        return redirect()->route('repair-requests.index')->with('success', 'Remonta pieteikums nosutits izskatisanai');
+        return redirect()->route('repair-requests.index')->with('success', 'Remonta pieteikums nosutits izskatīšanai');
     }
 
     /**
@@ -188,24 +188,24 @@ class RepairRequestController extends Controller
 
         if (! $this->featureTableExists('repair_requests')) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Remonta pieteikumu tabula sobrid nav pieejama.'], 503);
+                return response()->json(['message' => 'Remonta pieteikumu tabula šobrīd nav pieejama.'], 503);
             }
 
-            return back()->with('error', 'Remonta pieteikumu tabula sobrid nav pieejama.');
+            return back()->with('error', 'Remonta pieteikumu tabula šobrīd nav pieejama.');
         }
 
         if ($repairRequest->status !== RepairRequest::STATUS_SUBMITTED) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Sis pieteikums jau ir izskatits.'], 409);
+                return response()->json(['message' => 'Sis pieteikums jau ir izskatīts.'], 409);
             }
 
-            return back()->with('error', 'Sis pieteikums jau ir izskatits.');
+            return back()->with('error', 'Sis pieteikums jau ir izskatīts.');
         }
 
         $validated = $this->validateInput($request, [
             'status' => ['required', Rule::in([RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED])],
         ], [
-            'status.required' => 'Izvelies lemumu remonta pieteikumam.',
+            'status.required' => 'Izvēlies lēmumu remonta pieteikumam.',
         ]);
 
         $repairRequest->loadMissing(['device', 'responsibleUser']);
@@ -223,13 +223,13 @@ class RepairRequestController extends Controller
 
                 if (! $device || $device->status === Device::STATUS_WRITEOFF) {
                     throw ValidationException::withMessages([
-                        'status' => ['Pieteikumu nevar apstiprinat, jo ierice vairs nav pieejama remontam.'],
+                        'status' => ['Pieteikumu nevar apstiprināt, jo ierīce vairs nav pieejama remontam.'],
                     ]);
                 }
 
                 if ($device->repairs()->whereIn('status', ['waiting', 'in-progress'])->exists()) {
                     throw ValidationException::withMessages([
-                        'status' => ['Sai iericei jau ir aktivs remonta ieraksts.'],
+                        'status' => ['Sai ierīcei jau ir aktīvs remonta ieraksts.'],
                     ]);
                 }
 
@@ -265,13 +265,13 @@ class RepairRequestController extends Controller
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'Remonta pieteikums izskatits',
+                'message' => 'Remonta pieteikums izskatīts',
                 'status' => $validated['status'],
                 'request_id' => $repairRequest->id,
             ]);
         }
 
-        return back()->with('success', 'Remonta pieteikums izskatits');
+        return back()->with('success', 'Remonta pieteikums izskatīts');
     }
 
     private function availableDevicesForUser(User $user): Builder
@@ -319,25 +319,25 @@ class RepairRequestController extends Controller
     {
         if ($device->status === Device::STATUS_REPAIR) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai iericei jau notiek remonts (' . $this->repairStatusLabel($device->activeRepair?->status) . '), tapec jaunu remonta pieteikumu veidot nevar.'],
+                'device_id' => ['Sai ierīcei jau notiek remonts (' . $this->repairStatusLabel($device->activeRepair?->status) . '), tāpēc jaunu remonta pieteikumu veidot nevar.'],
             ]);
         }
 
         if (RepairRequest::query()->where('device_id', $device->id)->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai iericei jau ir gaidoss remonta pieteikums.'],
+                'device_id' => ['Sai ierīcei jau ir gaidošs remonta pieteikums.'],
             ]);
         }
 
         if (WriteoffRequest::query()->where('device_id', $device->id)->where('status', 'submitted')->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai iericei jau ir gaidoss norakstisanas pieteikums, tapec remonta pieteikumu veidot nevar.'],
+                'device_id' => ['Sai ierīcei jau ir gaidošs norakstīšanas pieteikums, tāpēc remonta pieteikumu veidot nevar.'],
             ]);
         }
 
         if (DeviceTransfer::query()->where('device_id', $device->id)->where('status', 'submitted')->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Sai iericei jau ir gaidoss nodosanas pieteikums, tapec remonta pieteikumu veidot nevar.'],
+                'device_id' => ['Sai ierīcei jau ir gaidošs nodošanas pieteikums, tāpēc remonta pieteikumu veidot nevar.'],
             ]);
         }
     }
@@ -346,7 +346,7 @@ class RepairRequestController extends Controller
     {
         return match ($status) {
             'waiting' => 'Gaida',
-            'in-progress' => 'Procesa',
+            'in-progress' => 'Procesā',
             'completed' => 'Pabeigts',
             'cancelled' => 'Atcelts',
             default => 'Remonta',

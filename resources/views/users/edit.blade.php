@@ -16,12 +16,12 @@
                     <div class="page-title-group mt-4">
                         <div class="page-title-icon page-title-icon-amber"><x-icon name="user" size="h-7 w-7" /></div>
                         <div>
-                            <h1 class="page-title">Rediget lietotaju</h1>
-                            <p class="page-subtitle">Atjauno lietotaja datus, lomu un piekluvi.</p>
+                            <h1 class="page-title">Rediģēt lietotāju</h1>
+                            <p class="page-subtitle">Atjauno lietotāja datus, lomu un piekļuvi.</p>
                         </div>
                     </div>
                 </div>
-                <a href="{{ route('users.index') }}" class="btn-back"><x-icon name="back" size="h-4 w-4" /><span>Atpakal</span></a>
+                <a href="{{ route('users.index') }}" class="btn-back"><x-icon name="back" size="h-4 w-4" /><span>Atpakaļ</span></a>
             </div>
         </div>
 
@@ -61,18 +61,18 @@
                     <input type="password" name="password" class="crud-control">
                 </label>
                 <label class="block">
-                    <span class="crud-label">Apstiprinat paroli</span>
+                    <span class="crud-label">Apstiprināt paroli</span>
                     <input type="password" name="password_confirmation" class="crud-control">
                 </label>
             </div>
 
             <label class="inline-flex items-center gap-3">
                 <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $user->is_active)) class="rounded border-gray-300 text-blue-600">
-                <span class="text-sm text-slate-700">Konts aktivs</span>
+                <span class="text-sm text-slate-700">Konts aktīvs</span>
             </label>
 
             <div class="flex flex-wrap gap-3">
-                <button type="submit" class="btn-edit"><x-icon name="save" size="h-4 w-4" /><span>Saglabat</span></button>
+                <button type="submit" class="btn-edit"><x-icon name="save" size="h-4 w-4" /><span>Saglabāt</span></button>
                 <a href="{{ route('users.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Atcelt</span></a>
             </div>
         </form>

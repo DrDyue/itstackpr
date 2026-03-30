@@ -14,7 +14,7 @@ use Throwable;
 /**
  * Autentifikācijas sagatavošanas serviss.
  *
- * Tas nodrošina, ka pieslēgšanās forma un demo konti darbojas arī daļēji
+ * Tas nodrošina, kā pieslēgšanās forma un demo konti darbojas arī daļēji
  * nesinhronizētās vai legacy datubāzes vidēs.
  */
 class AuthBootstrapper
@@ -25,7 +25,7 @@ class AuthBootstrapper
         'artis.berzins@ludzas.lv' => [
             'full_name' => 'Artis Berzins',
             'phone' => '+37126000001',
-            'job_title' => 'Sistemas administrators',
+            'job_title' => 'Sistēmas administrators',
             'role' => User::ROLE_ADMIN,
         ],
         'ilze.strautina@ludzas.lv' => [

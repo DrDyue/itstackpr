@@ -19,7 +19,7 @@
                         </div>
                         <span class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700">
                             <x-icon name="device" size="h-3.5 w-3.5" />
-                            <span>Ierices: {{ $dashboardDevices->total() }}</span>
+                            <span>Ierīces: {{ $dashboardDevices->total() }}</span>
                         </span>
                     </div>
 
@@ -29,7 +29,7 @@
                         </div>
                         <div>
                             <h1 class="page-title">Darbvirsma</h1>
-                            <p class="page-subtitle">Vienuviet redzi telpu strukturu, atri filtre ierices un parvaldi galvenas darbibas.</p>
+                            <p class="page-subtitle">Vienuviet redzi telpu strukturu, atri filtre ierīces un pārvaldi galvenas darbības.</p>
                         </div>
                     </div>
                 </div>
@@ -53,7 +53,7 @@
             <aside class="dash-location-panel">
                 <div class="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
                     <x-icon name="room" size="h-5 w-5" class="text-emerald-600" />
-                    <span>Stavi un telpas</span>
+                    <span>Stāvi un telpas</span>
                 </div>
 
                 <div class="dash-room-tree">
@@ -73,7 +73,7 @@
                                     class="dash-floor-filter {{ $floor['is_active'] ? 'dash-floor-filter-active' : '' }}"
                                 >
                                     <x-icon name="view" size="h-4 w-4" />
-                                    <span>Filtre si stava ierices</span>
+                                    <span>Filtre si stava ierīces</span>
                                 </a>
 
                                 <div class="dash-room-list">
@@ -89,8 +89,8 @@
                                                 @endif
                                             </div>
                                             <div class="dash-room-meta">
-                                                <span>{{ $room['building_name'] ?: 'Bez ekas' }}</span>
-                                                <span>{{ $room['device_count'] }} ierices</span>
+                                                <span>{{ $room['building_name'] ?: 'Bez ēkas' }}</span>
+                                                <span>{{ $room['device_count'] }} ierīces</span>
                                                 @if ($room['department'])
                                                     <span>{{ $room['department'] }}</span>
                                                 @endif
@@ -113,10 +113,10 @@
                         <div>
                             <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
                                 <x-icon name="device" size="h-5 w-5" class="text-sky-600" />
-                                <span>Ierices</span>
+                                <span>Ierīces</span>
                             </h2>
                             <p class="mt-2 text-sm text-slate-600">
-                                Parskats par visam iericem, sakartots pec jaunakajiem ierakstiem.
+                                Pārskats par visām ierīcēm, sakārtots pēc jaunākajiem ierakstiem.
                             </p>
                         </div>
 
@@ -124,7 +124,7 @@
                             @if ($filters['floor'] !== '' || $filters['room_id'] !== '')
                                 <div class="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700">
                                     <x-icon name="room" size="h-3.5 w-3.5" />
-                                    <span>{{ $filters['room_id'] !== '' ? 'Telpas filtrs ieslegts' : 'Stava filtrs ieslegts' }}</span>
+                                    <span>{{ $filters['room_id'] !== '' ? 'Telpas filtrs ieslēgts' : 'Stāva filtrs ieslēgts' }}</span>
                                 </div>
                                 <a href="{{ route('dashboard') }}" class="btn-clear">
                                     <x-icon name="x-circle" size="h-4 w-4" />
@@ -140,11 +140,11 @@
                             <thead class="dash-table-head">
                                 <tr>
                                     <th>Kods</th>
-                                    <th>Ierice</th>
-                                    <th>Atrasanas vieta</th>
-                                    <th>Pieskirta</th>
+                                    <th>Ierīce</th>
+                                    <th>Atrašanās vieta</th>
+                                    <th>Piesķirta</th>
                                     <th>Statuss</th>
-                                    <th>Darbibas</th>
+                                    <th>Darbības</th>
                                 </tr>
                             </thead>
                             <tbody class="dash-table-body">
@@ -162,7 +162,7 @@
                                                     ? trim($manufacturer . ' ' . $model)
                                                     : $model
                                             )
-                                            : ($manufacturer !== '' ? $manufacturer : 'Razotajs un modelis nav noradits');
+                                            : ($manufacturer !== '' ? $manufacturer : 'Ražotājs un modelis nav norādīts');
                                         $assignedJobTitle = $device->assignedTo?->job_title ?: 'Nav amata';
                                         $roomLabel = collect([
                                             $device->room?->room_number,
@@ -176,7 +176,7 @@
                                     <tr>
                                         <td>
                                             <div class="dash-table-cell-strong">{{ $device->code ?: '-' }}</div>
-                                            <div class="dash-table-subline">{{ $device->serial_number ?: 'Nav serijas numura' }}</div>
+                                            <div class="dash-table-subline">{{ $device->serial_number ?: 'Nav sērijas numura' }}</div>
                                         </td>
                                         <td>
                                             <a href="{{ route('devices.show', $device) }}" class="dash-table-link">{{ $device->name }}</a>
@@ -185,10 +185,10 @@
                                         </td>
                                         <td>
                                             <div class="dash-table-cell-strong dash-table-nowrap">{{ $device->building?->building_name ?: '-' }}</div>
-                                            <div class="dash-table-subline">{{ $roomLabel !== '' ? $roomLabel : 'Telpa nav noradita' }}</div>
+                                            <div class="dash-table-subline">{{ $roomLabel !== '' ? $roomLabel : 'Telpa nav norādīta' }}</div>
                                         </td>
                                         <td>
-                                            <div class="dash-table-cell-strong">{{ $device->assignedTo?->full_name ?: 'Nav pieskirts' }}</div>
+                                            <div class="dash-table-cell-strong">{{ $device->assignedTo?->full_name ?: 'Nav piesķirts' }}</div>
                                             <div class="dash-table-subline">{{ $assignedJobTitle }}</div>
                                         </td>
                                         <td>
@@ -218,7 +218,7 @@
                                                                     <span class="device-request-popover-value">{{ $repairPreview['type'] }}</span>
                                                                 </div>
                                                                 <div class="device-request-popover-row">
-                                                                    <span class="device-request-popover-label">Pienema remontu</span>
+                                                                    <span class="device-request-popover-label">Pieņēma remontu</span>
                                                                     <span class="device-request-popover-value">{{ $repairPreview['approved_by'] }}</span>
                                                                 </div>
                                                                 <div class="device-request-popover-row device-request-popover-row-stack">
@@ -254,7 +254,7 @@
                                                                 </div>
                                                                 @if (! empty($pendingRequestBadge['preview']['recipient']))
                                                                     <div class="device-request-popover-row">
-                                                                        <span class="device-request-popover-label">Sanemejs</span>
+                                                                        <span class="device-request-popover-label">Saņēmējs</span>
                                                                         <span class="device-request-popover-value">{{ $pendingRequestBadge['preview']['recipient'] }}</span>
                                                                     </div>
                                                                 @endif
@@ -262,7 +262,7 @@
                                                                     <span class="device-request-popover-label">{{ $pendingRequestBadge['preview']['meta_label'] }}</span>
                                                                     <div class="device-request-popover-copy">{{ $pendingRequestBadge['preview']['summary'] }}</div>
                                                                 </div>
-                                                                <div class="device-request-popover-link">Atvert pieprasijumu</div>
+                                                                <div class="device-request-popover-link">Atvērt pieprasijumu</div>
                                                             </div>
                                                         @endif
                                                     </div>
@@ -272,13 +272,13 @@
                                         <td>
                                             <a href="{{ route('devices.show', $device) }}" class="btn-view dash-table-action-btn">
                                                 <x-icon name="view" size="h-4 w-4" />
-                                                <span>Skatit</span>
+                                                <span>Skatīt</span>
                                             </a>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="px-4 py-8 text-center text-slate-500">Ierices pagaidam nav pieejamas.</td>
+                                        <td colspan="6" class="px-4 py-8 text-center text-slate-500">Ierīces pagaidam nav pieejamas.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -295,15 +295,15 @@
                         @endphp
                         <div class="dashboard-pagination">
                             <div class="dashboard-pagination-meta">
-                                <span>Kopa {{ $dashboardDevices->total() }} ierices</span>
+                                <span>Kopa {{ $dashboardDevices->total() }} ierīces</span>
                                 <span>Lapa {{ $currentPage }} no {{ $lastPage }}</span>
                             </div>
 
                             <div class="dashboard-pagination-links">
                                 @if ($dashboardDevices->onFirstPage())
-                                    <span class="dashboard-pagination-btn dashboard-pagination-btn-disabled">Iepriekseja</span>
+                                    <span class="dashboard-pagination-btn dashboard-pagination-btn-disabled">Iepriekšēja</span>
                                 @else
-                                    <a href="{{ $dashboardDevices->previousPageUrl() }}" class="dashboard-pagination-btn">Iepriekseja</a>
+                                    <a href="{{ $dashboardDevices->previousPageUrl() }}" class="dashboard-pagination-btn">Iepriekšēja</a>
                                 @endif
 
                                 @for ($page = $startPage; $page <= $endPage; $page++)

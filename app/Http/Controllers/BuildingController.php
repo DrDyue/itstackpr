@@ -74,7 +74,7 @@ class BuildingController extends Controller
         $building = Building::create($this->validatedData($request));
         AuditTrail::created(auth()->id(), $building);
 
-        return redirect()->route('buildings.index')->with('success', 'Eka veiksmigi pievienota');
+        return redirect()->route('buildings.index')->with('success', 'Ēka veiksmīgi pievienota');
     }
 
     /**
@@ -99,11 +99,11 @@ class BuildingController extends Controller
         $after = $building->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState(auth()->id(), $building, $before, $after);
 
-        return redirect()->route('buildings.index')->with('success', 'Ekas dati atjauninati');
+        return redirect()->route('buildings.index')->with('success', 'Ēkas dati atjauninati');
     }
 
     /**
-     * Dzēš ēku tikai tad, ja tai vairs nav piesaistītu telpu un ierīču.
+     * Dzēš ēku tikai tad, ja tai vairs nav piešaistītu telpu un ierīču.
      */
     public function destroy(Building $building)
     {
@@ -116,22 +116,22 @@ class BuildingController extends Controller
             $parts = [];
 
             if ($roomsCount > 0) {
-                $parts[] = "eka joprojam satur {$roomsCount} telpu" . ($roomsCount === 1 ? '' : 's');
+                $parts[] = "ēka joprojam satur {$roomsCount} telpu" . ($roomsCount === 1 ? '' : 's');
             }
 
             if ($devicesCount > 0) {
-                $parts[] = "tai piesaistitas {$devicesCount} ierice" . ($devicesCount === 1 ? '' : 's');
+                $parts[] = "tai piešaistītas {$devicesCount} ierīce" . ($devicesCount === 1 ? '' : 's');
             }
 
             return redirect()
                 ->route('buildings.index')
-                ->with('error', 'Eku nevar dzest, jo ' . implode(' un ', $parts) . '. Vispirms parvieto vai dzes piesaistitas telpas un ierices, tad meginiet velreiz.');
+                ->with('error', 'Ēku nevar dzēst, jo ' . implode(' un ', $parts) . '. Vispirms pārvieto vai dzēs piešaistītas telpas un ierīces, tad mēģiniet vēlreiz.');
         }
 
         AuditTrail::deleted(auth()->id(), $building);
         $building->delete();
 
-        return redirect()->route('buildings.index')->with('success', 'Eka dzesta');
+        return redirect()->route('buildings.index')->with('success', 'Ēka dzēsta');
     }
 
     /**
@@ -153,7 +153,7 @@ class BuildingController extends Controller
             'total_floors' => ['nullable', 'integer', 'min:0', 'max:200'],
             'notes' => ['nullable', 'string', 'max:200'],
         ], [
-            'building_name.required' => 'Noradi ekas nosaukumu.',
+            'building_name.required' => 'Noradi ēkas nosaukumu.',
         ]);
 
         $data['notes'] = $data['notes'] ?? self::NOTES_DEFAULT;

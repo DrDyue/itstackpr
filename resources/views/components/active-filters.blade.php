@@ -21,7 +21,7 @@
     <div class="filter-summary">
         <div class="filter-summary-head">
             <x-icon name="search" size="h-4 w-4" />
-            <span>Aktivie filtri</span>
+            <span>Aktīvie filtri</span>
         </div>
         <div class="filter-summary-items">
             @foreach ($activeItems as $item)

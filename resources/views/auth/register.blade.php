@@ -53,14 +53,14 @@
                 <x-input-error :messages="$errors->get('password')" class="mt-2" />
             </div>
             <div>
-                <x-input-label for="password_confirmation" value="Apstiprinat paroli" />
+                <x-input-label for="password_confirmation" value="Apstiprināt paroli" />
                 <x-text-input id="password_confirmation" class="mt-1 block w-full" type="password" name="password_confirmation" required />
             </div>
         </div>
 
         <div class="flex items-center justify-end gap-3">
-            <a href="{{ route('users.index') }}" class="text-sm text-slate-600 hover:text-slate-900">Atpakal</a>
-            <x-primary-button>Izveidot lietotaju</x-primary-button>
+            <a href="{{ route('users.index') }}" class="text-sm text-slate-600 hover:text-slate-900">Atpakaļ</a>
+            <x-primary-button>Izveidot lietotāju</x-primary-button>
         </div>
     </form>
 </x-guest-layout>

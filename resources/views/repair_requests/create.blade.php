@@ -17,11 +17,11 @@
                         <div class="page-title-icon page-title-icon-emerald"><x-icon name="repair-request" size="h-7 w-7" /></div>
                         <div>
                             <h1 class="page-title">Jauns remonta pieteikums</h1>
-                            <p class="page-subtitle">Izvelies savu ierici un apraksti problemu.</p>
+                            <p class="page-subtitle">Izvēlies savu ierīci un apraksti problēmu.</p>
                         </div>
                     </div>
                 </div>
-                <a href="{{ route('repair-requests.index') }}" class="btn-back"><x-icon name="back" size="h-4 w-4" /><span>Atpakal</span></a>
+                <a href="{{ route('repair-requests.index') }}" class="btn-back"><x-icon name="back" size="h-4 w-4" /><span>Atpakaļ</span></a>
             </div>
         </div>
 
@@ -34,7 +34,7 @@
             @csrf
             <div class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
                 <div>
-                    <span class="crud-label">Ierice</span>
+                    <span class="crud-label">Ierīce</span>
                     <x-searchable-select
                         name="device_id"
                         query-name="device_query"
@@ -42,8 +42,8 @@
                         :options="$deviceOptions"
                         :selected="old('device_id', $selectedDeviceId ?? '')"
                         :query="old('device_query', $selectedDeviceLabel ?? '')"
-                        placeholder="Mekle pec nosaukuma, koda vai telpas"
-                        empty-message="Neviena ierice neatbilst meklejumam."
+                        placeholder="Meklē pēc nosaukuma, koda vai telpas"
+                        empty-message="Neviena ierīce neatbilst meklējumam."
                     />
                     @error('device_id')
                         <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
@@ -52,7 +52,7 @@
                 <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
                     <div class="font-semibold text-slate-900">Ieteikums</div>
                     <div class="mt-2 leading-6">
-                        Iericu saraksta redzesi nosaukumu, kodu, tipu, razotaju ar modeli un atrasanas vietu, lai butu vieglak izveleties isto ierici.
+                        Ierīču saraksta redzēsi nosaukumu, kodu, tipu, ražotāju ar modeli un atrašanās vietu, lai butu vieglak izvēleties isto ierīci.
                     </div>
                 </div>
             </div>

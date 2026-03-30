@@ -63,7 +63,7 @@
                         @endif
                     </div>
                     <div class="flash-toast-body">
-                        <div class="flash-toast-title">{{ $flashTone === 'success' ? 'Veiksmigi' : 'Pazinojums' }}</div>
+                        <div class="flash-toast-title">{{ $flashTone === 'success' ? 'Veiksmīgi' : 'Pazinojums' }}</div>
                         <div class="flash-toast-message">{{ $flashMessage }}</div>
                     </div>
                     <button type="button" class="flash-toast-close" @click="open = false" aria-label="Aizvert">
@@ -134,7 +134,7 @@
                                     <div class="notification-toast-body">
                                         <div class="notification-toast-meta">
                                             <div class="notification-toast-meta-item notification-toast-meta-item-wide">
-                                                <div class="notification-toast-section-label">Ierice</div>
+                                                <div class="notification-toast-section-label">Ierīce</div>
                                                 <div class="notification-toast-meta-value" x-text="notification.details.device_name"></div>
                                             </div>
                                             <div class="notification-toast-meta-item">
@@ -158,7 +158,7 @@
                                                 <div class="notification-toast-meta-value" x-text="notification.details.device_location"></div>
                                             </div>
                                             <div class="notification-toast-meta-item notification-toast-meta-item-wide" x-show="notification.details.recipient">
-                                                <div class="notification-toast-section-label">Sanemejs</div>
+                                                <div class="notification-toast-section-label">Saņēmējs</div>
                                                 <div class="notification-toast-meta-value" x-text="notification.details.recipient"></div>
                                             </div>
                                             <div class="notification-toast-meta-item notification-toast-meta-item-wide">
@@ -168,7 +168,7 @@
                                         </div>
 
                                         <div class="notification-toast-footer">
-                                            <span class="notification-toast-link" x-text="notification.details.cta_label || 'Atvert pieprasijumu'"></span>
+                                            <span class="notification-toast-link" x-text="notification.details.cta_label || 'Atvērt pieprasijumu'"></span>
                                             <span class="notification-toast-link-arrow" aria-hidden="true">></span>
                                         </div>
                                     </div>
