@@ -84,6 +84,7 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('devices', DeviceController::class)->only(['index', 'show']);
     Route::post('/devices/{device}/user-room', [DeviceController::class, 'updateUserRoom'])->name('devices.user-room.update');
+    Route::get('/devices/find-by-code', [DeviceController::class, 'findByCode'])->name('devices.find-by-code');
     Route::get('/device-assets/remote-preview', [DeviceAssetController::class, 'remotePreview'])
         ->name('device-assets.remote-preview');
     Route::get('/device-assets/{path}', [DeviceAssetController::class, 'show'])

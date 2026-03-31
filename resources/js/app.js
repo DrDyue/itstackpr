@@ -1333,14 +1333,107 @@ document.addEventListener('alpine:init', registerAlpineData);
 document.addEventListener('DOMContentLoaded', initializeThemeToggle);
 document.addEventListener('DOMContentLoaded', initializeAsyncTableFilters);
 
-// Device search handler - submit form with code filter
+// Device search handler - find and highlight device by code
 window.deviceSearchHandler = () => ({
-    async handleSearch(event) {
-        event.preventDefault();
-        const form = event.target;
-        
-        // Simply submit the form - server will handle code filtering
-        form.submit();
+    async searchByCode() {
+        const codeInput = document.querySelector('input[name="code"]');
+        const searchCode = codeInput?.value?.trim();
+
+        if (!searchCode) {
+            this.showToast('Ievadiet ierīces kodu!', 'error');
+            return;
+        }
+
+        try {
+            // First, find which page contains the device
+            const response = await fetch(`/devices/find-by-code?code=${encodeURIComponent(searchCode)}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            const result = await response.json();
+
+            if (!result.found) {
+                this.showToast(`Ierīce ar kodu "${searchCode}" netika atrasta!`, 'error');
+                return;
+            }
+
+            // Navigate to the page where the device is located
+            const currentPage = parseInt(new URLSearchParams(window.location.search).get('page') || '1');
+            const targetPage = result.page;
+
+            if (targetPage !== currentPage) {
+                // Navigate to the target page with highlight parameter
+                const url = new URL(window.location.href);
+                url.searchParams.set('page', targetPage);
+                url.searchParams.set('highlight', searchCode);
+                window.location.href = url.toString();
+            } else {
+                // Already on the right page, just scroll and highlight
+                this.scrollToAndHighlight(searchCode);
+            }
+        } catch (error) {
+            console.error('Search error:', error);
+            this.showToast('Notika kļūda meklējot ierīci!', 'error');
+        }
+    },
+
+    scrollToAndHighlight(code) {
+        // Wait for DOM to be ready
+        setTimeout(() => {
+            const searchCode = code.toLowerCase();
+            const tableBody = document.querySelector('#devices-index-root tbody');
+
+            if (!tableBody) {
+                this.showToast('Ierīce netika atrasta šajā lapā!', 'error');
+                return;
+            }
+
+            const rows = Array.from(tableBody.querySelectorAll('tr'));
+            let foundRow = null;
+
+            for (const row of rows) {
+                const codeCell = row.querySelector('td:nth-child(3) .font-semibold');
+                if (codeCell) {
+                    const cellCode = codeCell.textContent?.trim().toLowerCase();
+                    if (cellCode === searchCode || cellCode.includes(searchCode)) {
+                        foundRow = row;
+                        break;
+                    }
+                }
+            }
+
+            if (foundRow) {
+                // Scroll to the row
+                foundRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // Add highlight animation
+                foundRow.classList.add('device-search-highlight');
+                foundRow.classList.add('device-search-highlight-found');
+
+                // Remove highlight after 5 seconds
+                setTimeout(() => {
+                    foundRow.classList.remove('device-search-highlight');
+                    foundRow.classList.remove('device-search-highlight-found');
+                }, 5000);
+            } else {
+                this.showToast('Ierīce netika atrasta šajā lapā!', 'error');
+            }
+        }, 300);
+    },
+
+    showToast(message, tone = 'info') {
+        if (window.dispatchAppToast) {
+            window.dispatchAppToast({
+                message,
+                tone,
+                title: tone === 'error' ? 'Kļūda' : 'Paziņojums'
+            });
+        } else {
+            alert(message);
+        }
     },
 });
 

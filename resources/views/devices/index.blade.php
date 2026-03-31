@@ -121,105 +121,123 @@
             </div>
         </div>
 
-        <div id="devices-index-root" data-async-table-root>
-            {{-- Filtru rīkjosla: meklēšana, telpas, tipi un statusi bez lapas pārlādes. --}}
-            <form
-                method="GET"
-                action="{{ route('devices.index') }}"
-                class="{{ $toolbarGridClass }}"
-                x-data="deviceSearchHandler()"
-                data-async-table-form
-                data-async-root="#devices-index-root"
-                @searchable-select-updated.window="if ($event.detail.identifier === 'device-floor-filter') { $dispatch('searchable-select-clear', { target: 'device-room-filter' }) }"
-                @submit.prevent="handleSearch"
-            >
-                <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
-                <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
-
-                {{-- Filtri pa kreisi --}}
-                @if ($canManageDevices)
-                    <label class="block">
-                        <span class="crud-label">Piešķirta</span>
-                        <x-searchable-select
-                            name="assigned_to_id"
-                            query-name="assigned_to_query"
-                            identifier="device-assignee-filter"
-                            :options="$assignedUserSelectOptions"
-                            :selected="$filters['assigned_to_id']"
-                            :query="$selectedAssignedUserLabel"
-                            placeholder="Izvēlies darbinieku"
-                            empty-message="Neviens darbinieks neatbilst meklējumam."
-                        />
-                    </label>
-                @endif
-                <label class="block">
-                    <span class="crud-label">Stāvs</span>
-                    <x-searchable-select
-                        name="floor"
-                        query-name="floor_query"
-                        identifier="device-floor-filter"
-                        :options="$floorSelectOptions"
-                        :selected="$filters['floor']"
-                        :query="$selectedFloorLabel"
-                        placeholder="Izvēlies vai raksti stāvu"
-                        empty-message="Neviens stāvs neatbilst meklējumam."
-                    />
-                </label>
-                <label class="block">
-                    <span class="crud-label">Telpa</span>
-                    <x-searchable-select
-                        name="room_id"
-                        query-name="room_query"
-                        identifier="device-room-filter"
-                        :options="$roomSelectOptions"
-                        :selected="$filters['room_id']"
-                        :query="$selectedRoomLabel"
-                        placeholder="Raksti telpas numuru vai nosaukumu"
-                        empty-message="Neviena telpa neatbilst meklējumam."
-                    />
-                </label>
-                <label class="block">
-                    <span class="crud-label">Tips</span>
-                    <x-searchable-select
-                        name="type"
-                        query-name="type_query"
-                        identifier="device-type-filter"
-                        :options="$typeSelectOptions"
-                        :selected="$filters['type']"
-                        :query="$selectedTypeLabel"
-                        placeholder="Raksti tipa nosaukumu"
-                        empty-message="Neviens tips neatbilst meklējumam."
-                    />
-                </label>
-
-                {{-- Meklēšana pa labi --}}
-                <div class="xl:col-span-full">
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <label class="block">
-                            <span class="crud-label">Filtrēt pēc teksta</span>
-                            <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, ražotājs, sērija...">
-                        </label>
-                        <label class="block">
-                            <span class="crud-label">Meklēt pēc koda</span>
-                            <div class="flex items-center gap-2">
-                                <input
-                                    type="text"
-                                    name="code"
-                                    value="{{ $filters['code'] }}"
-                                    class="crud-control"
-                                    placeholder="Ievadi precīzu ierīces kodu"
-                                    x-ref="codeInput"
-                                >
-                                <button type="submit" class="btn-search shrink-0">
+        <div id="devices-index-root" data-async-table-root" class="devices-index-page"
+            x-data="deviceSearchHandler()"
+            x-init="setTimeout(() => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const highlightCode = urlParams.get('highlight');
+                if (highlightCode) {
+                    scrollToAndHighlight(highlightCode);
+                    // Remove highlight parameter from URL without page reload
+                    urlParams.delete('highlight');
+                    const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+                    window.history.replaceState({}, '', newUrl);
+                }
+            }, 500)"
+        >
+            {{-- Filtru un meklēšanas josla --}}
+            <div class="devices-filter-surface">
+                <div class="devices-filter-header">
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
+                            <x-icon name="search" size="h-4 w-4" />
+                            <span>Meklēšana</span>
+                        </h3>
+                        <div class="devices-filter-grid">
+                            <div class="devices-search-group">
+                                <label class="devices-search-label">
+                                    <span>Meklēt pēc koda</span>
+                                    <input
+                                        type="text"
+                                        name="code"
+                                        value="{{ $filters['code'] }}"
+                                        class="devices-code-input"
+                                        placeholder="Ievadi ierīces kodu (piem. INV-001)"
+                                        x-ref="codeInput"
+                                        autocomplete="off"
+                                    >
+                                </label>
+                                <button type="button" class="devices-code-search-btn" @click="searchByCode()">
                                     <x-icon name="search" size="h-4 w-4" />
-                                    <span>Meklēt</span>
+                                    <span>Atrast ierīci</span>
                                 </button>
                             </div>
-                        </label>
+                            <label class="devices-text-search">
+                                <span>Filtrēt pēc teksta</span>
+                                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, ražotājs, sērija...">
+                            </label>
+                        </div>
                     </div>
                 </div>
 
-                <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
+                <div class="devices-filter-divider"></div>
+
+                <div class="devices-filter-header">
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
+                            <x-icon name="filter" size="h-4 w-4" />
+                            <span>Filtri</span>
+                        </h3>
+                        <div class="devices-filters-grid">
+                            @if ($canManageDevices)
+                                <label class="block">
+                                    <span class="crud-label">Piešķirta</span>
+                                    <x-searchable-select
+                                        name="assigned_to_id"
+                                        query-name="assigned_to_query"
+                                        identifier="device-assignee-filter"
+                                        :options="$assignedUserSelectOptions"
+                                        :selected="$filters['assigned_to_id']"
+                                        :query="$selectedAssignedUserLabel"
+                                        placeholder="Izvēlies darbinieku"
+                                        empty-message="Neviens darbinieks neatbilst meklējumam."
+                                    />
+                                </label>
+                            @endif
+                            <label class="block">
+                                <span class="crud-label">Stāvs</span>
+                                <x-searchable-select
+                                    name="floor"
+                                    query-name="floor_query"
+                                    identifier="device-floor-filter"
+                                    :options="$floorSelectOptions"
+                                    :selected="$filters['floor']"
+                                    :query="$selectedFloorLabel"
+                                    placeholder="Izvēlies vai raksti stāvu"
+                                    empty-message="Neviens stāvs neatbilst meklējumam."
+                                />
+                            </label>
+                            <label class="block">
+                                <span class="crud-label">Telpa</span>
+                                <x-searchable-select
+                                    name="room_id"
+                                    query-name="room_query"
+                                    identifier="device-room-filter"
+                                    :options="$roomSelectOptions"
+                                    :selected="$filters['room_id']"
+                                    :query="$selectedRoomLabel"
+                                    placeholder="Raksti telpas numuru vai nosaukumu"
+                                    empty-message="Neviena telpa neatbilst meklējumam."
+                                />
+                            </label>
+                            <label class="block">
+                                <span class="crud-label">Tips</span>
+                                <x-searchable-select
+                                    name="type"
+                                    query-name="type_query"
+                                    identifier="device-type-filter"
+                                    :options="$typeSelectOptions"
+                                    :selected="$filters['type']"
+                                    :query="$selectedTypeLabel"
+                                    placeholder="Raksti tipa nosaukumu"
+                                    empty-message="Neviens tips neatbilst meklējumam."
+                                />
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-toolbar-footer">
                     <div class="quick-filter-groups">
                         <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($selectedStatuses), minimum: 0 })">
                             <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ierīces statuss</div>
@@ -246,38 +264,45 @@
                         </div>
                     </div>
 
-                    <div class="toolbar-actions justify-end">
-                        <button type="submit" class="btn-search">
-                            <x-icon name="search" size="h-4 w-4" />
-                            <span>Meklēt kodu</span>
-                        </button>
+                    <div class="toolbar-actions">
                         <a href="{{ route('devices.index') }}" class="btn-clear" data-async-link="true">
                             <x-icon name="clear" size="h-4 w-4" />
-                            <span>Notīrīt</span>
+                            <span>Notīrīt filtrus</span>
                         </a>
                     </div>
                 </div>
-            </form>
+            </div>
 
-            <x-active-filters
-                :items="[
-                    ['label' => 'Teksts', 'value' => $filters['q']],
-                    ['label' => 'Kods', 'value' => $filters['code']],
-                    ['label' => 'Piešķirta', 'value' => $canManageDevices ? $selectedAssignedUserLabel : null],
-                    ['label' => 'Stāvs', 'value' => $selectedFloorLabel],
-                    ['label' => 'Telpa', 'value' => $selectedRoomLabel],
-                    ['label' => 'Tips', 'value' => $selectedTypeLabel],
-                    ['label' => 'Statuss', 'value' => $filters['has_status_filter'] ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ') : null],
-                ]"
-                :clear-url="route('devices.index')"
-            />
+            <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
+            <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
 
-            @if (session('error'))
-                <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
-            @endif
+            <form
+                method="GET"
+                action="{{ route('devices.index') }}"
+                class="hidden"
+                data-async-table-form
+                data-async-root="#devices-index-root"
+                @searchable-select-updated.window="if ($event.detail.identifier === 'device-floor-filter') { $dispatch('searchable-select-clear', { target: 'device-room-filter' }) }"
+            >
+                <x-active-filters
+                    :items="[
+                        ['label' => 'Teksts', 'value' => $filters['q']],
+                        ['label' => 'Kods', 'value' => $filters['code']],
+                        ['label' => 'Piešķirta', 'value' => $canManageDevices ? $selectedAssignedUserLabel : null],
+                        ['label' => 'Stāvs', 'value' => $selectedFloorLabel],
+                        ['label' => 'Telpa', 'value' => $selectedRoomLabel],
+                        ['label' => 'Tips', 'value' => $selectedTypeLabel],
+                        ['label' => 'Statuss', 'value' => $filters['has_status_filter'] ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ') : null],
+                    ]"
+                    :clear-url="route('devices.index')"
+                />
 
-        {{-- Galvenā ierīču tabula ar statusu preview un admina ātrajām darbībām. --}}
-        <div class="device-table-shell">
+                @if (session('error'))
+                    <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
+                @endif
+
+            {{-- Galvenā ierīču tabula ar statusu preview un admina ātrajām darbībām. --}}
+            <div class="device-table-shell">
             <div class="device-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
             <table class="min-w-full text-sm">
                 <thead class="bg-slate-50 text-left text-slate-500">
