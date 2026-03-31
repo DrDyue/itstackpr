@@ -141,7 +141,21 @@
                 </label>
                 <label class="block">
                     <span class="crud-label">Meklēt pēc koda</span>
-                    <input type="text" name="code" value="{{ $filters['code'] }}" class="crud-control" placeholder="Ievadi precīzu kodu" data-async-manual="true">
+                    <div class="flex items-center gap-2">
+                        <input
+                            type="text"
+                            name="code"
+                            value="{{ $filters['code'] }}"
+                            class="crud-control"
+                            placeholder="Ievadi precīzu kodu"
+                            data-async-manual="true"
+                            data-async-code-search="true"
+                        >
+                        <button type="submit" class="btn-search shrink-0" data-code-search-submit="true">
+                            <x-icon name="search" size="h-4 w-4" />
+                            <span>Meklēt</span>
+                        </button>
+                    </div>
                 </label>
                 @if ($canManageDevices)
                     <label class="block">
@@ -224,10 +238,6 @@
                     </div>
 
                     <div class="toolbar-actions justify-end">
-                        <button type="submit" class="btn-search">
-                            <x-icon name="search" size="h-4 w-4" />
-                            <span>Meklēt kodu</span>
-                        </button>
                         <a href="{{ route('devices.index') }}" class="btn-clear" data-async-link="true">
                             <x-icon name="clear" size="h-4 w-4" />
                             <span>Notīrīt</span>
@@ -236,18 +246,19 @@
                 </div>
             </form>
 
-            <x-active-filters
-                :items="[
-                    ['label' => 'Teksts', 'value' => $filters['q']],
-                    ['label' => 'Kods', 'value' => $filters['code']],
-                    ['label' => 'Piešķirta', 'value' => $canManageDevices ? $selectedAssignedUserLabel : null],
-                    ['label' => 'Stāvs', 'value' => $selectedFloorLabel],
-                    ['label' => 'Telpa', 'value' => $selectedRoomLabel],
-                    ['label' => 'Tips', 'value' => $selectedTypeLabel],
-                    ['label' => 'Statuss', 'value' => $filters['has_status_filter'] ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ') : null],
-                ]"
-                :clear-url="route('devices.index')"
-            />
+            <div class="mt-5">
+                <x-active-filters
+                    :items="[
+                        ['label' => 'Teksts', 'value' => $filters['q']],
+                        ['label' => 'Piešķirta', 'value' => $canManageDevices ? $selectedAssignedUserLabel : null],
+                        ['label' => 'Stāvs', 'value' => $selectedFloorLabel],
+                        ['label' => 'Telpa', 'value' => $selectedRoomLabel],
+                        ['label' => 'Tips', 'value' => $selectedTypeLabel],
+                        ['label' => 'Statuss', 'value' => $filters['has_status_filter'] ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ') : null],
+                    ]"
+                    :clear-url="route('devices.index')"
+                />
+            </div>
 
             @if (session('error'))
                 <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
@@ -316,7 +327,7 @@
                             $repairStatusLabel = $deviceState['repairStatusLabel'] ?? null;
                             $repairPreview = $deviceState['repairPreview'] ?? null;
                         @endphp
-                        <tr class="border-t border-slate-100 align-top">
+                        <tr class="border-t border-slate-100 align-top" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) $device->code)) }}">
                             <td class="px-4 py-4">
                                 @if ($thumbUrl)
                                     <img src="{{ $thumbUrl }}" alt="{{ $device->name }}" class="device-table-thumb">

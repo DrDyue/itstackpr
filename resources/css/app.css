@@ -2632,6 +2632,14 @@ tbody td {
     @apply ring-amber-200;
 }
 
+.quick-status-filter-sky {
+    @apply border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100;
+}
+
+.quick-status-filter-sky.quick-status-filter-active {
+    @apply ring-sky-200;
+}
+
 .quick-status-filter-rose {
     @apply border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100;
 }
@@ -2875,6 +2883,25 @@ tbody td {
 
 .device-table-shell {
     @apply relative overflow-visible;
+}
+
+.table-search-hit td {
+    @apply bg-sky-50;
+    animation: table-search-highlight 2.2s ease;
+}
+
+@keyframes table-search-highlight {
+    0% {
+        background-color: rgba(125, 211, 252, 0.08);
+    }
+
+    18% {
+        background-color: rgba(125, 211, 252, 0.36);
+    }
+
+    100% {
+        background-color: transparent;
+    }
 }
 
 .device-table-scroll {
@@ -3816,6 +3843,10 @@ html[data-theme='dark'] .device-table-scroll tbody tr:hover .dash-table-subline-
     color: #94a3b8 !important;
 }
 
+html[data-theme='dark'] .table-search-hit td {
+    background-color: rgba(14, 165, 233, 0.16) !important;
+}
+
 html[data-theme='dark'] .device-status-split-sub,
 html[data-theme='dark'] .dash-table-subline,
 html[data-theme='dark'] .dash-table-link,
@@ -4011,6 +4042,16 @@ html[data-theme='dark'] .quick-status-filter-amber {
     background-color: rgba(245, 158, 11, 0.14) !important;
     color: #fde68a !important;
     border-color: rgba(251, 191, 36, 0.28) !important;
+}
+
+html[data-theme='dark'] .quick-status-filter-sky {
+    background-color: rgba(14, 165, 233, 0.14) !important;
+    color: #bae6fd !important;
+    border-color: rgba(56, 189, 248, 0.28) !important;
+}
+
+html[data-theme='dark'] .quick-status-filter-sky.quick-status-filter-active {
+    --tw-ring-color: rgba(56, 189, 248, 0.28) !important;
 }
 
 html[data-theme='dark'] .device-type-count-link {

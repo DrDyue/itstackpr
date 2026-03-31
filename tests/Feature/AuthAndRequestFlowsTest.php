@@ -2067,13 +2067,13 @@ class AuthAndRequestFlowsTest extends TestCase
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-code-search-admin@example.com');
         $matchingDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'LDZ-001');
-        $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'LDZ-001-EXTRA');
+        $otherDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'LDZ-001-EXTRA');
 
         $this->actingAs($admin)
             ->get(route('devices.index', ['code' => 'ldz-001']))
             ->assertOk()
             ->assertSee($matchingDevice->code)
-            ->assertDontSee('Testa ierice LDZ-001-EXTRA');
+            ->assertSee($otherDevice->code);
     }
 
     public function test_devices_index_renders_pending_request_preview_information(): void

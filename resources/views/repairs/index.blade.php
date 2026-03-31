@@ -11,6 +11,9 @@
         $activeStatusLabel = count($filters['statuses']) > 0 && count($filters['statuses']) < count($statuses)
             ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ')
             : null;
+        $activePriorityLabel = count($filters['priorities'] ?? []) > 0 && count($filters['priorities']) < count($priorityLabels)
+            ? collect($filters['priorities'])->map(fn ($priority) => $priorityLabels[$priority] ?? $priority)->implode(', ')
+            : null;
     @endphp
 
     <section class="app-shell max-w-[112rem]">
@@ -86,8 +89,8 @@
                 <label class="block">
                     <span class="crud-label">Meklēt pēc koda</span>
                     <div class="flex items-center gap-2">
-                        <input type="text" name="code" value="{{ $filters['code'] }}" class="crud-control" placeholder="Ievadi precīzu kodu" data-async-manual="true">
-                        <button type="submit" class="btn-search shrink-0">
+                        <input type="text" name="code" value="{{ $filters['code'] }}" class="crud-control" placeholder="Ievadi precīzu kodu" data-async-manual="true" data-async-code-search="true">
+                        <button type="submit" class="btn-search shrink-0" data-code-search-submit="true">
                             <x-icon name="search" size="h-4 w-4" />
                             <span>Meklēt</span>
                         </button>
@@ -158,6 +161,34 @@
                                 </template>
                             </div>
                         </div>
+
+                        <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($filters['priorities'] ?? []), minimum: 0 })">
+                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Prioritāte</div>
+                            <div class="quick-status-filters">
+                                @foreach (['low', 'medium', 'high', 'critical'] as $priority)
+                                    @php
+                                        $priorityToneClass = match ($priority) {
+                                            'low' => 'quick-status-filter-slate',
+                                            'medium' => 'quick-status-filter-sky',
+                                            'high' => 'quick-status-filter-amber',
+                                            default => 'quick-status-filter-rose',
+                                        };
+                                    @endphp
+                                    <button
+                                        type="button"
+                                        @click="toggle(@js($priority)); $nextTick(() => $el.closest('form').requestSubmit())"
+                                        class="quick-status-filter {{ $priorityToneClass }}"
+                                        :class="isSelected(@js($priority)) ? 'quick-status-filter-active' : ''"
+                                    >
+                                        <x-status-pill context="priority" :value="$priority" :label="$priorityLabels[$priority] ?? null" />
+                                    </button>
+                                @endforeach
+
+                                <template x-for="value in selected" :key="'repair-priority-' + value">
+                                    <input type="hidden" name="priority[]" :value="value">
+                                </template>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="toolbar-actions justify-end">
@@ -172,13 +203,13 @@
             <div class="mt-5">
             <x-active-filters
                 :items="[
-                    ['label' => 'Kods', 'value' => $filters['code']],
                     ['label' => 'Teksts', 'value' => $filters['q']],
                     ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
                     ['label' => 'Pieprasītājs', 'value' => $selectedRequesterLabel],
                     ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
                     ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
                     ['label' => 'Statuss', 'value' => $activeStatusLabel],
+                    ['label' => 'Prioritāte', 'value' => $activePriorityLabel],
                     ['label' => 'Piešķirts', 'value' => ($filters['mine'] ?? false) ? 'Man' : null],
                 ]"
                 :clear-url="route('repairs.index')"
@@ -257,7 +288,7 @@
                                         ])
                                         : null;
                                 @endphp
-                                <tr class="border-t border-slate-100 align-top">
+                                <tr class="border-t border-slate-100 align-top" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
                                     <td class="px-4 py-4">
                                         @if ($thumbUrl)
                                             <img src="{{ $thumbUrl }}" alt="{{ $device?->name ?: 'Ierīce' }}" class="device-table-thumb">

@@ -574,10 +574,18 @@ class RepairController extends Controller
     private function normalizedIndexFilters(Request $request, bool $canManageRepairs): array
     {
         $availableStatuses = ['waiting', 'in-progress', 'completed', 'cancelled'];
+        $availablePriorities = self::PRIORITIES;
         $rawStatuses = $request->query('status', []);
+        $rawPriorities = $request->query('priority', []);
         $selectedStatuses = collect(is_array($rawStatuses) ? $rawStatuses : [$rawStatuses])
             ->map(fn ($status) => strtolower(trim((string) $status)))
             ->filter(fn ($status) => in_array($status, $availableStatuses, true))
+            ->unique()
+            ->values()
+            ->all();
+        $selectedPriorities = collect(is_array($rawPriorities) ? $rawPriorities : [$rawPriorities])
+            ->map(fn ($priority) => strtolower(trim((string) $priority)))
+            ->filter(fn ($priority) => in_array($priority, $availablePriorities, true))
             ->unique()
             ->values()
             ->all();
@@ -594,6 +602,7 @@ class RepairController extends Controller
             'requester_id' => ctype_digit((string) $request->query('requester_id', '')) ? (int) $request->query('requester_id') : null,
             'requester_query' => trim((string) $request->query('requester_query', '')),
             'statuses' => $selectedStatuses,
+            'priorities' => $selectedPriorities,
             'date_from' => trim((string) $request->query('date_from', '')),
             'date_to' => trim((string) $request->query('date_to', '')),
             'mine' => $request->boolean('mine'),
@@ -604,15 +613,24 @@ class RepairController extends Controller
     {
         if ($filters['q'] !== '' && ! in_array('q', $skip, true)) {
             $term = $filters['q'];
+            $likeTerm = '%'.$term.'%';
 
-            $query->whereHas('device', function (Builder $deviceQuery) use ($term) {
-                $deviceQuery->where('code', $term);
-            });
-        }
-
-        if ($filters['code'] !== '' && ! in_array('code', $skip, true)) {
-            $query->whereHas('device', function (Builder $deviceQuery) use ($filters) {
-                $deviceQuery->whereRaw('LOWER(code) = ?', [mb_strtolower($filters['code'])]);
+            $query->where(function (Builder $filterQuery) use ($likeTerm) {
+                $filterQuery
+                    ->where('repairs.description', 'like', $likeTerm)
+                    ->orWhere('repairs.vendor_name', 'like', $likeTerm)
+                    ->orWhere('repairs.vendor_contact', 'like', $likeTerm)
+                    ->orWhere('repairs.invoice_number', 'like', $likeTerm)
+                    ->orWhereHas('device', function (Builder $deviceQuery) use ($likeTerm) {
+                        $deviceQuery
+                            ->where('code', 'like', $likeTerm)
+                            ->orWhere('serial_number', 'like', $likeTerm)
+                            ->orWhere('name', 'like', $likeTerm)
+                            ->orWhere('manufacturer', 'like', $likeTerm)
+                            ->orWhere('model', 'like', $likeTerm);
+                    })
+                    ->orWhereHas('request.responsibleUser', fn (Builder $requesterQuery) => $requesterQuery->where('full_name', 'like', $likeTerm))
+                    ->orWhereHas('reporter', fn (Builder $reporterQuery) => $reporterQuery->where('full_name', 'like', $likeTerm));
             });
         }
 
@@ -629,8 +647,12 @@ class RepairController extends Controller
             });
         }
 
-        if (! in_array('status', $skip, true) && count($filters['statuses']) > 0 && count($filters['statuses']) < 3) {
+        if (! in_array('status', $skip, true) && count($filters['statuses']) > 0 && count($filters['statuses']) < count(self::STATUSES)) {
             $query->whereIn('repairs.status', $filters['statuses']);
+        }
+
+        if (! in_array('priority', $skip, true) && count($filters['priorities'] ?? []) > 0 && count($filters['priorities']) < count(self::PRIORITIES)) {
+            $query->whereIn('repairs.priority', $filters['priorities']);
         }
 
         if ($filters['date_from'] !== '' && ! in_array('date_from', $skip, true)) {

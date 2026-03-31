@@ -280,6 +280,90 @@ const debounceAsyncTableSubmit = (form, delay = 260) => {
     asyncTableDebounceTimers.set(form, timerId);
 };
 
+const normalizeTableCode = (value) => String(value ?? '').trim().toLocaleLowerCase();
+
+const clearTableSearchHighlights = (root) => {
+    root?.querySelectorAll('.table-search-hit').forEach((row) => {
+        row.classList.remove('table-search-hit');
+    });
+};
+
+const highlightTableRow = (row) => {
+    row.classList.remove('table-search-hit');
+    void row.offsetWidth;
+    row.classList.add('table-search-hit');
+
+    window.setTimeout(() => {
+        row.classList.remove('table-search-hit');
+    }, 2400);
+};
+
+const performCodeSearch = (form) => {
+    const rootSelector = form?.dataset?.asyncRoot;
+    const codeInput = form?.querySelector('[data-async-code-search="true"]');
+
+    if (!rootSelector || !codeInput) {
+        return false;
+    }
+
+    const root = document.querySelector(rootSelector);
+    if (!root) {
+        return false;
+    }
+
+    const rawCode = codeInput.value.trim();
+    const normalizedCode = normalizeTableCode(rawCode);
+
+    if (!normalizedCode) {
+        window.dispatchAppToast({
+            title: 'Koda meklēšana',
+            message: 'Ievadi pilnu ierīces kodu, lai atrastu konkrēto ierakstu.',
+            tone: 'info',
+        });
+        codeInput.focus();
+
+        return true;
+    }
+
+    clearTableSearchHighlights(root);
+
+    const match = Array.from(root.querySelectorAll('[data-table-code]')).find((row) => {
+        return normalizeTableCode(row.dataset.tableCode) === normalizedCode;
+    });
+
+    if (!match) {
+        window.dispatchAppToast({
+            title: 'Kods netika atrasts',
+            message: `Ieraksts ar kodu "${rawCode}" pašreizējā skatā netika atrasts.`,
+            tone: 'info',
+        });
+
+        return true;
+    }
+
+    highlightTableRow(match);
+    match.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest',
+    });
+
+    return true;
+};
+
+const shouldRunCodeSearch = (form, submitter) => {
+    const codeInput = form?.querySelector('[data-async-code-search="true"]');
+    if (!codeInput) {
+        return false;
+    }
+
+    if (submitter?.matches?.('[data-code-search-submit="true"]')) {
+        return true;
+    }
+
+    return document.activeElement === codeInput;
+};
+
 const initializeAsyncTableFilters = () => {
     if (window.__asyncTableFiltersInitialized) {
         return;
@@ -295,6 +379,11 @@ const initializeAsyncTableFilters = () => {
         }
 
         event.preventDefault();
+
+        if (shouldRunCodeSearch(form, event.submitter) && performCodeSearch(form)) {
+            return;
+        }
+
         submitAsyncTableForm(form, { resetPage: true });
     });
 
