@@ -68,62 +68,68 @@
             </div>
         </div>
 
-        <div id="repair-requests-index-root" data-async-table-root>
-            <form
-                method="GET"
-                action="{{ route('repair-requests.index') }}"
-                class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.5fr)]"
-                data-async-table-form
-                data-async-root="#repair-requests-index-root"
-            >
-                <input type="hidden" name="statuses_filter" value="1">
-                <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
-                <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
-                @if (! empty($filters['request_id']))
-                    <input type="hidden" name="request_id" value="{{ $filters['request_id'] }}">
-                @endif
-
-                {{-- Filtri pa kreisi --}}
-                <label class="block">
-                    <span class="crud-label">Ierīce</span>
-                    <x-searchable-select
-                        name="device_id"
-                        query-name="device_query"
-                        identifier="repair-request-device-filter"
-                        :options="$deviceOptions"
-                        :selected="(string) ($filters['device_id'] ?? '')"
-                        :query="$selectedDeviceLabel"
-                        placeholder="Izvēlies ierīci"
-                        empty-message="Neviens remonta pieteikums neatbilst izvēlētajai ierīcei."
-                    />
-                </label>
-
-                <label class="block">
-                    <span class="crud-label">Pieteicējs</span>
-                    <x-searchable-select
-                        name="requester_id"
-                        query-name="requester_query"
-                        identifier="repair-request-requester-filter"
-                        :options="$requesterOptions"
-                        :selected="(string) ($filters['requester_id'] ?? '')"
-                        :query="$selectedRequesterLabel"
-                        placeholder="Izvēlies pieteicēju"
-                        empty-message="Neviens pieteicējs neatbilst meklējumam."
-                    />
-                </label>
-
-                <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
-                <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
-
-                {{-- Meklēšana pa labi --}}
-                <div class="xl:col-span-full">
-                    <label class="block">
-                        <span class="crud-label">Meklēt</span>
-                        <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Kods, nosaukums, pieteicējs vai apraksts">
-                    </label>
+        <div id="repair-requests-index-root" data-async-table-root" class="repair-requests-index-page">
+            {{-- Filtru un meklēšanas josla --}}
+            <div class="devices-filter-surface">
+                <div class="devices-filter-header">
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
+                            <x-icon name="search" size="h-4 w-4" />
+                            <span>Meklēšana</span>
+                        </h3>
+                        <div class="devices-filter-grid">
+                            <label class="devices-text-search">
+                                <span>Meklēt</span>
+                                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Kods, nosaukums, pieteicējs vai apraksts">
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
+                <div class="devices-filter-divider"></div>
+
+                <div class="devices-filter-header">
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
+                            <x-icon name="filter" size="h-4 w-4" />
+                            <span>Filtri</span>
+                        </h3>
+                        <div class="devices-filters-grid">
+                            <label class="block">
+                                <span class="crud-label">Ierīce</span>
+                                <x-searchable-select
+                                    name="device_id"
+                                    query-name="device_query"
+                                    identifier="repair-request-device-filter"
+                                    :options="$deviceOptions"
+                                    :selected="(string) ($filters['device_id'] ?? '')"
+                                    :query="$selectedDeviceLabel"
+                                    placeholder="Izvēlies ierīci"
+                                    empty-message="Neviens remonta pieteikums neatbilst izvēlētajai ierīcei."
+                                />
+                            </label>
+
+                            <label class="block">
+                                <span class="crud-label">Pieteicējs</span>
+                                <x-searchable-select
+                                    name="requester_id"
+                                    query-name="requester_query"
+                                    identifier="repair-request-requester-filter"
+                                    :options="$requesterOptions"
+                                    :selected="(string) ($filters['requester_id'] ?? '')"
+                                    :query="$selectedRequesterLabel"
+                                    placeholder="Izvēlies pieteicēju"
+                                    empty-message="Neviens pieteicējs neatbilst meklējumam."
+                                />
+                            </label>
+
+                            <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
+                            <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-toolbar-footer">
                     <div class="quick-filter-groups">
                         <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($filters['statuses']), minimum: 0 })">
                             <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Statuss</div>
@@ -153,39 +159,50 @@
                         </div>
                     </div>
 
-                    <div class="toolbar-actions justify-end">
-                        <button type="submit" class="btn-search">
-                            <x-icon name="search" size="h-4 w-4" />
-                            <span>Meklēt</span>
-                        </button>
+                    <div class="toolbar-actions">
                         <a href="{{ route('repair-requests.index') }}" class="btn-clear" data-async-link="true">
                             <x-icon name="clear" size="h-4 w-4" />
-                            <span>Noņemt filtrus</span>
+                            <span>Notīrīt filtrus</span>
                         </a>
                     </div>
                 </div>
-            </form>
+            </div>
 
-            <x-active-filters
-                :items="[
-                    ['label' => 'Meklēt', 'value' => $filters['q']],
-                    ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
-                    ['label' => 'Pieteicējs', 'value' => $selectedRequesterLabel],
-                    ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
-                    ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
-                    ['label' => 'Statuss', 'value' => $activeStatusLabel],
-                ]"
-                :clear-url="route('repair-requests.index')"
-            />
-
-            @if (session('error'))
-                <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
+            <input type="hidden" name="statuses_filter" value="1">
+            <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
+            <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
+            @if (! empty($filters['request_id']))
+                <input type="hidden" name="request_id" value="{{ $filters['request_id'] }}">
             @endif
 
-            @if (! empty($featureMessage))
-                <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
-            @endif
+            <form
+                method="GET"
+                action="{{ route('repair-requests.index') }}"
+                class="hidden"
+                data-async-table-form
+                data-async-root="#repair-requests-index-root"
+            >
+                <x-active-filters
+                    :items="[
+                        ['label' => 'Meklēt', 'value' => $filters['q']],
+                        ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
+                        ['label' => 'Pieteicējs', 'value' => $selectedRequesterLabel],
+                        ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
+                        ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
+                        ['label' => 'Statuss', 'value' => $activeStatusLabel],
+                    ]"
+                    :clear-url="route('repair-requests.index')"
+                />
 
+                @if (session('error'))
+                    <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
+                @endif
+
+                @if (! empty($featureMessage))
+                    <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
+                @endif
+
+            {{-- Remonta pieteikumu tabula --}}
             <div class="device-table-shell">
                 <div class="device-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
                     <table class="min-w-full text-sm">
