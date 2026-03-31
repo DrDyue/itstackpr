@@ -46,12 +46,15 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('register', [RegisteredUserController::class, 'store']);
     Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
     Route::resource('users', UserController::class)->except(['show']);
+    Route::get('/users/find-by-name', [UserController::class, 'findByName'])->name('users.find-by-name');
 });
 
 // Inventāra pārvaldības sadaļa administratoram un IT darbiniekam.
 Route::middleware(['auth', 'manager'])->group(function () {
     Route::resource('buildings', BuildingController::class)->except(['show']);
+    Route::get('/buildings/find-by-name', [BuildingController::class, 'findByName'])->name('buildings.find-by-name');
     Route::resource('rooms', RoomController::class)->except(['show']);
+    Route::get('/rooms/find-by-name', [RoomController::class, 'findByName'])->name('rooms.find-by-name');
     Route::resource('device-types', DeviceTypeController::class)->except(['show']);
     Route::get('/devices/{device}/quick-update', [DeviceController::class, 'quickUpdateRedirect'])->name('devices.quick-update.redirect');
     Route::post('/devices/{device}/quick-update', [DeviceController::class, 'quickUpdate'])->name('devices.quick-update');
@@ -91,6 +94,7 @@ Route::middleware('auth')->group(function () {
         ->where('path', '.*')
         ->name('device-assets.show');
     Route::resource('repairs', RepairController::class)->only(['index']);
+    Route::get('/repairs/find-by-code', [RepairController::class, 'findByCode'])->name('repairs.find-by-code');
     Route::get('/repair-requests', [RepairRequestController::class, 'index'])->name('repair-requests.index');
     Route::get('/repair-requests/create', [RepairRequestController::class, 'create'])->name('repair-requests.create');
     Route::post('/repair-requests', [RepairRequestController::class, 'store'])->name('repair-requests.store');

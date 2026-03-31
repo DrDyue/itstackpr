@@ -37,10 +37,13 @@
         </div>
 
         <div id="buildings-index-root" data-async-table-root>
-        <form method="GET" action="{{ route('buildings.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-2" data-async-table-form data-async-root="#buildings-index-root">
+        <form method="GET" action="{{ route('buildings.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]" data-async-table-form data-async-root="#buildings-index-root" data-search-endpoint="{{ route('buildings.find-by-name') }}">
             <label class="block">
-                <span class="crud-label">Meklēt</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, adrese vai piezīmes...">
+                <span class="crud-label">Ēkas nosaukums</span>
+                <div class="flex items-center gap-2">
+                    <input type="text" name="search" value="{{ $filters['search'] }}" class="crud-control" placeholder="Ievadi ēkas nosaukumu" data-async-manual="true" data-table-manual-search="true" data-search-mode="contains">
+                    <button type="submit" class="btn-search shrink-0" data-table-search-submit="true"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
+                </div>
             </label>
             <label class="block">
                 <span class="crud-label">Pilsēta</span>
@@ -56,14 +59,12 @@
                 />
             </label>
             <div class="toolbar-actions md:col-span-2">
-                <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
                 <a href="{{ route('buildings.index') }}" class="btn-clear" data-async-link="true"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt</span></a>
             </div>
         </form>
 
         <x-active-filters
             :items="[
-                ['label' => 'Meklēt', 'value' => $filters['q']],
                 ['label' => 'Pilsēta', 'value' => $filters['city']],
             ]"
             :clear-url="route('buildings.index')"
@@ -90,7 +91,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @forelse ($buildings as $building)
-                            <tr class="hover:bg-slate-50">
+                            <tr class="hover:bg-slate-50" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim((string) $building->building_name)) }}">
                                 <td class="px-4 py-3 font-medium text-slate-900">{{ $building->building_name }}</td>
                                 <td class="px-4 py-3 text-slate-600">
                                     <div>Telpas: {{ $building->rooms_count }}</div>

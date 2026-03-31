@@ -63,10 +63,13 @@
         </div>
 
         <div id="rooms-index-root" data-async-table-root>
-        <form method="GET" action="{{ route('rooms.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-5" data-async-table-form data-async-root="#rooms-index-root">
-            <label class="block">
-                <span class="crud-label">Meklēt</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Telpa, ēka, nodaļa, atbildīgais...">
+        <form method="GET" action="{{ route('rooms.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-5" data-async-table-form data-async-root="#rooms-index-root" data-search-endpoint="{{ route('rooms.find-by-name') }}">
+            <label class="block md:col-span-2">
+                <span class="crud-label">Telpas nosaukums</span>
+                <div class="flex items-center gap-2">
+                    <input type="text" name="search" value="{{ $filters['search'] }}" class="crud-control" placeholder="Nosaukums vai numurs" data-async-manual="true" data-table-manual-search="true" data-search-mode="contains">
+                    <button type="submit" class="btn-search shrink-0" data-table-search-submit="true"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
+                </div>
             </label>
             <label class="block">
                 <span class="crud-label">Ēka</span>
@@ -121,14 +124,12 @@
                 />
             </label>
             <div class="toolbar-actions md:col-span-5">
-                <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
                 <a href="{{ route('rooms.index') }}" class="btn-clear" data-async-link="true"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt</span></a>
             </div>
         </form>
 
         <x-active-filters
             :items="[
-                ['label' => 'Meklēt', 'value' => $filters['q']],
                 ['label' => 'Ēka', 'value' => $filters['building_id'] !== '' ? optional($buildings->firstWhere('id', (int) $filters['building_id']))->building_name : null],
                 ['label' => 'Nodaļa', 'value' => $filters['department']],
                 ['label' => 'Atbildīgais', 'value' => $filters['user_id'] !== '' ? optional($responsibleUsers->firstWhere('id', (int) $filters['user_id']))->full_name : null],
@@ -158,7 +159,7 @@
                 </thead>
                 <tbody>
                     @forelse ($rooms as $room)
-                        <tr class="border-t border-slate-100">
+                        <tr class="border-t border-slate-100" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim(implode(' ', array_filter([$room->room_number, $room->room_name])))) }}">
                             <td class="px-4 py-3">{{ $room->building?->building_name }}</td>
                             <td class="px-4 py-3">{{ $room->floor_number }}</td>
                             <td class="px-4 py-3">{{ $room->room_number }}</td>

@@ -15,6 +15,7 @@ use App\Support\DeviceAssetManager;
 use App\Support\RuntimeSchemaBootstrapper;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -59,27 +60,44 @@ class DeviceController extends Controller
         $user = $this->user();
         abort_unless($user, 403);
 
-        $code = $request->query('code', '');
+        $code = trim((string) $request->query('code', ''));
 
         if (empty($code)) {
             return response()->json(['found' => false, 'page' => 1]);
         }
 
-        // Get all visible devices for the user
-        $devicesQuery = $this->visibleDevicesQuery($user)
-            ->select('devices.id', 'devices.code')
-            ->where('devices.code', 'like', "%{$code}%");
+        $canManageDevices = $user->canManageRequests();
+        $filters = $this->normalizedIndexFilters($request);
+        $sorting = $this->normalizedDeviceSorting($request);
+        $accessibleRooms = $this->accessibleRooms($user);
+        $types = DeviceType::query()->orderBy('type_name')->get();
+        $assignableUsers = $canManageDevices
+            ? User::query()->active()->orderBy('full_name')->get()
+            : collect();
 
-        // Find the position of the device in the full result set
-        $allDevices = $devicesQuery->orderBy('devices.created_at', 'desc')->orderBy('devices.id')->get();
+        $selectedRoom = ctype_digit($filters['room_id'])
+            ? $accessibleRooms->firstWhere('id', (int) $filters['room_id'])
+            : null;
+        $selectedType = ctype_digit($filters['type'])
+            ? $types->firstWhere('id', (int) $filters['type'])
+            : null;
+        $selectedAssignedUser = $canManageDevices && ctype_digit($filters['assigned_to_id'])
+            ? $assignableUsers->firstWhere('id', (int) $filters['assigned_to_id'])
+            : null;
+
+        $devicesQuery = $this->visibleDevicesQuery($user)->select('devices.id', 'devices.code');
+        $this->applyDeviceIndexFilters($devicesQuery, $filters, $selectedAssignedUser, $selectedRoom, $selectedType);
+        $this->applyDeviceIndexSorting($devicesQuery, $sorting);
+
+        $allDevices = $devicesQuery->get();
 
         $foundDevice = null;
         $foundIndex = null;
+        $searchCode = mb_strtolower($code);
 
         foreach ($allDevices as $index => $device) {
-            $deviceCode = strtolower($device->code ?? '');
-            $searchCode = strtolower($code);
-            if ($deviceCode === $searchCode || str_contains($deviceCode, $searchCode)) {
+            $deviceCode = mb_strtolower(trim((string) ($device->code ?? '')));
+            if ($deviceCode === $searchCode) {
                 $foundDevice = $device;
                 $foundIndex = $index;
                 break;
@@ -99,6 +117,7 @@ class DeviceController extends Controller
             'page' => $page,
             'device_id' => $foundDevice->id,
             'device_code' => $foundDevice->code,
+            'term' => $code,
         ]);
     }
 

@@ -129,6 +129,7 @@
                 class="devices-filter-surface"
                 data-async-table-form
                 data-async-root="#devices-index-root"
+                data-search-endpoint="{{ route('devices.find-by-code') }}"
                 @searchable-select-updated.window="if ($event.detail.identifier === 'device-floor-filter') { $dispatch('searchable-select-clear', { target: 'device-room-filter' }) }"
             >
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">

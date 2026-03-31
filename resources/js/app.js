@@ -280,7 +280,7 @@ const debounceAsyncTableSubmit = (form, delay = 260) => {
     asyncTableDebounceTimers.set(form, timerId);
 };
 
-const normalizeTableCode = (value) => String(value ?? '').trim().toLocaleLowerCase();
+const normalizeTableSearchValue = (value) => String(value ?? '').trim().toLocaleLowerCase();
 
 const clearTableSearchHighlights = (root) => {
     root?.querySelectorAll('.table-search-hit').forEach((row) => {
@@ -298,11 +298,66 @@ const highlightTableRow = (row) => {
     }, 2400);
 };
 
-const performCodeSearch = (form) => {
-    const rootSelector = form?.dataset?.asyncRoot;
-    const codeInput = form?.querySelector('[data-async-code-search="true"]');
+const getManualSearchInput = (form) => {
+    return form?.querySelector('[data-async-code-search="true"], [data-table-manual-search="true"]');
+};
 
-    if (!rootSelector || !codeInput) {
+const getManualSearchMode = (input) => {
+    if (!input) {
+        return 'contains';
+    }
+
+    return input.dataset.searchMode || (input.matches('[data-async-code-search="true"]') ? 'exact' : 'contains');
+};
+
+const getRowSearchValue = (row) => {
+    return row.dataset.tableSearchValue || row.dataset.tableCode || '';
+};
+
+const rowMatchesSearch = (row, term, mode = 'contains') => {
+    const value = normalizeTableSearchValue(getRowSearchValue(row));
+    const normalizedTerm = normalizeTableSearchValue(term);
+
+    if (!value || !normalizedTerm) {
+        return false;
+    }
+
+    if (mode === 'exact') {
+        return value === normalizedTerm;
+    }
+
+    return value.includes(normalizedTerm);
+};
+
+const findMatchingTableRow = (root, term, mode = 'contains') => {
+    return Array.from(root?.querySelectorAll('[data-table-search-value], [data-table-code]') ?? [])
+        .find((row) => rowMatchesSearch(row, term, mode)) || null;
+};
+
+const buildSearchNavigationUrl = (form, page, rawTerm, mode) => {
+    const targetUrl = new URL(form.getAttribute('action') || window.location.href, window.location.origin);
+    const formData = new FormData(form);
+
+    for (const [key, value] of formData.entries()) {
+        if (value === '') {
+            continue;
+        }
+
+        targetUrl.searchParams.append(key, value);
+    }
+
+    targetUrl.searchParams.set('page', String(page));
+    targetUrl.searchParams.set('highlight', rawTerm);
+    targetUrl.searchParams.set('highlight_mode', mode);
+
+    return targetUrl;
+};
+
+const performManualTableSearch = async (form) => {
+    const rootSelector = form?.dataset?.asyncRoot;
+    const searchInput = getManualSearchInput(form);
+
+    if (!rootSelector || !searchInput) {
         return false;
     }
 
@@ -311,57 +366,132 @@ const performCodeSearch = (form) => {
         return false;
     }
 
-    const rawCode = codeInput.value.trim();
-    const normalizedCode = normalizeTableCode(rawCode);
+    const rawTerm = searchInput.value.trim();
+    const normalizedTerm = normalizeTableSearchValue(rawTerm);
+    const searchMode = getManualSearchMode(searchInput);
 
-    if (!normalizedCode) {
+    if (!normalizedTerm) {
         window.dispatchAppToast({
-            title: 'Koda meklēšana',
-            message: 'Ievadi pilnu ierīces kodu, lai atrastu konkrēto ierakstu.',
+            title: 'Meklēšana',
+            message: 'Ievadi meklējamo vērtību, lai atrastu konkrēto ierakstu.',
             tone: 'info',
         });
-        codeInput.focus();
+        searchInput.focus();
 
         return true;
     }
 
     clearTableSearchHighlights(root);
 
-    const match = Array.from(root.querySelectorAll('[data-table-code]')).find((row) => {
-        return normalizeTableCode(row.dataset.tableCode) === normalizedCode;
-    });
+    const match = findMatchingTableRow(root, rawTerm, searchMode);
 
-    if (!match) {
+    if (match) {
+        highlightTableRow(match);
+        match.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest',
+        });
+
+        return true;
+    }
+
+    const searchEndpoint = form.dataset.searchEndpoint;
+    if (!searchEndpoint) {
         window.dispatchAppToast({
-            title: 'Kods netika atrasts',
-            message: `Ieraksts ar kodu "${rawCode}" pašreizējā skatā netika atrasts.`,
+            title: 'Ieraksts netika atrasts',
+            message: `Pašreizējā skatā netika atrasts ieraksts "${rawTerm}".`,
             tone: 'info',
         });
 
         return true;
     }
 
-    highlightTableRow(match);
-    match.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-        inline: 'nearest',
-    });
+    try {
+        const endpointUrl = new URL(searchEndpoint, window.location.origin);
+        const formData = new FormData(form);
+
+        for (const [key, value] of formData.entries()) {
+            if (value === '') {
+                continue;
+            }
+
+            endpointUrl.searchParams.append(key, value);
+        }
+
+        const response = await fetch(endpointUrl.toString(), {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Search request failed: ${response.status}`);
+        }
+
+        const result = await response.json();
+        if (!result?.found) {
+            window.dispatchAppToast({
+                title: 'Ieraksts netika atrasts',
+                message: `Ieraksts "${rawTerm}" netika atrasts nevienā lapā.`,
+                tone: 'info',
+            });
+
+            return true;
+        }
+
+        window.location.assign(buildSearchNavigationUrl(form, result.page, rawTerm, searchMode).toString());
+    } catch (error) {
+        window.dispatchAppToast({
+            title: 'Meklēšana neizdevās',
+            message: 'Neizdevās atrast ierakstu. Mēģini vēlreiz.',
+            tone: 'error',
+        });
+    }
 
     return true;
 };
 
-const shouldRunCodeSearch = (form, submitter) => {
-    const codeInput = form?.querySelector('[data-async-code-search="true"]');
-    if (!codeInput) {
+const shouldRunManualSearch = (form, submitter) => {
+    const searchInput = getManualSearchInput(form);
+    if (!searchInput) {
         return false;
     }
 
-    if (submitter?.matches?.('[data-code-search-submit="true"]')) {
+    if (submitter?.matches?.('[data-code-search-submit="true"], [data-table-search-submit="true"]')) {
         return true;
     }
 
-    return document.activeElement === codeInput;
+    return document.activeElement === searchInput;
+};
+
+const restoreHighlightedSearchFromUrl = () => {
+    const currentUrl = new URL(window.location.href);
+    const term = currentUrl.searchParams.get('highlight');
+    const mode = currentUrl.searchParams.get('highlight_mode') || 'contains';
+
+    if (!term) {
+        return;
+    }
+
+    const match = findMatchingTableRow(document, term, mode);
+    if (!match) {
+        return;
+    }
+
+    highlightTableRow(match);
+    window.setTimeout(() => {
+        match.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest',
+        });
+    }, 120);
+
+    currentUrl.searchParams.delete('highlight');
+    currentUrl.searchParams.delete('highlight_mode');
+    window.history.replaceState({}, '', `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`);
 };
 
 const initializeAsyncTableFilters = () => {
@@ -371,7 +501,7 @@ const initializeAsyncTableFilters = () => {
 
     window.__asyncTableFiltersInitialized = true;
 
-    document.addEventListener('submit', (event) => {
+    document.addEventListener('submit', async (event) => {
         const form = findAsyncTableForm(event.target);
 
         if (!form) {
@@ -380,7 +510,7 @@ const initializeAsyncTableFilters = () => {
 
         event.preventDefault();
 
-        if (shouldRunCodeSearch(form, event.submitter) && performCodeSearch(form)) {
+        if (shouldRunManualSearch(form, event.submitter) && await performManualTableSearch(form)) {
             return;
         }
 
@@ -1421,10 +1551,12 @@ registerAlpineData();
 document.addEventListener('alpine:init', registerAlpineData);
 document.addEventListener('DOMContentLoaded', initializeThemeToggle);
 document.addEventListener('DOMContentLoaded', initializeAsyncTableFilters);
+document.addEventListener('DOMContentLoaded', restoreHighlightedSearchFromUrl);
 
 if (document.readyState !== 'loading') {
     initializeThemeToggle();
     initializeAsyncTableFilters();
+    restoreHighlightedSearchFromUrl();
 }
 
 if (Alpine && !window.__appAlpineStarted) {

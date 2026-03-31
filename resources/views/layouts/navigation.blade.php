@@ -190,6 +190,7 @@
 
                     {{-- Paziņojumu centrs --}}
                     @php
+                        $showNotificationPreviewCards = ! request()->routeIs('*.create', '*.edit', 'my-requests.edit');
                         $pendingNotificationsCount = $canManageRequests
                             ? (\App\Models\RepairRequest::query()->where('status', \App\Models\RepairRequest::STATUS_SUBMITTED)->count()
                                 + \App\Models\WriteoffRequest::query()->where('status', \App\Models\WriteoffRequest::STATUS_SUBMITTED)->count())
@@ -256,7 +257,7 @@
                                             ->get();
                                     @endphp
 
-                                    @if ($pendingRepairs->count() > 0)
+                                    @if ($showNotificationPreviewCards && $pendingRepairs->count() > 0)
                                         <div class="px-3 pb-2 pt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta pieprasījumi</div>
                                         @foreach ($pendingRepairs as $request)
                                             <a href="{{ route('repair-requests.index', ['statuses_filter' => 1, 'status' => ['submitted']]) }}#repair-request-{{ $request->id }}" class="group flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-3 transition hover:border-amber-200 hover:bg-amber-50">
@@ -275,7 +276,7 @@
                                         @endforeach
                                     @endif
 
-                                    @if ($pendingWriteoffs->count() > 0)
+                                    @if ($showNotificationPreviewCards && $pendingWriteoffs->count() > 0)
                                         <div class="px-3 pb-2 pt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Norakstīšanas pieprasījumi</div>
                                         @foreach ($pendingWriteoffs as $request)
                                             <a href="{{ route('writeoff-requests.index', ['statuses_filter' => 1, 'status' => ['submitted']]) }}#writeoff-request-{{ $request->id }}" class="group flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-3 transition hover:border-rose-200 hover:bg-rose-50">
@@ -292,6 +293,13 @@
                                                 </div>
                                             </a>
                                         @endforeach
+                                    @endif
+
+                                    @if (! $showNotificationPreviewCards && ($pendingRepairs->count() > 0 || $pendingWriteoffs->count() > 0))
+                                        <div class="px-3 py-6 text-center">
+                                            <p class="text-sm font-semibold text-slate-900">Aktīvie pieprasījumi ir pieejami pārskata lapās</p>
+                                            <p class="mt-1 text-xs text-slate-500">Šajā formā atstātas tikai ātrās pārejas uz pieteikumu sadaļām.</p>
+                                        </div>
                                     @endif
 
                                     @if ($pendingRepairs->count() === 0 && $pendingWriteoffs->count() === 0)

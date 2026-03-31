@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Support\AuditTrail;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -20,7 +21,7 @@ class UserController extends Controller
         $this->requireAdmin();
 
         $filters = [
-            'q' => trim((string) $request->query('q', '')),
+            'search' => trim((string) $request->query('search', $request->query('q', ''))),
             'roles' => collect($request->query('role', []))
                 ->map(fn (mixed $role) => trim((string) $role))
                 ->filter(fn (string $role) => in_array($role, self::ROLES, true))
@@ -36,16 +37,6 @@ class UserController extends Controller
         $legacyEmail = trim((string) $request->query('email', ''));
 
         $users = User::query()
-            ->when($filters['q'] !== '', function ($query) use ($filters) {
-                $term = $filters['q'];
-
-                $query->where(function ($searchQuery) use ($term) {
-                    $searchQuery->where('full_name', 'like', '%' . $term . '%')
-                        ->orWhere('email', 'like', '%' . $term . '%')
-                        ->orWhere('phone', 'like', '%' . $term . '%')
-                        ->orWhere('job_title', 'like', '%' . $term . '%');
-                });
-            })
             ->when($legacyName !== '', fn ($query) => $query->where('full_name', 'like', '%' . $legacyName . '%'))
             ->when($legacyEmail !== '', fn ($query) => $query->where('email', 'like', '%' . $legacyEmail . '%'))
             ->when($filters['has_role_filter'], fn ($query) => $query->whereIn('role', $filters['roles']))
@@ -69,6 +60,55 @@ class UserController extends Controller
             'filters' => $filters,
             'roles' => self::ROLES,
             'roleLabels' => $this->roleLabels(),
+        ]);
+    }
+
+    /**
+     * Atrod lietotāju pēc vārda un uzvārda aktīvajā filtrētajā sarakstā.
+     */
+    public function findByName(Request $request): JsonResponse
+    {
+        $this->requireAdmin();
+
+        $search = trim((string) $request->query('search', $request->query('q', '')));
+        if ($search === '') {
+            return response()->json(['found' => false, 'page' => 1]);
+        }
+
+        $filters = [
+            'roles' => collect($request->query('role', []))
+                ->map(fn (mixed $role) => trim((string) $role))
+                ->filter(fn (string $role) => in_array($role, self::ROLES, true))
+                ->unique()
+                ->values()
+                ->all(),
+            'is_active' => (string) $request->query('is_active', ''),
+            'last_login' => trim((string) $request->query('last_login', '')),
+        ];
+        $filters['has_role_filter'] = count($filters['roles']) > 0 && count($filters['roles']) < count(self::ROLES);
+
+        $users = User::query()
+            ->when($filters['has_role_filter'], fn ($query) => $query->whereIn('role', $filters['roles']))
+            ->when($filters['is_active'] !== '', fn ($query) => $query->where('is_active', $filters['is_active'] === '1'))
+            ->when($filters['last_login'] === 'today', fn ($query) => $query->whereDate('last_login', today()))
+            ->when($filters['last_login'] === 'recent', fn ($query) => $query->where('last_login', '>=', now()->subDays(7)))
+            ->when($filters['last_login'] === 'never', fn ($query) => $query->whereNull('last_login'))
+            ->orderBy('full_name')
+            ->get(['id', 'full_name']);
+
+        $needle = mb_strtolower($search);
+        $foundIndex = $users->search(function (User $user) use ($needle) {
+            return str_contains(mb_strtolower($user->full_name), $needle);
+        });
+
+        if ($foundIndex === false) {
+            return response()->json(['found' => false, 'page' => 1]);
+        }
+
+        return response()->json([
+            'found' => true,
+            'page' => intdiv((int) $foundIndex, 15) + 1,
+            'term' => $search,
         ]);
     }
 

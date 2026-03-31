@@ -78,6 +78,7 @@
                 class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.5fr)]"
                 data-async-table-form
                 data-async-root="#repairs-index-root"
+                data-search-endpoint="{{ route('repairs.find-by-code') }}"
             >
                 <input type="hidden" name="statuses_filter" value="1">
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
@@ -164,7 +165,8 @@
                                             class="quick-status-filter {{ $toneClass }}"
                                             :class="isSelected(@js($status)) ? 'quick-status-filter-active' : ''"
                                         >
-                                            <x-status-pill context="repair" :value="$status" :label="$statusLabels[$status] ?? null" />
+                                            <x-icon :name="match($status) { 'waiting' => 'clock', 'in-progress' => 'stats', 'completed' => 'check-circle', default => 'x-circle' }" size="h-4 w-4" />
+                                            <span>{{ $statusLabels[$status] ?? $status }}</span>
                                         </button>
                                     @endforeach
 
@@ -193,7 +195,8 @@
                                         class="quick-status-filter {{ $priorityToneClass }}"
                                         :class="isSelected(@js($priority)) ? 'quick-status-filter-active' : ''"
                                     >
-                                        <x-status-pill context="priority" :value="$priority" :label="$priorityLabels[$priority] ?? null" />
+                                        <x-icon name="tag" size="h-4 w-4" />
+                                        <span>{{ $priorityLabels[$priority] ?? $priority }}</span>
                                     </button>
                                 @endforeach
 

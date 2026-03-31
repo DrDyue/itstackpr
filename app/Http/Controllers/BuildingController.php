@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Building;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
@@ -22,21 +23,12 @@ class BuildingController extends Controller
         $this->requireManager();
 
         $filters = [
-            'q' => trim((string) $request->query('q', '')),
+            'search' => trim((string) $request->query('search', $request->query('q', ''))),
             'city' => trim((string) $request->query('city', '')),
         ];
 
         $buildings = Building::query()
             ->withCount(['rooms', 'devices'])
-            ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
-                $term = $filters['q'];
-
-                $query->where(function (Builder $searchQuery) use ($term) {
-                    $searchQuery->where('building_name', 'like', "%{$term}%")
-                        ->orWhere('address', 'like', "%{$term}%")
-                        ->orWhere('notes', 'like', "%{$term}%");
-                });
-            })
             ->when($filters['city'] !== '', fn (Builder $query) => $query->where('city', $filters['city']))
             ->orderBy('building_name')
             ->paginate(20)
@@ -51,6 +43,40 @@ class BuildingController extends Controller
                 ->distinct()
                 ->orderBy('city')
                 ->pluck('city'),
+        ]);
+    }
+
+    /**
+     * Atrod ēku pēc nosaukuma aktīvajā filtrētajā sarakstā.
+     */
+    public function findByName(Request $request): JsonResponse
+    {
+        $this->requireManager();
+
+        $search = trim((string) $request->query('search', $request->query('q', '')));
+        if ($search === '') {
+            return response()->json(['found' => false, 'page' => 1]);
+        }
+
+        $city = trim((string) $request->query('city', ''));
+        $buildings = Building::query()
+            ->when($city !== '', fn (Builder $query) => $query->where('city', $city))
+            ->orderBy('building_name')
+            ->get(['id', 'building_name']);
+
+        $needle = mb_strtolower($search);
+        $foundIndex = $buildings->search(function (Building $building) use ($needle) {
+            return str_contains(mb_strtolower($building->building_name), $needle);
+        });
+
+        if ($foundIndex === false) {
+            return response()->json(['found' => false, 'page' => 1]);
+        }
+
+        return response()->json([
+            'found' => true,
+            'page' => intdiv((int) $foundIndex, 20) + 1,
+            'term' => $search,
         ]);
     }
 

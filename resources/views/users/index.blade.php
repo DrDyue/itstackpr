@@ -64,24 +64,44 @@
         </div>
 
         <div id="users-index-root" data-async-table-root>
-        <form method="GET" action="{{ route('users.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-3 xl:grid-cols-4" data-async-table-form data-async-root="#users-index-root">
+        <form method="GET" action="{{ route('users.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-3 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,1fr)]" data-async-table-form data-async-root="#users-index-root" data-search-endpoint="{{ route('users.find-by-name') }}">
             <label class="block">
-                <span class="crud-label">Meklēt</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Vārds, e-pasts, tālrunis, amats...">
+                <span class="crud-label">Vārds un uzvārds</span>
+                <div class="flex items-center gap-2">
+                    <input
+                        type="text"
+                        name="search"
+                        value="{{ $filters['search'] }}"
+                        class="crud-control"
+                        placeholder="Ievadi vārdu un uzvārdu"
+                        data-async-manual="true"
+                        data-table-manual-search="true"
+                        data-search-mode="contains"
+                    >
+                    <button type="submit" class="btn-search shrink-0" data-table-search-submit="true">
+                        <x-icon name="search" size="h-4 w-4" />
+                        <span>Meklēt</span>
+                    </button>
+                </div>
             </label>
-            <label class="block">
+            <div class="block">
                 <span class="crud-label">Statuss</span>
-                <x-searchable-select
-                    name="is_active"
-                    query-name="is_active_query"
-                    identifier="user-status-filter"
-                    :options="$statusOptions"
-                    :selected="$filters['is_active']"
-                    :query="$selectedStatusLabel"
-                    placeholder="Izvēlies statusu"
-                    empty-message="Neviens statuss neatbilst meklējumam."
-                />
-            </label>
+                <div class="status-segmented-control" x-data="{ value: @js($filters['is_active']) }">
+                    <input type="hidden" name="is_active" :value="value">
+                    <button type="button" class="status-segment status-segment-emerald" :class="value === '1' ? 'status-segment-active' : ''" @click="value = '1'; $nextTick(() => $el.closest('form').requestSubmit())">
+                        <x-icon name="check-circle" size="h-4 w-4" />
+                        <span>Aktīvi</span>
+                    </button>
+                    <button type="button" class="status-segment status-segment-slate" :class="value === '' ? 'status-segment-active' : ''" @click="value = ''; $nextTick(() => $el.closest('form').requestSubmit())">
+                        <x-icon name="filter" size="h-4 w-4" />
+                        <span>Visi</span>
+                    </button>
+                    <button type="button" class="status-segment status-segment-rose" :class="value === '0' ? 'status-segment-active' : ''" @click="value = '0'; $nextTick(() => $el.closest('form').requestSubmit())">
+                        <x-icon name="x-circle" size="h-4 w-4" />
+                        <span>Neaktīvi</span>
+                    </button>
+                </div>
+            </div>
             <label class="block">
                 <span class="crud-label">Pēdējā pieslēgšanās</span>
                 <x-searchable-select
@@ -124,7 +144,6 @@
                 </div>
 
                 <div class="toolbar-actions justify-end">
-                <button type="submit" class="btn-search"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
                 <a href="{{ route('users.index') }}" class="btn-clear" data-async-link="true"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt</span></a>
                 </div>
             </div>
@@ -132,7 +151,6 @@
 
         <x-active-filters
             :items="[
-                ['label' => 'Meklēt', 'value' => $filters['q']],
                 ['label' => 'Loma', 'value' => $filters['has_role_filter'] ? collect($filters['roles'])->map(fn ($role) => $roleLabels[$role] ?? $role)->implode(', ') : null],
                 ['label' => 'Statuss', 'value' => $filters['is_active'] === '1' ? 'Aktīvs' : ($filters['is_active'] === '0' ? 'Neaktīvs' : null)],
                 ['label' => 'Pēdējā pieslēgšanās', 'value' => $filters['last_login'] === 'today' ? 'Šodien' : ($filters['last_login'] === 'recent' ? 'Pēdējās 7 dienas' : ($filters['last_login'] === 'never' ? 'Nav pieslēdzies' : null))],
@@ -160,7 +178,7 @@
                 </thead>
                 <tbody>
                     @forelse ($users as $managedUser)
-                        <tr class="border-t border-slate-100 {{ $managedUser->role === 'admin' ? 'bg-violet-50/40' : 'bg-sky-50/30' }}">
+                        <tr class="border-t border-slate-100 {{ $managedUser->role === 'admin' ? 'bg-violet-50/40' : 'bg-sky-50/30' }}" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim((string) $managedUser->full_name)) }}">
                             <td class="px-4 py-3">
                                 <div class="font-medium text-slate-900">{{ $managedUser->full_name }}</div>
                             </td>

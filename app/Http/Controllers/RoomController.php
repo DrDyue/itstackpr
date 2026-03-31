@@ -7,6 +7,7 @@ use App\Models\Room;
 use App\Models\User;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -23,7 +24,7 @@ class RoomController extends Controller
         $this->requireManager();
 
         $filters = [
-            'q' => trim((string) $request->query('q', '')),
+            'search' => trim((string) $request->query('search', $request->query('q', ''))),
             'building_id' => trim((string) $request->query('building_id', '')),
             'department' => trim((string) $request->query('department', '')),
             'user_id' => trim((string) $request->query('user_id', '')),
@@ -33,18 +34,6 @@ class RoomController extends Controller
         $rooms = Room::query()
             ->with(['building', 'user'])
             ->withCount('devices')
-            ->when($filters['q'] !== '', function (Builder $query) use ($filters) {
-                $term = $filters['q'];
-
-                $query->where(function (Builder $searchQuery) use ($term) {
-                    $searchQuery->where('room_number', 'like', "%{$term}%")
-                        ->orWhere('room_name', 'like', "%{$term}%")
-                        ->orWhere('department', 'like', "%{$term}%")
-                        ->orWhere('notes', 'like', "%{$term}%")
-                        ->orWhereHas('building', fn (Builder $buildingQuery) => $buildingQuery->where('building_name', 'like', "%{$term}%"))
-                        ->orWhereHas('user', fn (Builder $userQuery) => $userQuery->where('full_name', 'like', "%{$term}%"));
-                });
-            })
             ->when($filters['building_id'] !== '' && ctype_digit($filters['building_id']), fn (Builder $query) => $query->where('building_id', (int) $filters['building_id']))
             ->when($filters['department'] !== '', fn (Builder $query) => $query->where('department', $filters['department']))
             ->when($filters['user_id'] !== '' && ctype_digit($filters['user_id']), fn (Builder $query) => $query->where('user_id', (int) $filters['user_id']))
@@ -70,6 +59,57 @@ class RoomController extends Controller
                 ->orderBy('department')
                 ->pluck('department'),
             'responsibleUsers' => User::active()->orderBy('full_name')->get(),
+        ]);
+    }
+
+    /**
+     * Atrod telpu pēc nosaukuma vai numura aktīvajā filtrētajā sarakstā.
+     */
+    public function findByName(Request $request): JsonResponse
+    {
+        $this->requireManager();
+
+        $search = trim((string) $request->query('search', $request->query('q', '')));
+        if ($search === '') {
+            return response()->json(['found' => false, 'page' => 1]);
+        }
+
+        $filters = [
+            'building_id' => trim((string) $request->query('building_id', '')),
+            'department' => trim((string) $request->query('department', '')),
+            'user_id' => trim((string) $request->query('user_id', '')),
+            'has_devices' => trim((string) $request->query('has_devices', '')),
+        ];
+
+        $rooms = Room::query()
+            ->when($filters['building_id'] !== '' && ctype_digit($filters['building_id']), fn (Builder $query) => $query->where('building_id', (int) $filters['building_id']))
+            ->when($filters['department'] !== '', fn (Builder $query) => $query->where('department', $filters['department']))
+            ->when($filters['user_id'] !== '' && ctype_digit($filters['user_id']), fn (Builder $query) => $query->where('user_id', (int) $filters['user_id']))
+            ->when($filters['has_devices'] === '1', fn (Builder $query) => $query->has('devices'))
+            ->when($filters['has_devices'] === '0', fn (Builder $query) => $query->doesntHave('devices'))
+            ->orderBy('building_id')
+            ->orderBy('floor_number')
+            ->orderBy('room_number')
+            ->get(['id', 'room_number', 'room_name']);
+
+        $needle = mb_strtolower($search);
+        $foundIndex = $rooms->search(function (Room $room) use ($needle) {
+            $searchValue = mb_strtolower(trim(implode(' ', array_filter([
+                $room->room_number,
+                $room->room_name,
+            ]))));
+
+            return str_contains($searchValue, $needle);
+        });
+
+        if ($foundIndex === false) {
+            return response()->json(['found' => false, 'page' => 1]);
+        }
+
+        return response()->json([
+            'found' => true,
+            'page' => intdiv((int) $foundIndex, 20) + 1,
+            'term' => $search,
         ]);
     }
 

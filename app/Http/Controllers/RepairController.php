@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -115,6 +116,59 @@ class RepairController extends Controller
             'sortOptions' => $this->sortOptions(),
             'deviceOptions' => $deviceOptions,
             'requesterOptions' => $requesterOptions,
+        ]);
+    }
+
+    /**
+     * Atrod remonta ierakstu pēc saistītās ierīces koda un atgriež lapu, kur tas atrodas.
+     */
+    public function findByCode(Request $request): JsonResponse
+    {
+        $user = $this->user();
+        abort_unless($user, 403);
+
+        $code = trim((string) $request->query('code', ''));
+        if ($code === '') {
+            return response()->json(['found' => false, 'page' => 1]);
+        }
+
+        $canManageRepairs = $user->canManageRequests();
+        $filters = $this->normalizedIndexFilters($request, $canManageRepairs);
+        $sorting = $this->normalizedSorting($request);
+
+        $baseQuery = $this->visibleRepairsQuery($user)
+            ->when($filters['mine'] && $canManageRepairs, fn (Builder $query) => $query->where('repairs.accepted_by', $user->id));
+
+        $repairsQuery = (clone $baseQuery)
+            ->with('device:id,code')
+            ->select('repairs.*');
+
+        $this->applyIndexFilters($repairsQuery, $filters);
+        $this->applySorting($repairsQuery, $sorting);
+
+        $repairs = $repairsQuery->get();
+        $foundRepair = null;
+        $foundIndex = null;
+        $searchCode = mb_strtolower($code);
+
+        foreach ($repairs as $index => $repair) {
+            $deviceCode = mb_strtolower(trim((string) ($repair->device?->code ?? '')));
+            if ($deviceCode === $searchCode) {
+                $foundRepair = $repair;
+                $foundIndex = $index;
+                break;
+            }
+        }
+
+        if (! $foundRepair || $foundIndex === null) {
+            return response()->json(['found' => false, 'page' => 1]);
+        }
+
+        return response()->json([
+            'found' => true,
+            'page' => intdiv($foundIndex, 20) + 1,
+            'repair_id' => $foundRepair->id,
+            'term' => $code,
         ]);
     }
 
@@ -265,6 +319,7 @@ class RepairController extends Controller
 
         if (
             $validated['target_status'] === 'in-progress'
+            && $repair->status === 'waiting'
             && $repair->repair_type === 'external'
             && (! filled($repair->vendor_name) || ! filled($repair->vendor_contact))
         ) {
@@ -489,9 +544,24 @@ class RepairController extends Controller
             ->with(['assignedTo', 'building', 'room', 'type'])
             ->where('status', Device::STATUS_ACTIVE)
             ->whereDoesntHave('repairs', fn (Builder $query) => $query->whereIn('status', ['waiting', 'in-progress']))
-            ->whereDoesntHave('repairRequests', fn (Builder $query) => $query->where('status', RepairRequest::STATUS_SUBMITTED))
-            ->whereDoesntHave('writeoffRequests', fn (Builder $query) => $query->where('status', WriteoffRequest::STATUS_SUBMITTED))
-            ->whereDoesntHave('transfers', fn (Builder $query) => $query->where('status', DeviceTransfer::STATUS_SUBMITTED))
+            ->whereNotExists(function ($query) {
+                $query->selectRaw('1')
+                    ->from('repair_requests')
+                    ->whereColumn('repair_requests.device_id', 'devices.id')
+                    ->where('repair_requests.status', RepairRequest::STATUS_SUBMITTED);
+            })
+            ->whereNotExists(function ($query) {
+                $query->selectRaw('1')
+                    ->from('writeoff_requests')
+                    ->whereColumn('writeoff_requests.device_id', 'devices.id')
+                    ->where('writeoff_requests.status', WriteoffRequest::STATUS_SUBMITTED);
+            })
+            ->whereNotExists(function ($query) {
+                $query->selectRaw('1')
+                    ->from('device_transfers')
+                    ->whereColumn('device_transfers.device_id', 'devices.id')
+                    ->where('device_transfers.status', DeviceTransfer::STATUS_SUBMITTED);
+            })
             ->orderBy('name');
     }
 
@@ -574,18 +644,10 @@ class RepairController extends Controller
     private function normalizedIndexFilters(Request $request, bool $canManageRepairs): array
     {
         $availableStatuses = ['waiting', 'in-progress', 'completed', 'cancelled'];
-        $availablePriorities = self::PRIORITIES;
         $rawStatuses = $request->query('status', []);
-        $rawPriorities = $request->query('priority', []);
         $selectedStatuses = collect(is_array($rawStatuses) ? $rawStatuses : [$rawStatuses])
             ->map(fn ($status) => strtolower(trim((string) $status)))
             ->filter(fn ($status) => in_array($status, $availableStatuses, true))
-            ->unique()
-            ->values()
-            ->all();
-        $selectedPriorities = collect(is_array($rawPriorities) ? $rawPriorities : [$rawPriorities])
-            ->map(fn ($priority) => strtolower(trim((string) $priority)))
-            ->filter(fn ($priority) => in_array($priority, $availablePriorities, true))
             ->unique()
             ->values()
             ->all();
