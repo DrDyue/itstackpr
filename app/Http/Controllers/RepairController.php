@@ -582,8 +582,27 @@ class RepairController extends Controller
             ->values()
             ->all();
 
-        if ($canManageRepairs && ! $request->has('statuses_filter')) {
+        // Handle clear_all parameter to reset all filters
+        if ($request->boolean('clear_all')) {
+            $selectedStatuses = [];
+        } elseif ($canManageRepairs && ! $request->has('statuses_filter') && ! $request->has('status') && ! $request->has('clear_all')) {
+            // Default filter: show only waiting and in-progress on first visit
             $selectedStatuses = ['waiting', 'in-progress'];
+        }
+
+        // Handle priorities filter
+        $availablePriorities = ['low', 'medium', 'high', 'critical'];
+        $rawPriorities = $request->query('priorities', []);
+        $selectedPriorities = collect(is_array($rawPriorities) ? $rawPriorities : [$rawPriorities])
+            ->map(fn ($p) => strtolower(trim((string) $p)))
+            ->filter(fn ($p) => in_array($p, $availablePriorities, true))
+            ->unique()
+            ->values()
+            ->all();
+
+        // Clear priorities if clear_all is set
+        if ($request->boolean('clear_all')) {
+            $selectedPriorities = [];
         }
 
         return [
@@ -594,9 +613,11 @@ class RepairController extends Controller
             'requester_id' => ctype_digit((string) $request->query('requester_id', '')) ? (int) $request->query('requester_id') : null,
             'requester_query' => trim((string) $request->query('requester_query', '')),
             'statuses' => $selectedStatuses,
+            'priorities' => $selectedPriorities,
             'date_from' => trim((string) $request->query('date_from', '')),
             'date_to' => trim((string) $request->query('date_to', '')),
             'mine' => $request->boolean('mine'),
+            'clear_all' => $request->boolean('clear_all'),
         ];
     }
 
@@ -629,8 +650,12 @@ class RepairController extends Controller
             });
         }
 
-        if (! in_array('status', $skip, true) && count($filters['statuses']) > 0 && count($filters['statuses']) < 3) {
+        if (! in_array('status', $skip, true) && count($filters['statuses']) > 0 && count($filters['statuses']) < 4) {
             $query->whereIn('repairs.status', $filters['statuses']);
+        }
+
+        if (! in_array('priorities', $skip, true) && count($filters['priorities']) > 0 && count($filters['priorities']) < 4) {
+            $query->whereIn('repairs.priority', $filters['priorities']);
         }
 
         if ($filters['date_from'] !== '' && ! in_array('date_from', $skip, true)) {

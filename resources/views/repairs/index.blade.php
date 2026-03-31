@@ -11,9 +11,12 @@
         $activeStatusLabel = count($filters['statuses']) > 0 && count($filters['statuses']) < count($statuses)
             ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ')
             : null;
+        $activePriorityLabel = isset($filters['priorities']) && count($filters['priorities']) > 0 && count($filters['priorities']) < 4
+            ? collect($filters['priorities'])->map(fn ($p) => $priorityLabels[$p] ?? $p)->implode(', ')
+            : null;
     @endphp
 
-    <section class="app-shell max-w-[112rem]">
+    <section class="app-shell">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-5xl">
@@ -131,39 +134,73 @@
                 <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
 
                 <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
-                    <div class="quick-filter-groups">
-                        <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($filters['statuses']), minimum: 0 })">
-                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta statuss</div>
-                            <div class="quick-status-filters">
-                                @foreach ($statuses as $status)
-                                    @php
-                                        $toneClass = match ($status) {
-                                            'waiting' => 'quick-status-filter-amber',
-                                            'in-progress' => 'quick-status-filter-sky',
-                                            default => 'quick-status-filter-emerald',
-                                        };
-                                    @endphp
-                                    <button
-                                        type="button"
-                                        @click="toggle(@js($status)); $nextTick(() => $el.closest('form').requestSubmit())"
-                                        class="quick-status-filter {{ $toneClass }}"
-                                        :class="isSelected(@js($status)) ? 'quick-status-filter-active' : ''"
-                                    >
-                                        <x-status-pill context="repair" :value="$status" :label="$statusLabels[$status] ?? null" />
-                                    </button>
-                                @endforeach
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="quick-filter-groups">
+                            <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($filters['statuses']), minimum: 0 })">
+                                <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta statuss</div>
+                                <div class="quick-status-filters">
+                                    @foreach ($statuses as $status)
+                                        @php
+                                            $toneClass = match ($status) {
+                                                'waiting' => 'quick-status-filter-amber',
+                                                'in-progress' => 'quick-status-filter-sky',
+                                                'cancelled' => 'quick-status-filter-rose',
+                                                default => 'quick-status-filter-emerald',
+                                            };
+                                        @endphp
+                                        <button
+                                            type="button"
+                                            @click="toggle(@js($status)); $nextTick(() => $el.closest('form').requestSubmit())"
+                                            class="quick-status-filter {{ $toneClass }}"
+                                            :class="isSelected(@js($status)) ? 'quick-status-filter-active' : ''"
+                                        >
+                                            <x-status-pill context="repair" :value="$status" :label="$statusLabels[$status] ?? null" />
+                                        </button>
+                                    @endforeach
 
-                                <template x-for="value in selected" :key="'repair-status-' + value">
-                                    <input type="hidden" name="status[]" :value="value">
-                                </template>
+                                    <template x-for="value in selected" :key="'repair-status-' + value">
+                                        <input type="hidden" name="status[]" :value="value">
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="quick-filter-groups">
+                            <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($filters['priorities'] ?? []), minimum: 0 })" x-ref="priorityFilter">
+                                <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Prioritāte</div>
+                                <div class="quick-status-filters">
+                                    @foreach (['low' => 'Zema', 'medium' => 'Vidēja', 'high' => 'Augsta', 'critical' => 'Kritiska'] as $priorityValue => $priorityLabel)
+                                        @php
+                                            $priorityToneClass = match ($priorityValue) {
+                                                'low' => 'quick-status-filter-emerald',
+                                                'medium' => 'quick-status-filter-sky',
+                                                'high' => 'quick-status-filter-amber',
+                                                'critical' => 'quick-status-filter-rose',
+                                            };
+                                        @endphp
+                                        <button
+                                            type="button"
+                                            @click="$refs.priorityFilter.toggle(@js($priorityValue)); $nextTick(() => $el.closest('form').requestSubmit())"
+                                            class="quick-status-filter {{ $priorityToneClass }}"
+                                            :class="$refs.priorityFilter.isSelected(@js($priorityValue)) ? 'quick-status-filter-active' : ''"
+                                        >
+                                            <x-icon name="tag" size="h-4 w-4" />
+                                            <span>{{ $priorityLabel }}</span>
+                                        </button>
+                                    @endforeach
+
+                                    <template x-for="value in $refs.priorityFilter?.selected ?? []" :key="'repair-priority-' + value">
+                                        <input type="hidden" name="priorities[]" :value="value">
+                                    </template>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="toolbar-actions justify-end">
-                        <a href="{{ route('repairs.index') }}" class="btn-clear" data-async-link="true">
+                        <a href="{{ route('repairs.index', ['clear_all' => '1']) }}" class="btn-clear" data-async-link="true">
                             <x-icon name="clear" size="h-4 w-4" />
-                            <span>Noņemt filtrus</span>
+                            <span>Notīrīt filtrus</span>
                         </a>
                     </div>
                 </div>
@@ -179,9 +216,10 @@
                     ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
                     ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
                     ['label' => 'Statuss', 'value' => $activeStatusLabel],
+                    ['label' => 'Prioritāte', 'value' => $activePriorityLabel],
                     ['label' => 'Piešķirts', 'value' => ($filters['mine'] ?? false) ? 'Man' : null],
                 ]"
-                :clear-url="route('repairs.index')"
+                :clear-url="route('repairs.index', ['clear_all' => '1'])"
             />
             </div>
 
