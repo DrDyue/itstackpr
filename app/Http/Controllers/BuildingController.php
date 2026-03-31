@@ -77,6 +77,7 @@ class BuildingController extends Controller
             'found' => true,
             'page' => intdiv((int) $foundIndex, 20) + 1,
             'term' => $search,
+            'highlight_id' => 'building-'.$buildings->values()[(int) $foundIndex]->id,
         ]);
     }
 

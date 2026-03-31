@@ -169,6 +169,7 @@ class RepairController extends Controller
             'page' => intdiv($foundIndex, 20) + 1,
             'repair_id' => $foundRepair->id,
             'term' => $code,
+            'highlight_id' => 'repair-'.$foundRepair->id,
         ]);
     }
 

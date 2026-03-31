@@ -291,7 +291,7 @@
                                         && $transfer->status === 'submitted';
                                     $hasActions = ($isAdmin && $deviceFilterUrl) || $isIncomingPending;
                                 @endphp
-                                <tr class="app-table-row border-t border-slate-100 align-top" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
+                                <tr class="app-table-row border-t border-slate-100 align-top" data-table-row-id="device-transfer-{{ $transfer->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
                                     <td class="px-4 py-4">
                                         <div class="font-semibold text-slate-900">{{ $device?->code ?: '-' }}</div>
                                         <div class="mt-1 text-xs text-slate-500">Sērija: {{ $device?->serial_number ?: '-' }}</div>

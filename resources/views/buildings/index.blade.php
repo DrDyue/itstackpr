@@ -91,7 +91,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @forelse ($buildings as $building)
-                            <tr class="app-table-row" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim((string) $building->building_name)) }}">
+                            <tr class="app-table-row" data-table-row-id="building-{{ $building->id }}" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim((string) $building->building_name)) }}">
                                 <td class="px-4 py-3 app-table-cell-strong">{{ $building->building_name }}</td>
                                 <td class="px-4 py-3 text-slate-600">
                                     <div>Telpas: {{ $building->rooms_count }}</div>

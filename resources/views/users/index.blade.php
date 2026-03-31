@@ -179,7 +179,7 @@
                 </thead>
                 <tbody>
                     @forelse ($users as $managedUser)
-                        <tr class="app-table-row border-t border-slate-100 {{ $managedUser->role === 'admin' ? 'app-table-row-accent-violet' : 'app-table-row-accent-sky' }}" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim((string) $managedUser->full_name)) }}">
+                        <tr class="app-table-row border-t border-slate-100 {{ $managedUser->role === 'admin' ? 'app-table-row-accent-violet' : 'app-table-row-accent-sky' }}" data-table-row-id="user-{{ $managedUser->id }}" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim((string) $managedUser->full_name)) }}">
                             <td class="px-4 py-3">
                                 <div class="app-table-cell-strong">{{ $managedUser->full_name }}</div>
                             </td>

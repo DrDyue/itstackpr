@@ -164,6 +164,7 @@ class WriteoffRequestController extends Controller
             'found' => true,
             'page' => intdiv($foundIndex, 20) + 1,
             'term' => $code,
+            'highlight_id' => 'writeoff-request-'.$requests->values()[$foundIndex]->id,
         ]);
     }
 

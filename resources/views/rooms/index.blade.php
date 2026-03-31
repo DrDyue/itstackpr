@@ -160,7 +160,7 @@
                 </thead>
                 <tbody>
                     @forelse ($rooms as $room)
-                        <tr class="app-table-row border-t border-slate-100" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim(implode(' ', array_filter([$room->room_number, $room->room_name])))) }}">
+                        <tr class="app-table-row border-t border-slate-100" data-table-row-id="room-{{ $room->id }}" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim(implode(' ', array_filter([$room->room_number, $room->room_name])))) }}">
                             <td class="px-4 py-3">{{ $room->building?->building_name }}</td>
                             <td class="px-4 py-3">{{ $room->floor_number }}</td>
                             <td class="px-4 py-3">{{ $room->room_number }}</td>

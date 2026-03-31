@@ -44,7 +44,10 @@ class LiveNotificationController extends Controller
                 ->update(['updated_at' => now()]);
         }
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success' => true,
+            'read_at' => now()->toIso8601String(),
+        ]);
     }
 
     /**

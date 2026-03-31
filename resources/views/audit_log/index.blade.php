@@ -170,7 +170,7 @@
                                 default => ['icon' => 'audit', 'class' => 'audit-badge audit-badge-slate'],
                             };
                         @endphp
-                        <tr class="app-table-row border-t border-slate-100" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim(implode(' ', array_filter([(string) $log->id, $log->localized_description, $log->user?->full_name, $log->user?->email])))) }}">
+                        <tr class="app-table-row border-t border-slate-100" data-table-row-id="audit-log-{{ $log->id }}" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim(implode(' ', array_filter([(string) $log->id, $log->localized_description, $log->user?->full_name, $log->user?->email])))) }}">
                             <td class="px-4 py-3">
                                 <div class="font-medium text-slate-900">{{ $log->timestamp?->format('d.m.Y') ?: '-' }}</div>
                                 <div class="text-xs text-slate-500">{{ $log->timestamp?->format('H:i:s') ?: '-' }}</div>

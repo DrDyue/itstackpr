@@ -353,7 +353,7 @@
                             $repairStatusLabel = $deviceState['repairStatusLabel'] ?? null;
                             $repairPreview = $deviceState['repairPreview'] ?? null;
                         @endphp
-                        <tr class="device-table-row border-t border-slate-100 align-top" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) $device->code)) }}">
+                        <tr class="device-table-row border-t border-slate-100 align-top" data-table-row-id="device-{{ $device->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) $device->code)) }}">
                             <td class="px-4 py-4 tabular-nums">
                                 @if ($thumbUrl)
                                     <img src="{{ $thumbUrl }}" alt="{{ $device->name }}" class="device-table-thumb">

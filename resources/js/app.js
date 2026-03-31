@@ -314,6 +314,10 @@ const getRowSearchValue = (row) => {
     return row.dataset.tableSearchValue || row.dataset.tableCode || '';
 };
 
+const getRowSearchId = (row) => {
+    return String(row?.dataset?.tableRowId || '').trim();
+};
+
 const rowMatchesSearch = (row, term, mode = 'contains') => {
     const value = normalizeTableSearchValue(getRowSearchValue(row));
     const normalizedTerm = normalizeTableSearchValue(term);
@@ -334,7 +338,17 @@ const findMatchingTableRow = (root, term, mode = 'contains') => {
         .find((row) => rowMatchesSearch(row, term, mode)) || null;
 };
 
-const buildSearchNavigationUrl = (form, page, rawTerm, mode) => {
+const findTableRowById = (root, rowId) => {
+    const normalizedRowId = String(rowId || '').trim();
+
+    if (!normalizedRowId) {
+        return null;
+    }
+
+    return root?.querySelector?.(`[data-table-row-id="${window.CSS?.escape ? window.CSS.escape(normalizedRowId) : normalizedRowId}"]`) || null;
+};
+
+const buildSearchNavigationUrl = (form, page, rawTerm, mode, highlightId = '') => {
     const targetUrl = new URL(form.getAttribute('action') || window.location.href, window.location.origin);
     const formData = new FormData(form);
 
@@ -349,6 +363,11 @@ const buildSearchNavigationUrl = (form, page, rawTerm, mode) => {
     targetUrl.searchParams.set('page', String(page));
     targetUrl.searchParams.set('highlight', rawTerm);
     targetUrl.searchParams.set('highlight_mode', mode);
+    if (highlightId) {
+        targetUrl.searchParams.set('highlight_id', String(highlightId));
+    } else {
+        targetUrl.searchParams.delete('highlight_id');
+    }
 
     return targetUrl;
 };
@@ -441,7 +460,9 @@ const performManualTableSearch = async (form) => {
             return true;
         }
 
-        window.location.assign(buildSearchNavigationUrl(form, result.page, rawTerm, searchMode).toString());
+        window.location.assign(
+            buildSearchNavigationUrl(form, result.page, rawTerm, searchMode, result.highlight_id ?? '').toString(),
+        );
     } catch (error) {
         window.dispatchAppToast({
             title: 'Meklēšana neizdevās',
@@ -470,12 +491,13 @@ const restoreHighlightedSearchFromUrl = () => {
     const currentUrl = new URL(window.location.href);
     const term = currentUrl.searchParams.get('highlight');
     const mode = currentUrl.searchParams.get('highlight_mode') || 'contains';
+    const highlightId = currentUrl.searchParams.get('highlight_id');
 
-    if (!term) {
+    if (!term && !highlightId) {
         return;
     }
 
-    const match = findMatchingTableRow(document, term, mode);
+    const match = findTableRowById(document, highlightId) || findMatchingTableRow(document, term, mode);
     if (!match) {
         return;
     }
@@ -491,6 +513,7 @@ const restoreHighlightedSearchFromUrl = () => {
 
     currentUrl.searchParams.delete('highlight');
     currentUrl.searchParams.delete('highlight_mode');
+    currentUrl.searchParams.delete('highlight_id');
     window.history.replaceState({}, '', `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`);
 };
 
@@ -1046,6 +1069,129 @@ const registerAlpineData = () => {
                 window.localStorage.setItem(this.storageKey, JSON.stringify(this.seenIds));
             } catch (error) {
                 // Ignore storage write issues; notifications will still work during the session.
+            }
+        },
+    }));
+
+    Alpine.data('navNotificationCenter', ({
+        initialCount = 0,
+        endpoint = '',
+        markReadUrl = '',
+        csrfToken = '',
+        storageKey = 'nav-notification-center',
+        pollSeconds = 15,
+    } = {}) => ({
+        open: false,
+        unreadCount: Number(initialCount) || 0,
+        markReadUrl,
+        endpoint,
+        csrfToken,
+        storageKey,
+        pollSeconds: Math.max(Number(pollSeconds) || 15, 5),
+        pollTimer: null,
+        markingAllRead: false,
+        readFeedbackVisible: false,
+        feedbackTimer: null,
+        init() {
+            this.refreshUnreadCount();
+            this.startPolling();
+        },
+        destroy() {
+            if (this.pollTimer) {
+                window.clearInterval(this.pollTimer);
+            }
+
+            if (this.feedbackTimer) {
+                window.clearTimeout(this.feedbackTimer);
+            }
+        },
+        startPolling() {
+            if (!this.endpoint) {
+                return;
+            }
+
+            this.pollTimer = window.setInterval(() => {
+                if (document.visibilityState === 'visible') {
+                    this.refreshUnreadCount();
+                }
+            }, this.pollSeconds * 1000);
+        },
+        readCutoff() {
+            try {
+                return Number(window.localStorage.getItem(this.storageKey) || 0) || 0;
+            } catch (error) {
+                return 0;
+            }
+        },
+        writeCutoff(timestamp) {
+            try {
+                window.localStorage.setItem(this.storageKey, String(timestamp));
+            } catch (error) {
+                // Ignore storage issues; nav badge will still work for current render.
+            }
+        },
+        showFeedback() {
+            this.readFeedbackVisible = true;
+
+            if (this.feedbackTimer) {
+                window.clearTimeout(this.feedbackTimer);
+            }
+
+            this.feedbackTimer = window.setTimeout(() => {
+                this.readFeedbackVisible = false;
+            }, 2200);
+        },
+        async refreshUnreadCount() {
+            if (!this.endpoint || !window.axios) {
+                return;
+            }
+
+            try {
+                const response = await window.axios.get(this.endpoint, {
+                    headers: {
+                        Accept: 'application/json',
+                    },
+                });
+
+                const cutoff = this.readCutoff();
+                const notifications = Array.isArray(response?.data?.notifications)
+                    ? response.data.notifications
+                    : [];
+
+                this.unreadCount = notifications.filter((notification) => {
+                    const createdUnix = Number(notification?.created_unix || 0);
+                    return createdUnix > 0 && (createdUnix * 1000) > cutoff;
+                }).length;
+            } catch (error) {
+                // Ignore transient badge refresh errors.
+            }
+        },
+        async markAllAsRead() {
+            if (this.markingAllRead || !this.markReadUrl) {
+                return;
+            }
+
+            this.markingAllRead = true;
+            const cutoff = Date.now();
+            const previousCount = this.unreadCount;
+
+            this.writeCutoff(cutoff);
+            this.unreadCount = 0;
+            this.showFeedback();
+
+            try {
+                await fetch(this.markReadUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': this.csrfToken,
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+            } catch (error) {
+                this.unreadCount = previousCount;
+            } finally {
+                this.markingAllRead = false;
             }
         },
     }));

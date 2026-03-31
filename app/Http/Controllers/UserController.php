@@ -109,6 +109,7 @@ class UserController extends Controller
             'found' => true,
             'page' => intdiv((int) $foundIndex, 15) + 1,
             'term' => $search,
+            'highlight_id' => 'user-'.$users->values()[(int) $foundIndex]->id,
         ]);
     }
 

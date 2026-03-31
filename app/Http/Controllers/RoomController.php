@@ -110,6 +110,7 @@ class RoomController extends Controller
             'found' => true,
             'page' => intdiv((int) $foundIndex, 20) + 1,
             'term' => $search,
+            'highlight_id' => 'room-'.$rooms->values()[(int) $foundIndex]->id,
         ]);
     }
 

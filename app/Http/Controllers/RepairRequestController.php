@@ -160,6 +160,7 @@ class RepairRequestController extends Controller
             'found' => true,
             'page' => intdiv($foundIndex, 20) + 1,
             'term' => $code,
+            'highlight_id' => 'repair-request-'.$requests->values()[$foundIndex]->id,
         ]);
     }
 

@@ -118,6 +118,7 @@ class DeviceController extends Controller
             'device_id' => $foundDevice->id,
             'device_code' => $foundDevice->code,
             'term' => $code,
+            'highlight_id' => 'device-'.$foundDevice->id,
         ]);
     }
 

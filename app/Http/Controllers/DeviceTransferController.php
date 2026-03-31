@@ -198,6 +198,7 @@ class DeviceTransferController extends Controller
             'found' => true,
             'page' => intdiv($foundIndex, 20) + 1,
             'term' => $code,
+            'highlight_id' => 'device-transfer-'.$transfers->values()[$foundIndex]->id,
         ]);
     }
 

@@ -196,32 +196,36 @@
                                 + \App\Models\WriteoffRequest::query()->where('status', \App\Models\WriteoffRequest::STATUS_SUBMITTED)->count())
                             : $incomingTransferReviewCount;
                     @endphp
-                    <div x-data="{ 
-                        open: false,
-                        markAllAsRead() {
-                            fetch('{{ route("notifications.mark-all-read") }}', {
-                                method: 'POST',
-                                headers: {
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'Accept': 'application/json',
-                                }
-                            }).then(() => {
-                                window.location.reload();
-                            });
-                        }
-                    }" class="relative">
+                    <div
+                        x-data="navNotificationCenter({
+                            initialCount: {{ $pendingNotificationsCount }},
+                            endpoint: '{{ route('live-notifications.index') }}',
+                            markReadUrl: '{{ route('notifications.mark-all-read') }}',
+                            csrfToken: '{{ csrf_token() }}',
+                            storageKey: 'nav-notification-center:{{ $user?->id ?? 'guest' }}:{{ $canManageRequests ? 'manager' : 'user' }}',
+                        })"
+                        class="relative"
+                    >
                         <button
                             @click="open = ! open"
                             @click.outside="open = false"
-                            class="relative inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                            class="relative inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-sky-50 px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-sky-200 hover:from-sky-50 hover:to-white hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
                         >
                             <x-icon name="mail" size="h-5 w-5" />
                             <span class="hidden sm:inline">Paziņojumi</span>
-                            @if ($pendingNotificationsCount > 0)
-                                <span class="absolute -right-1 -top-1 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
-                                    {{ min($pendingNotificationsCount, 99) }}
-                                </span>
-                            @endif
+                            <span
+                                x-cloak
+                                x-show="unreadCount > 0"
+                                x-transition:enter="transition ease-out duration-250"
+                                x-transition:enter-start="opacity-0 scale-75 -translate-y-1"
+                                x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                x-transition:leave="transition ease-in duration-180"
+                                x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                                x-transition:leave-end="opacity-0 scale-75 -translate-y-1"
+                                class="absolute -right-1 -top-1 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-gradient-to-r from-rose-500 to-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm"
+                            >
+                                <span x-text="Math.min(unreadCount, 99)"></span>
+                            </span>
                         </button>
 
                         <div
@@ -236,6 +240,15 @@
                             x-cloak
                         >
                             <div class="rounded-t-3xl border-b border-slate-100 bg-slate-50/50 px-5 py-4">
+                                <div
+                                    x-cloak
+                                    x-show="readFeedbackVisible"
+                                    x-transition.opacity.scale
+                                    class="mb-3 inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700"
+                                >
+                                    <x-icon name="check-circle" size="h-3.5 w-3.5" />
+                                    <span>Atzīmēts kā lasīts</span>
+                                </div>
                                 <h3 class="text-sm font-semibold text-slate-900">Paziņojumu centrs</h3>
                                 <p class="mt-1 text-xs text-slate-500">Reāllaika paziņojumi par pieprasījumiem</p>
                             </div>
@@ -368,12 +381,17 @@
                                         <x-icon name="transfer" size="h-4 w-4" />
                                     </a>
                                 @endif
-                                @if ($pendingNotificationsCount > 0)
+                                @if (true)
                                     <button
                                         type="button"
                                         @click="markAllAsRead()"
-                                        class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                                        x-cloak
+                                        x-show="unreadCount > 0"
+                                        x-transition.opacity
+                                        :disabled="markingAllRead"
+                                        class="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-500 via-indigo-500 to-slate-900 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:from-sky-600 hover:via-indigo-600 hover:to-slate-950 disabled:cursor-wait disabled:opacity-70"
                                     >
+                                        <x-icon name="check-circle" size="h-4 w-4" />
                                         Atzīmēt kā lasītu
                                     </button>
                                 @endif

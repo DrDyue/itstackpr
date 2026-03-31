@@ -155,6 +155,7 @@ class AuditLogController extends Controller
             'found' => true,
             'page' => intdiv((int) $foundIndex, 50) + 1,
             'term' => $search,
+            'highlight_id' => 'audit-log-'.$logs->values()[(int) $foundIndex]->id,
         ]);
     }
 }
