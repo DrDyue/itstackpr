@@ -212,7 +212,7 @@ const submitAsyncTableForm = async (form, { url = null, resetPage = true, toastM
     const rootSelector = form?.dataset?.asyncRoot;
 
     if (!form || !rootSelector) {
-        return;
+        return false;
     }
 
     const targetUrl = url instanceof URL ? url : buildAsyncTableUrl(form, { resetPage });
@@ -243,7 +243,7 @@ const submitAsyncTableForm = async (form, { url = null, resetPage = true, toastM
 
         if (!swapped) {
             window.location.assign(targetUrl.toString());
-            return;
+            return false;
         }
 
         window.history.replaceState({}, '', `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`);
@@ -254,10 +254,14 @@ const submitAsyncTableForm = async (form, { url = null, resetPage = true, toastM
                 tone: 'info',
             });
         }
+
+        return true;
     } catch (error) {
         if (error.name !== 'AbortError') {
             window.location.assign(targetUrl.toString());
         }
+
+        return false;
     } finally {
         if (asyncTableControllers.get(requestKey) === controller) {
             asyncTableControllers.delete(requestKey);
@@ -460,9 +464,18 @@ const performManualTableSearch = async (form) => {
             return true;
         }
 
-        window.location.assign(
-            buildSearchNavigationUrl(form, result.page, rawTerm, searchMode, result.highlight_id ?? '').toString(),
-        );
+        const targetUrl = buildSearchNavigationUrl(form, result.page, rawTerm, searchMode, result.highlight_id ?? '');
+        const swapped = await submitAsyncTableForm(form, {
+            url: targetUrl,
+            resetPage: false,
+        });
+
+        if (swapped) {
+            restoreHighlightedSearchFromUrl();
+            return true;
+        }
+
+        window.location.assign(targetUrl.toString());
     } catch (error) {
         window.dispatchAppToast({
             title: 'Meklēšana neizdevās',
