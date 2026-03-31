@@ -86,9 +86,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/my-requests/{requestType}/{requestId}', [UserRequestCenterController::class, 'update'])->name('my-requests.update');
     Route::delete('/my-requests/{requestType}/{requestId}', [UserRequestCenterController::class, 'destroy'])->name('my-requests.destroy');
 
+    Route::get('/devices/find-by-code', [DeviceController::class, 'findByCode'])->name('devices.find-by-code');
     Route::resource('devices', DeviceController::class)->only(['index', 'show']);
     Route::post('/devices/{device}/user-room', [DeviceController::class, 'updateUserRoom'])->name('devices.user-room.update');
-    Route::get('/devices/find-by-code', [DeviceController::class, 'findByCode'])->name('devices.find-by-code');
     Route::get('/device-assets/remote-preview', [DeviceAssetController::class, 'remotePreview'])
         ->name('device-assets.remote-preview');
     Route::get('/device-assets/{path}', [DeviceAssetController::class, 'show'])

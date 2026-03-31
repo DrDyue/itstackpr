@@ -2350,6 +2350,70 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertDontSee('DEV-OTHER-REPAIR');
     }
 
+    public function test_devices_find_by_code_returns_second_page_result(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-search-admin@example.com');
+
+        for ($i = 1; $i <= 22; $i++) {
+            $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-SEARCH-'.str_pad((string) $i, 3, '0', STR_PAD_LEFT));
+        }
+
+        $response = $this->actingAs($admin)
+            ->withSession([User::VIEW_MODE_SESSION_KEY => User::VIEW_MODE_ADMIN])
+            ->getJson(route('devices.find-by-code', [
+            'code' => 'DEV-SEARCH-021',
+            'sort' => 'code',
+            'direction' => 'asc',
+        ]));
+
+        $response
+            ->assertOk()
+            ->assertJson([
+                'found' => true,
+                'page' => 2,
+                'highlight_id' => 'device-'.Device::query()->where('code', 'DEV-SEARCH-021')->value('id'),
+            ]);
+    }
+
+    public function test_repairs_find_by_code_returns_second_page_result(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'repair-search-admin@example.com');
+        $user = $this->createUser(role: User::ROLE_USER, email: 'repair-search-user@example.com');
+
+        for ($i = 1; $i <= 22; $i++) {
+            $device = $this->createDevice($user->id, Device::STATUS_REPAIR, 'REP-SEARCH-'.str_pad((string) $i, 3, '0', STR_PAD_LEFT));
+
+            Repair::create([
+                'device_id' => $device->id,
+                'description' => 'Meklēšanas tests '.$i,
+                'status' => 'waiting',
+                'repair_type' => 'internal',
+                'priority' => 'medium',
+                'accepted_by' => $admin->id,
+            ]);
+        }
+
+        $response = $this->actingAs($admin)
+            ->withSession([User::VIEW_MODE_SESSION_KEY => User::VIEW_MODE_ADMIN])
+            ->getJson(route('repairs.find-by-code', [
+            'code' => 'REP-SEARCH-021',
+            'statuses_filter' => 1,
+            'status' => ['waiting', 'in-progress'],
+            'sort' => 'code',
+            'direction' => 'asc',
+        ]));
+
+        $response
+            ->assertOk()
+            ->assertJson([
+                'found' => true,
+                'page' => 2,
+                'highlight_id' => 'repair-'.Repair::query()
+                    ->whereHas('device', fn ($query) => $query->where('code', 'REP-SEARCH-021'))
+                    ->value('id'),
+            ]);
+    }
+
     public function test_room_cannot_be_deleted_while_devices_are_assigned(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'room-delete-admin@example.com');

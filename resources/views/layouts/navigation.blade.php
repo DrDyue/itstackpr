@@ -381,7 +381,7 @@
                                         <x-icon name="transfer" size="h-4 w-4" />
                                     </a>
                                 @endif
-                                @if (true)
+                                @if ($pendingNotificationsCount > 0)
                                     <button
                                         type="button"
                                         @click="markAllAsRead()"
