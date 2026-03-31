@@ -299,11 +299,14 @@
                                     $thumbUrl = $device?->deviceImageThumbUrl();
                                     $assignedUser = $device?->assignedTo;
                                     $requester = $repair->request?->responsibleUser ?: $repair->reporter;
-                                    $locationPrimary = collect([
-                                        $device?->building?->building_name,
-                                        $device?->room?->room_number ? 'Telpa ' . $device->room->room_number : null,
-                                    ])->filter()->implode(' | ');
-                                    $locationSecondary = $device?->room?->room_name ?: 'Atrašanās vieta nav norādīta';
+                                    $roomLabel = trim(collect([
+                                        $device?->room?->room_name,
+                                        $device?->room?->room_number,
+                                    ])->filter()->implode(' '));
+                                    $locationPrimary = $roomLabel !== ''
+                                        ? $roomLabel
+                                        : ($device?->room?->room_number ? 'Telpa ' . $device->room->room_number : 'Atrašanās vieta nav norādīta');
+                                    $locationSecondary = $device?->building?->building_name ?: null;
                                     $linkedRequestUrl = $repair->request_id
                                         ? route('repair-requests.index', [
                                             'request_id' => $repair->request_id,
@@ -336,7 +339,9 @@
                                     </td>
                                     <td class="px-4 py-4">
                                         <div class="font-semibold text-slate-900">{{ $locationPrimary !== '' ? $locationPrimary : 'Atrašanās vieta nav norādīta' }}</div>
-                                        <div class="mt-1 text-xs text-slate-500">{{ $locationSecondary }}</div>
+                                        @if ($locationSecondary)
+                                            <div class="mt-1 text-xs text-slate-500">{{ $locationSecondary }}</div>
+                                        @endif
                                     </td>
                                     <td class="px-4 py-4">
                                         <x-status-pill context="repair" :value="$repair->status" :label="$statusLabels[$repair->status] ?? null" />
@@ -358,7 +363,7 @@
                                     <td class="px-4 py-4 tabular-nums">
                                         <div class="font-semibold text-slate-900">{{ $repair->end_date?->format('d.m.Y') ?: '-' }}</div>
                                     </td>
-                                    <td class="px-4 py-4 text-right">
+                                    <td class="px-4 py-4 text-right repair-table-actions-cell">
                                         <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">
                                             <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
                                                 <span>Darbības</span>
