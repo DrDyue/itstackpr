@@ -2350,6 +2350,39 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertDontSee('DEV-OTHER-REPAIR');
     }
 
+    public function test_repairs_index_clear_filters_shows_all_statuses(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'repair-clear-admin@example.com');
+        $user = $this->createUser(role: User::ROLE_USER, email: 'repair-clear-user@example.com');
+
+        $waitingDevice = $this->createDevice($user->id, Device::STATUS_REPAIR, 'DEV-REPAIR-WAIT');
+        $completedDevice = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-REPAIR-DONE');
+
+        Repair::create([
+            'device_id' => $waitingDevice->id,
+            'description' => 'Gaidoss remonts notirisanas testam.',
+            'status' => 'waiting',
+            'repair_type' => 'internal',
+            'priority' => 'medium',
+            'accepted_by' => $admin->id,
+        ]);
+
+        Repair::create([
+            'device_id' => $completedDevice->id,
+            'description' => 'Pabeigts remonts notirisanas testam.',
+            'status' => 'completed',
+            'repair_type' => 'internal',
+            'priority' => 'high',
+            'accepted_by' => $admin->id,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('repairs.index', ['statuses_filter' => 1]))
+            ->assertOk()
+            ->assertSee('DEV-REPAIR-WAIT')
+            ->assertSee('DEV-REPAIR-DONE');
+    }
+
     public function test_devices_find_by_code_returns_second_page_result(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-search-admin@example.com');
@@ -2442,6 +2475,36 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->assertDatabaseHas('buildings', [
             'id' => $device->building_id,
         ]);
+    }
+
+    public function test_rooms_index_can_filter_by_floor_and_link_to_devices_in_room(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'rooms-filter-admin@example.com');
+        $firstDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-ROOM-LINK-ONE');
+        $secondDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-ROOM-LINK-TWO');
+
+        DB::table('rooms')->where('id', $firstDevice->room_id)->update([
+            'floor_number' => 3,
+            'room_number' => '302',
+            'room_name' => 'Rezerves telpa',
+        ]);
+
+        DB::table('rooms')->where('id', $secondDevice->room_id)->update([
+            'floor_number' => 1,
+            'room_number' => '105',
+            'room_name' => 'Sanāksmju telpa',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('rooms.index', ['floor' => 3]));
+
+        $response->assertOk()
+            ->assertSee('Rezerves telpa')
+            ->assertDontSee('Sanāksmju telpa')
+            ->assertSee(route('devices.index', [
+                'room_id' => $firstDevice->room_id,
+                'room_query' => 'Rezerves telpa 302',
+            ], false));
     }
 
     public function test_user_cannot_be_deleted_while_related_records_are_still_assigned(): void

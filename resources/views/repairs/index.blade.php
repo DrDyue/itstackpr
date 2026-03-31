@@ -214,7 +214,7 @@
                     </div>
 
                     <div class="toolbar-actions justify-end">
-                        <a href="{{ route('repairs.index', ['clear_all' => '1']) }}" class="btn-clear" data-async-link="true">
+                        <a href="{{ route('repairs.index', ['statuses_filter' => '1']) }}" class="btn-clear" data-async-link="true">
                             <x-icon name="clear" size="h-4 w-4" />
                             <span>Notīrīt filtrus</span>
                         </a>
@@ -234,7 +234,7 @@
                     ['label' => 'Prioritāte', 'value' => $activePriorityLabel],
                     ['label' => 'Piešķirts', 'value' => ($filters['mine'] ?? false) ? 'Man' : null],
                 ]"
-                :clear-url="route('repairs.index', ['clear_all' => '1'])"
+                :clear-url="route('repairs.index', ['statuses_filter' => '1'])"
             />
             </div>
 
@@ -401,19 +401,21 @@
                                                         </form>
                                                     @endif
 
+                                                    @if (in_array($repair->status, ['waiting', 'in-progress'], true))
+                                                        <form method="POST" action="{{ route('repairs.transition', $repair) }}">
+                                                            @csrf
+                                                            <input type="hidden" name="target_status" value="cancelled">
+                                                            <button type="submit" class="table-action-button table-action-button-rose">
+                                                                <x-icon name="clear" size="h-4 w-4" />
+                                                                <span>Atcelt remontu</span>
+                                                            </button>
+                                                        </form>
+                                                    @endif
+
                                                     <a href="{{ route('repairs.edit', $repair) }}" class="table-action-item table-action-item-amber" @click="open = false">
                                                         <x-icon name="edit" size="h-4 w-4" />
                                                         <span>Rediģēt</span>
                                                     </a>
-
-                                                    <form method="POST" action="{{ route('repairs.destroy', $repair) }}" onsubmit="return confirm('Vai tiešām dzēst šo remonta ierakstu?');">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="table-action-button table-action-button-rose">
-                                                            <x-icon name="trash" size="h-4 w-4" />
-                                                            <span>Dzēst</span>
-                                                        </button>
-                                                    </form>
                                                 @elseif (! $linkedRequestUrl)
                                                     <div class="px-3 py-2 text-xs font-medium text-slate-400">Nav darbību</div>
                                                 @endif

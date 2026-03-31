@@ -4,7 +4,7 @@
     Datu avots: RoomController@index.
     Galvenās daļas:
     1. Hero ar kopsavilkumu.
-    2. Filtri pēc ēkas, nodaļas, atbildīgā un aizpildījuma.
+    2. Filtri pēc ēkas, stāva un atbildīgā.
     3. Galvenā telpu tabula.
 --}}
 <x-app-layout>
@@ -15,11 +15,11 @@
             'description' => $building->city ?: '',
             'search' => implode(' ', array_filter([$building->building_name, $building->city, $building->address])),
         ])->values();
-        $departmentOptions = collect($departments)->map(fn ($department) => [
-            'value' => (string) $department,
-            'label' => (string) $department,
-            'description' => 'Filtrs pēc nodaļas',
-            'search' => (string) $department,
+        $floorOptions = collect($floors)->map(fn ($floor) => [
+            'value' => (string) $floor,
+            'label' => $floor . '. stāvs',
+            'description' => 'Filtrs pēc stāva',
+            'search' => $floor . ' ' . $floor . '. stāvs',
         ])->values();
         $userOptions = $responsibleUsers->map(fn ($responsibleUser) => [
             'value' => (string) $responsibleUser->id,
@@ -27,14 +27,11 @@
             'description' => $responsibleUser->job_title ?: '',
             'search' => implode(' ', array_filter([$responsibleUser->full_name, $responsibleUser->job_title, $responsibleUser->email])),
         ])->values();
-        $hasDeviceOptions = [
-            ['value' => '1', 'label' => 'Ar ierīcēm', 'description' => 'Telpas ar ierīcēm', 'search' => 'Ar ierīcēm'],
-            ['value' => '0', 'label' => 'Bez ierīcēm', 'description' => 'Telpas bez ierīcēm', 'search' => 'Bez ierīcēm'],
-        ];
         $selectedBuildingLabel = optional($buildings->firstWhere('id', (int) $filters['building_id']))->building_name;
-        $selectedDepartmentLabel = $filters['department'] !== '' ? $filters['department'] : null;
+        $selectedFloorLabel = $filters['floor'] !== ''
+            ? ($filters['floor'] . '. stāvs')
+            : ($filters['floor_query'] !== '' ? $filters['floor_query'] : null);
         $selectedUserLabel = optional($responsibleUsers->firstWhere('id', (int) $filters['user_id']))->full_name;
-        $selectedHasDevicesLabel = collect($hasDeviceOptions)->firstWhere('value', $filters['has_devices'])['label'] ?? null;
     @endphp
     <section class="app-shell app-shell-wide">
         <div class="page-hero">
@@ -63,7 +60,7 @@
         </div>
 
         <div id="rooms-index-root" data-async-table-root>
-        <form method="GET" action="{{ route('rooms.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-5" data-async-table-form data-async-root="#rooms-index-root" data-search-endpoint="{{ route('rooms.find-by-name') }}">
+        <form method="GET" action="{{ route('rooms.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-4" data-async-table-form data-async-root="#rooms-index-root" data-search-endpoint="{{ route('rooms.find-by-name') }}">
             <label class="block md:col-span-2">
                 <span class="crud-label">Telpas nosaukums</span>
                 <div class="flex items-center gap-2">
@@ -85,16 +82,16 @@
                 />
             </label>
             <label class="block">
-                <span class="crud-label">Nodaļa</span>
+                <span class="crud-label">Stāvs</span>
                 <x-searchable-select
-                    name="department"
-                    query-name="department_query"
-                    identifier="room-department-filter"
-                    :options="$departmentOptions"
-                    :selected="$filters['department']"
-                    :query="$selectedDepartmentLabel"
-                    placeholder="Izvēlies nodaļu"
-                    empty-message="Neviena nodaļa neatbilst meklējumam."
+                    name="floor"
+                    query-name="floor_query"
+                    identifier="room-floor-filter"
+                    :options="$floorOptions"
+                    :selected="$filters['floor']"
+                    :query="$selectedFloorLabel"
+                    placeholder="Izvēlies stāvu"
+                    empty-message="Neviens stāvs neatbilst meklējumam."
                 />
             </label>
             <label class="block">
@@ -110,20 +107,7 @@
                     empty-message="Neviens lietotājs neatbilst meklējumam."
                 />
             </label>
-            <label class="block">
-                <span class="crud-label">Ierīces telpa</span>
-                <x-searchable-select
-                    name="has_devices"
-                    query-name="has_devices_query"
-                    identifier="room-device-filter"
-                    :options="$hasDeviceOptions"
-                    :selected="$filters['has_devices']"
-                    :query="$selectedHasDevicesLabel"
-                    placeholder="Izvēlies telpas tipu"
-                    empty-message="Neviens variants neatbilst meklējumam."
-                />
-            </label>
-            <div class="toolbar-actions md:col-span-5">
+            <div class="toolbar-actions md:col-span-4">
                 <a href="{{ route('rooms.index') }}" class="btn-clear" data-async-link="true"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt</span></a>
             </div>
         </form>
@@ -131,9 +115,8 @@
         <x-active-filters
             :items="[
                 ['label' => 'Ēka', 'value' => $filters['building_id'] !== '' ? optional($buildings->firstWhere('id', (int) $filters['building_id']))->building_name : null],
-                ['label' => 'Nodaļa', 'value' => $filters['department']],
+                ['label' => 'Stāvs', 'value' => $selectedFloorLabel],
                 ['label' => 'Atbildīgais', 'value' => $filters['user_id'] !== '' ? optional($responsibleUsers->firstWhere('id', (int) $filters['user_id']))->full_name : null],
-                ['label' => 'Ierīces telpa', 'value' => $filters['has_devices'] === '1' ? 'Ar ierīcēm' : ($filters['has_devices'] === '0' ? 'Bez ierīcēm' : null)],
             ]"
             :clear-url="route('rooms.index')"
         />
@@ -167,7 +150,20 @@
                             <td class="px-4 py-3">{{ $room->room_name ?: '-' }}</td>
                             <td class="px-4 py-3">{{ $room->department ?: '-' }}</td>
                             <td class="px-4 py-3">{{ $room->user?->full_name ?: '-' }}</td>
-                            <td class="px-4 py-3">{{ $room->devices_count }}</td>
+                            <td class="px-4 py-3">
+                                @if ($room->devices_count > 0)
+                                    <a
+                                        href="{{ route('devices.index', ['room_id' => $room->id, 'room_query' => trim(implode(' ', array_filter([$room->room_name, $room->room_number])))]) }}"
+                                        class="inline-flex items-center justify-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 transition hover:bg-sky-100"
+                                    >
+                                        {{ $room->devices_count }} ierīces
+                                    </a>
+                                @else
+                                    <span class="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500">
+                                        0 ierīces
+                                    </span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3 text-slate-600">{{ $room->notes ?: '-' }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex flex-wrap gap-2">

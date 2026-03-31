@@ -1,11 +1,7 @@
-{{--
+{--
     Lapa: Remonta ieraksta rediģēšana.
-    Atbildība: ļauj administratoram atjaunot remonta detaļas un veikt statusa pārejas.
+    Atbildība: ļauj administratoram saprotami pārvaldīt remonta gaitu, labot datus un redzēt, kas vēl jāaizpilda.
     Datu avots: RepairController@edit, saglabāšana caur RepairController@update un statusa darbības caur RepairController@transition.
-    Galvenās daļas:
-    1. Hero ar remonta kontekstu.
-    2. Statusa kopsavilkuma un ātro pāreju panelis.
-    3. Pilnā remonta rediģēšanas forma.
 --}}
 <x-app-layout>
     @php
@@ -17,11 +13,25 @@
         };
         $deviceThumbUrl = $repair->device?->deviceImageThumbUrl();
         $statusMessage = match ($repair->status) {
-            'in-progress' => 'Remonts šobrīd atrodas procesā. Statusu no šī skata nevar rediģēt tieši, izmanto zemāk redzamās darbības.',
-            'completed' => 'Remonts ir pabeigts. Ja vajag turpināt darbu, vari to atgriezt atpakaļ uz procesa statusu.',
-            'cancelled' => 'Remonts ir atcelts. Ja darbs tomēr jāatjauno, vari to pārslēgt atpakaļ uz gaida vai procesa statusu.',
-            default => 'Remonts šobrīd gaida uzsākšanu. Kad darbs sākts, pārslēdz to uz procesā statusu.',
+            'in-progress' => 'Remonts pašlaik ir procesā. Kad visi nepieciešamie lauki ir aizpildīti, vari to pabeigt.',
+            'completed' => 'Remonts ir pabeigts. Ja izrādās, ka darbs jāturpina, to var atjaunot uz procesa statusu.',
+            'cancelled' => 'Remonts ir atcelts un paliek vēsturē. Šeit vēl vari pārskatīt vai precizēt datus.',
+            default => 'Remonts šobrīd gaida uzsākšanu. Pirms starta pārliecinies, ka viss nepieciešamais ir aizpildīts.',
         };
+        $nextStepRequirements = collect(match ($repair->status) {
+            'waiting' => [
+                ['label' => 'Apraksts', 'done' => filled($repair->description)],
+                ['label' => 'Pakalpojuma sniedzējs', 'done' => $repair->repair_type !== 'external' || filled($repair->vendor_name)],
+                ['label' => 'Kontaktinformācija', 'done' => $repair->repair_type !== 'external' || filled($repair->vendor_contact)],
+            ],
+            'in-progress' => [
+                ['label' => 'Apraksts', 'done' => filled($repair->description)],
+                ['label' => 'Rēķina numurs', 'done' => $repair->repair_type !== 'external' || filled($repair->invoice_number)],
+                ['label' => 'Izmaksas', 'done' => $repair->repair_type !== 'external' || filled($repair->cost)],
+            ],
+            default => [],
+        })->filter();
+        $nextStepReady = $nextStepRequirements->isNotEmpty() && $nextStepRequirements->every(fn ($item) => $item['done']);
     @endphp
 
     <section
@@ -36,102 +46,176 @@
     >
         <div class="page-hero">
             <div class="page-hero-grid">
-                <div class="max-w-3xl">
-                    <div class="page-eyebrow"><x-icon name="edit" size="h-4 w-4" /><span>Labosana</span></div>
+                <div class="max-w-4xl">
+                    <div class="page-eyebrow">
+                        <x-icon name="edit" size="h-4 w-4" />
+                        <span>Remonta kartīte</span>
+                    </div>
                     <div class="page-title-group mt-4">
-                        <div class="page-title-icon page-title-icon-amber"><x-icon name="repair" size="h-7 w-7" /></div>
+                        <div class="page-title-icon page-title-icon-amber">
+                            <x-icon name="repair" size="h-7 w-7" />
+                        </div>
                         <div>
                             <h1 class="page-title">Rediģēt remontu</h1>
-                            <p class="page-subtitle">Atjauno remonta informāciju. Statusu un izpildītāju sistēma piešķir ar remonta darbību pogām.</p>
+                            <p class="page-subtitle">Skaidrs remonta skats ar kopsavilkumu, nākamajām darbībām un labošanas formu vienuviet.</p>
                         </div>
                     </div>
                 </div>
-                <a href="{{ route('repairs.index') }}" class="btn-back"><x-icon name="back" size="h-4 w-4" /><span>Atpakaļ</span></a>
+                <a href="{{ route('repairs.index') }}" class="btn-back">
+                    <x-icon name="back" size="h-4 w-4" />
+                    <span>Atpakaļ</span>
+                </a>
             </div>
         </div>
 
         <x-validation-summary />
 
-
-        <div class="grid gap-4 xl:grid-cols-[1.35fr_0.95fr]">
-            <div class="surface-card space-y-4 p-6">
-                <div class="flex flex-wrap items-start justify-between gap-4">
-                    <div class="flex items-start gap-4">
-                        @if ($deviceThumbUrl)
-                            <img src="{{ $deviceThumbUrl }}" alt="{{ $repair->device?->name ?: 'Ierīce' }}" class="device-table-thumb shrink-0">
-                        @else
-                            <div class="device-table-thumb device-table-thumb-placeholder shrink-0">
-                                <x-icon name="device" size="h-4 w-4" />
-                            </div>
-                        @endif
-                        <div>
-                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta kopsavilkums</div>
-                            <h2 class="mt-2 text-xl font-semibold text-slate-900">{{ $repair->device?->name ?: 'Ierīce nav atrasta' }}</h2>
-                            <div class="mt-2 flex flex-wrap gap-2 text-sm text-slate-500">
-                                <span>Kods: {{ $repair->device?->code ?: 'bez koda' }}</span>
-                                @if ($repair->device?->room?->room_number)
-                                    <span>Telpa {{ $repair->device->room->room_number }}</span>
-                                @endif
+        <div class="grid gap-5 xl:grid-cols-[1.3fr_0.9fr]">
+            <div class="space-y-5">
+                <div class="surface-card space-y-4 p-6">
+                    <div class="flex flex-wrap items-start justify-between gap-4">
+                        <div class="flex items-start gap-4">
+                            @if ($deviceThumbUrl)
+                                <img src="{{ $deviceThumbUrl }}" alt="{{ $repair->device?->name ?: 'Ierīce' }}" class="device-table-thumb shrink-0">
+                            @else
+                                <div class="device-table-thumb device-table-thumb-placeholder shrink-0">
+                                    <x-icon name="device" size="h-4 w-4" />
+                                </div>
+                            @endif
+                            <div>
+                                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta kopsavilkums</div>
+                                <h2 class="mt-2 text-xl font-semibold text-slate-900">{{ $repair->device?->name ?: 'Ierīce nav atrasta' }}</h2>
+                                <div class="mt-2 flex flex-wrap gap-2 text-sm text-slate-500">
+                                    <span>Kods: {{ $repair->device?->code ?: 'bez koda' }}</span>
+                                    @if ($repair->device?->serial_number)
+                                        <span>Sērija: {{ $repair->device->serial_number }}</span>
+                                    @endif
+                                    @if ($repair->device?->room?->room_number)
+                                        <span>Telpa {{ $repair->device->room->room_number }}</span>
+                                    @endif
+                                </div>
                             </div>
                         </div>
+                        <x-status-pill context="repair" :value="$repair->status" :label="$statusLabels[$repair->status] ?? null" />
                     </div>
-                    <x-status-pill context="repair" :value="$repair->status" :label="$statusLabels[$repair->status] ?? null" />
+
+                    <div class="rounded-2xl border px-4 py-4 text-sm {{ $statusTone }}">
+                        <div class="font-semibold">Statusa informācija</div>
+                        <div class="mt-2">{{ $statusMessage }}</div>
+                        <div class="mt-3 grid gap-2 text-sm md:grid-cols-3">
+                            <div><strong>Pašreizējais statuss:</strong> {{ $statusLabels[$repair->status] ?? $repair->status }}</div>
+                            <div><strong>Sākuma datums:</strong> {{ $repair->start_date?->format('d.m.Y') ?: '-' }}</div>
+                            <div><strong>Beigu datums:</strong> {{ $repair->end_date?->format('d.m.Y') ?: '-' }}</div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <div class="text-sm font-semibold text-slate-900">Ātrās darbības</div>
+                        <div class="mt-1 text-sm text-slate-500">Redzamas tikai tās darbības, kuras šim remonta statusam drīkst veikt.</div>
+                        <div class="mt-3 flex flex-wrap gap-3">
+                            @if ($repair->status === 'waiting')
+                                <button type="button" class="btn-edit" @click="submitTransition({{ $repair->id }}, 'in-progress')">
+                                    <x-icon name="stats" size="h-4 w-4" />
+                                    <span>Sākt remontu</span>
+                                </button>
+                                <button type="button" class="btn-danger" @click="submitTransition({{ $repair->id }}, 'cancelled')">
+                                    <x-icon name="clear" size="h-4 w-4" />
+                                    <span>Atcelt remontu</span>
+                                </button>
+                            @elseif ($repair->status === 'in-progress')
+                                <button type="button" class="btn-clear" @click="submitTransition({{ $repair->id }}, 'waiting')">
+                                    <x-icon name="back" size="h-4 w-4" />
+                                    <span>Atpakaļ uz gaida</span>
+                                </button>
+                                <button type="button" class="btn-approve" @click="submitCompletion()">
+                                    <x-icon name="check-circle" size="h-4 w-4" />
+                                    <span>Pabeigt remontu</span>
+                                </button>
+                                <button type="button" class="btn-danger" @click="submitTransition({{ $repair->id }}, 'cancelled')">
+                                    <x-icon name="clear" size="h-4 w-4" />
+                                    <span>Atcelt remontu</span>
+                                </button>
+                            @elseif ($repair->status === 'completed')
+                                <button type="button" class="btn-clear" @click="submitTransition({{ $repair->id }}, 'in-progress')">
+                                    <x-icon name="back" size="h-4 w-4" />
+                                    <span>Atjaunot uz procesu</span>
+                                </button>
+                            @endif
+                        </div>
+                    </div>
                 </div>
 
-                <div class="rounded-2xl border px-4 py-4 text-sm {{ $statusTone }}">
-                    <div class="font-semibold">Statusa informācija</div>
-                    <div class="mt-2">{{ $statusMessage }}</div>
-                    <div class="mt-3 grid gap-2 text-sm md:grid-cols-3">
-                        <div><strong>Pašreizējāis statuss:</strong> {{ $statusLabels[$repair->status] ?? $repair->status }}</div>
-                        <div><strong>Sakuma datums:</strong> {{ $repair->start_date?->format('d.m.Y') ?: '-' }}</div>
-                        <div><strong>Beigu datums:</strong> {{ $repair->end_date?->format('d.m.Y') ?: '-' }}</div>
+                <form method="POST" action="{{ route('repairs.update', $repair) }}" class="surface-card space-y-6 p-6">
+                    @csrf
+                    @method('PUT')
+                    <div class="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 pb-4">
+                        <div>
+                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Labošanas forma</div>
+                            <h2 class="mt-2 text-lg font-semibold text-slate-900">Atjauno remonta datus</h2>
+                            <p class="mt-1 text-sm text-slate-500">Šeit vari precizēt aprakstu, ārējā remonta informāciju, prioritāti un izmaksas.</p>
+                        </div>
+                        <x-status-pill context="repair" :value="$repair->status" :label="$statusLabels[$repair->status] ?? null" />
                     </div>
-                </div>
 
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <div class="text-sm font-semibold text-slate-900">Statusa darbības</div>
-                    <div class="mt-3 flex flex-wrap gap-3">
-                        @if ($repair->status === 'waiting')
-                            <button type="button" class="btn-edit" @click="submitTransition({{ $repair->id }}, 'in-progress')">
-                                <x-icon name="stats" size="h-4 w-4" />
-                                <span>Sakt remontu</span>
+                    @include('repairs.partials.form-fields', ['repair' => $repair])
+
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
+                        <div class="text-sm text-slate-500">Statusu maini ar ātrajām darbībām augšā. Šī forma paredzēta remonta datu sakārtošanai pirms nākamā soļa.</div>
+                        <div class="flex flex-wrap gap-3">
+                            <button type="submit" class="btn-edit">
+                                <x-icon name="save" size="h-4 w-4" />
+                                <span>Saglabāt</span>
                             </button>
-                            <button type="button" class="btn-danger" @click="submitTransition({{ $repair->id }}, 'cancelled')">
+                            <a href="{{ route('repairs.index') }}" class="btn-clear">
                                 <x-icon name="clear" size="h-4 w-4" />
                                 <span>Atcelt</span>
-                            </button>
-                        @elseif ($repair->status === 'in-progress')
-                            <button type="button" class="btn-clear" @click="submitTransition({{ $repair->id }}, 'waiting')">
-                                <x-icon name="back" size="h-4 w-4" />
-                                <span>Atpakaļ uz gaida</span>
-                            </button>
-                            <button type="button" class="btn-approve" @click="submitCompletion()">
-                                <x-icon name="check-circle" size="h-4 w-4" />
-                                <span>Pabeigt remontu</span>
-                            </button>
-                            <button type="button" class="btn-danger" @click="submitTransition({{ $repair->id }}, 'cancelled')">
-                                <x-icon name="clear" size="h-4 w-4" />
-                                <span>Atcelt</span>
-                            </button>
-                        @endif
+                            </a>
+                        </div>
                     </div>
-                </div>
+                </form>
             </div>
 
-            <div class="space-y-4">
+            <div class="space-y-5">
                 <div class="surface-card p-6">
                     <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ierīces informācija</div>
                     <div class="mt-4 space-y-3 text-sm text-slate-600">
                         <div><strong class="text-slate-900">Ierīce:</strong> {{ $repair->device?->name ?: '-' }}</div>
                         <div><strong class="text-slate-900">Kods:</strong> {{ $repair->device?->code ?: 'bez koda' }}</div>
                         <div><strong class="text-slate-900">Ražotājs un modelis:</strong> {{ collect([$repair->device?->manufacturer, $repair->device?->model])->filter()->implode(' | ') ?: '-' }}</div>
-                        <div><strong class="text-slate-900">Apstiprinaja:</strong> {{ $repair->approval_actor?->full_name ?: 'Nav norādīts' }}</div>
+                        <div><strong class="text-slate-900">Apstiprināja:</strong> {{ $repair->approval_actor?->full_name ?: 'Nav norādīts' }}</div>
                     </div>
                 </div>
 
+                @if ($nextStepRequirements->isNotEmpty())
+                    <div class="surface-card p-6">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Nākamā soļa gatavība</div>
+                                <div class="mt-1 text-sm text-slate-500">
+                                    {{ $repair->status === 'waiting' ? 'Kas jāaizpilda pirms remonta sākšanas.' : 'Kas vēl nepieciešams pirms remonta pabeigšanas.' }}
+                                </div>
+                            </div>
+                            <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold {{ $nextStepReady ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700' }}">
+                                {{ $nextStepReady ? 'Gatavs' : 'Nepilnīgs' }}
+                            </span>
+                        </div>
+                        <div class="mt-4 space-y-2">
+                            @foreach ($nextStepRequirements as $requirement)
+                                <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
+                                    <span class="font-medium text-slate-700">{{ $requirement['label'] }}</span>
+                                    <span class="inline-flex items-center gap-2 font-semibold {{ $requirement['done'] ? 'text-emerald-700' : 'text-rose-700' }}">
+                                        <x-icon :name="$requirement['done'] ? 'check-circle' : 'x-circle'" size="h-4 w-4" />
+                                        <span>{{ $requirement['done'] ? 'Aizpildīts' : 'Trūkst' }}</span>
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 @if ($repair->request)
                     <div class="surface-card p-6">
-                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pieteikuma informācija</div>
+                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Saistītais pieteikums</div>
                         <div class="mt-4 space-y-3 text-sm text-slate-600">
                             <div><strong class="text-slate-900">Pieteica:</strong> {{ $repair->request->responsibleUser?->full_name ?: 'Nav norādīts' }}</div>
                             <div>
@@ -145,19 +229,5 @@
                 @endif
             </div>
         </div>
-
-        <form method="POST" action="{{ route('repairs.update', $repair) }}" class="surface-card space-y-6 p-6">
-            @csrf
-            @method('PUT')
-            @include('repairs.partials.form-fields', ['repair' => $repair])
-            <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
-                <div class="text-sm text-slate-500">Forma paredzeta remonta datu atjaunosanai. Statusu maini ar statusa darbībām augstāk.</div>
-                <div class="flex flex-wrap gap-3">
-                    <button type="submit" class="btn-edit"><x-icon name="save" size="h-4 w-4" /><span>Saglabāt</span></button>
-                    <a href="{{ route('repairs.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Atcelt</span></a>
-                </div>
-            </div>
-        </form>
-
     </section>
 </x-app-layout>

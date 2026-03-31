@@ -39,8 +39,8 @@
         </main>
 
         @php
-            $flashMessage = session('success') ?? session('status');
-            $flashTone = session('success') ? 'success' : (session('status') ? 'info' : null);
+            $flashMessage = session('success') ?? session('error') ?? session('status');
+            $flashTone = session('success') ? 'success' : (session('error') ? 'error' : (session('status') ? 'info' : null));
         @endphp
         @if ($flashMessage)
             <div x-data="{ open: true }" x-init="setTimeout(() => open = false, 3800)" class="pointer-events-none fixed bottom-4 right-4 z-[70] flex w-[min(26rem,calc(100vw-1.5rem))] flex-col sm:bottom-6 sm:right-6">
@@ -58,6 +58,8 @@
                     <div class="flash-toast-icon">
                         @if ($flashTone === 'success')
                             <x-icon name="check-circle" size="h-4 w-4" />
+                        @elseif ($flashTone === 'error')
+                            <x-icon name="x-circle" size="h-4 w-4" />
                         @else
                             <x-icon name="information-circle" size="h-4 w-4" />
                         @endif

@@ -26,19 +26,22 @@ class RoomController extends Controller
         $filters = [
             'search' => trim((string) $request->query('search', $request->query('q', ''))),
             'building_id' => trim((string) $request->query('building_id', '')),
-            'department' => trim((string) $request->query('department', '')),
+            'floor' => trim((string) $request->query('floor', '')),
+            'floor_query' => trim((string) $request->query('floor_query', '')),
             'user_id' => trim((string) $request->query('user_id', '')),
-            'has_devices' => trim((string) $request->query('has_devices', '')),
         ];
 
         $rooms = Room::query()
             ->with(['building', 'user'])
             ->withCount('devices')
             ->when($filters['building_id'] !== '' && ctype_digit($filters['building_id']), fn (Builder $query) => $query->where('building_id', (int) $filters['building_id']))
-            ->when($filters['department'] !== '', fn (Builder $query) => $query->where('department', $filters['department']))
+            ->when($filters['floor'] !== '' && is_numeric($filters['floor']), fn (Builder $query) => $query->where('floor_number', (int) $filters['floor']))
+            ->when($filters['floor'] === '' && $filters['floor_query'] !== '', function (Builder $query) use ($filters) {
+                if (is_numeric($filters['floor_query'])) {
+                    $query->where('floor_number', (int) $filters['floor_query']);
+                }
+            })
             ->when($filters['user_id'] !== '' && ctype_digit($filters['user_id']), fn (Builder $query) => $query->where('user_id', (int) $filters['user_id']))
-            ->when($filters['has_devices'] === '1', fn (Builder $query) => $query->has('devices'))
-            ->when($filters['has_devices'] === '0', fn (Builder $query) => $query->doesntHave('devices'))
             ->orderBy('building_id')
             ->orderBy('floor_number')
             ->orderBy('room_number')
@@ -52,12 +55,12 @@ class RoomController extends Controller
             ],
             'filters' => $filters,
             'buildings' => Building::orderBy('building_name')->get(),
-            'departments' => Room::query()
-                ->whereNotNull('department')
-                ->where('department', '!=', '')
+            'floors' => Room::query()
+                ->select('floor_number')
                 ->distinct()
-                ->orderBy('department')
-                ->pluck('department'),
+                ->orderBy('floor_number')
+                ->pluck('floor_number')
+                ->values(),
             'responsibleUsers' => User::active()->orderBy('full_name')->get(),
         ]);
     }
@@ -76,17 +79,20 @@ class RoomController extends Controller
 
         $filters = [
             'building_id' => trim((string) $request->query('building_id', '')),
-            'department' => trim((string) $request->query('department', '')),
+            'floor' => trim((string) $request->query('floor', '')),
+            'floor_query' => trim((string) $request->query('floor_query', '')),
             'user_id' => trim((string) $request->query('user_id', '')),
-            'has_devices' => trim((string) $request->query('has_devices', '')),
         ];
 
         $rooms = Room::query()
             ->when($filters['building_id'] !== '' && ctype_digit($filters['building_id']), fn (Builder $query) => $query->where('building_id', (int) $filters['building_id']))
-            ->when($filters['department'] !== '', fn (Builder $query) => $query->where('department', $filters['department']))
+            ->when($filters['floor'] !== '' && is_numeric($filters['floor']), fn (Builder $query) => $query->where('floor_number', (int) $filters['floor']))
+            ->when($filters['floor'] === '' && $filters['floor_query'] !== '', function (Builder $query) use ($filters) {
+                if (is_numeric($filters['floor_query'])) {
+                    $query->where('floor_number', (int) $filters['floor_query']);
+                }
+            })
             ->when($filters['user_id'] !== '' && ctype_digit($filters['user_id']), fn (Builder $query) => $query->where('user_id', (int) $filters['user_id']))
-            ->when($filters['has_devices'] === '1', fn (Builder $query) => $query->has('devices'))
-            ->when($filters['has_devices'] === '0', fn (Builder $query) => $query->doesntHave('devices'))
             ->orderBy('building_id')
             ->orderBy('floor_number')
             ->orderBy('room_number')

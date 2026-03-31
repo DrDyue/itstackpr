@@ -141,9 +141,10 @@
                         </div>
                     </div>
 
-                    <label class="block md:col-span-2" x-cloak x-show="repairStatus !== 'waiting'">
+                    <label class="block md:col-span-2">
                         <span class="crud-label">Izmaksas</span>
                         <input type="number" step="0.01" name="cost" value="{{ old('cost', $currentRepair?->cost) }}" class="crud-control">
+                        <div class="mt-2 text-xs text-slate-500">Izmaksas vari ievadīt uzreiz. Ārējam remontam tās ir obligātas, pirms remontu var pabeigt.</div>
                     </label>
                 </div>
             </div>
@@ -154,11 +155,13 @@
                 x-show="repairType === 'external'"
             >
                 <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ārējā remonta dati</div>
-                <div class="mt-1 text-sm text-slate-500">Vendoru informācija tiek izmantota tikai ārējam remontam.</div>
-                <div class="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600" x-show="repairStatus !== 'in-progress'">
-                    Vendora lauki aktivizējas un ir obligāti tikai tad, kad remonts ir procesa statusā.
+                <div class="mt-1 text-sm text-slate-500">Šie lauki vajadzīgi ārējam remontam. Pakalpojuma sniedzējs un kontakts jānorāda pirms remonta sākšanas, savukārt rēķina numurs jānorāda pirms pabeigšanas.</div>
+                <div class="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                    <div x-show="repairStatus === 'waiting'">Pirms ārējā remonta sākšanas aizpildi pakalpojuma sniedzēju un kontaktu.</div>
+                    <div x-show="repairStatus === 'in-progress'">Lai pabeigtu ārējo remontu, jābūt aizpildītam rēķina numuram un izmaksām.</div>
+                    <div x-show="repairStatus === 'completed' || repairStatus === 'cancelled'">Šeit glabājas ārējā remonta piegādātāja un rēķina informācija vēsturei.</div>
                 </div>
-                <div class="mt-4 grid gap-4 md:grid-cols-3" x-show="repairStatus === 'in-progress'">
+                <div class="mt-4 grid gap-4 md:grid-cols-3">
                     <label class="block">
                         <span class="crud-label">Pakalpojuma sniedzejs</span>
                         <input type="text" name="vendor_name" value="{{ old('vendor_name', $currentRepair?->vendor_name) }}" class="crud-control">

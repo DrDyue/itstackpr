@@ -8,6 +8,24 @@
     3. Telpas rediģēšanas forma.
 --}}
 <x-app-layout>
+    @php
+        $buildingOptions = $buildings->map(fn ($building) => [
+            'value' => (string) $building->id,
+            'label' => $building->building_name,
+            'description' => $building->city ?: '',
+            'search' => implode(' ', array_filter([$building->building_name, $building->city, $building->address])),
+        ])->values();
+        $userOptions = $users->map(fn ($roomUser) => [
+            'value' => (string) $roomUser->id,
+            'label' => $roomUser->full_name,
+            'description' => $roomUser->job_title ?: '',
+            'search' => implode(' ', array_filter([$roomUser->full_name, $roomUser->job_title, $roomUser->email])),
+        ])->values();
+        $selectedBuildingLabel = optional($buildings->firstWhere('id', (int) old('building_id', $room->building_id)))->building_name;
+        $selectedUserLabel = old('user_id', $room->user_id) !== null && old('user_id', $room->user_id) !== ''
+            ? optional($users->firstWhere('id', (int) old('user_id', $room->user_id)))->full_name
+            : null;
+    @endphp
     <section class="app-shell max-w-4xl">
         <div class="page-hero">
             <div class="page-hero-grid">
@@ -33,11 +51,16 @@
             <div class="grid gap-4 md:grid-cols-2">
                 <label class="block">
                     <span class="crud-label">Ēka</span>
-                    <select name="building_id" class="crud-control" required>
-                        @foreach ($buildings as $building)
-                            <option value="{{ $building->id }}" @selected(old('building_id', $room->building_id) == $building->id)>{{ $building->building_name }}</option>
-                        @endforeach
-                    </select>
+                    <x-searchable-select
+                        name="building_id"
+                        query-name="building_query"
+                        identifier="room-edit-building"
+                        :options="$buildingOptions"
+                        :selected="(string) old('building_id', $room->building_id)"
+                        :query="$selectedBuildingLabel"
+                        placeholder="Izvēlies ēku"
+                        empty-message="Neviena ēka neatbilst meklējumam."
+                    />
                 </label>
                 <label class="block">
                     <span class="crud-label">Stavs</span>
@@ -53,12 +76,16 @@
                 </label>
                 <label class="block">
                     <span class="crud-label">Atbildīgais lietotājs</span>
-                    <select name="user_id" class="crud-control">
-                        <option value="">Nav piesaistīts</option>
-                        @foreach ($users as $roomUser)
-                            <option value="{{ $roomUser->id }}" @selected(old('user_id', $room->user_id) == $roomUser->id)>{{ $roomUser->full_name }}</option>
-                        @endforeach
-                    </select>
+                    <x-searchable-select
+                        name="user_id"
+                        query-name="user_query"
+                        identifier="room-edit-user"
+                        :options="$userOptions"
+                        :selected="(string) old('user_id', $room->user_id)"
+                        :query="$selectedUserLabel"
+                        placeholder="Izvēlies atbildīgo"
+                        empty-message="Neviens lietotājs neatbilst meklējumam."
+                    />
                 </label>
                 <label class="block">
                     <span class="crud-label">Nodaļa</span>

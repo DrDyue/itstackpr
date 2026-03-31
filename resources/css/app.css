@@ -3399,6 +3399,14 @@ tbody td {
     @apply border-sky-200 bg-sky-100 text-sky-700;
 }
 
+.flash-toast-error {
+    @apply border-rose-200 bg-rose-50/95 text-rose-950;
+}
+
+.flash-toast-error .flash-toast-icon {
+    @apply border-rose-200 bg-rose-100 text-rose-700;
+}
+
 .notification-toast-actions {
     @apply border-black/5;
 }
@@ -4355,6 +4363,18 @@ html[data-theme='dark'] .flash-toast-info .flash-toast-icon {
     background: rgba(14, 165, 233, 0.2) !important;
     border-color: rgba(56, 189, 248, 0.35) !important;
     color: #7dd3fc !important;
+}
+
+html[data-theme='dark'] .flash-toast-error {
+    background: rgba(244, 63, 94, 0.12) !important;
+    border-color: rgba(251, 113, 133, 0.28) !important;
+    color: #ffe4e6 !important;
+}
+
+html[data-theme='dark'] .flash-toast-error .flash-toast-icon {
+    background: rgba(244, 63, 94, 0.18) !important;
+    border-color: rgba(251, 113, 133, 0.35) !important;
+    color: #fda4af !important;
 }
 
 html[data-theme='dark'] .notification-toast-copy,

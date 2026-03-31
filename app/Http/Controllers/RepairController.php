@@ -653,15 +653,12 @@ class RepairController extends Controller
             ->values()
             ->all();
 
-        // Handle clear_all parameter to reset all filters
         if ($request->boolean('clear_all')) {
             $selectedStatuses = [];
-        } elseif ($canManageRepairs && ! $request->has('statuses_filter') && ! $request->has('status') && ! $request->has('clear_all')) {
-            // Default filter: show only waiting and in-progress on first visit
+        } elseif ($canManageRepairs && ! $request->has('statuses_filter') && ! $request->has('status')) {
             $selectedStatuses = ['waiting', 'in-progress'];
         }
 
-        // Handle priorities filter
         $availablePriorities = ['low', 'medium', 'high', 'critical'];
         $rawPriorities = $request->query('priorities', []);
         $selectedPriorities = collect(is_array($rawPriorities) ? $rawPriorities : [$rawPriorities])
@@ -671,7 +668,6 @@ class RepairController extends Controller
             ->values()
             ->all();
 
-        // Clear priorities if clear_all is set
         if ($request->boolean('clear_all')) {
             $selectedPriorities = [];
         }
@@ -688,7 +684,6 @@ class RepairController extends Controller
             'date_from' => trim((string) $request->query('date_from', '')),
             'date_to' => trim((string) $request->query('date_to', '')),
             'mine' => $request->boolean('mine'),
-            'clear_all' => $request->boolean('clear_all'),
         ];
     }
 
