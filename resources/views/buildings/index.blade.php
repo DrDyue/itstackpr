@@ -16,7 +16,7 @@
             'search' => (string) $city,
         ])->values();
     @endphp
-    <section class="app-shell">
+    <section class="app-shell app-shell-wide">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-3xl">
@@ -74,10 +74,10 @@
             <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
         @endif
 
-        <div class="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-sm">
-                    <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
+        <div class="app-table-shell">
+            <div class="app-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+                <table class="app-table-content app-table-content-compact min-w-full text-sm">
+                    <thead class="app-table-head bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
                         <tr>
                             <th class="px-4 py-3 text-left">Nosaukums</th>
                             <th class="px-4 py-3 text-left">Resursi</th>
@@ -91,8 +91,8 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @forelse ($buildings as $building)
-                            <tr class="hover:bg-slate-50" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim((string) $building->building_name)) }}">
-                                <td class="px-4 py-3 font-medium text-slate-900">{{ $building->building_name }}</td>
+                            <tr class="app-table-row" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim((string) $building->building_name)) }}">
+                                <td class="px-4 py-3 app-table-cell-strong">{{ $building->building_name }}</td>
                                 <td class="px-4 py-3 text-slate-600">
                                     <div>Telpas: {{ $building->rooms_count }}</div>
                                     <div>Ierīces: {{ $building->devices_count }}</div>

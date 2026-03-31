@@ -16,7 +16,7 @@
             : null;
     @endphp
 
-    <section class="app-shell">
+    <section class="app-shell app-shell-wide">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-5xl">
@@ -75,7 +75,7 @@
             <form
                 method="GET"
                 action="{{ route('repairs.index') }}"
-                class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.5fr)]"
+                class="surface-toolbar repairs-toolbar-surface grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.5fr)]"
                 data-async-table-form
                 data-async-root="#repairs-index-root"
                 data-search-endpoint="{{ route('repairs.find-by-code') }}"
@@ -88,7 +88,7 @@
                 @endif
 
                 <div class="md:col-span-2 xl:col-span-full">
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.2fr)]">
+                    <div class="repair-toolbar-search-grid">
                         <label class="block">
                             <span class="crud-label">Meklēt pēc koda</span>
                             <div class="flex items-center gap-2">
@@ -144,7 +144,7 @@
                 <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
                 <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
 
-                <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
+                <div class="filter-toolbar-footer repairs-filter-footer md:col-span-2 xl:col-span-full">
                     <div class="flex flex-wrap items-center gap-4">
                         <div class="quick-filter-groups">
                             <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($filters['statuses']), minimum: 0 })">
@@ -240,9 +240,10 @@
                 <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
             @endif
 
-            <div class="mt-5 rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
-                    <table class="w-full min-w-full text-sm">
-                        <thead class="bg-slate-50 text-left text-slate-500">
+            <div class="repair-table-shell mt-5 rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+                <div class="repair-table-scroll">
+                    <table class="repair-table-content w-full min-w-full text-sm">
+                        <thead class="repair-table-head bg-slate-50 text-left text-slate-500">
                             <tr>
                                 <th class="px-4 py-3">Attēls</th>
                                 @foreach ([
@@ -282,7 +283,7 @@
                                         </button>
                                     </th>
                                 @endforeach
-                                <th class="px-4 py-3 text-right">Darbības</th>
+                                <th class="px-4 py-3 text-right w-[9rem]">Darbības</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -304,7 +305,7 @@
                                         ])
                                         : null;
                                 @endphp
-                                <tr class="border-t border-slate-100 align-top" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
+                                <tr class="repair-table-row border-t border-slate-100 align-top" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
                                     <td class="px-4 py-4">
                                         @if ($thumbUrl)
                                             <img src="{{ $thumbUrl }}" alt="{{ $device?->name ?: 'Ierīce' }}" class="device-table-thumb">
@@ -340,15 +341,15 @@
                                     <td class="px-4 py-4">
                                         <x-status-pill context="repair-type" :value="$repair->repair_type" :label="$typeLabels[$repair->repair_type] ?? null" />
                                     </td>
-                                    <td class="px-4 py-4">
+                                    <td class="px-4 py-4 tabular-nums">
                                         <div class="font-semibold text-slate-900">
                                             {{ $repair->cost !== null ? number_format((float) $repair->cost, 2, '.', ' ') . ' EUR' : '-' }}
                                         </div>
                                     </td>
-                                    <td class="px-4 py-4">
+                                    <td class="px-4 py-4 tabular-nums">
                                         <div class="font-semibold text-slate-900">{{ $repair->start_date?->format('d.m.Y') ?: '-' }}</div>
                                     </td>
-                                    <td class="px-4 py-4">
+                                    <td class="px-4 py-4 tabular-nums">
                                         <div class="font-semibold text-slate-900">{{ $repair->end_date?->format('d.m.Y') ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4 text-right">
@@ -418,6 +419,7 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
             </div>
 
             @if ($repairs->hasPages())

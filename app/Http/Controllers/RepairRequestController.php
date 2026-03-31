@@ -109,6 +109,61 @@ class RepairRequestController extends Controller
     }
 
     /**
+     * Atrod remonta pieteikumu pÄ“c saistÄ«tÄs ierÄ«ces koda filtrÄ“tajÄ sarakstÄ.
+     */
+    public function findByCode(Request $request)
+    {
+        $user = $this->user();
+        abort_unless($user, 403);
+
+        $code = trim((string) $request->query('code', ''));
+        if ($code === '') {
+            return response()->json(['found' => false, 'page' => 1]);
+        }
+
+        $canReview = $user->canManageRequests();
+        $availableStatuses = [
+            RepairRequest::STATUS_SUBMITTED,
+            RepairRequest::STATUS_APPROVED,
+            RepairRequest::STATUS_REJECTED,
+        ];
+        $filters = $this->normalizedIndexFilters($request, $availableStatuses, $canReview);
+        $sorting = $this->normalizedSorting($request);
+
+        $baseQuery = RepairRequest::query()
+            ->when(! $canReview, fn (Builder $query) => $query->where('responsible_user_id', $user->id));
+
+        $requestsQuery = (clone $baseQuery)
+            ->with('device:id,code')
+            ->select('repair_requests.*');
+
+        $this->applyIndexFilters($requestsQuery, $filters);
+        $this->applySorting($requestsQuery, $sorting);
+
+        $requests = $requestsQuery->get();
+        $needle = mb_strtolower($code);
+        $foundIndex = null;
+
+        foreach ($requests as $index => $repairRequest) {
+            $deviceCode = mb_strtolower(trim((string) ($repairRequest->device?->code ?? '')));
+            if ($deviceCode === $needle) {
+                $foundIndex = $index;
+                break;
+            }
+        }
+
+        if ($foundIndex === null) {
+            return response()->json(['found' => false, 'page' => 1]);
+        }
+
+        return response()->json([
+            'found' => true,
+            'page' => intdiv($foundIndex, 20) + 1,
+            'term' => $code,
+        ]);
+    }
+
+    /**
      * Parāda jauna remonta pieteikuma formu lietotājam.
      */
     public function create(Request $request)
@@ -372,7 +427,7 @@ class RepairRequestController extends Controller
             ->all();
 
         return [
-            'q' => trim((string) $request->query('q', '')),
+            'code' => trim((string) $request->query('code', '')),
             'request_id' => ctype_digit((string) $request->query('request_id', '')) ? (int) $request->query('request_id') : null,
             'device_id' => ctype_digit((string) $request->query('device_id', '')) ? (int) $request->query('device_id') : null,
             'device_query' => trim((string) $request->query('device_query', '')),
@@ -391,14 +446,6 @@ class RepairRequestController extends Controller
     private function applyIndexFilters(Builder $query, array $filters, array $skip = []): Builder
     {
         $skipLookup = array_flip($skip);
-
-        if (! isset($skipLookup['q']) && $filters['q'] !== '') {
-            $term = $filters['q'];
-
-            $query->whereHas('device', function (Builder $deviceQuery) use ($term) {
-                $deviceQuery->where('code', $term);
-            });
-        }
 
         if (! isset($skipLookup['request_id']) && filled($filters['request_id'])) {
             $query->whereKey($filters['request_id']);

@@ -45,6 +45,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->name('register');
     Route::post('register', [RegisteredUserController::class, 'store']);
     Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
+    Route::get('/audit-log/find-entry', [AuditLogController::class, 'findEntry'])->name('audit-log.find-entry');
     Route::resource('users', UserController::class)->except(['show']);
     Route::get('/users/find-by-name', [UserController::class, 'findByName'])->name('users.find-by-name');
 });
@@ -96,14 +97,17 @@ Route::middleware('auth')->group(function () {
     Route::resource('repairs', RepairController::class)->only(['index']);
     Route::get('/repairs/find-by-code', [RepairController::class, 'findByCode'])->name('repairs.find-by-code');
     Route::get('/repair-requests', [RepairRequestController::class, 'index'])->name('repair-requests.index');
+    Route::get('/repair-requests/find-by-code', [RepairRequestController::class, 'findByCode'])->name('repair-requests.find-by-code');
     Route::get('/repair-requests/create', [RepairRequestController::class, 'create'])->name('repair-requests.create');
     Route::post('/repair-requests', [RepairRequestController::class, 'store'])->name('repair-requests.store');
     Route::post('/repair-requests/{repairRequest}/review', [RepairRequestController::class, 'review'])->name('repair-requests.review');
     Route::get('/writeoff-requests', [WriteoffRequestController::class, 'index'])->name('writeoff-requests.index');
+    Route::get('/writeoff-requests/find-by-code', [WriteoffRequestController::class, 'findByCode'])->name('writeoff-requests.find-by-code');
     Route::get('/writeoff-requests/create', [WriteoffRequestController::class, 'create'])->name('writeoff-requests.create');
     Route::post('/writeoff-requests', [WriteoffRequestController::class, 'store'])->name('writeoff-requests.store');
     Route::post('/writeoff-requests/{writeoffRequest}/review', [WriteoffRequestController::class, 'review'])->name('writeoff-requests.review');
     Route::get('/device-transfers', [DeviceTransferController::class, 'index'])->name('device-transfers.index');
+    Route::get('/device-transfers/find-by-code', [DeviceTransferController::class, 'findByCode'])->name('device-transfers.find-by-code');
     Route::get('/device-transfers/create', [DeviceTransferController::class, 'create'])->name('device-transfers.create');
     Route::post('/device-transfers', [DeviceTransferController::class, 'store'])->name('device-transfers.store');
     Route::post('/device-transfers/{deviceTransfer}/review', [DeviceTransferController::class, 'review'])->name('device-transfers.review');

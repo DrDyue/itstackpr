@@ -13,7 +13,7 @@
             : null;
     @endphp
 
-    <section class="app-shell">
+    <section class="app-shell app-shell-wide">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-4xl">
@@ -68,7 +68,7 @@
             </div>
         </div>
 
-        <div id="repair-requests-index-root" data-async-table-root" class="repair-requests-index-page">
+        <div id="repair-requests-index-root" data-async-table-root class="repair-requests-index-page">
             {{-- Filtru un meklēšanas josla --}}
             <form
                 method="GET"
@@ -76,6 +76,7 @@
                 class="devices-filter-surface"
                 data-async-table-form
                 data-async-root="#repair-requests-index-root"
+                data-search-endpoint="{{ route('repair-requests.find-by-code') }}"
             >
                 <input type="hidden" name="statuses_filter" value="1">
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
@@ -91,10 +92,26 @@
                             <span>Meklēšana</span>
                         </h3>
                         <div class="devices-filter-grid">
-                            <label class="devices-text-search">
-                                <span>Meklēt</span>
-                                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Kods, nosaukums, pieteicējs vai apraksts">
-                            </label>
+                            <div class="devices-search-group">
+                                <label class="devices-search-label">
+                                    <span>Meklēt pēc koda</span>
+                                    <input
+                                        type="text"
+                                        name="code"
+                                        value="{{ $filters['code'] }}"
+                                        class="devices-code-input"
+                                        placeholder="Ievadi ierīces kodu"
+                                        autocomplete="off"
+                                        data-async-manual="true"
+                                        data-async-code-search="true"
+                                    >
+                                </label>
+                                <button type="submit" class="devices-code-search-btn" data-code-search-submit="true">
+                                    <x-icon name="search" size="h-4 w-4" />
+                                    <span>Meklēt kodu</span>
+                                </button>
+                            </div>
+                        </div>
                         </div>
                     </div>
                 </div>
@@ -183,7 +200,6 @@
 
             <x-active-filters
                 :items="[
-                    ['label' => 'Meklēt', 'value' => $filters['q']],
                     ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
                     ['label' => 'Pieteicējs', 'value' => $selectedRequesterLabel],
                     ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
@@ -202,10 +218,10 @@
             @endif
 
         {{-- Remonta pieteikumu tabula --}}
-        <div class="device-table-shell">
-            <div class="device-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
-                    <table class="min-w-full text-sm">
-                        <thead class="bg-slate-50 text-left text-slate-500">
+        <div class="app-table-shell">
+            <div class="app-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+                    <table class="app-table-content app-table-content-wide min-w-full text-sm">
+                        <thead class="app-table-head bg-slate-50 text-left text-slate-500">
                             <tr>
                                 @foreach ([
                                     'code' => 'Kods',
@@ -261,7 +277,7 @@
                                     $description = trim((string) $repairRequest->description);
                                     $shortDescription = \Illuminate\Support\Str::limit(preg_replace('/\s+/u', ' ', $description), 70);
                                 @endphp
-                                <tr class="border-t border-slate-100 align-top">
+                                <tr class="app-table-row border-t border-slate-100 align-top" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
                                     <td class="px-4 py-4">
                                         <div class="font-semibold text-slate-900">{{ $device?->code ?: '-' }}</div>
                                         <div class="mt-1 text-xs text-slate-500">Sērija: {{ $device?->serial_number ?: '-' }}</div>

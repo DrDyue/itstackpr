@@ -66,7 +66,7 @@
         $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
     @endphp
 
-    <section class="app-shell">
+    <section class="app-shell app-shell-wide">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-4xl">
@@ -126,7 +126,7 @@
             <form
                 method="GET"
                 action="{{ route('devices.index') }}"
-                class="devices-filter-surface"
+                class="devices-filter-surface devices-filter-surface-elevated"
                 data-async-table-form
                 data-async-root="#devices-index-root"
                 data-search-endpoint="{{ route('devices.find-by-code') }}"
@@ -291,10 +291,10 @@
             @endif
 
         {{-- Galvenā ierīču tabula ar statusu preview un admina ātrajām darbībām. --}}
-        <div class="device-table-shell">
-            <div class="device-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
-            <table class="min-w-full text-sm">
-                <thead class="bg-slate-50 text-left text-slate-500">
+        <div class="device-table-shell device-table-shell-wide">
+            <div class="device-table-scroll device-table-scroll-balanced rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+            <table class="device-table-content min-w-full text-sm">
+                <thead class="device-table-head bg-slate-50 text-left text-slate-500">
                     <tr>
                         <th class="px-4 py-3">Attēls</th>
                         @foreach ([
@@ -329,7 +329,7 @@
                                 </button>
                             </th>
                         @endforeach
-                        <th class="px-4 py-3">Darbības</th>
+                        <th class="px-4 py-3 w-[8rem]">Darbības</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -353,8 +353,8 @@
                             $repairStatusLabel = $deviceState['repairStatusLabel'] ?? null;
                             $repairPreview = $deviceState['repairPreview'] ?? null;
                         @endphp
-                        <tr class="border-t border-slate-100 align-top" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) $device->code)) }}">
-                            <td class="px-4 py-4">
+                        <tr class="device-table-row border-t border-slate-100 align-top" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) $device->code)) }}">
+                            <td class="px-4 py-4 tabular-nums">
                                 @if ($thumbUrl)
                                     <img src="{{ $thumbUrl }}" alt="{{ $device->name }}" class="device-table-thumb">
                                 @else
@@ -363,7 +363,7 @@
                                     </div>
                                 @endif
                             </td>
-                            <td class="px-4 py-4">
+                            <td class="px-4 py-4 tabular-nums">
                                 <div class="font-semibold text-slate-900">{{ $device->code ?: '-' }}</div>
                                 @if ($device->serial_number)
                                     <div class="mt-1 text-xs text-slate-500">Sērija: {{ $device->serial_number }}</div>

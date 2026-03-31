@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AuditLog;
 use App\Support\AuditTrail;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
@@ -25,7 +26,7 @@ class AuditLogController extends Controller
             'user_id' => trim((string) $request->query('user_id', '')),
             'date_from' => trim((string) $request->query('date_from', '')),
             'date_to' => trim((string) $request->query('date_to', '')),
-            'q' => trim((string) $request->query('q', '')),
+            'search' => trim((string) $request->query('search', $request->query('q', ''))),
         ];
 
         if (! $this->featureTableExists('audit_log')) {
@@ -51,14 +52,6 @@ class AuditLogController extends Controller
             ->when($filters['user_id'] !== '', fn ($query) => $query->where('user_id', $filters['user_id']))
             ->when($filters['date_from'] !== '', fn ($query) => $query->where('timestamp', '>=', CarbonImmutable::parse($filters['date_from'])->startOfDay()))
             ->when($filters['date_to'] !== '', fn ($query) => $query->where('timestamp', '<=', CarbonImmutable::parse($filters['date_to'])->endOfDay()))
-            ->when($filters['q'] !== '', function ($query) use ($filters) {
-                $term = $filters['q'];
-
-                $query->where(function ($auditQuery) use ($term) {
-                    $auditQuery->where('description', 'like', '%' . $term . '%')
-                        ->orWhereHas('user', fn ($userQuery) => $userQuery->where('full_name', 'like', '%' . $term . '%')->orWhere('email', 'like', '%' . $term . '%'));
-                });
-            })
             ->orderByDesc('timestamp')
             ->orderByDesc('id');
 
@@ -109,5 +102,59 @@ class AuditLogController extends Controller
             ]);
 
         return view('audit_log.index', compact('logs', 'filters', 'summary', 'actionOptions', 'severityOptions', 'actorOptions'));
+    }
+
+    /**
+     * Atrod audita ierakstu pÄ“c apraksta vai ID filtrÄ“tajÄ sarakstÄ.
+     */
+    public function findEntry(Request $request): JsonResponse
+    {
+        $this->requireAdmin();
+
+        $search = trim((string) $request->query('search', $request->query('q', '')));
+        if ($search === '') {
+            return response()->json(['found' => false, 'page' => 1]);
+        }
+
+        $filters = [
+            'action' => trim((string) $request->query('action', '')),
+            'severity' => trim((string) $request->query('severity', '')),
+            'user_id' => trim((string) $request->query('user_id', '')),
+            'date_from' => trim((string) $request->query('date_from', '')),
+            'date_to' => trim((string) $request->query('date_to', '')),
+        ];
+
+        $logs = AuditLog::query()
+            ->with(['user'])
+            ->when($filters['action'] !== '', fn ($query) => $query->where('action', $filters['action']))
+            ->when($filters['severity'] !== '', fn ($query) => $query->where('severity', $filters['severity']))
+            ->when($filters['user_id'] !== '', fn ($query) => $query->where('user_id', $filters['user_id']))
+            ->when($filters['date_from'] !== '', fn ($query) => $query->where('timestamp', '>=', CarbonImmutable::parse($filters['date_from'])->startOfDay()))
+            ->when($filters['date_to'] !== '', fn ($query) => $query->where('timestamp', '<=', CarbonImmutable::parse($filters['date_to'])->endOfDay()))
+            ->orderByDesc('timestamp')
+            ->orderByDesc('id')
+            ->get(['id', 'description', 'user_id', 'timestamp']);
+
+        $needle = mb_strtolower($search);
+        $foundIndex = $logs->search(function (AuditLog $log) use ($needle) {
+            $haystack = mb_strtolower(implode(' ', array_filter([
+                (string) $log->id,
+                $log->description,
+                $log->user?->full_name,
+                $log->user?->email,
+            ])));
+
+            return str_contains($haystack, $needle);
+        });
+
+        if ($foundIndex === false) {
+            return response()->json(['found' => false, 'page' => 1]);
+        }
+
+        return response()->json([
+            'found' => true,
+            'page' => intdiv((int) $foundIndex, 50) + 1,
+            'term' => $search,
+        ]);
     }
 }

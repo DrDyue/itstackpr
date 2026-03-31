@@ -27,7 +27,7 @@
         $selectedLastLoginLabel = collect($lastLoginOptions)->firstWhere('value', $filters['last_login'])['label'] ?? null;
     @endphp
 
-    <section class="app-shell">
+    <section class="app-shell app-shell-wide">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-3xl">
@@ -162,9 +162,10 @@
             <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
         @endif
 
-        <div class="overflow-x-auto rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
-            <table class="min-w-full text-sm">
-                <thead class="bg-slate-50 text-left text-slate-500">
+        <div class="app-table-shell">
+            <div class="app-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+            <table class="app-table-content app-table-content-compact min-w-full text-sm">
+                <thead class="app-table-head bg-slate-50 text-left text-slate-500">
                     <tr>
                         <th class="px-4 py-3">Vārds</th>
                         <th class="px-4 py-3">E-pasts</th>
@@ -178,9 +179,9 @@
                 </thead>
                 <tbody>
                     @forelse ($users as $managedUser)
-                        <tr class="border-t border-slate-100 {{ $managedUser->role === 'admin' ? 'bg-violet-50/40' : 'bg-sky-50/30' }}" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim((string) $managedUser->full_name)) }}">
+                        <tr class="app-table-row border-t border-slate-100 {{ $managedUser->role === 'admin' ? 'app-table-row-accent-violet' : 'app-table-row-accent-sky' }}" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim((string) $managedUser->full_name)) }}">
                             <td class="px-4 py-3">
-                                <div class="font-medium text-slate-900">{{ $managedUser->full_name }}</div>
+                                <div class="app-table-cell-strong">{{ $managedUser->full_name }}</div>
                             </td>
                             <td class="px-4 py-3 text-slate-600">{{ $managedUser->email }}</td>
                             <td class="px-4 py-3 text-slate-600">{{ $managedUser->phone ?: '-' }}</td>
@@ -235,6 +236,7 @@
                     @endforelse
                 </tbody>
             </table>
+            </div>
         </div>
 
         {{ $users->links() }}

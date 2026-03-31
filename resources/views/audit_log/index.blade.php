@@ -8,7 +8,7 @@
     3. Audita ierakstu tabula.
 --}}
 <x-app-layout>
-    <section class="app-shell">
+    <section class="app-shell app-shell-wide">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-3xl">
@@ -49,10 +49,25 @@
         @endif
 
         <div id="audit-log-index-root" data-async-table-root>
-        <form method="GET" action="{{ route('audit-log.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr]" data-async-table-form data-async-root="#audit-log-index-root">
+        <form method="GET" action="{{ route('audit-log.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr]" data-async-table-form data-async-root="#audit-log-index-root" data-search-endpoint="{{ route('audit-log.find-entry') }}">
             <label class="block">
-                <span class="mb-2 block text-sm font-medium text-slate-700">Meklēt</span>
-                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Meklē pēc apraksta vai ID">
+                <span class="mb-2 block text-sm font-medium text-slate-700">Meklēt ierakstu</span>
+                <div class="flex items-center gap-2">
+                    <input
+                        type="text"
+                        name="search"
+                        value="{{ $filters['search'] }}"
+                        class="crud-control"
+                        placeholder="ID, apraksts vai lietotājs"
+                        data-async-manual="true"
+                        data-table-manual-search="true"
+                        data-search-mode="contains"
+                    >
+                    <button type="submit" class="btn-search shrink-0" data-table-search-submit="true">
+                        <x-icon name="search" size="h-4 w-4" />
+                        <span>Meklēt</span>
+                    </button>
+                </div>
             </label>
 
             <div>
@@ -114,9 +129,10 @@
             </div>
         </form>
 
-        <div class="overflow-x-auto rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
-            <table class="min-w-full text-sm">
-                <thead class="bg-slate-50 text-left text-slate-500">
+        <div class="app-table-shell">
+            <div class="app-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+            <table class="app-table-content app-table-content-compact min-w-full text-sm">
+                <thead class="app-table-head bg-slate-50 text-left text-slate-500">
                     <tr>
                         <th class="px-4 py-3">Laiks</th>
                         <th class="px-4 py-3">Lietotājs</th>
@@ -154,7 +170,7 @@
                                 default => ['icon' => 'audit', 'class' => 'audit-badge audit-badge-slate'],
                             };
                         @endphp
-                        <tr class="border-t border-slate-100">
+                        <tr class="app-table-row border-t border-slate-100" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim(implode(' ', array_filter([(string) $log->id, $log->localized_description, $log->user?->full_name, $log->user?->email])))) }}">
                             <td class="px-4 py-3">
                                 <div class="font-medium text-slate-900">{{ $log->timestamp?->format('d.m.Y') ?: '-' }}</div>
                                 <div class="text-xs text-slate-500">{{ $log->timestamp?->format('H:i:s') ?: '-' }}</div>
@@ -184,6 +200,7 @@
                     @endforelse
                 </tbody>
             </table>
+            </div>
         </div>
 
         {{ $logs->links() }}

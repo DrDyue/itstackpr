@@ -14,7 +14,7 @@
             : null;
     @endphp
 
-    <section class="app-shell">
+    <section class="app-shell app-shell-wide">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-4xl">
@@ -81,6 +81,7 @@
                 class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.5fr)]"
                 data-async-table-form
                 data-async-root="#device-transfers-index-root"
+                data-search-endpoint="{{ route('device-transfers.find-by-code') }}"
             >
                 <input type="hidden" name="statuses_filter" value="1">
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
@@ -134,10 +135,25 @@
 
                 {{-- Meklēšana pa labi --}}
                 <div class="xl:col-span-full">
-                    <label class="block">
-                        <span class="crud-label">Meklēt</span>
-                        <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Kods, nosaukums, pieteicējs, saņēmējs vai iemesls">
-                    </label>
+                    <div class="devices-search-group">
+                        <label class="devices-search-label">
+                            <span>Meklēt pēc koda</span>
+                            <input
+                                type="text"
+                                name="code"
+                                value="{{ $filters['code'] }}"
+                                class="devices-code-input"
+                                placeholder="Ievadi ierīces kodu"
+                                autocomplete="off"
+                                data-async-manual="true"
+                                data-async-code-search="true"
+                            >
+                        </label>
+                        <button type="submit" class="devices-code-search-btn" data-code-search-submit="true">
+                            <x-icon name="search" size="h-4 w-4" />
+                            <span>Meklēt kodu</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
@@ -169,10 +185,6 @@
                     </div>
 
                     <div class="toolbar-actions justify-end">
-                        <button type="submit" class="btn-search">
-                            <x-icon name="search" size="h-4 w-4" />
-                            <span>Meklēt</span>
-                        </button>
                         <a href="{{ route('device-transfers.index') }}" class="btn-clear" data-async-link="true">
                             <x-icon name="clear" size="h-4 w-4" />
                             <span>Noņemt filtrus</span>
@@ -183,7 +195,6 @@
 
             <x-active-filters
                 :items="[
-                    ['label' => 'Meklēt', 'value' => $filters['q']],
                     ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
                     ['label' => 'Pieteicējs', 'value' => $selectedRequesterLabel],
                     ['label' => 'Saņēmējs', 'value' => $selectedRecipientLabel],
@@ -216,10 +227,10 @@
                 </div>
             @endif
 
-            <div class="device-table-shell">
-                <div class="device-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
-                    <table class="min-w-full text-sm">
-                        <thead class="bg-slate-50 text-left text-slate-500">
+            <div class="app-table-shell">
+                <div class="app-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+                    <table class="app-table-content app-table-content-wide min-w-full text-sm">
+                        <thead class="app-table-head bg-slate-50 text-left text-slate-500">
                             <tr>
                                 @foreach ([
                                     'code' => 'Kods',
@@ -280,7 +291,7 @@
                                         && $transfer->status === 'submitted';
                                     $hasActions = ($isAdmin && $deviceFilterUrl) || $isIncomingPending;
                                 @endphp
-                                <tr class="border-t border-slate-100 align-top">
+                                <tr class="app-table-row border-t border-slate-100 align-top" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
                                     <td class="px-4 py-4">
                                         <div class="font-semibold text-slate-900">{{ $device?->code ?: '-' }}</div>
                                         <div class="mt-1 text-xs text-slate-500">Sērija: {{ $device?->serial_number ?: '-' }}</div>

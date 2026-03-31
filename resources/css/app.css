@@ -2176,6 +2176,10 @@ tbody td {
     @apply mx-auto max-w-full space-y-6 px-6 py-6 sm:px-8 lg:px-12;
 }
 
+.app-shell-wide {
+    @apply max-w-[140rem] px-4 sm:px-6 lg:px-8 2xl:px-10;
+}
+
 .page-hero {
     @apply rounded-[2rem] border border-slate-200 bg-white/95 p-5 shadow-sm backdrop-blur sm:p-6;
 }
@@ -2459,12 +2463,16 @@ tbody td {
     @apply rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm mb-4;
 }
 
+.devices-filter-surface-elevated {
+    @apply space-y-1 shadow-[0_26px_60px_-45px_rgba(15,23,42,0.22)];
+}
+
 .devices-filter-header {
     @apply mb-4;
 }
 
 .devices-filter-section {
-    @apply space-y-3;
+    @apply space-y-3 rounded-[1.35rem] border border-slate-200/80 bg-slate-50/55 p-3.5;
 }
 
 .devices-filter-title {
@@ -2480,7 +2488,7 @@ tbody td {
 }
 
 .devices-search-group {
-    @apply flex flex-col gap-2 md:flex-row md:items-end;
+    @apply grid grid-cols-1 gap-2 md:grid-cols-[minmax(0,1fr)_auto] md:items-end;
 }
 
 .devices-search-label {
@@ -2508,7 +2516,7 @@ tbody td {
 }
 
 .devices-filter-divider {
-    @apply my-4 h-px bg-slate-200;
+    @apply my-4 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent;
 }
 
 /* Device search highlight animation */
@@ -2694,7 +2702,7 @@ tbody td {
 }
 
 .quick-status-filters {
-    @apply flex flex-wrap gap-2;
+    @apply flex flex-wrap gap-2.5;
 }
 
 .quick-filter-groups {
@@ -2702,7 +2710,7 @@ tbody td {
 }
 
 .quick-filter-group {
-    @apply min-w-0;
+    @apply min-w-0 rounded-[1.35rem] border border-slate-200/90 bg-slate-50/70 px-3.5 py-3 shadow-sm;
 }
 
 .quick-filter-group-end {
@@ -2710,15 +2718,15 @@ tbody td {
 }
 
 .quick-status-filter {
-    @apply inline-flex cursor-pointer select-none items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200;
+    @apply inline-flex min-h-[2.75rem] cursor-pointer select-none items-center gap-2 rounded-2xl border px-3.5 py-2.5 text-sm font-semibold transition-all duration-200;
 }
 
 .quick-status-filter:hover {
-    @apply -translate-y-0.5 shadow-md;
+    @apply -translate-y-0.5 shadow-sm;
 }
 
 .quick-status-filter-active {
-    @apply ring-2 ring-offset-2 shadow-md;
+    @apply ring-2 ring-offset-2 shadow-sm;
 }
 
 .quick-status-filter-slate {
@@ -2751,14 +2759,6 @@ tbody td {
 
 .quick-status-filter-sky.quick-status-filter-active {
     @apply border-sky-300 bg-sky-100 text-sky-900 ring-sky-300;
-}
-
-.quick-status-filter-sky {
-    @apply border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100;
-}
-
-.quick-status-filter-sky.quick-status-filter-active {
-    @apply ring-sky-200;
 }
 
 .quick-status-filter-rose {
@@ -3002,8 +3002,27 @@ tbody td {
     @apply flex items-center justify-end gap-2;
 }
 
+.app-table-shell,
 .device-table-shell {
     @apply relative overflow-visible;
+}
+
+.app-table-shell-wide,
+.device-table-shell-wide {
+    @apply rounded-[1.75rem];
+}
+
+.app-table-content,
+.device-table-content {
+    min-width: 88rem;
+}
+
+.app-table-content-compact {
+    min-width: 68rem;
+}
+
+.app-table-content-wide {
+    min-width: 100rem;
 }
 
 .table-search-hit td {
@@ -3025,8 +3044,85 @@ tbody td {
     }
 }
 
+.app-table-scroll,
 .device-table-scroll {
     @apply overflow-x-auto overflow-y-visible;
+}
+
+.app-table-scroll-balanced,
+.device-table-scroll-balanced {
+    @apply xl:overflow-x-visible;
+}
+
+.app-table-head th,
+.device-table-head th {
+    @apply whitespace-nowrap border-b border-slate-200/80 bg-slate-50/90 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500;
+}
+
+.app-table-row td,
+.device-table-row td {
+    @apply transition-colors duration-200;
+}
+
+.app-table-row:hover td,
+.device-table-row:hover td {
+    @apply bg-slate-50/80;
+}
+
+.app-table-row-accent-violet td {
+    @apply bg-violet-50/35;
+}
+
+.app-table-row-accent-sky td {
+    @apply bg-sky-50/25;
+}
+
+.app-table-row-accent-slate td {
+    @apply bg-slate-50/35;
+}
+
+.app-table-cell-strong {
+    @apply font-semibold text-slate-900;
+}
+
+.app-table-cell-subline {
+    @apply mt-1 text-xs text-slate-500;
+}
+
+.repair-table-shell {
+    @apply relative overflow-visible;
+}
+
+.repair-table-scroll {
+    @apply overflow-x-auto overflow-y-visible xl:overflow-x-visible;
+}
+
+.repair-table-content {
+    min-width: 116rem;
+}
+
+.repair-table-head th {
+    @apply whitespace-nowrap border-b border-slate-200/80 bg-slate-50/90 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500;
+}
+
+.repair-table-row td {
+    @apply transition-colors duration-200;
+}
+
+.repair-table-row:hover td {
+    @apply bg-slate-50/80;
+}
+
+.repairs-toolbar-surface {
+    @apply space-y-1 shadow-[0_26px_60px_-45px_rgba(15,23,42,0.22)];
+}
+
+.repair-toolbar-search-grid {
+    @apply grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)];
+}
+
+.repairs-filter-footer {
+    @apply items-start border-t border-slate-200/80 pt-4;
 }
 
 .device-sort-trigger {
@@ -3486,6 +3582,7 @@ html[data-theme='dark'] .page-hero,
 html[data-theme='dark'] .surface-card,
 html[data-theme='dark'] .surface-card-muted,
 html[data-theme='dark'] .surface-toolbar,
+html[data-theme='dark'] .devices-filter-surface,
 html[data-theme='dark'] .filter-summary,
 html[data-theme='dark'] .metric-card,
 html[data-theme='dark'] .request-info-panel,
@@ -3511,10 +3608,17 @@ html[data-theme='dark'] .device-file-input {
     color: #e2e8f0 !important;
 }
 
+html[data-theme='dark'] .devices-filter-section,
+html[data-theme='dark'] .quick-filter-group {
+    background-color: rgba(15, 23, 42, 0.72) !important;
+    border-color: rgba(51, 65, 85, 0.9) !important;
+}
+
 html[data-theme='dark'] .device-table-scroll,
 html[data-theme='dark'] .dash-table-wrap,
 html[data-theme='dark'] .user-table-wrap,
 html[data-theme='dark'] .repair-table-wrap,
+html[data-theme='dark'] .repair-table-scroll,
 html[data-theme='dark'] .table-container,
 html[data-theme='dark'] .table-card,
 html[data-theme='dark'] .dashboard-pagination,
@@ -3551,6 +3655,8 @@ html[data-theme='dark'] .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
 html[data-theme='dark'] .dash-table-body tr:hover,
 html[data-theme='dark'] .user-table-body tr:hover,
 html[data-theme='dark'] .repair-table-body tr:hover,
+html[data-theme='dark'] .device-table-row:hover td,
+html[data-theme='dark'] .repair-table-row:hover td,
 html[data-theme='dark'] .hover\:bg-slate-50\/80:hover {
     background-color: rgba(30, 41, 59, 0.72) !important;
 }
@@ -3737,6 +3843,8 @@ html[data-theme='dark'] .crud-form-card {
     border-color: rgba(51, 65, 85, 0.95) !important;
 }
 
+html[data-theme='dark'] .app-table-scroll thead th,
+html[data-theme='dark'] .app-table-scroll thead,
 html[data-theme='dark'] .device-table-scroll thead th,
 html[data-theme='dark'] .device-table-scroll thead {
     background-color: #111827 !important;
@@ -3744,6 +3852,7 @@ html[data-theme='dark'] .device-table-scroll thead {
     border-color: rgba(51, 65, 85, 0.92) !important;
 }
 
+html[data-theme='dark'] .app-table-scroll td,
 html[data-theme='dark'] .device-table-scroll td {
     color: #cbd5e1 !important;
 }
@@ -3957,12 +4066,18 @@ html[data-theme='dark'] .device-request-badge-link:hover {
     color: #f8fafc !important;
 }
 
+html[data-theme='dark'] .app-table-scroll tbody tr:hover,
+html[data-theme='dark'] .app-table-scroll tbody tr:hover td,
 html[data-theme='dark'] .device-table-scroll tbody tr:hover,
 html[data-theme='dark'] .device-table-scroll tbody tr:hover td {
     background-color: rgba(30, 41, 59, 0.72) !important;
     color: #cbd5e1 !important;
 }
 
+html[data-theme='dark'] .app-table-scroll tbody tr:hover .text-slate-900,
+html[data-theme='dark'] .app-table-scroll tbody tr:hover .font-semibold,
+html[data-theme='dark'] .app-table-scroll tbody tr:hover a:not(.device-request-badge-link):not(.table-action-item),
+html[data-theme='dark'] .app-table-scroll tbody tr:hover .app-table-cell-strong,
 html[data-theme='dark'] .device-table-scroll tbody tr:hover .text-slate-900,
 html[data-theme='dark'] .device-table-scroll tbody tr:hover .font-semibold,
 html[data-theme='dark'] .device-table-scroll tbody tr:hover a:not(.device-request-badge-link):not(.table-action-item),
@@ -3970,10 +4085,24 @@ html[data-theme='dark'] .device-table-scroll tbody tr:hover .dash-table-cell-str
     color: #f8fafc !important;
 }
 
+html[data-theme='dark'] .app-table-scroll tbody tr:hover .text-slate-500,
+html[data-theme='dark'] .app-table-scroll tbody tr:hover .app-table-cell-subline,
 html[data-theme='dark'] .device-table-scroll tbody tr:hover .text-slate-500,
 html[data-theme='dark'] .device-table-scroll tbody tr:hover .dash-table-subline,
 html[data-theme='dark'] .device-table-scroll tbody tr:hover .dash-table-subline-wrap {
     color: #94a3b8 !important;
+}
+
+html[data-theme='dark'] .app-table-row-accent-violet td {
+    background-color: rgba(76, 29, 149, 0.18) !important;
+}
+
+html[data-theme='dark'] .app-table-row-accent-sky td {
+    background-color: rgba(12, 74, 110, 0.2) !important;
+}
+
+html[data-theme='dark'] .app-table-row-accent-slate td {
+    background-color: rgba(30, 41, 59, 0.52) !important;
 }
 
 html[data-theme='dark'] .table-search-hit td {

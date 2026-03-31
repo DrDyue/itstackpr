@@ -8,7 +8,7 @@
     3. Labā kolonna ar jaunāko ierīču tabulu un statusu priekšskatījumiem.
 --}}
 <x-app-layout>
-    <section class="app-shell">
+    <section class="app-shell app-shell-wide">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-3xl">

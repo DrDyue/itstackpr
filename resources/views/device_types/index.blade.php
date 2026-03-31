@@ -17,7 +17,7 @@
         $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
     @endphp
 
-    <section class="app-shell">
+    <section class="app-shell app-shell-wide">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-4xl">
@@ -65,10 +65,10 @@
                 <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
             @endif
 
-            <div class="device-table-shell">
-                <div class="device-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
-                    <table class="min-w-full text-sm">
-                        <thead class="bg-slate-50 text-left text-slate-500">
+            <div class="app-table-shell">
+                <div class="app-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+                    <table class="app-table-content app-table-content-compact min-w-full text-sm">
+                        <thead class="app-table-head bg-slate-50 text-left text-slate-500">
                             <tr>
                                 @foreach ([
                                     'type_name' => 'Ierīces tips',
@@ -108,9 +108,9 @@
                                     $canDelete = (int) $type->devices_count === 0;
                                     $deleteTooltip = 'Šo ierīces tipu nevar dzēst, kamēr nav atbrīvoti visi ieraksti, kas ir saistīti ar šo ierīces tipu.';
                                 @endphp
-                                <tr class="border-t border-slate-100 align-middle">
+                                <tr class="app-table-row border-t border-slate-100 align-middle">
                                     <td class="px-4 py-4">
-                                        <div class="font-semibold text-slate-900">{{ $type->type_name }}</div>
+                                        <div class="app-table-cell-strong">{{ $type->type_name }}</div>
                                     </td>
                                     <td class="px-4 py-4">
                                         <a

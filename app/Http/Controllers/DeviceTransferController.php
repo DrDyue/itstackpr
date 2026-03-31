@@ -142,6 +142,66 @@ class DeviceTransferController extends Controller
     }
 
     /**
+     * Atrod nodoÅanas pieteikumu pÄ“c saistÄ«tÄs ierÄ«ces koda filtrÄ“tajÄ sarakstÄ.
+     */
+    public function findByCode(Request $request)
+    {
+        $user = $this->user();
+        abort_unless($user, 403);
+
+        $code = trim((string) $request->query('code', ''));
+        if ($code === '') {
+            return response()->json(['found' => false, 'page' => 1]);
+        }
+
+        $canManageTransfers = $user->canManageRequests();
+        $availableStatuses = [
+            DeviceTransfer::STATUS_SUBMITTED,
+            DeviceTransfer::STATUS_APPROVED,
+            DeviceTransfer::STATUS_REJECTED,
+        ];
+        $filters = $this->normalizedIndexFilters($request, $availableStatuses);
+        $sorting = $this->normalizedSorting($request);
+
+        $baseQuery = DeviceTransfer::query()
+            ->when(! $canManageTransfers, function (Builder $query) use ($user) {
+                $query->where(function (Builder $builder) use ($user) {
+                    $builder->where('responsible_user_id', $user->id)
+                        ->orWhere('transfered_to_id', $user->id);
+                });
+            });
+
+        $transfersQuery = (clone $baseQuery)
+            ->with('device:id,code')
+            ->select('device_transfers.*');
+
+        $this->applyIndexFilters($transfersQuery, $filters);
+        $this->applySorting($transfersQuery, $sorting);
+
+        $transfers = $transfersQuery->get();
+        $needle = mb_strtolower($code);
+        $foundIndex = null;
+
+        foreach ($transfers as $index => $transfer) {
+            $deviceCode = mb_strtolower(trim((string) ($transfer->device?->code ?? '')));
+            if ($deviceCode === $needle) {
+                $foundIndex = $index;
+                break;
+            }
+        }
+
+        if ($foundIndex === null) {
+            return response()->json(['found' => false, 'page' => 1]);
+        }
+
+        return response()->json([
+            'found' => true,
+            'page' => intdiv($foundIndex, 20) + 1,
+            'term' => $code,
+        ]);
+    }
+
+    /**
      * Parāda jauna nodošanas pieprasījuma formu.
      */
     public function create(Request $request)
@@ -459,7 +519,7 @@ class DeviceTransferController extends Controller
             ->all();
 
         return [
-            'q' => trim((string) $request->query('q', '')),
+            'code' => trim((string) $request->query('code', '')),
             'device_id' => ctype_digit((string) $request->query('device_id', '')) ? (int) $request->query('device_id') : null,
             'device_query' => trim((string) $request->query('device_query', '')),
             'requester_id' => ctype_digit((string) $request->query('requester_id', '')) ? (int) $request->query('requester_id') : null,
@@ -479,14 +539,6 @@ class DeviceTransferController extends Controller
     private function applyIndexFilters(Builder $query, array $filters, array $skip = []): Builder
     {
         $skipLookup = array_flip($skip);
-
-        if (! isset($skipLookup['q']) && $filters['q'] !== '') {
-            $term = $filters['q'];
-
-            $query->whereHas('device', function (Builder $deviceQuery) use ($term) {
-                $deviceQuery->where('code', $term);
-            });
-        }
 
         if (! isset($skipLookup['device_id']) && filled($filters['device_id'])) {
             $query->where('device_transfers.device_id', $filters['device_id']);

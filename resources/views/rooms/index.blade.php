@@ -36,7 +36,7 @@
         $selectedUserLabel = optional($responsibleUsers->firstWhere('id', (int) $filters['user_id']))->full_name;
         $selectedHasDevicesLabel = collect($hasDeviceOptions)->firstWhere('value', $filters['has_devices'])['label'] ?? null;
     @endphp
-    <section class="app-shell">
+    <section class="app-shell app-shell-wide">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-3xl">
@@ -142,9 +142,10 @@
             <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
         @endif
 
-        <div class="overflow-x-auto rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
-            <table class="min-w-full text-sm">
-                <thead class="bg-slate-50 text-left text-slate-500">
+        <div class="app-table-shell">
+            <div class="app-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+            <table class="app-table-content app-table-content-compact min-w-full text-sm">
+                <thead class="app-table-head bg-slate-50 text-left text-slate-500">
                     <tr>
                         <th class="px-4 py-3">Ēka</th>
                         <th class="px-4 py-3">Stāvs</th>
@@ -159,7 +160,7 @@
                 </thead>
                 <tbody>
                     @forelse ($rooms as $room)
-                        <tr class="border-t border-slate-100" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim(implode(' ', array_filter([$room->room_number, $room->room_name])))) }}">
+                        <tr class="app-table-row border-t border-slate-100" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim(implode(' ', array_filter([$room->room_number, $room->room_name])))) }}">
                             <td class="px-4 py-3">{{ $room->building?->building_name }}</td>
                             <td class="px-4 py-3">{{ $room->floor_number }}</td>
                             <td class="px-4 py-3">{{ $room->room_number }}</td>
@@ -186,6 +187,7 @@
                     @endforelse
                 </tbody>
             </table>
+            </div>
         </div>
 
         {{ $rooms->links() }}
