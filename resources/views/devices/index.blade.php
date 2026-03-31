@@ -21,7 +21,7 @@
         $quickAssigneeSelectOptions = collect($quickAssigneeOptions ?? [])->values();
         $statusFilterLinks = [
             ['label' => 'Aktīvas', 'value' => 'active', 'icon' => 'check-circle', 'tone' => 'emerald'],
-            ['label' => 'Remonta', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'amber'],
+            ['label' => 'Remonta', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'sky'],
             ['label' => 'Norakstītas', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
         ];
         $selectedStatuses = $filters['statuses'];
@@ -61,8 +61,8 @@
             'search' => $floor . ' ' . $floor . '. stāvs',
         ])->values();
         $toolbarGridClass = $canManageDevices
-            ? 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.85fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,1fr)]'
-            : 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,1fr)]';
+            ? 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,1.5fr)_minmax(0,1.5fr)]'
+            : 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,1.5fr)_minmax(0,1.5fr)]';
         $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
     @endphp
 
@@ -121,13 +121,12 @@
             </div>
         </div>
 
-        <div id="devices-index-root" data-async-table-root>
-            {{-- Filtru rīkjosla: meklēšana, telpas, tipi un statusi bez lapas pārlādes. --}}
+        <div id="devices-index-root" data-async-table-root class="devices-index-page">
+            {{-- Filtru un meklēšanas josla --}}
             <form
                 method="GET"
                 action="{{ route('devices.index') }}"
-                class="{{ $toolbarGridClass }}"
-                x-data="{}"
+                class="devices-filter-surface"
                 data-async-table-form
                 data-async-root="#devices-index-root"
                 @searchable-select-updated.window="if ($event.detail.identifier === 'device-floor-filter') { $dispatch('searchable-select-clear', { target: 'device-room-filter' }) }"
@@ -135,112 +134,138 @@
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
 
-                <label class="block">
-                    <span class="crud-label">Filtrēt pēc teksta</span>
-                    <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, ražotājs, sērija...">
-                </label>
-                <label class="block">
-                    <span class="crud-label">Meklēt pēc koda</span>
-                    <div class="flex items-center gap-2">
-                        <input
-                            type="text"
-                            name="code"
-                            value="{{ $filters['code'] }}"
-                            class="crud-control"
-                            placeholder="Ievadi precīzu kodu"
-                            data-async-manual="true"
-                            data-async-code-search="true"
-                        >
-                        <button type="submit" class="btn-search shrink-0" data-code-search-submit="true">
+                <div class="devices-filter-header">
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
                             <x-icon name="search" size="h-4 w-4" />
-                            <span>Meklēt</span>
-                        </button>
+                            <span>Meklēšana</span>
+                        </h3>
+                        <div class="devices-filter-grid">
+                            <div class="devices-search-group">
+                                <label class="devices-search-label">
+                                    <span>Meklēt pēc koda</span>
+                                    <input
+                                        type="text"
+                                        name="code"
+                                        value="{{ $filters['code'] }}"
+                                        class="devices-code-input"
+                                        placeholder="Ievadi ierīces kodu"
+                                        autocomplete="off"
+                                        data-async-manual="true"
+                                        data-async-code-search="true"
+                                    >
+                                </label>
+                                <button type="submit" class="devices-code-search-btn" data-code-search-submit="true">
+                                    <x-icon name="search" size="h-4 w-4" />
+                                    <span>Atrast ierīci</span>
+                                </button>
+                            </div>
+                            <label class="devices-text-search">
+                                <span>Filtrēt pēc teksta</span>
+                                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, ražotājs, sērija...">
+                            </label>
+                        </div>
                     </div>
-                </label>
-                @if ($canManageDevices)
-                    <label class="block">
-                        <span class="crud-label">Piešķirta</span>
-                        <x-searchable-select
-                            name="assigned_to_id"
-                            query-name="assigned_to_query"
-                            identifier="device-assignee-filter"
-                            :options="$assignedUserSelectOptions"
-                            :selected="$filters['assigned_to_id']"
-                            :query="$selectedAssignedUserLabel"
-                            placeholder="Izvēlies darbinieku"
-                            empty-message="Neviens darbinieks neatbilst meklējumam."
-                        />
-                    </label>
-                @endif
-                <label class="block">
-                    <span class="crud-label">Stāvs</span>
-                    <x-searchable-select
-                        name="floor"
-                        query-name="floor_query"
-                        identifier="device-floor-filter"
-                        :options="$floorSelectOptions"
-                        :selected="$filters['floor']"
-                        :query="$selectedFloorLabel"
-                        placeholder="Izvēlies vai raksti stāvu"
-                        empty-message="Neviens stāvs neatbilst meklējumam."
-                    />
-                </label>
-                <label class="block">
-                    <span class="crud-label">Telpa</span>
-                    <x-searchable-select
-                        name="room_id"
-                        query-name="room_query"
-                        identifier="device-room-filter"
-                        :options="$roomSelectOptions"
-                        :selected="$filters['room_id']"
-                        :query="$selectedRoomLabel"
-                        placeholder="Raksti telpas numuru vai nosaukumu"
-                        empty-message="Neviena telpa neatbilst meklējumam."
-                    />
-                </label>
-                <label class="block">
-                    <span class="crud-label">Tips</span>
-                    <x-searchable-select
-                        name="type"
-                        query-name="type_query"
-                        identifier="device-type-filter"
-                        :options="$typeSelectOptions"
-                        :selected="$filters['type']"
-                        :query="$selectedTypeLabel"
-                        placeholder="Raksti tipa nosaukumu"
-                        empty-message="Neviens tips neatbilst meklējumam."
-                    />
-                </label>
+                </div>
 
-                <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
+                <div class="devices-filter-divider"></div>
+
+                <div class="devices-filter-header">
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
+                            <x-icon name="filter" size="h-4 w-4" />
+                            <span>Filtri</span>
+                        </h3>
+                        <div class="devices-filters-grid">
+                            @if ($canManageDevices)
+                                <label class="block">
+                                    <span class="crud-label">Piešķirta</span>
+                                    <x-searchable-select
+                                        name="assigned_to_id"
+                                        query-name="assigned_to_query"
+                                        identifier="device-assignee-filter"
+                                        :options="$assignedUserSelectOptions"
+                                        :selected="$filters['assigned_to_id']"
+                                        :query="$selectedAssignedUserLabel"
+                                        placeholder="Izvēlies darbinieku"
+                                        empty-message="Neviens darbinieks neatbilst meklējumam."
+                                    />
+                                </label>
+                            @endif
+                            <label class="block">
+                                <span class="crud-label">Stāvs</span>
+                                <x-searchable-select
+                                    name="floor"
+                                    query-name="floor_query"
+                                    identifier="device-floor-filter"
+                                    :options="$floorSelectOptions"
+                                    :selected="$filters['floor']"
+                                    :query="$selectedFloorLabel"
+                                    placeholder="Izvēlies vai raksti stāvu"
+                                    empty-message="Neviens stāvs neatbilst meklējumam."
+                                />
+                            </label>
+                            <label class="block">
+                                <span class="crud-label">Telpa</span>
+                                <x-searchable-select
+                                    name="room_id"
+                                    query-name="room_query"
+                                    identifier="device-room-filter"
+                                    :options="$roomSelectOptions"
+                                    :selected="$filters['room_id']"
+                                    :query="$selectedRoomLabel"
+                                    placeholder="Raksti telpas numuru vai nosaukumu"
+                                    empty-message="Neviena telpa neatbilst meklējumam."
+                                />
+                            </label>
+                            <label class="block">
+                                <span class="crud-label">Tips</span>
+                                <x-searchable-select
+                                    name="type"
+                                    query-name="type_query"
+                                    identifier="device-type-filter"
+                                    :options="$typeSelectOptions"
+                                    :selected="$filters['type']"
+                                    :query="$selectedTypeLabel"
+                                    placeholder="Raksti tipa nosaukumu"
+                                    empty-message="Neviens tips neatbilst meklējumam."
+                                />
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-toolbar-footer">
                     <div class="quick-filter-groups">
-                        <div class="quick-filter-group">
+                        <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($selectedStatuses), minimum: 0 })">
                             <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ierīces statuss</div>
                             <div class="quick-status-filters">
                                 @foreach ($statusFilterLinks as $statusFilter)
                                     @php
-                                        $isActive = in_array($statusFilter['value'], $selectedStatuses, true);
+                                        $toneClass = 'quick-status-filter-' . $statusFilter['tone'];
                                     @endphp
-                                    <label class="quick-status-filter quick-status-filter-{{ $statusFilter['tone'] }} {{ $isActive ? 'quick-status-filter-active' : '' }}">
-                                        <input
-                                            type="checkbox"
-                                            name="status[]"
-                                            value="{{ $statusFilter['value'] }}"
-                                            class="sr-only"
-                                            @checked($isActive)
-                                        >
+                                    <button
+                                        type="button"
+                                        @click="toggle(@js($statusFilter['value'])); $nextTick(() => $el.closest('form').requestSubmit())"
+                                        class="quick-status-filter {{ $toneClass }}"
+                                        :class="isSelected(@js($statusFilter['value'])) ? 'quick-status-filter-active' : ''"
+                                    >
                                         <x-icon :name="$statusFilter['icon']" size="h-4 w-4" />
                                         <span>{{ $statusFilter['label'] }}</span>
-                                    </label>
+                                    </button>
                                 @endforeach
+
+                                <template x-for="value in selected" :key="'device-status-' + value">
+                                    <input type="hidden" name="status[]" :value="value">
+                                </template>
                             </div>
                         </div>
                     </div>
 
-                    <div class="toolbar-actions justify-end">
+                    <div class="toolbar-actions">
                         <a href="{{ route('devices.index') }}" class="btn-clear" data-async-link="true">
                             <x-icon name="clear" size="h-4 w-4" />
-                            <span>Notīrīt</span>
+                            <span>Notīrīt filtrus</span>
                         </a>
                     </div>
                 </div>
@@ -414,6 +439,7 @@
                                             @endif
                                         </div>
                                     @elseif ($pendingRequestBadge)
+                                        {{-- Ja ir aktīvs pieprasījums, rādīt tikai pieprasījuma badge (nevis "Aktīva" statusu) --}}
                                         <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
                                             @if (! empty($pendingRequestBadge['url']))
                                                 <a href="{{ $pendingRequestBadge['url'] }}" class="device-request-badge-link {{ $pendingRequestBadge['class'] }}" @focus="open = true" @blur="open = false">
@@ -464,6 +490,7 @@
                                             @endif
                                         </div>
                                     @else
+                                        {{-- Ja nav pieprasījumu, rādīt ierīces statusu (Aktīva, Norakstīta, utt.) --}}
                                         <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
                                     @endif
                                 </div>

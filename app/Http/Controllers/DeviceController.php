@@ -52,6 +52,57 @@ class DeviceController extends Controller
     }
 
     /**
+     * Atrod ierīci pēc koda un atgriež informāciju par lapu kurā tā atrodas.
+     */
+    public function findByCode(Request $request): JsonResponse
+    {
+        $user = $this->user();
+        abort_unless($user, 403);
+
+        $code = $request->query('code', '');
+
+        if (empty($code)) {
+            return response()->json(['found' => false, 'page' => 1]);
+        }
+
+        // Get all visible devices for the user
+        $devicesQuery = $this->visibleDevicesQuery($user)
+            ->select('devices.id', 'devices.code')
+            ->where('devices.code', 'like', "%{$code}%");
+
+        // Find the position of the device in the full result set
+        $allDevices = $devicesQuery->orderBy('devices.created_at', 'desc')->orderBy('devices.id')->get();
+
+        $foundDevice = null;
+        $foundIndex = null;
+
+        foreach ($allDevices as $index => $device) {
+            $deviceCode = strtolower($device->code ?? '');
+            $searchCode = strtolower($code);
+            if ($deviceCode === $searchCode || str_contains($deviceCode, $searchCode)) {
+                $foundDevice = $device;
+                $foundIndex = $index;
+                break;
+            }
+        }
+
+        if (!$foundDevice || $foundIndex === null) {
+            return response()->json(['found' => false, 'page' => 1]);
+        }
+
+        // Calculate which page the device is on (20 items per page)
+        $perPage = 20;
+        $page = intdiv($foundIndex, $perPage) + 1;
+
+        return response()->json([
+            'found' => true,
+            'page' => $page,
+            'device_id' => $foundDevice->id,
+            'device_code' => $foundDevice->code,
+        ]);
+    }
+
+    /**
      * Sagatavo visus datus ierīču saraksta lapai.
      *
      * Šī metode centralizē filtru normalizēšanu, ierīču atlasi, kārtošanu

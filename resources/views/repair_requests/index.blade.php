@@ -68,11 +68,12 @@
             </div>
         </div>
 
-        <div id="repair-requests-index-root" data-async-table-root>
+        <div id="repair-requests-index-root" data-async-table-root" class="repair-requests-index-page">
+            {{-- Filtru un meklēšanas josla --}}
             <form
                 method="GET"
                 action="{{ route('repair-requests.index') }}"
-                class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,0.8fr)]"
+                class="devices-filter-surface"
                 data-async-table-form
                 data-async-root="#repair-requests-index-root"
             >
@@ -83,43 +84,65 @@
                     <input type="hidden" name="request_id" value="{{ $filters['request_id'] }}">
                 @endif
 
-                <label class="block">
-                    <span class="crud-label">Meklēt</span>
-                    <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Kods, nosaukums, pieteicējs vai apraksts">
-                </label>
+                <div class="devices-filter-header">
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
+                            <x-icon name="search" size="h-4 w-4" />
+                            <span>Meklēšana</span>
+                        </h3>
+                        <div class="devices-filter-grid">
+                            <label class="devices-text-search">
+                                <span>Meklēt</span>
+                                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Kods, nosaukums, pieteicējs vai apraksts">
+                            </label>
+                        </div>
+                    </div>
+                </div>
 
-                <label class="block">
-                    <span class="crud-label">Ierīce</span>
-                    <x-searchable-select
-                        name="device_id"
-                        query-name="device_query"
-                        identifier="repair-request-device-filter"
-                        :options="$deviceOptions"
-                        :selected="(string) ($filters['device_id'] ?? '')"
-                        :query="$selectedDeviceLabel"
-                        placeholder="Izvēlies ierīci"
-                        empty-message="Neviens remonta pieteikums neatbilst izvēlētajai ierīcei."
-                    />
-                </label>
+                <div class="devices-filter-divider"></div>
 
-                <label class="block">
-                    <span class="crud-label">Pieteicējs</span>
-                    <x-searchable-select
-                        name="requester_id"
-                        query-name="requester_query"
-                        identifier="repair-request-requester-filter"
-                        :options="$requesterOptions"
-                        :selected="(string) ($filters['requester_id'] ?? '')"
-                        :query="$selectedRequesterLabel"
-                        placeholder="Izvēlies pieteicēju"
-                        empty-message="Neviens pieteicējs neatbilst meklējumam."
-                    />
-                </label>
+                <div class="devices-filter-header">
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
+                            <x-icon name="filter" size="h-4 w-4" />
+                            <span>Filtri</span>
+                        </h3>
+                        <div class="devices-filters-grid">
+                            <label class="block">
+                                <span class="crud-label">Ierīce</span>
+                                <x-searchable-select
+                                    name="device_id"
+                                    query-name="device_query"
+                                    identifier="repair-request-device-filter"
+                                    :options="$deviceOptions"
+                                    :selected="(string) ($filters['device_id'] ?? '')"
+                                    :query="$selectedDeviceLabel"
+                                    placeholder="Izvēlies ierīci"
+                                    empty-message="Neviens remonta pieteikums neatbilst izvēlētajai ierīcei."
+                                />
+                            </label>
 
-                <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
-                <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
+                            <label class="block">
+                                <span class="crud-label">Pieteicējs</span>
+                                <x-searchable-select
+                                    name="requester_id"
+                                    query-name="requester_query"
+                                    identifier="repair-request-requester-filter"
+                                    :options="$requesterOptions"
+                                    :selected="(string) ($filters['requester_id'] ?? '')"
+                                    :query="$selectedRequesterLabel"
+                                    placeholder="Izvēlies pieteicēju"
+                                    empty-message="Neviens pieteicējs neatbilst meklējumam."
+                                />
+                            </label>
 
-                <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
+                            <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
+                            <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-toolbar-footer">
                     <div class="quick-filter-groups">
                         <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($filters['statuses']), minimum: 0 })">
                             <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Statuss</div>
@@ -149,14 +172,10 @@
                         </div>
                     </div>
 
-                    <div class="toolbar-actions justify-end">
-                        <button type="submit" class="btn-search">
-                            <x-icon name="search" size="h-4 w-4" />
-                            <span>Meklēt</span>
-                        </button>
+                    <div class="toolbar-actions">
                         <a href="{{ route('repair-requests.index') }}" class="btn-clear" data-async-link="true">
                             <x-icon name="clear" size="h-4 w-4" />
-                            <span>Noņemt filtrus</span>
+                            <span>Notīrīt filtrus</span>
                         </a>
                     </div>
                 </div>
@@ -182,8 +201,9 @@
                 <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
             @endif
 
-            <div class="device-table-shell">
-                <div class="device-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+        {{-- Remonta pieteikumu tabula --}}
+        <div class="device-table-shell">
+            <div class="device-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
                     <table class="min-w-full text-sm">
                         <thead class="bg-slate-50 text-left text-slate-500">
                             <tr>

@@ -448,9 +448,10 @@ const initializeAsyncTableFilters = () => {
                 directionInput.value = sortTrigger.dataset.sortDirection || 'asc';
             }
 
+            // Don't show toast for sorting operations - too noisy
             submitAsyncTableForm(form, {
                 resetPage: true,
-                toastMessage: sortTrigger.dataset.sortToast || '',
+                toastMessage: '',
             });
 
             return;
@@ -635,7 +636,12 @@ const registerAlpineData = () => {
         timerId: null,
         refreshTimerId: null,
         onVisibilityChange: null,
+        lastSessionId: null,
+        lastViewMode: null,
         init() {
+            // Generate session ID to detect page reloads/navigation
+            this.lastSessionId = this.generateSessionId();
+            this.lastViewMode = this.getViewMode();
             this.seenIds = this.readSeenIds();
             this.fetchNotifications(true);
             this.startPolling();
@@ -645,6 +651,9 @@ const registerAlpineData = () => {
                 }
             };
             document.addEventListener('visibilitychange', this.onVisibilityChange);
+
+            // Clean up stale notifications on page unload
+            window.addEventListener('beforeunload', () => this.cleanup());
         },
         destroy() {
             this.stopPolling();
@@ -655,6 +664,36 @@ const registerAlpineData = () => {
 
             if (this.onVisibilityChange) {
                 document.removeEventListener('visibilitychange', this.onVisibilityChange);
+            }
+        },
+        generateSessionId() {
+            // Generate unique session ID for this page session
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        },
+        getViewMode() {
+            // Get current view mode from the storage key
+            const parts = this.storageKey.split(':');
+            return parts.length > 2 ? parts[parts.length - 1] : 'user';
+        },
+        detectViewModeChange() {
+            const currentViewMode = this.getViewMode();
+            const hasChanged = this.lastViewMode !== currentViewMode;
+            this.lastViewMode = currentViewMode;
+            return hasChanged;
+        },
+        cleanup() {
+            // Store session info for cleanup on next load
+            try {
+                const staleData = sessionStorage.getItem(this.storageKey + ':stale');
+                if (staleData) {
+                    const parsed = JSON.parse(staleData);
+                    // Remove old session data that's more than 5 minutes old
+                    const now = Date.now();
+                    const freshData = parsed.filter(item => (now - item.timestamp) < 300000);
+                    sessionStorage.setItem(this.storageKey + ':stale', JSON.stringify(freshData));
+                }
+            } catch (e) {
+                // Ignore storage errors
             }
         },
         startPolling() {
@@ -689,15 +728,37 @@ const registerAlpineData = () => {
                     ? response.data.notifications
                     : [];
 
-                if (!this.bootstrapped || isInitial) {
-                    notifications.forEach((notification) => this.remember(notification.id));
-                    this.bootstrapped = true;
+                // Detect view mode change to reset seen notifications
+                const viewModeChanged = this.detectViewModeChange();
 
-                    return;
+                if (!this.bootstrapped || isInitial) {
+                    // If view mode changed, don't mark notifications as seen immediately
+                    // This allows animations to show when switching between admin/user views
+                    if (viewModeChanged) {
+                        // Clear seen IDs for new view mode to show notifications with animation
+                        this.seenIds = [];
+                        this.writeSeenIds();
+                        this.bootstrapped = true;
+                        // Fall through to show notifications with animation
+                    } else {
+                        notifications.forEach((notification) => this.remember(notification.id));
+                        this.bootstrapped = true;
+                        return;
+                    }
                 }
+
+                const now = Date.now();
+                const maxAgeMs = 30000; // Only show notifications created within last 30 seconds
 
                 notifications.forEach((notification) => {
                     if (!notification?.id || this.hasSeen(notification.id) || this.items.some((item) => item.id === notification.id)) {
+                        return;
+                    }
+
+                    // Skip stale notifications (older than 30 seconds)
+                    const notificationAge = now - (notification.created_unix * 1000);
+                    if (notificationAge > maxAgeMs) {
+                        this.remember(notification.id);
                         return;
                     }
 

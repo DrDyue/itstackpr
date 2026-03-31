@@ -16,7 +16,7 @@
             : null;
     @endphp
 
-    <section class="app-shell max-w-[112rem]">
+    <section class="app-shell">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-5xl">
@@ -75,7 +75,7 @@
             <form
                 method="GET"
                 action="{{ route('repairs.index') }}"
-                class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,0.8fr)]"
+                class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.5fr)]"
                 data-async-table-form
                 data-async-root="#repairs-index-root"
             >
@@ -86,22 +86,32 @@
                     <input type="hidden" name="mine" value="1">
                 @endif
 
-                <label class="block">
-                    <span class="crud-label">Meklēt pēc koda</span>
-                    <div class="flex items-center gap-2">
-                        <input type="text" name="code" value="{{ $filters['code'] }}" class="crud-control" placeholder="Ievadi precīzu kodu" data-async-manual="true" data-async-code-search="true">
-                        <button type="submit" class="btn-search shrink-0" data-code-search-submit="true">
-                            <x-icon name="search" size="h-4 w-4" />
-                            <span>Meklēt</span>
-                        </button>
+                <div class="md:col-span-2 xl:col-span-full">
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.2fr)]">
+                        <label class="block">
+                            <span class="crud-label">Meklēt pēc koda</span>
+                            <div class="flex items-center gap-2">
+                                <input
+                                    type="text"
+                                    name="code"
+                                    value="{{ $filters['code'] }}"
+                                    class="crud-control"
+                                    placeholder="Ievadi precīzu kodu"
+                                    data-async-manual="true"
+                                    data-async-code-search="true"
+                                >
+                                <button type="submit" class="btn-search shrink-0" data-code-search-submit="true">
+                                    <x-icon name="search" size="h-4 w-4" />
+                                    <span>Meklēt</span>
+                                </button>
+                            </div>
+                        </label>
+                        <label class="block">
+                            <span class="crud-label">Filtrēt pēc teksta</span>
+                            <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, apraksts vai pieprasītājs">
+                        </label>
                     </div>
-                </label>
-
-                <label class="block">
-                    <span class="crud-label">Filtrēt pēc teksta</span>
-                    <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, apraksts vai pieprasītājs">
-                </label>
-
+                </div>
                 <label class="block">
                     <span class="crud-label">Ierīce</span>
                     <x-searchable-select
@@ -134,31 +144,34 @@
                 <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
 
                 <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
-                    <div class="quick-filter-groups">
-                        <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($filters['statuses']), minimum: 0 })">
-                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta statuss</div>
-                            <div class="quick-status-filters">
-                                @foreach ($statuses as $status)
-                                    @php
-                                        $toneClass = match ($status) {
-                                            'waiting' => 'quick-status-filter-amber',
-                                            'in-progress' => 'quick-status-filter-sky',
-                                            default => 'quick-status-filter-emerald',
-                                        };
-                                    @endphp
-                                    <button
-                                        type="button"
-                                        @click="toggle(@js($status)); $nextTick(() => $el.closest('form').requestSubmit())"
-                                        class="quick-status-filter {{ $toneClass }}"
-                                        :class="isSelected(@js($status)) ? 'quick-status-filter-active' : ''"
-                                    >
-                                        <x-status-pill context="repair" :value="$status" :label="$statusLabels[$status] ?? null" />
-                                    </button>
-                                @endforeach
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="quick-filter-groups">
+                            <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($filters['statuses']), minimum: 0 })">
+                                <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta statuss</div>
+                                <div class="quick-status-filters">
+                                    @foreach ($statuses as $status)
+                                        @php
+                                            $toneClass = match ($status) {
+                                                'waiting' => 'quick-status-filter-amber',
+                                                'in-progress' => 'quick-status-filter-sky',
+                                                'cancelled' => 'quick-status-filter-rose',
+                                                default => 'quick-status-filter-emerald',
+                                            };
+                                        @endphp
+                                        <button
+                                            type="button"
+                                            @click="toggle(@js($status)); $nextTick(() => $el.closest('form').requestSubmit())"
+                                            class="quick-status-filter {{ $toneClass }}"
+                                            :class="isSelected(@js($status)) ? 'quick-status-filter-active' : ''"
+                                        >
+                                            <x-status-pill context="repair" :value="$status" :label="$statusLabels[$status] ?? null" />
+                                        </button>
+                                    @endforeach
 
-                                <template x-for="value in selected" :key="'repair-status-' + value">
-                                    <input type="hidden" name="status[]" :value="value">
-                                </template>
+                                    <template x-for="value in selected" :key="'repair-status-' + value">
+                                        <input type="hidden" name="status[]" :value="value">
+                                    </template>
+                                </div>
                             </div>
                         </div>
 
@@ -185,16 +198,16 @@
                                 @endforeach
 
                                 <template x-for="value in selected" :key="'repair-priority-' + value">
-                                    <input type="hidden" name="priority[]" :value="value">
+                                    <input type="hidden" name="priorities[]" :value="value">
                                 </template>
                             </div>
                         </div>
                     </div>
 
                     <div class="toolbar-actions justify-end">
-                        <a href="{{ route('repairs.index') }}" class="btn-clear" data-async-link="true">
+                        <a href="{{ route('repairs.index', ['clear_all' => '1']) }}" class="btn-clear" data-async-link="true">
                             <x-icon name="clear" size="h-4 w-4" />
-                            <span>Noņemt filtrus</span>
+                            <span>Notīrīt filtrus</span>
                         </a>
                     </div>
                 </div>
@@ -212,7 +225,7 @@
                     ['label' => 'Prioritāte', 'value' => $activePriorityLabel],
                     ['label' => 'Piešķirts', 'value' => ($filters['mine'] ?? false) ? 'Man' : null],
                 ]"
-                :clear-url="route('repairs.index')"
+                :clear-url="route('repairs.index', ['clear_all' => '1'])"
             />
             </div>
 

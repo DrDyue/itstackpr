@@ -73,6 +73,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/live-notifications', [LiveNotificationController::class, 'index'])->name('live-notifications.index');
+    Route::post('/notifications/mark-all-read', [LiveNotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
     Route::post('/view-mode', [ViewModeController::class, 'update'])->name('view-mode.update');
     Route::get('/my-requests', [UserRequestCenterController::class, 'index'])->name('my-requests.index');
     Route::get('/my-requests/create', [UserRequestCenterController::class, 'create'])->name('my-requests.create');
@@ -83,6 +84,7 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('devices', DeviceController::class)->only(['index', 'show']);
     Route::post('/devices/{device}/user-room', [DeviceController::class, 'updateUserRoom'])->name('devices.user-room.update');
+    Route::get('/devices/find-by-code', [DeviceController::class, 'findByCode'])->name('devices.find-by-code');
     Route::get('/device-assets/remote-preview', [DeviceAssetController::class, 'remotePreview'])
         ->name('device-assets.remote-preview');
     Route::get('/device-assets/{path}', [DeviceAssetController::class, 'show'])

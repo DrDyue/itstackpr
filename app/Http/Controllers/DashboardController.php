@@ -253,7 +253,7 @@ class DashboardController extends Controller
                 'icon' => 'repair-request',
                 'label' => 'Apskatīt',
                 'detail_label' => 'Remonts',
-                'class' => 'border-sky-200 bg-sky-50 text-sky-700',
+                'class' => 'border-amber-200 bg-amber-50 text-amber-700',
                 'url' => $this->requestIndexUrl($device, 'repair', $device->pendingRepairRequest?->id),
                 'preview' => $this->pendingRequestPreview('repair', $device->pendingRepairRequest),
             ];

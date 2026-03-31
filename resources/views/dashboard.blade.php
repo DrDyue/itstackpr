@@ -228,18 +228,16 @@
                                                             </div>
                                                         @endif
                                                     </div>
-                                                @else
-                                                    <x-status-pill context="device" :value="$device->status" />
-                                                @endif
-
-                                                @if ($pendingRequestBadge)
+                                                @elseif ($pendingRequestBadge)
                                                     <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
                                                         <a href="{{ $pendingRequestBadge['url'] }}" class="device-request-badge-link {{ $pendingRequestBadge['class'] }}" @focus="open = true" @blur="open = false">
                                                             <span class="device-status-split-main">
                                                                 <x-icon :name="$pendingRequestBadge['icon']" size="h-3.5 w-3.5" />
-                                                                <span>{{ $pendingRequestBadge['label'] }}</span>
+                                                                <span>{{ $pendingRequestBadge['short_label'] ?? $pendingRequestBadge['label'] }}</span>
                                                             </span>
-                                                            <span class="device-status-split-sub">{{ $pendingRequestBadge['detail_label'] }}</span>
+                                                            @if (! empty($pendingRequestBadge['detail_label']))
+                                                                <span class="device-status-split-sub">{{ $pendingRequestBadge['detail_label'] }}</span>
+                                                            @endif
                                                         </a>
 
                                                         @if (! empty($pendingRequestBadge['preview']))
@@ -266,6 +264,8 @@
                                                             </div>
                                                         @endif
                                                     </div>
+                                                @else
+                                                    <x-status-pill context="device" :value="$device->status" />
                                                 @endif
                                             </div>
                                         </td>

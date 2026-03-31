@@ -49,7 +49,7 @@
         @endif
 
         <div id="audit-log-index-root" data-async-table-root>
-        <form method="GET" action="{{ route('audit-log.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[1.1fr_0.8fr_0.8fr_0.8fr_0.7fr_0.7fr]" data-async-table-form data-async-root="#audit-log-index-root">
+        <form method="GET" action="{{ route('audit-log.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr]" data-async-table-form data-async-root="#audit-log-index-root">
             <label class="block">
                 <span class="mb-2 block text-sm font-medium text-slate-700">Meklēt</span>
                 <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Meklē pēc apraksta vai ID">
@@ -82,15 +82,15 @@
             </div>
 
             <div>
-                <span class="mb-2 block text-sm font-medium text-slate-700">Objekts</span>
+                <span class="mb-2 block text-sm font-medium text-slate-700">Lietotājs</span>
                 <x-searchable-select
-                    name="entity_type"
-                    queryName="entity_query"
-                    :options="$entityOptions"
-                    :selected="$filters['entity_type']"
-                    :query="collect($entityOptions)->firstWhere('value', $filters['entity_type'])['label'] ?? ''"
-                    identifier="audit-entity"
-                    placeholder="Visi objekti"
+                    name="user_id"
+                    queryName="user_query"
+                    :options="$actorOptions"
+                    :selected="$filters['user_id']"
+                    :query="collect($actorOptions)->firstWhere('value', $filters['user_id'])['label'] ?? ''"
+                    identifier="audit-user"
+                    placeholder="Visi lietotāji"
                 />
             </div>
 
@@ -106,11 +106,7 @@
                 :value="$filters['date_to']"
             />
 
-            <div class="toolbar-actions md:col-span-2 xl:col-span-6">
-                <button type="submit" class="btn-search">
-                    <x-icon name="search" size="h-4 w-4" />
-                    <span>Filtret</span>
-                </button>
+            <div class="toolbar-actions md:col-span-2 xl:col-span-4">
                 <a href="{{ route('audit-log.index') }}" class="btn-clear" data-async-link="true">
                     <x-icon name="clear" size="h-4 w-4" />
                     <span>Notīrīt</span>
