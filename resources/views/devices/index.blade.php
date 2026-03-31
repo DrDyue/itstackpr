@@ -284,25 +284,27 @@
                 data-async-root="#devices-index-root"
                 @searchable-select-updated.window="if ($event.detail.identifier === 'device-floor-filter') { $dispatch('searchable-select-clear', { target: 'device-room-filter' }) }"
             >
-                <x-active-filters
-                    :items="[
-                        ['label' => 'Teksts', 'value' => $filters['q']],
-                        ['label' => 'Kods', 'value' => $filters['code']],
-                        ['label' => 'Piešķirta', 'value' => $canManageDevices ? $selectedAssignedUserLabel : null],
-                        ['label' => 'Stāvs', 'value' => $selectedFloorLabel],
-                        ['label' => 'Telpa', 'value' => $selectedRoomLabel],
-                        ['label' => 'Tips', 'value' => $selectedTypeLabel],
-                        ['label' => 'Statuss', 'value' => $filters['has_status_filter'] ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ') : null],
-                    ]"
-                    :clear-url="route('devices.index')"
-                />
+            </form>
 
-                @if (session('error'))
-                    <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
-                @endif
+            <x-active-filters
+                :items="[
+                    ['label' => 'Teksts', 'value' => $filters['q']],
+                    ['label' => 'Kods', 'value' => $filters['code']],
+                    ['label' => 'Piešķirta', 'value' => $canManageDevices ? $selectedAssignedUserLabel : null],
+                    ['label' => 'Stāvs', 'value' => $selectedFloorLabel],
+                    ['label' => 'Telpa', 'value' => $selectedRoomLabel],
+                    ['label' => 'Tips', 'value' => $selectedTypeLabel],
+                    ['label' => 'Statuss', 'value' => $filters['has_status_filter'] ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ') : null],
+                ]"
+                :clear-url="route('devices.index')"
+            />
 
-            {{-- Galvenā ierīču tabula ar statusu preview un admina ātrajām darbībām. --}}
-            <div class="device-table-shell">
+            @if (session('error'))
+                <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
+            @endif
+
+        {{-- Galvenā ierīču tabula ar statusu preview un admina ātrajām darbībām. --}}
+        <div class="device-table-shell">
             <div class="device-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
             <table class="min-w-full text-sm">
                 <thead class="bg-slate-50 text-left text-slate-500">

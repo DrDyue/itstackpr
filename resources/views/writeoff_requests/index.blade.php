@@ -177,29 +177,31 @@
                 data-async-table-form
                 data-async-root="#writeoff-requests-index-root"
             >
-                <x-active-filters
-                    :items="[
-                        ['label' => 'Meklēt', 'value' => $filters['q']],
-                        ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
-                        ['label' => 'Pieteicējs', 'value' => $selectedRequesterLabel],
-                        ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
-                        ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
-                        ['label' => 'Statuss', 'value' => $activeStatusLabel],
-                    ]"
-                    :clear-url="route('writeoff-requests.index')"
-                />
+            </form>
 
-                @if (session('error'))
-                    <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
-                @endif
+            <x-active-filters
+                :items="[
+                    ['label' => 'Meklēt', 'value' => $filters['q']],
+                    ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
+                    ['label' => 'Pieteicējs', 'value' => $selectedRequesterLabel],
+                    ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
+                    ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
+                    ['label' => 'Statuss', 'value' => $activeStatusLabel],
+                ]"
+                :clear-url="route('writeoff-requests.index')"
+            />
 
-                @if (! empty($featureMessage))
-                    <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
-                @endif
+            @if (session('error'))
+                <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
+            @endif
 
-            {{-- Norakstīšanas pieteikumu tabula --}}
-            <div class="device-table-shell">
-                <div class="device-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+            @if (! empty($featureMessage))
+                <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
+            @endif
+
+        {{-- Norakstīšanas pieteikumu tabula --}}
+        <div class="device-table-shell">
+            <div class="device-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
                     <table class="min-w-full text-sm">
                         <thead class="bg-slate-50 text-left text-slate-500">
                             <tr>
