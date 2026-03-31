@@ -19,6 +19,35 @@ use Illuminate\Support\Collection;
 class LiveNotificationController extends Controller
 {
     /**
+     * Atzīmē visus paziņojumus kā lasītus.
+     */
+    public function markAllAsRead(): JsonResponse
+    {
+        $user = $this->user();
+        abort_unless($user, 403);
+
+        // Atkarībā no lietotāja lomas, atjaunojam attiecīgos pieprasījumus
+        if ($user->canManageRequests()) {
+            // Administratoram: atzīmējam remonta un norakstīšanas pieprasījumus
+            RepairRequest::query()
+                ->where('status', RepairRequest::STATUS_SUBMITTED)
+                ->update(['updated_at' => now()]);
+            
+            WriteoffRequest::query()
+                ->where('status', WriteoffRequest::STATUS_SUBMITTED)
+                ->update(['updated_at' => now()]);
+        } else {
+            // Lietotājam: atzīmējam nodošanas pieprasījumus
+            DeviceTransfer::query()
+                ->where('transfered_to_id', $user->id)
+                ->where('status', DeviceTransfer::STATUS_SUBMITTED)
+                ->update(['updated_at' => now()]);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
      * Atgriež pašreizējam lietotājam aktuālos paziņojumus JSON formā.
      */
     public function index(): JsonResponse

@@ -72,7 +72,7 @@
             <form
                 method="GET"
                 action="{{ route('writeoff-requests.index') }}"
-                class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,0.8fr)]"
+                class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.5fr)]"
                 data-async-table-form
                 data-async-root="#writeoff-requests-index-root"
             >
@@ -80,11 +80,7 @@
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
 
-                <label class="block">
-                    <span class="crud-label">Meklēt</span>
-                    <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Kods, nosaukums, pieteicējs vai iemesls">
-                </label>
-
+                {{-- Filtri pa kreisi --}}
                 <label class="block">
                     <span class="crud-label">Ierīce</span>
                     <x-searchable-select
@@ -115,6 +111,14 @@
 
                 <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
                 <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
+
+                {{-- Meklēšana pa labi --}}
+                <div class="xl:col-span-full">
+                    <label class="block">
+                        <span class="crud-label">Meklēt</span>
+                        <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Kods, nosaukums, pieteicējs vai iemesls">
+                    </label>
+                </div>
 
                 <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
                     <div class="quick-filter-groups">

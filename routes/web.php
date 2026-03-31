@@ -73,6 +73,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/live-notifications', [LiveNotificationController::class, 'index'])->name('live-notifications.index');
+    Route::post('/notifications/mark-all-read', [LiveNotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
     Route::post('/view-mode', [ViewModeController::class, 'update'])->name('view-mode.update');
     Route::get('/my-requests', [UserRequestCenterController::class, 'index'])->name('my-requests.index');
     Route::get('/my-requests/create', [UserRequestCenterController::class, 'create'])->name('my-requests.create');

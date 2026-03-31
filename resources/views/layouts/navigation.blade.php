@@ -58,7 +58,7 @@
         }
     @endphp
 
-    <div class="mx-auto max-w-[92rem] px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-[120rem] px-4 sm:px-6 lg:px-8">
         <div class="flex min-h-20 items-center justify-between gap-4 py-3">
             <div class="flex min-w-0 items-center gap-3">
                 <a href="{{ route($canManageRequests ? 'dashboard' : 'devices.index') }}" class="flex min-w-0 items-center gap-3">
@@ -195,7 +195,20 @@
                                 + \App\Models\WriteoffRequest::query()->where('status', \App\Models\WriteoffRequest::STATUS_SUBMITTED)->count())
                             : $incomingTransferReviewCount;
                     @endphp
-                    <div x-data="{ open: false }" class="relative">
+                    <div x-data="{ 
+                        open: false,
+                        markAllAsRead() {
+                            fetch('{{ route("notifications.mark-all-read") }}', {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json',
+                                }
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        }
+                    }" class="relative">
                         <button
                             @click="open = ! open"
                             @click.outside="open = false"
@@ -330,10 +343,32 @@
                             </div>
 
                             <div class="rounded-b-3xl border-t border-slate-100 bg-slate-50/50 px-5 py-3">
-                                <a href="{{ $canManageRequests ? route('repair-requests.index') : route('device-transfers.index') }}" class="flex items-center justify-between text-sm font-semibold text-sky-700 transition hover:text-sky-900">
-                                    <span>Skatīt visus pieprasījumus</span>
-                                    <x-icon name="view" size="h-4 w-4" />
-                                </a>
+                                @if ($canManageRequests)
+                                    <div class="flex flex-col gap-2">
+                                        <a href="{{ route('repair-requests.index', ['statuses_filter' => 1, 'status' => ['submitted']]) }}" class="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm font-semibold text-amber-800 transition hover:bg-amber-100">
+                                            <span>Remonta pieprasījumi</span>
+                                            <x-icon name="repair-request" size="h-4 w-4" />
+                                        </a>
+                                        <a href="{{ route('writeoff-requests.index', ['statuses_filter' => 1, 'status' => ['submitted']]) }}" class="flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm font-semibold text-rose-800 transition hover:bg-rose-100">
+                                            <span>Norakstīšanas pieprasījumi</span>
+                                            <x-icon name="writeoff" size="h-4 w-4" />
+                                        </a>
+                                    </div>
+                                @else
+                                    <a href="{{ route('device-transfers.index') }}" class="flex items-center justify-between text-sm font-semibold text-sky-700 transition hover:text-sky-900">
+                                        <span>Skatīt visus pārsūtīšanas pieteikumus</span>
+                                        <x-icon name="transfer" size="h-4 w-4" />
+                                    </a>
+                                @endif
+                                @if ($pendingNotificationsCount > 0)
+                                    <button
+                                        type="button"
+                                        @click="markAllAsRead()"
+                                        class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                                    >
+                                        Atzīmēt kā lasītu
+                                    </button>
+                                @endif
                             </div>
                         </div>
                     </div>

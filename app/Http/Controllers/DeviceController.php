@@ -288,8 +288,11 @@ class DeviceController extends Controller
             });
         }
 
-        // Note: Code search is now handled client-side with scroll-to-highlight
-        // We don't filter by code server-side anymore
+        // Code search - exact match or partial match
+        if ($filters['code'] !== '') {
+            $codeTerm = $filters['code'];
+            $query->where('devices.code', 'like', "%{$codeTerm}%");
+        }
 
         $query
             ->when($selectedAssignedUser instanceof User, fn (Builder $deviceQuery) => $deviceQuery->where('devices.assigned_to_id', $selectedAssignedUser->id))

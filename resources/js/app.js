@@ -548,9 +548,11 @@ const registerAlpineData = () => {
         refreshTimerId: null,
         onVisibilityChange: null,
         lastSessionId: null,
+        lastViewMode: null,
         init() {
             // Generate session ID to detect page reloads/navigation
             this.lastSessionId = this.generateSessionId();
+            this.lastViewMode = this.getViewMode();
             this.seenIds = this.readSeenIds();
             this.fetchNotifications(true);
             this.startPolling();
@@ -560,7 +562,7 @@ const registerAlpineData = () => {
                 }
             };
             document.addEventListener('visibilitychange', this.onVisibilityChange);
-            
+
             // Clean up stale notifications on page unload
             window.addEventListener('beforeunload', () => this.cleanup());
         },
@@ -578,6 +580,17 @@ const registerAlpineData = () => {
         generateSessionId() {
             // Generate unique session ID for this page session
             return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        },
+        getViewMode() {
+            // Get current view mode from the storage key
+            const parts = this.storageKey.split(':');
+            return parts.length > 2 ? parts[parts.length - 1] : 'user';
+        },
+        detectViewModeChange() {
+            const currentViewMode = this.getViewMode();
+            const hasChanged = this.lastViewMode !== currentViewMode;
+            this.lastViewMode = currentViewMode;
+            return hasChanged;
         },
         cleanup() {
             // Store session info for cleanup on next load
@@ -626,11 +639,23 @@ const registerAlpineData = () => {
                     ? response.data.notifications
                     : [];
 
-                if (!this.bootstrapped || isInitial) {
-                    notifications.forEach((notification) => this.remember(notification.id));
-                    this.bootstrapped = true;
+                // Detect view mode change to reset seen notifications
+                const viewModeChanged = this.detectViewModeChange();
 
-                    return;
+                if (!this.bootstrapped || isInitial) {
+                    // If view mode changed, don't mark notifications as seen immediately
+                    // This allows animations to show when switching between admin/user views
+                    if (viewModeChanged) {
+                        // Clear seen IDs for new view mode to show notifications with animation
+                        this.seenIds = [];
+                        this.writeSeenIds();
+                        this.bootstrapped = true;
+                        // Fall through to show notifications with animation
+                    } else {
+                        notifications.forEach((notification) => this.remember(notification.id));
+                        this.bootstrapped = true;
+                        return;
+                    }
                 }
 
                 const now = Date.now();
@@ -1308,105 +1333,15 @@ document.addEventListener('alpine:init', registerAlpineData);
 document.addEventListener('DOMContentLoaded', initializeThemeToggle);
 document.addEventListener('DOMContentLoaded', initializeAsyncTableFilters);
 
-// Device search handler - scroll to and highlight found record
+// Device search handler - submit form with code filter
 window.deviceSearchHandler = () => ({
     async handleSearch(event) {
+        event.preventDefault();
         const form = event.target;
-        const codeInput = form.querySelector('input[name="code"]');
-        const searchQuery = codeInput?.value?.trim().toLowerCase();
-
-        if (!searchQuery) {
-            // If no code entered, submit form normally (show all records)
-            form.submit();
-            return;
-        }
-
-        // First, submit the form to ensure we have all data loaded
-        const formData = new FormData(form);
-        const searchUrl = form.action + '?' + new URLSearchParams(formData).toString();
-
-        // Fetch the page to ensure all data is loaded
-        try {
-            const response = await fetch(searchUrl, {
-                headers: {
-                    'Accept': 'text/html',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            const html = await response.text();
-            
-            // Parse the response and find the table body
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const newRoot = doc.querySelector('#devices-index-root');
-            const currentRoot = document.querySelector('#devices-index-root');
-            
-            if (newRoot && currentRoot) {
-                // Update the table content
-                const newTable = newRoot.querySelector('table');
-                const currentTable = currentRoot.querySelector('table');
-                
-                if (newTable && currentTable) {
-                    currentTable.innerHTML = newTable.innerHTML;
-                    
-                    // Now search for the device code in the updated table
-                    this.scrollToAndHighlightDevice(searchQuery);
-                }
-            }
-        } catch (error) {
-            console.error('Search error:', error);
-            form.submit();
-        }
-    },
-
-    scrollToAndHighlightDevice(code) {
-        const searchCode = code.toLowerCase();
-        const tableBody = document.querySelector('#devices-index-root tbody');
         
-        if (!tableBody) {
-            this.showNotFound();
-            return;
-        }
-
-        const rows = Array.from(tableBody.querySelectorAll('tr'));
-        let foundRow = null;
-
-        for (const row of rows) {
-            const codeCell = row.querySelector('td:nth-child(2) .font-semibold');
-            if (codeCell) {
-                const cellCode = codeCell.textContent?.trim().toLowerCase();
-                if (cellCode === searchCode) {
-                    foundRow = row;
-                    break;
-                }
-            }
-        }
-
-        if (foundRow) {
-            // Scroll to the row
-            foundRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // Add highlight animation
-            foundRow.classList.add('device-search-highlight');
-            
-            // Remove highlight after animation
-            setTimeout(() => {
-                foundRow.classList.remove('device-search-highlight');
-            }, 3000);
-        } else {
-            this.showNotFound();
-        }
+        // Simply submit the form - server will handle code filtering
+        form.submit();
     },
-
-    showNotFound() {
-        if (window.dispatchAppToast) {
-            window.dispatchAppToast({
-                message: 'Meklētais kods netika atrasts. Pārbaudiet ievadīto kodu.',
-                tone: 'error',
-                title: 'Nav atrasts'
-            });
-        }
-    }
 });
 
 if (document.readyState !== 'loading') {

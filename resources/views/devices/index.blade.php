@@ -61,8 +61,8 @@
             'search' => $floor . ' ' . $floor . '. stāvs',
         ])->values();
         $toolbarGridClass = $canManageDevices
-            ? 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.85fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,1fr)]'
-            : 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,1fr)]';
+            ? 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,1.5fr)_minmax(0,1.5fr)]'
+            : 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,1.5fr)_minmax(0,1.5fr)]';
         $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
     @endphp
 
@@ -136,27 +136,7 @@
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
 
-                <label class="block">
-                    <span class="crud-label">Filtrēt pēc teksta</span>
-                    <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, ražotājs, sērija...">
-                </label>
-                <label class="block">
-                    <span class="crud-label">Meklēt pēc koda</span>
-                    <div class="flex items-center gap-2">
-                        <input 
-                            type="text" 
-                            name="code" 
-                            value="{{ $filters['code'] }}" 
-                            class="crud-control" 
-                            placeholder="Ievadi precīzu ierīces kodu"
-                            x-ref="codeInput"
-                        >
-                        <button type="submit" class="btn-search shrink-0">
-                            <x-icon name="search" size="h-4 w-4" />
-                            <span>Meklēt</span>
-                        </button>
-                    </div>
-                </label>
+                {{-- Filtri pa kreisi --}}
                 @if ($canManageDevices)
                     <label class="block">
                         <span class="crud-label">Piešķirta</span>
@@ -211,6 +191,33 @@
                         empty-message="Neviens tips neatbilst meklējumam."
                     />
                 </label>
+
+                {{-- Meklēšana pa labi --}}
+                <div class="xl:col-span-full">
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <label class="block">
+                            <span class="crud-label">Filtrēt pēc teksta</span>
+                            <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, ražotājs, sērija...">
+                        </label>
+                        <label class="block">
+                            <span class="crud-label">Meklēt pēc koda</span>
+                            <div class="flex items-center gap-2">
+                                <input
+                                    type="text"
+                                    name="code"
+                                    value="{{ $filters['code'] }}"
+                                    class="crud-control"
+                                    placeholder="Ievadi precīzu ierīces kodu"
+                                    x-ref="codeInput"
+                                >
+                                <button type="submit" class="btn-search shrink-0">
+                                    <x-icon name="search" size="h-4 w-4" />
+                                    <span>Meklēt</span>
+                                </button>
+                            </div>
+                        </label>
+                    </div>
+                </div>
 
                 <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
                     <div class="quick-filter-groups">

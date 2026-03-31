@@ -2442,6 +2442,18 @@ tbody td {
     @apply rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm;
 }
 
+.surface-toolbar + .filter-summary,
+.filter-summary + .device-table-shell,
+.filter-summary + .overflow-x-auto,
+.filter-summary + .overflow-hidden,
+.filter-summary + .mt-5,
+.surface-toolbar + .mt-5,
+.surface-toolbar + .overflow-x-auto,
+.surface-toolbar + .overflow-hidden,
+.surface-toolbar + .device-table-shell {
+    @apply mt-4;
+}
+
 .toolbar-actions {
     @apply flex flex-wrap items-center gap-3 md:justify-end;
 }

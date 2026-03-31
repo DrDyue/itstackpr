@@ -75,7 +75,7 @@
             <form
                 method="GET"
                 action="{{ route('repairs.index') }}"
-                class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,0.8fr)]"
+                class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.5fr)]"
                 data-async-table-form
                 data-async-root="#repairs-index-root"
             >
@@ -86,22 +86,7 @@
                     <input type="hidden" name="mine" value="1">
                 @endif
 
-                <label class="block">
-                    <span class="crud-label">Meklēt pēc koda</span>
-                    <div class="flex items-center gap-2">
-                        <input type="text" name="code" value="{{ $filters['code'] }}" class="crud-control" placeholder="Ievadi precīzu kodu" data-async-manual="true">
-                        <button type="submit" class="btn-search shrink-0">
-                            <x-icon name="search" size="h-4 w-4" />
-                            <span>Meklēt</span>
-                        </button>
-                    </div>
-                </label>
-
-                <label class="block">
-                    <span class="crud-label">Filtrēt pēc teksta</span>
-                    <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, apraksts vai pieprasītājs">
-                </label>
-
+                {{-- Filtri pa kreisi --}}
                 <label class="block">
                     <span class="crud-label">Ierīce</span>
                     <x-searchable-select
@@ -132,6 +117,26 @@
 
                 <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
                 <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
+
+                {{-- Meklēšana pa labi --}}
+                <div class="xl:col-span-full">
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <label class="block">
+                            <span class="crud-label">Meklēt pēc koda</span>
+                            <div class="flex items-center gap-2">
+                                <input type="text" name="code" value="{{ $filters['code'] }}" class="crud-control" placeholder="Ievadi precīzu kodu" data-async-manual="true">
+                                <button type="submit" class="btn-search shrink-0">
+                                    <x-icon name="search" size="h-4 w-4" />
+                                    <span>Meklēt</span>
+                                </button>
+                            </div>
+                        </label>
+                        <label class="block">
+                            <span class="crud-label">Filtrēt pēc teksta</span>
+                            <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, apraksts vai pieprasītājs">
+                        </label>
+                    </div>
+                </div>
 
                 <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
                     <div class="flex flex-wrap items-center gap-4">
