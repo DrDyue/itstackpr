@@ -276,13 +276,22 @@ class DeviceController extends Controller
         ?Room $selectedRoom,
         ?DeviceType $selectedType
     ): void {
+        // Text search - filter by name, model, manufacturer, serial
+        if ($filters['q'] !== '') {
+            $term = $filters['q'];
+
+            $query->where(function (Builder $deviceQuery) use ($term) {
+                $deviceQuery->where('devices.name', 'like', "%{$term}%")
+                    ->orWhere('devices.serial_number', 'like', "%{$term}%")
+                    ->orWhere('devices.manufacturer', 'like', "%{$term}%")
+                    ->orWhere('devices.model', 'like', "%{$term}%");
+            });
+        }
+
+        // Note: Code search is now handled client-side with scroll-to-highlight
+        // We don't filter by code server-side anymore
+
         $query
-            ->when($filters['q'] !== '', function (Builder $deviceQuery) use ($filters) {
-                $deviceQuery->where('devices.code', $filters['q']);
-            })
-            ->when($filters['code'] !== '', function (Builder $deviceQuery) use ($filters) {
-                $deviceQuery->whereRaw('LOWER(devices.code) = ?', [mb_strtolower($filters['code'])]);
-            })
             ->when($selectedAssignedUser instanceof User, fn (Builder $deviceQuery) => $deviceQuery->where('devices.assigned_to_id', $selectedAssignedUser->id))
             ->when($filters['floor'] !== '' && ctype_digit($filters['floor']), function (Builder $deviceQuery) use ($filters) {
                 $deviceQuery->whereHas('room', fn (Builder $roomQuery) => $roomQuery->where('floor_number', (int) $filters['floor']));

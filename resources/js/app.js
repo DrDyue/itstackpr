@@ -359,9 +359,10 @@ const initializeAsyncTableFilters = () => {
                 directionInput.value = sortTrigger.dataset.sortDirection || 'asc';
             }
 
+            // Don't show toast for sorting operations - too noisy
             submitAsyncTableForm(form, {
                 resetPage: true,
-                toastMessage: sortTrigger.dataset.sortToast || '',
+                toastMessage: '',
             });
 
             return;
@@ -546,7 +547,10 @@ const registerAlpineData = () => {
         timerId: null,
         refreshTimerId: null,
         onVisibilityChange: null,
+        lastSessionId: null,
         init() {
+            // Generate session ID to detect page reloads/navigation
+            this.lastSessionId = this.generateSessionId();
             this.seenIds = this.readSeenIds();
             this.fetchNotifications(true);
             this.startPolling();
@@ -556,6 +560,9 @@ const registerAlpineData = () => {
                 }
             };
             document.addEventListener('visibilitychange', this.onVisibilityChange);
+            
+            // Clean up stale notifications on page unload
+            window.addEventListener('beforeunload', () => this.cleanup());
         },
         destroy() {
             this.stopPolling();
@@ -566,6 +573,25 @@ const registerAlpineData = () => {
 
             if (this.onVisibilityChange) {
                 document.removeEventListener('visibilitychange', this.onVisibilityChange);
+            }
+        },
+        generateSessionId() {
+            // Generate unique session ID for this page session
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        },
+        cleanup() {
+            // Store session info for cleanup on next load
+            try {
+                const staleData = sessionStorage.getItem(this.storageKey + ':stale');
+                if (staleData) {
+                    const parsed = JSON.parse(staleData);
+                    // Remove old session data that's more than 5 minutes old
+                    const now = Date.now();
+                    const freshData = parsed.filter(item => (now - item.timestamp) < 300000);
+                    sessionStorage.setItem(this.storageKey + ':stale', JSON.stringify(freshData));
+                }
+            } catch (e) {
+                // Ignore storage errors
             }
         },
         startPolling() {
@@ -607,8 +633,18 @@ const registerAlpineData = () => {
                     return;
                 }
 
+                const now = Date.now();
+                const maxAgeMs = 30000; // Only show notifications created within last 30 seconds
+
                 notifications.forEach((notification) => {
                     if (!notification?.id || this.hasSeen(notification.id) || this.items.some((item) => item.id === notification.id)) {
+                        return;
+                    }
+
+                    // Skip stale notifications (older than 30 seconds)
+                    const notificationAge = now - (notification.created_unix * 1000);
+                    if (notificationAge > maxAgeMs) {
+                        this.remember(notification.id);
                         return;
                     }
 
@@ -1271,6 +1307,107 @@ registerAlpineData();
 document.addEventListener('alpine:init', registerAlpineData);
 document.addEventListener('DOMContentLoaded', initializeThemeToggle);
 document.addEventListener('DOMContentLoaded', initializeAsyncTableFilters);
+
+// Device search handler - scroll to and highlight found record
+window.deviceSearchHandler = () => ({
+    async handleSearch(event) {
+        const form = event.target;
+        const codeInput = form.querySelector('input[name="code"]');
+        const searchQuery = codeInput?.value?.trim().toLowerCase();
+
+        if (!searchQuery) {
+            // If no code entered, submit form normally (show all records)
+            form.submit();
+            return;
+        }
+
+        // First, submit the form to ensure we have all data loaded
+        const formData = new FormData(form);
+        const searchUrl = form.action + '?' + new URLSearchParams(formData).toString();
+
+        // Fetch the page to ensure all data is loaded
+        try {
+            const response = await fetch(searchUrl, {
+                headers: {
+                    'Accept': 'text/html',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const html = await response.text();
+            
+            // Parse the response and find the table body
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newRoot = doc.querySelector('#devices-index-root');
+            const currentRoot = document.querySelector('#devices-index-root');
+            
+            if (newRoot && currentRoot) {
+                // Update the table content
+                const newTable = newRoot.querySelector('table');
+                const currentTable = currentRoot.querySelector('table');
+                
+                if (newTable && currentTable) {
+                    currentTable.innerHTML = newTable.innerHTML;
+                    
+                    // Now search for the device code in the updated table
+                    this.scrollToAndHighlightDevice(searchQuery);
+                }
+            }
+        } catch (error) {
+            console.error('Search error:', error);
+            form.submit();
+        }
+    },
+
+    scrollToAndHighlightDevice(code) {
+        const searchCode = code.toLowerCase();
+        const tableBody = document.querySelector('#devices-index-root tbody');
+        
+        if (!tableBody) {
+            this.showNotFound();
+            return;
+        }
+
+        const rows = Array.from(tableBody.querySelectorAll('tr'));
+        let foundRow = null;
+
+        for (const row of rows) {
+            const codeCell = row.querySelector('td:nth-child(2) .font-semibold');
+            if (codeCell) {
+                const cellCode = codeCell.textContent?.trim().toLowerCase();
+                if (cellCode === searchCode) {
+                    foundRow = row;
+                    break;
+                }
+            }
+        }
+
+        if (foundRow) {
+            // Scroll to the row
+            foundRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Add highlight animation
+            foundRow.classList.add('device-search-highlight');
+            
+            // Remove highlight after animation
+            setTimeout(() => {
+                foundRow.classList.remove('device-search-highlight');
+            }, 3000);
+        } else {
+            this.showNotFound();
+        }
+    },
+
+    showNotFound() {
+        if (window.dispatchAppToast) {
+            window.dispatchAppToast({
+                message: 'Meklētais kods netika atrasts. Pārbaudiet ievadīto kodu.',
+                tone: 'error',
+                title: 'Nav atrasts'
+            });
+        }
+    }
+});
 
 if (document.readyState !== 'loading') {
     initializeThemeToggle();

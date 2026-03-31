@@ -188,6 +188,156 @@
                         </form>
                     @endif
 
+                    {{-- Paziņojumu centrs --}}
+                    @php
+                        $pendingNotificationsCount = $canManageRequests
+                            ? (\App\Models\RepairRequest::query()->where('status', \App\Models\RepairRequest::STATUS_SUBMITTED)->count()
+                                + \App\Models\WriteoffRequest::query()->where('status', \App\Models\WriteoffRequest::STATUS_SUBMITTED)->count())
+                            : $incomingTransferReviewCount;
+                    @endphp
+                    <div x-data="{ open: false }" class="relative">
+                        <button
+                            @click="open = ! open"
+                            @click.outside="open = false"
+                            class="relative inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        >
+                            <x-icon name="mail" size="h-5 w-5" />
+                            <span class="hidden sm:inline">Paziņojumi</span>
+                            @if ($pendingNotificationsCount > 0)
+                                <span class="absolute -right-1 -top-1 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                                    {{ min($pendingNotificationsCount, 99) }}
+                                </span>
+                            @endif
+                        </button>
+
+                        <div
+                            x-show="open"
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                            x-transition:leave-end="opacity-0 translate-y-2 scale-95"
+                            class="absolute right-0 z-50 mt-2 w-96 origin-top-right rounded-3xl border border-slate-200 bg-white shadow-2xl ring-1 ring-black/5 focus:outline-none"
+                            x-cloak
+                        >
+                            <div class="rounded-t-3xl border-b border-slate-100 bg-slate-50/50 px-5 py-4">
+                                <h3 class="text-sm font-semibold text-slate-900">Paziņojumu centrs</h3>
+                                <p class="mt-1 text-xs text-slate-500">Reāllaika paziņojumi par pieprasījumiem</p>
+                            </div>
+
+                            <div class="max-h-[28rem] overflow-y-auto p-2">
+                                @if ($canManageRequests)
+                                    @php
+                                        $pendingRepairs = \App\Models\RepairRequest::query()
+                                            ->with(['device', 'responsibleUser'])
+                                            ->where('status', \App\Models\RepairRequest::STATUS_SUBMITTED)
+                                            ->latest('id')
+                                            ->limit(5)
+                                            ->get();
+                                        $pendingWriteoffs = \App\Models\WriteoffRequest::query()
+                                            ->with(['device', 'responsibleUser'])
+                                            ->where('status', \App\Models\WriteoffRequest::STATUS_SUBMITTED)
+                                            ->latest('id')
+                                            ->limit(5)
+                                            ->get();
+                                    @endphp
+
+                                    @if ($pendingRepairs->count() > 0)
+                                        <div class="px-3 pb-2 pt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta pieprasījumi</div>
+                                        @foreach ($pendingRepairs as $request)
+                                            <a href="{{ route('repair-requests.index', ['statuses_filter' => 1, 'status' => ['submitted']]) }}#repair-request-{{ $request->id }}" class="group flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-3 transition hover:border-amber-200 hover:bg-amber-50">
+                                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 ring-1 ring-amber-200">
+                                                    <x-icon name="repair-request" size="h-5 w-5" />
+                                                </div>
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="flex items-center justify-between">
+                                                        <p class="truncate text-sm font-semibold text-slate-900">{{ $request->responsibleUser?->full_name ?: 'Lietotājs' }}</p>
+                                                        <span class="text-[10px] text-slate-400">{{ $request->created_at?->diffForHumans(short: true) }}</span>
+                                                    </div>
+                                                    <p class="truncate text-xs text-slate-600">{{ $request->device?->name ?: 'Ierīce' }} · {{ $request->device?->code ?: 'Bez koda' }}</p>
+                                                    <p class="truncate text-xs text-slate-500">{{ Str::limit($request->description, 60) ?: 'Apraksts nav pievienots' }}</p>
+                                                </div>
+                                            </a>
+                                        @endforeach
+                                    @endif
+
+                                    @if ($pendingWriteoffs->count() > 0)
+                                        <div class="px-3 pb-2 pt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Norakstīšanas pieprasījumi</div>
+                                        @foreach ($pendingWriteoffs as $request)
+                                            <a href="{{ route('writeoff-requests.index', ['statuses_filter' => 1, 'status' => ['submitted']]) }}#writeoff-request-{{ $request->id }}" class="group flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-3 transition hover:border-rose-200 hover:bg-rose-50">
+                                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-700 ring-1 ring-rose-200">
+                                                    <x-icon name="writeoff" size="h-5 w-5" />
+                                                </div>
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="flex items-center justify-between">
+                                                        <p class="truncate text-sm font-semibold text-slate-900">{{ $request->responsibleUser?->full_name ?: 'Lietotājs' }}</p>
+                                                        <span class="text-[10px] text-slate-400">{{ $request->created_at?->diffForHumans(short: true) }}</span>
+                                                    </div>
+                                                    <p class="truncate text-xs text-slate-600">{{ $request->device?->name ?: 'Ierīce' }} · {{ $request->device?->code ?: 'Bez koda' }}</p>
+                                                    <p class="truncate text-xs text-slate-500">{{ Str::limit($request->reason, 60) ?: 'Iemesls nav pievienots' }}</p>
+                                                </div>
+                                            </a>
+                                        @endforeach
+                                    @endif
+
+                                    @if ($pendingRepairs->count() === 0 && $pendingWriteoffs->count() === 0)
+                                        <div class="flex flex-col items-center justify-center gap-2 py-8 text-center">
+                                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                                                <x-icon name="check-circle" size="h-7 w-7" />
+                                            </div>
+                                            <p class="text-sm font-semibold text-slate-900">Viss kārtībā!</p>
+                                            <p class="text-xs text-slate-500">Nav jaunu pieprasījumu</p>
+                                        </div>
+                                    @endif
+                                @else
+                                    @if ($incomingTransferReviewCount > 0)
+                                        @php
+                                            $pendingTransfers = \App\Models\DeviceTransfer::query()
+                                                ->with(['device', 'responsibleUser'])
+                                                ->where('transfered_to_id', auth()->id())
+                                                ->where('status', \App\Models\DeviceTransfer::STATUS_SUBMITTED)
+                                                ->latest('id')
+                                                ->limit(5)
+                                                ->get();
+                                        @endphp
+                                        <div class="px-3 pb-2 pt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ienākošās nodošanas</div>
+                                        @foreach ($pendingTransfers as $transfer)
+                                            <a href="{{ route('device-transfers.index', ['statuses_filter' => 1, 'status' => ['submitted']]) }}#device-transfer-{{ $transfer->id }}" class="group flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-3 transition hover:border-emerald-200 hover:bg-emerald-50">
+                                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200">
+                                                    <x-icon name="transfer" size="h-5 w-5" />
+                                                </div>
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="flex items-center justify-between">
+                                                        <p class="truncate text-sm font-semibold text-slate-900">{{ $transfer->responsibleUser?->full_name ?: 'Lietotājs' }}</p>
+                                                        <span class="text-[10px] text-slate-400">{{ $transfer->created_at?->diffForHumans(short: true) }}</span>
+                                                    </div>
+                                                    <p class="truncate text-xs text-slate-600">{{ $transfer->device?->name ?: 'Ierīce' }} · {{ $transfer->device?->code ?: 'Bez koda' }}</p>
+                                                    <p class="truncate text-xs text-slate-500">{{ Str::limit($transfer->transfer_reason, 60) ?: 'Nodošanas iemesls' }}</p>
+                                                </div>
+                                            </a>
+                                        @endforeach
+                                    @else
+                                        <div class="flex flex-col items-center justify-center gap-2 py-8 text-center">
+                                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                                                <x-icon name="check-circle" size="h-7 w-7" />
+                                            </div>
+                                            <p class="text-sm font-semibold text-slate-900">Viss kārtībā!</p>
+                                            <p class="text-xs text-slate-500">Nav jaunu paziņojumu</p>
+                                        </div>
+                                    @endif
+                                @endif
+                            </div>
+
+                            <div class="rounded-b-3xl border-t border-slate-100 bg-slate-50/50 px-5 py-3">
+                                <a href="{{ $canManageRequests ? route('repair-requests.index') : route('device-transfers.index') }}" class="flex items-center justify-between text-sm font-semibold text-sky-700 transition hover:text-sky-900">
+                                    <span>Skatīt visus pieprasījumus</span>
+                                    <x-icon name="view" size="h-4 w-4" />
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
                     <x-dropdown align="right" width="w-64">
                     <x-slot name="trigger">
                         <button class="inline-flex min-w-0 max-w-[17rem] items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-500">

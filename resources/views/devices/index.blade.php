@@ -127,10 +127,11 @@
                 method="GET"
                 action="{{ route('devices.index') }}"
                 class="{{ $toolbarGridClass }}"
-                x-data="{}"
+                x-data="deviceSearchHandler()"
                 data-async-table-form
                 data-async-root="#devices-index-root"
                 @searchable-select-updated.window="if ($event.detail.identifier === 'device-floor-filter') { $dispatch('searchable-select-clear', { target: 'device-room-filter' }) }"
+                @submit.prevent="handleSearch"
             >
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
@@ -141,7 +142,20 @@
                 </label>
                 <label class="block">
                     <span class="crud-label">Meklēt pēc koda</span>
-                    <input type="text" name="code" value="{{ $filters['code'] }}" class="crud-control" placeholder="Ievadi precīzu kodu" data-async-manual="true">
+                    <div class="flex items-center gap-2">
+                        <input 
+                            type="text" 
+                            name="code" 
+                            value="{{ $filters['code'] }}" 
+                            class="crud-control" 
+                            placeholder="Ievadi precīzu ierīces kodu"
+                            x-ref="codeInput"
+                        >
+                        <button type="submit" class="btn-search shrink-0">
+                            <x-icon name="search" size="h-4 w-4" />
+                            <span>Meklēt</span>
+                        </button>
+                    </div>
                 </label>
                 @if ($canManageDevices)
                     <label class="block">
