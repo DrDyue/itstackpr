@@ -310,7 +310,9 @@ class RepairController extends Controller
             'target_status.required' => 'Izvēlies jauno remonta statusu.',
         ]);
 
-        if ($validated['target_status'] === 'in-progress' && !filled($repair->description)) {
+        $draft = $this->validatedTransitionDraft($request, $repair, $validated['target_status']);
+
+        if ($validated['target_status'] === 'in-progress' && ! filled($draft['description'])) {
              return back()->with('error', 'Pirms remonta sākšanas ir nepieciešams aizpildīt remonta aprakstu.');
         }
 
@@ -321,16 +323,16 @@ class RepairController extends Controller
         if (
             $validated['target_status'] === 'in-progress'
             && $repair->status === 'waiting'
-            && $repair->repair_type === 'external'
-            && (! filled($repair->vendor_name) || ! filled($repair->vendor_contact))
+            && $draft['repair_type'] === 'external'
+            && (! filled($draft['vendor_name']) || ! filled($draft['vendor_contact']))
         ) {
             return back()->with('error', 'Lai sāktu ārējo remontu, vispirms aizpildi pakalpojuma sniedzēju un kontaktu remonta kartītē.');
         }
 
         if (
             $validated['target_status'] === 'completed'
-            && $repair->repair_type === 'external'
-            && (empty($repair->invoice_number) || (empty($repair->cost) && empty($validated['cost'])))
+            && $draft['repair_type'] === 'external'
+            && (! filled($draft['invoice_number']) || ! filled($draft['cost']))
         ) {
             return back()->with('error', 'Lai pabeigtu ārējo remontu, jābūt norādītam rēķina numuram un izmaksām.');
         }
@@ -344,11 +346,7 @@ class RepairController extends Controller
             'vendor_contact',
             'invoice_number',
         ]);
-        $payload = ['status' => $validated['target_status']];
-
-        if (array_key_exists('cost', $validated) && $validated['cost'] !== null && $validated['cost'] !== '') {
-            $payload['cost'] = $validated['cost'];
-        }
+        $payload = array_merge($draft, ['status' => $validated['target_status']]);
 
         if ($validated['target_status'] === 'waiting') {
             $payload['start_date'] = null;
@@ -537,6 +535,41 @@ class RepairController extends Controller
         }
 
         return $validated;
+    }
+
+    private function validatedTransitionDraft(Request $request, Repair $repair, string $targetStatus): array
+    {
+        $draft = $this->validateInput($request, [
+            'description' => ['nullable', 'string'],
+            'repair_type' => ['nullable', Rule::in(self::TYPES)],
+            'priority' => ['nullable', Rule::in(self::PRIORITIES)],
+            'cost' => ['nullable', 'numeric', 'min:0'],
+            'vendor_name' => ['nullable', 'string', 'max:100'],
+            'vendor_contact' => ['nullable', 'string', 'max:100'],
+            'invoice_number' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        $draft = [
+            'description' => array_key_exists('description', $draft) ? trim((string) $draft['description']) : (string) ($repair->description ?? ''),
+            'repair_type' => $draft['repair_type'] ?? $repair->repair_type ?? 'internal',
+            'priority' => $draft['priority'] ?? $repair->priority ?? 'medium',
+            'cost' => array_key_exists('cost', $draft) ? $draft['cost'] : $repair->cost,
+            'vendor_name' => array_key_exists('vendor_name', $draft) ? trim((string) $draft['vendor_name']) : $repair->vendor_name,
+            'vendor_contact' => array_key_exists('vendor_contact', $draft) ? trim((string) $draft['vendor_contact']) : $repair->vendor_contact,
+            'invoice_number' => array_key_exists('invoice_number', $draft) ? trim((string) $draft['invoice_number']) : $repair->invoice_number,
+        ];
+
+        if ($draft['repair_type'] === 'internal') {
+            $draft['vendor_name'] = null;
+            $draft['vendor_contact'] = null;
+            $draft['invoice_number'] = null;
+        }
+
+        if ($draft['repair_type'] === 'external' && $targetStatus === 'waiting') {
+            $draft['cost'] = null;
+        }
+
+        return $this->normalizeRepairPayloadForPersistence($draft);
     }
 
     private function availableDevicesForCreate(): Builder

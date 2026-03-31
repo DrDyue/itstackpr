@@ -1675,6 +1675,14 @@ window.repairBoard = (config) => ({
         this.clearDrag();
     },
     submitTransition(repairId, targetStatus, extra = {}) {
+        if (targetStatus === 'in-progress' && this.showMissingRequirements('waiting', 'Remontu sākt')) {
+            return;
+        }
+
+        if (targetStatus === 'completed' && this.showMissingRequirements('in-progress', 'Remontu pabeigt')) {
+            return;
+        }
+
         window.submitRepairTransition(config.transitionBaseUrl, config.csrfToken, repairId, targetStatus, extra);
     },
     submitCompletion(repair) {
@@ -1693,11 +1701,108 @@ window.repairBoard = (config) => ({
 
 window.repairProcess = (config) => ({
     repairType: config.repairType,
-    status: config.status,
+    repairStatus: config.status,
+    priority: config.priority ?? 'medium',
+    description: config.description ?? '',
+    vendorName: config.vendorName ?? '',
+    vendorContact: config.vendorContact ?? '',
+    invoiceNumber: config.invoiceNumber ?? '',
+    cost: config.cost ?? '',
+    isExternal() {
+        return this.repairType === 'external';
+    },
+    normalizedCost() {
+        return String(this.cost ?? '').trim();
+    },
+    transitionFormPayload() {
+        return {
+            description: this.description ?? '',
+            repair_type: this.repairType ?? 'internal',
+            priority: this.priority ?? 'medium',
+            cost: this.normalizedCost(),
+            vendor_name: this.vendorName ?? '',
+            vendor_contact: this.vendorContact ?? '',
+            invoice_number: this.invoiceNumber ?? '',
+        };
+    },
+    requirementRows(targetStatus = this.repairStatus) {
+        if (targetStatus === 'waiting') {
+            return [
+                { label: 'Apraksts', done: String(this.description ?? '').trim() !== '' },
+                { label: 'Pakalpojuma sniedzējs', done: !this.isExternal() || String(this.vendorName ?? '').trim() !== '' },
+                { label: 'Kontaktinformācija', done: !this.isExternal() || String(this.vendorContact ?? '').trim() !== '' },
+            ];
+        }
+
+        if (targetStatus === 'in-progress') {
+            return [
+                { label: 'Apraksts', done: String(this.description ?? '').trim() !== '' },
+                { label: 'Rēķina numurs', done: !this.isExternal() || String(this.invoiceNumber ?? '').trim() !== '' },
+                { label: 'Izmaksas', done: !this.isExternal() || this.normalizedCost() !== '' },
+            ];
+        }
+
+        return [];
+    },
+    nextStepLabel() {
+        if (this.repairStatus === 'waiting') {
+            return 'Kas jāaizpilda pirms remonta sākšanas.';
+        }
+
+        if (this.repairStatus === 'in-progress') {
+            return 'Kas vēl nepieciešams pirms remonta pabeigšanas.';
+        }
+
+        return 'Šim statusam papildu prasības nav nepieciešamas.';
+    },
+    nextStepReady() {
+        const rows = this.requirementRows();
+        return rows.length > 0 && rows.every((item) => item.done);
+    },
+    missingRequirementLabels(targetStatus) {
+        return this.requirementRows(targetStatus)
+            .filter((item) => !item.done)
+            .map((item) => item.label);
+    },
+    showMissingRequirements(targetStatus, actionLabel) {
+        const missing = this.missingRequirementLabels(targetStatus);
+        if (missing.length === 0) {
+            return false;
+        }
+
+        window.dispatchAppToast({
+            title: 'Darbību nevar izpildīt',
+            message: `${actionLabel} nevar, jo vēl trūkst: ${missing.join(', ')}.`,
+            tone: 'error',
+        });
+
+        return true;
+    },
     submitTransition(repairId, targetStatus, extra = {}) {
-        window.submitRepairTransition(config.transitionBaseUrl, config.csrfToken, repairId, targetStatus, extra);
+        if (targetStatus === 'in-progress' && this.showMissingRequirements('waiting', 'Remontu sākt')) {
+            return;
+        }
+
+        if (targetStatus === 'completed' && this.showMissingRequirements('in-progress', 'Remontu pabeigt')) {
+            return;
+        }
+
+        window.submitRepairTransition(
+            config.transitionBaseUrl,
+            config.csrfToken,
+            repairId,
+            targetStatus,
+            {
+                ...this.transitionFormPayload(),
+                ...extra,
+            },
+        );
     },
     submitCompletion() {
+        if (this.showMissingRequirements('in-progress', 'Remontu pabeigt')) {
+            return;
+        }
+
         if (!window.confirm('Vai tiešām gribat pabeigt šo ierīces remontu?')) {
             return;
         }

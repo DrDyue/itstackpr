@@ -23,10 +23,7 @@
     };
 @endphp
 
-<div
-    class="space-y-6"
-    x-data="{ repairType: @js(old('repair_type', $currentRepair?->repair_type ?? 'internal')), repairStatus: @js($currentRepair?->status ?? 'waiting'), priority: @js(old('priority', $currentRepair?->priority ?? 'medium')) }"
->
+<div class="space-y-6">
     <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div class="space-y-6">
             <div class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
@@ -69,7 +66,7 @@
 
                     <label class="block md:col-span-2">
                         <span class="crud-label">Apraksts</span>
-                        <textarea name="description" rows="5" class="crud-control" required>{{ old('description', $currentRepair?->description) }}</textarea>
+                        <textarea name="description" rows="5" class="crud-control" required x-model="description">{{ old('description', $currentRepair?->description) }}</textarea>
                     </label>
                 </div>
             </div>
@@ -143,7 +140,7 @@
 
                     <label class="block md:col-span-2">
                         <span class="crud-label">Izmaksas</span>
-                        <input type="number" step="0.01" name="cost" value="{{ old('cost', $currentRepair?->cost) }}" class="crud-control">
+                        <input type="number" step="0.01" name="cost" value="{{ old('cost', $currentRepair?->cost) }}" class="crud-control" x-model="cost">
                         <div class="mt-2 text-xs text-slate-500">Izmaksas vari ievadīt uzreiz. Ārējam remontam tās ir obligātas, pirms remontu var pabeigt.</div>
                     </label>
                 </div>
@@ -164,15 +161,15 @@
                 <div class="mt-4 grid gap-4 md:grid-cols-3">
                     <label class="block">
                         <span class="crud-label">Pakalpojuma sniedzejs</span>
-                        <input type="text" name="vendor_name" value="{{ old('vendor_name', $currentRepair?->vendor_name) }}" class="crud-control">
+                        <input type="text" name="vendor_name" value="{{ old('vendor_name', $currentRepair?->vendor_name) }}" class="crud-control" x-model="vendorName">
                     </label>
                     <label class="block">
                         <span class="crud-label">Vendora kontakts</span>
-                        <input type="text" name="vendor_contact" value="{{ old('vendor_contact', $currentRepair?->vendor_contact) }}" class="crud-control">
+                        <input type="text" name="vendor_contact" value="{{ old('vendor_contact', $currentRepair?->vendor_contact) }}" class="crud-control" x-model="vendorContact">
                     </label>
                     <label class="block">
                         <span class="crud-label">Rekina numurs</span>
-                        <input type="text" name="invoice_number" value="{{ old('invoice_number', $currentRepair?->invoice_number) }}" class="crud-control">
+                        <input type="text" name="invoice_number" value="{{ old('invoice_number', $currentRepair?->invoice_number) }}" class="crud-control" x-model="invoiceNumber">
                     </label>
                 </div>
             </div>

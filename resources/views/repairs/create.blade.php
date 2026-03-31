@@ -30,7 +30,24 @@
             <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
         @endif
 
-        <form method="POST" action="{{ route('repairs.store') }}" class="surface-card space-y-6 p-6">
+        <form
+            method="POST"
+            action="{{ route('repairs.store') }}"
+            class="surface-card space-y-6 p-6"
+            x-data="repairProcess({
+                repairId: null,
+                repairType: @js(old('repair_type', 'internal')),
+                status: 'waiting',
+                priority: @js(old('priority', 'medium')),
+                description: @js(old('description', '')),
+                vendorName: @js(old('vendor_name', '')),
+                vendorContact: @js(old('vendor_contact', '')),
+                invoiceNumber: @js(old('invoice_number', '')),
+                cost: @js(old('cost', '')),
+                transitionBaseUrl: @js(url('/repairs')),
+                csrfToken: @js(csrf_token()),
+            })"
+        >
             @csrf
             @include('repairs.partials.form-fields', ['repair' => null])
             <div class="flex flex-wrap gap-3">
