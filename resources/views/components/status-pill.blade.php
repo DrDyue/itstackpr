@@ -33,10 +33,10 @@
             'cancelled' => ['label' => 'Atcelts', 'tone' => 'danger', 'icon' => 'x-circle'],
         ],
         'priority' => [
-            'low' => ['label' => 'Zema', 'tone' => 'neutral', 'icon' => 'tag'],
+            'low' => ['label' => 'Zema', 'tone' => 'neutral', 'icon' => 'information-circle'],
             'medium' => ['label' => 'Vidēja', 'tone' => 'info', 'icon' => 'tag'],
-            'high' => ['label' => 'Augsta', 'tone' => 'warning', 'icon' => 'exclamation-triangle'],
-            'critical' => ['label' => 'Kritiska', 'tone' => 'danger', 'icon' => 'exclamation-triangle'],
+            'high' => ['label' => 'Augsta', 'tone' => 'warning', 'icon' => 'flag'],
+            'critical' => ['label' => 'Kritiska', 'tone' => 'danger', 'icon' => 'bolt'],
         ],
         'user-active' => [
             '1' => ['label' => 'Aktīvs', 'tone' => 'success', 'icon' => 'check-circle'],

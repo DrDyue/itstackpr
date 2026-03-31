@@ -188,6 +188,12 @@
                                             'high' => 'quick-status-filter-amber',
                                             default => 'quick-status-filter-rose',
                                         };
+                                        $priorityIcon = match ($priority) {
+                                            'low' => 'information-circle',
+                                            'medium' => 'tag',
+                                            'high' => 'flag',
+                                            default => 'bolt',
+                                        };
                                     @endphp
                                     <button
                                         type="button"
@@ -195,7 +201,7 @@
                                         class="quick-status-filter {{ $priorityToneClass }}"
                                         :class="isSelected(@js($priority)) ? 'quick-status-filter-active' : ''"
                                     >
-                                        <x-icon name="tag" size="h-4 w-4" />
+                                        <x-icon :name="$priorityIcon" size="h-4 w-4" />
                                         <span>{{ $priorityLabels[$priority] ?? $priority }}</span>
                                     </button>
                                 @endforeach

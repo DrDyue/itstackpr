@@ -222,6 +222,18 @@
         </svg>
         @break
 
+    @case('flag')
+        <svg xmlns="http://www.w3.org/2000/svg" {{ $attributes->class($size) }} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 21V4.5m0 0c2.25-1.5 4.5-1.5 6.75 0s4.5 1.5 6.75 0v9c-2.25 1.5-4.5 1.5-6.75 0s-4.5-1.5-6.75 0" />
+        </svg>
+        @break
+
+    @case('bolt')
+        <svg xmlns="http://www.w3.org/2000/svg" {{ $attributes->class($size) }} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 3 4.75 14.25H11l-1 6.75 8.25-11.25H12L13 3Z" />
+        </svg>
+        @break
+
     @default
         <svg xmlns="http://www.w3.org/2000/svg" {{ $attributes->class($size) }} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />

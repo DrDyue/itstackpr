@@ -1309,9 +1309,12 @@ tbody td {
 
 .auth-right {
     flex: 1;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
     background:
-        radial-gradient(circle at top left, rgba(255, 255, 255, 0.18), transparent 34%),
-        linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #0ea5e9 100%);
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.12), transparent 34%),
+        linear-gradient(135deg, #0f172a 0%, #1d4ed8 56%, #38bdf8 100%);
     display: none;
     align-items: center;
     justify-content: center;
@@ -1319,10 +1322,76 @@ tbody td {
     padding: 40px;
 }
 
+.auth-right::before,
+.auth-right::after {
+    content: '';
+    position: absolute;
+    inset: auto;
+    border-radius: 9999px;
+    pointer-events: none;
+    filter: blur(14px);
+    opacity: 0.95;
+}
+
+.auth-right::before {
+    top: -14%;
+    left: -8%;
+    width: 32rem;
+    height: 32rem;
+    background:
+        radial-gradient(circle, rgba(14, 165, 233, 0.38) 0%, rgba(29, 78, 216, 0.22) 42%, transparent 72%);
+    animation: auth-lamp-float-left 11s ease-in-out infinite alternate;
+}
+
+.auth-right::after {
+    right: -10%;
+    bottom: -16%;
+    width: 34rem;
+    height: 34rem;
+    background:
+        radial-gradient(circle, rgba(125, 211, 252, 0.28) 0%, rgba(59, 130, 246, 0.20) 38%, transparent 74%);
+    animation: auth-lamp-float-right 13s ease-in-out infinite alternate;
+}
+
+.auth-right-content {
+    position: relative;
+    z-index: 1;
+}
+
 .auth-right-content h2 {
     font-size: 32px;
     font-weight: 700;
     margin: 0;
+}
+
+@keyframes auth-lamp-float-left {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 0.72;
+    }
+    50% {
+        transform: translate3d(4%, 3%, 0) scale(1.08);
+        opacity: 0.96;
+    }
+    100% {
+        transform: translate3d(9%, 7%, 0) scale(1.14);
+        opacity: 0.8;
+    }
+}
+
+@keyframes auth-lamp-float-right {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 0.82;
+    }
+    50% {
+        transform: translate3d(-5%, -4%, 0) scale(1.05);
+        opacity: 1;
+    }
+    100% {
+        transform: translate3d(-9%, -8%, 0) scale(1.12);
+        opacity: 0.76;
+    }
 }
 
 /* Welcome page */
@@ -2503,10 +2572,6 @@ tbody td {
     @apply w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200;
 }
 
-.devices-code-search-btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500;
-}
-
 .devices-text-search {
     @apply flex flex-col gap-1.5;
 }
@@ -2902,8 +2967,9 @@ tbody td {
     @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2;
 }
 
-.btn-search {
-    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2;
+.btn-search,
+.devices-code-search-btn {
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2;
 }
 
 .btn-clear {
@@ -3501,6 +3567,16 @@ html[data-theme='dark'] .auth-right {
         radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 34%),
         linear-gradient(160deg, rgba(2, 6, 23, 0.92) 0%, rgba(15, 23, 42, 0.96) 38%, rgba(29, 78, 216, 0.78) 100%) !important;
     border-left: 1px solid rgba(51, 65, 85, 0.72);
+}
+
+html[data-theme='dark'] .auth-right::before {
+    background:
+        radial-gradient(circle, rgba(14, 165, 233, 0.44) 0%, rgba(29, 78, 216, 0.26) 42%, transparent 74%);
+}
+
+html[data-theme='dark'] .auth-right::after {
+    background:
+        radial-gradient(circle, rgba(96, 165, 250, 0.34) 0%, rgba(56, 189, 248, 0.24) 38%, transparent 74%);
 }
 
 html[data-theme='dark'] .app-bg::before,
