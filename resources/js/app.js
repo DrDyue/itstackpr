@@ -1333,7 +1333,7 @@ document.addEventListener('alpine:init', registerAlpineData);
 document.addEventListener('DOMContentLoaded', initializeThemeToggle);
 document.addEventListener('DOMContentLoaded', initializeAsyncTableFilters);
 
-// Device search handler - find and highlight device by code
+// Device search handler - find and highlight device by code (like Ctrl+F)
 window.deviceSearchHandler = () => ({
     async searchByCode() {
         const codeInput = document.querySelector('input[name="code"]');
@@ -1344,84 +1344,88 @@ window.deviceSearchHandler = () => ({
             return;
         }
 
-        try {
-            // First, find which page contains the device
-            const response = await fetch(`/devices/find-by-code?code=${encodeURIComponent(searchCode)}`, {
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
+        // Search on current page first
+        const foundOnCurrentPage = this.scrollToAndHighlight(searchCode);
+
+        if (foundOnCurrentPage) {
+            // Found on current page - show success message
+            this.showToast(`Ierīce "${searchCode}" atrasta!`, 'success');
+        } else {
+            // Not found on current page - check if it exists in database
+            try {
+                const response = await fetch(`/devices/find-by-code?code=${encodeURIComponent(searchCode)}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!result.found) {
+                    this.showToast(`Ierīce ar kodu "${searchCode}" netika atrasta!`, 'error');
+                    return;
                 }
-            });
 
-            const result = await response.json();
+                // Device exists but on different page - navigate there
+                const currentPage = parseInt(new URLSearchParams(window.location.search).get('page') || '1');
+                const targetPage = result.page;
 
-            if (!result.found) {
-                this.showToast(`Ierīce ar kodu "${searchCode}" netika atrasta!`, 'error');
-                return;
+                if (targetPage !== currentPage) {
+                    // Navigate to the target page with highlight parameter
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('page', targetPage);
+                    url.searchParams.set('highlight', searchCode);
+                    this.showToast(`Ierīce "${searchCode}" atrasta ${targetPage}. lapā. Pārlādēju...`, 'info');
+                    window.location.href = url.toString();
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                this.showToast('Notika kļūda meklējot ierīci!', 'error');
             }
-
-            // Navigate to the page where the device is located
-            const currentPage = parseInt(new URLSearchParams(window.location.search).get('page') || '1');
-            const targetPage = result.page;
-
-            if (targetPage !== currentPage) {
-                // Navigate to the target page with highlight parameter
-                const url = new URL(window.location.href);
-                url.searchParams.set('page', targetPage);
-                url.searchParams.set('highlight', searchCode);
-                window.location.href = url.toString();
-            } else {
-                // Already on the right page, just scroll and highlight
-                this.scrollToAndHighlight(searchCode);
-            }
-        } catch (error) {
-            console.error('Search error:', error);
-            this.showToast('Notika kļūda meklējot ierīci!', 'error');
         }
     },
 
     scrollToAndHighlight(code) {
-        // Wait for DOM to be ready
-        setTimeout(() => {
-            const searchCode = code.toLowerCase();
-            const tableBody = document.querySelector('#devices-index-root tbody');
+        const searchCode = code.toLowerCase();
+        const tableBody = document.querySelector('#devices-index-root tbody');
 
-            if (!tableBody) {
-                this.showToast('Ierīce netika atrasta šajā lapā!', 'error');
-                return;
-            }
+        if (!tableBody) {
+            return false;
+        }
 
-            const rows = Array.from(tableBody.querySelectorAll('tr'));
-            let foundRow = null;
+        const rows = Array.from(tableBody.querySelectorAll('tr'));
+        let foundRow = null;
 
-            for (const row of rows) {
-                const codeCell = row.querySelector('td:nth-child(3) .font-semibold');
-                if (codeCell) {
-                    const cellCode = codeCell.textContent?.trim().toLowerCase();
-                    if (cellCode === searchCode || cellCode.includes(searchCode)) {
-                        foundRow = row;
-                        break;
-                    }
+        for (const row of rows) {
+            const codeCell = row.querySelector('td:nth-child(3) .font-semibold');
+            if (codeCell) {
+                const cellCode = codeCell.textContent?.trim().toLowerCase();
+                if (cellCode === searchCode || cellCode.includes(searchCode)) {
+                    foundRow = row;
+                    break;
                 }
             }
+        }
 
-            if (foundRow) {
-                // Scroll to the row
-                foundRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (foundRow) {
+            // Scroll to the row
+            foundRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-                // Add highlight animation
-                foundRow.classList.add('device-search-highlight');
-                foundRow.classList.add('device-search-highlight-found');
+            // Add highlight animation
+            foundRow.classList.add('device-search-highlight');
+            foundRow.classList.add('device-search-highlight-found');
 
-                // Remove highlight after 5 seconds
-                setTimeout(() => {
-                    foundRow.classList.remove('device-search-highlight');
-                    foundRow.classList.remove('device-search-highlight-found');
-                }, 5000);
-            } else {
-                this.showToast('Ierīce netika atrasta šajā lapā!', 'error');
-            }
-        }, 300);
+            // Remove highlight after 5 seconds
+            setTimeout(() => {
+                foundRow.classList.remove('device-search-highlight');
+                foundRow.classList.remove('device-search-highlight-found');
+            }, 5000);
+
+            return true;
+        }
+
+        return false;
     },
 
     showToast(message, tone = 'info') {
@@ -1429,7 +1433,7 @@ window.deviceSearchHandler = () => ({
             window.dispatchAppToast({
                 message,
                 tone,
-                title: tone === 'error' ? 'Kļūda' : 'Paziņojums'
+                title: tone === 'error' ? 'Kļūda' : (tone === 'success' ? 'Veiksmīgi' : 'Paziņojums')
             });
         } else {
             alert(message);
