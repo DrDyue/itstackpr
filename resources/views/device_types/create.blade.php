@@ -22,8 +22,6 @@
             </a>
         </div>
 
-        <x-validation-summary />
-
         <form method="POST" action="{{ route('device-types.store') }}" class="type-form-grid">
             @csrf
 
@@ -35,8 +33,11 @@
                     <div class="mt-4">
                         <label class="crud-label">Tipa nosaukums *</label>
                         <input type="text" name="type_name" value="{{ old('type_name') }}" class="crud-control @error('type_name') border-rose-300 bg-rose-50/60 focus:border-rose-400 focus:ring-rose-200 @enderror" required>
+                        <div class="mt-2 text-xs text-slate-500">Katram ierīces tipam jābūt ar unikālu nosaukumu.</div>
                         @error('type_name')
-                            <div class="mt-2 text-sm font-medium text-rose-600">{{ $message }}</div>
+                            <div class="mt-2 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">
+                                {{ $message }}
+                            </div>
                         @enderror
                     </div>
                 </div>
