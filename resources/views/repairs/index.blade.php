@@ -166,7 +166,7 @@
                         </div>
 
                         <div class="quick-filter-groups">
-                            <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($filters['priorities'] ?? []), minimum: 0 })" x-ref="priorityFilter">
+                            <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($filters['priorities'] ?? []), minimum: 0 })">
                                 <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Prioritāte</div>
                                 <div class="quick-status-filters">
                                     @foreach (['low' => 'Zema', 'medium' => 'Vidēja', 'high' => 'Augsta', 'critical' => 'Kritiska'] as $priorityValue => $priorityLabel)
@@ -180,16 +180,16 @@
                                         @endphp
                                         <button
                                             type="button"
-                                            @click="$refs.priorityFilter.toggle(@js($priorityValue)); $nextTick(() => $el.closest('form').requestSubmit())"
+                                            @click="toggle(@js($priorityValue)); $nextTick(() => $el.closest('form').requestSubmit())"
                                             class="quick-status-filter {{ $priorityToneClass }}"
-                                            :class="$refs.priorityFilter.isSelected(@js($priorityValue)) ? 'quick-status-filter-active' : ''"
+                                            :class="isSelected(@js($priorityValue)) ? 'quick-status-filter-active' : ''"
                                         >
                                             <x-icon name="tag" size="h-4 w-4" />
                                             <span>{{ $priorityLabel }}</span>
                                         </button>
                                     @endforeach
 
-                                    <template x-for="value in $refs.priorityFilter?.selected ?? []" :key="'repair-priority-' + value">
+                                    <template x-for="value in selected" :key="'repair-priority-' + value">
                                         <input type="hidden" name="priorities[]" :value="value">
                                     </template>
                                 </div>

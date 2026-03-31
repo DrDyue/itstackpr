@@ -2585,7 +2585,7 @@ tbody td {
 }
 
 .quick-status-filters {
-    @apply flex flex-wrap gap-3;
+    @apply flex flex-wrap gap-2;
 }
 
 .quick-filter-groups {
@@ -2601,11 +2601,15 @@ tbody td {
 }
 
 .quick-status-filter {
-    @apply inline-flex cursor-pointer select-none items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-semibold shadow-sm transition;
+    @apply inline-flex cursor-pointer select-none items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200;
+}
+
+.quick-status-filter:hover {
+    @apply -translate-y-0.5 shadow-md;
 }
 
 .quick-status-filter-active {
-    @apply ring-2 ring-offset-2;
+    @apply ring-2 ring-offset-2 shadow-md;
 }
 
 .quick-status-filter-slate {
@@ -2613,7 +2617,7 @@ tbody td {
 }
 
 .quick-status-filter-slate.quick-status-filter-active {
-    @apply ring-slate-200;
+    @apply border-slate-300 bg-slate-50 text-slate-900 ring-slate-300;
 }
 
 .quick-status-filter-emerald {
@@ -2621,7 +2625,7 @@ tbody td {
 }
 
 .quick-status-filter-emerald.quick-status-filter-active {
-    @apply ring-emerald-200;
+    @apply border-emerald-300 bg-emerald-100 text-emerald-900 ring-emerald-300;
 }
 
 .quick-status-filter-amber {
@@ -2629,7 +2633,15 @@ tbody td {
 }
 
 .quick-status-filter-amber.quick-status-filter-active {
-    @apply ring-amber-200;
+    @apply border-amber-300 bg-amber-100 text-amber-900 ring-amber-300;
+}
+
+.quick-status-filter-sky {
+    @apply border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100;
+}
+
+.quick-status-filter-sky.quick-status-filter-active {
+    @apply border-sky-300 bg-sky-100 text-sky-900 ring-sky-300;
 }
 
 .quick-status-filter-rose {
@@ -2637,7 +2649,7 @@ tbody td {
 }
 
 .quick-status-filter-rose.quick-status-filter-active {
-    @apply ring-rose-200;
+    @apply border-rose-300 bg-rose-100 text-rose-900 ring-rose-300;
 }
 
 .filter-summary {
@@ -4011,6 +4023,12 @@ html[data-theme='dark'] .quick-status-filter-amber {
     background-color: rgba(245, 158, 11, 0.14) !important;
     color: #fde68a !important;
     border-color: rgba(251, 191, 36, 0.28) !important;
+}
+
+html[data-theme='dark'] .quick-status-filter-sky {
+    background-color: rgba(14, 165, 233, 0.14) !important;
+    color: #bae6fd !important;
+    border-color: rgba(56, 189, 248, 0.28) !important;
 }
 
 html[data-theme='dark'] .device-type-count-link {

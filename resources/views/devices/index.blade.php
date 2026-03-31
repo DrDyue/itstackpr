@@ -21,7 +21,7 @@
         $quickAssigneeSelectOptions = collect($quickAssigneeOptions ?? [])->values();
         $statusFilterLinks = [
             ['label' => 'Aktīvas', 'value' => 'active', 'icon' => 'check-circle', 'tone' => 'emerald'],
-            ['label' => 'Remonta', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'amber'],
+            ['label' => 'Remonta', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'sky'],
             ['label' => 'Norakstītas', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
         ];
         $selectedStatuses = $filters['statuses'];
@@ -200,25 +200,27 @@
 
                 <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
                     <div class="quick-filter-groups">
-                        <div class="quick-filter-group">
+                        <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($selectedStatuses), minimum: 0 })">
                             <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ierīces statuss</div>
                             <div class="quick-status-filters">
                                 @foreach ($statusFilterLinks as $statusFilter)
                                     @php
-                                        $isActive = in_array($statusFilter['value'], $selectedStatuses, true);
+                                        $toneClass = 'quick-status-filter-' . $statusFilter['tone'];
                                     @endphp
-                                    <label class="quick-status-filter quick-status-filter-{{ $statusFilter['tone'] }} {{ $isActive ? 'quick-status-filter-active' : '' }}">
-                                        <input
-                                            type="checkbox"
-                                            name="status[]"
-                                            value="{{ $statusFilter['value'] }}"
-                                            class="sr-only"
-                                            @checked($isActive)
-                                        >
+                                    <button
+                                        type="button"
+                                        @click="toggle(@js($statusFilter['value'])); $nextTick(() => $el.closest('form').requestSubmit())"
+                                        class="quick-status-filter {{ $toneClass }}"
+                                        :class="isSelected(@js($statusFilter['value'])) ? 'quick-status-filter-active' : ''"
+                                    >
                                         <x-icon :name="$statusFilter['icon']" size="h-4 w-4" />
                                         <span>{{ $statusFilter['label'] }}</span>
-                                    </label>
+                                    </button>
                                 @endforeach
+
+                                <template x-for="value in selected" :key="'device-status-' + value">
+                                    <input type="hidden" name="status[]" :value="value">
+                                </template>
                             </div>
                         </div>
                     </div>
@@ -403,6 +405,7 @@
                                             @endif
                                         </div>
                                     @elseif ($pendingRequestBadge)
+                                        {{-- Ja ir aktīvs pieprasījums, rādīt tikai pieprasījuma badge (nevis "Aktīva" statusu) --}}
                                         <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
                                             @if (! empty($pendingRequestBadge['url']))
                                                 <a href="{{ $pendingRequestBadge['url'] }}" class="device-request-badge-link {{ $pendingRequestBadge['class'] }}" @focus="open = true" @blur="open = false">
@@ -453,6 +456,7 @@
                                             @endif
                                         </div>
                                     @else
+                                        {{-- Ja nav pieprasījumu, rādīt ierīces statusu (Aktīva, Norakstīta, utt.) --}}
                                         <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
                                     @endif
                                 </div>
