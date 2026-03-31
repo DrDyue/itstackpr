@@ -109,7 +109,7 @@ class RepairRequestController extends Controller
     }
 
     /**
-     * Atrod remonta pieteikumu pÄ“c saistÄ«tÄs ierÄ«ces koda filtrÄ“tajÄ sarakstÄ.
+     * Atrod remonta pieteikumu pēc saistītās ierīces koda filtrētajā sarakstā.
      */
     public function findByCode(Request $request)
     {

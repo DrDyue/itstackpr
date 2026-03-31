@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\DeviceType;
 use App\Support\AuditTrail;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Ierīču tipu vārdnīcas pārvaldība.
@@ -50,9 +51,7 @@ class DeviceTypeController extends Controller
     {
         $this->requireManager();
 
-        $data = $request->validate([
-            'type_name' => ['required', 'string', 'max:30', 'unique:device_types,type_name'],
-        ]);
+        $data = $this->validateTypeName($request);
 
         $deviceType = DeviceType::create($data);
         AuditTrail::created(auth()->id(), $deviceType);
@@ -71,9 +70,7 @@ class DeviceTypeController extends Controller
     {
         $this->requireManager();
 
-        $data = $request->validate([
-            'type_name' => ['required', 'string', 'max:30', 'unique:device_types,type_name,' . $deviceType->id],
-        ]);
+        $data = $this->validateTypeName($request, $deviceType);
 
         $before = $deviceType->only(['type_name']);
         $deviceType->update($data);
@@ -138,5 +135,36 @@ class DeviceTypeController extends Controller
             'type_name' => ['label' => 'tipa nosaukuma'],
             'devices_count' => ['label' => 'piesaistīto ierīču skaita'],
         ];
+    }
+
+    private function validateTypeName(Request $request, ?DeviceType $deviceType = null): array
+    {
+        $data = $request->validate([
+            'type_name' => ['required', 'string', 'max:30'],
+        ], [
+            'type_name.required' => 'Ievadi ierīces tipa nosaukumu.',
+            'type_name.max' => 'Ierīces tipa nosaukums nedrīkst būt garāks par 30 rakstzīmēm.',
+        ]);
+
+        $data['type_name'] = trim($data['type_name']);
+
+        if ($data['type_name'] === '') {
+            throw ValidationException::withMessages([
+                'type_name' => ['Ievadi ierīces tipa nosaukumu.'],
+            ]);
+        }
+
+        $exists = DeviceType::query()
+            ->when($deviceType, fn ($query) => $query->whereKeyNot($deviceType->id))
+            ->whereRaw('LOWER(type_name) = ?', [mb_strtolower($data['type_name'])])
+            ->exists();
+
+        if ($exists) {
+            throw ValidationException::withMessages([
+                'type_name' => ['Ierīces tips ar šādu nosaukumu jau eksistē.'],
+            ]);
+        }
+
+        return $data;
     }
 }

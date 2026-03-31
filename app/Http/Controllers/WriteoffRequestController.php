@@ -113,7 +113,7 @@ class WriteoffRequestController extends Controller
     }
 
     /**
-     * Atrod norakstÄ«Åanas pieteikumu pÄ“c saistÄ«tÄs ierÄ«ces koda filtrÄ“tajÄ sarakstÄ.
+     * Atrod norakstīšanas pieteikumu pēc saistītās ierīces koda filtrētajā sarakstā.
      */
     public function findByCode(Request $request)
     {

@@ -1,11 +1,11 @@
 ﻿{{--
     Lapa: Remontu saraksts.
-    AtbildÄ«ba: rÄda visus remonta ierakstus vienotÄ tabulÄ ar filtriem, kÄrtoÅanu un darbÄ«bÄm.
+    Atbildība: rāda visus remonta ierakstus vienotā tabulā ar filtriem, kārtošanu un darbībām.
     Datu avots: RepairController@index.
 --}}
 <x-app-layout>
     @php
-        $sortDirectionLabels = ['asc' => 'augoÅajÄ secÄ«bÄ', 'desc' => 'dilstoÅajÄ secÄ«bÄ'];
+        $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
         $selectedDeviceLabel = collect($deviceOptions)->firstWhere('value', (string) ($filters['device_id'] ?? ''))['label'] ?? ($filters['device_query'] ?: null);
         $selectedRequesterLabel = collect($requesterOptions)->firstWhere('value', (string) ($filters['requester_id'] ?? ''))['label'] ?? ($filters['requester_query'] ?: null);
         $activeStatusLabel = count($filters['statuses']) > 0 && count($filters['statuses']) < count($statuses)
@@ -28,7 +28,7 @@
                         <div class="inventory-inline-metrics">
                             <span class="inventory-inline-chip inventory-inline-chip-slate">
                                 <x-icon name="repair" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">KopÄ</span>
+                                <span class="inventory-inline-label">Kopā</span>
                                 <span class="inventory-inline-value">{{ $repairSummary['total'] }}</span>
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-amber">
@@ -38,7 +38,7 @@
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-sky">
                                 <x-icon name="stats" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">ProcesÄ</span>
+                                <span class="inventory-inline-label">Procesā</span>
                                 <span class="inventory-inline-value">{{ $repairSummary['in_progress'] }}</span>
                             </span>
                             <span class="inventory-inline-chip inventory-inline-chip-emerald">
@@ -55,7 +55,7 @@
                         </div>
                         <div>
                             <h1 class="page-title">Remonti</h1>
-                            <p class="page-subtitle">{{ $canManageRepairs ? 'Vienota remonta tabula ar pilnu ierÄ«ces, statusa un izmaksu informÄciju.' : 'Å eit redzami ar tavÄm ierÄ«cÄ“m saistÄ«tie remonta ieraksti.' }}</p>
+                            <p class="page-subtitle">{{ $canManageRepairs ? 'Vienota remonta tabula ar pilnu ierīces, statusa un izmaksu informāciju.' : 'Šeit redzami ar tavām ierīcēm saistītie remonta ieraksti.' }}</p>
                         </div>
                     </div>
                 </div>
@@ -90,31 +90,31 @@
                 <div class="md:col-span-2 xl:col-span-full">
                     <div class="repair-toolbar-search-grid">
                         <label class="block">
-                            <span class="crud-label">MeklÄ“t pÄ“c koda</span>
+                            <span class="crud-label">Meklēt pēc koda</span>
                             <div class="flex items-center gap-2">
                                 <input
                                     type="text"
                                     name="code"
                                     value="{{ $filters['code'] }}"
                                     class="crud-control"
-                                    placeholder="Ievadi precÄ«zu kodu"
+                                    placeholder="Ievadi precīzu kodu"
                                     data-async-manual="true"
                                     data-async-code-search="true"
                                 >
                                 <button type="submit" class="btn-search shrink-0" data-code-search-submit="true">
                                     <x-icon name="search" size="h-4 w-4" />
-                                    <span>MeklÄ“t</span>
+                                    <span>Meklēt</span>
                                 </button>
                             </div>
                         </label>
                         <label class="block">
-                            <span class="crud-label">FiltrÄ“t pÄ“c teksta</span>
-                            <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, apraksts vai pieprasÄ«tÄjs">
+                            <span class="crud-label">Filtrēt pēc teksta</span>
+                            <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, apraksts vai pieprasītājs">
                         </label>
                     </div>
                 </div>
                 <label class="block">
-                    <span class="crud-label">IerÄ«ce</span>
+                    <span class="crud-label">Ierīce</span>
                     <x-searchable-select
                         name="device_id"
                         query-name="device_query"
@@ -122,13 +122,13 @@
                         :options="$deviceOptions"
                         :selected="(string) ($filters['device_id'] ?? '')"
                         :query="$selectedDeviceLabel"
-                        placeholder="IzvÄ“lies ierÄ«ci"
-                        empty-message="Neviens remonts neatbilst izvÄ“lÄ“tajai ierÄ«cei."
+                        placeholder="Izvēlies ierīci"
+                        empty-message="Neviens remonts neatbilst izvēlētajai ierīcei."
                     />
                 </label>
 
                 <label class="block">
-                    <span class="crud-label">PieprasÄ«tÄjs</span>
+                    <span class="crud-label">Pieprasītājs</span>
                     <x-searchable-select
                         name="requester_id"
                         query-name="requester_query"
@@ -136,13 +136,13 @@
                         :options="$requesterOptions"
                         :selected="(string) ($filters['requester_id'] ?? '')"
                         :query="$selectedRequesterLabel"
-                        placeholder="IzvÄ“lies pieprasÄ«tÄju"
-                        empty-message="Neviens pieprasÄ«tÄjs neatbilst meklÄ“jumam."
+                        placeholder="Izvēlies pieprasītāju"
+                        empty-message="Neviens pieprasītājs neatbilst meklējumam."
                     />
                 </label>
 
                 <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
-                <x-localized-date-input name="date_to" label="LÄ«dz datumam" :value="$filters['date_to']" />
+                <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
 
                 <div class="filter-toolbar-footer repairs-filter-footer md:col-span-2 xl:col-span-full">
                     <div class="flex flex-wrap items-center gap-4">
@@ -178,7 +178,7 @@
                         </div>
 
                         <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($filters['priorities'] ?? []), minimum: 0 })">
-                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">PrioritÄte</div>
+                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Prioritāte</div>
                             <div class="quick-status-filters">
                                 @foreach (['low', 'medium', 'high', 'critical'] as $priority)
                                     @php
@@ -216,7 +216,7 @@
                     <div class="toolbar-actions justify-end">
                         <a href="{{ route('repairs.index', ['statuses_filter' => '1']) }}" class="btn-clear" data-async-link="true">
                             <x-icon name="clear" size="h-4 w-4" />
-                            <span>NotÄ«rÄ«t filtrus</span>
+                            <span>Notīrīt filtrus</span>
                         </a>
                     </div>
                 </div>
@@ -226,13 +226,13 @@
             <x-active-filters
                 :items="[
                     ['label' => 'Teksts', 'value' => $filters['q']],
-                    ['label' => 'IerÄ«ce', 'value' => $selectedDeviceLabel],
-                    ['label' => 'PieprasÄ«tÄjs', 'value' => $selectedRequesterLabel],
+                    ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
+                    ['label' => 'Pieprasītājs', 'value' => $selectedRequesterLabel],
                     ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
-                    ['label' => 'LÄ«dz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
+                    ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
                     ['label' => 'Statuss', 'value' => $activeStatusLabel],
-                    ['label' => 'PrioritÄte', 'value' => $activePriorityLabel],
-                    ['label' => 'PieÅÄ·irts', 'value' => ($filters['mine'] ?? false) ? 'Man' : null],
+                    ['label' => 'Prioritāte', 'value' => $activePriorityLabel],
+                    ['label' => 'Piešķirts', 'value' => ($filters['mine'] ?? false) ? 'Man' : null],
                 ]"
                 :clear-url="route('repairs.index', ['statuses_filter' => '1'])"
             />
@@ -251,24 +251,24 @@
                     <table class="repair-table-content w-full min-w-full text-sm">
                         <thead class="repair-table-head bg-slate-50 text-left text-slate-500">
                             <tr>
-                                <th class="px-4 py-3">AttÄ“ls</th>
+                                <th class="px-4 py-3">Attēls</th>
                                 @foreach ([
                                     'code' => 'Kods',
                                     'name' => 'Nosaukums',
-                                    'assigned' => 'PieÅÄ·irta',
-                                    'location' => 'AtraÅanÄs vieta',
+                                    'assigned' => 'Piešķirta',
+                                    'location' => 'Atrašanās vieta',
                                     'status' => 'Remonta statuss',
-                                    'priority' => 'PrioritÄte',
+                                    'priority' => 'Prioritāte',
                                     'repair_type' => 'Tips',
                                     'cost' => 'Izmaksas',
-                                    'start_date' => 'SÄkuma datums',
+                                    'start_date' => 'Sākuma datums',
                                     'end_date' => 'Beigu datums',
                                 ] as $column => $label)
                                     @php
                                         $isCurrentSort = $sorting['sort'] === $column;
                                         $defaultDirection = in_array($column, ['cost', 'end_date', 'start_date'], true) ? 'desc' : 'asc';
                                         $nextDirection = $isCurrentSort && $sorting['direction'] === 'asc' ? 'desc' : ($isCurrentSort && $sorting['direction'] === 'desc' ? 'asc' : $defaultDirection);
-                                        $sortMessage = 'Tabula "Remonti" kÄrtota pÄ“c ' . ($sortOptions[$column]['label'] ?? mb_strtolower($label)) . ' ' . ($sortDirectionLabels[$nextDirection] ?? '');
+                                        $sortMessage = 'Tabula "Remonti" kārtota pēc ' . ($sortOptions[$column]['label'] ?? mb_strtolower($label)) . ' ' . ($sortDirectionLabels[$nextDirection] ?? '');
                                     @endphp
                                     <th class="px-4 py-3">
                                         <button
@@ -289,7 +289,7 @@
                                         </button>
                                     </th>
                                 @endforeach
-                                <th class="px-4 py-3 text-right w-[9rem]">DarbÄ«bas</th>
+                                <th class="px-4 py-3 text-right w-[9rem]">Darbības</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -305,7 +305,7 @@
                                     ])->filter()->implode(' '));
                                     $locationPrimary = $roomLabel !== ''
                                         ? $roomLabel
-                                        : ($device?->room?->room_number ? 'Telpa ' . $device->room->room_number : 'AtraÅanÄs vieta nav norÄdÄ«ta');
+                                        : ($device?->room?->room_number ? 'Telpa ' . $device->room->room_number : 'Atrašanās vieta nav norādīta');
                                     $locationSecondary = $device?->building?->building_name ?: null;
                                     $linkedRequestUrl = $repair->request_id
                                         ? route('repair-requests.index', [
@@ -317,7 +317,7 @@
                                 <tr class="repair-table-row border-t border-slate-100 align-top" data-table-row-id="repair-{{ $repair->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
                                     <td class="px-4 py-4">
                                         @if ($thumbUrl)
-                                            <img src="{{ $thumbUrl }}" alt="{{ $device?->name ?: 'IerÄ«ce' }}" class="device-table-thumb">
+                                            <img src="{{ $thumbUrl }}" alt="{{ $device?->name ?: 'Ierīce' }}" class="device-table-thumb">
                                         @else
                                             <div class="device-table-thumb device-table-thumb-placeholder">
                                                 <x-icon name="device" size="h-4 w-4" />
@@ -326,19 +326,19 @@
                                     </td>
                                     <td class="px-4 py-4">
                                         <div class="font-semibold text-slate-900">{{ $device?->code ?: '-' }}</div>
-                                        <div class="mt-1 text-xs text-slate-500">SÄ“rija: {{ $device?->serial_number ?: '-' }}</div>
+                                        <div class="mt-1 text-xs text-slate-500">Sērija: {{ $device?->serial_number ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4">
-                                        <div class="font-semibold text-slate-900">{{ $device?->name ?: 'IerÄ«ce nav atrasta' }}</div>
-                                        <div class="mt-1 text-xs text-slate-500">{{ collect([$device?->manufacturer, $device?->model])->filter()->implode(' | ') ?: 'RaÅ¾otÄjs un modelis nav norÄdÄ«ti' }}</div>
-                                        <div class="mt-1 text-xs text-slate-400">{{ $device?->type?->type_name ?: 'Tips nav norÄdÄ«ts' }}</div>
+                                        <div class="font-semibold text-slate-900">{{ $device?->name ?: 'Ierīce nav atrasta' }}</div>
+                                        <div class="mt-1 text-xs text-slate-500">{{ collect([$device?->manufacturer, $device?->model])->filter()->implode(' | ') ?: 'Ražotājs un modelis nav norādīti' }}</div>
+                                        <div class="mt-1 text-xs text-slate-400">{{ $device?->type?->type_name ?: 'Tips nav norādīts' }}</div>
                                     </td>
                                     <td class="px-4 py-4">
-                                        <div class="font-semibold text-slate-900">{{ $assignedUser?->full_name ?: 'Nav pieÅÄ·irta' }}</div>
+                                        <div class="font-semibold text-slate-900">{{ $assignedUser?->full_name ?: 'Nav piešķirta' }}</div>
                                         <div class="mt-1 text-xs text-slate-500">{{ $requester?->full_name ? 'Pieprasītājs: ' . $requester->full_name : 'Pieprasītājs nav norādīts' }}</div>
                                     </td>
                                     <td class="px-4 py-4">
-                                        <div class="font-semibold text-slate-900">{{ $locationPrimary !== '' ? $locationPrimary : 'AtraÅanÄs vieta nav norÄdÄ«ta' }}</div>
+                                        <div class="font-semibold text-slate-900">{{ $locationPrimary !== '' ? $locationPrimary : 'Atrašanās vieta nav norādīta' }}</div>
                                         @if ($locationSecondary)
                                             <div class="mt-1 text-xs text-slate-500">{{ $locationSecondary }}</div>
                                         @endif
@@ -366,7 +366,7 @@
                                     <td class="px-4 py-4 text-right repair-table-actions-cell">
                                         <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">
                                             <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
-                                                <span>DarbÄ«bas</span>
+                                                <span>Darbības</span>
                                                 <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                                 </svg>
@@ -392,7 +392,7 @@
                                                             <input type="hidden" name="target_status" value="in-progress">
                                                             <button type="submit" class="table-action-button table-action-button-sky">
                                                                 <x-icon name="stats" size="h-4 w-4" />
-                                                                <span>PÄrvietot uz procesu</span>
+                                                                <span>Pārvietot uz procesu</span>
                                                             </button>
                                                         </form>
                                                     @elseif ($repair->status === 'in-progress')
@@ -418,7 +418,7 @@
                                                     @endif
                                                     </a>
                                                 @elseif (! $linkedRequestUrl)
-                                                    <div class="px-3 py-2 text-xs font-medium text-slate-400">Nav darbÄ«bu</div>
+                                                    <div class="px-3 py-2 text-xs font-medium text-slate-400">Nav darbību</div>
                                                 @endif
                                             </div>
                                         </div>

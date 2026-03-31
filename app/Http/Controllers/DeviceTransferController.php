@@ -142,7 +142,7 @@ class DeviceTransferController extends Controller
     }
 
     /**
-     * Atrod nodoÅanas pieteikumu pÄ“c saistÄ«tÄs ierÄ«ces koda filtrÄ“tajÄ sarakstÄ.
+     * Atrod nodošanas pieteikumu pēc saistītās ierīces koda filtrētajā sarakstā.
      */
     public function findByCode(Request $request)
     {

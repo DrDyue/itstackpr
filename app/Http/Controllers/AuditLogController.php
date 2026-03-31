@@ -105,7 +105,7 @@ class AuditLogController extends Controller
     }
 
     /**
-     * Atrod audita ierakstu pÄ“c apraksta vai ID filtrÄ“tajÄ sarakstÄ.
+     * Atrod audita ierakstu pēc apraksta vai ID filtrētajā sarakstā.
      */
     public function findEntry(Request $request): JsonResponse
     {

@@ -34,7 +34,10 @@
                     </div>
                     <div class="mt-4">
                         <label class="crud-label">Tipa nosaukums *</label>
-                        <input type="text" name="type_name" value="{{ old('type_name') }}" class="crud-control" required>
+                        <input type="text" name="type_name" value="{{ old('type_name') }}" class="crud-control @error('type_name') border-rose-300 bg-rose-50/60 focus:border-rose-400 focus:ring-rose-200 @enderror" required>
+                        @error('type_name')
+                            <div class="mt-2 text-sm font-medium text-rose-600">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
             </div>
