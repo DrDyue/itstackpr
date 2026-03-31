@@ -70,7 +70,17 @@
 
         <div id="writeoff-requests-index-root" data-async-table-root" class="writeoff-requests-index-page">
             {{-- Filtru un meklēšanas josla --}}
-            <div class="devices-filter-surface">
+            <form
+                method="GET"
+                action="{{ route('writeoff-requests.index') }}"
+                class="devices-filter-surface"
+                data-async-table-form
+                data-async-root="#writeoff-requests-index-root"
+            >
+                <input type="hidden" name="statuses_filter" value="1">
+                <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
+                <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
+
                 <div class="devices-filter-header">
                     <div class="devices-filter-section">
                         <h3 class="devices-filter-title">
@@ -164,19 +174,6 @@
                         </a>
                     </div>
                 </div>
-            </div>
-
-            <input type="hidden" name="statuses_filter" value="1">
-            <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
-            <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
-
-            <form
-                method="GET"
-                action="{{ route('writeoff-requests.index') }}"
-                class="hidden"
-                data-async-table-form
-                data-async-root="#writeoff-requests-index-root"
-            >
             </form>
 
             <x-active-filters

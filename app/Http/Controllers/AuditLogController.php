@@ -22,8 +22,7 @@ class AuditLogController extends Controller
         $filters = [
             'action' => trim((string) $request->query('action', '')),
             'severity' => trim((string) $request->query('severity', '')),
-            'entity_type' => trim((string) $request->query('entity_type', '')),
-            'actor_id' => trim((string) $request->query('actor_id', '')),
+            'user_id' => trim((string) $request->query('user_id', '')),
             'date_from' => trim((string) $request->query('date_from', '')),
             'date_to' => trim((string) $request->query('date_to', '')),
             'q' => trim((string) $request->query('q', '')),
@@ -40,7 +39,6 @@ class AuditLogController extends Controller
                 ],
                 'actionOptions' => collect(),
                 'severityOptions' => collect(),
-                'entityOptions' => collect(),
                 'actorOptions' => collect(),
                 'featureMessage' => 'Tabula audit_log šobrīd nav pieejama.',
             ]);
@@ -50,8 +48,7 @@ class AuditLogController extends Controller
             ->with(['user'])
             ->when($filters['action'] !== '', fn ($query) => $query->where('action', $filters['action']))
             ->when($filters['severity'] !== '', fn ($query) => $query->where('severity', $filters['severity']))
-            ->when($filters['entity_type'] !== '', fn ($query) => $query->where('entity_type', $filters['entity_type']))
-            ->when($filters['actor_id'] !== '', fn ($query) => $query->where('user_id', $filters['actor_id']))
+            ->when($filters['user_id'] !== '', fn ($query) => $query->where('user_id', $filters['user_id']))
             ->when($filters['date_from'] !== '', fn ($query) => $query->where('timestamp', '>=', CarbonImmutable::parse($filters['date_from'])->startOfDay()))
             ->when($filters['date_to'] !== '', fn ($query) => $query->where('timestamp', '<=', CarbonImmutable::parse($filters['date_to'])->endOfDay()))
             ->when($filters['q'] !== '', function ($query) use ($filters) {
@@ -59,8 +56,6 @@ class AuditLogController extends Controller
 
                 $query->where(function ($auditQuery) use ($term) {
                     $auditQuery->where('description', 'like', '%' . $term . '%')
-                        ->orWhere('entity_type', 'like', '%' . $term . '%')
-                        ->orWhere('entity_id', 'like', '%' . $term . '%')
                         ->orWhereHas('user', fn ($userQuery) => $userQuery->where('full_name', 'like', '%' . $term . '%')->orWhere('email', 'like', '%' . $term . '%'));
                 });
             })
@@ -97,17 +92,6 @@ class AuditLogController extends Controller
                 'search' => AuditTrail::severityLabel($severity) . ' ' . $severity,
             ]);
 
-        $entityOptions = AuditLog::query()
-            ->select('entity_type')
-            ->distinct()
-            ->orderBy('entity_type')
-            ->pluck('entity_type')
-            ->map(fn (string $entityType) => [
-                'value' => $entityType,
-                'label' => AuditTrail::entityLabel($entityType),
-                'search' => AuditTrail::entityLabel($entityType) . ' ' . $entityType,
-            ]);
-
         $actorOptions = AuditLog::query()
             ->with('user')
             ->whereNotNull('user_id')
@@ -124,6 +108,6 @@ class AuditLogController extends Controller
                 'search' => implode(' ', array_filter([$user->full_name, $user->email])),
             ]);
 
-        return view('audit_log.index', compact('logs', 'filters', 'summary', 'actionOptions', 'severityOptions', 'entityOptions', 'actorOptions'));
+        return view('audit_log.index', compact('logs', 'filters', 'summary', 'actionOptions', 'severityOptions', 'actorOptions'));
     }
 }

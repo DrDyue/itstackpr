@@ -70,7 +70,20 @@
 
         <div id="repair-requests-index-root" data-async-table-root" class="repair-requests-index-page">
             {{-- Filtru un meklēšanas josla --}}
-            <div class="devices-filter-surface">
+            <form
+                method="GET"
+                action="{{ route('repair-requests.index') }}"
+                class="devices-filter-surface"
+                data-async-table-form
+                data-async-root="#repair-requests-index-root"
+            >
+                <input type="hidden" name="statuses_filter" value="1">
+                <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
+                <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
+                @if (! empty($filters['request_id']))
+                    <input type="hidden" name="request_id" value="{{ $filters['request_id'] }}">
+                @endif
+
                 <div class="devices-filter-header">
                     <div class="devices-filter-section">
                         <h3 class="devices-filter-title">
@@ -166,22 +179,6 @@
                         </a>
                     </div>
                 </div>
-            </div>
-
-            <input type="hidden" name="statuses_filter" value="1">
-            <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
-            <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
-            @if (! empty($filters['request_id']))
-                <input type="hidden" name="request_id" value="{{ $filters['request_id'] }}">
-            @endif
-
-            <form
-                method="GET"
-                action="{{ route('repair-requests.index') }}"
-                class="hidden"
-                data-async-table-form
-                data-async-root="#repair-requests-index-root"
-            >
             </form>
 
             <x-active-filters

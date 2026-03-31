@@ -136,7 +136,17 @@
             }, 500)"
         >
             {{-- Filtru un meklēšanas josla --}}
-            <div class="devices-filter-surface">
+            <form
+                method="GET"
+                action="{{ route('devices.index') }}"
+                class="devices-filter-surface"
+                data-async-table-form
+                data-async-root="#devices-index-root"
+                @searchable-select-updated.window="if ($event.detail.identifier === 'device-floor-filter') { $dispatch('searchable-select-clear', { target: 'device-room-filter' }) }"
+            >
+                <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
+                <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
+
                 <div class="devices-filter-header">
                     <div class="devices-filter-section">
                         <h3 class="devices-filter-title">
@@ -155,6 +165,7 @@
                                         placeholder="Ievadi ierīces kodu (piem. INV-001)"
                                         x-ref="codeInput"
                                         autocomplete="off"
+                                        data-async-manual="true"
                                     >
                                 </label>
                                 <button type="button" class="devices-code-search-btn" @click="searchByCode()">
@@ -271,19 +282,6 @@
                         </a>
                     </div>
                 </div>
-            </div>
-
-            <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
-            <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
-
-            <form
-                method="GET"
-                action="{{ route('devices.index') }}"
-                class="hidden"
-                data-async-table-form
-                data-async-root="#devices-index-root"
-                @searchable-select-updated.window="if ($event.detail.identifier === 'device-floor-filter') { $dispatch('searchable-select-clear', { target: 'device-room-filter' }) }"
-            >
             </form>
 
             <x-active-filters
