@@ -1103,6 +1103,51 @@ class AuthAndRequestFlowsTest extends TestCase
             ]);
     }
 
+    public function test_audit_log_hides_unknown_entity_types_from_filters(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'audit-entity-filter-admin@example.com');
+
+        AuditLog::create([
+            'timestamp' => now(),
+            'user_id' => $admin->id,
+            'action' => 'VIEW',
+            'entity_type' => 'Session',
+            'entity_id' => 55,
+            'description' => 'Tehnisks sesijas ieraksts.',
+            'severity' => 'info',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('audit-log.index'))
+            ->assertOk()
+            ->assertDontSee('placeholder="Visi objekti" value="Session"', false);
+    }
+
+    public function test_audit_log_shows_device_type_name_without_id_reference(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'audit-device-type-admin@example.com');
+        $typeId = DB::table('device_types')->insertGetId([
+            'type_name' => 'Dokumentu skeneris',
+        ]);
+
+        AuditLog::create([
+            'timestamp' => now(),
+            'user_id' => $admin->id,
+            'action' => 'CREATE',
+            'entity_type' => 'DeviceType',
+            'entity_id' => $typeId,
+            'description' => 'Ierīces tips izveidots: Dokumentu skeneris',
+            'severity' => 'info',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('audit-log.index'));
+
+        $response->assertOk()
+            ->assertSee('Dokumentu skeneris')
+            ->assertDontSee('Ierīces tips #'.$typeId);
+    }
+
     public function test_admin_can_review_repair_request_via_json_endpoint(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'json-review-admin@example.com');

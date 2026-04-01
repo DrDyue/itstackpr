@@ -108,7 +108,7 @@
                                     $canDelete = (int) $type->devices_count === 0;
                                     $deleteTooltip = 'Šo ierīces tipu nevar dzēst, kamēr nav atbrīvoti visi ieraksti, kas ir saistīti ar šo ierīces tipu.';
                                 @endphp
-                                <tr class="app-table-row border-t border-slate-100 align-middle">
+                                <tr class="app-table-row border-t border-slate-100 align-middle" data-table-row-id="device-type-{{ $type->id }}" data-table-search-value="{{ \Illuminate\Support\Str::lower($type->type_name) }}">
                                     <td class="px-4 py-4">
                                         <div class="app-table-cell-strong">{{ $type->type_name }}</div>
                                     </td>

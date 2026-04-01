@@ -156,13 +156,15 @@ class AuditLogController extends Controller
         $entityOptions = AuditLog::query()
             ->select('entity_type')
             ->distinct()
-            ->orderBy('entity_type')
             ->pluck('entity_type')
+            ->filter(fn (string $entityType) => AuditTrail::isKnownEntityType($entityType))
             ->map(fn (string $entityType) => [
                 'value' => $entityType,
                 'label' => AuditTrail::entityLabel($entityType),
                 'search' => AuditTrail::entityLabel($entityType).' '.$entityType,
-            ]);
+            ])
+            ->sortBy('label')
+            ->values();
 
         return view('audit_log.index', compact(
             'logs',

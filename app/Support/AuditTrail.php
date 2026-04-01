@@ -3,8 +3,17 @@
 namespace App\Support;
 
 use App\Models\AuditLog;
+use App\Models\Building;
+use App\Models\Device;
+use App\Models\DeviceTransfer;
+use App\Models\DeviceType;
+use App\Models\Repair;
+use App\Models\RepairRequest;
+use App\Models\Room;
 use App\Models\User;
+use App\Models\WriteoffRequest;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -427,8 +436,31 @@ class AuditTrail
             'view_mode' => 'Skata režīms',
             'database_backup' => 'Datubāzes kopija',
             'backup_setting' => 'Kopiju iestatijumi',
-            default => Str::headline((string) $entityType),
+            default => 'Cits objekts',
         };
+    }
+
+    /**
+     * Pārbauda, vai objekta tips ir zināms un paredzēts rādīšanai auditā.
+     */
+    public static function isKnownEntityType(?string $entityType): bool
+    {
+        return in_array(self::normalizeEntityKey($entityType), [
+            'building',
+            'room',
+            'device_type',
+            'device',
+            'repair',
+            'user',
+            'repair_request',
+            'writeoff_request',
+            'device_transfer',
+            'audit_log',
+            'notification_center',
+            'view_mode',
+            'database_backup',
+            'backup_setting',
+        ], true);
     }
 
     /**
@@ -450,13 +482,13 @@ class AuditTrail
      */
     public static function entityReference(?string $entityType, ?string $entityId): string
     {
-        $label = self::entityLabel($entityType);
+        $preview = self::entityPreview($entityType, $entityId);
 
-        if (! filled($entityId)) {
-            return $label;
+        if (($preview['title'] ?? '') !== '') {
+            return (string) $preview['title'];
         }
 
-        return $label . ' #' . $entityId;
+        return self::entityLabel($entityType);
     }
 
     public static function entityUrl(?string $entityType, ?string $entityId): ?string
@@ -466,6 +498,8 @@ class AuditTrail
         }
 
         try {
+            $entity = self::resolveEntityModel($entityType, $entityId);
+
             return match (self::normalizeEntityKey($entityType)) {
                 'device' => route('devices.show', $entityId),
                 'repair' => route('repairs.edit', $entityId),
@@ -474,7 +508,7 @@ class AuditTrail
                 'device_transfer' => route('device-transfers.index', ['q' => $entityId]) . '#device-transfer-' . $entityId,
                 'room' => route('rooms.edit', $entityId),
                 'building' => route('buildings.edit', $entityId),
-                'device_type' => route('device-types.edit', $entityId),
+                'device_type' => $entity instanceof DeviceType ? self::deviceTypeIndexUrl($entity) : route('device-types.index'),
                 'user' => route('users.edit', $entityId),
                 'audit_log' => route('audit-log.index'),
                 default => null,
@@ -482,6 +516,106 @@ class AuditTrail
         } catch (Throwable) {
             return null;
         }
+    }
+
+    /**
+     * Sagatavo hover kartītes saturu objektam.
+     *
+     * @return array{title:string, lines:array<int,string>, exists:bool}
+     */
+    public static function entityPreview(?string $entityType, ?string $entityId): array
+    {
+        $label = self::entityLabel($entityType);
+        $entity = self::resolveEntityModel($entityType, $entityId);
+
+        if (! $entity) {
+            return [
+                'title' => $label,
+                'lines' => ['Objekts vairs nav pieejams vai ir dzēsts.'],
+                'exists' => false,
+            ];
+        }
+
+        return match (self::normalizeEntityKey($entityType)) {
+            'device_type' => [
+                'title' => (string) $entity->type_name,
+                'lines' => [
+                    'Saistītās ierīces: '.(string) $entity->devices()->count(),
+                    'Atver tipu sarakstu ar izcelto ierakstu.',
+                ],
+                'exists' => true,
+            ],
+            'device' => [
+                'title' => trim((string) (($entity->code ? '['.$entity->code.'] ' : '').($entity->name ?? 'Ierīce'))),
+                'lines' => array_values(array_filter([
+                    $entity->type?->type_name ? 'Tips: '.$entity->type->type_name : null,
+                    $entity->assignedTo?->full_name ? 'Piešķirta: '.$entity->assignedTo->full_name : null,
+                    $entity->room?->room_name ? 'Telpa: '.$entity->room->room_name : null,
+                ])),
+                'exists' => true,
+            ],
+            'user' => [
+                'title' => (string) $entity->full_name,
+                'lines' => array_values(array_filter([
+                    $entity->email ?: null,
+                    $entity->role ? 'Loma: '.self::translateValue((string) $entity->role) : null,
+                ])),
+                'exists' => true,
+            ],
+            'room' => [
+                'title' => trim((string) (($entity->room_name ?? 'Telpa').' '.($entity->room_number ?? ''))),
+                'lines' => array_values(array_filter([
+                    $entity->building?->building_name ? 'Ēka: '.$entity->building->building_name : null,
+                    $entity->floor_number !== null ? 'Stāvs: '.$entity->floor_number : null,
+                ])),
+                'exists' => true,
+            ],
+            'building' => [
+                'title' => (string) ($entity->building_name ?? $label),
+                'lines' => array_values(array_filter([
+                    $entity->address ?: null,
+                    $entity->city ?: null,
+                ])),
+                'exists' => true,
+            ],
+            'repair' => [
+                'title' => (string) ($entity->device?->name ?: 'Remonts'),
+                'lines' => array_values(array_filter([
+                    $entity->status ? 'Statuss: '.self::translateValue((string) $entity->status) : null,
+                    $entity->priority ? 'Prioritāte: '.self::translateValue((string) $entity->priority) : null,
+                ])),
+                'exists' => true,
+            ],
+            'repair_request' => [
+                'title' => (string) ($entity->device?->name ?: 'Remonta pieteikums'),
+                'lines' => array_values(array_filter([
+                    $entity->responsibleUser?->full_name ? 'Pieteicējs: '.$entity->responsibleUser->full_name : null,
+                    $entity->status ? 'Statuss: '.self::translateValue((string) $entity->status) : null,
+                ])),
+                'exists' => true,
+            ],
+            'writeoff_request' => [
+                'title' => (string) ($entity->device?->name ?: 'Norakstīšanas pieteikums'),
+                'lines' => array_values(array_filter([
+                    $entity->responsibleUser?->full_name ? 'Pieteicējs: '.$entity->responsibleUser->full_name : null,
+                    $entity->status ? 'Statuss: '.self::translateValue((string) $entity->status) : null,
+                ])),
+                'exists' => true,
+            ],
+            'device_transfer' => [
+                'title' => (string) ($entity->device?->name ?: 'Nodošanas pieteikums'),
+                'lines' => array_values(array_filter([
+                    $entity->responsibleUser?->full_name ? 'No: '.$entity->responsibleUser->full_name : null,
+                    $entity->transferTo?->full_name ? 'Kam: '.$entity->transferTo->full_name : null,
+                ])),
+                'exists' => true,
+            ],
+            default => [
+                'title' => self::labelFor($entity),
+                'lines' => [],
+                'exists' => true,
+            ],
+        };
     }
 
     public static function localizedDescription(?string $description, ?string $entityType = null): string
@@ -914,5 +1048,46 @@ class AuditTrail
             ->snake()
             ->lower()
             ->toString();
+    }
+
+    private static function resolveEntityModel(?string $entityType, ?string $entityId): ?Model
+    {
+        if (! filled($entityId)) {
+            return null;
+        }
+
+        return match (self::normalizeEntityKey($entityType)) {
+            'building' => Building::query()->find($entityId),
+            'room' => Room::query()->with('building')->find($entityId),
+            'device_type' => DeviceType::query()->find($entityId),
+            'device' => Device::query()->with(['type', 'assignedTo', 'room'])->find($entityId),
+            'repair' => Repair::query()->with('device')->find($entityId),
+            'user' => User::query()->find($entityId),
+            'repair_request' => RepairRequest::query()->with(['device', 'responsibleUser'])->find($entityId),
+            'writeoff_request' => WriteoffRequest::query()->with(['device', 'responsibleUser'])->find($entityId),
+            'device_transfer' => DeviceTransfer::query()->with(['device', 'responsibleUser', 'transferTo'])->find($entityId),
+            'audit_log' => AuditLog::query()->find($entityId),
+            default => null,
+        };
+    }
+
+    private static function deviceTypeIndexUrl(DeviceType $deviceType): string
+    {
+        $position = DeviceType::query()
+            ->where(function ($query) use ($deviceType) {
+                $query->where('type_name', '<', $deviceType->type_name)
+                    ->orWhere(function ($subQuery) use ($deviceType) {
+                        $subQuery->where('type_name', $deviceType->type_name)
+                            ->where('id', '<=', $deviceType->id);
+                    });
+            })
+            ->count();
+
+        $page = (int) ceil(max($position, 1) / 20);
+
+        return route('device-types.index', [
+            'page' => max($page, 1),
+            'highlight_id' => 'device-type-'.$deviceType->id,
+        ]);
     }
 }

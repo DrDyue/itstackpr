@@ -249,6 +249,7 @@
                         <tbody>
                             @forelse ($logs as $log)
                                 @php
+                                    $entityPreview = \App\Support\AuditTrail::entityPreview($log->entity_type, $log->entity_id);
                                     $actionStyles = match ($log->action) {
                                         'CREATE' => ['icon' => 'plus', 'class' => 'audit-badge audit-badge-emerald'],
                                         'UPDATE', 'PROFILE_UPDATE' => ['icon' => 'edit', 'class' => 'audit-badge audit-badge-sky'],
@@ -313,20 +314,29 @@
                                         </span>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <div class="flex flex-col gap-2">
+                                        <div class="audit-entity-cell">
                                             <span class="{{ $entityStyles['class'] }}">
                                                 <x-icon :name="$entityStyles['icon']" size="h-3.5 w-3.5" />
                                                 <span>{{ $log->localized_entity_type }}</span>
                                             </span>
-                                            <div class="text-xs text-slate-500">
+                                            <div class="audit-entity-reference">
                                                 @if ($log->entity_url)
-                                                    <a href="{{ $log->entity_url }}" class="font-semibold text-sky-600 transition hover:text-sky-700">
+                                                    <a href="{{ $log->entity_url }}" class="audit-entity-link">
                                                         {{ $log->entity_reference }}
                                                     </a>
                                                 @else
                                                     <span>{{ $log->entity_reference }}</span>
                                                 @endif
                                             </div>
+
+                                            @if (! empty($entityPreview['title']))
+                                                <div class="audit-entity-preview" role="tooltip">
+                                                    <div class="audit-entity-preview-title">{{ $entityPreview['title'] }}</div>
+                                                    @foreach (($entityPreview['lines'] ?? []) as $line)
+                                                        <div class="audit-entity-preview-line">{{ $line }}</div>
+                                                    @endforeach
+                                                </div>
+                                            @endif
                                         </div>
                                     </td>
                                     <td class="px-4 py-3">
