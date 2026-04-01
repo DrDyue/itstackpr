@@ -1,4 +1,4 @@
-{--
+{{--
     Lapa: Audita žurnāls.
     Atbildība: parāda sistēmas darbību vēsturi administratoram ar skaidriem filtriem un manuālu ierakstu meklēšanu.
     Datu avots: AuditLogController@index.

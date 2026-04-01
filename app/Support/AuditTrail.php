@@ -500,6 +500,10 @@ class AuditTrail
         try {
             $entity = self::resolveEntityModel($entityType, $entityId);
 
+             if (! $entity) {
+                return null;
+            }
+
             return match (self::normalizeEntityKey($entityType)) {
                 'device' => route('devices.show', $entityId),
                 'repair' => route('repairs.edit', $entityId),
@@ -508,9 +512,9 @@ class AuditTrail
                 'device_transfer' => route('device-transfers.index', ['q' => $entityId]) . '#device-transfer-' . $entityId,
                 'room' => route('rooms.edit', $entityId),
                 'building' => route('buildings.edit', $entityId),
-                'device_type' => $entity instanceof DeviceType ? self::deviceTypeIndexUrl($entity) : route('device-types.index'),
+                'device_type' => $entity instanceof DeviceType ? self::deviceTypeIndexUrl($entity) : null,
                 'user' => route('users.edit', $entityId),
-                'audit_log' => route('audit-log.index'),
+                'audit_log' => route('audit-log.index', ['highlight_id' => 'audit-log-'.$entityId]),
                 default => null,
             };
         } catch (Throwable) {

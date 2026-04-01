@@ -1148,6 +1148,33 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertDontSee('Ierīces tips #'.$typeId);
     }
 
+    public function test_audit_log_does_not_link_deleted_object(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'audit-deleted-device-type-admin@example.com');
+        $typeId = DB::table('device_types')->insertGetId([
+            'type_name' => 'Dzēsts tips',
+        ]);
+
+        DB::table('device_types')->where('id', $typeId)->delete();
+
+        AuditLog::create([
+            'timestamp' => now(),
+            'user_id' => $admin->id,
+            'action' => 'DELETE',
+            'entity_type' => 'DeviceType',
+            'entity_id' => $typeId,
+            'description' => 'Ierīces tips dzēsts: Dzēsts tips',
+            'severity' => 'warning',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('audit-log.index'));
+
+        $response->assertOk()
+            ->assertSee('Objekts vairs nav pieejams vai ir dzēsts.')
+            ->assertDontSee('class="audit-entity-link"', false);
+    }
+
     public function test_admin_can_review_repair_request_via_json_endpoint(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'json-review-admin@example.com');
