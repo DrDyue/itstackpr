@@ -419,7 +419,8 @@ class RepairRequestController extends Controller
     private function normalizedIndexFilters(Request $request, array $availableStatuses, bool $canReview): array
     {
         $statusFilterTouched = $request->has('statuses_filter');
-        $defaultStatuses = $canReview ? [RepairRequest::STATUS_SUBMITTED] : [];
+        $hasAnyQueryParams = $request->query->count() > 0;
+        $defaultStatuses = $canReview && ! $hasAnyQueryParams ? [RepairRequest::STATUS_SUBMITTED] : [];
         $selectedStatuses = collect($request->query('status', $statusFilterTouched ? [] : $defaultStatuses))
             ->map(fn (mixed $status) => trim((string) $status))
             ->filter(fn (string $status) => in_array($status, $availableStatuses, true))

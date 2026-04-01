@@ -88,26 +88,10 @@
                             <span>Meklēšana</span>
                         </h3>
                         <div class="devices-filter-grid">
-                            <div class="devices-search-group">
-                                <label class="devices-search-label">
-                                    <span>Meklēt pēc koda</span>
-                                    <input
-                                        type="text"
-                                        name="code"
-                                        value="{{ $filters['code'] }}"
-                                        class="devices-code-input"
-                                        placeholder="Ievadi ierīces kodu"
-                                        autocomplete="off"
-                                        data-async-manual="true"
-                                        data-async-code-search="true"
-                                    >
-                                </label>
-                                <button type="submit" class="devices-code-search-btn" data-code-search-submit="true">
-                                    <x-icon name="search" size="h-4 w-4" />
-                                    <span>Meklēt kodu</span>
-                                </button>
-                            </div>
-                        </div>
+                            <label class="devices-text-search">
+                                <span>Meklēt</span>
+                                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Kods, nosaukums, pieteicējs vai iemesls">
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -186,7 +170,7 @@
                     </div>
 
                     <div class="toolbar-actions">
-                        <a href="{{ route('writeoff-requests.index') }}" class="btn-clear" data-async-link="true">
+                        <a href="{{ route('writeoff-requests.index', ['statuses_filter' => 1]) }}" class="btn-clear" data-async-link="true">
                             <x-icon name="clear" size="h-4 w-4" />
                             <span>Notīrīt filtrus</span>
                         </a>
