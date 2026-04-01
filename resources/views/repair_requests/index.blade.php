@@ -326,7 +326,15 @@
                                                 @endif
 
                                                 @if ($canReview && $repairRequest->status === 'submitted')
-                                                    <form method="POST" action="{{ route('repair-requests.review', $repairRequest) }}">
+                                                    <form
+                                                        method="POST"
+                                                        action="{{ route('repair-requests.review', $repairRequest) }}"
+                                                        data-app-confirm-title="Apstiprināt pieteikumu?"
+                                                        data-app-confirm-message="Vai tiešām apstiprināt šo remonta pieteikumu?"
+                                                        data-app-confirm-accept="Jā, apstiprināt"
+                                                        data-app-confirm-cancel="Nē"
+                                                        data-app-confirm-tone="warning"
+                                                    >
                                                         @csrf
                                                         <input type="hidden" name="status" value="approved">
                                                         <button type="submit" class="table-action-button table-action-button-amber">
@@ -335,7 +343,15 @@
                                                         </button>
                                                     </form>
 
-                                                    <form method="POST" action="{{ route('repair-requests.review', $repairRequest) }}">
+                                                    <form
+                                                        method="POST"
+                                                        action="{{ route('repair-requests.review', $repairRequest) }}"
+                                                        data-app-confirm-title="Noraidīt pieteikumu?"
+                                                        data-app-confirm-message="Vai tiešām noraidīt šo remonta pieteikumu?"
+                                                        data-app-confirm-accept="Jā, noraidīt"
+                                                        data-app-confirm-cancel="Nē"
+                                                        data-app-confirm-tone="danger"
+                                                    >
                                                         @csrf
                                                         <input type="hidden" name="status" value="rejected">
                                                         <button type="submit" class="table-action-button table-action-button-rose">
@@ -349,7 +365,15 @@
                                                         <span>Labot aprakstu</span>
                                                     </a>
 
-                                                    <form method="POST" action="{{ route('my-requests.destroy', ['requestType' => 'repair', 'requestId' => $repairRequest->id]) }}" onsubmit="return confirm('Vai tiešām atcelt šo pieteikumu?');">
+                                                    <form
+                                                        method="POST"
+                                                        action="{{ route('my-requests.destroy', ['requestType' => 'repair', 'requestId' => $repairRequest->id]) }}"
+                                                        data-app-confirm-title="Atcelt pieteikumu?"
+                                                        data-app-confirm-message="Vai tiešām atcelt šo remonta pieteikumu?"
+                                                        data-app-confirm-accept="Jā, atcelt"
+                                                        data-app-confirm-cancel="Nē"
+                                                        data-app-confirm-tone="danger"
+                                                    >
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="table-action-button table-action-button-rose">

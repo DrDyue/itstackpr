@@ -561,16 +561,19 @@
                                                     <span>Mainīt atbildīgo</span>
                                                 </button>
 
-                                                <form method="POST" action="{{ route('devices.quick-update', $device) }}">
+                                                <form
+                                                    method="POST"
+                                                    action="{{ route('devices.quick-update', $device) }}"
+                                                    data-app-confirm-title="Norakstīt ierīci?"
+                                                    data-app-confirm-message="Vai tiešām norakstīt šo ierīci? Pēc norakstīšanas tā vairs nebūs piešķirta lietotājam vai telpai."
+                                                    data-app-confirm-accept="Jā, norakstīt"
+                                                    data-app-confirm-cancel="Nē"
+                                                    data-app-confirm-tone="danger"
+                                                >
                                                     @csrf
                                                     <input type="hidden" name="action" value="status">
                                                     <input type="hidden" name="target_status" value="writeoff">
-                                                    <button
-                                                        type="submit"
-                                                        class="table-action-button table-action-button-rose"
-                                                        formmethod="POST"
-                                                        onclick="return confirm('Vai tiešām norakstīt šo ierīci? Pēc norakstīšanas tā vairs nebūs piešķirta lietotājam vai telpai.')"
-                                                    >
+                                                    <button type="submit" class="table-action-button table-action-button-rose" formmethod="POST">
                                                         <x-icon name="writeoff" size="h-4 w-4" />
                                                         <span>Norakstīt</span>
                                                     </button>

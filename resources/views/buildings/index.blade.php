@@ -105,10 +105,18 @@
                                 <td class="px-4 py-3">
                                     <div class="flex flex-wrap items-center gap-2">
                                         <a href="{{ route('buildings.edit', $building) }}" class="btn-edit"><x-icon name="edit" size="h-4 w-4" /><span>Rediģēt</span></a>
-                                        <form method="POST" action="{{ route('buildings.destroy', $building) }}">
+                                        <form
+                                            method="POST"
+                                            action="{{ route('buildings.destroy', $building) }}"
+                                            data-app-confirm-title="Dzēst ēku?"
+                                            data-app-confirm-message="Vai tiešām dzēst šo ēku?"
+                                            data-app-confirm-accept="Jā, dzēst"
+                                            data-app-confirm-cancel="Nē"
+                                            data-app-confirm-tone="danger"
+                                        >
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" onclick="return confirm('Dzēst šo ēku?')" class="btn-danger"><x-icon name="trash" size="h-4 w-4" /><span>Dzēst</span></button>
+                                            <button type="submit" class="btn-danger"><x-icon name="trash" size="h-4 w-4" /><span>Dzēst</span></button>
                                         </form>
                                     </div>
                                 </td>

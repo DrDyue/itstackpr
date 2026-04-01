@@ -129,10 +129,18 @@
                                             </a>
 
                                             @if ($canDelete)
-                                                <form method="POST" action="{{ route('device-types.destroy', $type) }}">
+                                                <form
+                                                    method="POST"
+                                                    action="{{ route('device-types.destroy', $type) }}"
+                                                    data-app-confirm-title="Dzēst ierīces tipu?"
+                                                    data-app-confirm-message="Vai tiešām dzēst šo ierīces tipu?"
+                                                    data-app-confirm-accept="Jā, dzēst"
+                                                    data-app-confirm-cancel="Nē"
+                                                    data-app-confirm-tone="danger"
+                                                >
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn-clear border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100" onclick="return confirm('Vai tiešām dzēst šo ierīces tipu?')">
+                                                    <button type="submit" class="btn-clear border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100">
                                                         <x-icon name="trash" size="h-4 w-4" />
                                                         <span>Dzēst</span>
                                                     </button>

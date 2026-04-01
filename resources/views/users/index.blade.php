@@ -217,10 +217,19 @@
                                             <span>Apskatīt piesaistītās ierīces</span>
                                         </a>
 
-                                        <form method="POST" action="{{ route('users.destroy', $managedUser) }}" onsubmit="return confirm('Dzēst šo lietotāju?')" class="contents">
+                                        <form
+                                            method="POST"
+                                            action="{{ route('users.destroy', $managedUser) }}"
+                                            class="contents"
+                                            data-app-confirm-title="Dzēst lietotāju?"
+                                            data-app-confirm-message="Vai tiešām dzēst šo lietotāju?"
+                                            data-app-confirm-accept="Jā, dzēst"
+                                            data-app-confirm-cancel="Nē"
+                                            data-app-confirm-tone="danger"
+                                        >
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="table-action-button table-action-button-rose" @disabled(auth()->id() === $managedUser->id)">
+                                            <button type="submit" class="table-action-button table-action-button-rose" @disabled(auth()->id() === $managedUser->id)>
                                                 <x-icon name="trash" size="h-4 w-4" />
                                                 <span>Dzēst</span>
                                             </button>

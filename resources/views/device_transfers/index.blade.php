@@ -416,7 +416,15 @@
                                                     @endif
 
                                                     @if ($isIncomingPending)
-                                                        <form method="POST" action="{{ route('device-transfers.review', $transfer) }}">
+                                                        <form
+                                                            method="POST"
+                                                            action="{{ route('device-transfers.review', $transfer) }}"
+                                                            data-app-confirm-title="Apstiprināt nodošanu?"
+                                                            data-app-confirm-message="Vai tiešām apstiprināt šo ierīces nodošanas pieprasījumu?"
+                                                            data-app-confirm-accept="Jā, apstiprināt"
+                                                            data-app-confirm-cancel="Nē"
+                                                            data-app-confirm-tone="warning"
+                                                        >
                                                             @csrf
                                                             <input type="hidden" name="status" value="approved">
                                                             <button type="submit" class="table-action-button table-action-button-amber">
@@ -425,7 +433,15 @@
                                                             </button>
                                                         </form>
 
-                                                        <form method="POST" action="{{ route('device-transfers.review', $transfer) }}">
+                                                        <form
+                                                            method="POST"
+                                                            action="{{ route('device-transfers.review', $transfer) }}"
+                                                            data-app-confirm-title="Noraidīt nodošanu?"
+                                                            data-app-confirm-message="Vai tiešām noraidīt šo ierīces nodošanas pieprasījumu?"
+                                                            data-app-confirm-accept="Jā, noraidīt"
+                                                            data-app-confirm-cancel="Nē"
+                                                            data-app-confirm-tone="danger"
+                                                        >
                                                             @csrf
                                                             <input type="hidden" name="status" value="rejected">
                                                             <button type="submit" class="table-action-button table-action-button-rose">

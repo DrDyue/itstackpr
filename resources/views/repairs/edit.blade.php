@@ -26,7 +26,7 @@
         $deviceMeta = collect([$repair->device?->manufacturer, $repair->device?->model])->filter()->implode(' ');
     @endphp
 
-    <section class="app-shell max-w-7xl"
+    <section class="app-shell app-shell-wide"
         x-data="repairProcess({
             repairId: {{ $repair->id }},
             repairType: @js(old('repair_type', $repair->repair_type ?? 'internal')),
@@ -68,7 +68,7 @@
         <x-validation-summary />
 
         {{-- REMONTA KOPSAVILKUMS - augšā pilnā platumā --}}
-        <div class="surface-card space-y-4 p-5">
+        <div class="surface-card space-y-4 p-4 sm:p-5">
             <div class="flex flex-wrap items-start justify-between gap-4">
                 <div class="flex items-start gap-4">
                     @if ($deviceThumbUrl)
@@ -145,10 +145,10 @@
         </div>
 
         {{-- APAKŠĀ - 2 kolonnas --}}
-        <div class="grid gap-4 lg:grid-cols-3">
-            {{-- PA KREISI - Galvenā darbība (2 kolonnas) --}}
-            <div class="lg:col-span-2">
-                <form id="repair-edit-form" method="POST" action="{{ route('repairs.update', $repair) }}" class="surface-card space-y-5 p-5">
+        <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
+            {{-- PA KREISI - Galvenā darbība --}}
+            <div>
+                <form id="repair-edit-form" method="POST" action="{{ route('repairs.update', $repair) }}" class="surface-card space-y-4 p-4 sm:p-5">
                     @csrf
                     @method('PUT')
 
@@ -176,11 +176,11 @@
                 </form>
             </div>
 
-            {{-- PA LABI - Gatavība un Darbības (1 kolonna) --}}
-            <div class="space-y-4">
+            {{-- PA LABI - Gatavība un Darbības --}}
+            <div class="space-y-4 xl:sticky xl:top-24 xl:self-start">
                 {{-- NĀKAMĀ SOĻA GATAVĪBA --}}
                 @if ($repair->status === 'in-progress')
-                <div class="surface-card space-y-5 p-5">
+                <div class="surface-card space-y-4 p-4 sm:p-5">
                     <div>
                         <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Nākamā soļa gatavība</div>
                         <div class="mt-1 text-sm text-slate-500" x-text="nextStepLabel()"></div>
@@ -217,7 +217,7 @@
                 @endif
 
                 {{-- DARBĪBAS --}}
-                <div class="surface-card space-y-4 p-5">
+                <div class="surface-card space-y-4 p-4 sm:p-5">
                     <div>
                         <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Darbības</div>
                         <div class="mt-1 text-sm text-slate-500">Pēc datu saglabāšanas veic statusa maiņu.</div>

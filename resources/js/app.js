@@ -144,6 +144,138 @@ window.dispatchAppToast = ({ message = '', tone = 'info', title = '' } = {}) => 
     window.setTimeout(() => dismissAppToast(toast), 3800);
 };
 
+const ensureAppConfirmRoot = () => {
+    let root = document.querySelector('[data-app-confirm-root]');
+
+    if (root) {
+        return root;
+    }
+
+    root = document.createElement('div');
+    root.dataset.appConfirmRoot = 'true';
+    root.className = 'app-confirm-overlay hidden';
+    root.innerHTML = `
+        <div class="app-confirm-backdrop" data-app-confirm-close="true"></div>
+        <div class="app-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="app-confirm-title">
+            <div class="app-confirm-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12v-.008ZM21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+            </div>
+            <h3 id="app-confirm-title" class="app-confirm-title">Apstiprini darbību</h3>
+            <p class="app-confirm-message" data-app-confirm-message></p>
+            <div class="app-confirm-actions">
+                <button type="button" class="btn-clear" data-app-confirm-cancel="true">Nē</button>
+                <button type="button" class="btn-danger-solid" data-app-confirm-accept="true">Jā</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(root);
+
+    return root;
+};
+
+window.openAppConfirm = (options = {}) => {
+    const {
+        title = 'Apstiprini darbību',
+        message = 'Vai tiešām vēlaties turpināt?',
+        confirmLabel = 'Jā',
+        cancelLabel = 'Nē',
+        tone = 'danger',
+    } = options;
+
+    const root = ensureAppConfirmRoot();
+    const titleNode = root.querySelector('#app-confirm-title');
+    const messageNode = root.querySelector('[data-app-confirm-message]');
+    const acceptButton = root.querySelector('[data-app-confirm-accept]');
+    const cancelButtons = root.querySelectorAll('[data-app-confirm-cancel]');
+    const dismissButtons = root.querySelectorAll('[data-app-confirm-cancel], [data-app-confirm-close]');
+
+    titleNode.textContent = title;
+    messageNode.textContent = message;
+    acceptButton.textContent = confirmLabel;
+    cancelButtons.forEach((button) => {
+        button.textContent = cancelLabel;
+    });
+
+    acceptButton.classList.toggle('btn-danger-solid', tone !== 'warning');
+    acceptButton.classList.toggle('btn-approve', tone === 'warning');
+
+    root.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+    window.requestAnimationFrame(() => root.classList.add('is-visible'));
+    acceptButton.focus();
+
+    return new Promise((resolve) => {
+        const cleanup = (result) => {
+            root.classList.remove('is-visible');
+            document.body.classList.remove('overflow-hidden');
+            window.setTimeout(() => root.classList.add('hidden'), 180);
+
+            acceptButton.removeEventListener('click', handleAccept);
+            dismissButtons.forEach((button) => button.removeEventListener('click', handleCancel));
+            window.removeEventListener('keydown', handleKeyDown);
+
+            resolve(result);
+        };
+
+        const handleAccept = () => cleanup(true);
+        const handleCancel = () => cleanup(false);
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') {
+                cleanup(false);
+            }
+        };
+
+        acceptButton.addEventListener('click', handleAccept);
+        dismissButtons.forEach((button) => button.addEventListener('click', handleCancel));
+        window.addEventListener('keydown', handleKeyDown);
+    });
+};
+
+const initializeAppConfirm = () => {
+    if (window.__appConfirmInitialized) {
+        return;
+    }
+
+    window.__appConfirmInitialized = true;
+
+    document.addEventListener('submit', async (event) => {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement)) {
+            return;
+        }
+
+        const message = form.dataset.appConfirmMessage;
+        if (!message) {
+            return;
+        }
+
+        if (form.dataset.appConfirmBypass === '1') {
+            form.dataset.appConfirmBypass = '0';
+            return;
+        }
+
+        event.preventDefault();
+
+        const accepted = await window.openAppConfirm({
+            title: form.dataset.appConfirmTitle || 'Apstiprini darbību',
+            message,
+            confirmLabel: form.dataset.appConfirmAccept || 'Jā',
+            cancelLabel: form.dataset.appConfirmCancel || 'Nē',
+            tone: form.dataset.appConfirmTone || 'danger',
+        });
+
+        if (!accepted) {
+            return;
+        }
+
+        form.dataset.appConfirmBypass = '1';
+        form.requestSubmit();
+    });
+};
+
 const asyncTableControllers = new Map();
 const asyncTableDebounceTimers = new WeakMap();
 
@@ -1692,13 +1824,21 @@ window.repairBoard = (config) => ({
 
         window.submitRepairTransition(config.transitionBaseUrl, config.csrfToken, repairId, targetStatus, extra);
     },
-    submitCompletion(repair) {
+    async submitCompletion(repair) {
         if (!repair?.id) {
             return;
         }
 
         const repairName = repair.name ?? 'šo remontu';
-        if (!window.confirm(`Vai tiešām gribat pabeigt ierīces remontu "${repairName}"?`)) {
+        const accepted = await window.openAppConfirm({
+            title: 'Pabeigt remontu?',
+            message: `Vai tiešām gribat pabeigt ierīces remontu "${repairName}"?`,
+            confirmLabel: 'Jā, pabeigt',
+            cancelLabel: 'Nē',
+            tone: 'warning',
+        });
+
+        if (!accepted) {
             return;
         }
 
@@ -1783,8 +1923,27 @@ window.repairProcess = (config) => ({
 
         return true;
     },
-    submitTransition(repairId, targetStatus, extra = {}) {
+    async submitTransition(repairId, targetStatus, extra = {}) {
         if (targetStatus === 'completed' && this.showMissingRequirements('completed', 'Remontu pabeigt')) {
+            return;
+        }
+
+        const actionLabels = {
+            waiting: 'atgriezt uz gaida',
+            'in-progress': 'sākt remontu',
+            completed: 'pabeigt remontu',
+            cancelled: 'atcelt remontu',
+        };
+
+        const accepted = await window.openAppConfirm({
+            title: 'Apstiprini statusa maiņu',
+            message: `Vai tiešām vēlaties ${actionLabels[targetStatus] ?? 'mainīt remonta statusu'}?`,
+            confirmLabel: 'Jā',
+            cancelLabel: 'Nē',
+            tone: targetStatus === 'cancelled' ? 'danger' : 'warning',
+        });
+
+        if (!accepted) {
             return;
         }
 
@@ -1799,12 +1958,20 @@ window.repairProcess = (config) => ({
             },
         );
     },
-    submitCompletion() {
+    async submitCompletion() {
         if (this.showMissingRequirements('completed', 'Remontu pabeigt')) {
             return;
         }
 
-        if (!window.confirm('Vai tiešām gribat pabeigt šo ierīces remontu?')) {
+        const accepted = await window.openAppConfirm({
+            title: 'Pabeigt remontu?',
+            message: 'Vai tiešām gribat pabeigt šo ierīces remontu?',
+            confirmLabel: 'Jā, pabeigt',
+            cancelLabel: 'Nē',
+            tone: 'warning',
+        });
+
+        if (!accepted) {
             return;
         }
 
@@ -1827,11 +1994,13 @@ window.repairProcess = (config) => ({
 registerAlpineData();
 document.addEventListener('alpine:init', registerAlpineData);
 document.addEventListener('DOMContentLoaded', initializeThemeToggle);
+document.addEventListener('DOMContentLoaded', initializeAppConfirm);
 document.addEventListener('DOMContentLoaded', initializeAsyncTableFilters);
 document.addEventListener('DOMContentLoaded', restoreHighlightedSearchFromUrl);
 
 if (document.readyState !== 'loading') {
     initializeThemeToggle();
+    initializeAppConfirm();
     initializeAsyncTableFilters();
     restoreHighlightedSearchFromUrl();
 }

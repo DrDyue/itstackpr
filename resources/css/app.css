@@ -4513,3 +4513,82 @@ html[data-theme='dark'] input::placeholder,
 html[data-theme='dark'] textarea::placeholder {
     color: #64748b !important;
 }
+
+.app-confirm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 180ms ease;
+}
+
+.app-confirm-overlay.is-visible {
+    pointer-events: auto;
+    opacity: 1;
+}
+
+.app-confirm-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.6);
+    backdrop-filter: blur(2px);
+}
+
+.app-confirm-dialog {
+    position: relative;
+    width: min(34rem, calc(100vw - 2rem));
+    border-radius: 1.25rem;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    padding: 1.25rem;
+    box-shadow: 0 30px 80px -35px rgba(15, 23, 42, 0.55);
+}
+
+.app-confirm-icon {
+    display: inline-flex;
+    height: 2.25rem;
+    width: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background: rgba(244, 63, 94, 0.12);
+    color: #e11d48;
+}
+
+.app-confirm-title {
+    margin-top: 0.75rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.app-confirm-message {
+    margin-top: 0.5rem;
+    color: #475569;
+    line-height: 1.5;
+}
+
+.app-confirm-actions {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.625rem;
+}
+
+html[data-theme='dark'] .app-confirm-dialog {
+    border-color: rgba(51, 65, 85, 0.95);
+    background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+}
+
+html[data-theme='dark'] .app-confirm-title {
+    color: #f8fafc;
+}
+
+html[data-theme='dark'] .app-confirm-message {
+    color: #cbd5e1;
+}

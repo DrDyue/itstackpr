@@ -423,7 +423,15 @@
                                                     </a>
 
                                                     @if ($repair->status === 'waiting')
-                                                        <form method="POST" action="{{ route('repairs.transition', $repair) }}">
+                                                        <form
+                                                            method="POST"
+                                                            action="{{ route('repairs.transition', $repair) }}"
+                                                            data-app-confirm-title="Sākt remontu?"
+                                                            data-app-confirm-message="Vai tiešām pārvietot šo remontu uz statusu “Procesā”?"
+                                                            data-app-confirm-accept="Jā, sākt"
+                                                            data-app-confirm-cancel="Nē"
+                                                            data-app-confirm-tone="warning"
+                                                        >
                                                             @csrf
                                                             <input type="hidden" name="target_status" value="in-progress">
                                                             <button type="submit" class="table-action-button table-action-button-sky">
@@ -432,7 +440,15 @@
                                                             </button>
                                                         </form>
                                                     @elseif ($repair->status === 'in-progress')
-                                                        <form method="POST" action="{{ route('repairs.transition', $repair) }}">
+                                                        <form
+                                                            method="POST"
+                                                            action="{{ route('repairs.transition', $repair) }}"
+                                                            data-app-confirm-title="Pabeigt remontu?"
+                                                            data-app-confirm-message="Vai tiešām pabeigt šo remonta ierakstu?"
+                                                            data-app-confirm-accept="Jā, pabeigt"
+                                                            data-app-confirm-cancel="Nē"
+                                                            data-app-confirm-tone="warning"
+                                                        >
                                                             @csrf
                                                             <input type="hidden" name="target_status" value="completed">
                                                             <button type="submit" class="table-action-button table-action-button-emerald">
@@ -443,7 +459,15 @@
                                                     @endif
 
                                                     @if (in_array($repair->status, ['waiting', 'in-progress'], true))
-                                                        <form method="POST" action="{{ route('repairs.transition', $repair) }}">
+                                                        <form
+                                                            method="POST"
+                                                            action="{{ route('repairs.transition', $repair) }}"
+                                                            data-app-confirm-title="Atcelt remontu?"
+                                                            data-app-confirm-message="Vai tiešām atcelt šo remonta ierakstu?"
+                                                            data-app-confirm-accept="Jā, atcelt"
+                                                            data-app-confirm-cancel="Nē"
+                                                            data-app-confirm-tone="danger"
+                                                        >
                                                             @csrf
                                                             <input type="hidden" name="target_status" value="cancelled">
                                                             <button type="submit" class="table-action-button table-action-button-rose">
@@ -452,7 +476,6 @@
                                                             </button>
                                                         </form>
                                                     @endif
-                                                    </a>
                                                 @elseif (! $linkedRequestUrl)
                                                     <div class="px-3 py-2 text-xs font-medium text-slate-400">Nav darbību</div>
                                                 @endif

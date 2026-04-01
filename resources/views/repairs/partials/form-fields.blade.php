@@ -6,14 +6,14 @@
     $currentRepair = $repair;
 @endphp
 
-<div class="space-y-6">
-    <div class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+<div class="space-y-4">
+    <div class="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <div>
             <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pamata informācija</div>
             <div class="mt-1 text-sm text-slate-500">Galvenie lauki par ierīci un remonta saturu.</div>
         </div>
 
-        <div class="mt-4 grid gap-4">
+        <div class="mt-3 grid gap-4">
             @if ($currentRepair)
                 <div class="block">
                     <span class="crud-label">Ierīce</span>
@@ -47,7 +47,7 @@
 
             <label class="block">
                 <span class="crud-label">Apraksts</span>
-                <textarea name="description" rows="5" class="crud-control" x-model="description">{{ old('description', $currentRepair?->description) }}</textarea>
+                <textarea name="description" rows="4" class="crud-control" x-model="description">{{ old('description', $currentRepair?->description) }}</textarea>
                 <div class="mt-2 text-xs text-slate-500">
                     <span x-show="repairStatus === 'waiting'">Apraksts vēl nav obligāts, lai pārietu uz procesa statusu.</span>
                     <span x-show="repairStatus === 'in-progress'">Apraksts ir obligāts, lai remontu varētu pabeigt.</span>
@@ -57,13 +57,13 @@
         </div>
     </div>
 
-    <div class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+    <div class="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <div>
             <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta iestatījumi</div>
             <div class="mt-1 text-sm text-slate-500">Izvēlies remonta tipu un prioritāti.</div>
         </div>
 
-        <div class="mt-4 grid gap-4">
+        <div class="mt-3 grid gap-4">
             <div class="md:col-span-2">
                 <span class="crud-label">Remonta tips</span>
                 <div class="mt-2 rounded-2xl border border-slate-200 bg-slate-50 p-2">
@@ -136,13 +136,13 @@
     </div>
 
     <div
-        class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm"
+        class="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
         x-cloak
         x-show="repairType === 'external'"
     >
         <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ārējā remonta dati</div>
         <div class="mt-1 text-sm text-slate-500">Šie lauki kļūst obligāti tikai tad, kad ārējo remontu pabeidz.</div>
-        <div class="mt-4 grid gap-4 md:grid-cols-3">
+        <div class="mt-3 grid gap-4 md:grid-cols-3">
             <label class="block">
                 <span class="crud-label">Pakalpojuma sniedzējs</span>
                 <input type="text" name="vendor_name" value="{{ old('vendor_name', $currentRepair?->vendor_name) }}" class="crud-control" x-model="vendorName">
