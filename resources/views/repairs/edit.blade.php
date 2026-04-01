@@ -26,8 +26,7 @@
         $deviceMeta = collect([$repair->device?->manufacturer, $repair->device?->model])->filter()->implode(' ');
     @endphp
 
-    <section
-        class="app-shell max-w-7xl"
+    <section class="app-shell max-w-7xl"
         x-data="repairProcess({
             repairId: {{ $repair->id }},
             repairType: @js(old('repair_type', $repair->repair_type ?? 'internal')),
@@ -61,6 +60,10 @@
                 </div>
                 <a href="{{ route('repairs.index') }}" class="btn-back">
                     <x-icon name="back" size="h-4 w-4" />
+                    <span>Atpakaļ</span>
+                </a>
+            </div>
+        </div>
 
         <x-validation-summary />
 
@@ -258,6 +261,7 @@
                 </div>
             </div>
         </div>
+    </section>
 
     <script>
     function repairProcess(config) {
@@ -352,5 +356,4 @@
         };
     }
     </script>
-</section>
 </x-app-layout>
