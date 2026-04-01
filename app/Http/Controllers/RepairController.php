@@ -399,11 +399,12 @@ class RepairController extends Controller
             'invoice_number' => ['nullable', 'string', 'max:255'],
         ]);
 
-        // Pārbauda vai visi lauki ir aizpildīti
+        // Pārbauda vai apraksts ir aizpildīts (obligāts VISIEM)
         if (! filled($validated['description'])) {
             return back()->with('error', 'Lai pabeigtu remontu, ir jābūt aizpildītam aprakstam.');
         }
 
+        // Ārējam remontam papildus pārbauda vendora datus
         if ($repair->repair_type === 'external') {
             if (! filled($validated['vendor_name'])) {
                 return back()->with('error', 'Ārējam remontam ir jābūt norādītam pakalpojuma sniedzējam.');

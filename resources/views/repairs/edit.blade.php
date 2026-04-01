@@ -68,10 +68,9 @@
 
         <x-validation-summary />
 
-        <div class="grid gap-4 xl:grid-cols-[minmax(0,1.28fr)_minmax(22rem,0.92fr)]">
-            <div class="space-y-4">
-                {{-- REMONTA KOPSAVILKUMS --}}
-                <div class="surface-card space-y-4 p-5">
+        <div class="space-y-4">
+            {{-- REMONTA KOPSAVILKUMS --}}
+            <div class="surface-card space-y-4 p-5">
                     <div class="flex flex-wrap items-start justify-between gap-4">
                         <div class="flex items-start gap-4">
                             @if ($deviceThumbUrl)
@@ -174,89 +173,89 @@
                         </div>
                     </div>
                 </form>
-            </div>
 
-            {{-- LABĀ PUSE - GATAVĪBA UN DARBĪBAS --}}
-            <div class="space-y-4 xl:sticky xl:top-24 xl:self-start">
-                {{-- NĀKAMĀ SOĻA GATAVĪBA - tikai ja statuss ir in-progress --}}
-                @if ($repair->status === 'in-progress')
-                <div class="surface-card space-y-5 p-5">
-                    <div>
-                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Nākamā soļa gatavība</div>
-                        <div class="mt-1 text-sm text-slate-500" x-text="nextStepLabel()"></div>
-                    </div>
-
-                    <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                        <div class="text-sm font-medium text-slate-700">Pašreizējā gatavība</div>
-                        <span
-                            class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
-                            :class="nextStepReady() ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'"
-                            x-text="nextStepReady() ? 'Gatavs' : 'Nepilnīgs'"
-                        ></span>
-                    </div>
-
-                    <template x-if="requirementRows().length > 0">
-                        <div class="space-y-2">
-                            <template x-for="item in requirementRows()" :key="item.label">
-                                <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
-                                    <span class="font-medium text-slate-700" x-text="item.label"></span>
-                                    <span class="inline-flex items-center gap-2 font-semibold" :class="item.done ? 'text-emerald-700' : 'text-rose-700'">
-                                        <span class="inline-flex" x-show="item.done">
-                                            <x-icon name="check-circle" size="h-4 w-4" />
-                                        </span>
-                                        <span class="inline-flex" x-show="!item.done">
-                                            <x-icon name="x-circle" size="h-4 w-4" />
-                                        </span>
-                                        <span x-text="item.done ? 'Aizpildīts' : 'Trūkst'"></span>
-                                    </span>
-                                </div>
-                            </template>
+                {{-- GATAVĪBA UN DARBĪBAS --}}
+                <div class="grid gap-4 md:grid-cols-2">
+                    {{-- NĀKAMĀ SOĻA GATAVĪBA - tikai ja statuss ir in-progress --}}
+                    @if ($repair->status === 'in-progress')
+                    <div class="surface-card space-y-5 p-5">
+                        <div>
+                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Nākamā soļa gatavība</div>
+                            <div class="mt-1 text-sm text-slate-500" x-text="nextStepLabel()"></div>
                         </div>
-                    </template>
-                </div>
-                @endif
 
-                {{-- DARBĪBAS --}}
-                <div class="surface-card space-y-4 p-5">
-                    <div>
-                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Darbības</div>
-                        <div class="mt-1 text-sm text-slate-500">Svarīgākā darbība ir datu rediģēšana un saglabāšana, pēc tam statusa maiņa.</div>
+                        <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                            <div class="text-sm font-medium text-slate-700">Pašreizējā gatavība</div>
+                            <span
+                                class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+                                :class="nextStepReady() ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'"
+                                x-text="nextStepReady() ? 'Gatavs' : 'Nepilnīgs'"
+                            ></span>
+                        </div>
+
+                        <template x-if="requirementRows().length > 0">
+                            <div class="space-y-2">
+                                <template x-for="item in requirementRows()" :key="item.label">
+                                    <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
+                                        <span class="font-medium text-slate-700" x-text="item.label"></span>
+                                        <span class="inline-flex items-center gap-2 font-semibold" :class="item.done ? 'text-emerald-700' : 'text-rose-700'">
+                                            <span class="inline-flex" x-show="item.done">
+                                                <x-icon name="check-circle" size="h-4 w-4" />
+                                            </span>
+                                            <span class="inline-flex" x-show="!item.done">
+                                                <x-icon name="x-circle" size="h-4 w-4" />
+                                            </span>
+                                            <span x-text="item.done ? 'Aizpildīts' : 'Trūkst'"></span>
+                                        </span>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
                     </div>
+                    @endif
 
-                    <div class="flex flex-col gap-3">
-                        <button type="submit" form="repair-edit-form" class="btn-edit w-full justify-center">
-                            <x-icon name="save" size="h-4 w-4" />
-                            <span>Rediģēt remontu</span>
-                        </button>
+                    {{-- DARBĪBAS --}}
+                    <div class="surface-card space-y-4 p-5">
+                        <div>
+                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Darbības</div>
+                            <div class="mt-1 text-sm text-slate-500">Svarīgākā darbība ir datu rediģēšana un saglabāšana, pēc tam statusa maiņa.</div>
+                        </div>
 
-                        @if ($repair->status === 'waiting')
-                            <button type="button" class="btn-approve w-full justify-center" @click="submitTransition({{ $repair->id }}, 'in-progress')">
-                                <x-icon name="stats" size="h-4 w-4" />
-                                <span>Sākt remontu</span>
+                        <div class="flex flex-col gap-3">
+                            <button type="submit" form="repair-edit-form" class="btn-edit w-full justify-center">
+                                <x-icon name="save" size="h-4 w-4" />
+                                <span>Saglabāt izmaiņas</span>
                             </button>
-                            <button type="button" class="btn-danger w-full justify-center" @click="submitTransition({{ $repair->id }}, 'cancelled')">
-                                <x-icon name="clear" size="h-4 w-4" />
-                                <span>Atcelt remontu</span>
-                            </button>
-                        @elseif ($repair->status === 'in-progress')
-                            <button type="button" class="btn-approve w-full justify-center" @click="submitCompletion()">
-                                <x-icon name="check-circle" size="h-4 w-4" />
-                                <span>Pabeigt remontu</span>
-                            </button>
-                            <button type="button" class="btn-clear w-full justify-center" @click="submitTransition({{ $repair->id }}, 'waiting')">
-                                <x-icon name="back" size="h-4 w-4" />
-                                <span>Atpakaļ uz gaida</span>
-                            </button>
-                            <button type="button" class="btn-danger w-full justify-center" @click="submitTransition({{ $repair->id }}, 'cancelled')">
-                                <x-icon name="clear" size="h-4 w-4" />
-                                <span>Atcelt remontu</span>
-                            </button>
-                        @elseif ($repair->status === 'completed')
-                            <button type="button" class="btn-clear w-full justify-center" @click="submitTransition({{ $repair->id }}, 'in-progress')">
-                                <x-icon name="back" size="h-4 w-4" />
-                                <span>Atjaunot uz procesu</span>
-                            </button>
-                        @endif
+
+                            @if ($repair->status === 'waiting')
+                                <button type="button" class="btn-approve w-full justify-center" @click="submitTransition({{ $repair->id }}, 'in-progress')">
+                                    <x-icon name="stats" size="h-4 w-4" />
+                                    <span>Sākt remontu</span>
+                                </button>
+                                <button type="button" class="btn-danger w-full justify-center" @click="submitTransition({{ $repair->id }}, 'cancelled')">
+                                    <x-icon name="clear" size="h-4 w-4" />
+                                    <span>Atcelt remontu</span>
+                                </button>
+                            @elseif ($repair->status === 'in-progress')
+                                <button type="button" class="btn-approve w-full justify-center" @click="submitCompletion()">
+                                    <x-icon name="check-circle" size="h-4 w-4" />
+                                    <span>Pabeigt remontu</span>
+                                </button>
+                                <button type="button" class="btn-clear w-full justify-center" @click="submitTransition({{ $repair->id }}, 'waiting')">
+                                    <x-icon name="back" size="h-4 w-4" />
+                                    <span>Atpakaļ uz gaida</span>
+                                </button>
+                                <button type="button" class="btn-danger w-full justify-center" @click="submitTransition({{ $repair->id }}, 'cancelled')">
+                                    <x-icon name="clear" size="h-4 w-4" />
+                                    <span>Atcelt remontu</span>
+                                </button>
+                            @elseif ($repair->status === 'completed')
+                                <button type="button" class="btn-clear w-full justify-center" @click="submitTransition({{ $repair->id }}, 'in-progress')">
+                                    <x-icon name="back" size="h-4 w-4" />
+                                    <span>Atjaunot uz procesu</span>
+                                </button>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
@@ -293,13 +292,13 @@
                 const rows = [];
 
                 if (this.status === 'in-progress') {
-                    // Apraksts ir obligāts
+                    // Apraksts ir obligāts VISIEM remontiem
                     rows.push({
                         label: 'Remonta apraksts',
                         done: this.description && this.description.trim().length > 0
                     });
 
-                    // Ja ir ārējais remonts
+                    // Ja ir ārējais remonts - papildus prasības
                     if (this.repairType === 'external') {
                         rows.push({
                             label: 'Pakalpojuma sniedzējs',
@@ -313,17 +312,8 @@
                             label: 'Rēķina numurs',
                             done: this.invoiceNumber && this.invoiceNumber.trim().length > 0
                         });
-                        rows.push({
-                            label: 'Izmaksas',
-                            done: this.cost && parseFloat(this.cost) > 0
-                        });
-                    } else {
-                        // Iekšējam remontam tikai apraksts un izmaksas
-                        rows.push({
-                            label: 'Izmaksas',
-                            done: this.cost && parseFloat(this.cost) >= 0
-                        });
                     }
+                    // Iekšējam remontam - tikai apraksts ir obligāts
                 }
 
                 return rows;
