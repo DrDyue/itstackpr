@@ -273,20 +273,8 @@
             vendorContact: config.vendorContact,
             invoiceNumber: config.invoiceNumber,
             cost: config.cost,
-            forceUpdate: 0,
-
-            init() {
-                // Seko līdzi izmaiņām lai atjauninātu gatavību
-                this.$watch('repairType', () => this.forceUpdate++);
-                this.$watch('status', () => this.forceUpdate++);
-                this.$watch('description', () => this.forceUpdate++);
-                this.$watch('vendorName', () => this.forceUpdate++);
-                this.$watch('vendorContact', () => this.forceUpdate++);
-                this.$watch('invoiceNumber', () => this.forceUpdate++);
-            },
 
             nextStepLabel() {
-                this.forceUpdate; // reaktivitatei
                 if (this.status === 'in-progress') {
                     if (this.repairType === 'external') {
                         return 'Lai pabeigtu ārējo remontu, aizpildi 4 prasības.';
@@ -297,125 +285,76 @@
             },
 
             nextStepReady() {
-                this.forceUpdate; // reaktivitatei
                 if (this.status !== 'in-progress') {
                     return true;
                 }
-                
                 const rows = this.requirementRows();
-                if (rows.length === 0) {
-                    return true;
-                }
-                return rows.every(r => r.done);
+                return rows.length === 0 || rows.every(r => r.done);
             },
 
             requirementRows() {
-                this.forceUpdate; // reaktivitatei
-                // Ja nav in-progress statusā, nav prasību
                 if (this.status !== 'in-progress') {
                     return [];
                 }
 
                 const rows = [];
 
-                // 1. Apraksts - OBLIGĀTS VISIEM REMONTIEM
-                const hasDescription = this.description && this.description.trim().length > 0;
+                // 1. Apraksts - OBLIGĀTS VISIEM
                 rows.push({
                     key: 'description',
                     label: 'Remonta apraksts',
-                    done: hasDescription
+                    done: this.description && this.description.trim().length > 0
                 });
 
-                // 2. Ja ir ĀRĒJAIS remonts - papildus 3 prasības
+                // 2. Tikai ĀRĒJAM remontam
                 if (this.repairType === 'external') {
-                    const hasVendorName = this.vendorName && this.vendorName.trim().length > 0;
                     rows.push({
                         key: 'vendor_name',
                         label: 'Pakalpojuma sniedzējs',
-                        done: hasVendorName
+                        done: this.vendorName && this.vendorName.trim().length > 0
                     });
-
-                    const hasVendorContact = this.vendorContact && this.vendorContact.trim().length > 0;
                     rows.push({
                         key: 'vendor_contact',
                         label: 'Vendora kontakts',
-                        done: hasVendorContact
+                        done: this.vendorContact && this.vendorContact.trim().length > 0
                     });
-
-                    const hasInvoiceNumber = this.invoiceNumber && this.invoiceNumber.trim().length > 0;
                     rows.push({
                         key: 'invoice_number',
                         label: 'Rēķina numurs',
-                        done: hasInvoiceNumber
+                        done: this.invoiceNumber && this.invoiceNumber.trim().length > 0
                     });
                 }
-
-                // 3. Iekšējam remontam - TIKAI apraksts (vairāk nekas nav jāpievieno)
 
                 return rows;
             },
 
             submitTransition(repairId, targetStatus) {
-                if (targetStatus === 'in-progress' && !confirm('Vai tiešām sākt šo remontu?')) {
-                    return;
-                }
-
-                if (targetStatus === 'waiting' && !confirm('Vai tiešām atgriezt remontu gaida statusā?')) {
-                    return;
-                }
-
-                if (targetStatus === 'cancelled' && !confirm('Vai tiešām atcelt šo remontu?')) {
-                    return;
-                }
-
+                if (!confirm('Vai tiešām mainīt statusu?')) return;
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = config.transitionBaseUrl + '/' + repairId + '/transition';
-
-                const csrfInput = document.createElement('input');
-                csrfInput.type = 'hidden';
-                csrfInput.name = '_token';
-                csrfInput.value = config.csrfToken;
-                form.appendChild(csrfInput);
-
-                const statusInput = document.createElement('input');
-                statusInput.type = 'hidden';
-                statusInput.name = 'status';
-                statusInput.value = targetStatus;
-                form.appendChild(statusInput);
-
-                document.body.appendChild(form);
-                form.submit();
-            },
-
-            submitCompletion() {
-                const rows = this.requirementRows();
-                const allDone = rows.length === 0 || rows.every(r => r.done);
-                
-                if (!allDone) {
-                    const missingCount = rows.filter(r => !r.done).length;
-                    alert('Lūdzu vispirms aizpildi ' + missingCount + ' trūkstošās prasības remonta pabeigšanai.');
-                    return;
-                }
-
-                if (!confirm('Vai tiešām pabeigt šo remontu?')) {
-                    return;
-                }
-
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = config.transitionBaseUrl + '/' + config.repairId + '/completion';
-
-                const csrfInput = document.createElement('input');
-                csrfInput.type = 'hidden';
-                csrfInput.name = '_token';
-                csrfInput.value = config.csrfToken;
-                form.appendChild(csrfInput);
-
+                form.innerHTML = '<input type="hidden" name="_token" value="' + config.csrfToken + '">' +
+                    '<input type="hidden" name="status" value="' + targetStatus + '">';
                 document.body.appendChild(form);
                 form.submit();
             }
-        };
+            },
+
+            submitCompletion() {
+                if (!this.nextStepReady()) {
+                    alert('Lūdzu aizpildi visas prasības.');
+                    return;
+                }
+                if (!confirm('Vai tiešām pabeigt remontu?')) return;
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = config.transitionBaseUrl + '/' + config.repairId + '/completion';
+                form.innerHTML = '<input type="hidden" name="_token" value="' + config.csrfToken + '">';
+                document.body.appendChild(form);
+                form.submit();
+            }
     }
-    </script>
+
+</script>
+</section>
 </x-app-layout>
