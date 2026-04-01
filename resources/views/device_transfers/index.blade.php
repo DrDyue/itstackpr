@@ -12,6 +12,7 @@
         $activeStatusLabel = count($filters['statuses']) > 0 && count($filters['statuses']) < count($statuses)
             ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ')
             : null;
+        $isIncomingFilter = $filters['incoming'] ?? false;
     @endphp
 
     <section class="app-shell">
@@ -153,6 +154,34 @@
                                         empty-message="Neviens saņēmējs neatbilst meklējumam."
                                     />
                                 </label>
+                            @else
+                                <label class="block">
+                                    <span class="crud-label">Kam nosūtīju</span>
+                                    <x-searchable-select
+                                        name="recipient_id"
+                                        query-name="recipient_query"
+                                        identifier="transfer-recipient-filter"
+                                        :options="$recipientOptions"
+                                        :selected="(string) ($filters['recipient_id'] ?? '')"
+                                        :query="$selectedRecipientLabel"
+                                        placeholder="Izvēlies saņēmēju"
+                                        empty-message="Neviens saņēmējs neatbilst meklējumam."
+                                    />
+                                </label>
+
+                                <label class="block">
+                                    <span class="crud-label">No kā saņēmu</span>
+                                    <x-searchable-select
+                                        name="requester_id"
+                                        query-name="requester_query"
+                                        identifier="transfer-requester-filter"
+                                        :options="$requesterOptions"
+                                        :selected="(string) ($filters['requester_id'] ?? '')"
+                                        :query="$selectedRequesterLabel"
+                                        placeholder="Izvēlies pieteicēju"
+                                        empty-message="Neviens pieteicējs neatbilst meklējumam."
+                                    />
+                                </label>
                             @endif
 
                             <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
@@ -163,6 +192,21 @@
 
                 <div class="filter-toolbar-footer">
                     <div class="quick-filter-groups">
+                        @if (! $isAdmin)
+                            <div class="quick-filter-group">
+                                <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ātrie filtri</div>
+                                <div class="quick-status-filters">
+                                    <a
+                                        href="{{ route('device-transfers.index', array_merge(request()->except(['incoming']), ['incoming' => 1])) }}"
+                                        class="quick-status-filter quick-status-filter-sky {{ $isIncomingFilter ? 'quick-status-filter-active' : '' }}"
+                                    >
+                                        <x-icon name="transfer" size="h-4 w-4" />
+                                        <span>Ienākošie piedāvājumi</span>
+                                    </a>
+                                </div>
+                            </div>
+                        @endif
+
                         <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($filters['statuses']), minimum: 0 })">
                             <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Statuss</div>
                             <div class="quick-status-filters">
@@ -202,8 +246,9 @@
                 :items="[
                     ['label' => 'Meklēt', 'value' => $filters['q']],
                     ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
-                    ['label' => 'Pieteicējs', 'value' => $isAdmin ? $selectedRequesterLabel : null],
-                    ['label' => 'Saņēmējs', 'value' => $isAdmin ? $selectedRecipientLabel : null],
+                    ['label' => 'Pieteicējs', 'value' => $isAdmin ? $selectedRequesterLabel : ($isIncomingFilter ? null : $selectedRequesterLabel)],
+                    ['label' => 'Saņēmējs', 'value' => $isAdmin ? $selectedRecipientLabel : ($isIncomingFilter ? null : $selectedRecipientLabel)],
+                    ['label' => 'Ienākošie', 'value' => $isIncomingFilter ? 'Jā' : null],
                     ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
                     ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
                     ['label' => 'Statuss', 'value' => $activeStatusLabel],

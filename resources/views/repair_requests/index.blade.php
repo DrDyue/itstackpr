@@ -76,7 +76,6 @@
                 class="devices-filter-surface"
                 data-async-table-form
                 data-async-root="#repair-requests-index-root"
-                data-search-endpoint="{{ route('repair-requests.find-by-code') }}"
             >
                 <input type="hidden" name="statuses_filter" value="1">
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
@@ -92,26 +91,10 @@
                             <span>Meklēšana</span>
                         </h3>
                         <div class="devices-filter-grid">
-                            <div class="devices-search-group">
-                                <label class="devices-search-label">
-                                    <span>Meklēt pēc koda</span>
-                                    <input
-                                        type="text"
-                                        name="code"
-                                        value="{{ $filters['code'] }}"
-                                        class="devices-code-input"
-                                        placeholder="Ievadi ierīces kodu"
-                                        autocomplete="off"
-                                        data-async-manual="true"
-                                        data-async-code-search="true"
-                                    >
-                                </label>
-                                <button type="submit" class="devices-code-search-btn" data-code-search-submit="true">
-                                    <x-icon name="search" size="h-4 w-4" />
-                                    <span>Meklēt kodu</span>
-                                </button>
-                            </div>
-                        </div>
+                            <label class="devices-text-search">
+                                <span>Meklēt</span>
+                                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Kods, nosaukums, pieteicējs vai apraksts">
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -202,6 +185,7 @@
 
             <x-active-filters
                 :items="[
+                    ['label' => 'Meklēt', 'value' => $filters['q']],
                     ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
                     ['label' => 'Pieteicējs', 'value' => $canReview ? $selectedRequesterLabel : null],
                     ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],

@@ -428,7 +428,7 @@ class RepairRequestController extends Controller
             ->all();
 
         return [
-            'code' => trim((string) $request->query('code', '')),
+            'q' => trim((string) $request->query('q', '')),
             'request_id' => ctype_digit((string) $request->query('request_id', '')) ? (int) $request->query('request_id') : null,
             'device_id' => ctype_digit((string) $request->query('device_id', '')) ? (int) $request->query('device_id') : null,
             'device_query' => trim((string) $request->query('device_query', '')),
@@ -447,6 +447,14 @@ class RepairRequestController extends Controller
     private function applyIndexFilters(Builder $query, array $filters, array $skip = []): Builder
     {
         $skipLookup = array_flip($skip);
+
+        if (! isset($skipLookup['q']) && $filters['q'] !== '') {
+            $term = $filters['q'];
+
+            $query->whereHas('device', function (Builder $deviceQuery) use ($term) {
+                $deviceQuery->where('code', $term);
+            });
+        }
 
         if (! isset($skipLookup['request_id']) && filled($filters['request_id'])) {
             $query->whereKey($filters['request_id']);

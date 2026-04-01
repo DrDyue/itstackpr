@@ -67,10 +67,14 @@ class DeviceTransferController extends Controller
         }
 
         $baseQuery = DeviceTransfer::query()
-            ->when(! $canManageTransfers, function (Builder $query) use ($user) {
-                $query->where(function (Builder $builder) use ($user) {
-                    $builder->where('responsible_user_id', $user->id)
-                        ->orWhere('transfered_to_id', $user->id);
+            ->when(! $canManageTransfers, function (Builder $query) use ($user, $filters) {
+                $query->where(function (Builder $builder) use ($user, $filters) {
+                    if ($filters['incoming']) {
+                        $builder->where('transfered_to_id', $user->id);
+                    } else {
+                        $builder->where('responsible_user_id', $user->id)
+                            ->orWhere('transfered_to_id', $user->id);
+                    }
                 });
             });
 
@@ -520,7 +524,7 @@ class DeviceTransferController extends Controller
             ->all();
 
         return [
-            'code' => trim((string) $request->query('code', '')),
+            'q' => trim((string) $request->query('q', '')),
             'device_id' => ctype_digit((string) $request->query('device_id', '')) ? (int) $request->query('device_id') : null,
             'device_query' => trim((string) $request->query('device_query', '')),
             'requester_id' => ctype_digit((string) $request->query('requester_id', '')) ? (int) $request->query('requester_id') : null,
@@ -531,6 +535,7 @@ class DeviceTransferController extends Controller
             'date_to' => trim((string) $request->query('date_to', '')),
             'statuses' => $selectedStatuses,
             'status_filter_touched' => $statusFilterTouched,
+            'incoming' => $request->boolean('incoming'),
         ];
     }
 
@@ -540,6 +545,14 @@ class DeviceTransferController extends Controller
     private function applyIndexFilters(Builder $query, array $filters, array $skip = []): Builder
     {
         $skipLookup = array_flip($skip);
+
+        if (! isset($skipLookup['q']) && $filters['q'] !== '') {
+            $term = $filters['q'];
+
+            $query->whereHas('device', function (Builder $deviceQuery) use ($term) {
+                $deviceQuery->where('code', $term);
+            });
+        }
 
         if (! isset($skipLookup['device_id']) && filled($filters['device_id'])) {
             $query->where('device_transfers.device_id', $filters['device_id']);
@@ -551,6 +564,10 @@ class DeviceTransferController extends Controller
 
         if (! isset($skipLookup['recipient_id']) && filled($filters['recipient_id'])) {
             $query->where('device_transfers.transfered_to_id', $filters['recipient_id']);
+        }
+
+        if (! isset($skipLookup['incoming']) && $filters['incoming']) {
+            $query->where('device_transfers.status', DeviceTransfer::STATUS_SUBMITTED);
         }
 
         if (! isset($skipLookup['date_from']) && filled($filters['date_from'])) {

@@ -514,7 +514,7 @@ class WriteoffRequestController extends Controller
             ->all();
 
         return [
-            'code' => trim((string) $request->query('code', '')),
+            'q' => trim((string) $request->query('q', '')),
             'device_id' => ctype_digit((string) $request->query('device_id', '')) ? (int) $request->query('device_id') : null,
             'device_query' => trim((string) $request->query('device_query', '')),
             'requester_id' => ctype_digit((string) $request->query('requester_id', '')) ? (int) $request->query('requester_id') : null,
@@ -532,6 +532,14 @@ class WriteoffRequestController extends Controller
     private function applyIndexFilters(Builder $query, array $filters, array $skip = []): Builder
     {
         $skipLookup = array_flip($skip);
+
+        if (! isset($skipLookup['q']) && $filters['q'] !== '') {
+            $term = $filters['q'];
+
+            $query->whereHas('device', function (Builder $deviceQuery) use ($term) {
+                $deviceQuery->where('code', $term);
+            });
+        }
 
         if (! isset($skipLookup['device_id']) && filled($filters['device_id'])) {
             $query->where('writeoff_requests.device_id', $filters['device_id']);

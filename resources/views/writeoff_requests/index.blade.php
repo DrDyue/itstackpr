@@ -76,7 +76,6 @@
                 class="devices-filter-surface"
                 data-async-table-form
                 data-async-root="#writeoff-requests-index-root"
-                data-search-endpoint="{{ route('writeoff-requests.find-by-code') }}"
             >
                 <input type="hidden" name="statuses_filter" value="1">
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
@@ -197,6 +196,7 @@
 
             <x-active-filters
                 :items="[
+                    ['label' => 'Meklēt', 'value' => $filters['q']],
                     ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
                     ['label' => 'Pieteicējs', 'value' => $canReview ? $selectedRequesterLabel : null],
                     ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
