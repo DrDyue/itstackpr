@@ -274,6 +274,15 @@
             vendorContact: config.vendorContact,
             invoiceNumber: config.invoiceNumber,
             cost: config.cost,
+            requirementsVersion: 0,
+
+            init() {
+                this.$watch("repairType", () => { this.requirementsVersion++; });
+                this.$watch("description", () => { this.requirementsVersion++; });
+                this.$watch("vendorName", () => { this.requirementsVersion++; });
+                this.$watch("vendorContact", () => { this.requirementsVersion++; });
+                this.$watch("invoiceNumber", () => { this.requirementsVersion++; });
+            },
 
             nextStepLabel() {
                 if (this.status === 'in-progress') {
@@ -294,6 +303,7 @@
             },
 
             requirementRows() {
+                this.requirementsVersion; // reaktivitātei
                 if (this.status !== "in-progress") {
                     return [];
                 }
