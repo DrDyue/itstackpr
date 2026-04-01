@@ -8,6 +8,18 @@
     3. Audita ierakstu tabula.
 --}}
 <x-app-layout>
+    @php
+        $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
+        $selectedActionLabel = collect($actionOptions)->firstWhere('value', $filters['action'])['label'] ?? null;
+        $selectedUserLabel = collect($actorOptions)->firstWhere('value', $filters['user_id'])['label'] ?? null;
+        $severityFilterLinks = [
+            ['label' => 'Informācija', 'value' => 'info', 'icon' => 'info', 'tone' => 'slate'],
+            ['label' => 'Brīdinājums', 'value' => 'warning', 'icon' => 'exclamation-triangle', 'tone' => 'amber'],
+            ['label' => 'Kritiski', 'value' => 'critical', 'icon' => 'x-circle', 'tone' => 'rose'],
+        ];
+        $selectedSeverities = $filters['severity'] !== '' ? [$filters['severity']] : [];
+    @endphp
+
     <section class="app-shell app-shell-wide">
         <div class="page-hero">
             <div class="page-hero-grid">
@@ -49,97 +61,152 @@
         @endif
 
         <div id="audit-log-index-root" data-async-table-root>
-        <form method="GET" action="{{ route('audit-log.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr]" data-async-table-form data-async-root="#audit-log-index-root" data-search-endpoint="{{ route('audit-log.find-entry') }}">
-            <label class="block">
-                <span class="mb-2 block text-sm font-medium text-slate-700">Meklēt ierakstu</span>
-                <div class="flex items-center gap-2">
-                    <input
-                        type="text"
-                        name="search"
-                        value="{{ $filters['search'] }}"
-                        class="crud-control"
-                        placeholder="ID, apraksts vai lietotājs"
-                        data-async-manual="true"
-                        data-table-manual-search="true"
-                        data-search-mode="contains"
-                    >
-                    <button type="submit" class="btn-search shrink-0" data-table-search-submit="true">
+        <form method="GET" action="{{ route('audit-log.index') }}" class="devices-filter-surface" data-async-table-form data-async-root="#audit-log-index-root">
+            <input type="hidden" name="sort" value="{{ $filters['sort'] }}" data-sort-hidden="field">
+            <input type="hidden" name="direction" value="{{ $filters['direction'] }}" data-sort-hidden="direction">
+
+            <div class="devices-filter-header">
+                <div class="devices-filter-section">
+                    <h3 class="devices-filter-title">
                         <x-icon name="search" size="h-4 w-4" />
-                        <span>Meklēt</span>
-                    </button>
+                        <span>Meklēšana</span>
+                    </h3>
+                    <div class="devices-filter-grid">
+                        <label class="devices-text-search">
+                            <span>Meklēt ierakstu</span>
+                            <input type="text" name="search" value="{{ $filters['search'] }}" class="crud-control" placeholder="ID, apraksts vai lietotājs">
+                        </label>
+                    </div>
                 </div>
-            </label>
-
-            <div>
-                <span class="mb-2 block text-sm font-medium text-slate-700">Darbība</span>
-                <x-searchable-select
-                    name="action"
-                    queryName="action_query"
-                    :options="$actionOptions"
-                    :selected="$filters['action']"
-                    :query="collect($actionOptions)->firstWhere('value', $filters['action'])['label'] ?? ''"
-                    identifier="audit-action"
-                    placeholder="Visas darbības"
-                />
             </div>
 
-            <div>
-                <span class="mb-2 block text-sm font-medium text-slate-700">Svarīgums</span>
-                <x-searchable-select
-                    name="severity"
-                    queryName="severity_query"
-                    :options="$severityOptions"
-                    :selected="$filters['severity']"
-                    :query="collect($severityOptions)->firstWhere('value', $filters['severity'])['label'] ?? ''"
-                    identifier="audit-severity"
-                    placeholder="Visi limeni"
-                />
+            <div class="devices-filter-divider"></div>
+
+            <div class="devices-filter-header">
+                <div class="devices-filter-section">
+                    <h3 class="devices-filter-title">
+                        <x-icon name="filter" size="h-4 w-4" />
+                        <span>Filtri</span>
+                    </h3>
+                    <div class="devices-filters-grid">
+                        <div>
+                            <span class="crud-label">Darbība</span>
+                            <x-searchable-select
+                                name="action"
+                                query-name="action_query"
+                                :options="$actionOptions"
+                                :selected="$filters['action']"
+                                :query="$selectedActionLabel"
+                                identifier="audit-action"
+                                placeholder="Visas darbības"
+                            />
+                        </div>
+
+                        <div>
+                            <span class="crud-label">Lietotājs</span>
+                            <x-searchable-select
+                                name="user_id"
+                                query-name="user_query"
+                                :options="$actorOptions"
+                                :selected="$filters['user_id']"
+                                :query="$selectedUserLabel"
+                                identifier="audit-user"
+                                placeholder="Visi lietotāji"
+                            />
+                        </div>
+
+                        <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
+                        <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
+                    </div>
+                </div>
             </div>
 
-            <div>
-                <span class="mb-2 block text-sm font-medium text-slate-700">Lietotājs</span>
-                <x-searchable-select
-                    name="user_id"
-                    queryName="user_query"
-                    :options="$actorOptions"
-                    :selected="$filters['user_id']"
-                    :query="collect($actorOptions)->firstWhere('value', $filters['user_id'])['label'] ?? ''"
-                    identifier="audit-user"
-                    placeholder="Visi lietotāji"
-                />
-            </div>
+            <div class="filter-toolbar-footer">
+                <div class="quick-filter-groups">
+                    <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($selectedSeverities), minimum: 0 })">
+                        <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Svarīgums</div>
+                        <div class="quick-status-filters">
+                            @foreach ($severityFilterLinks as $severityFilter)
+                                @php
+                                    $toneClass = 'quick-status-filter-' . $severityFilter['tone'];
+                                @endphp
+                                <button
+                                    type="button"
+                                    @click="toggle(@js($severityFilter['value'])); $nextTick(() => $el.closest('form').requestSubmit())"
+                                    class="quick-status-filter {{ $toneClass }}"
+                                    :class="isSelected(@js($severityFilter['value'])) ? 'quick-status-filter-active' : ''"
+                                >
+                                    <x-icon :name="$severityFilter['icon']" size="h-4 w-4" />
+                                    <span>{{ $severityFilter['label'] }}</span>
+                                </button>
+                            @endforeach
 
-            <x-localized-date-input
-                name="date_from"
-                label="No datuma"
-                :value="$filters['date_from']"
-            />
+                            <template x-for="value in selected" :key="'audit-severity-' + value">
+                                <input type="hidden" name="severity" :value="value">
+                            </template>
+                        </div>
+                    </div>
+                </div>
 
-            <x-localized-date-input
-                name="date_to"
-                label="Līdz datumam"
-                :value="$filters['date_to']"
-            />
-
-            <div class="toolbar-actions md:col-span-2 xl:col-span-4">
-                <a href="{{ route('audit-log.index') }}" class="btn-clear" data-async-link="true">
-                    <x-icon name="clear" size="h-4 w-4" />
-                    <span>Notīrīt</span>
-                </a>
+                <div class="toolbar-actions">
+                    <a href="{{ route('audit-log.index') }}" class="btn-clear" data-async-link="true">
+                        <x-icon name="clear" size="h-4 w-4" />
+                        <span>Notīrīt</span>
+                    </a>
+                </div>
             </div>
         </form>
+
+        <x-active-filters
+            :items="[
+                ['label' => 'Meklēt', 'value' => $filters['search'] !== '' ? $filters['search'] : null],
+                ['label' => 'Darbība', 'value' => $selectedActionLabel],
+                ['label' => 'Lietotājs', 'value' => $selectedUserLabel],
+                ['label' => 'No datuma', 'value' => $filters['date_from'] !== '' ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
+                ['label' => 'Līdz datumam', 'value' => $filters['date_to'] !== '' ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
+                ['label' => 'Svarīgums', 'value' => $filters['severity'] !== '' ? collect($severityFilterLinks)->firstWhere('value', $filters['severity'])['label'] ?? $filters['severity'] : null],
+            ]"
+            :clear-url="route('audit-log.index')"
+        />
 
         <div class="app-table-shell">
             <div class="app-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
             <table class="app-table-content app-table-content-compact min-w-full text-sm">
                 <thead class="app-table-head bg-slate-50 text-left text-slate-500">
                     <tr>
-                        <th class="px-4 py-3">Laiks</th>
-                        <th class="px-4 py-3">Lietotājs</th>
-                        <th class="px-4 py-3">Darbība</th>
-                        <th class="px-4 py-3">Objekts</th>
-                        <th class="px-4 py-3">Svarīgums</th>
-                        <th class="px-4 py-3">Apraksts</th>
+                        @foreach ([
+                            'timestamp' => 'Laiks',
+                            'user' => 'Lietotājs',
+                            'action' => 'Darbība',
+                            'entity_type' => 'Objekts',
+                            'severity' => 'Svarīgums',
+                            'description' => 'Apraksts',
+                        ] as $column => $label)
+                            @php
+                                $isCurrentSort = $filters['sort'] === $column || ($filters['sort'] === 'time' && $column === 'timestamp') || ($filters['sort'] === 'user_id' && $column === 'user') || ($filters['sort'] === 'object' && $column === 'entity_type');
+                                $defaultDirection = $column === 'timestamp' ? 'desc' : 'asc';
+                                $nextDirection = $isCurrentSort && $filters['direction'] === 'asc' ? 'desc' : ($isCurrentSort && $filters['direction'] === 'desc' ? 'asc' : $defaultDirection);
+                                $sortMessage = 'Tabula "Audita žurnāls" kārtota pēc ' . mb_strtolower($label) . ' ' . ($sortDirectionLabels[$nextDirection] ?? '');
+                            @endphp
+                            <th class="px-4 py-3">
+                                <button
+                                    type="button"
+                                    class="device-sort-trigger {{ $isCurrentSort ? 'device-sort-trigger-active' : '' }}"
+                                    data-sort-trigger="true"
+                                    data-sort-field="{{ $column }}"
+                                    data-sort-direction="{{ $nextDirection }}"
+                                    data-sort-toast="{{ $sortMessage }}"
+                                >
+                                    <span>{{ $label }}</span>
+                                    <span class="device-sort-icon" aria-hidden="true">
+                                        <svg class="h-[1.05em] w-[1.05em]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 9 3.75-3.75L15.75 9" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 15-3.75 3.75L8.25 15" />
+                                        </svg>
+                                    </span>
+                                </button>
+                            </th>
+                        @endforeach
                     </tr>
                 </thead>
                 <tbody>

@@ -27,7 +27,14 @@ class AuditLogController extends Controller
             'date_from' => trim((string) $request->query('date_from', '')),
             'date_to' => trim((string) $request->query('date_to', '')),
             'search' => trim((string) $request->query('search', $request->query('q', ''))),
+            'sort' => trim((string) $request->query('sort', 'timestamp')),
+            'direction' => trim((string) $request->query('direction', 'desc')),
         ];
+
+        // Normalizēt severity no array uz string (ja ir multiple select)
+        if (is_array($filters['severity'])) {
+            $filters['severity'] = !empty($filters['severity']) ? $filters['severity'][0] : '';
+        }
 
         if (! $this->featureTableExists('audit_log')) {
             return view('audit_log.index', [
@@ -52,8 +59,54 @@ class AuditLogController extends Controller
             ->when($filters['user_id'] !== '', fn ($query) => $query->where('user_id', $filters['user_id']))
             ->when($filters['date_from'] !== '', fn ($query) => $query->where('timestamp', '>=', CarbonImmutable::parse($filters['date_from'])->startOfDay()))
             ->when($filters['date_to'] !== '', fn ($query) => $query->where('timestamp', '<=', CarbonImmutable::parse($filters['date_to'])->endOfDay()))
-            ->orderByDesc('timestamp')
-            ->orderByDesc('id');
+            ->when($filters['search'] !== '', function ($query) use ($filters) {
+                $query->where(function ($q) use ($filters) {
+                    $q->where('description', 'like', '%' . $filters['search'] . '%')
+                        ->orWhereHas('user', function ($uq) use ($filters) {
+                            $uq->where('full_name', 'like', '%' . $filters['search'] . '%')
+                                ->orWhere('email', 'like', '%' . $filters['search'] . '%');
+                        });
+                });
+            });
+
+        // Kārtošana
+        $sortField = $filters['sort'];
+        $sortDirection = $filters['direction'] === 'asc' ? 'asc' : 'desc';
+        
+        switch ($sortField) {
+            case 'timestamp':
+            case 'time':
+                $logQuery->orderBy('timestamp', $sortDirection)->orderBy('id', $sortDirection);
+                break;
+            case 'user':
+            case 'user_id':
+                $logQuery->leftJoin('users', 'audit_log.user_id', '=', 'users.id')
+                    ->orderByRaw('COALESCE(users.full_name, "Sistēma") ' . $sortDirection)
+                    ->orderBy('timestamp', 'desc');
+                break;
+            case 'action':
+                $logQuery->orderBy('action', $sortDirection)->orderBy('timestamp', 'desc');
+                break;
+            case 'entity_type':
+            case 'object':
+                $logQuery->orderBy('entity_type', $sortDirection)->orderBy('timestamp', 'desc');
+                break;
+            case 'severity':
+                $logQuery->orderByRaw('
+                    CASE severity
+                        WHEN "critical" THEN 1
+                        WHEN "error" THEN 2
+                        WHEN "warning" THEN 3
+                        ELSE 4
+                    END ' . $sortDirection
+                )->orderBy('timestamp', 'desc');
+                break;
+            case 'description':
+                $logQuery->orderBy('description', $sortDirection)->orderBy('timestamp', 'desc');
+                break;
+            default:
+                $logQuery->orderBy('timestamp', 'desc')->orderBy('id', 'desc');
+        }
 
         $logs = (clone $logQuery)->paginate(50)->withQueryString();
 

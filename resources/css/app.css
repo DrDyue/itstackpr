@@ -2521,12 +2521,16 @@ tbody td {
 .filter-summary + .overflow-x-auto,
 .filter-summary + .overflow-hidden,
 .filter-summary + .mt-5,
+.devices-filter-surface + .app-table-shell,
+.devices-filter-surface + .device-table-shell,
+.devices-filter-surface + .mt-5,
+.devices-filter-surface + .filter-summary,
 .surface-toolbar + .mt-5,
 .surface-toolbar + .overflow-x-auto,
 .surface-toolbar + .overflow-hidden,
 .surface-toolbar + .device-table-shell,
 .surface-toolbar + .app-table-shell {
-    @apply mt-4;
+    @apply mt-5;
 }
 
 /* Devices index - new filter and search design */
@@ -2837,6 +2841,7 @@ tbody td {
 }
 
 .filter-summary {
+    @apply mb-4;
     @apply rounded-[1.5rem] border border-slate-200 bg-white px-5 py-4 shadow-sm;
 }
 

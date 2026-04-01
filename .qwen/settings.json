@@ -9,7 +9,8 @@
       "Bash(ls *)",
       "Bash(git commit *)",
       "Bash(grep *)",
-      "Bash(find *)"
+      "Bash(find *)",
+      "Bash(sed *)"
     ]
   },
   "$version": 3
