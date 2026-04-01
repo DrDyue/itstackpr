@@ -1,4 +1,4 @@
-{--
+{{--
     Lapa: Lietotāju saraksts.
     Atbildība: rāda sistēmas lietotājus, viņu lomas, statusus un pēdējo pieslēgšanos.
     Datu avots: UserController@index.
