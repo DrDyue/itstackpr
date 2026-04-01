@@ -3786,7 +3786,7 @@ tbody td {
 }
 
 .table-col-image {
-    width: 5.5rem;
+    width: 4.75rem;
 }
 
 .table-col-code {
@@ -4151,7 +4151,7 @@ tbody td {
 }
 
 .device-table-thumb {
-    @apply h-10 w-10 rounded-xl object-cover ring-1 ring-slate-200;
+    @apply mx-auto h-11 w-11 rounded-xl object-cover ring-1 ring-slate-200;
 }
 
 .device-table-thumb-placeholder {

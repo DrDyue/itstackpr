@@ -344,7 +344,7 @@
             <table class="device-table-content min-w-full text-sm">
                 <thead class="device-table-head bg-slate-50 text-left text-slate-500">
                     <tr>
-                        <th class="px-4 py-3">Attēls</th>
+                        <th class="table-col-image px-3 py-3 text-center">Attēls</th>
                         @foreach ([
                             'code' => 'Kods',
                             'name' => 'Nosaukums',
@@ -411,7 +411,7 @@
                             $repairPreview = $deviceState['repairPreview'] ?? null;
                         @endphp
                         <tr class="device-table-row border-t border-slate-100 align-top" data-table-row-id="device-{{ $device->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) $device->code)) }}">
-                            <td class="px-4 py-4 tabular-nums">
+                            <td class="table-col-image px-3 py-4 text-center align-middle tabular-nums">
                                 @if ($thumbUrl)
                                     <img src="{{ $thumbUrl }}" alt="{{ $device->name }}" class="device-table-thumb">
                                 @else
