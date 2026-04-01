@@ -11,7 +11,6 @@ use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
@@ -21,6 +20,7 @@ use Illuminate\Validation\Rule;
 class UserController extends Controller
 {
     private const ROLES = [User::ROLE_ADMIN, User::ROLE_USER];
+    private const SORTABLE_COLUMNS = ['full_name', 'email', 'phone', 'role', 'job_title', 'is_active', 'last_login'];
 
     public function index(Request $request)
     {
@@ -38,30 +38,26 @@ class UserController extends Controller
             'last_login' => trim((string) $request->query('last_login', '')),
         ];
         $filters['has_role_filter'] = count($filters['roles']) > 0 && count($filters['roles']) < count(self::ROLES);
+        $sorting = $this->normalizedSorting($request);
 
         $legacyName = trim((string) $request->query('name', ''));
         $legacyEmail = trim((string) $request->query('email', ''));
 
-        $users = User::query()
-            ->withCount([
-                'assignedDevices',
-                'repairRequests as active_repair_requests_count' => fn ($query) => $query->where('status', RepairRequest::STATUS_SUBMITTED),
-                'writeoffRequests as active_writeoff_requests_count' => fn ($query) => $query->where('status', WriteoffRequest::STATUS_SUBMITTED),
-                'outgoingTransfers as active_transfer_requests_count' => fn ($query) => $query->where('status', DeviceTransfer::STATUS_SUBMITTED),
-                'incomingTransfers as incoming_transfer_requests_count' => fn ($query) => $query->where('status', DeviceTransfer::STATUS_SUBMITTED),
-            ])
+        $usersQuery = User::query()
             ->when($legacyName !== '', fn ($query) => $query->where('full_name', 'like', '%' . $legacyName . '%'))
             ->when($legacyEmail !== '', fn ($query) => $query->where('email', 'like', '%' . $legacyEmail . '%'))
+            ->when($filters['search'] !== '', fn ($query) => $query->where('full_name', 'like', '%' . $filters['search'] . '%'))
             ->when($filters['has_role_filter'], fn ($query) => $query->whereIn('role', $filters['roles']))
             ->when($filters['is_active'] !== '', fn ($query) => $query->where('is_active', $filters['is_active'] === '1'))
             ->when($filters['last_login'] === 'today', fn ($query) => $query->whereDate('last_login', today()))
             ->when($filters['last_login'] === 'recent', fn ($query) => $query->where('last_login', '>=', now()->subDays(7)))
-            ->when($filters['last_login'] === 'never', fn ($query) => $query->whereNull('last_login'))
-            ->orderBy('full_name')
+            ->when($filters['last_login'] === 'never', fn ($query) => $query->whereNull('last_login'));
+
+        $this->applySorting($usersQuery, $sorting);
+
+        $users = $usersQuery
             ->paginate(15)
             ->withQueryString();
-
-        $this->attachUserActivityDetails($users);
 
         $userSummaryQuery = User::query();
 
@@ -73,6 +69,8 @@ class UserController extends Controller
                 'user' => (clone $userSummaryQuery)->where('role', User::ROLE_USER)->count(),
             ],
             'filters' => $filters,
+            'sorting' => $sorting,
+            'sortOptions' => $this->sortOptions(),
             'roles' => self::ROLES,
             'roleLabels' => $this->roleLabels(),
         ]);
@@ -101,15 +99,18 @@ class UserController extends Controller
             'last_login' => trim((string) $request->query('last_login', '')),
         ];
         $filters['has_role_filter'] = count($filters['roles']) > 0 && count($filters['roles']) < count(self::ROLES);
+        $sorting = $this->normalizedSorting($request);
 
-        $users = User::query()
+        $usersQuery = User::query()
             ->when($filters['has_role_filter'], fn ($query) => $query->whereIn('role', $filters['roles']))
             ->when($filters['is_active'] !== '', fn ($query) => $query->where('is_active', $filters['is_active'] === '1'))
             ->when($filters['last_login'] === 'today', fn ($query) => $query->whereDate('last_login', today()))
             ->when($filters['last_login'] === 'recent', fn ($query) => $query->where('last_login', '>=', now()->subDays(7)))
-            ->when($filters['last_login'] === 'never', fn ($query) => $query->whereNull('last_login'))
-            ->orderBy('full_name')
-            ->get(['id', 'full_name']);
+            ->when($filters['last_login'] === 'never', fn ($query) => $query->whereNull('last_login'));
+
+        $this->applySorting($usersQuery, $sorting);
+
+        $users = $usersQuery->get(['id', 'full_name']);
 
         $needle = mb_strtolower($search);
         $foundIndex = $users->search(function (User $user) use ($needle) {
@@ -154,14 +155,24 @@ class UserController extends Controller
             ->findOrFail($user->id);
 
         $assignedDevices = Device::query()
-            ->with(['type', 'room', 'building'])
+            ->select(['id', 'code', 'name', 'device_type_id', 'room_id', 'building_id'])
+            ->with([
+                'type:id,type_name',
+                'room:id,room_number,room_name',
+                'building:id,building_name',
+            ])
             ->where('assigned_to_id', $managedUser->id)
             ->orderBy('code')
             ->limit(8)
             ->get();
 
         $openRepairRequests = RepairRequest::query()
-            ->with(['device.type', 'device.room', 'reviewedBy'])
+            ->select(['id', 'device_id', 'responsible_user_id', 'description', 'status', 'created_at'])
+            ->with([
+                'device:id,code,name,device_type_id,room_id',
+                'device.type:id,type_name',
+                'device.room:id,room_number,room_name',
+            ])
             ->where('responsible_user_id', $managedUser->id)
             ->where('status', RepairRequest::STATUS_SUBMITTED)
             ->latest()
@@ -169,7 +180,12 @@ class UserController extends Controller
             ->get();
 
         $openWriteoffRequests = WriteoffRequest::query()
-            ->with(['device.type', 'device.room', 'reviewedBy'])
+            ->select(['id', 'device_id', 'responsible_user_id', 'reason', 'status', 'created_at'])
+            ->with([
+                'device:id,code,name,device_type_id,room_id',
+                'device.type:id,type_name',
+                'device.room:id,room_number,room_name',
+            ])
             ->where('responsible_user_id', $managedUser->id)
             ->where('status', WriteoffRequest::STATUS_SUBMITTED)
             ->latest()
@@ -177,7 +193,13 @@ class UserController extends Controller
             ->get();
 
         $outgoingTransfers = DeviceTransfer::query()
-            ->with(['device.type', 'device.room', 'transferTo', 'reviewedBy'])
+            ->select(['id', 'device_id', 'responsible_user_id', 'transfered_to_id', 'transfer_reason', 'status', 'created_at'])
+            ->with([
+                'device:id,code,name,device_type_id,room_id',
+                'device.type:id,type_name',
+                'device.room:id,room_number,room_name',
+                'transferTo:id,full_name',
+            ])
             ->where('responsible_user_id', $managedUser->id)
             ->where('status', DeviceTransfer::STATUS_SUBMITTED)
             ->latest()
@@ -185,7 +207,13 @@ class UserController extends Controller
             ->get();
 
         $incomingTransfers = DeviceTransfer::query()
-            ->with(['device.type', 'device.room', 'responsibleUser', 'reviewedBy'])
+            ->select(['id', 'device_id', 'responsible_user_id', 'transfered_to_id', 'transfer_reason', 'status', 'created_at'])
+            ->with([
+                'device:id,code,name,device_type_id,room_id',
+                'device.type:id,type_name',
+                'device.room:id,room_number,room_name',
+                'responsibleUser:id,full_name',
+            ])
             ->where('transfered_to_id', $managedUser->id)
             ->where('status', DeviceTransfer::STATUS_SUBMITTED)
             ->latest()
@@ -194,9 +222,17 @@ class UserController extends Controller
 
         $recentAuditLogs = AuditLog::query()
             ->where('user_id', $managedUser->id)
+            ->select(['id', 'user_id', 'action', 'entity_type', 'entity_id', 'description', 'severity', 'timestamp'])
             ->latest('timestamp')
-            ->limit(15)
+            ->limit(5)
             ->get();
+
+        $activityHistory = AuditLog::query()
+            ->where('user_id', $managedUser->id)
+            ->select(['id', 'user_id', 'action', 'entity_type', 'entity_id', 'description', 'severity', 'timestamp'])
+            ->latest('timestamp')
+            ->paginate(12, ['*'], 'activity_page')
+            ->withQueryString();
 
         $managedUser->active_requests_total = (int) (
             ($managedUser->active_repair_requests_count ?? 0)
@@ -213,6 +249,7 @@ class UserController extends Controller
             'outgoingTransfers' => $outgoingTransfers,
             'incomingTransfers' => $incomingTransfers,
             'recentAuditLogs' => $recentAuditLogs,
+            'activityHistory' => $activityHistory,
             'roleLabels' => $this->roleLabels(),
         ]);
     }
@@ -340,45 +377,73 @@ class UserController extends Controller
         ];
     }
 
-    /**
-     * Papildina lietotāju saraksta rindas ar pēdējām auditētajām darbībām
-     * un kopējiem aktīvo pieprasījumu skaitītājiem.
-     */
-    private function attachUserActivityDetails(LengthAwarePaginator $users): void
+    private function normalizedSorting(Request $request): array
     {
-        $userIds = $users->getCollection()
-            ->pluck('id')
-            ->filter()
-            ->values();
+        $sort = trim((string) $request->query('sort', 'full_name'));
+        $direction = trim((string) $request->query('direction', 'asc'));
 
-        if ($userIds->isEmpty()) {
-            return;
+        if (! in_array($sort, self::SORTABLE_COLUMNS, true)) {
+            $sort = 'full_name';
         }
 
-        $recentLogsByUser = AuditLog::query()
-            ->select(['id', 'user_id', 'action', 'entity_type', 'entity_id', 'description', 'severity', 'timestamp'])
-            ->whereIn('user_id', $userIds)
-            ->orderByDesc('timestamp')
-            ->get()
-            ->groupBy('user_id')
-            ->map(fn ($logs) => $logs->take(3)->values());
+        if (! in_array($direction, ['asc', 'desc'], true)) {
+            $direction = $sort === 'last_login' ? 'desc' : 'asc';
+        }
 
-        $users->setCollection(
-            $users->getCollection()->map(function (User $managedUser) use ($recentLogsByUser) {
-                $managedUser->setRelation(
-                    'recentAuditLogs',
-                    $recentLogsByUser->get($managedUser->id, collect())
-                );
+        return [
+            'sort' => $sort,
+            'direction' => $direction,
+            'label' => $this->sortOptions()[$sort]['label'] ?? 'vārda un uzvārda',
+        ];
+    }
 
-                $managedUser->active_requests_total = (int) (
-                    ($managedUser->active_repair_requests_count ?? 0)
-                    + ($managedUser->active_writeoff_requests_count ?? 0)
-                    + ($managedUser->active_transfer_requests_count ?? 0)
-                    + ($managedUser->incoming_transfer_requests_count ?? 0)
-                );
+    private function applySorting($query, array $sorting): void
+    {
+        switch ($sorting['sort']) {
+            case 'email':
+                $query->orderByRaw('LOWER(COALESCE(email, "")) '.$sorting['direction']);
+                break;
+            case 'phone':
+                $query->orderByRaw('LOWER(COALESCE(phone, "")) '.$sorting['direction']);
+                break;
+            case 'role':
+                $query->orderByRaw("
+                    CASE role
+                        WHEN 'admin' THEN 1
+                        WHEN 'user' THEN 2
+                        ELSE 3
+                    END {$sorting['direction']}
+                ");
+                break;
+            case 'job_title':
+                $query->orderByRaw('LOWER(COALESCE(job_title, "")) '.$sorting['direction']);
+                break;
+            case 'is_active':
+                $query->orderBy('is_active', $sorting['direction']);
+                break;
+            case 'last_login':
+                $query->orderByRaw('CASE WHEN last_login IS NULL THEN 1 ELSE 0 END')
+                    ->orderBy('last_login', $sorting['direction']);
+                break;
+            case 'full_name':
+            default:
+                $query->orderByRaw('LOWER(COALESCE(full_name, "")) '.$sorting['direction']);
+                break;
+        }
 
-                return $managedUser;
-            })
-        );
+        $query->orderBy('id', $sorting['direction'] === 'asc' ? 'asc' : 'desc');
+    }
+
+    private function sortOptions(): array
+    {
+        return [
+            'full_name' => ['label' => 'vārda un uzvārda'],
+            'email' => ['label' => 'e-pasta'],
+            'phone' => ['label' => 'tālruņa'],
+            'role' => ['label' => 'lomas'],
+            'job_title' => ['label' => 'amata'],
+            'is_active' => ['label' => 'statusa'],
+            'last_login' => ['label' => 'pēdējās pieslēgšanās'],
+        ];
     }
 }

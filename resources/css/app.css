@@ -2548,11 +2548,15 @@ tbody td {
 }
 
 .user-profile-request-title {
-    @apply text-sm font-semibold text-slate-900;
+    @apply flex items-center gap-2 text-sm font-semibold text-slate-900;
 }
 
 .user-profile-request-meta {
     @apply mt-1 text-xs leading-5 text-slate-500;
+}
+
+.user-profile-request-copy {
+    @apply mt-2 text-sm leading-6 text-slate-600;
 }
 
 .user-profile-audit-item {
@@ -2569,6 +2573,26 @@ tbody td {
 
 .user-profile-audit-meta {
     @apply mt-2 text-xs leading-5 text-slate-500;
+}
+
+.user-profile-history-item {
+    @apply rounded-[1.4rem] border border-slate-200 bg-slate-50/80 px-4 py-4;
+}
+
+.user-profile-history-head {
+    @apply flex flex-wrap items-start justify-between gap-3;
+}
+
+.user-profile-history-title {
+    @apply text-sm font-semibold text-slate-900;
+}
+
+.user-profile-history-meta {
+    @apply mt-2 flex flex-wrap items-center gap-2 text-xs leading-5 text-slate-500;
+}
+
+.user-profile-history-copy {
+    @apply mt-2 text-sm leading-6 text-slate-600;
 }
 
 .request-card-grid {
@@ -3703,7 +3727,11 @@ tbody td {
 }
 
 .app-table-content-compact {
-    min-width: 68rem;
+    min-width: 62rem;
+}
+
+.app-table-content-users {
+    min-width: 70rem;
 }
 
 .app-table-content-wide {
@@ -3781,6 +3809,10 @@ tbody td {
     width: 15rem;
 }
 
+.table-col-phone {
+    width: 10rem;
+}
+
 .table-col-role,
 .table-col-type,
 .table-col-money {
@@ -3805,7 +3837,7 @@ tbody td {
 }
 
 .table-col-actions {
-    width: 9.5rem;
+    width: 8.25rem;
 }
 
 .app-table-row td,
@@ -4119,7 +4151,7 @@ tbody td {
 }
 
 .device-table-thumb {
-    @apply h-12 w-12 rounded-xl object-cover ring-1 ring-slate-200;
+    @apply h-10 w-10 rounded-xl object-cover ring-1 ring-slate-200;
 }
 
 .device-table-thumb-placeholder {
@@ -5301,4 +5333,86 @@ html[data-theme='dark'] .app-confirm-title {
 
 html[data-theme='dark'] .app-confirm-message {
     color: #cbd5e1;
+}
+
+html[data-theme='dark'] .surface-empty,
+html[data-theme='dark'] .empty-state {
+    border-color: rgba(71, 85, 105, 0.45);
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.84));
+    color: #cbd5e1;
+}
+
+html[data-theme='dark'] .empty-state-icon {
+    background: rgba(15, 23, 42, 0.92);
+    color: #93c5fd;
+    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.2);
+}
+
+html[data-theme='dark'] .empty-state-title {
+    color: #f8fafc;
+}
+
+html[data-theme='dark'] .empty-state-description {
+    color: #cbd5e1;
+}
+
+html[data-theme='dark'] .user-profile-card,
+html[data-theme='dark'] .user-profile-link-card,
+html[data-theme='dark'] .user-profile-device-card,
+html[data-theme='dark'] .user-profile-request-group,
+html[data-theme='dark'] .user-profile-request-item,
+html[data-theme='dark'] .user-profile-audit-item,
+html[data-theme='dark'] .user-profile-history-item {
+    border-color: rgba(71, 85, 105, 0.45);
+    background: rgba(15, 23, 42, 0.88);
+}
+
+html[data-theme='dark'] .user-profile-request-item-incoming {
+    border-color: rgba(56, 189, 248, 0.35);
+    background: rgba(8, 47, 73, 0.72);
+}
+
+html[data-theme='dark'] .user-profile-section-title,
+html[data-theme='dark'] .user-profile-card-value,
+html[data-theme='dark'] .user-profile-link-card strong,
+html[data-theme='dark'] .user-profile-device-title,
+html[data-theme='dark'] .user-profile-request-head,
+html[data-theme='dark'] .user-profile-request-title,
+html[data-theme='dark'] .user-profile-audit-title,
+html[data-theme='dark'] .user-profile-history-title {
+    color: #f8fafc;
+}
+
+html[data-theme='dark'] .user-profile-section-subtitle,
+html[data-theme='dark'] .user-profile-card-meta,
+html[data-theme='dark'] .user-profile-device-meta,
+html[data-theme='dark'] .user-profile-request-meta,
+html[data-theme='dark'] .user-profile-request-copy,
+html[data-theme='dark'] .user-profile-audit-copy,
+html[data-theme='dark'] .user-profile-audit-meta,
+html[data-theme='dark'] .user-profile-history-meta,
+html[data-theme='dark'] .user-profile-history-copy,
+html[data-theme='dark'] .user-profile-device-sub {
+    color: #cbd5e1;
+}
+
+html[data-theme='dark'] .user-profile-card-label {
+    color: #94a3b8;
+}
+
+html[data-theme='dark'] .user-profile-link-card {
+    color: #e2e8f0;
+}
+
+html[data-theme='dark'] .user-profile-link-card:hover,
+html[data-theme='dark'] .user-profile-device-card:hover {
+    background: rgba(30, 41, 59, 0.98);
+}
+
+html[data-theme='dark'] .user-profile-request-head a {
+    color: #7dd3fc;
+}
+
+html[data-theme='dark'] .user-profile-request-head a:hover {
+    color: #bae6fd;
 }

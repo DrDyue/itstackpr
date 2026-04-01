@@ -88,6 +88,85 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertDontSee($employee->email);
     }
 
+    public function test_admin_can_open_detailed_user_profile_page(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'profile-admin@example.com');
+        $employee = $this->createUser(role: User::ROLE_USER, email: 'profile-employee@example.com');
+        $device = $this->createDevice($employee->id, Device::STATUS_ACTIVE, 'DEV-USER-PROFILE');
+
+        RepairRequest::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $employee->id,
+            'description' => 'Profilam paredzets remonta pieteikums.',
+            'status' => RepairRequest::STATUS_SUBMITTED,
+        ]);
+
+        AuditLog::create([
+            'timestamp' => now(),
+            'user_id' => $employee->id,
+            'action' => 'LOGIN',
+            'entity_type' => 'User',
+            'entity_id' => (string) $employee->id,
+            'description' => 'Lietotajs piesledzas sistemai.',
+            'severity' => 'info',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('users.show', $employee))
+            ->assertOk()
+            ->assertSee($employee->full_name)
+            ->assertSee($device->name)
+            ->assertSee('Pilna aktivitātes vēsture')
+            ->assertSee('Atvērtie pieprasījumi');
+    }
+
+    public function test_regular_user_cannot_open_admin_user_profile(): void
+    {
+        $employee = $this->createUser(role: User::ROLE_USER, email: 'profile-regular@example.com');
+
+        $this->actingAs($employee)
+            ->get(route('users.show', $employee))
+            ->assertForbidden();
+    }
+
+    public function test_users_find_by_name_returns_second_page_result(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'users-search-admin@example.com');
+
+        for ($i = 1; $i <= 18; $i++) {
+            User::create([
+                'full_name' => 'Darbinieks '.str_pad((string) $i, 2, '0', STR_PAD_LEFT),
+                'email' => 'users-search-'.$i.'@example.com',
+                'password' => Hash::make('secret123'),
+                'role' => User::ROLE_USER,
+                'is_active' => true,
+            ]);
+        }
+
+        $targetUser = User::query()->where('email', 'users-search-18@example.com')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->getJson(route('users.find-by-name', ['search' => 'Darbinieks 18']))
+            ->assertOk()
+            ->assertJson([
+                'found' => true,
+                'page' => 2,
+                'highlight_id' => 'user-'.$targetUser->id,
+            ]);
+    }
+
+    public function test_admin_can_sort_users_by_email_descending(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'users-sort-admin@example.com');
+        $firstUser = $this->createUser(role: User::ROLE_USER, email: 'aaa-user@example.com');
+        $secondUser = $this->createUser(role: User::ROLE_USER, email: 'zzz-user@example.com');
+
+        $this->actingAs($admin)
+            ->get(route('users.index', ['sort' => 'email', 'direction' => 'desc']))
+            ->assertOk()
+            ->assertSeeInOrder([$secondUser->email, $firstUser->email]);
+    }
+
     public function test_admin_can_filter_devices_by_assigned_user_from_user_list_shortcut(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'user-device-shortcut-admin@example.com');
@@ -2714,6 +2793,68 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->assertDatabaseHas('users', [
             'id' => $employee->id,
         ]);
+    }
+
+    public function test_repairs_index_quick_view_contains_related_request_summary(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'repair-quick-view-admin@example.com');
+        $user = $this->createUser(role: User::ROLE_USER, email: 'repair-quick-view-user@example.com');
+        $device = $this->createDevice($user->id, Device::STATUS_REPAIR, 'DEV-REPAIR-QUICKVIEW');
+
+        $repairRequest = RepairRequest::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $user->id,
+            'description' => 'Apraksts atrajam skatam.',
+            'status' => RepairRequest::STATUS_APPROVED,
+        ]);
+
+        Repair::create([
+            'device_id' => $device->id,
+            'request_id' => $repairRequest->id,
+            'issue_reported_by' => $user->id,
+            'accepted_by' => $admin->id,
+            'description' => 'Remonta apraksts atrajam skatam.',
+            'status' => 'in-progress',
+            'repair_type' => 'external',
+            'priority' => 'high',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('repairs.index'))
+            ->assertOk();
+
+        $content = $response->getContent();
+
+        $this->assertIsString($content);
+        $this->assertStringContainsString('open-request-detail', $content);
+        $this->assertStringContainsString('secondary_label', $content);
+        $this->assertStringContainsString('details_title', $content);
+    }
+
+    public function test_audit_quick_view_contains_time_and_object_explainer(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'audit-quick-view-admin@example.com');
+
+        AuditLog::create([
+            'timestamp' => now(),
+            'user_id' => $admin->id,
+            'action' => 'LOGIN',
+            'entity_type' => 'User',
+            'entity_id' => (string) $admin->id,
+            'description' => 'Admins piesledzas auditam.',
+            'severity' => 'warning',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('audit-log.index'))
+            ->assertOk();
+
+        $content = $response->getContent();
+
+        $this->assertIsString($content);
+        $this->assertStringContainsString('open-request-detail', $content);
+        $this->assertStringContainsString('tertiary_label', $content);
+        $this->assertStringContainsString('details_intro_label', $content);
     }
 
     private function createUser(string $role, ?string $email = null): User

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use App\Models\User;
 use App\Support\AuditTrail;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
@@ -137,16 +138,16 @@ class AuditLogController extends Controller
                 'search' => AuditTrail::severityLabel($severity).' '.$severity,
             ]);
 
-        $actorOptions = AuditLog::query()
-            ->with('user')
+        $actorIds = AuditLog::query()
             ->whereNotNull('user_id')
-            ->get()
-            ->map(fn (AuditLog $log) => $log->user)
-            ->filter()
-            ->unique('id')
-            ->sortBy('full_name')
-            ->values()
-            ->map(fn ($userOption) => [
+            ->distinct()
+            ->pluck('user_id');
+
+        $actorOptions = User::query()
+            ->whereIn('id', $actorIds)
+            ->orderBy('full_name')
+            ->get(['id', 'full_name', 'email'])
+            ->map(fn (User $userOption) => [
                 'value' => (string) $userOption->id,
                 'label' => $userOption->full_name,
                 'description' => $userOption->email,

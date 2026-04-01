@@ -46,7 +46,7 @@
                         </span>
                         <span class="inventory-inline-chip inventory-inline-chip-amber">
                             <x-icon name="repair-request" size="h-3.5 w-3.5" />
-                            <span class="inventory-inline-label">Atvērti pieprasījumi</span>
+                            <span class="inventory-inline-label">Atvērtie pieprasījumi</span>
                             <span class="inventory-inline-value">{{ $managedUser->active_requests_total ?? 0 }}</span>
                         </span>
                         <span class="inventory-inline-chip inventory-inline-chip-slate">
@@ -171,7 +171,12 @@
                         <a href="{{ route('devices.show', $device) }}" class="user-profile-device-card">
                             <div class="user-profile-device-title">{{ $device->name }}</div>
                             <div class="user-profile-device-meta">{{ $device->code ?: 'Bez koda' }} | {{ $device->type?->type_name ?: 'Bez tipa' }}</div>
-                            <div class="user-profile-device-sub">{{ $device->room?->room_number ?: 'Bez telpas' }}@if ($device->room?->room_name) | {{ $device->room->room_name }} @endif</div>
+                            <div class="user-profile-device-sub">
+                                {{ $device->room?->room_number ?: 'Bez telpas' }}
+                                @if ($device->room?->room_name)
+                                    | {{ $device->room->room_name }}
+                                @endif
+                            </div>
                         </a>
                     @endforeach
                 </div>
@@ -195,8 +200,18 @@
                         </div>
                         @forelse ($openRepairRequests as $request)
                             <div class="user-profile-request-item">
-                                <div class="user-profile-request-title">{{ $request->device?->name ?: 'Ierīce nav atrasta' }}</div>
-                                <div class="user-profile-request-meta">{{ $request->device?->code ?: '-' }} | {{ $request->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
+                                <div class="user-profile-request-title">
+                                    <x-icon name="repair-request" size="h-4 w-4" />
+                                    <span>{{ $request->device?->name ?: 'Ierīce nav atrasta' }}</span>
+                                </div>
+                                <div class="user-profile-request-meta">
+                                    {{ $request->device?->code ?: '-' }}
+                                    @if ($request->device?->type?->type_name)
+                                        | {{ $request->device->type->type_name }}
+                                    @endif
+                                    | {{ $request->created_at?->format('d.m.Y H:i') ?: '-' }}
+                                </div>
+                                <div class="user-profile-request-copy">{{ $request->description }}</div>
                             </div>
                         @empty
                             <x-empty-state compact icon="repair-request" title="Nav atvērtu remonta pieteikumu" />
@@ -210,8 +225,18 @@
                         </div>
                         @forelse ($openWriteoffRequests as $request)
                             <div class="user-profile-request-item">
-                                <div class="user-profile-request-title">{{ $request->device?->name ?: 'Ierīce nav atrasta' }}</div>
-                                <div class="user-profile-request-meta">{{ $request->device?->code ?: '-' }} | {{ $request->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
+                                <div class="user-profile-request-title">
+                                    <x-icon name="writeoff" size="h-4 w-4" />
+                                    <span>{{ $request->device?->name ?: 'Ierīce nav atrasta' }}</span>
+                                </div>
+                                <div class="user-profile-request-meta">
+                                    {{ $request->device?->code ?: '-' }}
+                                    @if ($request->device?->type?->type_name)
+                                        | {{ $request->device->type->type_name }}
+                                    @endif
+                                    | {{ $request->created_at?->format('d.m.Y H:i') ?: '-' }}
+                                </div>
+                                <div class="user-profile-request-copy">{{ $request->reason }}</div>
                             </div>
                         @empty
                             <x-empty-state compact icon="writeoff" title="Nav atvērtu norakstīšanas pieteikumu" />
@@ -225,8 +250,15 @@
                         </div>
                         @forelse ($outgoingTransfers as $transfer)
                             <div class="user-profile-request-item">
-                                <div class="user-profile-request-title">{{ $transfer->device?->name ?: 'Ierīce nav atrasta' }}</div>
-                                <div class="user-profile-request-meta">Saņēmējs: {{ $transfer->transferTo?->full_name ?: 'Nav norādīts' }} | {{ $transfer->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
+                                <div class="user-profile-request-title">
+                                    <x-icon name="transfer" size="h-4 w-4" />
+                                    <span>{{ $transfer->device?->name ?: 'Ierīce nav atrasta' }}</span>
+                                </div>
+                                <div class="user-profile-request-meta">
+                                    Saņēmējs: {{ $transfer->transferTo?->full_name ?: 'Nav norādīts' }}
+                                    | {{ $transfer->created_at?->format('d.m.Y H:i') ?: '-' }}
+                                </div>
+                                <div class="user-profile-request-copy">{{ $transfer->transfer_reason }}</div>
                             </div>
                         @empty
                             <x-empty-state compact icon="transfer" title="Nav atvērtu nosūtīto nodošanu" />
@@ -234,8 +266,15 @@
 
                         @forelse ($incomingTransfers as $transfer)
                             <div class="user-profile-request-item user-profile-request-item-incoming">
-                                <div class="user-profile-request-title">{{ $transfer->device?->name ?: 'Ierīce nav atrasta' }}</div>
-                                <div class="user-profile-request-meta">No: {{ $transfer->responsibleUser?->full_name ?: 'Nav norādīts' }} | {{ $transfer->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
+                                <div class="user-profile-request-title">
+                                    <x-icon name="transfer" size="h-4 w-4" />
+                                    <span>{{ $transfer->device?->name ?: 'Ierīce nav atrasta' }}</span>
+                                </div>
+                                <div class="user-profile-request-meta">
+                                    No: {{ $transfer->responsibleUser?->full_name ?: 'Nav norādīts' }}
+                                    | {{ $transfer->created_at?->format('d.m.Y H:i') ?: '-' }}
+                                </div>
+                                <div class="user-profile-request-copy">{{ $transfer->transfer_reason }}</div>
                             </div>
                         @empty
                             <x-empty-state compact icon="transfer" title="Nav atvērtu ienākošo nodošanu" />
@@ -277,5 +316,49 @@
                 @endif
             </section>
         </div>
+
+        <section class="surface-card p-6">
+            <div class="user-profile-section-head">
+                <div>
+                    <h2 class="user-profile-section-title">Pilna aktivitātes vēsture</h2>
+                    <p class="user-profile-section-subtitle">Pilns auditēto darbību laika ceļš ar ieraksta tipu, aprakstu un laiku.</p>
+                </div>
+                <a href="{{ $auditUrl }}" class="btn-view">
+                    <x-icon name="audit" size="h-4 w-4" />
+                    <span>Atvērt auditā</span>
+                </a>
+            </div>
+
+            @if ($activityHistory->isEmpty())
+                <x-empty-state
+                    class="mt-5"
+                    compact
+                    icon="audit"
+                    title="Pilna aktivitātes vēsture vēl nav pieejama"
+                    description="Kad lietotājs veiks darbības sistēmā, tās parādīsies arī šajā detalizētajā vēsturē."
+                />
+            @else
+                <div class="mt-5 space-y-3">
+                    @foreach ($activityHistory as $log)
+                        <div class="user-profile-history-item">
+                            <div class="user-profile-history-head">
+                                <div class="user-profile-history-title">{{ $log->localized_action }}</div>
+                                <x-status-pill context="audit-severity" :value="$log->severity" />
+                            </div>
+                            <div class="user-profile-history-meta">
+                                <span>{{ $log->localized_entity_type }}</span>
+                                <span>•</span>
+                                <span>{{ $log->timestamp?->format('d.m.Y H:i:s') ?: '-' }}</span>
+                            </div>
+                            <div class="user-profile-history-copy">{{ $log->localized_description }}</div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="mt-5">
+                    {{ $activityHistory->links() }}
+                </div>
+            @endif
+        </section>
     </section>
 </x-app-layout>

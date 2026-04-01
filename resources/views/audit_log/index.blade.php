@@ -64,7 +64,7 @@
         </div>
 
         @if (! empty($featureMessage ?? null))
-            <div class="surface-empty">{{ $featureMessage }}</div>
+            <x-empty-state compact icon="information-circle" title="Funkcija īslaicīgi nav pieejama" :description="$featureMessage" />
         @endif
 
         <div id="audit-log-index-root" data-async-table-root x-data="requestDetailsDrawer()" @open-request-detail.window="show($event.detail)">
