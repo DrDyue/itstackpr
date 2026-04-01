@@ -216,6 +216,12 @@ window.submitAsyncTableForm = async (form, { url = null, resetPage = true, toast
     }
 
     const targetUrl = url instanceof URL ? url : buildAsyncTableUrl(form, { resetPage });
+    
+    // Add cache-busting timestamp for filter clear actions
+    if (targetUrl.searchParams.has('clear')) {
+        targetUrl.searchParams.set('_t', Date.now().toString());
+    }
+    
     const requestKey = rootSelector;
 
     if (asyncTableControllers.has(requestKey)) {
@@ -232,6 +238,7 @@ window.submitAsyncTableForm = async (form, { url = null, resetPage = true, toast
                 'X-Requested-With': 'XMLHttpRequest',
             },
             signal: controller.signal,
+            priority: 'high',
         });
 
         if (!response.ok) {

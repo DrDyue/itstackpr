@@ -234,7 +234,7 @@
                     </div>
 
                     <div class="toolbar-actions">
-                        <a href="{{ route('device-transfers.index') }}" class="btn-clear" data-async-link="true">
+                        <a href="{{ route('device-transfers.index', ['statuses_filter' => 1, 'clear' => 1]) }}" class="btn-clear" data-async-link="true">
                             <x-icon name="clear" size="h-4 w-4" />
                             <span>Notīrīt filtrus</span>
                         </a>
@@ -253,7 +253,7 @@
                     ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
                     ['label' => 'Statuss', 'value' => $activeStatusLabel],
                 ]"
-                :clear-url="route('device-transfers.index')"
+                :clear-url="route('device-transfers.index', ['statuses_filter' => 1, 'clear' => 1])"
             />
 
             @if (session('error'))

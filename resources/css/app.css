@@ -2517,13 +2517,15 @@ tbody td {
 
 .surface-toolbar + .filter-summary,
 .filter-summary + .device-table-shell,
+.filter-summary + .app-table-shell,
 .filter-summary + .overflow-x-auto,
 .filter-summary + .overflow-hidden,
 .filter-summary + .mt-5,
 .surface-toolbar + .mt-5,
 .surface-toolbar + .overflow-x-auto,
 .surface-toolbar + .overflow-hidden,
-.surface-toolbar + .device-table-shell {
+.surface-toolbar + .device-table-shell,
+.surface-toolbar + .app-table-shell {
     @apply mt-4;
 }
 

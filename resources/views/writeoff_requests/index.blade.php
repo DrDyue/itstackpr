@@ -187,7 +187,7 @@
                     ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
                     ['label' => 'Statuss', 'value' => $activeStatusLabel],
                 ]"
-                :clear-url="route('writeoff-requests.index')"
+                :clear-url="route('writeoff-requests.index', ['statuses_filter' => 1, 'clear' => 1])"
             />
 
             @if (session('error'))
