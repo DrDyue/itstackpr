@@ -312,30 +312,22 @@ class RepairController extends Controller
 
         $draft = $this->validatedTransitionDraft($request, $repair, $validated['target_status']);
 
-        if ($validated['target_status'] === 'in-progress' && ! filled($draft['description'])) {
-             return back()->with('error', 'Pirms remonta sākšanas ir nepieciešams aizpildīt remonta aprakstu.');
-        }
-
         if (! in_array($validated['target_status'], $this->allowedTransitionTargets($repair->status), true)) {
-            return back()->with('error', 'Sadu remonta statusa mainu veikt nevar.');
+            return back()->with('error', '??du remonta statusa mai?u veikt nevar.');
         }
 
-        if (
-            $validated['target_status'] === 'in-progress'
-            && $repair->status === 'waiting'
-            && $draft['repair_type'] === 'external'
-            && (! filled($draft['vendor_name']) || ! filled($draft['vendor_contact']))
-        ) {
-            return back()->with('error', 'Lai sāktu ārējo remontu, vispirms aizpildi pakalpojuma sniedzēju un kontaktu remonta kartītē.');
+        if ($validated['target_status'] === 'completed' && ! filled($draft['description'])) {
+            return back()->with('error', 'Lai pabeigtu remontu, jābūt aizpildītam aprakstam.');
         }
 
         if (
             $validated['target_status'] === 'completed'
             && $draft['repair_type'] === 'external'
-            && (! filled($draft['invoice_number']) || ! filled($draft['cost']))
+            && (! filled($draft['vendor_name']) || ! filled($draft['vendor_contact']) || ! filled($draft['invoice_number']))
         ) {
-            return back()->with('error', 'Lai pabeigtu ārējo remontu, jābūt norādītam rēķina numuram un izmaksām.');
+            return back()->with('error', 'Lai pabeigtu ārējo remontu, jābūt norādītam pakalpojuma sniedzējam, vendora kontaktam un rēķina numuram.');
         }
+
 
         $before = $repair->only([
             'status',
@@ -391,48 +383,30 @@ class RepairController extends Controller
             return back()->with('error', 'Remontu var pabeigt tikai no procesa statusa.');
         }
 
-        $validated = $this->validateInput($request, [
-            'description' => ['required', 'string'],
-            'cost' => ['nullable', 'numeric', 'min:0'],
-            'vendor_name' => ['nullable', 'string', 'max:255'],
-            'vendor_contact' => ['nullable', 'string', 'max:255'],
-            'invoice_number' => ['nullable', 'string', 'max:255'],
-        ]);
+        $draft = $this->validatedTransitionDraft($request, $repair, 'completed');
 
-        // Pārbauda vai apraksts ir aizpildīts (obligāts VISIEM)
-        if (! filled($validated['description'])) {
+        if (! filled($draft['description'])) {
             return back()->with('error', 'Lai pabeigtu remontu, ir jābūt aizpildītam aprakstam.');
         }
 
-        // Ārējam remontam papildus pārbauda vendora datus
-        if ($repair->repair_type === 'external') {
-            if (! filled($validated['vendor_name'])) {
+        if ($draft['repair_type'] === 'external') {
+            if (! filled($draft['vendor_name'])) {
                 return back()->with('error', 'Ārējam remontam ir jābūt norādītam pakalpojuma sniedzējam.');
             }
-            if (! filled($validated['vendor_contact'])) {
+            if (! filled($draft['vendor_contact'])) {
                 return back()->with('error', 'Ārējam remontam ir jābūt norādītam vendora kontaktam.');
             }
-            if (! filled($validated['invoice_number'])) {
+            if (! filled($draft['invoice_number'])) {
                 return back()->with('error', 'Ārējam remontam ir jābūt norādītam rēķina numuram.');
             }
         }
 
         $before = $repair->only(['status', 'end_date', 'cost', 'vendor_name', 'vendor_contact', 'invoice_number', 'description']);
 
-        $payload = [
+        $payload = array_merge($draft, [
             'status' => 'completed',
             'end_date' => now()->toDateString(),
-            'description' => $validated['description'],
-        ];
-
-        if ($repair->repair_type === 'external') {
-            $payload['vendor_name'] = $validated['vendor_name'] ?? $repair->vendor_name;
-            $payload['vendor_contact'] = $validated['vendor_contact'] ?? $repair->vendor_contact;
-            $payload['invoice_number'] = $validated['invoice_number'] ?? $repair->invoice_number;
-            $payload['cost'] = filled($validated['cost']) ? $validated['cost'] : $repair->cost;
-        } else {
-            $payload['cost'] = filled($validated['cost']) ? $validated['cost'] : null;
-        }
+        ]);
 
         $repair->update($payload);
         $this->syncDeviceStatus($repair, 'in-progress');
@@ -494,7 +468,7 @@ class RepairController extends Controller
     {
         $validated = $this->validateInput($request, [
             'device_id' => ['required', 'exists:devices,id'],
-            'description' => ['required', 'string'],
+            'description' => ['nullable', 'string'],
             'repair_type' => ['required', Rule::in(self::TYPES)],
             'priority' => ['nullable', Rule::in(self::PRIORITIES)],
             'cost' => ['nullable', 'numeric', 'min:0'],
@@ -584,26 +558,6 @@ class RepairController extends Controller
             $validated['vendor_name'] = null;
             $validated['vendor_contact'] = null;
             $validated['invoice_number'] = null;
-        }
-
-        $isExternalInProcess = $validated['repair_type'] === 'external' && (($repair?->status ?? $validated['status']) === 'in-progress');
-
-        if ($validated['repair_type'] === 'external' && ! $isExternalInProcess) {
-            $validated['vendor_name'] = null;
-            $validated['vendor_contact'] = null;
-            $validated['invoice_number'] = null;
-        }
-
-        if ($isExternalInProcess && ! filled($validated['vendor_name'])) {
-            throw ValidationException::withMessages([
-                'vendor_name' => ['Ārējam remontam norādi pakalpojuma sniedzēju.'],
-            ]);
-        }
-
-        if ($isExternalInProcess && ! filled($validated['vendor_contact'])) {
-            throw ValidationException::withMessages([
-                'vendor_contact' => ['Ārējam remontam norādi pakalpojuma sniedzēja kontaktu.'],
-            ]);
         }
 
         return $validated;

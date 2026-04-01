@@ -1733,31 +1733,29 @@ window.repairProcess = (config) => ({
         };
     },
     requirementRows(targetStatus = this.repairStatus) {
-        if (targetStatus === 'waiting') {
-            return [
-                { label: 'Apraksts', done: String(this.description ?? '').trim() !== '' },
-                { label: 'Pakalpojuma sniedzējs', done: !this.isExternal() || String(this.vendorName ?? '').trim() !== '' },
-                { label: 'Kontaktinformācija', done: !this.isExternal() || String(this.vendorContact ?? '').trim() !== '' },
-            ];
+        if (targetStatus !== 'completed' && this.repairStatus !== 'in-progress') {
+            return [];
         }
 
-        if (targetStatus === 'in-progress') {
-            return [
-                { label: 'Apraksts', done: String(this.description ?? '').trim() !== '' },
-                { label: 'Rēķina numurs', done: !this.isExternal() || String(this.invoiceNumber ?? '').trim() !== '' },
-                { label: 'Izmaksas', done: !this.isExternal() || this.normalizedCost() !== '' },
-            ];
+        const rows = [
+            { key: 'description', label: 'Apraksts', done: String(this.description ?? '').trim() !== '' },
+        ];
+
+        if (this.isExternal()) {
+            rows.push(
+                { key: 'vendor_name', label: 'Pakalpojuma sniedzējs', done: String(this.vendorName ?? '').trim() !== '' },
+                { key: 'vendor_contact', label: 'Vendora kontakts', done: String(this.vendorContact ?? '').trim() !== '' },
+                { key: 'invoice_number', label: 'Rēķina numurs', done: String(this.invoiceNumber ?? '').trim() !== '' },
+            );
         }
 
-        return [];
+        return rows;
     },
     nextStepLabel() {
-        if (this.repairStatus === 'waiting') {
-            return 'Kas jāaizpilda pirms remonta sākšanas.';
-        }
-
         if (this.repairStatus === 'in-progress') {
-            return 'Kas vēl nepieciešams pirms remonta pabeigšanas.';
+            return this.isExternal()
+                ? 'Lai pabeigtu ārējo remontu, jāaizpilda apraksts, pakalpojuma sniedzējs, vendora kontakts un rēķina numurs.'
+                : 'Lai pabeigtu iekšējo remontu, jāaizpilda tikai apraksts.';
         }
 
         return 'Šim statusam papildu prasības nav nepieciešamas.';
@@ -1780,17 +1778,13 @@ window.repairProcess = (config) => ({
         window.dispatchAppToast({
             title: 'Darbību nevar izpildīt',
             message: `${actionLabel} nevar, jo vēl trūkst: ${missing.join(', ')}.`,
-            tone: 'error',
+            tone: 'info',
         });
 
         return true;
     },
     submitTransition(repairId, targetStatus, extra = {}) {
-        if (targetStatus === 'in-progress' && this.showMissingRequirements('waiting', 'Remontu sākt')) {
-            return;
-        }
-
-        if (targetStatus === 'completed' && this.showMissingRequirements('in-progress', 'Remontu pabeigt')) {
+        if (targetStatus === 'completed' && this.showMissingRequirements('completed', 'Remontu pabeigt')) {
             return;
         }
 
@@ -1806,7 +1800,7 @@ window.repairProcess = (config) => ({
         );
     },
     submitCompletion() {
-        if (this.showMissingRequirements('in-progress', 'Remontu pabeigt')) {
+        if (this.showMissingRequirements('completed', 'Remontu pabeigt')) {
             return;
         }
 
@@ -1814,7 +1808,19 @@ window.repairProcess = (config) => ({
             return;
         }
 
-        this.submitTransition(config.repairId, 'completed');
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `${config.transitionBaseUrl}/${config.repairId}/completion`;
+        form.style.display = 'none';
+
+        appendHiddenInput(form, '_token', config.csrfToken);
+
+        Object.entries(this.transitionFormPayload()).forEach(([key, value]) => {
+            appendHiddenInput(form, key, value);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
     },
 });
 
