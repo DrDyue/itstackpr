@@ -55,7 +55,7 @@
             </div>
         </div>
 
-        <div id="device-types-index-root" data-async-table-root>
+        <div id="device-types-index-root" data-async-table-root x-data="requestDetailsDrawer()" @open-request-detail.window="show($event.detail)">
             <form method="GET" action="{{ route('device-types.index') }}" data-async-table-form data-async-root="#device-types-index-root">
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
@@ -80,7 +80,11 @@
                                         $nextDirection = $isCurrentSort && $sorting['direction'] === 'asc' ? 'desc' : ($isCurrentSort && $sorting['direction'] === 'desc' ? 'asc' : $defaultDirection);
                                         $sortMessage = 'Tabula "Ierīču tipi" kārtota pēc ' . ($sortOptions[$column]['label'] ?? mb_strtolower($label)) . ' ' . ($sortDirectionLabels[$nextDirection] ?? '');
                                     @endphp
-                                    <th class="px-4 py-3">
+                                    <th class="{{ match ($column) {
+                                        'type_name' => 'table-col-name',
+                                        'devices_count' => 'table-col-code',
+                                        default => '',
+                                    } }} px-4 py-3">
                                         <button
                                             type="button"
                                             class="device-sort-trigger {{ $isCurrentSort ? 'device-sort-trigger-active' : '' }}"
@@ -99,7 +103,7 @@
                                         </button>
                                     </th>
                                 @endforeach
-                                <th class="px-4 py-3 text-right">Darbības</th>
+                                <th class="table-col-actions px-4 py-3 text-right">Darbības</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -122,44 +126,82 @@
                                         </a>
                                     </td>
                                     <td class="px-4 py-4">
-                                        <div class="flex justify-end gap-2">
-                                            <a href="{{ route('device-types.edit', $type) }}" class="btn-edit px-4 py-2 text-sm">
-                                                <x-icon name="edit" size="h-4 w-4" />
-                                                <span>Rediģēt</span>
-                                            </a>
+                                        <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">
+                                            <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
+                                                <span>Darbības</span>
+                                                <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                                </svg>
+                                            </button>
 
-                                            @if ($canDelete)
-                                                <form
-                                                    method="POST"
-                                                    action="{{ route('device-types.destroy', $type) }}"
-                                                    data-app-confirm-title="Dzēst ierīces tipu?"
-                                                    data-app-confirm-message="Vai tiešām dzēst šo ierīces tipu?"
-                                                    data-app-confirm-accept="Jā, dzēst"
-                                                    data-app-confirm-cancel="Nē"
-                                                    data-app-confirm-tone="danger"
+                                            <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
+                                                <button
+                                                    type="button"
+                                                    class="table-action-item"
+                                                    @click="open = false; $dispatch('open-request-detail', {
+                                                        drawer_title: 'Ierīces tips',
+                                                        drawer_subtitle: 'Ātrs skats ar tipa nosaukumu un saistīto ierīču skaitu.',
+                                                        status_label: 'Tips',
+                                                        status_badge_class: 'request-detail-status-violet',
+                                                        submitted_at: '{{ $type->created_at?->format('d.m.Y H:i') ?: '-' }}',
+                                                        primary_label: 'Tipa nosaukums',
+                                                        primary_value: @js($type->type_name),
+                                                        primary_meta: @js($type->devices_count . ' piesaistītas ierīces'),
+                                                        primary_note: @js($canDelete ? 'Šo tipu var droši dzēst.' : 'Šis tips vēl tiek izmantots inventārā.'),
+                                                        primary_link_url: @js(route('devices.index', ['type' => $type->id, 'type_query' => $type->type_name])),
+                                                        primary_link_label: 'Atvērt šī tipa ierīces',
+                                                        secondary_label: 'Dzēšanas statuss',
+                                                        secondary_value: @js($canDelete ? 'Pieejams dzēšanai' : 'Dzēšana bloķēta'),
+                                                        secondary_meta: @js($canDelete ? 'Ar tipu nav saistītu ierīču.' : $deleteTooltip),
+                                                        description_label: 'Piezīme',
+                                                        description: @js($canDelete ? 'Tips ir brīvs un to var dzēst, ja tas vairs nav nepieciešams.' : $deleteTooltip),
+                                                    })"
                                                 >
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn-clear border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100">
-                                                        <x-icon name="trash" size="h-4 w-4" />
-                                                        <span>Dzēst</span>
-                                                    </button>
-                                                </form>
-                                            @else
-                                                <span class="inline-flex" title="{{ $deleteTooltip }}">
-                                                    <button type="button" class="btn-clear cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 opacity-80" disabled aria-disabled="true">
-                                                        <x-icon name="trash" size="h-4 w-4" />
-                                                        <span>Dzēst</span>
-                                                    </button>
-                                                </span>
-                                            @endif
+                                                    <x-icon name="view" size="h-4 w-4" />
+                                                    <span>Ātrais skats</span>
+                                                </button>
+
+                                                <a href="{{ route('device-types.edit', $type) }}" class="table-action-item table-action-item-amber" @click="open = false">
+                                                    <x-icon name="edit" size="h-4 w-4" />
+                                                    <span>Rediģēt</span>
+                                                </a>
+
+                                                @if ($canDelete)
+                                                    <form
+                                                        method="POST"
+                                                        action="{{ route('device-types.destroy', $type) }}"
+                                                        data-app-confirm-title="Dzēst ierīces tipu?"
+                                                        data-app-confirm-message="Vai tiešām dzēst šo ierīces tipu?"
+                                                        data-app-confirm-accept="Jā, dzēst"
+                                                        data-app-confirm-cancel="Nē"
+                                                        data-app-confirm-tone="danger"
+                                                    >
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="table-action-button table-action-button-rose">
+                                                            <x-icon name="trash" size="h-4 w-4" />
+                                                            <span>Dzēst</span>
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">
+                                                        <div class="font-semibold text-slate-700">Dzēšana nav pieejama</div>
+                                                        <div class="mt-1">{{ $deleteTooltip }}</div>
+                                                    </div>
+                                                @endif
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="px-4 py-16 text-center text-sm text-slate-500">
-                                        Ierīču tipu saraksts pašlaik ir tukšs.
+                                    <td colspan="3" class="px-4 py-6">
+                                        <x-empty-state
+                                            compact
+                                            icon="tag"
+                                            title="Ierīču tipu saraksts pašlaik ir tukšs"
+                                            description="Pievieno pirmo ierīces tipu, lai varētu to izmantot ierīču formās un filtros."
+                                        />
                                     </td>
                                 </tr>
                             @endforelse
@@ -171,6 +213,8 @@
             @if ($types->hasPages())
                 <div class="mt-5">{{ $types->links() }}</div>
             @endif
+
+            <x-request-detail-drawer />
         </div>
     </section>
 </x-app-layout>

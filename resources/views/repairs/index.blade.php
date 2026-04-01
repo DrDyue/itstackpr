@@ -19,6 +19,12 @@
             'internal' => 'Iekšējais',
             'external' => 'Ārējais',
         ];
+        $detailStatusClasses = [
+            'waiting' => 'request-detail-status-amber',
+            'in-progress' => 'request-detail-status-sky',
+            'completed' => 'request-detail-status-emerald',
+            'cancelled' => 'request-detail-status-rose',
+        ];
     @endphp
 
     <section class="app-shell app-shell-wide">
@@ -76,7 +82,7 @@
             </div>
         </div>
 
-        <div id="repairs-index-root" data-async-table-root>
+        <div id="repairs-index-root" data-async-table-root x-data="requestDetailsDrawer()" @open-request-detail.window="show($event.detail)">
             <form
                 method="GET"
                 action="{{ route('repairs.index') }}"
@@ -154,30 +160,30 @@
                         <div class="quick-filter-group">
                             <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta tips</div>
                             <div class="quick-status-filters">
-                                <button
-                                    type="button"
-                                    @click="window.location.href = '{{ route('repairs.index', array_merge(request()->except(['repair_type']), ['repair_type' => 'internal', 'statuses_filter' => '1'])) }}'"
+                                <a
+                                    href="{{ route('repairs.index', array_merge(request()->except(['repair_type', 'page']), ['repair_type' => 'internal', 'statuses_filter' => '1'])) }}"
                                     class="quick-status-filter quick-status-filter-sky {{ ($filters['repair_type'] ?? '') === 'internal' ? 'quick-status-filter-active' : '' }}"
+                                    data-async-link="true"
                                 >
                                     <x-icon name="repair" size="h-4 w-4" />
                                     <span>Iekšējais</span>
-                                </button>
-                                <button
-                                    type="button"
-                                    @click="window.location.href = '{{ route('repairs.index', array_merge(request()->except(['repair_type']), ['repair_type' => 'external', 'statuses_filter' => '1'])) }}'"
+                                </a>
+                                <a
+                                    href="{{ route('repairs.index', array_merge(request()->except(['repair_type', 'page']), ['repair_type' => 'external', 'statuses_filter' => '1'])) }}"
                                     class="quick-status-filter quick-status-filter-violet {{ ($filters['repair_type'] ?? '') === 'external' ? 'quick-status-filter-active' : '' }}"
+                                    data-async-link="true"
                                 >
                                     <x-icon name="send" size="h-4 w-4" />
                                     <span>Ārējais</span>
-                                </button>
-                                <button
-                                    type="button"
-                                    @click="window.location.href = '{{ route('repairs.index', array_merge(request()->except(['repair_type']), ['statuses_filter' => '1'])) }}'"
+                                </a>
+                                <a
+                                    href="{{ route('repairs.index', array_merge(request()->except(['repair_type', 'page']), ['statuses_filter' => '1'])) }}"
                                     class="quick-status-filter quick-status-filter-slate {{ !isset($filters['repair_type']) ? 'quick-status-filter-active' : '' }}"
+                                    data-async-link="true"
                                 >
                                     <x-icon name="view" size="h-4 w-4" />
                                     <span>Visi</span>
-                                </button>
+                                </a>
                             </div>
                         </div>
 
@@ -302,11 +308,23 @@
                                 ] as $column => $label)
                                     @php
                                         $isCurrentSort = $sorting['sort'] === $column;
+                                        $headerWidthClass = match ($column) {
+                                            'code' => 'table-col-code',
+                                            'name' => 'table-col-name',
+                                            'assigned_to' => 'table-col-person',
+                                            'location' => 'table-col-location',
+                                            'status' => 'table-col-status',
+                                            'priority' => 'table-col-priority',
+                                            'repair_type' => 'table-col-type',
+                                            'cost' => 'table-col-money',
+                                            'start_date', 'end_date' => 'table-col-date',
+                                            default => '',
+                                        };
                                         $defaultDirection = in_array($column, ['cost', 'end_date', 'start_date'], true) ? 'desc' : 'asc';
                                         $nextDirection = $isCurrentSort && $sorting['direction'] === 'asc' ? 'desc' : ($isCurrentSort && $sorting['direction'] === 'desc' ? 'asc' : $defaultDirection);
                                         $sortMessage = 'Tabula "Remonti" kārtota pēc ' . ($sortOptions[$column]['label'] ?? mb_strtolower($label)) . ' ' . ($sortDirectionLabels[$nextDirection] ?? '');
                                     @endphp
-                                    <th class="px-4 py-3">
+                                    <th class="{{ $headerWidthClass }} px-4 py-3">
                                         <button
                                             type="button"
                                             class="device-sort-trigger {{ $isCurrentSort ? 'device-sort-trigger-active' : '' }}"
@@ -325,7 +343,7 @@
                                         </button>
                                     </th>
                                 @endforeach
-                                <th class="px-4 py-3 text-right w-[9rem]">Darbības</th>
+                                <th class="table-col-actions px-4 py-3 text-right w-[9rem]">Darbības</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -349,6 +367,7 @@
                                             'statuses_filter' => 1,
                                         ])
                                         : null;
+                                    $deviceShowUrl = $device ? route('devices.show', $device) : null;
                                 @endphp
                                 <tr class="repair-table-row border-t border-slate-100 align-top" data-table-row-id="repair-{{ $repair->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
                                     <td class="px-4 py-4">
@@ -409,6 +428,44 @@
                                             </button>
 
                                             <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
+                                                <button
+                                                    type="button"
+                                                    class="table-action-item"
+                                                    @click="open = false; $dispatch('open-request-detail', @js([
+                                                        'drawer_title' => 'Remonta ieraksts',
+                                                        'drawer_subtitle' => 'Ātrais skats ar remonta gaitu, atbildīgajiem un saistīto ierīci.',
+                                                        'status_label' => $statusLabels[$repair->status] ?? $repair->status,
+                                                        'status_badge_class' => $detailStatusClasses[$repair->status] ?? 'request-detail-status-slate',
+                                                        'submitted_at' => $repair->created_at?->format('d.m.Y H:i') ?: '-',
+                                                        'primary_label' => 'Ierīce',
+                                                        'primary_value' => $device?->code ?: '-',
+                                                        'primary_meta' => $device?->serial_number ? 'Sērija: '.$device->serial_number : 'Sērijas numurs nav norādīts',
+                                                        'primary_note' => $device?->name ?: 'Ierīce nav atrasta',
+                                                        'primary_note_secondary' => collect([$device?->manufacturer, $device?->model, $device?->type?->type_name])->filter()->implode(' | '),
+                                                        'primary_link_url' => $deviceShowUrl,
+                                                        'primary_link_label' => 'Atvērt ierīces kartīti',
+                                                        'secondary_label' => 'Piešķirta persona',
+                                                        'secondary_value' => $assignedUser?->full_name ?: 'Nav piešķirta',
+                                                        'secondary_meta' => $assignedUser?->job_title ?: ($assignedUser?->email ?: 'Atbildīgā persona nav norādīta'),
+                                                        'secondary_note' => $requester?->full_name ? 'Pieprasītājs: '.$requester->full_name : 'Pieprasītājs nav norādīts',
+                                                        'tertiary_label' => 'Remonta informācija',
+                                                        'tertiary_value' => $priorityLabels[$repair->priority] ?? $repair->priority,
+                                                        'tertiary_meta' => 'Tips: '.($typeLabels[$repair->repair_type] ?? $repair->repair_type),
+                                                        'tertiary_note' => $repair->cost !== null ? 'Izmaksas: '.number_format((float) $repair->cost, 2, '.', ' ').' EUR' : 'Izmaksas nav norādītas',
+                                                        'description_label' => 'Remonta apraksts',
+                                                        'description' => trim((string) $repair->description) !== '' ? $repair->description : 'Apraksts nav norādīts.',
+                                                        'reviewed_by_name' => $repair->acceptedBy?->full_name,
+                                                        'review_notes' => collect([
+                                                            $repair->start_date?->format('d.m.Y') ? 'Sākums: '.$repair->start_date->format('d.m.Y') : null,
+                                                            $repair->end_date?->format('d.m.Y') ? 'Beigas: '.$repair->end_date->format('d.m.Y') : null,
+                                                            $locationPrimary !== '' ? 'Atrašanās vieta: '.$locationPrimary : null,
+                                                        ])->filter()->implode(' | '),
+                                                    ]))"
+                                                >
+                                                    <x-icon name="view" size="h-4 w-4" />
+                                                    <span>Ātrais skats</span>
+                                                </button>
+
                                                 @if ($linkedRequestUrl)
                                                     <a href="{{ $linkedRequestUrl }}" class="table-action-item" @click="open = false">
                                                         <x-icon name="repair-request" size="h-4 w-4" />
@@ -485,8 +542,13 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="12" class="px-4 py-16 text-center text-sm text-slate-500">
-                                        Remonta ieraksti netika atrasti.
+                                    <td colspan="12" class="px-4 py-6">
+                                        <x-empty-state
+                                            compact
+                                            icon="repair"
+                                            title="Remonta ieraksti netika atrasti"
+                                            description="Pamēģini paplašināt filtru nosacījumus vai notīrīt atlasītos kritērijus."
+                                        />
                                     </td>
                                 </tr>
                             @endforelse
@@ -498,6 +560,8 @@
             @if ($repairs->hasPages())
                 <div class="mt-5">{{ $repairs->links() }}</div>
             @endif
+
+            <x-request-detail-drawer />
         </div>
     </section>
 </x-app-layout>

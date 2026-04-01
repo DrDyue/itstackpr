@@ -36,7 +36,7 @@
             </div>
         </div>
 
-        <div id="buildings-index-root" data-async-table-root>
+        <div id="buildings-index-root" data-async-table-root x-data="requestDetailsDrawer()" @open-request-detail.window="show($event.detail)">
         <form method="GET" action="{{ route('buildings.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]" data-async-table-form data-async-root="#buildings-index-root" data-search-endpoint="{{ route('buildings.find-by-name') }}">
             <label class="block">
                 <span class="crud-label">Ēkas nosaukums</span>
@@ -103,27 +103,78 @@
                                 <td class="px-4 py-3 text-slate-600">{{ $building->notes ?: '-' }}</td>
                                 <td class="px-4 py-3">{{ $building->created_at?->format('d.m.Y H:i') ?: '-' }}</td>
                                 <td class="px-4 py-3">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <a href="{{ route('buildings.edit', $building) }}" class="btn-edit"><x-icon name="edit" size="h-4 w-4" /><span>Rediģēt</span></a>
-                                        <form
-                                            method="POST"
-                                            action="{{ route('buildings.destroy', $building) }}"
-                                            data-app-confirm-title="Dzēst ēku?"
-                                            data-app-confirm-message="Vai tiešām dzēst šo ēku?"
-                                            data-app-confirm-accept="Jā, dzēst"
-                                            data-app-confirm-cancel="Nē"
-                                            data-app-confirm-tone="danger"
-                                        >
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn-danger"><x-icon name="trash" size="h-4 w-4" /><span>Dzēst</span></button>
-                                        </form>
+                                    <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">
+                                        <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
+                                            <span>Darbības</span>
+                                            <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                            </svg>
+                                        </button>
+
+                                        <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
+                                            <button
+                                                type="button"
+                                                class="table-action-item"
+                                                @click="open = false; $dispatch('open-request-detail', {
+                                                    drawer_title: 'Ēkas profils',
+                                                    drawer_subtitle: 'Ātrs kopsavilkums ar ēkas resursiem un atrašanās vietu.',
+                                                    status_label: 'Ēka',
+                                                    status_badge_class: 'request-detail-status-slate',
+                                                    submitted_at: '{{ $building->created_at?->format('d.m.Y H:i') ?: '-' }}',
+                                                    primary_label: 'Ēka',
+                                                    primary_value: @js($building->building_name),
+                                                    primary_meta: @js($building->address ?: 'Adrese nav norādīta'),
+                                                    primary_note: @js($building->city ?: 'Pilsēta nav norādīta'),
+                                                    primary_note_secondary: @js($building->total_floors !== null ? $building->total_floors . ' stāvi' : 'Stāvu skaits nav norādīts'),
+                                                    primary_link_url: @js(route('rooms.index', ['building_id' => $building->id, 'building_query' => $building->building_name])),
+                                                    primary_link_label: 'Atvērt ēkas telpas',
+                                                    secondary_label: 'Resursi',
+                                                    secondary_value: @js($building->rooms_count . ' telpas'),
+                                                    secondary_meta: @js($building->devices_count . ' ierīces'),
+                                                    secondary_note: @js($building->notes ? 'Ir piezīmes' : 'Piezīmes nav pievienotas'),
+                                                    description_label: 'Piezīmes',
+                                                    description: @js($building->notes ?: 'Ēkai piezīmes nav pievienotas.'),
+                                                })"
+                                            >
+                                                <x-icon name="view" size="h-4 w-4" />
+                                                <span>Ātrais skats</span>
+                                            </button>
+
+                                            <a href="{{ route('buildings.edit', $building) }}" class="table-action-item table-action-item-amber" @click="open = false">
+                                                <x-icon name="edit" size="h-4 w-4" />
+                                                <span>Rediģēt</span>
+                                            </a>
+
+                                            <form
+                                                method="POST"
+                                                action="{{ route('buildings.destroy', $building) }}"
+                                                data-app-confirm-title="Dzēst ēku?"
+                                                data-app-confirm-message="Vai tiešām dzēst šo ēku?"
+                                                data-app-confirm-accept="Jā, dzēst"
+                                                data-app-confirm-cancel="Nē"
+                                                data-app-confirm-tone="danger"
+                                            >
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="table-action-button table-action-button-rose">
+                                                    <x-icon name="trash" size="h-4 w-4" />
+                                                    <span>Dzēst</span>
+                                                </button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-4 py-8 text-center text-slate-500">Ēkas vēl nav pievienotas.</td>
+                                <td colspan="8" class="px-4 py-6">
+                                    <x-empty-state
+                                        compact
+                                        icon="building"
+                                        title="Ēkas vēl nav pievienotas"
+                                        description="Kad pievienosi pirmo ēku, tā parādīsies šajā sarakstā."
+                                    />
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -132,6 +183,8 @@
         </div>
 
         {{ $buildings->links() }}
+
+        <x-request-detail-drawer />
         </div>
     </section>
 </x-app-layout>

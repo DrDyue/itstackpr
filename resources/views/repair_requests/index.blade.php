@@ -11,6 +11,11 @@
         $activeStatusLabel = count($filters['statuses']) > 0 && count($filters['statuses']) < count($statuses)
             ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ')
             : null;
+        $detailStatusClasses = [
+            'submitted' => 'request-detail-status-amber',
+            'approved' => 'request-detail-status-emerald',
+            'rejected' => 'request-detail-status-rose',
+        ];
     @endphp
 
     <section class="app-shell app-shell-wide">
@@ -68,7 +73,7 @@
             </div>
         </div>
 
-        <div id="repair-requests-index-root" data-async-table-root class="repair-requests-index-page">
+        <div id="repair-requests-index-root" data-async-table-root class="repair-requests-index-page" x-data="requestDetailsDrawer()" @open-request-detail.window="show($event.detail)">
             {{-- Filtru un meklēšanas josla --}}
             <form
                 method="GET"
@@ -217,7 +222,18 @@
                                     'created_at' => 'Iesniegts',
                                     'status' => 'Statuss',
                                 ] as $column => $label)
-                                    <th class="px-4 py-3">
+                                    @php
+                                        $headerWidthClass = match ($column) {
+                                            'code' => 'table-col-code',
+                                            'name' => 'table-col-name',
+                                            'requester' => 'table-col-person',
+                                            'description' => 'table-col-note',
+                                            'created_at' => 'table-col-date',
+                                            'status' => 'table-col-status',
+                                            default => '',
+                                        };
+                                    @endphp
+                                    <th class="{{ $headerWidthClass }} px-4 py-3">
                                         @if (in_array($column, ['code', 'name', 'requester', 'created_at', 'status'], true))
                                             @php
                                                 $isCurrentSort = $sorting['sort'] === $column;
@@ -246,7 +262,7 @@
                                         @endif
                                     </th>
                                 @endforeach
-                                <th class="px-4 py-3 text-right">Darbības</th>
+                                <th class="table-col-actions px-4 py-3 text-right">Darbības</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -318,6 +334,33 @@
                                             </button>
 
                                             <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
+                                                <button
+                                                    type="button"
+                                                    class="table-action-item"
+                                                    @click="open = false; $dispatch('open-request-detail', @js([
+                                                        'drawer_title' => 'Remonta pieteikums',
+                                                        'drawer_subtitle' => 'Ātrais skats ar iesniegto problēmu un saistīto ierīci.',
+                                                        'status_label' => $statusLabels[$repairRequest->status] ?? $repairRequest->status,
+                                                        'status_badge_class' => $detailStatusClasses[$repairRequest->status] ?? 'request-detail-status-amber',
+                                                        'submitted_at' => $repairRequest->created_at?->format('d.m.Y H:i') ?: '-',
+                                                        'device_code' => $device?->code ?: '-',
+                                                        'device_serial' => $device?->serial_number ? 'Sērija: '.$device->serial_number : 'Sērijas numurs nav norādīts',
+                                                        'device_name' => $device?->name ?: 'Ierīce nav atrasta',
+                                                        'device_meta' => $deviceMeta !== '' ? $deviceMeta : 'Ražotājs un modelis nav norādīti',
+                                                        'device_type' => $device?->type?->type_name ? 'Tips: '.$device->type->type_name : 'Tips nav norādīts',
+                                                        'requester_name' => $repairRequest->responsibleUser?->full_name ?: '-',
+                                                        'requester_meta' => $repairRequest->responsibleUser?->job_title ?: ($repairRequest->responsibleUser?->email ?: 'Darbinieks'),
+                                                        'description_label' => 'Problēmas apraksts',
+                                                        'description' => $description !== '' ? $description : 'Apraksts nav norādīts.',
+                                                        'reviewed_by_name' => $repairRequest->reviewedBy?->full_name,
+                                                        'review_notes' => $repairRequest->review_notes,
+                                                        'device_url' => $deviceFilterUrl,
+                                                    ]))"
+                                                >
+                                                    <x-icon name="view" size="h-4 w-4" />
+                                                    <span>Ātrais skats</span>
+                                                </button>
+
                                                 @if ($deviceFilterUrl)
                                                     <a href="{{ $deviceFilterUrl }}" class="table-action-item" @click="open = false">
                                                         <x-icon name="view" size="h-4 w-4" />
@@ -388,8 +431,13 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-4 py-16 text-center text-sm text-slate-500">
-                                        Remonta pieteikumi netika atrasti.
+                                    <td colspan="7" class="px-4 py-6">
+                                        <x-empty-state
+                                            compact
+                                            icon="repair-request"
+                                            title="Remonta pieteikumi netika atrasti"
+                                            description="Maini filtrus vai meklēšanas nosacījumus, lai atrastu vajadzīgo pieteikumu."
+                                        />
                                     </td>
                                 </tr>
                             @endforelse
@@ -401,6 +449,8 @@
             @if ($requests->hasPages())
                 <div class="mt-5">{{ $requests->links() }}</div>
             @endif
+
+            <x-request-detail-drawer />
         </div>
     </section>
 </x-app-layout>

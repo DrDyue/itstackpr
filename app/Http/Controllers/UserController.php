@@ -2,10 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
+use App\Models\DeviceTransfer;
+use App\Models\RepairRequest;
 use App\Models\User;
+use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
@@ -37,6 +42,13 @@ class UserController extends Controller
         $legacyEmail = trim((string) $request->query('email', ''));
 
         $users = User::query()
+            ->withCount([
+                'assignedDevices',
+                'repairRequests as active_repair_requests_count' => fn ($query) => $query->where('status', RepairRequest::STATUS_SUBMITTED),
+                'writeoffRequests as active_writeoff_requests_count' => fn ($query) => $query->where('status', WriteoffRequest::STATUS_SUBMITTED),
+                'outgoingTransfers as active_transfer_requests_count' => fn ($query) => $query->where('status', DeviceTransfer::STATUS_SUBMITTED),
+                'incomingTransfers as incoming_transfer_requests_count' => fn ($query) => $query->where('status', DeviceTransfer::STATUS_SUBMITTED),
+            ])
             ->when($legacyName !== '', fn ($query) => $query->where('full_name', 'like', '%' . $legacyName . '%'))
             ->when($legacyEmail !== '', fn ($query) => $query->where('email', 'like', '%' . $legacyEmail . '%'))
             ->when($filters['has_role_filter'], fn ($query) => $query->whereIn('role', $filters['roles']))
@@ -47,6 +59,8 @@ class UserController extends Controller
             ->orderBy('full_name')
             ->paginate(15)
             ->withQueryString();
+
+        $this->attachUserActivityDetails($users);
 
         $userSummaryQuery = User::query();
 
@@ -244,5 +258,46 @@ class UserController extends Controller
             User::ROLE_ADMIN => 'Admins',
             User::ROLE_USER => 'Darbinieks',
         ];
+    }
+
+    /**
+     * Papildina lietotāju saraksta rindas ar pēdējām auditētajām darbībām
+     * un kopējiem aktīvo pieprasījumu skaitītājiem.
+     */
+    private function attachUserActivityDetails(LengthAwarePaginator $users): void
+    {
+        $userIds = $users->getCollection()
+            ->pluck('id')
+            ->filter()
+            ->values();
+
+        if ($userIds->isEmpty()) {
+            return;
+        }
+
+        $recentLogsByUser = AuditLog::query()
+            ->whereIn('user_id', $userIds)
+            ->orderByDesc('timestamp')
+            ->get()
+            ->groupBy('user_id')
+            ->map(fn ($logs) => $logs->take(3)->values());
+
+        $users->setCollection(
+            $users->getCollection()->map(function (User $managedUser) use ($recentLogsByUser) {
+                $managedUser->setRelation(
+                    'recentAuditLogs',
+                    $recentLogsByUser->get($managedUser->id, collect())
+                );
+
+                $managedUser->active_requests_total = (int) (
+                    ($managedUser->active_repair_requests_count ?? 0)
+                    + ($managedUser->active_writeoff_requests_count ?? 0)
+                    + ($managedUser->active_transfer_requests_count ?? 0)
+                    + ($managedUser->incoming_transfer_requests_count ?? 0)
+                );
+
+                return $managedUser;
+            })
+        );
     }
 }

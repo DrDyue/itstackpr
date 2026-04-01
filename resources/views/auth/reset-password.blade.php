@@ -11,6 +11,8 @@
     <form method="POST" action="{{ route('password.store') }}">
         @csrf
 
+        <x-validation-summary />
+
         <!-- Paroles atiestatīšanas tokens -->
         <input type="hidden" name="token" value="{{ $request->route('token') }}">
 

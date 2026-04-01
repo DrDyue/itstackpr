@@ -22,6 +22,8 @@
             </a>
         </div>
 
+        <x-validation-summary />
+
         <form method="POST" action="{{ route('device-types.store') }}" class="type-form-grid">
             @csrf
 

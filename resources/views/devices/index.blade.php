@@ -60,6 +60,38 @@
             'description' => 'Filtrs pēc stāva',
             'search' => $floor . ' ' . $floor . '. stāvs',
         ])->values();
+        $presetIsActive = function (array $preset) use ($filters) {
+            $params = $preset['params'] ?? [];
+            $onlyStatusPreset = array_key_exists('status', $params) && count($params) === 3;
+            $onlyAssigneePreset = array_key_exists('assigned_to_id', $params);
+            $isDefaultMinePreset = ($preset['key'] ?? '') === 'mine' && ! $onlyAssigneePreset;
+
+            if ($onlyStatusPreset) {
+                return count($filters['statuses']) === 1
+                    && ($filters['statuses'][0] ?? null) === (($params['status'][0] ?? null));
+            }
+
+            if ($onlyAssigneePreset) {
+                return $filters['assigned_to_id'] === (string) ($params['assigned_to_id'] ?? '')
+                    && $filters['q'] === ''
+                    && $filters['code'] === ''
+                    && $filters['floor'] === ''
+                    && $filters['room_id'] === ''
+                    && $filters['type'] === ''
+                    && ! $filters['has_status_filter'];
+            }
+
+            if ($isDefaultMinePreset) {
+                return $filters['q'] === ''
+                    && $filters['code'] === ''
+                    && $filters['floor'] === ''
+                    && $filters['room_id'] === ''
+                    && $filters['type'] === ''
+                    && ! $filters['has_status_filter'];
+            }
+
+            return false;
+        };
         $toolbarGridClass = $canManageDevices
             ? 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,1.5fr)_minmax(0,1.5fr)]'
             : 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,1.5fr)_minmax(0,1.5fr)]';
@@ -238,6 +270,22 @@
 
                 <div class="filter-toolbar-footer">
                     <div class="quick-filter-groups">
+                        <div class="quick-filter-group">
+                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Saglabātie skati</div>
+                            <div class="quick-status-filters">
+                                @foreach ($filterPresets as $preset)
+                                    <a
+                                        href="{{ route('devices.index', $preset['params']) }}"
+                                        class="quick-status-filter quick-status-filter-{{ $preset['tone'] ?? 'slate' }} {{ $presetIsActive($preset) ? 'quick-status-filter-active' : '' }}"
+                                        data-async-link="true"
+                                    >
+                                        <x-icon :name="$preset['icon']" size="h-4 w-4" />
+                                        <span>{{ $preset['label'] }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+
                         <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($selectedStatuses), minimum: 0 })">
                             <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ierīces statuss</div>
                             <div class="quick-status-filters">
@@ -307,10 +355,19 @@
                         ] as $column => $label)
                             @php
                                 $isCurrentSort = $sorting['sort'] === $column;
+                                $headerWidthClass = match ($column) {
+                                    'code' => 'table-col-code',
+                                    'name' => 'table-col-name',
+                                    'location' => 'table-col-location',
+                                    'created_at' => 'table-col-date',
+                                    'assigned_to' => 'table-col-person',
+                                    'status' => 'table-col-status',
+                                    default => '',
+                                };
                                 $nextDirection = $isCurrentSort && $sorting['direction'] === 'asc' ? 'desc' : 'asc';
                                 $sortMessage = 'Kārtots pēc ' . ($sortOptions[$column]['label'] ?? mb_strtolower($label)) . ' ' . ($sortDirectionLabels[$nextDirection] ?? '');
                             @endphp
-                            <th class="px-4 py-3">
+                            <th class="{{ $headerWidthClass }} px-4 py-3">
                                 <button
                                     type="button"
                                     class="device-sort-trigger {{ $isCurrentSort ? 'device-sort-trigger-active' : '' }}"
@@ -329,7 +386,7 @@
                                 </button>
                             </th>
                         @endforeach
-                        <th class="px-4 py-3 w-[8rem]">Darbības</th>
+                        <th class="table-col-actions px-4 py-3 w-[8rem]">Darbības</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -664,7 +721,14 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-4 py-8 text-center text-slate-500">Ierīces nav atrastas.</td>
+                            <td colspan="8" class="px-4 py-6">
+                                <x-empty-state
+                                    compact
+                                    icon="devices"
+                                    title="Ierīces nav atrastas."
+                                    description="Pamēģini mainīt filtrus vai meklēšanas nosacījumus, lai atrastu vajadzīgo ierakstu."
+                                />
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>

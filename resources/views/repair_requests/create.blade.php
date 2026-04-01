@@ -29,6 +29,8 @@
             <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{ $featureMessage }}</div>
         @endif
 
+        <x-validation-summary />
+
         {{-- Formā lietotājs izvēlas ierīci un apraksta problēmu, ko admins vēlāk izskata. --}}
         <form method="POST" action="{{ route('repair-requests.store') }}" class="surface-card space-y-6 p-6">
             @csrf

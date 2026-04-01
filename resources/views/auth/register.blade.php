@@ -11,6 +11,8 @@
     <form method="POST" action="{{ route('register') }}" class="space-y-4">
         @csrf
 
+        <x-validation-summary />
+
         <div>
             <x-input-label for="full_name" value="Vārds un uzvārds" />
             <x-text-input id="full_name" class="mt-1 block w-full" type="text" name="full_name" :value="old('full_name')" required autofocus />

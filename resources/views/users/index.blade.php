@@ -63,7 +63,7 @@
             </div>
         </div>
 
-        <div id="users-index-root" data-async-table-root>
+        <div id="users-index-root" data-async-table-root x-data="requestDetailsDrawer()" @open-request-detail.window="show($event.detail)">
         <form method="GET" action="{{ route('users.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-3 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,1fr)]" data-async-table-form data-async-root="#users-index-root" data-search-endpoint="{{ route('users.find-by-name') }}">
             <label class="block">
                 <span class="crud-label">Vārds un uzvārds</span>
@@ -174,14 +174,25 @@
                         <th class="px-4 py-3">Amats</th>
                         <th class="px-4 py-3">Statuss</th>
                         <th class="px-4 py-3">Pēdējā pieslēgšanās</th>
+                        <th class="px-4 py-3">Aktivitāte</th>
                         <th class="px-4 py-3">Darbības</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($users as $managedUser)
+                        @php
+                            $recentAuditLogs = $managedUser->recentAuditLogs ?? collect();
+                            $latestAuditLog = $recentAuditLogs->first();
+                            $assignedDevicesUrl = route('devices.index', ['assigned_to_id' => $managedUser->id, 'assigned_to_query' => $managedUser->full_name]);
+                        @endphp
                         <tr class="app-table-row border-t border-slate-100 {{ $managedUser->role === 'admin' ? 'app-table-row-accent-violet' : 'app-table-row-accent-sky' }}" data-table-row-id="user-{{ $managedUser->id }}" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim((string) $managedUser->full_name)) }}">
                             <td class="px-4 py-3">
                                 <div class="app-table-cell-strong">{{ $managedUser->full_name }}</div>
+                                <div class="mt-1 flex flex-wrap gap-2 text-xs text-slate-500">
+                                    <span>{{ $managedUser->job_title ?: 'Amats nav norādīts' }}</span>
+                                    <span>•</span>
+                                    <span>{{ $managedUser->assigned_devices_count ?? 0 }} ierīce{{ ($managedUser->assigned_devices_count ?? 0) === 1 ? '' : 's' }}</span>
+                                </div>
                             </td>
                             <td class="px-4 py-3 text-slate-600">{{ $managedUser->email }}</td>
                             <td class="px-4 py-3 text-slate-600">{{ $managedUser->phone ?: '-' }}</td>
@@ -192,7 +203,58 @@
                             <td class="px-4 py-3">
                                 <x-status-pill context="user-active" :value="$managedUser->is_active" />
                             </td>
-                            <td class="px-4 py-3 text-slate-600">{{ $managedUser->last_login?->format('d.m.Y H:i') ?: '-' }}</td>
+                            <td class="px-4 py-3 text-slate-600">
+                                <div class="font-semibold text-slate-900">{{ $managedUser->last_login?->format('d.m.Y H:i') ?: 'Nav pieslēdzies' }}</div>
+                                <div class="mt-1 text-xs text-slate-500">
+                                    {{ $managedUser->last_login ? $managedUser->last_login->diffForHumans() : 'Pirmā pieslēgšanās vēl nav notikusi' }}
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="space-y-3">
+                                    <div class="flex flex-wrap gap-2">
+                                        <a
+                                            href="{{ route('devices.index', ['assigned_to_id' => $managedUser->id, 'assigned_to_query' => $managedUser->full_name]) }}"
+                                            class="inline-flex items-center gap-1 rounded-full bg-sky-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-sky-700 ring-1 ring-sky-200"
+                                        >
+                                            <x-icon name="device" size="h-3.5 w-3.5" />
+                                            <span>{{ $managedUser->assigned_devices_count ?? 0 }} ierīces</span>
+                                        </a>
+
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-700 ring-1 ring-amber-200">
+                                            <x-icon name="repair-request" size="h-3.5 w-3.5" />
+                                            <span>{{ $managedUser->active_requests_total ?? 0 }} aktīvi pieprasījumi</span>
+                                        </span>
+                                    </div>
+
+                                    <div class="grid gap-2 text-xs text-slate-600">
+                                        <div class="flex flex-wrap gap-2">
+                                            <a href="{{ route('repair-requests.index', ['requester_id' => $managedUser->id, 'requester_query' => $managedUser->full_name, 'statuses_filter' => 1]) }}" class="rounded-full bg-white px-3 py-1 ring-1 ring-slate-200 transition hover:bg-slate-50">
+                                                Remonts: {{ $managedUser->active_repair_requests_count ?? 0 }}
+                                            </a>
+                                            <a href="{{ route('writeoff-requests.index', ['requester_id' => $managedUser->id, 'requester_query' => $managedUser->full_name, 'statuses_filter' => 1]) }}" class="rounded-full bg-white px-3 py-1 ring-1 ring-slate-200 transition hover:bg-slate-50">
+                                                Norakstīšana: {{ $managedUser->active_writeoff_requests_count ?? 0 }}
+                                            </a>
+                                            <a href="{{ route('device-transfers.index', ['requester_id' => $managedUser->id, 'requester_query' => $managedUser->full_name, 'statuses_filter' => 1]) }}" class="rounded-full bg-white px-3 py-1 ring-1 ring-slate-200 transition hover:bg-slate-50">
+                                                Nosūtītās nodošanas: {{ $managedUser->active_transfer_requests_count ?? 0 }}
+                                            </a>
+                                            <a href="{{ route('device-transfers.index', ['recipient_id' => $managedUser->id, 'recipient_query' => $managedUser->full_name, 'statuses_filter' => 1]) }}" class="rounded-full bg-white px-3 py-1 ring-1 ring-slate-200 transition hover:bg-slate-50">
+                                                Ienākošās nodošanas: {{ $managedUser->incoming_transfer_requests_count ?? 0 }}
+                                            </a>
+                                        </div>
+
+                                        <div class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3">
+                                            <div class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Pēdējās darbības</div>
+                                            @if ($latestAuditLog)
+                                                <div class="mt-2 text-sm font-semibold text-slate-900">{{ $latestAuditLog->localized_action }}</div>
+                                                <div class="mt-1 text-sm leading-6 text-slate-600">{{ $latestAuditLog->localized_description }}</div>
+                                                <div class="mt-2 text-xs text-slate-500">{{ $latestAuditLog->timestamp?->format('d.m.Y H:i') ?: '-' }}</div>
+                                            @else
+                                                <div class="mt-2 text-sm text-slate-500">Auditētās darbības vēl nav fiksētas.</div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
                             <td class="px-4 py-3">
                                 <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">
                                     <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
@@ -203,13 +265,52 @@
                                     </button>
 
                                     <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
+                                        <button
+                                            type="button"
+                                            class="table-action-item"
+                                            @click="open = false; $dispatch('open-request-detail', {
+                                                drawer_title: 'Lietotāja profils',
+                                                drawer_subtitle: 'Ātrs kopsavilkums par lomu, aktivitāti un piesaistīto inventāru.',
+                                                status_label: @js($managedUser->is_active ? 'Aktīvs' : 'Neaktīvs'),
+                                                status_badge_class: '{{ $managedUser->is_active ? 'request-detail-status-emerald' : 'request-detail-status-rose' }}',
+                                                submitted_at: @js($managedUser->last_login?->format('d.m.Y H:i') ?: 'Nav pieslēdzies'),
+                                                primary_label: 'Lietotājs',
+                                                primary_value: @js($managedUser->full_name),
+                                                primary_meta: @js($managedUser->email),
+                                                primary_note: @js($managedUser->job_title ?: 'Amats nav norādīts'),
+                                                primary_note_secondary: @js($roleLabels[$managedUser->role] ?? $managedUser->role),
+                                                primary_link_url: @js($assignedDevicesUrl),
+                                                primary_link_label: 'Atvērt piesaistītās ierīces',
+                                                secondary_label: 'Aktivitāte',
+                                                secondary_value: @js(($managedUser->active_requests_total ?? 0) . ' aktīvi pieprasījumi'),
+                                                secondary_meta: @js(($managedUser->assigned_devices_count ?? 0) . ' piesaistītas ierīces'),
+                                                secondary_note: @js($latestAuditLog ? $latestAuditLog->localized_action : 'Auditētu darbību vēl nav'),
+                                                tertiary_label: 'Pēdējā darbība',
+                                                tertiary_value: @js($latestAuditLog?->localized_description ?: 'Nav pieejama'),
+                                                tertiary_meta: @js($latestAuditLog?->timestamp?->format('d.m.Y H:i') ?: 'Laiks nav pieejams'),
+                                                tertiary_note: @js(collect([
+                                                    'Remonts: '.($managedUser->active_repair_requests_count ?? 0),
+                                                    'Norakstīšana: '.($managedUser->active_writeoff_requests_count ?? 0),
+                                                    'Nodošanas: '.(($managedUser->active_transfer_requests_count ?? 0) + ($managedUser->incoming_transfer_requests_count ?? 0)),
+                                                ])->implode(' | ')),
+                                                description_label: 'Pēdējo darbību vēsture',
+                                                description: @js($recentAuditLogs->isNotEmpty()
+                                                    ? $recentAuditLogs->map(fn ($log) => ($log->timestamp?->format('d.m.Y H:i') ?: '-') . ' — ' . $log->localized_description)->implode("\n")
+                                                    : 'Auditētā darbību vēsture šim lietotājam vēl nav pieejama.'
+                                                ),
+                                            })"
+                                        >
+                                            <x-icon name="view" size="h-4 w-4" />
+                                            <span>Ātrais skats</span>
+                                        </button>
+
                                         <a href="{{ route('users.edit', $managedUser) }}" class="table-action-item table-action-item-amber" @click="open = false">
                                             <x-icon name="edit" size="h-4 w-4" />
                                             <span>Rediģēt</span>
                                         </a>
 
                                         <a
-                                            href="{{ route('devices.index', ['assigned_to_id' => $managedUser->id, 'assigned_to_query' => $managedUser->full_name]) }}"
+                                            href="{{ $assignedDevicesUrl }}"
                                             class="table-action-item"
                                             @click="open = false"
                                         >
@@ -240,7 +341,14 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-4 py-8 text-center text-slate-500">Lietotāji vēl nav pievienoti.</td>
+                            <td colspan="9" class="px-4 py-6">
+                                <x-empty-state
+                                    compact
+                                    icon="users"
+                                    title="Lietotāji vēl nav pievienoti"
+                                    description="Kad sistēmā būs izveidoti lietotāji, tie parādīsies šajā tabulā."
+                                />
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -249,6 +357,8 @@
         </div>
 
         {{ $users->links() }}
+
+        <x-request-detail-drawer />
         </div>
     </section>
 </x-app-layout>

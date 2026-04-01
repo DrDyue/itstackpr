@@ -59,7 +59,7 @@
             </div>
         </div>
 
-        <div id="rooms-index-root" data-async-table-root>
+        <div id="rooms-index-root" data-async-table-root x-data="requestDetailsDrawer()" @open-request-detail.window="show($event.detail)">
         <form method="GET" action="{{ route('rooms.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-4" data-async-table-form data-async-root="#rooms-index-root" data-search-endpoint="{{ route('rooms.find-by-name') }}">
             <label class="block md:col-span-2">
                 <span class="crud-label">Telpas nosaukums</span>
@@ -143,6 +143,9 @@
                 </thead>
                 <tbody>
                     @forelse ($rooms as $room)
+                        @php
+                            $roomDevicesUrl = route('devices.index', ['room_id' => $room->id, 'room_query' => trim(implode(' ', array_filter([$room->room_name, $room->room_number])))]);
+                        @endphp
                         <tr class="app-table-row border-t border-slate-100" data-table-row-id="room-{{ $room->id }}" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim(implode(' ', array_filter([$room->room_number, $room->room_name])))) }}">
                             <td class="px-4 py-3">{{ $room->building?->building_name }}</td>
                             <td class="px-4 py-3">{{ $room->floor_number }}</td>
@@ -167,6 +170,36 @@
                             <td class="px-4 py-3 text-slate-600">{{ $room->notes ?: '-' }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex flex-wrap gap-2">
+                                    <button
+                                        type="button"
+                                        class="btn-search"
+                                        @click="$dispatch('open-request-detail', {
+                                            drawer_title: 'Telpas profils',
+                                            drawer_subtitle: 'Ātrais skats ar telpas atbildīgo, atrašanās vietu un piesaistītajām ierīcēm.',
+                                            status_label: 'Telpa',
+                                            status_badge_class: 'request-detail-status-sky',
+                                            submitted_at: '{{ $room->updated_at?->format('d.m.Y H:i') ?: '-' }}',
+                                            primary_label: 'Telpas identitāte',
+                                            primary_value: '{{ $room->room_number ?: '-' }}',
+                                            primary_meta: '{{ $room->room_name ?: 'Nosaukums nav norādīts' }}',
+                                            primary_note: '{{ $room->building?->building_name ?: 'Ēka nav norādīta' }}',
+                                            primary_note_secondary: '{{ $room->floor_number }}. stāvs',
+                                            primary_link_url: '{{ $roomDevicesUrl }}',
+                                            primary_link_label: 'Atvērt telpas ierīces',
+                                            secondary_label: 'Atbildīgais',
+                                            secondary_value: '{{ $room->user?->full_name ?: 'Nav piesaistīts' }}',
+                                            secondary_meta: '{{ $room->user?->job_title ?: ($room->user?->email ?: 'Atbildīgā persona nav norādīta') }}',
+                                            secondary_note: '{{ $room->department ?: 'Nodaļa nav norādīta' }}',
+                                            tertiary_label: 'Inventārs',
+                                            tertiary_value: '{{ $room->devices_count }} ierīces',
+                                            tertiary_meta: '{{ $room->notes ? 'Ir piezīmes' : 'Piezīmes nav norādītas' }}',
+                                            description_label: 'Piezīmes',
+                                            description: @js($room->notes ?: 'Telpai piezīmes nav pievienotas.'),
+                                        })"
+                                    >
+                                        <x-icon name="view" size="h-4 w-4" />
+                                        <span>Ātrais skats</span>
+                                    </button>
                                     <a href="{{ route('rooms.edit', $room) }}" class="btn-edit"><x-icon name="edit" size="h-4 w-4" /><span>Rediģēt</span></a>
                                     <form
                                         method="POST"
@@ -186,7 +219,14 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="px-4 py-8 text-center text-slate-500">Telpas vēl nav pievienotas.</td>
+                            <td colspan="9" class="px-4 py-6">
+                                <x-empty-state
+                                    compact
+                                    icon="room"
+                                    title="Telpas vēl nav pievienotas"
+                                    description="Pievieno telpu vai paplašini filtrus, lai šeit redzētu ierakstus."
+                                />
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -195,6 +235,8 @@
         </div>
 
         {{ $rooms->links() }}
+
+        <x-request-detail-drawer />
         </div>
     </section>
 </x-app-layout>

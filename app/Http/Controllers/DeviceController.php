@@ -263,6 +263,7 @@ class DeviceController extends Controller
             'deviceStates' => $deviceStates,
             'filters' => $filters,
             'sorting' => $sorting,
+            'filterPresets' => $this->deviceFilterPresets($user, $sorting),
             'deviceSummary' => [
                 'total' => (clone $summaryQuery)->count(),
                 'active' => (clone $summaryQuery)->where('status', Device::STATUS_ACTIVE)->count(),
@@ -460,6 +461,60 @@ SQL;
             'created_at' => ['label' => 'izveides datuma'],
             'assigned_to' => ['label' => 'piešķirtās personas'],
             'status' => ['label' => 'statusa'],
+        ];
+    }
+
+    /**
+     * Sagatavo gatavos filtru skatus, lai lietotājam nebūtu katru reizi
+     * manuāli jāsaliek vieni un tie paši atlases nosacījumi.
+     */
+    private function deviceFilterPresets(User $user, array $sorting): array
+    {
+        $baseSorting = [
+            'sort' => $sorting['sort'] ?? 'created_at',
+            'direction' => $sorting['direction'] ?? 'desc',
+        ];
+
+        return [
+            [
+                'key' => 'mine',
+                'label' => 'Manas ierīces',
+                'icon' => 'profile',
+                'tone' => 'sky',
+                'params' => $user->canManageRequests()
+                    ? array_merge($baseSorting, [
+                        'assigned_to_id' => (string) $user->id,
+                        'assigned_to_query' => $user->full_name,
+                    ])
+                    : $baseSorting,
+            ],
+            [
+                'key' => 'active',
+                'label' => 'Aktīvās',
+                'icon' => 'check-circle',
+                'tone' => 'emerald',
+                'params' => array_merge($baseSorting, [
+                    'status' => [Device::STATUS_ACTIVE],
+                ]),
+            ],
+            [
+                'key' => 'repair',
+                'label' => 'Remontā',
+                'icon' => 'repair',
+                'tone' => 'amber',
+                'params' => array_merge($baseSorting, [
+                    'status' => [Device::STATUS_REPAIR],
+                ]),
+            ],
+            [
+                'key' => 'writeoff',
+                'label' => 'Norakstītās',
+                'icon' => 'writeoff',
+                'tone' => 'rose',
+                'params' => array_merge($baseSorting, [
+                    'status' => [Device::STATUS_WRITEOFF],
+                ]),
+            ],
         ];
     }
 

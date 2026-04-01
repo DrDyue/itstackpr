@@ -67,7 +67,7 @@
             <div class="surface-empty">{{ $featureMessage }}</div>
         @endif
 
-        <div id="audit-log-index-root" data-async-table-root>
+        <div id="audit-log-index-root" data-async-table-root x-data="requestDetailsDrawer()" @open-request-detail.window="show($event.detail)">
             <form
                 method="GET"
                 action="{{ route('audit-log.index') }}"
@@ -225,7 +225,15 @@
                                             . ' '
                                             . ($sortDirectionLabels[$nextDirection] ?? '');
                                     @endphp
-                                    <th class="px-4 py-3">
+                                    <th class="{{ match ($column) {
+                                        'date' => 'table-col-date',
+                                        'severity' => 'table-col-status',
+                                        'action' => 'table-col-name',
+                                        'entity' => 'table-col-name',
+                                        'user' => 'table-col-person',
+                                        'description' => 'table-col-note',
+                                        default => '',
+                                    } }} px-4 py-3">
                                         <button
                                             type="button"
                                             class="device-sort-trigger {{ $isCurrentSort ? 'device-sort-trigger-active' : '' }}"
@@ -244,6 +252,7 @@
                                         </button>
                                     </th>
                                 @endforeach
+                                <th class="table-col-actions px-4 py-3 text-right">Skats</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -347,10 +356,57 @@
                                             {{ $log->localized_description }}
                                         </div>
                                     </td>
+                                    <td class="px-4 py-3 text-right">
+                                        @php
+                                            $severityClass = match ($log->severity) {
+                                                'critical', 'error' => 'request-detail-status-rose',
+                                                'warning' => 'request-detail-status-amber',
+                                                'info' => 'request-detail-status-sky',
+                                                default => 'request-detail-status-slate',
+                                            };
+                                        @endphp
+                                        <button
+                                            type="button"
+                                            class="btn-search"
+                                            @click="$dispatch('open-request-detail', {
+                                                drawer_title: 'Audita ieraksts',
+                                                drawer_subtitle: 'Pilnāka informācija par sistēmā fiksēto darbību un saistīto objektu.',
+                                                status_label: @js($log->localized_severity),
+                                                status_badge_class: '{{ $severityClass }}',
+                                                submitted_at: '{{ $log->timestamp?->format('d.m.Y H:i:s') ?: '-' }}',
+                                                primary_label: 'Darbība',
+                                                primary_value: @js($log->localized_action),
+                                                primary_meta: @js($log->localized_entity_type),
+                                                primary_note: @js($log->entity_reference),
+                                                primary_note_secondary: @js($log->entity_url ? 'Objekts ir pieejams atvēršanai' : 'Saistītais objekts vairs nav pieejams'),
+                                                primary_link_url: @js($log->entity_url),
+                                                primary_link_label: 'Atvērt saistīto objektu',
+                                                secondary_label: 'Lietotājs',
+                                                secondary_value: @js($log->user?->full_name ?: 'Sistēma'),
+                                                secondary_meta: @js($log->user?->email ?: 'Automātiska sistēmas darbība'),
+                                                tertiary_label: 'Identifikācija',
+                                                tertiary_value: @js('Ieraksts #'.$log->id),
+                                                tertiary_meta: @js($log->timestamp?->format('d.m.Y H:i:s') ?: '-'),
+                                                tertiary_note: @js('Svarīgums: '.$log->localized_severity),
+                                                description_label: 'Pilns apraksts',
+                                                description: @js($log->localized_description),
+                                            })"
+                                        >
+                                            <x-icon name="view" size="h-4 w-4" />
+                                            <span>Ātrais skats</span>
+                                        </button>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-4 py-8 text-center text-slate-500">Audita ierakstu nav.</td>
+                                    <td colspan="7" class="px-4 py-6">
+                                        <x-empty-state
+                                            compact
+                                            icon="audit"
+                                            title="Audita ierakstu nav"
+                                            description="Kad lietotāji veiks darbības sistēmā, tās parādīsies audita žurnālā."
+                                        />
+                                    </td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -359,6 +415,8 @@
             </div>
 
             {{ $logs->links() }}
+
+            <x-request-detail-drawer />
         </div>
     </section>
 </x-app-layout>

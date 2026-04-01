@@ -930,6 +930,21 @@ const registerAlpineData = () => {
         },
     }));
 
+    Alpine.data('requestDetailsDrawer', () => ({
+        open: false,
+        item: null,
+        show(item) {
+            this.item = item || null;
+            this.open = true;
+            document.body.classList.add('overflow-hidden');
+        },
+        close() {
+            this.open = false;
+            this.item = null;
+            document.body.classList.remove('overflow-hidden');
+        },
+    }));
+
     Alpine.data('liveRequestNotifications', ({ endpoint = '', storageKey = 'live-request-notifications', pollSeconds = 12, pageKind = '' } = {}) => ({
         endpoint,
         storageKey,

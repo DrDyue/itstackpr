@@ -37,6 +37,8 @@
             </div>
         </div>
 
+        <x-validation-summary />
+
         <form method="POST" action="{{ route('my-requests.update', ['requestType' => $requestType, 'requestId' => $editableRequest->id]) }}" class="surface-card space-y-6 p-6">
             @csrf
             @method('PATCH')

@@ -15,6 +15,8 @@
     <form method="POST" action="{{ route('password.email') }}">
         @csrf
 
+        <x-validation-summary />
+
         <!-- E-pasta adrese -->
         <div class="form-group">
             <x-input-label for="email">E-pasta adrese</x-input-label>

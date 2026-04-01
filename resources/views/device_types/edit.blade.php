@@ -22,6 +22,8 @@
             </a>
         </div>
 
+        <x-validation-summary />
+
         <form method="POST" action="{{ route('device-types.update', $type) }}" class="type-form-grid">
             @csrf
             @method('PUT')
