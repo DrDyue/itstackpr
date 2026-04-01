@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use App\Models\Device;
 use App\Models\DeviceTransfer;
 use App\Models\RepairRequest;
 use App\Models\User;
@@ -133,6 +134,85 @@ class UserController extends Controller
 
         return view('users.create', [
             'roles' => self::ROLES,
+            'roleLabels' => $this->roleLabels(),
+        ]);
+    }
+
+    public function show(User $user)
+    {
+        $this->requireAdmin();
+
+        $managedUser = User::query()
+            ->withCount([
+                'assignedDevices',
+                'repairRequests as active_repair_requests_count' => fn ($query) => $query->where('status', RepairRequest::STATUS_SUBMITTED),
+                'writeoffRequests as active_writeoff_requests_count' => fn ($query) => $query->where('status', WriteoffRequest::STATUS_SUBMITTED),
+                'outgoingTransfers as active_transfer_requests_count' => fn ($query) => $query->where('status', DeviceTransfer::STATUS_SUBMITTED),
+                'incomingTransfers as incoming_transfer_requests_count' => fn ($query) => $query->where('status', DeviceTransfer::STATUS_SUBMITTED),
+                'auditLogs as audit_logs_total_count',
+            ])
+            ->findOrFail($user->id);
+
+        $assignedDevices = Device::query()
+            ->with(['type', 'room', 'building'])
+            ->where('assigned_to_id', $managedUser->id)
+            ->orderBy('code')
+            ->limit(8)
+            ->get();
+
+        $openRepairRequests = RepairRequest::query()
+            ->with(['device.type', 'device.room', 'reviewedBy'])
+            ->where('responsible_user_id', $managedUser->id)
+            ->where('status', RepairRequest::STATUS_SUBMITTED)
+            ->latest()
+            ->limit(6)
+            ->get();
+
+        $openWriteoffRequests = WriteoffRequest::query()
+            ->with(['device.type', 'device.room', 'reviewedBy'])
+            ->where('responsible_user_id', $managedUser->id)
+            ->where('status', WriteoffRequest::STATUS_SUBMITTED)
+            ->latest()
+            ->limit(6)
+            ->get();
+
+        $outgoingTransfers = DeviceTransfer::query()
+            ->with(['device.type', 'device.room', 'transferTo', 'reviewedBy'])
+            ->where('responsible_user_id', $managedUser->id)
+            ->where('status', DeviceTransfer::STATUS_SUBMITTED)
+            ->latest()
+            ->limit(6)
+            ->get();
+
+        $incomingTransfers = DeviceTransfer::query()
+            ->with(['device.type', 'device.room', 'responsibleUser', 'reviewedBy'])
+            ->where('transfered_to_id', $managedUser->id)
+            ->where('status', DeviceTransfer::STATUS_SUBMITTED)
+            ->latest()
+            ->limit(6)
+            ->get();
+
+        $recentAuditLogs = AuditLog::query()
+            ->where('user_id', $managedUser->id)
+            ->latest('timestamp')
+            ->limit(15)
+            ->get();
+
+        $managedUser->active_requests_total = (int) (
+            ($managedUser->active_repair_requests_count ?? 0)
+            + ($managedUser->active_writeoff_requests_count ?? 0)
+            + ($managedUser->active_transfer_requests_count ?? 0)
+            + ($managedUser->incoming_transfer_requests_count ?? 0)
+        );
+
+        return view('users.show', [
+            'managedUser' => $managedUser,
+            'assignedDevices' => $assignedDevices,
+            'openRepairRequests' => $openRepairRequests,
+            'openWriteoffRequests' => $openWriteoffRequests,
+            'outgoingTransfers' => $outgoingTransfers,
+            'incomingTransfers' => $incomingTransfers,
+            'recentAuditLogs' => $recentAuditLogs,
             'roleLabels' => $this->roleLabels(),
         ]);
     }
@@ -276,6 +356,7 @@ class UserController extends Controller
         }
 
         $recentLogsByUser = AuditLog::query()
+            ->select(['id', 'user_id', 'action', 'entity_type', 'entity_id', 'description', 'severity', 'timestamp'])
             ->whereIn('user_id', $userIds)
             ->orderByDesc('timestamp')
             ->get()

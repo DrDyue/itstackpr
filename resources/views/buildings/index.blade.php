@@ -1,4 +1,4 @@
-{{--
+﻿{{--
     Lapa: Ēku saraksts.
     Atbildība: rāda visas ēkas, kurās sistēmā tiek organizētas telpas un ierīces.
     Datu avots: BuildingController@index.
@@ -36,7 +36,7 @@
             </div>
         </div>
 
-        <div id="buildings-index-root" data-async-table-root x-data="requestDetailsDrawer()" @open-request-detail.window="show($event.detail)">
+        <div id="buildings-index-root" data-async-table-root>
         <form method="GET" action="{{ route('buildings.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]" data-async-table-form data-async-root="#buildings-index-root" data-search-endpoint="{{ route('buildings.find-by-name') }}">
             <label class="block">
                 <span class="crud-label">Ēkas nosaukums</span>
@@ -112,35 +112,7 @@
                                         </button>
 
                                         <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
-                                            <button
-                                                type="button"
-                                                class="table-action-item"
-                                                @click="open = false; $dispatch('open-request-detail', {
-                                                    drawer_title: 'Ēkas profils',
-                                                    drawer_subtitle: 'Ātrs kopsavilkums ar ēkas resursiem un atrašanās vietu.',
-                                                    status_label: 'Ēka',
-                                                    status_badge_class: 'request-detail-status-slate',
-                                                    submitted_at: '{{ $building->created_at?->format('d.m.Y H:i') ?: '-' }}',
-                                                    primary_label: 'Ēka',
-                                                    primary_value: @js($building->building_name),
-                                                    primary_meta: @js($building->address ?: 'Adrese nav norādīta'),
-                                                    primary_note: @js($building->city ?: 'Pilsēta nav norādīta'),
-                                                    primary_note_secondary: @js($building->total_floors !== null ? $building->total_floors . ' stāvi' : 'Stāvu skaits nav norādīts'),
-                                                    primary_link_url: @js(route('rooms.index', ['building_id' => $building->id, 'building_query' => $building->building_name])),
-                                                    primary_link_label: 'Atvērt ēkas telpas',
-                                                    secondary_label: 'Resursi',
-                                                    secondary_value: @js($building->rooms_count . ' telpas'),
-                                                    secondary_meta: @js($building->devices_count . ' ierīces'),
-                                                    secondary_note: @js($building->notes ? 'Ir piezīmes' : 'Piezīmes nav pievienotas'),
-                                                    description_label: 'Piezīmes',
-                                                    description: @js($building->notes ?: 'Ēkai piezīmes nav pievienotas.'),
-                                                })"
-                                            >
-                                                <x-icon name="view" size="h-4 w-4" />
-                                                <span>Ātrais skats</span>
-                                            </button>
-
-                                            <a href="{{ route('buildings.edit', $building) }}" class="table-action-item table-action-item-amber" @click="open = false">
+<a href="{{ route('buildings.edit', $building) }}" class="table-action-item table-action-item-amber" @click="open = false">
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Rediģēt</span>
                                             </a>
@@ -183,8 +155,7 @@
         </div>
 
         {{ $buildings->links() }}
-
-        <x-request-detail-drawer />
         </div>
     </section>
 </x-app-layout>
+

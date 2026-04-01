@@ -1,4 +1,4 @@
-{{--
+﻿{{--
     Lapa: Ierīču nodošanas pieprasījumu saraksts.
     Atbildība: rāda visus nodošanas pieprasījumus tabulas veidā; admins redz kopskatu, lietotājs redz savus nosūtītos un saņemtos.
     Datu avots: DeviceTransferController@index.
@@ -80,7 +80,7 @@
             </div>
         </div>
 
-        <div id="device-transfers-index-root" data-async-table-root x-data="requestDetailsDrawer()" @open-request-detail.window="show($event.detail)">
+        <div id="device-transfers-index-root" data-async-table-root>
             {{-- Filtru un meklēšanas josla --}}
             <form
                 method="GET"
@@ -424,36 +424,7 @@
                                                 </button>
 
                                                 <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
-                                                    <button
-                                                        type="button"
-                                                        class="table-action-item"
-                                                        @click="open = false; $dispatch('open-request-detail', @js([
-                                                            'drawer_title' => 'Nodošanas pieteikums',
-                                                            'drawer_subtitle' => 'Ātrais skats ar nodošanas iemeslu un iesaistītajām personām.',
-                                                            'status_label' => $statusLabels[$transfer->status] ?? $transfer->status,
-                                                            'status_badge_class' => $detailStatusClasses[$transfer->status] ?? 'request-detail-status-amber',
-                                                            'submitted_at' => $transfer->created_at?->format('d.m.Y H:i') ?: '-',
-                                                            'device_code' => $device?->code ?: '-',
-                                                            'device_serial' => $device?->serial_number ? 'Sērija: '.$device->serial_number : 'Sērijas numurs nav norādīts',
-                                                            'device_name' => $device?->name ?: 'Ierīce nav atrasta',
-                                                            'device_meta' => $deviceMeta !== '' ? $deviceMeta : 'Ražotājs un modelis nav norādīti',
-                                                            'device_type' => $device?->type?->type_name ? 'Tips: '.$device->type->type_name : 'Tips nav norādīts',
-                                                            'requester_name' => $transfer->responsibleUser?->full_name ?: '-',
-                                                            'requester_meta' => $transfer->responsibleUser?->job_title ?: ($transfer->responsibleUser?->email ?: 'Darbinieks'),
-                                                            'recipient_name' => $transfer->transferTo?->full_name,
-                                                            'recipient_meta' => $transfer->transferTo?->job_title ?: ($transfer->transferTo?->email ?: 'Darbinieks'),
-                                                            'description_label' => 'Nodošanas iemesls',
-                                                            'description' => $reason !== '' ? $reason : 'Iemesls nav norādīts.',
-                                                            'reviewed_by_name' => $transfer->reviewedBy?->full_name,
-                                                            'review_notes' => $transfer->review_notes,
-                                                            'device_url' => $deviceFilterUrl,
-                                                        ]))"
-                                                    >
-                                                        <x-icon name="view" size="h-4 w-4" />
-                                                        <span>Ātrais skats</span>
-                                                    </button>
-
-                                                    @if ($isAdmin && $deviceFilterUrl)
+@if ($isAdmin && $deviceFilterUrl)
                                                         <a href="{{ $deviceFilterUrl }}" class="table-action-item" @click="open = false">
                                                             <x-icon name="view" size="h-4 w-4" />
                                                             <span>Skatīt saistīto ierīci</span>
@@ -522,8 +493,7 @@
             @if ($transfers->hasPages())
                 <div class="mt-5">{{ $transfers->links() }}</div>
             @endif
-
-            <x-request-detail-drawer />
         </div>
     </section>
 </x-app-layout>
+

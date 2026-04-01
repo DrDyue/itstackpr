@@ -46,7 +46,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('register', [RegisteredUserController::class, 'store']);
     Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
     Route::get('/audit-log/find-entry', [AuditLogController::class, 'findEntry'])->name('audit-log.find-entry');
-    Route::resource('users', UserController::class)->except(['show']);
+    Route::resource('users', UserController::class);
     Route::get('/users/find-by-name', [UserController::class, 'findByName'])->name('users.find-by-name');
 });
 

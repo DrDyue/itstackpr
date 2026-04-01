@@ -1,4 +1,4 @@
-{{--
+﻿{{--
     Lapa: Audita žurnāls.
     Atbildība: parāda sistēmas darbību vēsturi administratoram ar skaidriem filtriem un manuālu ierakstu meklēšanu.
     Datu avots: AuditLogController@index.
@@ -369,27 +369,79 @@
                                             type="button"
                                             class="btn-search"
                                             @click="$dispatch('open-request-detail', {
-                                                drawer_title: 'Audita ieraksts',
-                                                drawer_subtitle: 'Pilnāka informācija par sistēmā fiksēto darbību un saistīto objektu.',
+                                                drawer_title: 'Audita ātrais skats',
+                                                drawer_subtitle: 'Īss skaidrojums par fiksēto darbību, objektu un tās ietekmi sistēmā.',
                                                 status_label: @js($log->localized_severity),
                                                 status_badge_class: '{{ $severityClass }}',
                                                 submitted_at: '{{ $log->timestamp?->format('d.m.Y H:i:s') ?: '-' }}',
+                                                hero_icon: 'audit',
+                                                hero_tone: @js(match ($log->severity) {
+                                                    'critical', 'error' => 'rose',
+                                                    'warning' => 'amber',
+                                                    'info' => 'sky',
+                                                    default => 'slate',
+                                                }),
+                                                hero_title: @js($log->localized_action),
+                                                hero_meta: @js(collect([
+                                                    $log->localized_entity_type,
+                                                    $log->entity_reference,
+                                                ])->filter()->implode(' | ') ?: 'Objekta informācija nav pieejama'),
+                                                hero_note: @js('Fiksēts: '.($log->timestamp?->format('d.m.Y H:i:s') ?: '-')),
                                                 primary_label: 'Darbība',
+                                                primary_icon: 'information-circle',
+                                                primary_tone: @js(match ($log->severity) {
+                                                    'critical', 'error' => 'rose',
+                                                    'warning' => 'amber',
+                                                    'info' => 'sky',
+                                                    default => 'slate',
+                                                }),
                                                 primary_value: @js($log->localized_action),
-                                                primary_meta: @js($log->localized_entity_type),
-                                                primary_note: @js($log->entity_reference),
-                                                primary_note_secondary: @js($log->entity_url ? 'Objekts ir pieejams atvēršanai' : 'Saistītais objekts vairs nav pieejams'),
+                                                primary_meta: @js(match ($log->action) {
+                                                    'CREATE' => 'Sistēmā tika izveidots jauns ieraksts vai resurss.',
+                                                    'UPDATE', 'PROFILE_UPDATE' => 'Esošs ieraksts tika mainīts vai papildināts.',
+                                                    'DELETE' => 'Ieraksts tika dzēsts vai padarīts nepieejams.',
+                                                    'LOGIN' => 'Lietotājs veiksmīgi pieslēdzās sistēmai.',
+                                                    'LOGOUT' => 'Lietotājs izrakstījās no sistēmas.',
+                                                    default => 'Sistēma reģistrēja darbību audita žurnālā.',
+                                                }),
+                                                primary_note: @js($log->localized_entity_type ?: 'Objekta tips nav norādīts'),
+                                                primary_note_secondary: @js($log->entity_url ? 'Saistītais objekts ir pieejams atvēršanai.' : 'Saistītais objekts vairs nav pieejams vai ir dzēsts.'),
                                                 primary_link_url: @js($log->entity_url),
                                                 primary_link_label: 'Atvērt saistīto objektu',
                                                 secondary_label: 'Lietotājs',
+                                                secondary_icon: 'user',
+                                                secondary_tone: 'sky',
                                                 secondary_value: @js($log->user?->full_name ?: 'Sistēma'),
                                                 secondary_meta: @js($log->user?->email ?: 'Automātiska sistēmas darbība'),
-                                                tertiary_label: 'Identifikācija',
-                                                tertiary_value: @js('Ieraksts #'.$log->id),
-                                                tertiary_meta: @js($log->timestamp?->format('d.m.Y H:i:s') ?: '-'),
-                                                tertiary_note: @js('Svarīgums: '.$log->localized_severity),
-                                                description_label: 'Pilns apraksts',
+                                                secondary_note: @js($log->user ? 'Darbību izpildīja konkrēts lietotājs.' : 'Darbību izveidoja sistēmas process.'),
+                                                tertiary_label: 'Laiks un objekta atsauce',
+                                                tertiary_icon: 'clock',
+                                                tertiary_tone: @js(match ($log->severity) {
+                                                    'critical', 'error' => 'rose',
+                                                    'warning' => 'amber',
+                                                    'info' => 'sky',
+                                                    default => 'slate',
+                                                }),
+                                                tertiary_value: @js($log->timestamp?->format('d.m.Y') ?: '-'),
+                                                tertiary_meta: @js($log->timestamp?->format('H:i:s') ? 'Laiks: '.$log->timestamp->format('H:i:s') : 'Laiks nav pieejams'),
+                                                tertiary_note: @js($log->entity_reference ? 'Objekta atsauce: '.$log->entity_reference : 'Objekta atsauce nav pieejama'),
+                                                description_label: 'Pilns apraksts un skaidrojums',
+                                                description_icon: 'audit',
+                                                description_tone: 'violet',
                                                 description: @js($log->localized_description),
+                                                details_title: 'Papildinformācija',
+                                                details_icon: $log->entity_url ? 'check-circle' : 'clear',
+                                                details_tone: @js($log->entity_url ? 'emerald' : 'slate'),
+                                                details_intro_label: 'Objekta statuss:',
+                                                details_intro: @js($log->entity_url ? 'Objekts joprojām ir pieejams sistēmā.' : 'Objekts vairs nav pieejams vai ir dzēsts.'),
+                                                details_body: @js(collect([
+                                                    $log->localized_entity_type ? 'Objekta tips: '.$log->localized_entity_type : null,
+                                                    $log->entity_reference ? 'Objekta atsauce: '.$log->entity_reference : null,
+                                                    $log->timestamp?->format('d.m.Y H:i:s') ? 'Precīzs ieraksta laiks: '.$log->timestamp->format('d.m.Y H:i:s') : null,
+                                                ])->filter()->implode("\n")),
+                                                details_link_url: @js($log->entity_url),
+                                                details_link_label: 'Atvērt saistīto objektu',
+                                                details_link_icon: 'view',
                                             })"
                                         >
                                             <x-icon name="view" size="h-4 w-4" />
@@ -420,3 +472,4 @@
         </div>
     </section>
 </x-app-layout>
+

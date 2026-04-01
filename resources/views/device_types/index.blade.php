@@ -1,4 +1,4 @@
-{{--
+﻿{{--
     Lapa: Ierīču tipu saraksts.
     Atbildība: rāda visu tipu vārdnīcu klasiskā tabulā un ļauj to pārvaldīt bez lapas pārlādes.
     Datu avots: DeviceTypeController@index.
@@ -55,7 +55,7 @@
             </div>
         </div>
 
-        <div id="device-types-index-root" data-async-table-root x-data="requestDetailsDrawer()" @open-request-detail.window="show($event.detail)">
+        <div id="device-types-index-root" data-async-table-root>
             <form method="GET" action="{{ route('device-types.index') }}" data-async-table-form data-async-root="#device-types-index-root">
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
@@ -135,33 +135,7 @@
                                             </button>
 
                                             <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
-                                                <button
-                                                    type="button"
-                                                    class="table-action-item"
-                                                    @click="open = false; $dispatch('open-request-detail', {
-                                                        drawer_title: 'Ierīces tips',
-                                                        drawer_subtitle: 'Ātrs skats ar tipa nosaukumu un saistīto ierīču skaitu.',
-                                                        status_label: 'Tips',
-                                                        status_badge_class: 'request-detail-status-violet',
-                                                        submitted_at: '{{ $type->created_at?->format('d.m.Y H:i') ?: '-' }}',
-                                                        primary_label: 'Tipa nosaukums',
-                                                        primary_value: @js($type->type_name),
-                                                        primary_meta: @js($type->devices_count . ' piesaistītas ierīces'),
-                                                        primary_note: @js($canDelete ? 'Šo tipu var droši dzēst.' : 'Šis tips vēl tiek izmantots inventārā.'),
-                                                        primary_link_url: @js(route('devices.index', ['type' => $type->id, 'type_query' => $type->type_name])),
-                                                        primary_link_label: 'Atvērt šī tipa ierīces',
-                                                        secondary_label: 'Dzēšanas statuss',
-                                                        secondary_value: @js($canDelete ? 'Pieejams dzēšanai' : 'Dzēšana bloķēta'),
-                                                        secondary_meta: @js($canDelete ? 'Ar tipu nav saistītu ierīču.' : $deleteTooltip),
-                                                        description_label: 'Piezīme',
-                                                        description: @js($canDelete ? 'Tips ir brīvs un to var dzēst, ja tas vairs nav nepieciešams.' : $deleteTooltip),
-                                                    })"
-                                                >
-                                                    <x-icon name="view" size="h-4 w-4" />
-                                                    <span>Ātrais skats</span>
-                                                </button>
-
-                                                <a href="{{ route('device-types.edit', $type) }}" class="table-action-item table-action-item-amber" @click="open = false">
+<a href="{{ route('device-types.edit', $type) }}" class="table-action-item table-action-item-amber" @click="open = false">
                                                     <x-icon name="edit" size="h-4 w-4" />
                                                     <span>Rediģēt</span>
                                                 </a>
@@ -213,8 +187,7 @@
             @if ($types->hasPages())
                 <div class="mt-5">{{ $types->links() }}</div>
             @endif
-
-            <x-request-detail-drawer />
         </div>
     </section>
 </x-app-layout>
+

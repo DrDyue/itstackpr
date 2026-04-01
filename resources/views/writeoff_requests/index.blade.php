@@ -1,4 +1,4 @@
-{{--
+﻿{{--
     Lapa: Norakstīšanas pieteikumu saraksts.
     Atbildība: rāda norakstīšanas pieprasījumus tabulas veidā; admins izskata visus, lietotājs redz savus.
     Datu avots: WriteoffRequestController@index.
@@ -73,7 +73,7 @@
             </div>
         </div>
 
-        <div id="writeoff-requests-index-root" data-async-table-root class="writeoff-requests-index-page" x-data="requestDetailsDrawer()" @open-request-detail.window="show($event.detail)">
+        <div id="writeoff-requests-index-root" data-async-table-root class="writeoff-requests-index-page">
             {{-- Filtru un meklēšanas josla --}}
             <form
                 method="GET"
@@ -329,34 +329,7 @@
                                             </button>
 
                                             <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
-                                                <button
-                                                    type="button"
-                                                    class="table-action-item"
-                                                    @click="open = false; $dispatch('open-request-detail', @js([
-                                                        'drawer_title' => 'Norakstīšanas pieteikums',
-                                                        'drawer_subtitle' => 'Ātrais skats ar norakstīšanas iemeslu un saistīto ierīci.',
-                                                        'status_label' => $statusLabels[$writeoffRequest->status] ?? $writeoffRequest->status,
-                                                        'status_badge_class' => $detailStatusClasses[$writeoffRequest->status] ?? 'request-detail-status-amber',
-                                                        'submitted_at' => $writeoffRequest->created_at?->format('d.m.Y H:i') ?: '-',
-                                                        'device_code' => $device?->code ?: '-',
-                                                        'device_serial' => $device?->serial_number ? 'Sērija: '.$device->serial_number : 'Sērijas numurs nav norādīts',
-                                                        'device_name' => $device?->name ?: 'Ierīce nav atrasta',
-                                                        'device_meta' => $deviceMeta !== '' ? $deviceMeta : 'Ražotājs un modelis nav norādīti',
-                                                        'device_type' => $device?->type?->type_name ? 'Tips: '.$device->type->type_name : 'Tips nav norādīts',
-                                                        'requester_name' => $writeoffRequest->responsibleUser?->full_name ?: '-',
-                                                        'requester_meta' => $writeoffRequest->responsibleUser?->job_title ?: ($writeoffRequest->responsibleUser?->email ?: 'Darbinieks'),
-                                                        'description_label' => 'Norakstīšanas iemesls',
-                                                        'description' => $reason !== '' ? $reason : 'Iemesls nav norādīts.',
-                                                        'reviewed_by_name' => $writeoffRequest->reviewedBy?->full_name,
-                                                        'review_notes' => $writeoffRequest->review_notes,
-                                                        'device_url' => $deviceFilterUrl,
-                                                    ]))"
-                                                >
-                                                    <x-icon name="view" size="h-4 w-4" />
-                                                    <span>Ātrais skats</span>
-                                                </button>
-
-                                                @if ($deviceFilterUrl)
+@if ($deviceFilterUrl)
                                                     <a href="{{ $deviceFilterUrl }}" class="table-action-item" @click="open = false">
                                                         <x-icon name="view" size="h-4 w-4" />
                                                         <span>Skatīt saistīto ierīci</span>
@@ -444,8 +417,7 @@
             @if ($requests->hasPages())
                 <div class="mt-5">{{ $requests->links() }}</div>
             @endif
-
-            <x-request-detail-drawer />
         </div>
     </section>
 </x-app-layout>
+

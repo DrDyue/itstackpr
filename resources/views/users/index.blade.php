@@ -1,4 +1,4 @@
-{{--
+﻿{{--
     Lapa: Lietotāju saraksts.
     Atbildība: rāda sistēmas lietotājus, viņu lomas, aktivitāti un pēdējo pieslēgšanos.
     Datu avots: UserController@index.
@@ -63,7 +63,7 @@
             </div>
         </div>
 
-        <div id="users-index-root" data-async-table-root x-data="requestDetailsDrawer()" @open-request-detail.window="show($event.detail)">
+        <div id="users-index-root" data-async-table-root>
         <form method="GET" action="{{ route('users.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-3 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,1fr)]" data-async-table-form data-async-root="#users-index-root" data-search-endpoint="{{ route('users.find-by-name') }}">
             <label class="block">
                 <span class="crud-label">Vārds un uzvārds</span>
@@ -265,46 +265,7 @@
                                     </button>
 
                                     <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
-                                        <button
-                                            type="button"
-                                            class="table-action-item"
-                                            @click="open = false; $dispatch('open-request-detail', {
-                                                drawer_title: 'Lietotāja profils',
-                                                drawer_subtitle: 'Ātrs kopsavilkums par lomu, aktivitāti un piesaistīto inventāru.',
-                                                status_label: @js($managedUser->is_active ? 'Aktīvs' : 'Neaktīvs'),
-                                                status_badge_class: '{{ $managedUser->is_active ? 'request-detail-status-emerald' : 'request-detail-status-rose' }}',
-                                                submitted_at: @js($managedUser->last_login?->format('d.m.Y H:i') ?: 'Nav pieslēdzies'),
-                                                primary_label: 'Lietotājs',
-                                                primary_value: @js($managedUser->full_name),
-                                                primary_meta: @js($managedUser->email),
-                                                primary_note: @js($managedUser->job_title ?: 'Amats nav norādīts'),
-                                                primary_note_secondary: @js($roleLabels[$managedUser->role] ?? $managedUser->role),
-                                                primary_link_url: @js($assignedDevicesUrl),
-                                                primary_link_label: 'Atvērt piesaistītās ierīces',
-                                                secondary_label: 'Aktivitāte',
-                                                secondary_value: @js(($managedUser->active_requests_total ?? 0) . ' aktīvi pieprasījumi'),
-                                                secondary_meta: @js(($managedUser->assigned_devices_count ?? 0) . ' piesaistītas ierīces'),
-                                                secondary_note: @js($latestAuditLog ? $latestAuditLog->localized_action : 'Auditētu darbību vēl nav'),
-                                                tertiary_label: 'Pēdējā darbība',
-                                                tertiary_value: @js($latestAuditLog?->localized_description ?: 'Nav pieejama'),
-                                                tertiary_meta: @js($latestAuditLog?->timestamp?->format('d.m.Y H:i') ?: 'Laiks nav pieejams'),
-                                                tertiary_note: @js(collect([
-                                                    'Remonts: '.($managedUser->active_repair_requests_count ?? 0),
-                                                    'Norakstīšana: '.($managedUser->active_writeoff_requests_count ?? 0),
-                                                    'Nodošanas: '.(($managedUser->active_transfer_requests_count ?? 0) + ($managedUser->incoming_transfer_requests_count ?? 0)),
-                                                ])->implode(' | ')),
-                                                description_label: 'Pēdējo darbību vēsture',
-                                                description: @js($recentAuditLogs->isNotEmpty()
-                                                    ? $recentAuditLogs->map(fn ($log) => ($log->timestamp?->format('d.m.Y H:i') ?: '-') . ' — ' . $log->localized_description)->implode("\n")
-                                                    : 'Auditētā darbību vēsture šim lietotājam vēl nav pieejama.'
-                                                ),
-                                            })"
-                                        >
-                                            <x-icon name="view" size="h-4 w-4" />
-                                            <span>Ātrais skats</span>
-                                        </button>
-
-                                        <a href="{{ route('users.edit', $managedUser) }}" class="table-action-item table-action-item-amber" @click="open = false">
+<a href="{{ route('users.edit', $managedUser) }}" class="table-action-item table-action-item-amber" @click="open = false">
                                             <x-icon name="edit" size="h-4 w-4" />
                                             <span>Rediģēt</span>
                                         </a>
@@ -357,8 +318,7 @@
         </div>
 
         {{ $users->links() }}
-
-        <x-request-detail-drawer />
         </div>
     </section>
 </x-app-layout>
+

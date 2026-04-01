@@ -1,4 +1,4 @@
-{{--
+﻿{{--
     Lapa: Telpu saraksts.
     Atbildība: rāda visas telpas, to ēkas, atbildīgos un ierīču skaitu.
     Datu avots: RoomController@index.
@@ -59,7 +59,7 @@
             </div>
         </div>
 
-        <div id="rooms-index-root" data-async-table-root x-data="requestDetailsDrawer()" @open-request-detail.window="show($event.detail)">
+        <div id="rooms-index-root" data-async-table-root>
         <form method="GET" action="{{ route('rooms.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-4" data-async-table-form data-async-root="#rooms-index-root" data-search-endpoint="{{ route('rooms.find-by-name') }}">
             <label class="block md:col-span-2">
                 <span class="crud-label">Telpas nosaukums</span>
@@ -170,37 +170,7 @@
                             <td class="px-4 py-3 text-slate-600">{{ $room->notes ?: '-' }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex flex-wrap gap-2">
-                                    <button
-                                        type="button"
-                                        class="btn-search"
-                                        @click="$dispatch('open-request-detail', {
-                                            drawer_title: 'Telpas profils',
-                                            drawer_subtitle: 'Ātrais skats ar telpas atbildīgo, atrašanās vietu un piesaistītajām ierīcēm.',
-                                            status_label: 'Telpa',
-                                            status_badge_class: 'request-detail-status-sky',
-                                            submitted_at: '{{ $room->updated_at?->format('d.m.Y H:i') ?: '-' }}',
-                                            primary_label: 'Telpas identitāte',
-                                            primary_value: '{{ $room->room_number ?: '-' }}',
-                                            primary_meta: '{{ $room->room_name ?: 'Nosaukums nav norādīts' }}',
-                                            primary_note: '{{ $room->building?->building_name ?: 'Ēka nav norādīta' }}',
-                                            primary_note_secondary: '{{ $room->floor_number }}. stāvs',
-                                            primary_link_url: '{{ $roomDevicesUrl }}',
-                                            primary_link_label: 'Atvērt telpas ierīces',
-                                            secondary_label: 'Atbildīgais',
-                                            secondary_value: '{{ $room->user?->full_name ?: 'Nav piesaistīts' }}',
-                                            secondary_meta: '{{ $room->user?->job_title ?: ($room->user?->email ?: 'Atbildīgā persona nav norādīta') }}',
-                                            secondary_note: '{{ $room->department ?: 'Nodaļa nav norādīta' }}',
-                                            tertiary_label: 'Inventārs',
-                                            tertiary_value: '{{ $room->devices_count }} ierīces',
-                                            tertiary_meta: '{{ $room->notes ? 'Ir piezīmes' : 'Piezīmes nav norādītas' }}',
-                                            description_label: 'Piezīmes',
-                                            description: @js($room->notes ?: 'Telpai piezīmes nav pievienotas.'),
-                                        })"
-                                    >
-                                        <x-icon name="view" size="h-4 w-4" />
-                                        <span>Ātrais skats</span>
-                                    </button>
-                                    <a href="{{ route('rooms.edit', $room) }}" class="btn-edit"><x-icon name="edit" size="h-4 w-4" /><span>Rediģēt</span></a>
+<a href="{{ route('rooms.edit', $room) }}" class="btn-edit"><x-icon name="edit" size="h-4 w-4" /><span>Rediģēt</span></a>
                                     <form
                                         method="POST"
                                         action="{{ route('rooms.destroy', $room) }}"
@@ -235,8 +205,7 @@
         </div>
 
         {{ $rooms->links() }}
-
-        <x-request-detail-drawer />
         </div>
     </section>
 </x-app-layout>
+

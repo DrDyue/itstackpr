@@ -1,4 +1,4 @@
-{{--
+﻿{{--
     Lapa: Remonta pieteikumu saraksts.
     Atbildība: rāda remonta pieprasījumus tabulas veidā; lietotājs redz savus, admins redz visus un var tos izskatīt.
     Datu avots: RepairRequestController@index.
@@ -73,7 +73,7 @@
             </div>
         </div>
 
-        <div id="repair-requests-index-root" data-async-table-root class="repair-requests-index-page" x-data="requestDetailsDrawer()" @open-request-detail.window="show($event.detail)">
+        <div id="repair-requests-index-root" data-async-table-root class="repair-requests-index-page">
             {{-- Filtru un meklēšanas josla --}}
             <form
                 method="GET"
@@ -334,34 +334,7 @@
                                             </button>
 
                                             <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
-                                                <button
-                                                    type="button"
-                                                    class="table-action-item"
-                                                    @click="open = false; $dispatch('open-request-detail', @js([
-                                                        'drawer_title' => 'Remonta pieteikums',
-                                                        'drawer_subtitle' => 'Ātrais skats ar iesniegto problēmu un saistīto ierīci.',
-                                                        'status_label' => $statusLabels[$repairRequest->status] ?? $repairRequest->status,
-                                                        'status_badge_class' => $detailStatusClasses[$repairRequest->status] ?? 'request-detail-status-amber',
-                                                        'submitted_at' => $repairRequest->created_at?->format('d.m.Y H:i') ?: '-',
-                                                        'device_code' => $device?->code ?: '-',
-                                                        'device_serial' => $device?->serial_number ? 'Sērija: '.$device->serial_number : 'Sērijas numurs nav norādīts',
-                                                        'device_name' => $device?->name ?: 'Ierīce nav atrasta',
-                                                        'device_meta' => $deviceMeta !== '' ? $deviceMeta : 'Ražotājs un modelis nav norādīti',
-                                                        'device_type' => $device?->type?->type_name ? 'Tips: '.$device->type->type_name : 'Tips nav norādīts',
-                                                        'requester_name' => $repairRequest->responsibleUser?->full_name ?: '-',
-                                                        'requester_meta' => $repairRequest->responsibleUser?->job_title ?: ($repairRequest->responsibleUser?->email ?: 'Darbinieks'),
-                                                        'description_label' => 'Problēmas apraksts',
-                                                        'description' => $description !== '' ? $description : 'Apraksts nav norādīts.',
-                                                        'reviewed_by_name' => $repairRequest->reviewedBy?->full_name,
-                                                        'review_notes' => $repairRequest->review_notes,
-                                                        'device_url' => $deviceFilterUrl,
-                                                    ]))"
-                                                >
-                                                    <x-icon name="view" size="h-4 w-4" />
-                                                    <span>Ātrais skats</span>
-                                                </button>
-
-                                                @if ($deviceFilterUrl)
+@if ($deviceFilterUrl)
                                                     <a href="{{ $deviceFilterUrl }}" class="table-action-item" @click="open = false">
                                                         <x-icon name="view" size="h-4 w-4" />
                                                         <span>Skatīt saistīto ierīci</span>
@@ -449,8 +422,7 @@
             @if ($requests->hasPages())
                 <div class="mt-5">{{ $requests->links() }}</div>
             @endif
-
-            <x-request-detail-drawer />
         </div>
     </section>
 </x-app-layout>
+
