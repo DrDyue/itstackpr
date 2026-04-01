@@ -274,47 +274,79 @@
             invoiceNumber: config.invoiceNumber,
             cost: config.cost,
 
+            init() {
+                // Seko līdzi izmaiņām lai atjauninātu gatavību
+                this.$watch('repairType', () => this.$forceUpdate());
+                this.$watch('status', () => this.$forceUpdate());
+                this.$watch('description', () => this.$forceUpdate());
+                this.$watch('vendorName', () => this.$forceUpdate());
+                this.$watch('vendorContact', () => this.$forceUpdate());
+                this.$watch('invoiceNumber', () => this.$forceUpdate());
+            },
+
             nextStepLabel() {
                 if (this.status === 'in-progress') {
-                    return 'Lai pabeigtu remontu, aizpildi zemāk esošās prasības.';
+                    if (this.repairType === 'external') {
+                        return 'Lai pabeigtu ārējo remontu, aizpildi 4 prasības.';
+                    }
+                    return 'Lai pabeigtu iekšējo remontu, aizpildi 1 prasību.';
                 }
                 return '';
             },
 
             nextStepReady() {
-                if (this.status === 'in-progress') {
-                    return this.requirementRows().every(r => r.done);
+                if (this.status !== 'in-progress') {
+                    return true;
                 }
-                return true;
+                
+                const rows = this.requirementRows();
+                if (rows.length === 0) {
+                    return true;
+                }
+                return rows.every(r => r.done);
             },
 
             requirementRows() {
+                // Ja nav in-progress statusā, nav prasību
+                if (this.status !== 'in-progress') {
+                    return [];
+                }
+
                 const rows = [];
 
-                if (this.status === 'in-progress') {
-                    // Apraksts ir obligāts VISIEM remontiem
+                // 1. Apraksts - OBLIGĀTS VISIEM REMONTIEM
+                const hasDescription = this.description && this.description.trim().length > 0;
+                rows.push({
+                    key: 'description',
+                    label: 'Remonta apraksts',
+                    done: hasDescription
+                });
+
+                // 2. Ja ir ĀRĒJAIS remonts - papildus 3 prasības
+                if (this.repairType === 'external') {
+                    const hasVendorName = this.vendorName && this.vendorName.trim().length > 0;
                     rows.push({
-                        label: 'Remonta apraksts',
-                        done: this.description && this.description.trim().length > 0
+                        key: 'vendor_name',
+                        label: 'Pakalpojuma sniedzējs',
+                        done: hasVendorName
                     });
 
-                    // Ja ir ārējais remonts - papildus prasības
-                    if (this.repairType === 'external') {
-                        rows.push({
-                            label: 'Pakalpojuma sniedzējs',
-                            done: this.vendorName && this.vendorName.trim().length > 0
-                        });
-                        rows.push({
-                            label: 'Vendora kontakts',
-                            done: this.vendorContact && this.vendorContact.trim().length > 0
-                        });
-                        rows.push({
-                            label: 'Rēķina numurs',
-                            done: this.invoiceNumber && this.invoiceNumber.trim().length > 0
-                        });
-                    }
-                    // Iekšējam remontam - tikai apraksts ir obligāts
+                    const hasVendorContact = this.vendorContact && this.vendorContact.trim().length > 0;
+                    rows.push({
+                        key: 'vendor_contact',
+                        label: 'Vendora kontakts',
+                        done: hasVendorContact
+                    });
+
+                    const hasInvoiceNumber = this.invoiceNumber && this.invoiceNumber.trim().length > 0;
+                    rows.push({
+                        key: 'invoice_number',
+                        label: 'Rēķina numurs',
+                        done: hasInvoiceNumber
+                    });
                 }
+
+                // 3. Iekšējam remontam - TIKAI apraksts (vairāk nekas nav jāpievieno)
 
                 return rows;
             },
@@ -353,8 +385,12 @@
             },
 
             submitCompletion() {
-                if (!this.nextStepReady()) {
-                    alert('Lūdzu vispirms aizpildi visas obligātās prasības remonta pabeigšanai.');
+                const rows = this.requirementRows();
+                const allDone = rows.length === 0 || rows.every(r => r.done);
+                
+                if (!allDone) {
+                    const missingCount = rows.filter(r => !r.done).length;
+                    alert('Lūdzu vispirms aizpildi ' + missingCount + ' trūkstošās prasības remonta pabeigšanai.');
                     return;
                 }
 
