@@ -273,18 +273,20 @@
             vendorContact: config.vendorContact,
             invoiceNumber: config.invoiceNumber,
             cost: config.cost,
+            forceUpdate: 0,
 
             init() {
                 // Seko līdzi izmaiņām lai atjauninātu gatavību
-                this.$watch('repairType', () => this.$forceUpdate());
-                this.$watch('status', () => this.$forceUpdate());
-                this.$watch('description', () => this.$forceUpdate());
-                this.$watch('vendorName', () => this.$forceUpdate());
-                this.$watch('vendorContact', () => this.$forceUpdate());
-                this.$watch('invoiceNumber', () => this.$forceUpdate());
+                this.$watch('repairType', () => this.forceUpdate++);
+                this.$watch('status', () => this.forceUpdate++);
+                this.$watch('description', () => this.forceUpdate++);
+                this.$watch('vendorName', () => this.forceUpdate++);
+                this.$watch('vendorContact', () => this.forceUpdate++);
+                this.$watch('invoiceNumber', () => this.forceUpdate++);
             },
 
             nextStepLabel() {
+                this.forceUpdate; // reaktivitatei
                 if (this.status === 'in-progress') {
                     if (this.repairType === 'external') {
                         return 'Lai pabeigtu ārējo remontu, aizpildi 4 prasības.';
@@ -295,6 +297,7 @@
             },
 
             nextStepReady() {
+                this.forceUpdate; // reaktivitatei
                 if (this.status !== 'in-progress') {
                     return true;
                 }
@@ -307,6 +310,7 @@
             },
 
             requirementRows() {
+                this.forceUpdate; // reaktivitatei
                 // Ja nav in-progress statusā, nav prasību
                 if (this.status !== 'in-progress') {
                     return [];
