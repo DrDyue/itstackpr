@@ -61,6 +61,7 @@ Route::middleware(['auth', 'manager'])->group(function () {
     Route::post('/devices/{device}/quick-update', [DeviceController::class, 'quickUpdate'])->name('devices.quick-update');
     Route::resource('devices', DeviceController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
     Route::post('/repairs/{repair}/transition', [RepairController::class, 'transition'])->name('repairs.transition');
+    Route::post('/repairs/{repair}/completion', [RepairController::class, 'completion'])->name('repairs.completion');
     Route::resource('repairs', RepairController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
 });
 

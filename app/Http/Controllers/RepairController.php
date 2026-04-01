@@ -377,6 +377,77 @@ class RepairController extends Controller
     }
 
     /**
+     * Pabeidz remontu (pāreja no in-progress uz completed).
+     */
+    public function completion(Request $request, Repair $repair)
+    {
+        $this->requireManager();
+
+        if (! $this->featureTableExists('repairs')) {
+            return back()->with('error', 'Tabula repairs šobrīd nav pieejama.');
+        }
+
+        if ($repair->status !== 'in-progress') {
+            return back()->with('error', 'Remontu var pabeigt tikai no procesa statusa.');
+        }
+
+        $validated = $this->validateInput($request, [
+            'description' => ['required', 'string'],
+            'cost' => ['nullable', 'numeric', 'min:0'],
+            'vendor_name' => ['nullable', 'string', 'max:255'],
+            'vendor_contact' => ['nullable', 'string', 'max:255'],
+            'invoice_number' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        // Pārbauda vai visi lauki ir aizpildīti
+        if (! filled($validated['description'])) {
+            return back()->with('error', 'Lai pabeigtu remontu, ir jābūt aizpildītam aprakstam.');
+        }
+
+        if ($repair->repair_type === 'external') {
+            if (! filled($validated['vendor_name'])) {
+                return back()->with('error', 'Ārējam remontam ir jābūt norādītam pakalpojuma sniedzējam.');
+            }
+            if (! filled($validated['vendor_contact'])) {
+                return back()->with('error', 'Ārējam remontam ir jābūt norādītam vendora kontaktam.');
+            }
+            if (! filled($validated['invoice_number'])) {
+                return back()->with('error', 'Ārējam remontam ir jābūt norādītam rēķina numuram.');
+            }
+        }
+
+        $before = $repair->only(['status', 'end_date', 'cost', 'vendor_name', 'vendor_contact', 'invoice_number', 'description']);
+
+        $payload = [
+            'status' => 'completed',
+            'end_date' => now()->toDateString(),
+            'description' => $validated['description'],
+        ];
+
+        if ($repair->repair_type === 'external') {
+            $payload['vendor_name'] = $validated['vendor_name'] ?? $repair->vendor_name;
+            $payload['vendor_contact'] = $validated['vendor_contact'] ?? $repair->vendor_contact;
+            $payload['invoice_number'] = $validated['invoice_number'] ?? $repair->invoice_number;
+            $payload['cost'] = filled($validated['cost']) ? $validated['cost'] : $repair->cost;
+        } else {
+            $payload['cost'] = filled($validated['cost']) ? $validated['cost'] : null;
+        }
+
+        $repair->update($payload);
+        $this->syncDeviceStatus($repair, 'in-progress');
+
+        AuditTrail::updatedFromState(
+            auth()->id(),
+            $repair,
+            $before,
+            ['status' => 'completed', 'end_date' => now()->toDateString()],
+            description: 'Remonts pabeigts: ' . $this->labelForStatus('in-progress') . ' -> ' . $this->labelForStatus('completed')
+        );
+
+        return back()->with('success', 'Remonts pabeigts');
+    }
+
+    /**
      * Vecais show ceļš projektā tiek izmantots kā pāradresācija uz rediģēšanu.
      */
     public function show(Repair $repair)
@@ -714,6 +785,7 @@ class RepairController extends Controller
             'requester_query' => trim((string) $request->query('requester_query', '')),
             'statuses' => $selectedStatuses,
             'priorities' => $selectedPriorities,
+            'repair_type' => in_array($request->query('repair_type', ''), ['internal', 'external'], true) ? $request->query('repair_type') : null,
             'date_from' => trim((string) $request->query('date_from', '')),
             'date_to' => trim((string) $request->query('date_to', '')),
             'mine' => $request->boolean('mine'),
@@ -764,6 +836,10 @@ class RepairController extends Controller
 
         if (! in_array('priority', $skip, true) && count($filters['priorities'] ?? []) > 0 && count($filters['priorities']) < count(self::PRIORITIES)) {
             $query->whereIn('repairs.priority', $filters['priorities']);
+        }
+
+        if (! in_array('repair_type', $skip, true) && filled($filters['repair_type'])) {
+            $query->where('repairs.repair_type', $filters['repair_type']);
         }
 
         if ($filters['date_from'] !== '' && ! in_array('date_from', $skip, true)) {

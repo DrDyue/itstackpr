@@ -23,6 +23,7 @@
             $repair->device?->room?->room_number,
         ])->filter()->implode(' '));
         $locationSecondary = $repair->device?->building?->building_name;
+        $deviceMeta = collect([$repair->device?->manufacturer, $repair->device?->model])->filter()->implode(' ');
     @endphp
 
     <section
@@ -69,6 +70,7 @@
 
         <div class="grid gap-4 xl:grid-cols-[minmax(0,1.28fr)_minmax(22rem,0.92fr)]">
             <div class="space-y-4">
+                {{-- REMONTA KOPSAVILKUMS --}}
                 <div class="surface-card space-y-4 p-5">
                     <div class="flex flex-wrap items-start justify-between gap-4">
                         <div class="flex items-start gap-4">
@@ -85,11 +87,19 @@
                                 <h2 class="text-xl font-semibold text-slate-900">{{ $repair->device?->name ?: 'Ierīce nav atrasta' }}</h2>
                                 <div class="flex flex-wrap gap-2 text-sm text-slate-500">
                                     <span>Kods: {{ $repair->device?->code ?: 'bez koda' }}</span>
+                                    @if ($deviceMeta)
+                                        <span>{{ $deviceMeta }}</span>
+                                    @endif
                                     @if ($repair->device?->serial_number)
                                         <span>Sērija: {{ $repair->device->serial_number }}</span>
                                     @endif
+                                </div>
+                                <div class="flex flex-wrap gap-2 text-sm text-slate-600">
                                     @if ($locationPrimary)
-                                        <span>{{ $locationPrimary }}</span>
+                                        <span><strong class="text-slate-900">Atrodas:</strong> {{ $locationPrimary }}</span>
+                                    @endif
+                                    @if ($locationSecondary)
+                                        <span>{{ $locationSecondary }}</span>
                                     @endif
                                 </div>
                             </div>
@@ -98,26 +108,21 @@
                         <x-status-pill context="repair" :value="$repair->status" :label="$statusLabels[$repair->status] ?? null" />
                     </div>
 
-                    <div class="grid gap-3 lg:grid-cols-3">
+                    <div class="grid gap-3 lg:grid-cols-2">
                         <div class="rounded-2xl border px-4 py-4 text-sm {{ $statusTone }}">
                             <div class="font-semibold">Statusa informācija</div>
                             <div class="mt-2">{{ $statusMessage }}</div>
                         </div>
 
                         <div class="surface-card-muted space-y-2">
-                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Atbildība un vieta</div>
+                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Atbildība un laiks</div>
                             <div class="text-sm text-slate-600"><strong class="text-slate-900">Piešķirta:</strong> {{ $repair->device?->assignedTo?->full_name ?: 'Nav piešķirta' }}</div>
-                            <div class="text-sm text-slate-600"><strong class="text-slate-900">Atrašanās vieta:</strong> {{ $locationPrimary ?: 'Nav norādīta' }}</div>
-                            @if ($locationSecondary)
-                                <div class="text-xs text-slate-500">{{ $locationSecondary }}</div>
+                            <div class="text-sm text-slate-600"><strong class="text-slate-900">Apstiprināja:</strong> {{ $repair->approval_actor?->full_name ?: 'Nav norādīts' }}</div>
+                            @if ($repair->executor)
+                                <div class="text-sm text-slate-600"><strong class="text-slate-900">Izpildītājs:</strong> {{ $repair->executor->full_name }}</div>
                             @endif
-                        </div>
-
-                        <div class="surface-card-muted space-y-2">
-                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Laika dati</div>
                             <div class="text-sm text-slate-600"><strong class="text-slate-900">Sākums:</strong> {{ $repair->start_date?->format('d.m.Y') ?: '-' }}</div>
                             <div class="text-sm text-slate-600"><strong class="text-slate-900">Beigas:</strong> {{ $repair->end_date?->format('d.m.Y') ?: '-' }}</div>
-                            <div class="text-sm text-slate-600"><strong class="text-slate-900">Apstiprināja:</strong> {{ $repair->approval_actor?->full_name ?: 'Nav norādīts' }}</div>
                         </div>
                     </div>
 
@@ -136,23 +141,21 @@
                                 </a>
                             </div>
                             <div class="mt-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-700">
-                                {{ $repair->request->description ?: '-' }}
+                                <strong class="text-slate-900">Pieteikuma teksts:</strong> {{ $repair->request->description ?: '-' }}
                             </div>
                         </div>
                     @endif
                 </div>
 
+                {{-- GALVENĀ DARBĪBA - FORMA --}}
                 <form id="repair-edit-form" method="POST" action="{{ route('repairs.update', $repair) }}" class="surface-card space-y-5 p-5">
                     @csrf
                     @method('PUT')
 
-                    <div class="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 pb-4">
-                        <div>
-                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Galvenā darbība</div>
-                            <h2 class="mt-2 text-lg font-semibold text-slate-900">Rediģēt remonta datus</h2>
-                            <p class="mt-1 text-sm text-slate-500">Šeit maini aprakstu, tipu, prioritāti, izmaksas un ārējā remonta informāciju.</p>
-                        </div>
-                        <x-status-pill context="repair" :value="$repair->status" :label="$statusLabels[$repair->status] ?? null" />
+                    <div class="border-b border-slate-200 pb-4">
+                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Galvenā darbība</div>
+                        <h2 class="mt-2 text-lg font-semibold text-slate-900">Rediģēt remonta datus</h2>
+                        <p class="mt-1 text-sm text-slate-500">Lauki mainās atkarībā no statusa un remonta tipa.</p>
                     </div>
 
                     @include('repairs.partials.form-fields', ['repair' => $repair])
@@ -173,7 +176,10 @@
                 </form>
             </div>
 
+            {{-- LABĀ PUSE - GATAVĪBA UN DARBĪBAS --}}
             <div class="space-y-4 xl:sticky xl:top-24 xl:self-start">
+                {{-- NĀKAMĀ SOĻA GATAVĪBA - tikai ja statuss ir in-progress --}}
+                @if ($repair->status === 'in-progress')
                 <div class="surface-card space-y-5 p-5">
                     <div>
                         <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Nākamā soļa gatavība</div>
@@ -208,7 +214,9 @@
                         </div>
                     </template>
                 </div>
+                @endif
 
+                {{-- DARBĪBAS --}}
                 <div class="surface-card space-y-4 p-5">
                     <div>
                         <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Darbības</div>
@@ -254,4 +262,130 @@
             </div>
         </div>
     </section>
+
+    <script>
+    function repairProcess(config) {
+        return {
+            repairType: config.repairType,
+            status: config.status,
+            priority: config.priority,
+            description: config.description,
+            vendorName: config.vendorName,
+            vendorContact: config.vendorContact,
+            invoiceNumber: config.invoiceNumber,
+            cost: config.cost,
+
+            nextStepLabel() {
+                if (this.status === 'in-progress') {
+                    return 'Lai pabeigtu remontu, aizpildi zemāk esošās prasības.';
+                }
+                return '';
+            },
+
+            nextStepReady() {
+                if (this.status === 'in-progress') {
+                    return this.requirementRows().every(r => r.done);
+                }
+                return true;
+            },
+
+            requirementRows() {
+                const rows = [];
+
+                if (this.status === 'in-progress') {
+                    // Apraksts ir obligāts
+                    rows.push({
+                        label: 'Remonta apraksts',
+                        done: this.description && this.description.trim().length > 0
+                    });
+
+                    // Ja ir ārējais remonts
+                    if (this.repairType === 'external') {
+                        rows.push({
+                            label: 'Pakalpojuma sniedzējs',
+                            done: this.vendorName && this.vendorName.trim().length > 0
+                        });
+                        rows.push({
+                            label: 'Vendora kontakts',
+                            done: this.vendorContact && this.vendorContact.trim().length > 0
+                        });
+                        rows.push({
+                            label: 'Rēķina numurs',
+                            done: this.invoiceNumber && this.invoiceNumber.trim().length > 0
+                        });
+                        rows.push({
+                            label: 'Izmaksas',
+                            done: this.cost && parseFloat(this.cost) > 0
+                        });
+                    } else {
+                        // Iekšējam remontam tikai apraksts un izmaksas
+                        rows.push({
+                            label: 'Izmaksas',
+                            done: this.cost && parseFloat(this.cost) >= 0
+                        });
+                    }
+                }
+
+                return rows;
+            },
+
+            submitTransition(repairId, targetStatus) {
+                if (targetStatus === 'in-progress' && !confirm('Vai tiešām sākt šo remontu?')) {
+                    return;
+                }
+
+                if (targetStatus === 'waiting' && !confirm('Vai tiešām atgriezt remontu gaida statusā?')) {
+                    return;
+                }
+
+                if (targetStatus === 'cancelled' && !confirm('Vai tiešām atcelt šo remontu?')) {
+                    return;
+                }
+
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = config.transitionBaseUrl + '/' + repairId + '/transition';
+
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = config.csrfToken;
+                form.appendChild(csrfInput);
+
+                const statusInput = document.createElement('input');
+                statusInput.type = 'hidden';
+                statusInput.name = 'status';
+                statusInput.value = targetStatus;
+                form.appendChild(statusInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            },
+
+            submitCompletion() {
+                if (!this.nextStepReady()) {
+                    alert('Lūdzu vispirms aizpildi visas obligātās prasības remonta pabeigšanai.');
+                    return;
+                }
+
+                if (!confirm('Vai tiešām pabeigt šo remontu?')) {
+                    return;
+                }
+
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = config.transitionBaseUrl + '/' + config.repairId + '/completion';
+
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = config.csrfToken;
+                form.appendChild(csrfInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        };
+    }
+    </script>
 </x-app-layout>

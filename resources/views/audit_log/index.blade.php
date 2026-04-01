@@ -12,6 +12,7 @@
         $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
         $selectedActionLabel = collect($actionOptions)->firstWhere('value', $filters['action'])['label'] ?? null;
         $selectedUserLabel = collect($actorOptions)->firstWhere('value', $filters['user_id'])['label'] ?? null;
+        $selectedEntityLabel = collect($entityOptions ?? [])->firstWhere('value', $filters['entity_type'])['label'] ?? null;
         $severityFilterLinks = [
             ['label' => 'Informācija', 'value' => 'info', 'icon' => 'info', 'tone' => 'slate'],
             ['label' => 'Brīdinājums', 'value' => 'warning', 'icon' => 'exclamation-triangle', 'tone' => 'amber'],
@@ -65,60 +66,53 @@
             <input type="hidden" name="sort" value="{{ $filters['sort'] }}" data-sort-hidden="field">
             <input type="hidden" name="direction" value="{{ $filters['direction'] }}" data-sort-hidden="direction">
 
-            <div class="devices-filter-header">
-                <div class="devices-filter-section">
-                    <h3 class="devices-filter-title">
-                        <x-icon name="search" size="h-4 w-4" />
-                        <span>Meklēšana</span>
-                    </h3>
-                    <div class="devices-filter-grid">
-                        <label class="devices-text-search">
-                            <span>Meklēt ierakstu</span>
-                            <input type="text" name="search" value="{{ $filters['search'] }}" class="crud-control" placeholder="ID, apraksts vai lietotājs">
-                        </label>
-                    </div>
+            <div class="devices-filters-grid">
+                <label class="devices-text-search">
+                    <span>Meklēt ierakstu</span>
+                    <input type="text" name="search" value="{{ $filters['search'] }}" class="crud-control" placeholder="ID, apraksts vai lietotājs">
+                </label>
+
+                <div>
+                    <span class="crud-label">Darbība</span>
+                    <x-searchable-select
+                        name="action"
+                        query-name="action_query"
+                        :options="$actionOptions"
+                        :selected="$filters['action']"
+                        :query="$selectedActionLabel"
+                        identifier="audit-action"
+                        placeholder="Visas darbības"
+                    />
                 </div>
-            </div>
 
-            <div class="devices-filter-divider"></div>
-
-            <div class="devices-filter-header">
-                <div class="devices-filter-section">
-                    <h3 class="devices-filter-title">
-                        <x-icon name="filter" size="h-4 w-4" />
-                        <span>Filtri</span>
-                    </h3>
-                    <div class="devices-filters-grid">
-                        <div>
-                            <span class="crud-label">Darbība</span>
-                            <x-searchable-select
-                                name="action"
-                                query-name="action_query"
-                                :options="$actionOptions"
-                                :selected="$filters['action']"
-                                :query="$selectedActionLabel"
-                                identifier="audit-action"
-                                placeholder="Visas darbības"
-                            />
-                        </div>
-
-                        <div>
-                            <span class="crud-label">Lietotājs</span>
-                            <x-searchable-select
-                                name="user_id"
-                                query-name="user_query"
-                                :options="$actorOptions"
-                                :selected="$filters['user_id']"
-                                :query="$selectedUserLabel"
-                                identifier="audit-user"
-                                placeholder="Visi lietotāji"
-                            />
-                        </div>
-
-                        <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
-                        <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
-                    </div>
+                <div>
+                    <span class="crud-label">Objekts</span>
+                    <x-searchable-select
+                        name="entity_type"
+                        query-name="entity_query"
+                        :options="$entityOptions"
+                        :selected="$filters['entity_type']"
+                        :query="$selectedEntityLabel"
+                        identifier="audit-entity"
+                        placeholder="Visi objekti"
+                    />
                 </div>
+
+                <div>
+                    <span class="crud-label">Lietotājs</span>
+                    <x-searchable-select
+                        name="user_id"
+                        query-name="user_query"
+                        :options="$actorOptions"
+                        :selected="$filters['user_id']"
+                        :query="$selectedUserLabel"
+                        identifier="audit-user"
+                        placeholder="Visi lietotāji"
+                    />
+                </div>
+
+                <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
+                <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
             </div>
 
             <div class="filter-toolbar-footer">
@@ -161,6 +155,7 @@
             :items="[
                 ['label' => 'Meklēt', 'value' => $filters['search'] !== '' ? $filters['search'] : null],
                 ['label' => 'Darbība', 'value' => $selectedActionLabel],
+                ['label' => 'Objekts', 'value' => $selectedEntityLabel],
                 ['label' => 'Lietotājs', 'value' => $selectedUserLabel],
                 ['label' => 'No datuma', 'value' => $filters['date_from'] !== '' ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
                 ['label' => 'Līdz datumam', 'value' => $filters['date_to'] !== '' ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],

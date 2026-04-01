@@ -14,6 +14,11 @@
         $activePriorityLabel = count($filters['priorities'] ?? []) > 0 && count($filters['priorities']) < count($priorityLabels)
             ? collect($filters['priorities'])->map(fn ($priority) => $priorityLabels[$priority] ?? $priority)->implode(', ')
             : null;
+        $activeTypeLabel = $filters['repair_type'] ?? null;
+        $repairTypeLabels = [
+            'internal' => 'Iekšējais',
+            'external' => 'Ārējais',
+        ];
     @endphp
 
     <section class="app-shell app-shell-wide">
@@ -146,6 +151,36 @@
 
                 <div class="filter-toolbar-footer repairs-filter-footer md:col-span-2 xl:col-span-full">
                     <div class="flex flex-wrap items-center gap-4">
+                        <div class="quick-filter-group">
+                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta tips</div>
+                            <div class="quick-status-filters">
+                                <button
+                                    type="button"
+                                    @click="window.location.href = '{{ route('repairs.index', array_merge(request()->except(['repair_type']), ['repair_type' => 'internal', 'statuses_filter' => '1'])) }}'"
+                                    class="quick-status-filter quick-status-filter-sky {{ ($filters['repair_type'] ?? '') === 'internal' ? 'quick-status-filter-active' : '' }}"
+                                >
+                                    <x-icon name="repair" size="h-4 w-4" />
+                                    <span>Iekšējais</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    @click="window.location.href = '{{ route('repairs.index', array_merge(request()->except(['repair_type']), ['repair_type' => 'external', 'statuses_filter' => '1'])) }}'"
+                                    class="quick-status-filter quick-status-filter-violet {{ ($filters['repair_type'] ?? '') === 'external' ? 'quick-status-filter-active' : '' }}"
+                                >
+                                    <x-icon name="send" size="h-4 w-4" />
+                                    <span>Ārējais</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    @click="window.location.href = '{{ route('repairs.index', array_merge(request()->except(['repair_type']), ['statuses_filter' => '1'])) }}'"
+                                    class="quick-status-filter quick-status-filter-slate {{ !isset($filters['repair_type']) ? 'quick-status-filter-active' : '' }}"
+                                >
+                                    <x-icon name="view" size="h-4 w-4" />
+                                    <span>Visi</span>
+                                </button>
+                            </div>
+                        </div>
+
                         <div class="quick-filter-groups">
                             <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($filters['statuses']), minimum: 0 })">
                                 <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta statuss</div>
@@ -232,6 +267,7 @@
                     ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
                     ['label' => 'Statuss', 'value' => $activeStatusLabel],
                     ['label' => 'Prioritāte', 'value' => $activePriorityLabel],
+                    ['label' => 'Remonta tips', 'value' => $activeTypeLabel ? $repairTypeLabels[$activeTypeLabel] ?? $activeTypeLabel : null],
                     ['label' => 'Piešķirts', 'value' => ($filters['mine'] ?? false) ? 'Man' : null],
                 ]"
                 :clear-url="route('repairs.index', ['statuses_filter' => '1'])"

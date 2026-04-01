@@ -22,6 +22,19 @@ class AuditTrail
     public const ACTION_BACKUP = 'BACKUP';
     public const ACTION_RESTORE = 'RESTORE';
     public const ACTION_VIEW = 'VIEW';
+    public const ACTION_ASSIGN = 'ASSIGN';
+    public const ACTION_UNASSIGN = 'UNASSIGN';
+    public const ACTION_MOVE = 'MOVE';
+    public const ACTION_STATUS_CHANGE = 'STATUS_CHANGE';
+    public const ACTION_APPROVE = 'APPROVE';
+    public const ACTION_REJECT = 'REJECT';
+    public const ACTION_SUBMIT = 'SUBMIT';
+    public const ACTION_CANCEL = 'CANCEL';
+    public const ACTION_TRANSFER = 'TRANSFER';
+    public const ACTION_PASSWORD_CHANGE = 'PASSWORD_CHANGE';
+    public const ACTION_PROFILE_UPDATE = 'PROFILE_UPDATE';
+    public const ACTION_ROOM_ASSIGN = 'ROOM_ASSIGN';
+    public const ACTION_BUILDING_ASSIGN = 'BUILDING_ASSIGN';
 
     public const SEVERITY_INFO = 'info';
     public const SEVERITY_WARNING = 'warning';
@@ -161,6 +174,106 @@ class AuditTrail
     }
 
     /**
+     * Auditē ierīces piešķiršanu lietotājam.
+     */
+    public static function assign(?int $userId, Model $model, ?User $assignedTo = null, ?string $description = null): void
+    {
+        $desc = $description ?? sprintf(
+            'Ierīce piešķirta: %s → %s',
+            self::labelFor($model),
+            $assignedTo ? self::labelFor($assignedTo) : 'Nav piešķirts'
+        );
+        self::writeForModel($userId, self::ACTION_ASSIGN, $model, $desc, self::SEVERITY_INFO);
+    }
+
+    /**
+     * Auditē ierīces atsaistīšanu no lietotāja.
+     */
+    public static function unassign(?int $userId, Model $model, ?string $description = null): void
+    {
+        $desc = $description ?? 'Ierīce atsaistīta: ' . self::labelFor($model);
+        self::writeForModel($userId, self::ACTION_UNASSIGN, $model, $desc, self::SEVERITY_INFO);
+    }
+
+    /**
+     * Auditē ierīces pārvietošanu uz citu telpu.
+     */
+    public static function move(?int $userId, Model $model, ?string $fromLocation, ?string $toLocation, ?string $description = null): void
+    {
+        $desc = $description ?? sprintf(
+            'Ierīce pārvietota: %s | %s → %s',
+            self::labelFor($model),
+            $fromLocation ?? 'Nav norādīts',
+            $toLocation ?? 'Nav norādīts'
+        );
+        self::writeForModel($userId, self::ACTION_MOVE, $model, $desc, self::SEVERITY_INFO);
+    }
+
+    /**
+     * Auditē statusa maiņu.
+     */
+    public static function statusChange(?int $userId, Model $model, string $oldStatus, string $newStatus, ?string $description = null): void
+    {
+        $desc = $description ?? sprintf(
+            'Statuss mainīts: %s | %s → %s',
+            self::labelFor($model),
+            self::translateValue($oldStatus),
+            self::translateValue($newStatus)
+        );
+        self::writeForModel($userId, self::ACTION_STATUS_CHANGE, $model, $desc, self::SEVERITY_INFO);
+    }
+
+    /**
+     * Auditē pieteikuma apstiprināšanu.
+     */
+    public static function approve(?int $userId, Model $model, ?string $description = null): void
+    {
+        $desc = $description ?? 'Apstiprināts: ' . self::labelFor($model);
+        self::writeForModel($userId, self::ACTION_APPROVE, $model, $desc, self::SEVERITY_INFO);
+    }
+
+    /**
+     * Auditē pieteikuma noraidīšanu.
+     */
+    public static function reject(?int $userId, Model $model, ?string $reason = null, ?string $description = null): void
+    {
+        $desc = $description ?? 'Noraidīts: ' . self::labelFor($model) . ($reason ? ' | Iemesls: ' . $reason : '');
+        self::writeForModel($userId, self::ACTION_REJECT, $model, $desc, self::SEVERITY_WARNING);
+    }
+
+    /**
+     * Auditē pieteikuma iesniegšanu.
+     */
+    public static function submit(?int $userId, Model $model, ?string $description = null): void
+    {
+        $desc = $description ?? 'Iesniegts: ' . self::labelFor($model);
+        self::writeForModel($userId, self::ACTION_SUBMIT, $model, $desc, self::SEVERITY_INFO);
+    }
+
+    /**
+     * Auditē pieteikuma atcelšanu.
+     */
+    public static function cancel(?int $userId, Model $model, ?string $description = null): void
+    {
+        $desc = $description ?? 'Atcelts: ' . self::labelFor($model);
+        self::writeForModel($userId, self::ACTION_CANCEL, $model, $desc, self::SEVERITY_WARNING);
+    }
+
+    /**
+     * Auditē ierīces nodošanu citam lietotājam.
+     */
+    public static function transfer(?int $userId, Model $model, ?User $transferTo, ?string $description = null): void
+    {
+        $desc = $description ?? sprintf(
+            'Nodots: %s | %s → %s',
+            self::labelFor($model),
+            self::labelFor($userId ? \App\Models\User::find($userId) : null) ?? 'Nezināms',
+            $transferTo ? self::labelFor($transferTo) : 'Nezināms'
+        );
+        self::writeForModel($userId, self::ACTION_TRANSFER, $model, $desc, self::SEVERITY_INFO);
+    }
+
+    /**
      * Uzraksta audita ierakstu, balstoties uz Eloquent modeli.
      */
     public static function writeForModel(
@@ -206,14 +319,27 @@ class AuditTrail
     {
         return match (strtoupper($action)) {
             self::ACTION_CREATE => 'Izveide',
-            self::ACTION_UPDATE => 'Atjaunosana',
+            self::ACTION_UPDATE => 'Atjaunošana',
             self::ACTION_DELETE => 'Dzēšana',
-            self::ACTION_LOGIN => 'Pieslegsanas',
-            self::ACTION_LOGOUT => 'Izrakstisanas',
+            self::ACTION_LOGIN => 'Pieslēgšanās',
+            self::ACTION_LOGOUT => 'Izrakstīšanās',
             self::ACTION_EXPORT => 'Eksports',
             self::ACTION_BACKUP => 'Kopija',
-            self::ACTION_RESTORE => 'Atjaunosana no kopijas',
+            self::ACTION_RESTORE => 'Atjaunošana no kopijas',
             self::ACTION_VIEW => 'Apskate',
+            self::ACTION_ASSIGN => 'Piešķiršana',
+            self::ACTION_UNASSIGN => 'Atsaistīšana',
+            self::ACTION_MOVE => 'Pārvietošana',
+            self::ACTION_STATUS_CHANGE => 'Statusa maiņa',
+            self::ACTION_APPROVE => 'Apstiprināšana',
+            self::ACTION_REJECT => 'Noraidīšana',
+            self::ACTION_SUBMIT => 'Iesniegšana',
+            self::ACTION_CANCEL => 'Atcelšana',
+            self::ACTION_TRANSFER => 'Nodošana',
+            self::ACTION_PASSWORD_CHANGE => 'Paroles maiņa',
+            self::ACTION_PROFILE_UPDATE => 'Profila atjaunošana',
+            self::ACTION_ROOM_ASSIGN => 'Telpas piešķiršana',
+            self::ACTION_BUILDING_ASSIGN => 'Ēkas piešķiršana',
             default => $action,
         };
     }
@@ -247,10 +373,11 @@ class AuditTrail
     public static function severityLabel(string $severity): string
     {
         return match ($severity) {
-            self::SEVERITY_WARNING => 'Bridinajums',
-            self::SEVERITY_ERROR => 'Kluda',
-            self::SEVERITY_CRITICAL => 'Kritisks',
-            default => 'Informācija',
+            self::SEVERITY_WARNING => 'Brīdinājums',
+            self::SEVERITY_ERROR => 'Kļūda',
+            self::SEVERITY_CRITICAL => 'Kritiski',
+            self::SEVERITY_INFO => 'Informācija',
+            default => $severity,
         };
     }
 
@@ -300,6 +427,44 @@ class AuditTrail
             return 'Nav apraksta';
         }
 
+        // Jaunas darbības
+        if (preg_match('/^Ierīce piešķirta: (?<label>.+) → (?<user>.+)$/i', $text, $matches)) {
+            return 'Ierīce piešķirta: ' . $matches['label'] . ' → ' . $matches['user'];
+        }
+
+        if (preg_match('/^Ierīce atsaistīta: (?<label>.+)$/i', $text, $matches)) {
+            return 'Ierīce atsaistīta: ' . $matches['label'];
+        }
+
+        if (preg_match('/^Ierīce pārvietota: (?<label>.+) \| (?<from>.+) → (?<to>.+)$/i', $text, $matches)) {
+            return 'Ierīce pārvietota: ' . $matches['label'] . ' | ' . $matches['from'] . ' → ' . $matches['to'];
+        }
+
+        if (preg_match('/^Statuss mainīts: (?<label>.+) \| (?<from>.+) → (?<to>.+)$/i', $text, $matches)) {
+            return 'Statuss mainīts: ' . $matches['label'] . ' | ' . self::translateValue($matches['from']) . ' → ' . self::translateValue($matches['to']);
+        }
+
+        if (preg_match('/^Apstiprināts: (?<label>.+)$/i', $text, $matches)) {
+            return 'Apstiprināts: ' . $matches['label'];
+        }
+
+        if (preg_match('/^Noraidīts: (?<label>.+)(?: \| Iemesls: (?<reason>.+))?$/i', $text, $matches)) {
+            return 'Noraidīts: ' . $matches['label'] . (isset($matches['reason']) ? ' | Iemesls: ' . $matches['reason'] : '');
+        }
+
+        if (preg_match('/^Iesniegts: (?<label>.+)$/i', $text, $matches)) {
+            return 'Iesniegts: ' . $matches['label'];
+        }
+
+        if (preg_match('/^Atcelts: (?<label>.+)$/i', $text, $matches)) {
+            return 'Atcelts: ' . $matches['label'];
+        }
+
+        if (preg_match('/^Nodots: (?<label>.+) \| (?<from>.+) → (?<to>.+)$/i', $text, $matches)) {
+            return 'Nodots: ' . $matches['label'] . ' | ' . $matches['from'] . ' → ' . $matches['to'];
+        }
+
+        // Esošās darbības
         if (preg_match('/^User logged in: (?<label>.+)$/i', $text, $matches)) {
             return 'Lietotājs pieslēdzas: ' . $matches['label'];
         }
@@ -442,7 +607,19 @@ class AuditTrail
         }
 
         return match ($action) {
-            self::ACTION_DELETE, self::ACTION_RESTORE => self::SEVERITY_WARNING,
+            self::ACTION_DELETE,
+            self::ACTION_RESTORE,
+            self::ACTION_REJECT,
+            self::ACTION_CANCEL,
+            self::ACTION_UNASSIGN => self::SEVERITY_WARNING,
+            
+            self::ACTION_STATUS_CHANGE,
+            self::ACTION_MOVE,
+            self::ACTION_ASSIGN,
+            self::ACTION_APPROVE,
+            self::ACTION_SUBMIT,
+            self::ACTION_TRANSFER => self::SEVERITY_INFO,
+            
             default => self::SEVERITY_INFO,
         };
     }
@@ -465,6 +642,19 @@ class AuditTrail
             self::ACTION_BACKUP,
             self::ACTION_RESTORE,
             self::ACTION_VIEW,
+            self::ACTION_ASSIGN,
+            self::ACTION_UNASSIGN,
+            self::ACTION_MOVE,
+            self::ACTION_STATUS_CHANGE,
+            self::ACTION_APPROVE,
+            self::ACTION_REJECT,
+            self::ACTION_SUBMIT,
+            self::ACTION_CANCEL,
+            self::ACTION_TRANSFER,
+            self::ACTION_PASSWORD_CHANGE,
+            self::ACTION_PROFILE_UPDATE,
+            self::ACTION_ROOM_ASSIGN,
+            self::ACTION_BUILDING_ASSIGN,
         ];
 
         return in_array($action, $allowed, true) ? $action : self::ACTION_UPDATE;

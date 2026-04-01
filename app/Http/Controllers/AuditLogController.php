@@ -23,6 +23,7 @@ class AuditLogController extends Controller
         $filters = [
             'action' => trim((string) $request->query('action', '')),
             'severity' => trim((string) $request->query('severity', '')),
+            'entity_type' => trim((string) $request->query('entity_type', '')),
             'user_id' => trim((string) $request->query('user_id', '')),
             'date_from' => trim((string) $request->query('date_from', '')),
             'date_to' => trim((string) $request->query('date_to', '')),
@@ -56,6 +57,7 @@ class AuditLogController extends Controller
             ->with(['user'])
             ->when($filters['action'] !== '', fn ($query) => $query->where('action', $filters['action']))
             ->when($filters['severity'] !== '', fn ($query) => $query->where('severity', $filters['severity']))
+            ->when($filters['entity_type'] !== '', fn ($query) => $query->where('entity_type', $filters['entity_type']))
             ->when($filters['user_id'] !== '', fn ($query) => $query->where('user_id', $filters['user_id']))
             ->when($filters['date_from'] !== '', fn ($query) => $query->where('timestamp', '>=', CarbonImmutable::parse($filters['date_from'])->startOfDay()))
             ->when($filters['date_to'] !== '', fn ($query) => $query->where('timestamp', '<=', CarbonImmutable::parse($filters['date_to'])->endOfDay()))
@@ -154,7 +156,18 @@ class AuditLogController extends Controller
                 'search' => implode(' ', array_filter([$user->full_name, $user->email])),
             ]);
 
-        return view('audit_log.index', compact('logs', 'filters', 'summary', 'actionOptions', 'severityOptions', 'actorOptions'));
+        $entityOptions = AuditLog::query()
+            ->select('entity_type')
+            ->distinct()
+            ->orderBy('entity_type')
+            ->pluck('entity_type')
+            ->map(fn (string $entityType) => [
+                'value' => $entityType,
+                'label' => AuditTrail::entityLabel($entityType),
+                'search' => AuditTrail::entityLabel($entityType) . ' ' . $entityType,
+            ]);
+
+        return view('audit_log.index', compact('logs', 'filters', 'summary', 'actionOptions', 'severityOptions', 'actorOptions', 'entityOptions'));
     }
 
     /**
