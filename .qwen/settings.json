@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(php *)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git rebase *)",
+      "Bash(ls *)",
+      "Bash(git commit *)"
     ]
   },
   "$version": 3
