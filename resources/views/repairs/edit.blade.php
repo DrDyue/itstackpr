@@ -294,7 +294,7 @@
             },
 
             requirementRows() {
-                if (this.status !== 'in-progress') {
+                if (this.status !== "in-progress") {
                     return [];
                 }
 
@@ -302,26 +302,26 @@
 
                 // 1. Apraksts - OBLIGĀTS VISIEM
                 rows.push({
-                    key: 'description',
-                    label: 'Remonta apraksts',
+                    key: "description",
+                    label: "Remonta apraksts",
                     done: this.description && this.description.trim().length > 0
                 });
 
-                // 2. Tikai ĀRĒJAM remontam
-                if (this.repairType === 'external') {
+                // 2. Tikai ARĒJAM remontam
+                if (this.repairType === "external") {
                     rows.push({
-                        key: 'vendor_name',
-                        label: 'Pakalpojuma sniedzējs',
+                        key: "vendor_name",
+                        label: "Pakalpojuma sniedzējs",
                         done: this.vendorName && this.vendorName.trim().length > 0
                     });
                     rows.push({
-                        key: 'vendor_contact',
-                        label: 'Vendora kontakts',
+                        key: "vendor_contact",
+                        label: "Vendora kontakts",
                         done: this.vendorContact && this.vendorContact.trim().length > 0
                     });
                     rows.push({
-                        key: 'invoice_number',
-                        label: 'Rēķina numurs',
+                        key: "invoice_number",
+                        label: "Rēķina numurs",
                         done: this.invoiceNumber && this.invoiceNumber.trim().length > 0
                     });
                 }

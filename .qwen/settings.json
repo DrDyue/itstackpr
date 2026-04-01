@@ -94,7 +94,9 @@
       "Bash(form.submit)",
       "Bash(submitcompletion)",
       "Bash(alert)",
-      "Bash(return)"
+      "Bash(return)",
+      "Bash(console.log)",
+      "Bash(jseof)"
     ]
   },
   "$version": 3
