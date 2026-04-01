@@ -235,6 +235,7 @@ class RepairRequestController extends Controller
         ]);
 
         AuditTrail::created($user->id, $repairRequest);
+        AuditTrail::submit($user->id, $repairRequest, 'Iesniegts remonta pieteikums: '.AuditTrail::labelFor($repairRequest));
 
         return redirect()->route('repair-requests.index')->with('success', 'Remonta pieteikums nosūtīts izskatīšanai');
     }
@@ -322,6 +323,11 @@ class RepairRequestController extends Controller
 
         $after = $repairRequest->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState($manager->id, $repairRequest, $before, $after);
+        if ($validated['status'] === RepairRequest::STATUS_APPROVED) {
+            AuditTrail::approve($manager->id, $repairRequest, 'Apstiprināts remonta pieteikums: '.AuditTrail::labelFor($repairRequest));
+        } else {
+            AuditTrail::reject($manager->id, $repairRequest, null, 'Noraidīts remonta pieteikums: '.AuditTrail::labelFor($repairRequest));
+        }
 
         if ($request->expectsJson()) {
             return response()->json([

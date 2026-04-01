@@ -90,6 +90,7 @@ class UserRequestCenterController extends Controller
             ]);
 
             AuditTrail::created($user->id, $repairRequest);
+            AuditTrail::submit($user->id, $repairRequest, 'Iesniegts remonta pieteikums: '.AuditTrail::labelFor($repairRequest));
 
             return redirect()->route('repair-requests.index')->with('success', 'Remonta pieteikums izveidots.');
         }
@@ -103,6 +104,7 @@ class UserRequestCenterController extends Controller
             ]);
 
             AuditTrail::created($user->id, $writeoffRequest);
+            AuditTrail::submit($user->id, $writeoffRequest, 'Iesniegts norakstīšanas pieteikums: '.AuditTrail::labelFor($writeoffRequest));
 
             return redirect()->route('writeoff-requests.index')->with('success', 'Norakstīšanas pieteikums izveidots.');
         }
@@ -116,6 +118,7 @@ class UserRequestCenterController extends Controller
         ]);
 
         AuditTrail::created($user->id, $transfer);
+        AuditTrail::submit($user->id, $transfer, 'Iesniegts ierīces nodošanas pieteikums: '.AuditTrail::labelFor($transfer));
 
         return redirect()->route('device-transfers.index')->with('success', 'Nodošanas pieteikums izveidots.');
     }
@@ -176,6 +179,7 @@ class UserRequestCenterController extends Controller
         $user = $this->requireRegularUser();
         [$editableRequest, $config] = $this->editableRequestForUser($user, $requestType, $requestId);
 
+        AuditTrail::cancel($user->id, $editableRequest, 'Atcelts pieteikums: '.AuditTrail::labelFor($editableRequest));
         AuditTrail::deleted($user->id, $editableRequest, $config['deleted_audit_message']);
         $editableRequest->delete();
 

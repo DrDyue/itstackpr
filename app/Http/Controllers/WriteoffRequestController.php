@@ -239,6 +239,7 @@ class WriteoffRequestController extends Controller
         ]);
 
         AuditTrail::created($user->id, $writeoffRequest);
+        AuditTrail::submit($user->id, $writeoffRequest, 'Iesniegts norakstīšanas pieteikums: '.AuditTrail::labelFor($writeoffRequest));
 
         return redirect()->route('writeoff-requests.index')->with('success', 'Norakstīšanas pieteikums nosūtīts izskatīšanai');
     }
@@ -307,6 +308,11 @@ class WriteoffRequestController extends Controller
 
         $after = $writeoffRequest->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState($manager->id, $writeoffRequest, $before, $after);
+        if ($validated['status'] === WriteoffRequest::STATUS_APPROVED) {
+            AuditTrail::approve($manager->id, $writeoffRequest, 'Apstiprināts norakstīšanas pieteikums: '.AuditTrail::labelFor($writeoffRequest));
+        } else {
+            AuditTrail::reject($manager->id, $writeoffRequest, null, 'Noraidīts norakstīšanas pieteikums: '.AuditTrail::labelFor($writeoffRequest));
+        }
 
         if ($request->expectsJson()) {
             return response()->json([

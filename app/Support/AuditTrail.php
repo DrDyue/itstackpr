@@ -35,6 +35,8 @@ class AuditTrail
     public const ACTION_PROFILE_UPDATE = 'PROFILE_UPDATE';
     public const ACTION_ROOM_ASSIGN = 'ROOM_ASSIGN';
     public const ACTION_BUILDING_ASSIGN = 'BUILDING_ASSIGN';
+    public const ACTION_SWITCH_VIEW = 'SWITCH_VIEW';
+    public const ACTION_MARK_READ = 'MARK_READ';
 
     public const SEVERITY_INFO = 'info';
     public const SEVERITY_WARNING = 'warning';
@@ -169,6 +171,63 @@ class AuditTrail
             self::ACTION_LOGOUT,
             $user,
             'Lietotājs izrakstijas: ' . self::labelFor($user),
+            self::SEVERITY_INFO
+        );
+    }
+
+    /**
+     * Auditē administratora skata režīma pārslēgšanu.
+     */
+    public static function switchViewMode(?User $user, string $fromMode, string $toMode): void
+    {
+        if (! $user) {
+            return;
+        }
+
+        self::write(
+            $user->id,
+            self::ACTION_SWITCH_VIEW,
+            'ViewMode',
+            (string) $user->id,
+            'Skata režīms pārslēgts: '.self::translateValue($fromMode).' -> '.self::translateValue($toMode),
+            self::SEVERITY_INFO
+        );
+    }
+
+    /**
+     * Auditē paziņojumu atzīmēšanu kā lasītus.
+     */
+    public static function markRead(?User $user, string $description): void
+    {
+        if (! $user) {
+            return;
+        }
+
+        self::write(
+            $user->id,
+            self::ACTION_MARK_READ,
+            'NotificationCenter',
+            (string) $user->id,
+            $description,
+            self::SEVERITY_INFO
+        );
+    }
+
+    /**
+     * Auditē kādas sadaļas apskati.
+     */
+    public static function viewed(?User $user, string $entityType, ?string $entityId = null, ?string $description = null): void
+    {
+        if (! $user) {
+            return;
+        }
+
+        self::write(
+            $user->id,
+            self::ACTION_VIEW,
+            $entityType,
+            $entityId,
+            $description ?? ('Atvērta sadaļa: '.self::entityLabel($entityType)),
             self::SEVERITY_INFO
         );
     }
@@ -340,6 +399,8 @@ class AuditTrail
             self::ACTION_PROFILE_UPDATE => 'Profila atjaunošana',
             self::ACTION_ROOM_ASSIGN => 'Telpas piešķiršana',
             self::ACTION_BUILDING_ASSIGN => 'Ēkas piešķiršana',
+            self::ACTION_SWITCH_VIEW => 'Skata maiņa',
+            self::ACTION_MARK_READ => 'Atzīmēts kā lasīts',
             default => $action,
         };
     }
@@ -361,6 +422,9 @@ class AuditTrail
             'repair_request' => 'Remonta pieteikums',
             'writeoff_request' => 'Norakstīšanas pieteikums',
             'device_transfer' => 'Ierīces pārsūtīšana',
+            'audit_log' => 'Audita žurnāls',
+            'notification_center' => 'Paziņojumu centrs',
+            'view_mode' => 'Skata režīms',
             'database_backup' => 'Datubāzes kopija',
             'backup_setting' => 'Kopiju iestatijumi',
             default => Str::headline((string) $entityType),
@@ -412,6 +476,7 @@ class AuditTrail
                 'building' => route('buildings.edit', $entityId),
                 'device_type' => route('device-types.edit', $entityId),
                 'user' => route('users.edit', $entityId),
+                'audit_log' => route('audit-log.index'),
                 default => null,
             };
         } catch (Throwable) {
@@ -655,6 +720,8 @@ class AuditTrail
             self::ACTION_PROFILE_UPDATE,
             self::ACTION_ROOM_ASSIGN,
             self::ACTION_BUILDING_ASSIGN,
+            self::ACTION_SWITCH_VIEW,
+            self::ACTION_MARK_READ,
         ];
 
         return in_array($action, $allowed, true) ? $action : self::ACTION_UPDATE;

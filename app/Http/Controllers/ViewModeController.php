@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\AuditTrail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -19,6 +20,7 @@ class ViewModeController extends Controller
     {
         $user = $this->user();
         abort_unless($user?->isAdmin(), 403);
+        $previousMode = $user->currentViewMode();
 
         $validated = $this->validateInput($request, [
             'mode' => ['required', Rule::in([User::VIEW_MODE_ADMIN, User::VIEW_MODE_USER])],
@@ -27,6 +29,7 @@ class ViewModeController extends Controller
         ]);
 
         $request->session()->put(User::VIEW_MODE_SESSION_KEY, $validated['mode']);
+        AuditTrail::switchViewMode($user, $previousMode, $validated['mode']);
 
         return redirect()->route(
             $validated['mode'] === User::VIEW_MODE_ADMIN ? 'dashboard' : 'devices.index'

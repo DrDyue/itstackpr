@@ -7,6 +7,7 @@ use App\Models\DeviceTransfer;
 use App\Models\RepairRequest;
 use App\Models\User;
 use App\Models\WriteoffRequest;
+use App\Support\AuditTrail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 
@@ -25,23 +26,33 @@ class LiveNotificationController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+        $markedCount = 0;
 
         // Atkarībā no lietotāja lomas, atjaunojam attiecīgos pieprasījumus
         if ($user->canManageRequests()) {
             // Administratoram: atzīmējam remonta un norakstīšanas pieprasījumus
-            RepairRequest::query()
+            $markedCount += RepairRequest::query()
                 ->where('status', RepairRequest::STATUS_SUBMITTED)
                 ->update(['updated_at' => now()]);
             
-            WriteoffRequest::query()
+            $markedCount += WriteoffRequest::query()
                 ->where('status', WriteoffRequest::STATUS_SUBMITTED)
                 ->update(['updated_at' => now()]);
         } else {
             // Lietotājam: atzīmējam nodošanas pieprasījumus
-            DeviceTransfer::query()
+            $markedCount += DeviceTransfer::query()
                 ->where('transfered_to_id', $user->id)
                 ->where('status', DeviceTransfer::STATUS_SUBMITTED)
                 ->update(['updated_at' => now()]);
+        }
+
+        if ($markedCount > 0) {
+            AuditTrail::markRead(
+                $user,
+                $user->canManageRequests()
+                    ? 'Administrators atzīmēja paziņojumus kā lasītus: '.$markedCount.' ieraksti.'
+                    : 'Lietotājs atzīmēja paziņojumus kā lasītus: '.$markedCount.' ieraksti.'
+            );
         }
 
         return response()->json([

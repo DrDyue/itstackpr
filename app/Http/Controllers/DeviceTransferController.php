@@ -301,6 +301,7 @@ class DeviceTransferController extends Controller
         ]);
 
         AuditTrail::created($user->id, $transfer);
+        AuditTrail::submit($user->id, $transfer, 'Iesniegts ierīces nodošanas pieteikums: '.AuditTrail::labelFor($transfer));
 
         return redirect()->route('device-transfers.index')->with('success', 'Ierīces pārsūtīšanas pieteikums izveidots');
     }
@@ -393,6 +394,11 @@ class DeviceTransferController extends Controller
 
         $after = $deviceTransfer->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState($reviewer->id, $deviceTransfer, $before, $after);
+        if ($validated['status'] === DeviceTransfer::STATUS_APPROVED) {
+            AuditTrail::approve($reviewer->id, $deviceTransfer, 'Apstiprināts ierīces nodošanas pieteikums: '.AuditTrail::labelFor($deviceTransfer));
+        } else {
+            AuditTrail::reject($reviewer->id, $deviceTransfer, null, 'Noraidīts ierīces nodošanas pieteikums: '.AuditTrail::labelFor($deviceTransfer));
+        }
 
         if ($request->expectsJson()) {
             return response()->json([

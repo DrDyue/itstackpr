@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\AuditLog;
 use App\Models\Device;
 use App\Models\DeviceTransfer;
 use App\Models\Repair;
@@ -242,6 +243,24 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->actingAs($admin)
             ->get(route('users.index'))
             ->assertOk();
+    }
+
+    public function test_switching_view_mode_creates_audit_entry(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'view-mode-audit@example.com');
+
+        $this->actingAs($admin)
+            ->post(route('view-mode.update'), [
+                'mode' => User::VIEW_MODE_USER,
+            ])
+            ->assertRedirect(route('devices.index'));
+
+        $this->assertDatabaseHas('audit_log', [
+            'user_id' => $admin->id,
+            'action' => 'SWITCH_VIEW',
+            'entity_type' => 'ViewMode',
+            'entity_id' => (string) $admin->id,
+        ]);
     }
 
     public function test_admin_cannot_open_or_submit_user_only_request_forms(): void
@@ -980,6 +999,108 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->assertCount(1, $notifications);
         $this->assertSame('incoming-transfer:'.$incomingTransfer->id, $notifications->first()['id']);
         $this->assertSame(2, count($notifications->first()['actions'] ?? []));
+    }
+
+    public function test_marking_notifications_as_read_creates_audit_entry(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'live-notify-audit-admin@example.com');
+        $employee = $this->createUser(role: User::ROLE_USER, email: 'live-notify-audit-user@example.com');
+        $device = $this->createDevice($employee->id, Device::STATUS_ACTIVE, 'DEV-LIVE-AUDIT');
+
+        RepairRequest::create([
+            'device_id' => $device->id,
+            'responsible_user_id' => $employee->id,
+            'description' => 'Jāatzīmē kā lasīts.',
+            'status' => RepairRequest::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($admin)
+            ->postJson(route('notifications.mark-all-read'))
+            ->assertOk()
+            ->assertJson([
+                'success' => true,
+            ]);
+
+        $this->assertDatabaseHas('audit_log', [
+            'user_id' => $admin->id,
+            'action' => 'MARK_READ',
+            'entity_type' => 'NotificationCenter',
+            'entity_id' => (string) $admin->id,
+        ]);
+    }
+
+    public function test_audit_log_can_filter_by_multiple_severities(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'audit-filter-admin@example.com');
+
+        AuditLog::create([
+            'timestamp' => now()->subMinutes(3),
+            'user_id' => $admin->id,
+            'action' => 'UPDATE',
+            'entity_type' => 'Device',
+            'entity_id' => 1001,
+            'description' => 'Brīdinājuma ieraksts.',
+            'severity' => 'warning',
+        ]);
+
+        AuditLog::create([
+            'timestamp' => now()->subMinutes(2),
+            'user_id' => $admin->id,
+            'action' => 'DELETE',
+            'entity_type' => 'Device',
+            'entity_id' => 1002,
+            'description' => 'Kritisks ieraksts.',
+            'severity' => 'critical',
+        ]);
+
+        AuditLog::create([
+            'timestamp' => now()->subMinute(),
+            'user_id' => $admin->id,
+            'action' => 'VIEW',
+            'entity_type' => 'Device',
+            'entity_id' => 1003,
+            'description' => 'Informācijas ieraksts.',
+            'severity' => 'info',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('audit-log.index', ['severity' => ['warning', 'critical']]))
+            ->assertOk()
+            ->assertSee('Brīdinājuma ieraksts.')
+            ->assertSee('Kritisks ieraksts.')
+            ->assertDontSee('Informācijas ieraksts.');
+    }
+
+    public function test_audit_log_find_entry_returns_second_page_result(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'audit-search-admin@example.com');
+
+        for ($i = 1; $i <= 55; $i++) {
+            AuditLog::create([
+                'timestamp' => now()->subMinutes(60 - $i),
+                'user_id' => $admin->id,
+                'action' => 'UPDATE',
+                'entity_type' => 'Device',
+                'entity_id' => $i,
+                'description' => $i === 1 ? 'Īpašais audita meklēšanas ieraksts' : 'Parasts audita ieraksts '.$i,
+                'severity' => 'info',
+            ]);
+        }
+
+        $targetId = AuditLog::query()
+            ->where('description', 'Īpašais audita meklēšanas ieraksts')
+            ->value('id');
+
+        $this->actingAs($admin)
+            ->getJson(route('audit-log.find-entry', [
+                'lookup' => 'Īpašais audita meklēšanas ieraksts',
+            ]))
+            ->assertOk()
+            ->assertJson([
+                'found' => true,
+                'page' => 2,
+                'highlight_id' => 'audit-log-'.$targetId,
+            ]);
     }
 
     public function test_admin_can_review_repair_request_via_json_endpoint(): void

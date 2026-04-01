@@ -9,34 +9,28 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-public function up(): void
-{
-    Schema::create('audit_log', function (Blueprint $table) {
-        $table->id();
+    public function up(): void
+    {
+        Schema::create('audit_log', function (Blueprint $table) {
+            $table->id();
 
-        // в документе есть timestamp (не created_at/updated_at)
-        $table->timestamp('timestamp')->useCurrent()->nullable();
+            // Auditam izmantojam vienu laika zīmogu, nevis created_at un updated_at.
+            $table->timestamp('timestamp')->useCurrent()->nullable();
 
-        $table->foreignId('user_id')
-            ->nullable()
-            ->constrained('users')
-            ->nullOnDelete();
+            $table->foreignId('user_id')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
 
-        // enum как в документе
-        $table->enum('action', [
-            'CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'EXPORT', 'BACKUP', 'RESTORE', 'VIEW'
-        ]);
+            // Darbības glabājam kā string, lai bez sāpēm var pievienot jaunus audita tipus.
+            $table->string('action', 50);
 
-        $table->string('entity_type', 50);
-        $table->unsignedBigInteger('entity_id')->nullable();
-
-        $table->text('description');
-
-        // severity как в документе
-        $table->enum('severity', ['info', 'warning', 'error', 'critical'])->default('info');
-    });
-}
-
+            $table->string('entity_type', 50);
+            $table->unsignedBigInteger('entity_id')->nullable();
+            $table->text('description');
+            $table->enum('severity', ['info', 'warning', 'error', 'critical'])->default('info');
+        });
+    }
 
     /**
      * Reverse the migrations.
