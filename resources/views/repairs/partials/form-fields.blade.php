@@ -110,8 +110,8 @@
                 </div>
             </div>
 
-            {{-- Izmaksas - redzamas tikai ja statuss ir in-progress vai completed --}}
-            <div x-show="status === 'in-progress' || status === 'completed'" style="display: none;">
+            {{-- Izmaksas - redzamas ja statuss ir in-progress vai completed --}}
+            <div x-show="status === 'in-progress' || status === 'completed'">
                 <label class="block">
                     <span class="crud-label">Izmaksas</span>
                     <input type="number" step="0.01" name="cost" value="{{ old('cost', $currentRepair?->cost) }}" class="crud-control" x-model="cost">
@@ -124,12 +124,11 @@
         </div>
     </div>
 
-    {{-- ĀRĒJĀ REMONTA DATI - redzami tikai ja repair_type === 'external' un statuss ir in-progress vai completed --}}
+    {{-- ĀRĒJĀ REMONTA DATI - redzami tikai ja repair_type === 'external' --}}
     <div
         class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm"
         x-cloak
-        x-show="repairType === 'external' && (status === 'in-progress' || status === 'completed')"
-        style="display: none;"
+        x-show="repairType === 'external'"
     >
         <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ārējā remonta dati</div>
         <div class="mt-1 text-sm text-slate-500">Šie lauki ir obligāti ārējam remontam.</div>
