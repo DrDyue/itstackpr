@@ -14,7 +14,7 @@
             : null;
     @endphp
 
-    <section class="app-shell app-shell-wide">
+    <section class="app-shell">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-4xl">
@@ -75,88 +75,93 @@
         </div>
 
         <div id="device-transfers-index-root" data-async-table-root>
+            {{-- Filtru un meklēšanas josla --}}
             <form
                 method="GET"
                 action="{{ route('device-transfers.index') }}"
-                class="surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.5fr)]"
+                class="devices-filter-surface"
                 data-async-table-form
                 data-async-root="#device-transfers-index-root"
-                data-search-endpoint="{{ route('device-transfers.find-by-code') }}"
             >
                 <input type="hidden" name="statuses_filter" value="1">
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
 
-                {{-- Filtri pa kreisi --}}
-                <label class="block">
-                    <span class="crud-label">Ierīce</span>
-                    <x-searchable-select
-                        name="device_id"
-                        query-name="device_query"
-                        identifier="transfer-device-filter"
-                        :options="$deviceOptions"
-                        :selected="(string) ($filters['device_id'] ?? '')"
-                        :query="$selectedDeviceLabel"
-                        placeholder="Izvēlies ierīci"
-                        empty-message="Neviena ierīce neatbilst izvēlētajiem filtriem."
-                    />
-                </label>
-
-                <label class="block">
-                    <span class="crud-label">Pieteicējs</span>
-                    <x-searchable-select
-                        name="requester_id"
-                        query-name="requester_query"
-                        identifier="transfer-requester-filter"
-                        :options="$requesterOptions"
-                        :selected="(string) ($filters['requester_id'] ?? '')"
-                        :query="$selectedRequesterLabel"
-                        placeholder="Izvēlies pieteicēju"
-                        empty-message="Neviens pieteicējs neatbilst meklējumam."
-                    />
-                </label>
-
-                <label class="block">
-                    <span class="crud-label">Saņēmējs</span>
-                    <x-searchable-select
-                        name="recipient_id"
-                        query-name="recipient_query"
-                        identifier="transfer-recipient-filter"
-                        :options="$recipientOptions"
-                        :selected="(string) ($filters['recipient_id'] ?? '')"
-                        :query="$selectedRecipientLabel"
-                        placeholder="Izvēlies saņēmēju"
-                        empty-message="Neviens saņēmējs neatbilst meklējumam."
-                    />
-                </label>
-
-                <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
-                <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
-
-                {{-- Meklēšana pa labi --}}
-                <div class="xl:col-span-full">
-                    <div class="devices-search-group">
-                        <label class="devices-search-label">
-                            <span>Meklēt pēc koda</span>
-                            <input
-                                type="text"
-                                name="code"
-                                value="{{ $filters['code'] }}"
-                                class="devices-code-input"
-                                placeholder="Ievadi ierīces kodu"
-                                autocomplete="off"
-                                data-async-manual="true"
-                                data-async-code-search="true"
-                            >
-                        </label>
-                        <button type="submit" class="devices-code-search-btn" data-code-search-submit="true">
+                <div class="devices-filter-header">
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
                             <x-icon name="search" size="h-4 w-4" />
-                            <span>Meklēt kodu</span>
-                        </button>
+                            <span>Meklēšana</span>
+                        </h3>
+                        <div class="devices-filter-grid">
+                            <label class="devices-text-search">
+                                <span>Meklēt</span>
+                                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Kods, nosaukums, pieteicējs, saņēmējs vai iemesls">
+                            </label>
+                        </div>
                     </div>
                 </div>
 
-                <div class="filter-toolbar-footer md:col-span-2 xl:col-span-full">
+                <div class="devices-filter-divider"></div>
+
+                <div class="devices-filter-header">
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
+                            <x-icon name="filter" size="h-4 w-4" />
+                            <span>Filtri</span>
+                        </h3>
+                        <div class="devices-filters-grid">
+                            <label class="block">
+                                <span class="crud-label">Ierīce</span>
+                                <x-searchable-select
+                                    name="device_id"
+                                    query-name="device_query"
+                                    identifier="transfer-device-filter"
+                                    :options="$deviceOptions"
+                                    :selected="(string) ($filters['device_id'] ?? '')"
+                                    :query="$selectedDeviceLabel"
+                                    placeholder="Izvēlies ierīci"
+                                    empty-message="Neviena ierīce neatbilst izvēlētajiem filtriem."
+                                />
+                            </label>
+
+                            @if ($isAdmin)
+                                <label class="block">
+                                    <span class="crud-label">Pieteicējs</span>
+                                    <x-searchable-select
+                                        name="requester_id"
+                                        query-name="requester_query"
+                                        identifier="transfer-requester-filter"
+                                        :options="$requesterOptions"
+                                        :selected="(string) ($filters['requester_id'] ?? '')"
+                                        :query="$selectedRequesterLabel"
+                                        placeholder="Izvēlies pieteicēju"
+                                        empty-message="Neviens pieteicējs neatbilst meklējumam."
+                                    />
+                                </label>
+
+                                <label class="block">
+                                    <span class="crud-label">Saņēmējs</span>
+                                    <x-searchable-select
+                                        name="recipient_id"
+                                        query-name="recipient_query"
+                                        identifier="transfer-recipient-filter"
+                                        :options="$recipientOptions"
+                                        :selected="(string) ($filters['recipient_id'] ?? '')"
+                                        :query="$selectedRecipientLabel"
+                                        placeholder="Izvēlies saņēmēju"
+                                        empty-message="Neviens saņēmējs neatbilst meklējumam."
+                                    />
+                                </label>
+                            @endif
+
+                            <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
+                            <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-toolbar-footer">
                     <div class="quick-filter-groups">
                         <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($filters['statuses']), minimum: 0 })">
                             <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Statuss</div>
@@ -184,10 +189,10 @@
                         </div>
                     </div>
 
-                    <div class="toolbar-actions justify-end">
+                    <div class="toolbar-actions">
                         <a href="{{ route('device-transfers.index') }}" class="btn-clear" data-async-link="true">
                             <x-icon name="clear" size="h-4 w-4" />
-                            <span>Noņemt filtrus</span>
+                            <span>Notīrīt filtrus</span>
                         </a>
                     </div>
                 </div>
@@ -195,9 +200,10 @@
 
             <x-active-filters
                 :items="[
+                    ['label' => 'Meklēt', 'value' => $filters['q']],
                     ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
-                    ['label' => 'Pieteicējs', 'value' => $selectedRequesterLabel],
-                    ['label' => 'Saņēmējs', 'value' => $selectedRecipientLabel],
+                    ['label' => 'Pieteicējs', 'value' => $isAdmin ? $selectedRequesterLabel : null],
+                    ['label' => 'Saņēmējs', 'value' => $isAdmin ? $selectedRecipientLabel : null],
                     ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
                     ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
                     ['label' => 'Statuss', 'value' => $activeStatusLabel],
@@ -227,10 +233,10 @@
                 </div>
             @endif
 
-            <div class="app-table-shell">
-                <div class="app-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
-                    <table class="app-table-content app-table-content-wide min-w-full text-sm">
-                        <thead class="app-table-head bg-slate-50 text-left text-slate-500">
+            <div class="device-table-shell">
+                <div class="device-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-slate-50 text-left text-slate-500">
                             <tr>
                                 @foreach ([
                                     'code' => 'Kods',
@@ -291,7 +297,7 @@
                                         && $transfer->status === 'submitted';
                                     $hasActions = ($isAdmin && $deviceFilterUrl) || $isIncomingPending;
                                 @endphp
-                                <tr class="app-table-row border-t border-slate-100 align-top" data-table-row-id="device-transfer-{{ $transfer->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
+                                <tr class="border-t border-slate-100 align-top">
                                     <td class="px-4 py-4">
                                         <div class="font-semibold text-slate-900">{{ $device?->code ?: '-' }}</div>
                                         <div class="mt-1 text-xs text-slate-500">Sērija: {{ $device?->serial_number ?: '-' }}</div>

@@ -136,19 +136,21 @@
                                 />
                             </label>
 
-                            <label class="block">
-                                <span class="crud-label">Pieteicējs</span>
-                                <x-searchable-select
-                                    name="requester_id"
-                                    query-name="requester_query"
-                                    identifier="writeoff-request-requester-filter"
-                                    :options="$requesterOptions"
-                                    :selected="(string) ($filters['requester_id'] ?? '')"
-                                    :query="$selectedRequesterLabel"
-                                    placeholder="Izvēlies pieteicēju"
-                                    empty-message="Neviens pieteicējs neatbilst meklējumam."
-                                />
-                            </label>
+                            @if ($canReview)
+                                <label class="block">
+                                    <span class="crud-label">Pieteicējs</span>
+                                    <x-searchable-select
+                                        name="requester_id"
+                                        query-name="requester_query"
+                                        identifier="writeoff-request-requester-filter"
+                                        :options="$requesterOptions"
+                                        :selected="(string) ($filters['requester_id'] ?? '')"
+                                        :query="$selectedRequesterLabel"
+                                        placeholder="Izvēlies pieteicēju"
+                                        empty-message="Neviens pieteicējs neatbilst meklējumam."
+                                    />
+                                </label>
+                            @endif
 
                             <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
                             <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
@@ -196,7 +198,7 @@
             <x-active-filters
                 :items="[
                     ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
-                    ['label' => 'Pieteicējs', 'value' => $selectedRequesterLabel],
+                    ['label' => 'Pieteicējs', 'value' => $canReview ? $selectedRequesterLabel : null],
                     ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
                     ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
                     ['label' => 'Statuss', 'value' => $activeStatusLabel],
