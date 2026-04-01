@@ -208,7 +208,7 @@ const swapAsyncTableRoot = (rootSelector, html) => {
     return true;
 };
 
-const submitAsyncTableForm = async (form, { url = null, resetPage = true, toastMessage = '' } = {}) => {
+window.submitAsyncTableForm = async (form, { url = null, resetPage = true, toastMessage = '' } = {}) => {
     const rootSelector = form?.dataset?.asyncRoot;
 
     if (!form || !rootSelector) {
@@ -1827,3 +1827,33 @@ if (Alpine && !window.__appAlpineStarted) {
     window.__appAlpineStarted = true;
     Alpine.start();
 }
+
+// Clear all filters function for request index pages
+window.clearAllFilters = function(button) {
+    const form = button.closest('form[data-async-table-form]');
+    if (!form) return;
+
+    const root = form.closest('[data-async-table-root]');
+    if (!root) return;
+
+    // Build URL with only statuses_filter=1 (to indicate filters were cleared)
+    const url = new URL(form.action, window.location.origin);
+    
+    // Keep sort params
+    const sortField = form.querySelector('input[data-sort-hidden="field"]');
+    const sortDirection = form.querySelector('input[data-sort-hidden="direction"]');
+    
+    const params = new URLSearchParams();
+    params.append('statuses_filter', '1');
+    if (sortField) params.append('sort', sortField.value);
+    if (sortDirection) params.append('direction', sortDirection.value);
+    
+    url.search = '?' + params.toString();
+
+    // Use the existing submitAsyncTableForm function
+    window.submitAsyncTableForm(form, {
+        url: url,
+        resetPage: true,
+        toastMessage: 'Filtri notīrīti'
+    });
+};

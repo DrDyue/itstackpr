@@ -505,7 +505,7 @@ class WriteoffRequestController extends Controller
     private function normalizedIndexFilters(Request $request, array $availableStatuses, bool $canReview): array
     {
         $statusFilterTouched = $request->has('statuses_filter');
-        $hasAnyQueryParams = $request->query->count() > 0;
+        $hasAnyQueryParams = $request->query->count() > 1 || ($request->query->count() === 1 && ! $statusFilterTouched);
         $defaultStatuses = $canReview && ! $hasAnyQueryParams ? [WriteoffRequest::STATUS_SUBMITTED] : [];
         $selectedStatuses = collect($request->query('status', $statusFilterTouched ? [] : $defaultStatuses))
             ->map(fn (mixed $status) => trim((string) $status))

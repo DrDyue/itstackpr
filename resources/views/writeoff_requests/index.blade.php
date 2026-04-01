@@ -170,10 +170,10 @@
                     </div>
 
                     <div class="toolbar-actions">
-                        <a href="{{ route('writeoff-requests.index', ['statuses_filter' => 1]) }}" class="btn-clear" data-async-link="true">
+                        <button type="button" class="btn-clear" onclick="clearAllFilters(this)">
                             <x-icon name="clear" size="h-4 w-4" />
                             <span>Notīrīt filtrus</span>
-                        </a>
+                        </button>
                     </div>
                 </div>
             </form>
