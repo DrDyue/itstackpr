@@ -195,7 +195,7 @@
 
                         <template x-if="requirementRows().length > 0">
                             <div class="space-y-2">
-                                <template x-for="item in requirementRows()" :key="item.label">
+                                <template x-for="item in requirementRows()" :key="item.key">
                                     <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
                                         <span class="font-medium text-slate-700" x-text="item.label"></span>
                                         <span class="inline-flex items-center gap-2 font-semibold" :class="item.done ? 'text-emerald-700' : 'text-rose-700'">
