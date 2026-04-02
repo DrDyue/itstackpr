@@ -89,6 +89,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/my-requests/{requestType}/{requestId}', [UserRequestCenterController::class, 'destroy'])->name('my-requests.destroy');
 
     Route::get('/devices/find-by-code', [DeviceController::class, 'findByCode'])->name('devices.find-by-code');
+    Route::get('/devices/table', [DeviceController::class, 'table'])->name('devices.table');
     Route::resource('devices', DeviceController::class)->only(['index', 'show']);
     Route::post('/devices/{device}/user-room', [DeviceController::class, 'updateUserRoom'])->name('devices.user-room.update');
     Route::get('/device-assets/remote-preview', [DeviceAssetController::class, 'remotePreview'])

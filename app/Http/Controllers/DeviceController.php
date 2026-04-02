@@ -53,6 +53,26 @@ class DeviceController extends Controller
     }
 
     /**
+     * Atgriež filtrētu ierīču tabulu (async).
+     */
+    public function table(Request $request)
+    {
+        $user = $this->user();
+        abort_unless($user, 403);
+        $viewData = $this->devicesIndexViewData($request, $user);
+        return view('devices.index-table', [
+            'devices' => $viewData['devices'],
+            'deviceStates' => $viewData['deviceStates'],
+            'sorting' => $viewData['sorting'],
+            'sortOptions' => $viewData['sortOptions'],
+            'statusLabels' => $viewData['statusLabels'],
+            'canManageDevices' => $viewData['canManageDevices'],
+            'quickRoomSelectOptions' => $viewData['quickRoomOptions'],
+            'quickAssigneeOptions' => $viewData['quickAssigneeOptions'],
+        ]);
+    }
+
+    /**
      * Atrod ierīci pēc koda un atgriež informāciju par lapu kurā tā atrodas.
      */
     public function findByCode(Request $request): JsonResponse
