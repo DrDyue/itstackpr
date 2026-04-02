@@ -19,12 +19,12 @@
         $selectedAssignedUserLabel = $selectedAssignedUser?->full_name;
         $quickRoomSelectOptions = collect($quickRoomOptions ?? [])->values();
         $quickAssigneeSelectOptions = collect($quickAssigneeOptions ?? [])->values();
+        $selectedStatuses = $filters['statuses'];
         $statusFilterLinks = [
             ['label' => 'Aktīvas', 'value' => 'active', 'icon' => 'check-circle', 'tone' => 'emerald'],
             ['label' => 'Remonta', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'sky'],
             ['label' => 'Norakstītas', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
         ];
-        $selectedStatuses = $filters['statuses'];
         $roomSelectOptions = $roomOptions->map(fn ($room) => [
             'value' => (string) $room->id,
             'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
@@ -60,38 +60,6 @@
             'description' => 'Filtrs pēc stāva',
             'search' => $floor . ' ' . $floor . '. stāvs',
         ])->values();
-        $presetIsActive = function (array $preset) use ($filters) {
-            $params = $preset['params'] ?? [];
-            $onlyStatusPreset = array_key_exists('status', $params) && count($params) === 3;
-            $onlyAssigneePreset = array_key_exists('assigned_to_id', $params);
-            $isDefaultMinePreset = ($preset['key'] ?? '') === 'mine' && ! $onlyAssigneePreset;
-
-            if ($onlyStatusPreset) {
-                return count($filters['statuses']) === 1
-                    && ($filters['statuses'][0] ?? null) === (($params['status'][0] ?? null));
-            }
-
-            if ($onlyAssigneePreset) {
-                return $filters['assigned_to_id'] === (string) ($params['assigned_to_id'] ?? '')
-                    && $filters['q'] === ''
-                    && $filters['code'] === ''
-                    && $filters['floor'] === ''
-                    && $filters['room_id'] === ''
-                    && $filters['type'] === ''
-                    && ! $filters['has_status_filter'];
-            }
-
-            if ($isDefaultMinePreset) {
-                return $filters['q'] === ''
-                    && $filters['code'] === ''
-                    && $filters['floor'] === ''
-                    && $filters['room_id'] === ''
-                    && $filters['type'] === ''
-                    && ! $filters['has_status_filter'];
-            }
-
-            return false;
-        };
         $toolbarGridClass = $canManageDevices
             ? 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,1.5fr)_minmax(0,1.5fr)]'
             : 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,1.5fr)_minmax(0,1.5fr)]';
@@ -270,22 +238,6 @@
 
                 <div class="filter-toolbar-footer">
                     <div class="quick-filter-groups">
-                        <div class="quick-filter-group">
-                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Saglabātie skati</div>
-                            <div class="quick-status-filters">
-                                @foreach ($filterPresets as $preset)
-                                    <a
-                                        href="{{ route('devices.index', $preset['params']) }}"
-                                        class="quick-status-filter quick-status-filter-{{ $preset['tone'] ?? 'slate' }} {{ $presetIsActive($preset) ? 'quick-status-filter-active' : '' }}"
-                                        data-async-link="true"
-                                    >
-                                        <x-icon :name="$preset['icon']" size="h-4 w-4" />
-                                        <span>{{ $preset['label'] }}</span>
-                                    </a>
-                                @endforeach
-                            </div>
-                        </div>
-
                         <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($selectedStatuses), minimum: 0 })">
                             <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ierīces statuss</div>
                             <div class="quick-status-filters">
@@ -328,7 +280,6 @@
                         ['label' => 'Stāvs', 'value' => $selectedFloorLabel],
                         ['label' => 'Telpa', 'value' => $selectedRoomLabel],
                         ['label' => 'Tips', 'value' => $selectedTypeLabel],
-                        ['label' => 'Statuss', 'value' => $filters['has_status_filter'] ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ') : null],
                     ]"
                     :clear-url="route('devices.index')"
                 />
