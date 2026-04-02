@@ -34,11 +34,38 @@ class DashboardController extends Controller
             return redirect()->route('devices.index');
         }
 
+        return $this->renderDashboard($request);
+    }
+
+    /**
+     * Atgriež filtrētu ierīču tabulu priekš dashboard (async).
+     */
+    public function devices(Request $request): View
+    {
+        $user = $this->user();
+        abort_unless($user, 403);
+        abort_unless($user->canManageRequests(), 403);
+
         $filters = [
             'floor' => trim((string) $request->query('floor', '')),
             'room_id' => trim((string) $request->query('room_id', '')),
         ];
 
+        $viewData = $this->dashboardViewData($request, $user, $filters);
+
+        return view('dashboard.devices-table', [
+            'dashboardDevices' => $viewData['dashboardDevices'],
+            'dashboardDeviceStates' => $viewData['dashboardDeviceStates'],
+            'filters' => $filters,
+        ]);
+    }
+
+    /**
+     * Kopīga metode dashboard datu sagatavošanai.
+     */
+    private function dashboardViewData(Request $request, $user, array $filters): array
+    {
+        $isManager = $user->canManageRequests();
         $hasDevices = $this->featureTableExists('devices');
         $hasRooms = $this->featureTableExists('rooms');
 
@@ -138,9 +165,7 @@ class DashboardController extends Controller
             ])
             ->all();
 
-        return view('dashboard', [
-            'user' => $user,
-            'isManager' => $isManager,
+        return [
             'dashboardDevices' => $dashboardDevices,
             'dashboardDeviceStates' => $dashboardDeviceStates,
             'locationTree' => $locationTree,
@@ -149,7 +174,30 @@ class DashboardController extends Controller
                 $pendingWriteoffRequestCount
             ),
             'filters' => $filters,
-        ]);
+        ];
+    }
+
+    /**
+     * Parāda darba virsmu ar visiem datiem.
+     */
+    public function renderDashboard(Request $request): View
+    {
+        $user = $this->user();
+        abort_unless($user, 403);
+        abort_unless($user->canManageRequests(), 403);
+
+        $filters = [
+            'floor' => trim((string) $request->query('floor', '')),
+            'room_id' => trim((string) $request->query('room_id', '')),
+        ];
+
+        $viewData = $this->dashboardViewData($request, $user, $filters);
+
+        return view('dashboard', array_merge($viewData, [
+            'user' => $user,
+            'isManager' => true,
+            'filters' => $filters,
+        ]));
     }
 
     /**

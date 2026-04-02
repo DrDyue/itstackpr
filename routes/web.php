@@ -77,6 +77,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/devices', [DashboardController::class, 'devices'])->name('dashboard.devices');
     Route::get('/live-notifications', [LiveNotificationController::class, 'index'])->name('live-notifications.index');
     Route::post('/notifications/mark-all-read', [LiveNotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
     Route::post('/view-mode', [ViewModeController::class, 'update'])->name('view-mode.update');

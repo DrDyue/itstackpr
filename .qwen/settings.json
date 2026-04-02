@@ -97,7 +97,8 @@
       "Bash(return)",
       "Bash(console.log)",
       "Bash(jseof)",
-      "Bash(rm *)"
+      "Bash(rm *)",
+      "Bash(mkdir *)"
     ]
   },
   "$version": 3
