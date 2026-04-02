@@ -172,19 +172,19 @@
                 @if ($dashboardDevices->onFirstPage())
                     <span class="dashboard-pagination-btn dashboard-pagination-btn-disabled">Iepriekšējā</span>
                 @else
-                    <a href="{{ $dashboardDevices->previousPageUrl() }}" class="dashboard-pagination-btn" data-async-link="true">Iepriekšējā</a>
+                    <button type="button" @click="window.dashboardFilter.fetchDevices(getCurrentFilters({{ $dashboardDevices->currentPage() - 1 }}))" class="dashboard-pagination-btn">Iepriekšējā</button>
                 @endif
 
                 @for ($page = $startPage; $page <= $endPage; $page++)
                     @if ($page === $currentPage)
                         <span class="dashboard-pagination-btn dashboard-pagination-btn-active">{{ $page }}</span>
                     @else
-                        <a href="{{ $dashboardDevices->url($page) }}" class="dashboard-pagination-btn" data-async-link="true">{{ $page }}</a>
+                        <button type="button" @click="window.dashboardFilter.fetchDevices(getCurrentFilters({{ $page }}))" class="dashboard-pagination-btn">{{ $page }}</button>
                     @endif
                 @endfor
 
                 @if ($dashboardDevices->hasMorePages())
-                    <a href="{{ $dashboardDevices->nextPageUrl() }}" class="dashboard-pagination-btn" data-async-link="true">Nākamā</a>
+                    <button type="button" @click="window.dashboardFilter.fetchDevices(getCurrentFilters({{ $dashboardDevices->currentPage() + 1 }}))" class="dashboard-pagination-btn">Nākamā</button>
                 @else
                     <span class="dashboard-pagination-btn dashboard-pagination-btn-disabled">Nākamā</span>
                 @endif
@@ -192,3 +192,10 @@
         </div>
     @endif
 </div>
+
+<script>
+function getCurrentFilters(page) {
+    const filter = window.dashboardFilter.currentFilters || { floor: '', room_id: '' };
+    return { ...filter, page: page };
+}
+</script>

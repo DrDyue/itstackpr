@@ -49,7 +49,7 @@
         </div>
 
         {{-- Darba virsmas galvenais saturs sadalīts telpu kokā un ierīču tabulā. --}}
-        <div class="dash-workspace-grid" x-data="dashboardFilter()" @dashboard-filter-change.window="fetchDevices($event.detail)">
+        <div class="dash-workspace-grid" x-data="dashboardFilter">
             <aside class="dash-location-panel">
                 <div class="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
                     <x-icon name="room" size="h-5 w-5" class="text-emerald-600" />
@@ -71,6 +71,7 @@
                                 <button
                                     type="button"
                                     @click="filterByFloor('{{ $floor['id'] }}')"
+                                    data-floor="{{ $floor['id'] }}"
                                     class="dash-floor-filter {{ $floor['is_active'] ? 'dash-floor-filter-active' : '' }}"
                                 >
                                     <x-icon name="view" size="h-4 w-4" />
@@ -82,6 +83,8 @@
                                         <button
                                             type="button"
                                             @click="filterByRoom('{{ $room['id'] }}', '{{ $floor['id'] }}')"
+                                            data-room="{{ $room['id'] }}"
+                                            data-floor="{{ $floor['id'] }}"
                                             class="dash-room-link {{ $room['is_active'] ? 'dash-room-link-active' : '' }}"
                                         >
                                             <div class="dash-room-name">
@@ -148,63 +151,64 @@
     </section>
 
     <script>
-        function dashboardFilter() {
-            return {
-                isLoading: false,
-                async fetchDevices(params) {
-                    this.isLoading = true;
-                    try {
-                        const queryString = new URLSearchParams(params).toString();
-                        const url = '{{ route("dashboard.devices") }}' + (queryString ? '?' + queryString : '');
-                        const response = await fetch(url, {
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest',
-                                'Accept': 'text/html',
-                            },
-                        });
-                        const html = await response.text();
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(html, 'text/html');
-                        const newTable = doc.querySelector('#dashboard-devices-table');
-                        if (newTable) {
-                            document.querySelector('#dashboard-devices-table').outerHTML = newTable.outerHTML;
-                        }
-                    } catch (error) {
-                        console.error('Failed to fetch devices:', error);
-                    } finally {
-                        this.isLoading = false;
-                    }
-                },
-                filterByFloor(floorId) {
-                    const params = { floor: floorId };
-                    this.updateActiveState(floorId, null);
-                    this.fetchDevices(params);
-                },
-                filterByRoom(roomId, floorId) {
-                    const params = { floor: floorId, room_id: roomId };
-                    this.updateActiveState(floorId, roomId);
-                    this.fetchDevices(params);
-                },
-                clearFilters() {
-                    this.updateActiveState(null, null);
-                    this.fetchDevices({});
-                },
-                updateActiveState(floorId, roomId) {
-                    document.querySelectorAll('.dash-floor-filter').forEach(el => {
-                        el.classList.remove('dash-floor-filter-active');
+        const dashboardFilter = {
+            isLoading: false,
+            currentFilters: { floor: '', room_id: '' },
+            async fetchDevices(params = {}) {
+                this.isLoading = true;
+                const filters = { ...this.currentFilters, ...params };
+                try {
+                    const queryString = new URLSearchParams(filters).toString();
+                    const url = '{{ route("dashboard.devices") }}' + (queryString ? '?' + queryString : '');
+                    const response = await fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'text/html',
+                        },
                     });
-                    document.querySelectorAll('.dash-room-link').forEach(el => {
-                        el.classList.remove('dash-room-link-active');
-                    });
-                    if (roomId) {
-                        const roomLink = document.querySelector(`.dash-room-link[ @click*="${roomId}"]`);
-                        if (roomLink) roomLink.classList.add('dash-room-link-active');
-                    } else if (floorId) {
-                        const floorFilter = document.querySelector(`.dash-floor-filter[ @click*="${floorId}"]`);
-                        if (floorFilter) floorFilter.classList.add('dash-floor-filter-active');
+                    const html = await response.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newTable = doc.querySelector('#dashboard-devices-table');
+                    if (newTable) {
+                        document.querySelector('#dashboard-devices-table').outerHTML = newTable.outerHTML;
                     }
+                } catch (error) {
+                    console.error('Failed to fetch devices:', error);
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+            filterByFloor(floorId) {
+                this.currentFilters = { floor: floorId, room_id: '' };
+                this.updateActiveState(floorId, null);
+                this.fetchDevices();
+            },
+            filterByRoom(roomId, floorId) {
+                this.currentFilters = { floor: floorId, room_id: roomId };
+                this.updateActiveState(floorId, roomId);
+                this.fetchDevices();
+            },
+            clearFilters() {
+                this.currentFilters = { floor: '', room_id: '' };
+                this.updateActiveState(null, null);
+                this.fetchDevices();
+            },
+            updateActiveState(floorId, roomId) {
+                document.querySelectorAll('.dash-floor-filter').forEach(el => {
+                    el.classList.remove('dash-floor-filter-active');
+                });
+                document.querySelectorAll('.dash-room-link').forEach(el => {
+                    el.classList.remove('dash-room-link-active');
+                });
+                if (roomId) {
+                    const roomButton = document.querySelector(`.dash-room-link[data-room="${roomId}"]`);
+                    if (roomButton) roomButton.classList.add('dash-room-link-active');
+                } else if (floorId) {
+                    const floorButton = document.querySelector(`.dash-floor-filter[data-floor="${floorId}"]`);
+                    if (floorButton) floorButton.classList.add('dash-floor-filter-active');
                 }
             }
-        }
+        };
     </script>
 </x-app-layout>
