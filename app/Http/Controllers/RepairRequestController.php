@@ -93,13 +93,13 @@ class RepairRequestController extends Controller
             ->when(! $canReview, fn (Builder $query) => $query->where('responsible_user_id', $user->id));
 
         $deviceOptions = $this->repairDeviceOptions(
-            (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['device_id']))
+            (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['device_id', 'code']))
                 ->with(['device.type'])
                 ->get()
         );
 
         $requesterOptions = $this->repairRequesterOptions(
-            (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['requester_id']))
+            (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['requester_id', 'code']))
                 ->with('responsibleUser')
                 ->get()
                 ->pluck('responsibleUser')
@@ -457,10 +457,11 @@ class RepairRequestController extends Controller
     {
         $statusFilterTouched = $request->has('statuses_filter');
         $filtersCleared = $request->boolean('clear');
-        $hasOtherFilters = $request->filled('q') 
-            || $request->filled('device_id') 
-            || $request->filled('requester_id') 
-            || $request->filled('date_from') 
+        $hasOtherFilters = $request->filled('q')
+            || $request->filled('code')
+            || $request->filled('device_id')
+            || $request->filled('requester_id')
+            || $request->filled('date_from')
             || $request->filled('date_to');
         $defaultStatuses = $canReview && ! $filtersCleared && ! $hasOtherFilters ? [RepairRequest::STATUS_SUBMITTED] : [];
         $selectedStatuses = collect($request->query('status', $statusFilterTouched ? [] : $defaultStatuses))
@@ -472,6 +473,7 @@ class RepairRequestController extends Controller
 
         return [
             'q' => trim((string) $request->query('q', '')),
+            'code' => trim((string) $request->query('code', '')),
             'request_id' => ctype_digit((string) $request->query('request_id', '')) ? (int) $request->query('request_id') : null,
             'device_id' => ctype_digit((string) $request->query('device_id', '')) ? (int) $request->query('device_id') : null,
             'device_query' => trim((string) $request->query('device_query', '')),
@@ -491,11 +493,21 @@ class RepairRequestController extends Controller
     {
         $skipLookup = array_flip($skip);
 
+        if (! isset($skipLookup['code']) && $filters['code'] !== '') {
+            $query->whereHas('device', function (Builder $deviceQuery) use ($filters) {
+                $deviceQuery->where('code', $filters['code']);
+            });
+        }
+
         if (! isset($skipLookup['q']) && $filters['q'] !== '') {
             $term = $filters['q'];
 
             $query->whereHas('device', function (Builder $deviceQuery) use ($term) {
-                $deviceQuery->where('code', $term);
+                $deviceQuery->where(function (Builder $q) use ($term) {
+                    $q->where('name', 'like', "%{$term}%")
+                      ->orWhere('manufacturer', 'like', "%{$term}%")
+                      ->orWhere('model', 'like', "%{$term}%");
+                });
             });
         }
 

@@ -86,13 +86,13 @@ class DeviceTransferController extends Controller
             : 0;
 
         $deviceOptions = $this->transferDeviceOptions(
-            (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['device_id']))
+            (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['device_id', 'code']))
                 ->with(['device.type'])
                 ->get()
         );
 
         $requesterOptions = $this->transferUserOptions(
-            (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['requester_id']))
+            (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['requester_id', 'code']))
                 ->with('responsibleUser')
                 ->get()
                 ->pluck('responsibleUser')
@@ -102,7 +102,7 @@ class DeviceTransferController extends Controller
         );
 
         $recipientOptions = $this->transferUserOptions(
-            (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['recipient_id']))
+            (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['recipient_id', 'code']))
                 ->with('transferTo')
                 ->get()
                 ->pluck('transferTo')
@@ -531,6 +531,7 @@ class DeviceTransferController extends Controller
 
         return [
             'q' => trim((string) $request->query('q', '')),
+            'code' => trim((string) $request->query('code', '')),
             'device_id' => ctype_digit((string) $request->query('device_id', '')) ? (int) $request->query('device_id') : null,
             'device_query' => trim((string) $request->query('device_query', '')),
             'requester_id' => ctype_digit((string) $request->query('requester_id', '')) ? (int) $request->query('requester_id') : null,
@@ -552,11 +553,21 @@ class DeviceTransferController extends Controller
     {
         $skipLookup = array_flip($skip);
 
+        if (! isset($skipLookup['code']) && $filters['code'] !== '') {
+            $query->whereHas('device', function (Builder $deviceQuery) use ($filters) {
+                $deviceQuery->where('code', $filters['code']);
+            });
+        }
+
         if (! isset($skipLookup['q']) && $filters['q'] !== '') {
             $term = $filters['q'];
 
             $query->whereHas('device', function (Builder $deviceQuery) use ($term) {
-                $deviceQuery->where('code', $term);
+                $deviceQuery->where(function (Builder $q) use ($term) {
+                    $q->where('name', 'like', "%{$term}%")
+                      ->orWhere('manufacturer', 'like', "%{$term}%")
+                      ->orWhere('model', 'like', "%{$term}%");
+                });
             });
         }
 
