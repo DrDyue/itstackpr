@@ -302,4 +302,3 @@
         ])
     </section>
 </x-app-layout>
-                    @forelse ($devices as $device)
