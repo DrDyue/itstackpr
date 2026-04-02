@@ -2707,7 +2707,7 @@ tbody td {
 }
 
 .devices-filters-grid {
-    @apply grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6;
+    @apply grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6;
 }
 
 .devices-search-group {

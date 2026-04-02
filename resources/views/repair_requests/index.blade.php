@@ -93,26 +93,30 @@
                     <div class="devices-filter-section">
                         <h3 class="devices-filter-title">
                             <x-icon name="search" size="h-4 w-4" />
-                            <span>Meklēšana</span>
-                        </h3>
-                        <div class="devices-filter-grid">
-                            <label class="devices-text-search">
-                                <span>Meklēt</span>
-                                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Kods, nosaukums, pieteicējs vai apraksts">
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="devices-filter-divider"></div>
-
-                <div class="devices-filter-header">
-                    <div class="devices-filter-section">
-                        <h3 class="devices-filter-title">
-                            <x-icon name="filter" size="h-4 w-4" />
-                            <span>Filtri</span>
+                            <span>Meklēšana un filtri</span>
                         </h3>
                         <div class="devices-filters-grid">
+                            <div class="devices-search-group">
+                                <label class="devices-search-label">
+                                    <span>Meklēt pēc koda</span>
+                                    <input
+                                        type="text"
+                                        name="code"
+                                        value="{{ $filters['code'] }}"
+                                        class="crud-control"
+                                        placeholder="Ierīces kods"
+                                        autocomplete="off"
+                                    >
+                                </label>
+                                <button type="submit" class="btn-search">
+                                    <x-icon name="search" size="h-4 w-4" />
+                                    <span>Meklēt</span>
+                                </button>
+                            </div>
+                            <label class="devices-text-search">
+                                <span>Meklēt</span>
+                                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, pieteicējs vai apraksts">
+                            </label>
                             <label class="block">
                                 <span class="crud-label">Ierīce</span>
                                 <x-searchable-select

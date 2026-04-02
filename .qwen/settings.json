@@ -99,7 +99,20 @@
       "Bash(jseof)",
       "Bash(rm *)",
       "Bash(mkdir *)",
-      "Bash(cp *)"
+      "Bash(cp *)",
+      "Bash(python3)",
+      "Bash(import *)",
+      "Bash(with)",
+      "Bash(as *)",
+      "Bash(content *)",
+      "Bash(old_pattern *)",
+      "Bash(new_text *)",
+      "Bash(old_pattern, *)",
+      "Bash(old_grid *)",
+      "Bash(new_grid *)",
+      "Bash(old_grid, *)",
+      "Bash(f.write)",
+      "Bash(print)"
     ]
   },
   "$version": 3
