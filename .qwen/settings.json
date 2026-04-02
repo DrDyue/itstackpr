@@ -96,7 +96,8 @@
       "Bash(alert)",
       "Bash(return)",
       "Bash(console.log)",
-      "Bash(jseof)"
+      "Bash(jseof)",
+      "Bash(rm *)"
     ]
   },
   "$version": 3

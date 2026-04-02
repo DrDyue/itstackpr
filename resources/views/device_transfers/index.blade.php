@@ -424,11 +424,41 @@
                                                 </button>
 
                                                 <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
-@if ($isAdmin && $deviceFilterUrl)
+                                                    @if ($isAdmin && $deviceFilterUrl)
                                                         <a href="{{ $deviceFilterUrl }}" class="table-action-item" @click="open = false">
                                                             <x-icon name="view" size="h-4 w-4" />
                                                             <span>Skatīt saistīto ierīci</span>
                                                         </a>
+                                                    @endif
+
+                                                    @php
+                                                        $isOwnerCanEdit = ! $isAdmin
+                                                            && (int) $currentUserId === (int) $transfer->responsible_user_id
+                                                            && $transfer->status === 'submitted';
+                                                    @endphp
+
+                                                    @if ($isOwnerCanEdit)
+                                                        <a href="{{ route('my-requests.edit', ['requestType' => 'transfer', 'requestId' => $transfer->id]) }}" class="table-action-item table-action-item-amber" @click="open = false">
+                                                            <x-icon name="edit" size="h-4 w-4" />
+                                                            <span>Rediģēt aprakstu</span>
+                                                        </a>
+
+                                                        <form
+                                                            method="POST"
+                                                            action="{{ route('my-requests.destroy', ['requestType' => 'transfer', 'requestId' => $transfer->id]) }}"
+                                                            data-app-confirm-title="Atcelt nodošanu?"
+                                                            data-app-confirm-message="Vai tiešām atcelt šo ierīces nodošanas pieprasījumu?"
+                                                            data-app-confirm-accept="Jā, atcelt"
+                                                            data-app-confirm-cancel="Nē"
+                                                            data-app-confirm-tone="danger"
+                                                        >
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="table-action-button table-action-button-rose">
+                                                                <x-icon name="x-circle" size="h-4 w-4" />
+                                                                <span>Atcelt pieprasījumu</span>
+                                                            </button>
+                                                        </form>
                                                     @endif
 
                                                     @if ($isIncomingPending)
