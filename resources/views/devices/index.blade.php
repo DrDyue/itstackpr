@@ -280,6 +280,7 @@
                         ['label' => 'Stāvs', 'value' => $selectedFloorLabel],
                         ['label' => 'Telpa', 'value' => $selectedRoomLabel],
                         ['label' => 'Tips', 'value' => $selectedTypeLabel],
+                        ['label' => 'Statuss', 'value' => $filters['has_status_filter'] ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ') : null],
                     ]"
                     :clear-url="route('devices.index')"
                 />
