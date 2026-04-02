@@ -36,7 +36,32 @@ class WriteoffRequestController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+        return view('writeoff_requests.index', $this->writeoffRequestsViewData($request, $user));
+    }
 
+    /**
+     * Atgriež filtrētu norakstīšanas pieteikumu tabulu (async).
+     */
+    public function table(Request $request)
+    {
+        $user = $this->user();
+        abort_unless($user, 403);
+        $viewData = $this->writeoffRequestsViewData($request, $user);
+        return view('writeoff_requests.index-table', [
+            'requests' => $viewData['requests'],
+            'canReview' => $viewData['canReview'],
+            'sorting' => $viewData['sorting'],
+            'sortOptions' => $viewData['sortOptions'],
+            'statusLabels' => $viewData['statusLabels'],
+            'sortDirectionLabels' => $viewData['sortDirectionLabels'],
+        ]);
+    }
+
+    /**
+     * Kopīga metode norakstīšanas pieteikumu datu sagatavošanai.
+     */
+    private function writeoffRequestsViewData(Request $request, $user): array
+    {
         $canReview = $user->canManageRequests();
         $availableStatuses = [
             WriteoffRequest::STATUS_SUBMITTED,
@@ -47,7 +72,7 @@ class WriteoffRequestController extends Controller
         $sorting = $this->normalizedSorting($request);
 
         if (! $this->featureTableExists('writeoff_requests')) {
-            return view('writeoff_requests.index', [
+            return [
                 'requests' => $this->emptyPaginator(),
                 'requestSummary' => [
                     'total' => 0,
@@ -64,7 +89,8 @@ class WriteoffRequestController extends Controller
                 'deviceOptions' => collect(),
                 'requesterOptions' => collect(),
                 'featureMessage' => 'Tabula writeoff_requests šobrīd nav pieejama.',
-            ]);
+                'sortDirectionLabels' => ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'],
+            ];
         }
 
         $baseQuery = WriteoffRequest::query()
@@ -93,7 +119,7 @@ class WriteoffRequestController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('writeoff_requests.index', [
+        return [
             'requests' => $requests,
             'requestSummary' => [
                 'total' => (clone $baseQuery)->count(),
@@ -109,7 +135,8 @@ class WriteoffRequestController extends Controller
             'sortOptions' => $this->sortOptions(),
             'deviceOptions' => $deviceOptions,
             'requesterOptions' => $requesterOptions,
-        ]);
+            'sortDirectionLabels' => ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'],
+        ];
     }
 
     /**

@@ -101,11 +101,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/repairs/find-by-code', [RepairController::class, 'findByCode'])->name('repairs.find-by-code');
     Route::get('/repair-requests', [RepairRequestController::class, 'index'])->name('repair-requests.index');
     Route::get('/repair-requests/find-by-code', [RepairRequestController::class, 'findByCode'])->name('repair-requests.find-by-code');
+    Route::get('/repair-requests/table', [RepairRequestController::class, 'table'])->name('repair-requests.table');
     Route::get('/repair-requests/create', [RepairRequestController::class, 'create'])->name('repair-requests.create');
     Route::post('/repair-requests', [RepairRequestController::class, 'store'])->name('repair-requests.store');
     Route::post('/repair-requests/{repairRequest}/review', [RepairRequestController::class, 'review'])->name('repair-requests.review');
     Route::get('/writeoff-requests', [WriteoffRequestController::class, 'index'])->name('writeoff-requests.index');
     Route::get('/writeoff-requests/find-by-code', [WriteoffRequestController::class, 'findByCode'])->name('writeoff-requests.find-by-code');
+    Route::get('/writeoff-requests/table', [WriteoffRequestController::class, 'table'])->name('writeoff-requests.table');
     Route::get('/writeoff-requests/create', [WriteoffRequestController::class, 'create'])->name('writeoff-requests.create');
     Route::post('/writeoff-requests', [WriteoffRequestController::class, 'store'])->name('writeoff-requests.store');
     Route::post('/writeoff-requests/{writeoffRequest}/review', [WriteoffRequestController::class, 'review'])->name('writeoff-requests.review');

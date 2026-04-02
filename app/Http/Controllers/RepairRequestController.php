@@ -32,7 +32,32 @@ class RepairRequestController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
+        return view('repair_requests.index', $this->repairRequestsViewData($request, $user));
+    }
 
+    /**
+     * Atgriež filtrētu remonta pieteikumu tabulu (async).
+     */
+    public function table(Request $request)
+    {
+        $user = $this->user();
+        abort_unless($user, 403);
+        $viewData = $this->repairRequestsViewData($request, $user);
+        return view('repair_requests.index-table', [
+            'requests' => $viewData['requests'],
+            'canReview' => $viewData['canReview'],
+            'sorting' => $viewData['sorting'],
+            'sortOptions' => $viewData['sortOptions'],
+            'statusLabels' => $viewData['statusLabels'],
+            'sortDirectionLabels' => $viewData['sortDirectionLabels'],
+        ]);
+    }
+
+    /**
+     * Kopīga metode remonta pieteikumu datu sagatavošanai.
+     */
+    private function repairRequestsViewData(Request $request, $user): array
+    {
         $canReview = $user->canManageRequests();
         $availableStatuses = [
             RepairRequest::STATUS_SUBMITTED,
@@ -43,7 +68,7 @@ class RepairRequestController extends Controller
         $sorting = $this->normalizedSorting($request);
 
         if (! $this->featureTableExists('repair_requests')) {
-            return view('repair_requests.index', [
+            return [
                 'requests' => $this->emptyPaginator(),
                 'requestSummary' => [
                     'total' => 0,
@@ -60,7 +85,8 @@ class RepairRequestController extends Controller
                 'deviceOptions' => collect(),
                 'requesterOptions' => collect(),
                 'featureMessage' => 'Tabula repair_requests šobrīd nav pieejama.',
-            ]);
+                'sortDirectionLabels' => ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'],
+            ];
         }
 
         $baseQuery = RepairRequest::query()
@@ -76,10 +102,14 @@ class RepairRequestController extends Controller
             (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['requester_id']))
                 ->with('responsibleUser')
                 ->get()
+                ->pluck('responsibleUser')
+                ->filter()
+                ->unique('id')
+                ->values()
         );
 
         $requestsQuery = (clone $baseQuery)
-            ->with(['device.type', 'responsibleUser', 'reviewedBy', 'repair'])
+            ->with(['device.type', 'responsibleUser', 'reviewedBy'])
             ->select('repair_requests.*');
 
         $this->applyIndexFilters($requestsQuery, $filters);
@@ -89,7 +119,7 @@ class RepairRequestController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('repair_requests.index', [
+        return [
             'requests' => $requests,
             'requestSummary' => [
                 'total' => (clone $baseQuery)->count(),
@@ -105,7 +135,8 @@ class RepairRequestController extends Controller
             'sortOptions' => $this->sortOptions(),
             'deviceOptions' => $deviceOptions,
             'requesterOptions' => $requesterOptions,
-        ]);
+            'sortDirectionLabels' => ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'],
+        ];
     }
 
     /**
