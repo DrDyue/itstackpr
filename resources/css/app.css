@@ -2648,7 +2648,7 @@ tbody td {
 }
 
 .request-device-thumb {
-    @apply h-24 w-24 rounded-[1.5rem] object-cover ring-1 ring-slate-200;
+    @apply h-12 w-12 rounded-[1rem] object-cover ring-1 ring-slate-200;
 }
 
 .request-device-thumb-placeholder {
