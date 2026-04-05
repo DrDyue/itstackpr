@@ -9,6 +9,7 @@
         <table class="app-table-content app-table-content-wide min-w-full text-sm">
             <thead class="app-table-head bg-slate-50 text-left text-slate-500">
                 <tr>
+                    <th class="table-col-image px-4 py-3 text-center">Attēls</th>
                     @foreach ([
                         'code' => 'Kods',
                         'name' => 'Nosaukums',
@@ -64,6 +65,7 @@
                 @forelse ($requests as $writeoffRequest)
                     @php
                         $device = $writeoffRequest->device;
+                        $thumbUrl = $device?->deviceImageThumbUrl();
                         $deviceFilterUrl = $device
                             ? route('devices.index', array_filter([
                                 'code' => $device->code,
@@ -75,6 +77,15 @@
                         $shortReason = \Illuminate\Support\Str::limit(preg_replace('/\s+/u', ' ', $reason), 70);
                     @endphp
                     <tr class="app-table-row border-t border-slate-100 align-top" data-table-row-id="writeoff-request-{{ $writeoffRequest->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
+                        <td class="table-col-image px-4 py-4 text-center align-middle">
+                            @if ($thumbUrl)
+                                <img src="{{ $thumbUrl }}" alt="{{ $device?->name ?: 'Ierīce' }}" class="request-device-thumb mx-auto">
+                            @else
+                                <div class="request-device-thumb request-device-thumb-placeholder mx-auto">
+                                    <x-icon name="device" size="h-4 w-4" />
+                                </div>
+                            @endif
+                        </td>
                         <td class="px-4 py-4">
                             <div class="font-semibold text-slate-900">{{ $device?->code ?: '-' }}</div>
                             <div class="mt-1 text-xs text-slate-500">Sērija: {{ $device?->serial_number ?: '-' }}</div>
@@ -128,7 +139,17 @@
                                     </svg>
                                 </button>
 
-                                <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
+                                <div class="table-action-inline-panel" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
+                                    <div class="table-action-inline-head">
+                                        <div>
+                                            <div class="table-action-inline-title">Pieteikuma darbības</div>
+                                            <div class="table-action-inline-copy">Apskati saistīto ierīci un pieņem lēmumu par norakstīšanas pieteikumu.</div>
+                                        </div>
+                                        <button type="button" class="table-action-inline-close" @click="open = false">
+                                            <x-icon name="x-mark" size="h-4 w-4" />
+                                        </button>
+                                    </div>
+
                                     @if ($deviceFilterUrl)
                                         <a href="{{ $deviceFilterUrl }}" class="table-action-item" @click="open = false">
                                             <x-icon name="view" size="h-4 w-4" />
@@ -137,39 +158,41 @@
                                     @endif
 
                                     @if ($canReview && $writeoffRequest->status === 'submitted')
-                                        <form
-                                            method="POST"
-                                            action="{{ route('writeoff-requests.review', $writeoffRequest) }}"
-                                            data-app-confirm-title="Apstiprināt pieteikumu?"
-                                            data-app-confirm-message="Vai tiešām apstiprināt šo norakstīšanas pieteikumu?"
-                                            data-app-confirm-accept="Jā, apstiprināt"
-                                            data-app-confirm-cancel="Nē"
-                                            data-app-confirm-tone="warning"
-                                        >
-                                            @csrf
-                                            <input type="hidden" name="status" value="approved">
-                                            <button type="submit" class="table-action-button table-action-button-amber">
-                                                <x-icon name="check-circle" size="h-4 w-4" />
-                                                <span>Apstiprināt</span>
-                                            </button>
-                                        </form>
+                                        <div class="table-action-inline-actions">
+                                            <form
+                                                method="POST"
+                                                action="{{ route('writeoff-requests.review', $writeoffRequest) }}"
+                                                data-app-confirm-title="Apstiprināt pieteikumu?"
+                                                data-app-confirm-message="Vai tiešām apstiprināt šo norakstīšanas pieteikumu?"
+                                                data-app-confirm-accept="Jā, apstiprināt"
+                                                data-app-confirm-cancel="Nē"
+                                                data-app-confirm-tone="warning"
+                                            >
+                                                @csrf
+                                                <input type="hidden" name="status" value="approved">
+                                                <button type="submit" class="btn-approve">
+                                                    <x-icon name="check-circle" size="h-4 w-4" />
+                                                    <span>Apstiprināt</span>
+                                                </button>
+                                            </form>
 
-                                        <form
-                                            method="POST"
-                                            action="{{ route('writeoff-requests.review', $writeoffRequest) }}"
-                                            data-app-confirm-title="Noraidīt pieteikumu?"
-                                            data-app-confirm-message="Vai tiešām noraidīt šo norakstīšanas pieteikumu?"
-                                            data-app-confirm-accept="Jā, noraidīt"
-                                            data-app-confirm-cancel="Nē"
-                                            data-app-confirm-tone="danger"
-                                        >
-                                            @csrf
-                                            <input type="hidden" name="status" value="rejected">
-                                            <button type="submit" class="table-action-button table-action-button-rose">
-                                                <x-icon name="x-circle" size="h-4 w-4" />
-                                                <span>Noraidīt</span>
-                                            </button>
-                                        </form>
+                                            <form
+                                                method="POST"
+                                                action="{{ route('writeoff-requests.review', $writeoffRequest) }}"
+                                                data-app-confirm-title="Noraidīt pieteikumu?"
+                                                data-app-confirm-message="Vai tiešām noraidīt šo norakstīšanas pieteikumu?"
+                                                data-app-confirm-accept="Jā, noraidīt"
+                                                data-app-confirm-cancel="Nē"
+                                                data-app-confirm-tone="danger"
+                                            >
+                                                @csrf
+                                                <input type="hidden" name="status" value="rejected">
+                                                <button type="submit" class="btn-reject">
+                                                    <x-icon name="x-circle" size="h-4 w-4" />
+                                                    <span>Noraidīt</span>
+                                                </button>
+                                            </form>
+                                        </div>
                                     @elseif (! $canReview && $writeoffRequest->status === 'submitted')
                                         <a href="{{ route('my-requests.edit', ['requestType' => 'writeoff', 'requestId' => $writeoffRequest->id]) }}" class="table-action-item table-action-item-amber" @click="open = false">
                                             <x-icon name="edit" size="h-4 w-4" />
@@ -199,7 +222,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-4 py-6">
+                        <td colspan="8" class="px-4 py-6">
                             <x-empty-state
                                 compact
                                 icon="writeoff"
