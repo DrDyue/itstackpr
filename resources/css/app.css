@@ -2812,11 +2812,11 @@ tbody td {
 }
 
 .searchable-select-toggle {
-    @apply absolute right-2 top-1/2 z-20 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-500 shadow-sm transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700 active:scale-[0.98];
+    @apply absolute right-1.5 top-1/2 z-20 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg border border-transparent bg-transparent text-slate-400 transition hover:border-slate-200 hover:bg-slate-100 hover:text-slate-700 active:scale-[0.98];
 }
 
 .searchable-select-toggle-active {
-    @apply border-sky-300 bg-sky-50 text-sky-700 ring-2 ring-sky-100;
+    @apply border-sky-200 bg-sky-50 text-sky-700 ring-2 ring-sky-100;
 }
 
 .searchable-select-scrub-preview {
@@ -2945,7 +2945,7 @@ tbody td {
 }
 
 .quick-status-filter {
-    @apply inline-flex min-h-[2.25rem] cursor-pointer select-none items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all duration-200;
+    @apply inline-flex min-h-[2.25rem] cursor-pointer select-none items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-semibold leading-none transition-all duration-200;
 }
 
 .quick-status-filter:hover {
@@ -4586,11 +4586,16 @@ html[data-theme='dark'] .inventory-inline-chip-slate,
 html[data-theme='dark'] .request-device-chip,
 html[data-theme='dark'] .table-action-inline-close,
 html[data-theme='dark'] .localized-date-trigger-icon,
-html[data-theme='dark'] .searchable-select-toggle,
 html[data-theme='dark'] .notification-toast-close {
     background-color: #111827 !important;
     border-color: rgba(51, 65, 85, 0.95) !important;
     color: #cbd5e1 !important;
+}
+
+html[data-theme='dark'] .searchable-select-toggle {
+    background-color: transparent !important;
+    border-color: transparent !important;
+    color: #94a3b8 !important;
 }
 
 html[data-theme='dark'] .page-eyebrow {

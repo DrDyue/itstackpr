@@ -18,7 +18,7 @@
         ];
     @endphp
 
-    <section class="app-shell app-shell-wide">
+    <section class="app-shell">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-4xl">
@@ -160,6 +160,12 @@
                                         $toneClass = $status === 'submitted'
                                             ? 'quick-status-filter-amber'
                                             : ($status === 'approved' ? 'quick-status-filter-emerald' : 'quick-status-filter-rose');
+                                        $iconName = match ($status) {
+                                            'submitted' => 'clock',
+                                            'approved' => 'check-circle',
+                                            'rejected' => 'x-circle',
+                                            default => 'information-circle',
+                                        };
                                     @endphp
                                     <button
                                         type="button"
@@ -167,7 +173,8 @@
                                         class="quick-status-filter {{ $toneClass }}"
                                         :class="isSelected(@js($status)) ? 'quick-status-filter-active' : ''"
                                     >
-                                        <x-status-pill context="request" :value="$status" :label="$statusLabels[$status] ?? null" />
+                                        <x-icon :name="$iconName" size="h-4 w-4" />
+                                        <span>{{ $statusLabels[$status] ?? $status }}</span>
                                     </button>
                                 @endforeach
 
