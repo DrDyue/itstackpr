@@ -2691,11 +2691,15 @@ tbody td {
 
 /* Devices index - new filter and search design */
 .devices-filter-surface {
-    @apply rounded-[1.5rem] border border-slate-200 bg-white px-3 py-2.5 shadow-sm mb-4;
+    @apply rounded-[1.5rem] border border-slate-200 bg-white px-3 py-2.5 shadow-sm mb-4 transition duration-200;
 }
 
 .devices-filter-surface-elevated {
     @apply space-y-0.5 shadow-[0_26px_60px_-45px_rgba(15,23,42,0.22)];
+}
+
+.devices-filter-surface-elevated:hover {
+    box-shadow: 0 28px 70px -48px rgba(15, 23, 42, 0.28);
 }
 
 .devices-filter-header {
@@ -2716,6 +2720,18 @@ tbody td {
 
 .devices-filters-grid {
     @apply grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6;
+}
+
+.transfer-search-grid {
+    @apply grid grid-cols-1 gap-2 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.35fr)];
+}
+
+.transfer-filters-grid {
+    @apply grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4;
+}
+
+.transfer-filters-grid-admin {
+    @apply 2xl:grid-cols-5;
 }
 
 .devices-search-group {
@@ -2740,6 +2756,12 @@ tbody td {
 
 .devices-text-search span {
     @apply text-xs font-medium text-slate-600;
+}
+
+.transfer-search-grid .devices-text-search .crud-control,
+.transfer-filters-grid .crud-control,
+.transfer-filters-grid .searchable-select-trigger {
+    min-height: 2.75rem;
 }
 
 .devices-filter-divider {

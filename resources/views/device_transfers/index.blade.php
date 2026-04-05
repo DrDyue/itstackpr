@@ -20,7 +20,7 @@
         ];
     @endphp
 
-    <section class="app-shell">
+    <section class="{{ $isAdmin ? 'app-shell app-shell-wide' : 'app-shell' }}">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-4xl">
@@ -85,7 +85,7 @@
             <form
                 method="GET"
                 action="{{ route('device-transfers.index') }}"
-                class="devices-filter-surface"
+                class="space-y-3"
                 data-async-table-form
                 data-async-root="#device-transfers-index-root"
             >
@@ -93,18 +93,13 @@
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
 
-                <div class="devices-filter-header">
+                <div class="devices-filter-surface devices-filter-surface-elevated">
                     <div class="devices-filter-section">
                         <h3 class="devices-filter-title">
                             <x-icon name="search" size="h-4 w-4" />
-                            <span>Meklēšana un filtri</span>
+                            <span>Meklēšana</span>
                         </h3>
-                    <div class="devices-filter-section">
-                        <h3 class="devices-filter-title">
-                            <x-icon name="filter" size="h-4 w-4" />
-                            <span>Filtri</span>
-                        </h3>
-                        <div class="devices-filters-grid">
+                        <div class="transfer-search-grid">
                             <div class="devices-search-group">
                                 <label class="devices-search-label">
                                     <span>Meklēt pēc koda</span>
@@ -123,9 +118,20 @@
                                 </button>
                             </div>
                             <label class="devices-text-search">
-                                <span>Meklēt</span>
+                                <span>Meklēt tabulā</span>
                                 <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, pieteicējs, saņēmējs vai iemesls">
                             </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="devices-filter-surface devices-filter-surface-elevated">
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
+                            <x-icon name="filter" size="h-4 w-4" />
+                            <span>Filtri</span>
+                        </h3>
+                        <div class="{{ $isAdmin ? 'transfer-filters-grid transfer-filters-grid-admin' : 'transfer-filters-grid' }}">
                             <label class="block">
                                 <span class="crud-label">Ierīce</span>
                                 <x-searchable-select
@@ -204,6 +210,7 @@
                     </div>
                 </div>
 
+                <div class="devices-filter-surface devices-filter-surface-elevated">
                 <div class="filter-toolbar-footer">
                     <div class="quick-filter-groups">
                         @if (! $isAdmin)
@@ -260,6 +267,7 @@
                             <span>Notīrīt filtrus</span>
                         </a>
                     </div>
+                </div>
                 </div>
             </form>
 
