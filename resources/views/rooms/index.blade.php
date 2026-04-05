@@ -60,8 +60,8 @@
         </div>
 
         <div id="rooms-index-root" data-async-table-root>
-        <form method="GET" action="{{ route('rooms.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-4" data-async-table-form data-async-root="#rooms-index-root" data-search-endpoint="{{ route('rooms.find-by-name') }}">
-            <label class="block md:col-span-2">
+        <form method="GET" action="{{ route('rooms.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-2 lg:grid-cols-4" data-async-table-form data-async-root="#rooms-index-root" data-search-endpoint="{{ route('rooms.find-by-name') }}">
+            <label class="block">
                 <span class="crud-label">Telpas nosaukums</span>
                 <div class="flex items-center gap-2">
                     <input type="text" name="search" value="{{ $filters['search'] }}" class="crud-control" placeholder="Nosaukums vai numurs" data-async-manual="true" data-table-manual-search="true" data-search-mode="contains">
@@ -107,7 +107,7 @@
                     empty-message="Neviens lietotājs neatbilst meklējumam."
                 />
             </label>
-            <div class="toolbar-actions md:col-span-4">
+            <div class="toolbar-actions md:col-span-2 lg:col-span-4">
                 <a href="{{ route('rooms.index') }}" class="btn-clear" data-async-link="true"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt</span></a>
             </div>
         </form>

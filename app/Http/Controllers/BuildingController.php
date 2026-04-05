@@ -14,6 +14,12 @@ use Illuminate\Http\Request;
 class BuildingController extends Controller
 {
     private const NOTES_DEFAULT = '';
+    private const SORTABLE_COLUMNS = [
+        'building_name' => 'building_name',
+        'address' => 'address',
+        'total_floors' => 'total_floors',
+        'created_at' => 'created_at',
+    ];
 
     /**
      * Parāda ēku sarakstu ar filtriem.
@@ -24,25 +30,39 @@ class BuildingController extends Controller
 
         $filters = [
             'search' => trim((string) $request->query('search', $request->query('q', ''))),
-            'city' => trim((string) $request->query('city', '')),
+            'total_floors' => trim((string) $request->query('total_floors', '')),
         ];
+        $sorting = $this->resolveSorting($request);
 
-        $buildings = Building::query()
+        $buildingsQuery = Building::query()
             ->withCount(['rooms', 'devices'])
-            ->when($filters['city'] !== '', fn (Builder $query) => $query->where('city', $filters['city']))
-            ->orderBy('building_name')
+            ->when($filters['search'] !== '', function (Builder $query) use ($filters) {
+                $search = $filters['search'];
+
+                $query->where(function (Builder $nestedQuery) use ($search) {
+                    $nestedQuery
+                        ->where('building_name', 'like', "%{$search}%")
+                        ->orWhere('address', 'like', "%{$search}%");
+                });
+            })
+            ->when($filters['total_floors'] !== '' && ctype_digit($filters['total_floors']), fn (Builder $query) => $query->where('total_floors', (int) $filters['total_floors']));
+
+        $this->applySorting($buildingsQuery, $sorting);
+
+        $buildings = $buildingsQuery
             ->paginate(20)
             ->withQueryString();
 
         return view('buildings.index', [
             'buildings' => $buildings,
             'filters' => $filters,
-            'cities' => Building::query()
-                ->whereNotNull('city')
-                ->where('city', '!=', '')
-                ->distinct()
-                ->orderBy('city')
-                ->pluck('city'),
+            'sorting' => $sorting,
+            'sortOptions' => [
+                'building_name' => ['label' => 'nosaukuma'],
+                'address' => ['label' => 'adreses'],
+                'total_floors' => ['label' => 'stāvu skaita'],
+                'created_at' => ['label' => 'izveides datuma'],
+            ],
         ]);
     }
 
@@ -58,15 +78,27 @@ class BuildingController extends Controller
             return response()->json(['found' => false, 'page' => 1]);
         }
 
-        $city = trim((string) $request->query('city', ''));
-        $buildings = Building::query()
-            ->when($city !== '', fn (Builder $query) => $query->where('city', $city))
-            ->orderBy('building_name')
-            ->get(['id', 'building_name']);
+        $filters = [
+            'total_floors' => trim((string) $request->query('total_floors', '')),
+        ];
+        $sorting = $this->resolveSorting($request);
+
+        $buildingsQuery = Building::query()
+            ->when($filters['total_floors'] !== '' && ctype_digit($filters['total_floors']), fn (Builder $query) => $query->where('total_floors', (int) $filters['total_floors']))
+            ->select(['id', 'building_name', 'address']);
+
+        $this->applySorting($buildingsQuery, $sorting);
+
+        $buildings = $buildingsQuery->get();
 
         $needle = mb_strtolower($search);
         $foundIndex = $buildings->search(function (Building $building) use ($needle) {
-            return str_contains(mb_strtolower($building->building_name), $needle);
+            $searchValue = mb_strtolower(trim(implode(' ', array_filter([
+                $building->building_name,
+                $building->address,
+            ]))));
+
+            return str_contains($searchValue, $needle);
         });
 
         if ($foundIndex === false) {
@@ -186,5 +218,36 @@ class BuildingController extends Controller
         $data['notes'] = $data['notes'] ?? self::NOTES_DEFAULT;
 
         return $data;
+    }
+
+    private function resolveSorting(Request $request): array
+    {
+        $sort = trim((string) $request->query('sort', 'building_name'));
+        $direction = trim((string) $request->query('direction', 'asc'));
+
+        if (! array_key_exists($sort, self::SORTABLE_COLUMNS)) {
+            $sort = 'building_name';
+        }
+
+        if (! in_array($direction, ['asc', 'desc'], true)) {
+            $direction = 'asc';
+        }
+
+        return [
+            'sort' => $sort,
+            'direction' => $direction,
+        ];
+    }
+
+    private function applySorting(Builder $query, array $sorting): void
+    {
+        $column = self::SORTABLE_COLUMNS[$sorting['sort']] ?? self::SORTABLE_COLUMNS['building_name'];
+        $direction = $sorting['direction'] ?? 'asc';
+
+        $query->orderBy($column, $direction);
+
+        if ($column !== 'building_name') {
+            $query->orderBy('building_name');
+        }
     }
 }

@@ -2779,6 +2779,59 @@ class AuthAndRequestFlowsTest extends TestCase
             ], false));
     }
 
+    public function test_buildings_index_can_filter_by_total_floors(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'buildings-floor-filter-admin@example.com');
+        $firstDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-BUILDING-FLOOR-ONE');
+        $secondDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-BUILDING-FLOOR-TWO');
+
+        DB::table('buildings')->where('id', $firstDevice->building_id)->update([
+            'building_name' => 'AdministrÄcijas centrs',
+            'total_floors' => 5,
+        ]);
+
+        DB::table('buildings')->where('id', $secondDevice->building_id)->update([
+            'building_name' => 'Sporta halle',
+            'total_floors' => 2,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('buildings.index', ['total_floors' => 5]));
+
+        $response->assertOk()
+            ->assertSee('AdministrÄcijas centrs')
+            ->assertDontSee('Sporta halle');
+    }
+
+    public function test_buildings_find_by_name_can_match_address_on_second_page(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'buildings-search-admin@example.com');
+
+        for ($i = 1; $i <= 21; $i++) {
+            $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, sprintf('DEV-BUILDING-SEARCH-%03d', $i));
+
+            DB::table('buildings')->where('id', $device->building_id)->update([
+                'building_name' => 'Testa Ä“ka '.str_pad((string) $i, 3, '0', STR_PAD_LEFT),
+                'address' => $i === 21 ? 'BrÄ«vÄ«bas iela 99' : 'BrÄ«vÄ«bas iela '.$i,
+                'total_floors' => 3,
+            ]);
+        }
+
+        $response = $this->actingAs($admin)
+            ->getJson(route('buildings.find-by-name', [
+                'search' => 'BrÄ«vÄ«bas iela 99',
+                'sort' => 'building_name',
+                'direction' => 'asc',
+            ]));
+
+        $response
+            ->assertOk()
+            ->assertJson([
+                'found' => true,
+                'page' => 2,
+            ]);
+    }
+
     public function test_user_cannot_be_deleted_while_related_records_are_still_assigned(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'user-delete-admin@example.com');
