@@ -2410,11 +2410,15 @@ tbody td {
 }
 
 .form-page-actions-copy > .text-sm.font-semibold.text-slate-900 {
-    @apply text-sm font-semibold text-slate-900;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #0f172a;
 }
 
 .form-page-actions-copy > .mt-1.text-sm.text-slate-500 {
-    @apply mt-1 text-sm text-slate-500;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: #64748b;
 }
 
 .request-type-section {
