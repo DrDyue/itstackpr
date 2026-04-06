@@ -3929,11 +3929,29 @@ tbody td {
 }
 
 .repairs-toolbar-surface {
-    @apply space-y-1 shadow-[0_26px_60px_-45px_rgba(15,23,42,0.22)];
+    @apply space-y-3 shadow-[0_26px_60px_-45px_rgba(15,23,42,0.22)];
 }
 
-.repair-toolbar-search-grid {
-    @apply grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)];
+.repairs-toolbar-main {
+    @apply grid grid-cols-1 items-end gap-3 md:grid-cols-2 2xl:grid-cols-[minmax(0,0.88fr)_minmax(0,1fr)_minmax(0,0.92fr)_minmax(0,0.92fr)_minmax(0,0.72fr)_minmax(0,0.72fr)];
+}
+
+.repairs-toolbar-main > label,
+.repairs-toolbar-main > div {
+    @apply min-w-0;
+}
+
+.repairs-toolbar-code-field .crud-control,
+.repairs-toolbar-text-field .crud-control {
+    min-height: 2.75rem;
+}
+
+.repairs-toolbar-date-field .localized-date-picker {
+    @apply w-full;
+}
+
+.repairs-toolbar-date-field .localized-date-trigger {
+    @apply w-full min-h-[2.75rem];
 }
 
 .repairs-filter-footer {
