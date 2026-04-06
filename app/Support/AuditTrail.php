@@ -831,6 +831,30 @@ class AuditTrail
         return $text;
     }
 
+    public static function compactDescription(?string $description, ?string $entityType = null, ?string $action = null): string
+    {
+        $text = self::localizedDescription($description, $entityType);
+
+        $patterns = [
+            '/^.+? izveidots: (?<body>.+)$/u' => 'Izveidots: $1',
+            '/^.+? atjaunināts: (?<body>.+)$/u' => 'Atjaunināts: $1',
+            '/^.+? dzēsts: (?<body>.+)$/u' => 'Dzēsts: $1',
+            '/^.+? mainīts: (?<body>.+)$/u' => 'Mainīts: $1',
+            '/^Atvērta sadaļa: (?<body>.+)$/u' => 'Atvērts: $1',
+            '/^Audita žurnālā meklēts ieraksts: (?<body>.+)$/u' => 'Meklēts: $1',
+            '/^Audita žurnāls filtrēts pēc: (?<body>.+)$/u' => 'Filtri: $1',
+            '/^Audita žurnāls sakārtots pēc (?<body>.+)$/u' => 'Kārtošana: $1',
+        ];
+
+        foreach ($patterns as $pattern => $replacement) {
+            if (preg_match($pattern, $text)) {
+                return preg_replace($pattern, $replacement, $text) ?? $text;
+            }
+        }
+
+        return $text;
+    }
+
     private static function defaultDescription(string $action, Model $model, array $changedFields = []): string
     {
         $entity = self::readableEntityName(class_basename($model));

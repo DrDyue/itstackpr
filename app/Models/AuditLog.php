@@ -50,6 +50,11 @@ class AuditLog extends Model
         return AuditTrail::localizedDescription($this->description, $this->entity_type);
     }
 
+    public function getCompactDescriptionAttribute(): string
+    {
+        return AuditTrail::compactDescription($this->description, $this->entity_type, $this->action);
+    }
+
     public function getLocalizedEntityTypeAttribute(): string
     {
         return AuditTrail::entityLabel($this->entity_type);

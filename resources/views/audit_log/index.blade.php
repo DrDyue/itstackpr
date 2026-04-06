@@ -217,11 +217,11 @@
 
             <div class="app-table-shell mt-5">
                 <div class="app-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
-                    <table class="app-table-content app-table-content-compact min-w-full text-sm">
+                    <table class="app-table-content app-table-content-compact audit-log-table min-w-full text-sm">
                         <thead class="app-table-head bg-slate-50 text-left text-slate-500">
                             <tr>
                                 @foreach ([
-                                    'timestamp' => 'Laiks',
+                                    'timestamp' => 'Datums un laiks',
                                     'user' => 'Lietotājs',
                                     'action' => 'Darbība',
                                     'entity_type' => 'Objekts',
@@ -237,18 +237,18 @@
                                         $nextDirection = $isCurrentSort && $filters['direction'] === 'asc'
                                             ? 'desc'
                                             : ($isCurrentSort && $filters['direction'] === 'desc' ? 'asc' : $defaultDirection);
-                                        $sortMessage = 'Tabula "Audita žurnāls" kārtota pēc '
+                                        $sortMessage = 'Audita žurnāls kārtots pēc '
                                             . mb_strtolower($label)
                                             . ' '
                                             . ($sortDirectionLabels[$nextDirection] ?? '');
                                     @endphp
                                     <th class="{{ match ($column) {
-                                        'date' => 'table-col-date',
-                                        'severity' => 'table-col-status',
-                                        'action' => 'table-col-name',
-                                        'entity' => 'table-col-name',
-                                        'user' => 'table-col-person',
-                                        'description' => 'table-col-note',
+                                        'timestamp' => 'table-col-audit-date',
+                                        'user' => 'table-col-audit-user',
+                                        'action' => 'table-col-audit-action',
+                                        'entity_type' => 'table-col-audit-object',
+                                        'severity' => 'table-col-audit-status',
+                                        'description' => 'table-col-audit-description',
                                         default => '',
                                     } }} px-4 py-3">
                                         <button
@@ -320,16 +320,19 @@
                                     data-table-row-id="audit-log-{{ $log->id }}"
                                     data-table-search-value="{{ \Illuminate\Support\Str::lower(trim(implode(' ', array_filter([
                                         (string) $log->id,
-                                        $log->localized_description,
+                                        $log->compact_description,
                                         $log->localized_action,
                                         $log->localized_entity_type,
+                                        $log->entity_reference,
                                         $log->user?->full_name,
                                         $log->user?->email,
                                     ])))) }}"
                                 >
                                     <td class="px-4 py-3">
-                                        <div class="font-medium text-slate-900">{{ $log->timestamp?->format('d.m.Y') ?: '-' }}</div>
-                                        <div class="text-xs text-slate-500">{{ $log->timestamp?->format('H:i:s') ?: '-' }}</div>
+                                        <div class="audit-date-stack">
+                                            <div class="audit-date-value">{{ $log->timestamp?->format('d.m.Y') ?: '-' }}</div>
+                                            <div class="audit-time-value">{{ $log->timestamp?->format('H:i:s') ?: '-' }}</div>
+                                        </div>
                                     </td>
                                     <td class="px-4 py-3">
                                         <div class="font-medium text-slate-900">{{ $log->user?->full_name ?: 'Sistēma' }}</div>
@@ -371,24 +374,8 @@
                                         <x-status-pill context="severity" :value="$log->severity" :label="$log->localized_severity" />
                                     </td>
                                     <td class="px-4 py-3">
-                                        <div class="audit-description-card">
-                                            <div class="audit-description-main">{{ $log->localized_description }}</div>
-                                            <div class="audit-description-meta">
-                                                <span class="audit-description-chip">
-                                                    <x-icon :name="$actionStyles['icon']" size="h-3.5 w-3.5" />
-                                                    <span>{{ $log->localized_action }}</span>
-                                                </span>
-                                                @if ($log->entity_reference)
-                                                    <span class="audit-description-chip">
-                                                        <x-icon :name="$entityStyles['icon']" size="h-3.5 w-3.5" />
-                                                        <span>{{ $log->entity_reference }}</span>
-                                                    </span>
-                                                @endif
-                                                <span class="audit-description-chip">
-                                                    <x-icon name="calendar" size="h-3.5 w-3.5" />
-                                                    <span>{{ $log->timestamp?->format('d.m.Y H:i:s') ?: '-' }}</span>
-                                                </span>
-                                            </div>
+                                        <div class="audit-description-text">
+                                            {{ $log->compact_description }}
                                         </div>
                                     </td>
                                 </tr>

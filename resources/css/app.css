@@ -3345,15 +3345,15 @@ tbody td {
 }
 
 .audit-entity-cell {
-  @apply relative flex flex-col gap-2;
+  @apply relative flex min-w-0 flex-col gap-2;
 }
 
 .audit-entity-reference {
-  @apply text-xs text-slate-500;
+  @apply line-clamp-2 text-sm font-medium leading-5 text-slate-700;
 }
 
 .audit-entity-link {
-  @apply font-semibold text-sky-600 transition hover:text-sky-700;
+  @apply font-semibold text-sky-600 underline decoration-slate-300 underline-offset-4 transition hover:text-sky-700 hover:decoration-sky-300;
 }
 
 .audit-entity-preview {
@@ -3373,20 +3373,20 @@ tbody td {
   @apply mt-1 text-xs leading-5 text-slate-600;
 }
 
-.audit-description-card {
-  @apply max-w-[38rem] rounded-2xl border border-slate-200/80 bg-slate-50/80 px-3.5 py-3 shadow-sm;
+.audit-date-stack {
+  @apply flex flex-col gap-1;
 }
 
-.audit-description-main {
-  @apply text-sm font-medium leading-6 text-slate-700;
+.audit-date-value {
+  @apply font-semibold text-slate-900;
 }
 
-.audit-description-meta {
-  @apply mt-2 flex flex-wrap items-center gap-2;
+.audit-time-value {
+  @apply text-xs font-medium tracking-[0.08em] text-slate-500;
 }
 
-.audit-description-chip {
-  @apply inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-500 shadow-sm;
+.audit-description-text {
+  @apply break-words text-sm font-medium leading-6 text-slate-700;
 }
 
 /* Shared action buttons */
@@ -4287,6 +4287,34 @@ tbody td {
 
 .table-col-actions {
     width: 8.25rem;
+}
+
+.table-col-audit-date {
+    width: 9.5rem;
+}
+
+.table-col-audit-user {
+    width: 12.5rem;
+}
+
+.table-col-audit-action {
+    width: 9.5rem;
+}
+
+.table-col-audit-object {
+    width: 12.5rem;
+}
+
+.table-col-audit-status {
+    width: 8rem;
+}
+
+.table-col-audit-description {
+    width: 24rem;
+}
+
+.audit-log-table {
+    table-layout: fixed;
 }
 
 .app-table-row td,
@@ -5447,19 +5475,16 @@ html[data-theme='dark'] .audit-entity-reference {
     color: #cbd5e1 !important;
 }
 
-html[data-theme='dark'] .audit-description-card {
-    background-color: rgba(15, 23, 42, 0.7) !important;
-    border-color: rgba(51, 65, 85, 0.85) !important;
-}
-
-html[data-theme='dark'] .audit-description-main {
+html[data-theme='dark'] .audit-date-value {
     color: #f8fafc !important;
 }
 
-html[data-theme='dark'] .audit-description-chip {
-    background-color: rgba(2, 6, 23, 0.82) !important;
-    border-color: rgba(51, 65, 85, 0.92) !important;
-    color: #cbd5e1 !important;
+html[data-theme='dark'] .audit-time-value {
+    color: #94a3b8 !important;
+}
+
+html[data-theme='dark'] .audit-description-text {
+    color: #e2e8f0 !important;
 }
 
 html[data-theme='dark'] .device-request-badge-link {

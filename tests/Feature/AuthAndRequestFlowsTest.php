@@ -2944,7 +2944,7 @@ class AuthAndRequestFlowsTest extends TestCase
 
         $this->assertIsString($content);
         $this->assertStringNotContainsString('open-request-detail', $content);
-        $this->assertStringContainsString('audit-description-card', $content);
+        $this->assertStringContainsString('audit-description-text', $content);
         $this->assertStringContainsString('Admins piesledzas auditam.', $content);
         $this->assertStringContainsString('warning', $content);
     }
