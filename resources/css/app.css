@@ -2783,7 +2783,7 @@ tbody td {
 }
 
 .devices-filter-section {
-    @apply space-y-2 rounded-[1.25rem] border border-slate-200/80 bg-slate-50/55 p-2.5;
+    @apply space-y-2 rounded-[1.25rem] border border-slate-200/80 bg-slate-50/50 p-2.5;
 }
 
 .devices-filter-title {
@@ -2999,7 +2999,7 @@ tbody td {
 }
 
 .searchable-select-toggle {
-    @apply absolute right-1.5 top-1/2 z-20 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg border border-slate-200/70 bg-white/92 text-slate-400 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-700 active:scale-[0.98];
+    @apply absolute right-1.5 top-1/2 z-20 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg border border-slate-200/70 bg-white/90 text-slate-400 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-700 active:scale-[0.98];
 }
 
 .searchable-select-toggle-active {
@@ -4212,7 +4212,7 @@ tbody td {
 }
 
 .app-table-row-accent-violet td {
-    @apply bg-violet-50/35;
+    @apply bg-violet-50/30;
 }
 
 .app-table-row-accent-sky td {
@@ -4220,7 +4220,7 @@ tbody td {
 }
 
 .app-table-row-accent-slate td {
-    @apply bg-slate-50/35;
+    @apply bg-slate-50/30;
 }
 
 .app-table-cell-strong {
