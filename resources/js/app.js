@@ -1060,6 +1060,88 @@ const registerAlpineData = () => {
             this.item = null;
             document.body.classList.remove('overflow-hidden');
         },
+        panelVariantClass() {
+            if (this.item?.drawer_variant === 'audit') {
+                return 'request-detail-panel-audit';
+            }
+
+            if (this.item?.drawer_variant === 'repair') {
+                return 'request-detail-panel-repair';
+            }
+
+            return '';
+        },
+        summaryItems() {
+            if (Array.isArray(this.item?.summary_items) && this.item.summary_items.length > 0) {
+                return this.item.summary_items.filter((entry) => entry?.value);
+            }
+
+            const items = [];
+
+            if (this.item?.status_label) {
+                items.push({
+                    label: this.item.drawer_variant === 'audit' ? 'Svarīgums' : 'Statuss',
+                    value: this.item.status_label,
+                    icon: this.item.hero_icon || 'information-circle',
+                    tone: this.item.hero_tone || 'slate',
+                    badgeClass: this.item.status_badge_class || '',
+                });
+            }
+
+            if (this.item?.submitted_at) {
+                items.push({
+                    label: this.item.drawer_variant === 'audit' ? 'Fiksēts' : 'Datums',
+                    value: this.item.submitted_at,
+                    icon: 'calendar',
+                    tone: 'slate',
+                });
+            }
+
+            if (this.item?.hero_meta) {
+                items.push({
+                    label: this.item.drawer_variant === 'audit' ? 'Objekts' : 'Kopsavilkums',
+                    value: this.item.hero_meta,
+                    icon: this.item.drawer_variant === 'audit' ? 'audit' : 'tag',
+                    tone: this.item.drawer_variant === 'audit' ? 'violet' : 'sky',
+                });
+            }
+
+            return items.slice(0, 3);
+        },
+        infoCards() {
+            return [
+                {
+                    label: this.item?.primary_label || 'Galvenā informācija',
+                    value: this.item?.primary_value || this.item?.device_code || '',
+                    meta: this.item?.primary_meta || this.item?.device_serial || '',
+                    notes: [this.item?.primary_note, this.item?.primary_note_secondary].filter(Boolean),
+                    icon: this.item?.primary_icon || 'information-circle',
+                    tone: this.item?.primary_tone || 'slate',
+                },
+                {
+                    label: this.item?.secondary_label || 'Papildinformācija',
+                    value: this.item?.secondary_value || this.item?.requester_name || '',
+                    meta: this.item?.secondary_meta || this.item?.requester_meta || '',
+                    notes: [this.item?.secondary_note].filter(Boolean),
+                    icon: this.item?.secondary_icon || 'user',
+                    tone: this.item?.secondary_tone || 'sky',
+                },
+                {
+                    label: this.item?.tertiary_label || 'Papildlauks',
+                    value: this.item?.tertiary_value || this.item?.recipient_name || '',
+                    meta: this.item?.tertiary_meta || this.item?.recipient_meta || '',
+                    notes: [this.item?.tertiary_note].filter(Boolean),
+                    icon: this.item?.tertiary_icon || 'stats',
+                    tone: this.item?.tertiary_tone || 'slate',
+                },
+            ].filter((entry) => entry.value || entry.meta || entry.notes.length > 0);
+        },
+        textLines(value) {
+            return String(value || '')
+                .split('\n')
+                .map((line) => line.trim())
+                .filter(Boolean);
+        },
     }));
 
     Alpine.data('liveRequestNotifications', ({ endpoint = '', storageKey = 'live-request-notifications', pollSeconds = 12, pageKind = '' } = {}) => ({

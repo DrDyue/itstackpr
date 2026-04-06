@@ -98,65 +98,81 @@
                     <input type="hidden" name="mine" value="1">
                 @endif
 
-                <div class="repairs-toolbar-main">
-                    <label class="block repairs-toolbar-code-field">
-                        <span class="crud-label">Meklēt pēc koda</span>
-                        <div class="flex items-center gap-2">
-                            <input
-                                type="text"
-                                name="code"
-                                value="{{ $filters['code'] }}"
-                                class="crud-control"
-                                placeholder="Ievadi precīzu kodu"
-                                data-async-manual="true"
-                                data-async-code-search="true"
-                            >
-                            <button type="submit" class="btn-search shrink-0" data-code-search-submit="true">
-                                <x-icon name="search" size="h-4 w-4" />
-                                <span>Meklēt</span>
-                            </button>
+                <div class="toolbar-panels toolbar-panels-wide">
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
+                            <x-icon name="search" size="h-4 w-4" />
+                            <span>Meklēšana</span>
+                        </h3>
+                        <div class="devices-filter-grid">
+                            <label class="block repairs-toolbar-code-field">
+                                <span class="crud-label">Meklēt pēc koda</span>
+                                <div class="flex items-center gap-2">
+                                    <input
+                                        type="text"
+                                        name="code"
+                                        value="{{ $filters['code'] }}"
+                                        class="crud-control"
+                                        placeholder="Ievadi precīzu kodu"
+                                        data-async-manual="true"
+                                        data-async-code-search="true"
+                                    >
+                                    <button type="submit" class="btn-search shrink-0" data-code-search-submit="true">
+                                        <x-icon name="search" size="h-4 w-4" />
+                                        <span>Meklēt</span>
+                                    </button>
+                                </div>
+                            </label>
                         </div>
-                    </label>
-
-                    <label class="block repairs-toolbar-text-field">
-                        <span class="crud-label">Filtrēt pēc teksta</span>
-                        <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, apraksts vai pieprasītājs">
-                    </label>
-
-                    <label class="block">
-                        <span class="crud-label">Ierīce</span>
-                        <x-searchable-select
-                            name="device_id"
-                            query-name="device_query"
-                            identifier="repairs-device-filter"
-                            :options="$deviceOptions"
-                            :selected="(string) ($filters['device_id'] ?? '')"
-                            :query="$selectedDeviceLabel"
-                            placeholder="Izvēlies ierīci"
-                            empty-message="Neviens remonts neatbilst izvēlētajai ierīcei."
-                        />
-                    </label>
-
-                    <label class="block">
-                        <span class="crud-label">Pieprasītājs</span>
-                        <x-searchable-select
-                            name="requester_id"
-                            query-name="requester_query"
-                            identifier="repairs-requester-filter"
-                            :options="$requesterOptions"
-                            :selected="(string) ($filters['requester_id'] ?? '')"
-                            :query="$selectedRequesterLabel"
-                            placeholder="Izvēlies pieprasītāju"
-                            empty-message="Neviens pieprasītājs neatbilst meklējumam."
-                        />
-                    </label>
-
-                    <div class="repairs-toolbar-date-field">
-                        <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
                     </div>
 
-                    <div class="repairs-toolbar-date-field">
-                        <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
+                            <x-icon name="filter" size="h-4 w-4" />
+                            <span>Filtri</span>
+                        </h3>
+                        <div class="repairs-toolbar-filters-grid">
+                            <label class="block repairs-toolbar-text-field">
+                                <span class="crud-label">Filtrēt pēc teksta</span>
+                                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, apraksts vai pieprasītājs">
+                            </label>
+
+                            <label class="block">
+                                <span class="crud-label">Ierīce</span>
+                                <x-searchable-select
+                                    name="device_id"
+                                    query-name="device_query"
+                                    identifier="repairs-device-filter"
+                                    :options="$deviceOptions"
+                                    :selected="(string) ($filters['device_id'] ?? '')"
+                                    :query="$selectedDeviceLabel"
+                                    placeholder="Izvēlies ierīci"
+                                    empty-message="Neviens remonts neatbilst izvēlētajai ierīcei."
+                                />
+                            </label>
+
+                            <label class="block">
+                                <span class="crud-label">Pieprasītājs</span>
+                                <x-searchable-select
+                                    name="requester_id"
+                                    query-name="requester_query"
+                                    identifier="repairs-requester-filter"
+                                    :options="$requesterOptions"
+                                    :selected="(string) ($filters['requester_id'] ?? '')"
+                                    :query="$selectedRequesterLabel"
+                                    placeholder="Izvēlies pieprasītāju"
+                                    empty-message="Neviens pieprasītājs neatbilst meklējumam."
+                                />
+                            </label>
+
+                            <div class="repairs-toolbar-date-field">
+                                <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
+                            </div>
+
+                            <div class="repairs-toolbar-date-field">
+                                <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
+                            </div>
+                        </div>
                     </div>
                 </div>
 

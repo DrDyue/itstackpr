@@ -159,10 +159,6 @@
                                     <span>Atrast ierīci</span>
                                 </button>
                             </div>
-                            <label class="devices-text-search">
-                                <span>Filtrēt pēc teksta</span>
-                                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, ražotājs, sērija...">
-                            </label>
                         </div>
                     </div>
                 </div>
@@ -176,6 +172,10 @@
                             <span>Filtri</span>
                         </h3>
                         <div class="devices-filters-grid">
+                            <label class="block">
+                                <span class="crud-label">Filtrēt pēc teksta</span>
+                                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, ražotājs, sērija...">
+                            </label>
                             @if ($canManageDevices)
                                 <label class="block">
                                     <span class="crud-label">Piešķirta</span>

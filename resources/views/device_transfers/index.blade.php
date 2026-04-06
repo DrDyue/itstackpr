@@ -94,12 +94,13 @@
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
 
                 <div class="devices-filter-surface devices-filter-surface-elevated">
-                    <div class="devices-filter-section">
-                        <h3 class="devices-filter-title">
-                            <x-icon name="search" size="h-4 w-4" />
-                            <span>Meklēšana un filtri</span>
-                        </h3>
-                        <div class="{{ $isAdmin ? 'transfer-toolbar-main transfer-toolbar-main-admin' : 'transfer-toolbar-main' }}">
+                    <div class="toolbar-panels toolbar-panels-wide">
+                        <div class="devices-filter-section">
+                            <h3 class="devices-filter-title">
+                                <x-icon name="search" size="h-4 w-4" />
+                                <span>Meklēšana</span>
+                            </h3>
+                            <div class="devices-filter-grid">
                             <div class="devices-search-group">
                                 <label class="devices-search-label">
                                     <span>Meklēt pēc koda</span>
@@ -117,7 +118,15 @@
                                     <span>Meklēt</span>
                                 </button>
                             </div>
+                            </div>
+                        </div>
 
+                        <div class="devices-filter-section">
+                            <h3 class="devices-filter-title">
+                                <x-icon name="filter" size="h-4 w-4" />
+                                <span>Filtri</span>
+                            </h3>
+                            <div class="{{ $isAdmin ? 'transfer-toolbar-filters-grid transfer-toolbar-filters-grid-admin' : 'transfer-toolbar-filters-grid' }}">
                             <label class="devices-text-search">
                                 <span>Filtrēt pēc teksta</span>
                                 <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, pieteicējs, saņēmējs vai iemesls">
@@ -198,6 +207,8 @@
                             <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
                             <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
                         </div>
+                        </div>
+                    </div>
 
                         <div class="filter-toolbar-footer">
                     <div class="quick-filter-groups">

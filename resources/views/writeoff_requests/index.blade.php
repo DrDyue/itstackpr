@@ -86,13 +86,13 @@
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
 
-                <div class="devices-filter-header">
+                <div class="toolbar-panels">
                     <div class="devices-filter-section">
                         <h3 class="devices-filter-title">
                             <x-icon name="search" size="h-4 w-4" />
-                            <span>Meklēšana un filtri</span>
+                            <span>Meklēšana</span>
                         </h3>
-                        <div class="devices-filters-grid">
+                        <div class="devices-filter-grid">
                             <div class="devices-search-group">
                                 <label class="devices-search-label">
                                     <span>Meklēt pēc koda</span>
@@ -110,6 +110,15 @@
                                     <span>Meklēt</span>
                                 </button>
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
+                            <x-icon name="filter" size="h-4 w-4" />
+                            <span>Filtri</span>
+                        </h3>
+                        <div class="request-toolbar-filters-grid {{ $canReview ? 'request-toolbar-filters-grid-admin' : '' }}">
                             <label class="devices-text-search">
                                 <span>Filtrēt pēc teksta</span>
                                 <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, pieteicējs vai iemesls">

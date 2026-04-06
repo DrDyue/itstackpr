@@ -79,71 +79,87 @@
                 <input type="hidden" name="sort" value="{{ $filters['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $filters['direction'] }}" data-sort-hidden="direction">
 
-                <div class="audit-toolbar-main">
-                    <label class="block audit-toolbar-search-field">
-                        <span class="crud-label">Meklēt ierakstu</span>
-                        <div class="flex items-center gap-2">
-                            <input
-                                type="text"
-                                name="lookup"
-                                value="{{ $filters['lookup'] }}"
-                                class="crud-control"
-                                placeholder="Apraksts, darbība, lietotājs vai ID"
-                                data-async-manual="true"
-                                data-table-manual-search="true"
-                            >
-                            <button type="submit" class="btn-search shrink-0" data-table-search-submit="true">
-                                <x-icon name="search" size="h-4 w-4" />
-                                <span>Meklēt</span>
-                            </button>
+                <div class="toolbar-panels toolbar-panels-wide">
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
+                            <x-icon name="search" size="h-4 w-4" />
+                            <span>Meklēšana</span>
+                        </h3>
+                        <div class="devices-filter-grid">
+                            <label class="block audit-toolbar-search-field">
+                                <span class="crud-label">Meklēt ierakstu</span>
+                                <div class="flex items-center gap-2">
+                                    <input
+                                        type="text"
+                                        name="lookup"
+                                        value="{{ $filters['lookup'] }}"
+                                        class="crud-control"
+                                        placeholder="Apraksts, darbība, lietotājs vai ID"
+                                        data-async-manual="true"
+                                        data-table-manual-search="true"
+                                    >
+                                    <button type="submit" class="btn-search shrink-0" data-table-search-submit="true">
+                                        <x-icon name="search" size="h-4 w-4" />
+                                        <span>Meklēt</span>
+                                    </button>
+                                </div>
+                            </label>
                         </div>
-                    </label>
-
-                    <div>
-                        <span class="crud-label">Darbība</span>
-                        <x-searchable-select
-                            name="action"
-                            query-name="action_query"
-                            :options="$actionOptions"
-                            :selected="$filters['action']"
-                            :query="$selectedActionLabel"
-                            identifier="audit-action"
-                            placeholder="Visas darbības"
-                        />
                     </div>
 
-                    <div>
-                        <span class="crud-label">Objekts</span>
-                        <x-searchable-select
-                            name="entity_type"
-                            query-name="entity_query"
-                            :options="$entityOptions"
-                            :selected="$filters['entity_type']"
-                            :query="$selectedEntityLabel"
-                            identifier="audit-entity"
-                            placeholder="Visi objekti"
-                        />
-                    </div>
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
+                            <x-icon name="filter" size="h-4 w-4" />
+                            <span>Filtri</span>
+                        </h3>
+                        <div class="audit-toolbar-filters-grid">
+                            <div>
+                                <span class="crud-label">Darbība</span>
+                                <x-searchable-select
+                                    name="action"
+                                    query-name="action_query"
+                                    :options="$actionOptions"
+                                    :selected="$filters['action']"
+                                    :query="$selectedActionLabel"
+                                    identifier="audit-action"
+                                    placeholder="Visas darbības"
+                                />
+                            </div>
 
-                    <div>
-                        <span class="crud-label">Lietotājs</span>
-                        <x-searchable-select
-                            name="user_id"
-                            query-name="user_query"
-                            :options="$actorOptions"
-                            :selected="$filters['user_id']"
-                            :query="$selectedUserLabel"
-                            identifier="audit-user"
-                            placeholder="Visi lietotāji"
-                        />
-                    </div>
+                            <div>
+                                <span class="crud-label">Objekts</span>
+                                <x-searchable-select
+                                    name="entity_type"
+                                    query-name="entity_query"
+                                    :options="$entityOptions"
+                                    :selected="$filters['entity_type']"
+                                    :query="$selectedEntityLabel"
+                                    identifier="audit-entity"
+                                    placeholder="Visi objekti"
+                                />
+                            </div>
 
-                    <div class="audit-toolbar-date-field">
-                        <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
-                    </div>
+                            <div>
+                                <span class="crud-label">Lietotājs</span>
+                                <x-searchable-select
+                                    name="user_id"
+                                    query-name="user_query"
+                                    :options="$actorOptions"
+                                    :selected="$filters['user_id']"
+                                    :query="$selectedUserLabel"
+                                    identifier="audit-user"
+                                    placeholder="Visi lietotāji"
+                                />
+                            </div>
 
-                    <div class="audit-toolbar-date-field">
-                        <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
+                            <div class="audit-toolbar-date-field">
+                                <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
+                            </div>
+
+                            <div class="audit-toolbar-date-field">
+                                <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -310,7 +326,8 @@
                                     };
                                     $quickViewPayload = [
                                         'drawer_title' => 'Audita ātrais skats',
-                                        'drawer_subtitle' => 'Īss skaidrojums par fiksēto darbību, objektu un tās ietekmi sistēmā.',
+                                        'drawer_subtitle' => 'Pārskatāms kopsavilkums par notikumu, iesaistīto objektu un to, ko sistēma šajā brīdī fiksēja.',
+                                        'drawer_variant' => 'audit',
                                         'status_label' => $log->localized_severity,
                                         'status_badge_class' => $severityClass,
                                         'submitted_at' => $log->timestamp?->format('d.m.Y H:i:s') ?: '-',
@@ -322,6 +339,27 @@
                                             $log->entity_reference,
                                         ])->filter()->implode(' | ') ?: 'Objekta informācija nav pieejama',
                                         'hero_note' => 'Fiksēts: '.($log->timestamp?->format('d.m.Y H:i:s') ?: '-'),
+                                        'summary_items' => [
+                                            [
+                                                'label' => 'Svarīgums',
+                                                'value' => $log->localized_severity,
+                                                'icon' => 'flag',
+                                                'tone' => $severityTone,
+                                                'badgeClass' => $severityClass,
+                                            ],
+                                            [
+                                                'label' => 'Objekts',
+                                                'value' => $log->localized_entity_type,
+                                                'icon' => $entityStyles['icon'],
+                                                'tone' => 'violet',
+                                            ],
+                                            [
+                                                'label' => 'Laiks',
+                                                'value' => $log->timestamp?->format('d.m.Y H:i:s') ?: '-',
+                                                'icon' => 'calendar',
+                                                'tone' => 'sky',
+                                            ],
+                                        ],
                                         'primary_label' => 'Darbība',
                                         'primary_icon' => 'information-circle',
                                         'primary_tone' => $severityTone,
@@ -363,7 +401,7 @@
                                         'description_tone' => 'violet',
                                         'description' => $log->localized_description,
                                         'details_title' => 'Papildinformācija',
-                                        'details_icon' => $log->entity_url ? 'check-circle' : 'clear',
+                                        'details_icon' => $log->entity_url ? 'check-circle' : 'information-circle',
                                         'details_tone' => $log->entity_url ? 'emerald' : 'slate',
                                         'details_intro_label' => 'Objekta statuss:',
                                         'details_intro' => $log->entity_url
