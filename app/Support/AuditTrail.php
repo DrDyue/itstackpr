@@ -46,6 +46,9 @@ class AuditTrail
     public const ACTION_BUILDING_ASSIGN = 'BUILDING_ASSIGN';
     public const ACTION_SWITCH_VIEW = 'SWITCH_VIEW';
     public const ACTION_MARK_READ = 'MARK_READ';
+    public const ACTION_SEARCH = 'SEARCH';
+    public const ACTION_FILTER = 'FILTER';
+    public const ACTION_SORT = 'SORT';
 
     public const SEVERITY_INFO = 'info';
     public const SEVERITY_WARNING = 'warning';
@@ -218,6 +221,70 @@ class AuditTrail
             'NotificationCenter',
             (string) $user->id,
             $description,
+            self::SEVERITY_INFO
+        );
+    }
+
+    /**
+     * Auditē meklēšanas darbību sarakstos vai tabulās.
+     */
+    public static function search(?User $user, string $entityType, string $term, ?string $description = null): void
+    {
+        if (! $user) {
+            return;
+        }
+
+        self::write(
+            $user->id,
+            self::ACTION_SEARCH,
+            $entityType,
+            null,
+            $description ?? ('Meklēts '.mb_strtolower(self::entityLabel($entityType)).': '.$term),
+            self::SEVERITY_INFO
+        );
+    }
+
+    /**
+     * Auditē filtru pielietošanu sarakstiem.
+     */
+    public static function filter(?User $user, string $entityType, array $filters, ?string $description = null): void
+    {
+        if (! $user) {
+            return;
+        }
+
+        $summary = self::filterSummary($filters);
+        if ($summary === '') {
+            return;
+        }
+
+        self::write(
+            $user->id,
+            self::ACTION_FILTER,
+            $entityType,
+            null,
+            $description ?? ('Filtrēts '.mb_strtolower(self::entityLabel($entityType)).': '.$summary),
+            self::SEVERITY_INFO
+        );
+    }
+
+    /**
+     * Auditē kārtošanas darbību tabulās.
+     */
+    public static function sort(?User $user, string $entityType, string $field, string $direction, ?string $description = null): void
+    {
+        if (! $user) {
+            return;
+        }
+
+        $directionLabel = strtolower($direction) === 'asc' ? 'augošajā secībā' : 'dilstošajā secībā';
+
+        self::write(
+            $user->id,
+            self::ACTION_SORT,
+            $entityType,
+            null,
+            $description ?? ('Kārtots '.mb_strtolower(self::entityLabel($entityType)).' pēc '.$field.' '.$directionLabel.'.'),
             self::SEVERITY_INFO
         );
     }
@@ -410,6 +477,9 @@ class AuditTrail
             self::ACTION_BUILDING_ASSIGN => 'Ēkas piešķiršana',
             self::ACTION_SWITCH_VIEW => 'Skata maiņa',
             self::ACTION_MARK_READ => 'Atzīmēts kā lasīts',
+            self::ACTION_SEARCH => 'Meklēšana',
+            self::ACTION_FILTER => 'Filtrēšana',
+            self::ACTION_SORT => 'Kārtošana',
             default => $action,
         };
     }
@@ -860,6 +930,9 @@ class AuditTrail
             self::ACTION_BUILDING_ASSIGN,
             self::ACTION_SWITCH_VIEW,
             self::ACTION_MARK_READ,
+            self::ACTION_SEARCH,
+            self::ACTION_FILTER,
+            self::ACTION_SORT,
         ];
 
         return in_array($action, $allowed, true) ? $action : self::ACTION_UPDATE;
@@ -929,6 +1002,40 @@ class AuditTrail
             ->map(fn (string $field) => self::translateFieldName(trim($field)))
             ->filter()
             ->implode(', ');
+    }
+
+    private static function filterSummary(array $filters): string
+    {
+        return collect($filters)
+            ->map(function (mixed $value, mixed $key) {
+                $label = self::translateFieldName((string) $key);
+
+                if (is_array($value)) {
+                    $items = collect($value)
+                        ->filter(fn (mixed $item) => $item !== null && $item !== '')
+                        ->map(fn (mixed $item) => self::translateValue((string) $item, (string) $key))
+                        ->values()
+                        ->all();
+
+                    if ($items === []) {
+                        return null;
+                    }
+
+                    return $label . ': ' . implode(', ', $items);
+                }
+
+                if (is_bool($value)) {
+                    return $value ? $label . ': jā' : null;
+                }
+
+                if ($value === null || $value === '') {
+                    return null;
+                }
+
+                return $label . ': ' . self::translateValue((string) $value, (string) $key);
+            })
+            ->filter()
+            ->implode(' | ');
     }
 
     private static function translateDetails(string $details): string

@@ -36,7 +36,12 @@ class WriteoffRequestController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
-        return view('writeoff_requests.index', $this->writeoffRequestsViewData($request, $user));
+        $viewData = $this->writeoffRequestsViewData($request, $user);
+
+        AuditTrail::viewed($user, 'WriteoffRequest', null, 'Atvērts norakstīšanas pieteikumu saraksts.');
+        $this->auditWriteoffRequestListInteractions($request, $user, $viewData['filters'], $viewData['sorting']);
+
+        return view('writeoff_requests.index', $viewData);
     }
 
     /**
@@ -47,6 +52,7 @@ class WriteoffRequestController extends Controller
         $user = $this->user();
         abort_unless($user, 403);
         $viewData = $this->writeoffRequestsViewData($request, $user);
+        $this->auditWriteoffRequestListInteractions($request, $user, $viewData['filters'], $viewData['sorting']);
         return view('writeoff_requests.index-table', [
             'requests' => $viewData['requests'],
             'canReview' => $viewData['canReview'],
@@ -152,6 +158,8 @@ class WriteoffRequestController extends Controller
             return response()->json(['found' => false, 'page' => 1]);
         }
 
+        AuditTrail::search($user, 'WriteoffRequest', $code, 'Meklēts norakstīšanas pieteikums pēc ierīces koda: '.$code);
+
         $canReview = $user->canManageRequests();
         $availableStatuses = [
             WriteoffRequest::STATUS_SUBMITTED,
@@ -203,6 +211,8 @@ class WriteoffRequestController extends Controller
         $user = $this->user();
         abort_unless($user, 403);
         abort_if($user->canManageRequests(), 403);
+
+        AuditTrail::viewed($user, 'WriteoffRequest', null, 'Atvērta norakstīšanas pieteikuma forma.');
 
         if (! $this->featureTableExists('writeoff_requests')) {
             return view('writeoff_requests.create', [
@@ -692,6 +702,43 @@ class WriteoffRequestController extends Controller
             'created_at' => ['label' => 'iesniegšanas datuma'],
             'status' => ['label' => 'statusa'],
         ];
+    }
+
+    private function auditWriteoffRequestListInteractions(Request $request, User $user, array $filters, array $sorting): void
+    {
+        $filterPayload = array_filter([
+            'teksts' => $filters['q'] ?? '',
+            'ierīce' => $filters['device_query'] ?? '',
+            'pieteicējs' => $filters['requester_query'] ?? '',
+            'no datuma' => $filters['date_from'] ?? '',
+            'līdz datumam' => $filters['date_to'] ?? '',
+            'statusi' => count($filters['statuses'] ?? []) > 0 && count($filters['statuses'] ?? []) < 3 ? ($filters['statuses'] ?? []) : [],
+        ], fn (mixed $value) => $value !== null && $value !== '' && $value !== []);
+
+        if ($filterPayload !== []) {
+            AuditTrail::filter(
+                $user,
+                'WriteoffRequest',
+                $filterPayload,
+                'Filtrēti norakstīšanas pieteikumi: '.implode(' | ', collect($filterPayload)->map(function (mixed $value, string $label) {
+                    if (is_array($value)) {
+                        return $label.': '.implode(', ', $value);
+                    }
+
+                    return $label.': '.$value;
+                })->all())
+            );
+        }
+
+        if (($sorting['sort'] ?? 'created_at') !== 'created_at' || ($sorting['direction'] ?? 'desc') !== 'desc' || $request->has('sort')) {
+            AuditTrail::sort(
+                $user,
+                'WriteoffRequest',
+                $sorting['label'] ?? 'iesniegšanas datuma',
+                $sorting['direction'] ?? 'desc',
+                'Kārtoti norakstīšanas pieteikumi pēc '.($sorting['label'] ?? 'iesniegšanas datuma').' '.(($sorting['direction'] ?? 'desc') === 'asc' ? 'augošajā secībā' : 'dilstošajā secībā').'.'
+            );
+        }
     }
 
     /**

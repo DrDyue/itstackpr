@@ -54,6 +54,25 @@ class BuildingController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        AuditTrail::viewed($this->user(), 'Building', null, 'Atvērts ēku saraksts.');
+
+        if ($filters['search'] !== '' || $filters['total_floors'] !== '') {
+            AuditTrail::filter($this->user(), 'Building', [
+                'teksts' => $filters['search'],
+                'stāvu skaits' => $filters['total_floors'],
+            ], 'Filtrēts ēku saraksts.');
+        }
+
+        if (($sorting['sort'] ?? 'building_name') !== 'building_name' || ($sorting['direction'] ?? 'asc') !== 'asc' || $request->has('sort')) {
+            AuditTrail::sort(
+                $this->user(),
+                'Building',
+                $this->sortOptions()[$sorting['sort']]['label'] ?? 'nosaukuma',
+                $sorting['direction'] ?? 'asc',
+                'Kārtots ēku saraksts pēc '.($this->sortOptions()[$sorting['sort']]['label'] ?? 'nosaukuma').' '.(($sorting['direction'] ?? 'asc') === 'asc' ? 'augošajā secībā' : 'dilstošajā secībā').'.'
+            );
+        }
+
         return view('buildings.index', [
             'buildings' => $buildings,
             'filters' => $filters,
@@ -78,6 +97,8 @@ class BuildingController extends Controller
         if ($search === '') {
             return response()->json(['found' => false, 'page' => 1]);
         }
+
+        AuditTrail::search($this->user(), 'Building', $search, 'Meklēta ēka pēc nosaukuma vai adreses: '.$search);
 
         $filters = [
             'total_floors' => trim((string) $request->query('total_floors', '')),
@@ -120,6 +141,7 @@ class BuildingController extends Controller
     public function create()
     {
         $this->requireManager();
+        AuditTrail::viewed($this->user(), 'Building', null, 'Atvērta ēkas izveides forma.');
 
         return view('buildings.create');
     }
@@ -143,6 +165,7 @@ class BuildingController extends Controller
     public function edit(Building $building)
     {
         $this->requireManager();
+        AuditTrail::viewed($this->user(), 'Building', (string) $building->id, 'Atvērta ēkas labošanas forma: '.AuditTrail::labelFor($building));
 
         return view('buildings.edit', compact('building'));
     }
@@ -237,6 +260,16 @@ class BuildingController extends Controller
         return [
             'sort' => $sort,
             'direction' => $direction,
+        ];
+    }
+
+    private function sortOptions(): array
+    {
+        return [
+            'building_name' => ['label' => 'nosaukuma'],
+            'address' => ['label' => 'adreses'],
+            'total_floors' => ['label' => 'stāvu skaita'],
+            'created_at' => ['label' => 'izveides datuma'],
         ];
     }
 

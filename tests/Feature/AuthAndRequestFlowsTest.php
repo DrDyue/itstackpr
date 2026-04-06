@@ -2922,7 +2922,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->assertStringContainsString('details_title', $content);
     }
 
-    public function test_audit_quick_view_contains_time_and_object_explainer(): void
+    public function test_audit_log_uses_description_cards_instead_of_quick_view(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'audit-quick-view-admin@example.com');
 
@@ -2943,9 +2943,75 @@ class AuthAndRequestFlowsTest extends TestCase
         $content = $response->getContent();
 
         $this->assertIsString($content);
-        $this->assertStringContainsString('open-request-detail', $content);
-        $this->assertStringContainsString('tertiary_label', $content);
-        $this->assertStringContainsString('details_intro_label', $content);
+        $this->assertStringNotContainsString('open-request-detail', $content);
+        $this->assertStringContainsString('audit-description-card', $content);
+        $this->assertStringContainsString('Admins piesledzas auditam.', $content);
+        $this->assertStringContainsString('warning', $content);
+    }
+
+    public function test_audit_log_records_filter_and_sort_actions(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'audit-filter-sort-admin@example.com');
+
+        AuditLog::create([
+            'timestamp' => now(),
+            'user_id' => $admin->id,
+            'action' => 'LOGIN',
+            'entity_type' => 'User',
+            'entity_id' => (string) $admin->id,
+            'description' => 'Admins atver auditu filtrēšanas testam.',
+            'severity' => 'info',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('audit-log.index', [
+                'action' => 'LOGIN',
+                'severity' => ['info'],
+                'sort' => 'action',
+                'direction' => 'asc',
+            ]))
+            ->assertOk();
+
+        $this->assertDatabaseHas('audit_log', [
+            'user_id' => $admin->id,
+            'action' => 'FILTER',
+            'entity_type' => 'AuditLog',
+        ]);
+
+        $this->assertDatabaseHas('audit_log', [
+            'user_id' => $admin->id,
+            'action' => 'SORT',
+            'entity_type' => 'AuditLog',
+        ]);
+    }
+
+    public function test_audit_log_records_manual_search_action(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'audit-search-admin@example.com');
+
+        $entry = AuditLog::create([
+            'timestamp' => now(),
+            'user_id' => $admin->id,
+            'action' => 'LOGIN',
+            'entity_type' => 'User',
+            'entity_id' => (string) $admin->id,
+            'description' => 'Meklēšanas pārbaudes ieraksts auditā.',
+            'severity' => 'info',
+        ]);
+
+        $this->actingAs($admin)
+            ->getJson(route('audit-log.find-entry', ['lookup' => 'Meklēšanas pārbaudes ieraksts auditā.']))
+            ->assertOk()
+            ->assertJson([
+                'found' => true,
+                'highlight_id' => 'audit-log-'.$entry->id,
+            ]);
+
+        $this->assertDatabaseHas('audit_log', [
+            'user_id' => $admin->id,
+            'action' => 'SEARCH',
+            'entity_type' => 'AuditLog',
+        ]);
     }
 
     public function test_audit_log_can_sort_by_action_ascending(): void

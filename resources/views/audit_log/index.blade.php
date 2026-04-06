@@ -67,7 +67,7 @@
             <x-empty-state compact icon="information-circle" title="Funkcija īslaicīgi nav pieejama" :description="$featureMessage" />
         @endif
 
-        <div id="audit-log-index-root" data-async-table-root x-data="requestDetailsDrawer()" @open-request-detail.window="show($event.detail)">
+        <div id="audit-log-index-root" data-async-table-root>
             <form
                 method="GET"
                 action="{{ route('audit-log.index') }}"
@@ -269,7 +269,6 @@
                                         </button>
                                     </th>
                                 @endforeach
-                                <th class="table-col-actions px-4 py-3 text-right">Skats</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -294,6 +293,9 @@
                                         'PASSWORD_CHANGE' => ['icon' => 'key', 'class' => 'audit-badge audit-badge-amber'],
                                         'SWITCH_VIEW' => ['icon' => 'users', 'class' => 'audit-badge audit-badge-violet'],
                                         'MARK_READ' => ['icon' => 'check-circle', 'class' => 'audit-badge audit-badge-slate'],
+                                        'SEARCH' => ['icon' => 'search', 'class' => 'audit-badge audit-badge-sky'],
+                                        'FILTER' => ['icon' => 'filter', 'class' => 'audit-badge audit-badge-violet'],
+                                        'SORT' => ['icon' => 'stats', 'class' => 'audit-badge audit-badge-amber'],
                                         default => ['icon' => 'audit', 'class' => 'audit-badge audit-badge-slate'],
                                     };
 
@@ -312,112 +314,6 @@
                                         'ViewMode' => ['icon' => 'users', 'class' => 'audit-badge audit-badge-violet'],
                                         default => ['icon' => 'audit', 'class' => 'audit-badge audit-badge-slate'],
                                     };
-                                    $severityTone = match ($log->severity) {
-                                        'critical', 'error' => 'rose',
-                                        'warning' => 'amber',
-                                        'info' => 'sky',
-                                        default => 'slate',
-                                    };
-                                    $severityClass = match ($log->severity) {
-                                        'critical', 'error' => 'request-detail-status-rose',
-                                        'warning' => 'request-detail-status-amber',
-                                        'info' => 'request-detail-status-sky',
-                                        default => 'request-detail-status-slate',
-                                    };
-                                    $quickViewPayload = [
-                                        'drawer_title' => 'Audita ātrais skats',
-                                        'drawer_subtitle' => 'Pārskatāms kopsavilkums par notikumu, iesaistīto objektu un to, ko sistēma šajā brīdī fiksēja.',
-                                        'drawer_variant' => 'audit',
-                                        'status_label' => $log->localized_severity,
-                                        'status_badge_class' => $severityClass,
-                                        'submitted_at' => $log->timestamp?->format('d.m.Y H:i:s') ?: '-',
-                                        'hero_icon' => 'audit',
-                                        'hero_tone' => $severityTone,
-                                        'hero_title' => $log->localized_action,
-                                        'hero_meta' => collect([
-                                            $log->localized_entity_type,
-                                            $log->entity_reference,
-                                        ])->filter()->implode(' | ') ?: 'Objekta informācija nav pieejama',
-                                        'hero_note' => 'Fiksēts: '.($log->timestamp?->format('d.m.Y H:i:s') ?: '-'),
-                                        'summary_items' => [
-                                            [
-                                                'label' => 'Svarīgums',
-                                                'value' => $log->localized_severity,
-                                                'icon' => 'flag',
-                                                'tone' => $severityTone,
-                                                'badgeClass' => $severityClass,
-                                            ],
-                                            [
-                                                'label' => 'Objekts',
-                                                'value' => $log->localized_entity_type,
-                                                'icon' => $entityStyles['icon'],
-                                                'tone' => 'violet',
-                                            ],
-                                            [
-                                                'label' => 'Laiks',
-                                                'value' => $log->timestamp?->format('d.m.Y H:i:s') ?: '-',
-                                                'icon' => 'calendar',
-                                                'tone' => 'sky',
-                                            ],
-                                        ],
-                                        'primary_label' => 'Darbība',
-                                        'primary_icon' => 'information-circle',
-                                        'primary_tone' => $severityTone,
-                                        'primary_value' => $log->localized_action,
-                                        'primary_meta' => match ($log->action) {
-                                            'CREATE' => 'Sistēmā tika izveidots jauns ieraksts vai resurss.',
-                                            'UPDATE', 'PROFILE_UPDATE' => 'Esošs ieraksts tika mainīts vai papildināts.',
-                                            'DELETE' => 'Ieraksts tika dzēsts vai padarīts nepieejams.',
-                                            'LOGIN' => 'Lietotājs veiksmīgi pieslēdzās sistēmai.',
-                                            'LOGOUT' => 'Lietotājs izrakstījās no sistēmas.',
-                                            default => 'Sistēma reģistrēja darbību audita žurnālā.',
-                                        },
-                                        'primary_note' => $log->localized_entity_type ?: 'Objekta tips nav norādīts',
-                                        'primary_note_secondary' => $log->entity_url
-                                            ? 'Saistītais objekts ir pieejams atvēršanai.'
-                                            : 'Saistītais objekts vairs nav pieejams vai ir dzēsts.',
-                                        'primary_link_url' => $log->entity_url,
-                                        'primary_link_label' => 'Atvērt saistīto objektu',
-                                        'secondary_label' => 'Lietotājs',
-                                        'secondary_icon' => 'user',
-                                        'secondary_tone' => 'sky',
-                                        'secondary_value' => $log->user?->full_name ?: 'Sistēma',
-                                        'secondary_meta' => $log->user?->email ?: 'Automātiska sistēmas darbība',
-                                        'secondary_note' => $log->user
-                                            ? 'Darbību izpildīja konkrēts lietotājs.'
-                                            : 'Darbību izveidoja sistēmas process.',
-                                        'tertiary_label' => 'Laiks un objekta atsauce',
-                                        'tertiary_icon' => 'clock',
-                                        'tertiary_tone' => $severityTone,
-                                        'tertiary_value' => $log->timestamp?->format('d.m.Y') ?: '-',
-                                        'tertiary_meta' => $log->timestamp?->format('H:i:s')
-                                            ? 'Laiks: '.$log->timestamp->format('H:i:s')
-                                            : 'Laiks nav pieejams',
-                                        'tertiary_note' => $log->entity_reference
-                                            ? 'Objekta atsauce: '.$log->entity_reference
-                                            : 'Objekta atsauce nav pieejama',
-                                        'description_label' => 'Pilns apraksts un skaidrojums',
-                                        'description_icon' => 'audit',
-                                        'description_tone' => 'violet',
-                                        'description' => $log->localized_description,
-                                        'details_title' => 'Papildinformācija',
-                                        'details_icon' => $log->entity_url ? 'check-circle' : 'information-circle',
-                                        'details_tone' => $log->entity_url ? 'emerald' : 'slate',
-                                        'details_intro_label' => 'Objekta statuss:',
-                                        'details_intro' => $log->entity_url
-                                            ? 'Objekts joprojām ir pieejams sistēmā.'
-                                            : 'Objekts vairs nav pieejams vai ir dzēsts.',
-                                        'details_body' => collect([
-                                            $log->localized_entity_type ? 'Objekta tips: '.$log->localized_entity_type : null,
-                                            $log->entity_reference ? 'Objekta atsauce: '.$log->entity_reference : null,
-                                            $log->timestamp?->format('d.m.Y H:i:s')
-                                                ? 'Precīzs ieraksta laiks: '.$log->timestamp->format('d.m.Y H:i:s')
-                                                : null,
-                                        ])->filter()->implode("\n"),
-                                        'details_link_url' => $log->entity_url,
-                                        'details_link_label' => 'Atvērt saistīto objektu',
-                                        'details_link_icon' => 'view',
-                                    ];
                                 @endphp
                                 <tr
                                     class="app-table-row border-t border-slate-100"
@@ -475,24 +371,30 @@
                                         <x-status-pill context="severity" :value="$log->severity" :label="$log->localized_severity" />
                                     </td>
                                     <td class="px-4 py-3">
-                                        <div class="max-w-[36rem] text-sm leading-6 text-slate-600">
-                                            {{ $log->localized_description }}
+                                        <div class="audit-description-card">
+                                            <div class="audit-description-main">{{ $log->localized_description }}</div>
+                                            <div class="audit-description-meta">
+                                                <span class="audit-description-chip">
+                                                    <x-icon :name="$actionStyles['icon']" size="h-3.5 w-3.5" />
+                                                    <span>{{ $log->localized_action }}</span>
+                                                </span>
+                                                @if ($log->entity_reference)
+                                                    <span class="audit-description-chip">
+                                                        <x-icon :name="$entityStyles['icon']" size="h-3.5 w-3.5" />
+                                                        <span>{{ $log->entity_reference }}</span>
+                                                    </span>
+                                                @endif
+                                                <span class="audit-description-chip">
+                                                    <x-icon name="calendar" size="h-3.5 w-3.5" />
+                                                    <span>{{ $log->timestamp?->format('d.m.Y H:i:s') ?: '-' }}</span>
+                                                </span>
+                                            </div>
                                         </div>
-                                    </td>
-                                    <td class="px-4 py-3 text-right">
-                                        <button
-                                            type="button"
-                                            class="btn-search"
-                                            @click="$dispatch('open-request-detail', @js($quickViewPayload))"
-                                        >
-                                            <x-icon name="view" size="h-4 w-4" />
-                                            <span>Ātrais skats</span>
-                                        </button>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-4 py-6">
+                                    <td colspan="6" class="px-4 py-6">
                                         <x-empty-state
                                             compact
                                             icon="audit"
@@ -508,8 +410,6 @@
             </div>
 
             {{ $logs->links() }}
-
-            <x-request-detail-drawer />
         </div>
     </section>
 </x-app-layout>

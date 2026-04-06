@@ -32,7 +32,12 @@ class RepairRequestController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
-        return view('repair_requests.index', $this->repairRequestsViewData($request, $user));
+        $viewData = $this->repairRequestsViewData($request, $user);
+
+        AuditTrail::viewed($user, 'RepairRequest', null, 'Atvērts remonta pieteikumu saraksts.');
+        $this->auditRepairRequestListInteractions($request, $user, $viewData['filters'], $viewData['sorting']);
+
+        return view('repair_requests.index', $viewData);
     }
 
     /**
@@ -43,6 +48,7 @@ class RepairRequestController extends Controller
         $user = $this->user();
         abort_unless($user, 403);
         $viewData = $this->repairRequestsViewData($request, $user);
+        $this->auditRepairRequestListInteractions($request, $user, $viewData['filters'], $viewData['sorting']);
         return view('repair_requests.index-table', [
             'requests' => $viewData['requests'],
             'canReview' => $viewData['canReview'],
@@ -152,6 +158,8 @@ class RepairRequestController extends Controller
             return response()->json(['found' => false, 'page' => 1]);
         }
 
+        AuditTrail::search($user, 'RepairRequest', $code, 'Meklēts remonta pieteikums pēc ierīces koda: '.$code);
+
         $canReview = $user->canManageRequests();
         $availableStatuses = [
             RepairRequest::STATUS_SUBMITTED,
@@ -203,6 +211,8 @@ class RepairRequestController extends Controller
         $user = $this->user();
         abort_unless($user, 403);
         abort_if($user->canManageRequests(), 403);
+
+        AuditTrail::viewed($user, 'RepairRequest', null, 'Atvērta remonta pieteikuma forma.');
 
         if (! $this->featureTableExists('repair_requests')) {
             return view('repair_requests.create', [
@@ -615,6 +625,43 @@ class RepairRequestController extends Controller
             'created_at' => ['label' => 'iesniegšanas datuma'],
             'status' => ['label' => 'statusa'],
         ];
+    }
+
+    private function auditRepairRequestListInteractions(Request $request, User $user, array $filters, array $sorting): void
+    {
+        $filterPayload = array_filter([
+            'teksts' => $filters['q'] ?? '',
+            'ierīce' => $filters['device_query'] ?? '',
+            'pieteicējs' => $filters['requester_query'] ?? '',
+            'no datuma' => $filters['date_from'] ?? '',
+            'līdz datumam' => $filters['date_to'] ?? '',
+            'statusi' => count($filters['statuses'] ?? []) > 0 && count($filters['statuses'] ?? []) < 3 ? ($filters['statuses'] ?? []) : [],
+        ], fn (mixed $value) => $value !== null && $value !== '' && $value !== []);
+
+        if ($filterPayload !== []) {
+            AuditTrail::filter(
+                $user,
+                'RepairRequest',
+                $filterPayload,
+                'Filtrēti remonta pieteikumi: '.implode(' | ', collect($filterPayload)->map(function (mixed $value, string $label) {
+                    if (is_array($value)) {
+                        return $label.': '.implode(', ', $value);
+                    }
+
+                    return $label.': '.$value;
+                })->all())
+            );
+        }
+
+        if (($sorting['sort'] ?? 'created_at') !== 'created_at' || ($sorting['direction'] ?? 'desc') !== 'desc' || $request->has('sort')) {
+            AuditTrail::sort(
+                $user,
+                'RepairRequest',
+                $sorting['label'] ?? 'iesniegšanas datuma',
+                $sorting['direction'] ?? 'desc',
+                'Kārtoti remonta pieteikumi pēc '.($sorting['label'] ?? 'iesniegšanas datuma').' '.(($sorting['direction'] ?? 'desc') === 'asc' ? 'augošajā secībā' : 'dilstošajā secībā').'.'
+            );
+        }
     }
 
     /**

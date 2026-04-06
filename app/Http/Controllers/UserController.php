@@ -62,6 +62,27 @@ class UserController extends Controller
 
         $userSummaryQuery = User::query();
 
+        AuditTrail::viewed($this->user(), 'User', null, 'Atvērts lietotāju saraksts.');
+
+        if ($filters['search'] !== '' || $filters['has_role_filter'] || $filters['is_active'] !== '' || $filters['last_login'] !== '') {
+            AuditTrail::filter($this->user(), 'User', [
+                'teksts' => $filters['search'],
+                'lomas' => $filters['has_role_filter'] ? ($filters['roles'] ?? []) : [],
+                'statuss' => $filters['is_active'],
+                'pēdējā pieslēgšanās' => $filters['last_login'],
+            ], 'Filtrēts lietotāju saraksts.');
+        }
+
+        if (($sorting['sort'] ?? 'full_name') !== 'full_name' || ($sorting['direction'] ?? 'asc') !== 'asc' || $request->has('sort')) {
+            AuditTrail::sort(
+                $this->user(),
+                'User',
+                $sorting['label'] ?? 'vārda un uzvārda',
+                $sorting['direction'] ?? 'asc',
+                'Kārtots lietotāju saraksts pēc '.($sorting['label'] ?? 'vārda un uzvārda').' '.(($sorting['direction'] ?? 'asc') === 'asc' ? 'augošajā secībā' : 'dilstošajā secībā').'.'
+            );
+        }
+
         return view('users.index', [
             'users' => $users,
             'userSummary' => [
@@ -88,6 +109,8 @@ class UserController extends Controller
         if ($search === '') {
             return response()->json(['found' => false, 'page' => 1]);
         }
+
+        AuditTrail::search($this->user(), 'User', $search, 'Meklēts lietotājs pēc vārda un uzvārda: '.$search);
 
         $filters = [
             'roles' => collect($request->query('role', []))
@@ -133,6 +156,7 @@ class UserController extends Controller
     public function create()
     {
         $this->requireAdmin();
+        AuditTrail::viewed($this->user(), 'User', null, 'Atvērta lietotāja izveides forma.');
 
         return view('users.create', [
             'roles' => self::ROLES,
@@ -143,6 +167,7 @@ class UserController extends Controller
     public function show(User $user)
     {
         $this->requireAdmin();
+        AuditTrail::viewed($this->user(), 'User', (string) $user->id, 'Atvērta lietotāja karte: '.AuditTrail::labelFor($user));
 
         $managedUser = User::query()
             ->select(['id', 'full_name', 'email', 'phone', 'job_title', 'role', 'is_active', 'last_login', 'created_at'])
@@ -272,6 +297,7 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $this->requireAdmin();
+        AuditTrail::viewed($this->user(), 'User', (string) $user->id, 'Atvērta lietotāja labošanas forma: '.AuditTrail::labelFor($user));
 
         return view('users.edit', [
             'user' => $user,

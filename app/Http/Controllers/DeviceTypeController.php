@@ -33,6 +33,18 @@ class DeviceTypeController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        AuditTrail::viewed($this->user(), 'DeviceType', null, 'Atvērts ierīču tipu saraksts.');
+
+        if (($sorting['sort'] ?? 'type_name') !== 'type_name' || ($sorting['direction'] ?? 'asc') !== 'asc' || $request->has('sort')) {
+            AuditTrail::sort(
+                $this->user(),
+                'DeviceType',
+                $this->sortOptions()[$sorting['sort']]['label'] ?? 'tipa nosaukuma',
+                $sorting['direction'] ?? 'asc',
+                'Kārtots ierīču tipu saraksts pēc '.($this->sortOptions()[$sorting['sort']]['label'] ?? 'tipa nosaukuma').' '.(($sorting['direction'] ?? 'asc') === 'asc' ? 'augošajā secībā' : 'dilstošajā secībā').'.'
+            );
+        }
+
         return view('device_types.index', [
             'types' => $types,
             'sorting' => $sorting,
@@ -43,6 +55,7 @@ class DeviceTypeController extends Controller
     public function create()
     {
         $this->requireManager();
+        AuditTrail::viewed($this->user(), 'DeviceType', null, 'Atvērta ierīces tipa izveides forma.');
 
         return view('device_types.create');
     }
@@ -62,6 +75,7 @@ class DeviceTypeController extends Controller
     public function edit(DeviceType $deviceType)
     {
         $this->requireManager();
+        AuditTrail::viewed($this->user(), 'DeviceType', (string) $deviceType->id, 'Atvērta ierīces tipa labošanas forma: '.AuditTrail::labelFor($deviceType));
 
         return view('device_types.edit', ['type' => $deviceType]);
     }

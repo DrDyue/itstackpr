@@ -49,7 +49,12 @@ class DeviceController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
-        return view('devices.index', $this->devicesIndexViewData($request, $user));
+        $viewData = $this->devicesIndexViewData($request, $user);
+
+        AuditTrail::viewed($user, 'Device', null, 'Atvērts ierīču saraksts.');
+        $this->auditDeviceListInteractions($request, $user, $viewData['filters'], $viewData['sorting']);
+
+        return view('devices.index', $viewData);
     }
 
     /**
@@ -60,6 +65,7 @@ class DeviceController extends Controller
         $user = $this->user();
         abort_unless($user, 403);
         $viewData = $this->devicesIndexViewData($request, $user);
+        $this->auditDeviceListInteractions($request, $user, $viewData['filters'], $viewData['sorting']);
         return view('devices.index-table', [
             'devices' => $viewData['devices'],
             'deviceStates' => $viewData['deviceStates'],
@@ -85,6 +91,8 @@ class DeviceController extends Controller
         if (empty($code)) {
             return response()->json(['found' => false, 'page' => 1]);
         }
+
+        AuditTrail::search($user, 'Device', $code, 'Meklēta ierīce pēc koda: '.$code);
 
         $canManageDevices = $user->canManageRequests();
         $filters = $this->normalizedIndexFilters($request);
@@ -490,9 +498,48 @@ SQL;
         ];
     }
 
+    private function auditDeviceListInteractions(Request $request, User $user, array $filters, array $sorting): void
+    {
+        $filterPayload = array_filter([
+            'teksts' => $filters['q'] ?? '',
+            'piešķirtais lietotājs' => $filters['assigned_to_query'] ?? '',
+            'stāvs' => ($filters['floor_query'] ?? '') !== '' ? ($filters['floor_query'] ?? '') : ($filters['floor'] ?? ''),
+            'telpa' => $filters['room_query'] ?? '',
+            'ierīces tips' => $filters['type_query'] ?? '',
+            'statusi' => $filters['has_status_filter'] ? ($filters['statuses'] ?? []) : [],
+        ], fn (mixed $value) => $value !== null && $value !== '' && $value !== []);
+
+        if ($filterPayload !== []) {
+            AuditTrail::filter(
+                $user,
+                'Device',
+                $filterPayload,
+                'Filtrēts ierīču saraksts: '.implode(' | ', collect($filterPayload)->map(function (mixed $value, string $label) {
+                    if (is_array($value)) {
+                        return $label.': '.implode(', ', $value);
+                    }
+
+                    return $label.': '.$value;
+                })->all())
+            );
+        }
+
+        if (($sorting['sort'] ?? 'created_at') !== 'created_at' || ($sorting['direction'] ?? 'desc') !== 'desc' || $request->has('sort')) {
+            AuditTrail::sort(
+                $user,
+                'Device',
+                $sorting['label'] ?? 'izveides datuma',
+                $sorting['direction'] ?? 'desc',
+                'Kārtots ierīču saraksts pēc '.($sorting['label'] ?? 'izveides datuma').' '.(($sorting['direction'] ?? 'desc') === 'asc' ? 'augošajā secībā' : 'dilstošajā secībā').'.'
+            );
+        }
+    }
+
     public function create()
     {
-        $this->requireManager();
+        $manager = $this->requireManager();
+
+        AuditTrail::viewed($manager, 'Device', null, 'Atvērta ierīces izveides forma.');
 
         return view('devices.create', $this->formData());
     }
@@ -519,7 +566,9 @@ SQL;
 
     public function edit(Device $device)
     {
-        $this->requireManager();
+        $manager = $this->requireManager();
+
+        AuditTrail::viewed($manager, 'Device', (string) $device->id, 'Atvērta ierīces labošanas forma: '.AuditTrail::labelFor($device));
 
         return view('devices.edit', array_merge(['device' => $device], $this->formData()));
     }
@@ -532,6 +581,7 @@ SQL;
         $this->authorizeView($device);
 
         $user = $this->user();
+        AuditTrail::viewed($user, 'Device', (string) $device->id, 'Atvērta ierīces karte: '.AuditTrail::labelFor($device));
         $device->load([
             'type',
             'building',

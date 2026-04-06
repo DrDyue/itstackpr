@@ -98,6 +98,9 @@ class RepairController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        AuditTrail::viewed($user, 'Repair', null, 'Atvērts remontu saraksts.');
+        $this->auditRepairListInteractions($request, $user, $filters, $sorting);
+
         return view('repairs.index', [
             'repairs' => $repairs,
             'repairSummary' => [
@@ -131,6 +134,8 @@ class RepairController extends Controller
         if ($code === '') {
             return response()->json(['found' => false, 'page' => 1]);
         }
+
+        AuditTrail::search($user, 'Repair', $code, 'Meklēts remonta ieraksts pēc ierīces koda: '.$code);
 
         $canManageRepairs = $user->canManageRequests();
         $filters = $this->normalizedIndexFilters($request, $canManageRepairs);
@@ -178,7 +183,9 @@ class RepairController extends Controller
      */
     public function create(Request $request)
     {
-        $this->requireManager();
+        $manager = $this->requireManager();
+
+        AuditTrail::viewed($manager, 'Repair', null, 'Atvērta remonta izveides forma.');
 
         if (! $this->featureTableExists('repairs')) {
             return view('repairs.create', array_merge($this->formData(), [
@@ -222,12 +229,13 @@ class RepairController extends Controller
      */
     public function edit(Repair $repair)
     {
-        $this->requireManager();
+        $manager = $this->requireManager();
 
         if (! $this->featureTableExists('repairs')) {
             return redirect()->route('repairs.index')->with('error', 'Tabula repairs šobrīd nav pieejama.');
         }
 
+        AuditTrail::viewed($manager, 'Repair', (string) $repair->id, 'Atvērta remonta labošanas forma: '.AuditTrail::labelFor($repair));
         $repair->load(['device', 'executor', 'acceptedBy', 'request.responsibleUser', 'request.reviewedBy']);
 
         return view('repairs.edit', array_merge([
@@ -939,6 +947,50 @@ class RepairController extends Controller
             'start_date' => ['label' => 'sākuma datuma'],
             'end_date' => ['label' => 'beigu datuma'],
         ];
+    }
+
+    private function auditRepairListInteractions(Request $request, User $user, array $filters, array $sorting): void
+    {
+        $filterPayload = array_filter([
+            'teksts' => $filters['q'] ?? '',
+            'ierīce' => $filters['device_query'] ?? '',
+            'pieteicējs' => $filters['requester_query'] ?? '',
+            'statusi' => count($filters['statuses'] ?? []) > 0 && count($filters['statuses'] ?? []) < count(self::STATUSES) ? ($filters['statuses'] ?? []) : [],
+            'prioritātes' => count($filters['priorities'] ?? []) > 0 && count($filters['priorities'] ?? []) < count(self::PRIORITIES) ? ($filters['priorities'] ?? []) : [],
+            'remonta tips' => $filters['repair_type'] ?? '',
+            'no datuma' => $filters['date_from'] ?? '',
+            'līdz datumam' => $filters['date_to'] ?? '',
+            'mani remonti' => ! empty($filters['mine']),
+        ], fn (mixed $value) => $value !== null && $value !== '' && $value !== []);
+
+        if ($filterPayload !== []) {
+            AuditTrail::filter(
+                $user,
+                'Repair',
+                $filterPayload,
+                'Filtrēti remonti: '.implode(' | ', collect($filterPayload)->map(function (mixed $value, string $label) {
+                    if (is_array($value)) {
+                        return $label.': '.implode(', ', $value);
+                    }
+
+                    if (is_bool($value)) {
+                        return $label.': '.($value ? 'jā' : 'nē');
+                    }
+
+                    return $label.': '.$value;
+                })->all())
+            );
+        }
+
+        if (($sorting['sort'] ?? 'priority') !== 'priority' || ($sorting['direction'] ?? 'desc') !== 'desc' || $request->has('sort')) {
+            AuditTrail::sort(
+                $user,
+                'Repair',
+                $sorting['label'] ?? 'prioritātes',
+                $sorting['direction'] ?? 'desc',
+                'Kārtoti remonti pēc '.($sorting['label'] ?? 'prioritātes').' '.(($sorting['direction'] ?? 'desc') === 'asc' ? 'augošajā secībā' : 'dilstošajā secībā').'.'
+            );
+        }
     }
 
     private function repairDeviceOptions($repairs)

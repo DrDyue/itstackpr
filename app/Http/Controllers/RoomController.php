@@ -52,6 +52,16 @@ class RoomController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        AuditTrail::viewed($this->user(), 'Room', null, 'Atvērts telpu saraksts.');
+
+        if ($filters['building_id'] !== '' || $filters['floor'] !== '' || $filters['floor_query'] !== '' || $filters['user_id'] !== '') {
+            AuditTrail::filter($this->user(), 'Room', [
+                'ēka' => $filters['building_id'],
+                'stāvs' => $filters['floor'] !== '' ? $filters['floor'] : $filters['floor_query'],
+                'atbildīgais' => $filters['user_id'],
+            ], 'Filtrēts telpu saraksts.');
+        }
+
         return view('rooms.index', [
             'rooms' => $rooms,
             'roomSummary' => [
@@ -87,6 +97,8 @@ class RoomController extends Controller
         if ($search === '') {
             return response()->json(['found' => false, 'page' => 1]);
         }
+
+        AuditTrail::search($this->user(), 'Room', $search, 'Meklēta telpa pēc nosaukuma vai numura: '.$search);
 
         $filters = [
             'building_id' => trim((string) $request->query('building_id', '')),
@@ -137,6 +149,7 @@ class RoomController extends Controller
     public function create()
     {
         $this->requireManager();
+        AuditTrail::viewed($this->user(), 'Room', null, 'Atvērta telpas izveides forma.');
 
         return view('rooms.create', [
             'buildings' => Building::query()
@@ -170,6 +183,7 @@ class RoomController extends Controller
     public function edit(Room $room)
     {
         $this->requireManager();
+        AuditTrail::viewed($this->user(), 'Room', (string) $room->id, 'Atvērta telpas labošanas forma: '.AuditTrail::labelFor($room));
 
         return view('rooms.edit', [
             'room' => $room,

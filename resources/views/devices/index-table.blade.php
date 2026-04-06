@@ -225,30 +225,38 @@
                             </button>
 
                             <div class="table-action-list" :class="panel ? 'table-action-list-wide' : ''" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false; panel = null">
-                                <a href="{{ route('devices.show', $device) }}" class="table-action-item" @click="open = false; panel = null">
+                                <div class="table-action-section">
+                                    <div class="table-action-section-title">Pārskats</div>
+                                <a href="{{ route('devices.show', $device) }}" class="table-action-item table-action-item-primary" @click="open = false; panel = null">
                                     <x-icon name="view" size="h-4 w-4" />
                                     <span>Skatīt</span>
                                 </a>
+                                </div>
 
                                 @if (! $canManageDevices)
+                                    <div class="table-action-divider"></div>
+                                    <div class="table-action-section">
+                                        <div class="table-action-section-title">Pieprasījumi</div>
                                     @if ($requestAvailability['can_create_any'])
-                                        <a href="{{ route('repair-requests.create', ['device_id' => $device->id]) }}" class="table-action-item text-sky-700 hover:bg-sky-50" @click="open = false; panel = null">
+                                        <div class="table-action-grid">
+                                        <a href="{{ route('repair-requests.create', ['device_id' => $device->id]) }}" class="table-action-item table-action-item-sky" @click="open = false; panel = null">
                                             <x-icon name="repair" size="h-4 w-4" />
                                             <span>Pieteikt remontu</span>
                                         </a>
 
-                                        <a href="{{ route('writeoff-requests.create', ['device_id' => $device->id]) }}" class="table-action-item text-rose-700 hover:bg-rose-50" @click="open = false; panel = null">
+                                        <a href="{{ route('writeoff-requests.create', ['device_id' => $device->id]) }}" class="table-action-item table-action-item-rose" @click="open = false; panel = null">
                                             <x-icon name="writeoff" size="h-4 w-4" />
                                             <span>Pieteikt norakstīšanu</span>
                                         </a>
 
-                                        <a href="{{ route('device-transfers.create', ['device_id' => $device->id]) }}" class="table-action-item text-emerald-700 hover:bg-emerald-50" @click="open = false; panel = null">
+                                        <a href="{{ route('device-transfers.create', ['device_id' => $device->id]) }}" class="table-action-item table-action-item-emerald" @click="open = false; panel = null">
                                             <x-icon name="transfer" size="h-4 w-4" />
                                             <span>Nodot citam</span>
                                         </a>
+                                        </div>
                                     @elseif ($requestAvailability['reason'])
                                         @if (! empty($pendingRequestBadge['url']))
-                                            <a href="{{ $pendingRequestBadge['url'] }}" class="table-action-item text-sky-700 hover:bg-sky-50" @click="open = false; panel = null">
+                                            <a href="{{ $pendingRequestBadge['url'] }}" class="table-action-item table-action-item-sky" @click="open = false; panel = null">
                                                 <x-icon :name="$pendingRequestBadge['icon'] ?? 'view'" size="h-4 w-4" />
                                                 <span>Skatīt pieteikumu</span>
                                             </a>
@@ -264,25 +272,33 @@
                                             <span>{{ $pendingRequestBadge['label'] ?? 'Pieteikums nav pieejams' }}</span>
                                         </button>
                                     @endif
+                                    </div>
                                 @endif
 
                                 @if ($canManageDevices)
+                                    <div class="table-action-divider"></div>
+                                    <div class="table-action-section">
+                                        <div class="table-action-section-title">Pārvaldība</div>
                                     <a href="{{ route('devices.edit', $device) }}" class="table-action-item table-action-item-amber" @click="open = false; panel = null">
                                         <x-icon name="edit" size="h-4 w-4" />
                                         <span>Rediģēt</span>
                                     </a>
 
                                     @if ($device->status === 'active')
-                                        <button type="button" class="table-action-item text-sky-700 hover:bg-sky-50" @click="panel = panel === 'room' ? null : 'room'">
+                                        <div class="table-action-grid">
+                                        <button type="button" class="table-action-item table-action-item-sky" @click="panel = panel === 'room' ? null : 'room'">
                                             <x-icon name="room" size="h-4 w-4" />
                                             <span>Mainīt telpu</span>
                                         </button>
 
-                                        <button type="button" class="table-action-item text-violet-700 hover:bg-violet-50" @click="panel = panel === 'assignee' ? null : 'assignee'">
+                                        <button type="button" class="table-action-item table-action-item-violet" @click="panel = panel === 'assignee' ? null : 'assignee'">
                                             <x-icon name="user" size="h-4 w-4" />
                                             <span>Mainīt atbildīgo</span>
                                         </button>
 
+                                        </div>
+
+                                        <div class="table-action-grid">
                                         <form
                                             method="POST"
                                             action="{{ route('devices.quick-update', $device) }}"
@@ -314,6 +330,8 @@
                                                 <span>Atdot remonta</span>
                                             </button>
                                         </form>
+
+                                        </div>
 
                                         <div class="table-action-inline-panel" x-cloak x-show="panel === 'room'" x-transition.opacity>
                                             <div class="table-action-inline-head">
@@ -383,6 +401,7 @@
                                             </form>
                                         </div>
                                     @endif
+                                    </div>
                                 @endif
                             </div>
                         </div>

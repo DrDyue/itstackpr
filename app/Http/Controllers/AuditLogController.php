@@ -6,7 +6,6 @@ use App\Models\AuditLog;
 use App\Models\User;
 use App\Support\AuditTrail;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -174,6 +173,8 @@ class AuditLogController extends Controller
             ->sortBy('label')
             ->values();
 
+        $this->auditAuditLogInteractions($request, $user, $filters);
+
         return view('audit_log.index', compact(
             'logs',
             'filters',
@@ -191,6 +192,7 @@ class AuditLogController extends Controller
     public function findEntry(Request $request): JsonResponse
     {
         $this->requireAdmin();
+        $user = $this->user();
 
         $search = trim((string) $request->query('lookup', $request->query('search', $request->query('q', ''))));
         if ($search === '') {
@@ -243,11 +245,56 @@ class AuditLogController extends Controller
             return response()->json(['found' => false, 'page' => 1]);
         }
 
+        AuditTrail::search($user, 'AuditLog', $search, 'Audita žurnālā meklēts ieraksts: '.$search);
+
         return response()->json([
             'found' => true,
             'page' => intdiv((int) $foundIndex, 50) + 1,
             'term' => $search,
             'highlight_id' => 'audit-log-'.$logs->values()[(int) $foundIndex]->id,
         ]);
+    }
+
+    /**
+     * Reģistrē audita saraksta filtrēšanas un kārtošanas darbības.
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    private function auditAuditLogInteractions(Request $request, User $user, array $filters): void
+    {
+        $activeFilters = array_filter([
+            'darbība' => $filters['action'] ?: null,
+            'objekts' => $filters['entity_type'] ?: null,
+            'lietotājs' => $filters['user_id'] ?: null,
+            'no datuma' => $filters['date_from'] ?: null,
+            'līdz datumam' => $filters['date_to'] ?: null,
+            'svarīgums' => ! empty($filters['severities']) ? implode(', ', $filters['severities']) : null,
+        ], fn ($value) => $value !== null && $value !== '');
+
+        if ($activeFilters !== []) {
+            AuditTrail::filter(
+                $user,
+                'AuditLog',
+                $activeFilters,
+                'Audita žurnāls filtrēts pēc: '.implode(', ', array_map(
+                    fn ($label, $value) => $label.' — '.$value,
+                    array_keys($activeFilters),
+                    array_values($activeFilters),
+                ))
+            );
+        }
+
+        $sortField = trim((string) $request->query('sort', ''));
+        $sortDirection = trim((string) $request->query('direction', ''));
+
+        if ($sortField !== '' && ! ($sortField === 'timestamp' && $sortDirection === 'desc')) {
+            AuditTrail::sort(
+                $user,
+                'AuditLog',
+                $sortField,
+                $sortDirection === 'asc' ? 'asc' : 'desc',
+                'Audita žurnāls sakārtots pēc '.$sortField.' '.($sortDirection === 'asc' ? 'augošā' : 'dilstošā').' secībā.'
+            );
+        }
     }
 }

@@ -123,6 +123,9 @@ class DeviceTransferController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        AuditTrail::viewed($user, 'DeviceTransfer', null, 'Atvērts ierīču pārsūtīšanas pieteikumu saraksts.');
+        $this->auditDeviceTransferListInteractions($request, $user, $filters, $sorting);
+
         return view('device_transfers.index', [
             'transfers' => $transfers,
             'transferSummary' => [
@@ -157,6 +160,8 @@ class DeviceTransferController extends Controller
         if ($code === '') {
             return response()->json(['found' => false, 'page' => 1]);
         }
+
+        AuditTrail::search($user, 'DeviceTransfer', $code, 'Meklēts ierīces pārsūtīšanas pieteikums pēc ierīces koda: '.$code);
 
         $canManageTransfers = $user->canManageRequests();
         $availableStatuses = [
@@ -214,6 +219,8 @@ class DeviceTransferController extends Controller
         $user = $this->user();
         abort_unless($user, 403);
         $canManageTransfers = $user->canManageRequests();
+
+        AuditTrail::viewed($user, 'DeviceTransfer', null, 'Atvērta ierīces pārsūtīšanas pieteikuma forma.');
 
         if (! $this->featureTableExists('device_transfers')) {
             return view('device_transfers.create', [
@@ -684,6 +691,49 @@ class DeviceTransferController extends Controller
             'created_at' => ['label' => 'iesniegšanas datuma'],
             'status' => ['label' => 'statusa'],
         ];
+    }
+
+    private function auditDeviceTransferListInteractions(Request $request, User $user, array $filters, array $sorting): void
+    {
+        $filterPayload = array_filter([
+            'teksts' => $filters['q'] ?? '',
+            'ierīce' => $filters['device_query'] ?? '',
+            'pieteicējs' => $filters['requester_query'] ?? '',
+            'saņēmējs' => $filters['recipient_query'] ?? '',
+            'ienākošie' => ! empty($filters['incoming']),
+            'no datuma' => $filters['date_from'] ?? '',
+            'līdz datumam' => $filters['date_to'] ?? '',
+            'statusi' => count($filters['statuses'] ?? []) > 0 && count($filters['statuses'] ?? []) < 3 ? ($filters['statuses'] ?? []) : [],
+        ], fn (mixed $value) => $value !== null && $value !== '' && $value !== []);
+
+        if ($filterPayload !== []) {
+            AuditTrail::filter(
+                $user,
+                'DeviceTransfer',
+                $filterPayload,
+                'Filtrēti ierīču pārsūtīšanas pieteikumi: '.implode(' | ', collect($filterPayload)->map(function (mixed $value, string $label) {
+                    if (is_array($value)) {
+                        return $label.': '.implode(', ', $value);
+                    }
+
+                    if (is_bool($value)) {
+                        return $label.': '.($value ? 'jā' : 'nē');
+                    }
+
+                    return $label.': '.$value;
+                })->all())
+            );
+        }
+
+        if (($sorting['sort'] ?? 'created_at') !== 'created_at' || ($sorting['direction'] ?? 'desc') !== 'desc' || $request->has('sort')) {
+            AuditTrail::sort(
+                $user,
+                'DeviceTransfer',
+                $sorting['label'] ?? 'iesniegšanas datuma',
+                $sorting['direction'] ?? 'desc',
+                'Kārtoti ierīču pārsūtīšanas pieteikumi pēc '.($sorting['label'] ?? 'iesniegšanas datuma').' '.(($sorting['direction'] ?? 'desc') === 'asc' ? 'augošajā secībā' : 'dilstošajā secībā').'.'
+            );
+        }
     }
 
     /**
