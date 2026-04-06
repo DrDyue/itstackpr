@@ -97,7 +97,7 @@ class AuthAndRequestFlowsTest extends TestCase
         RepairRequest::create([
             'device_id' => $device->id,
             'responsible_user_id' => $employee->id,
-            'description' => 'Profilam paredzets remonta pieteikums.',
+            'description' => 'Profilam paredzēts remonta pieteikums.',
             'status' => RepairRequest::STATUS_SUBMITTED,
         ]);
 
@@ -107,7 +107,7 @@ class AuthAndRequestFlowsTest extends TestCase
             'action' => 'LOGIN',
             'entity_type' => 'User',
             'entity_id' => (string) $employee->id,
-            'description' => 'Lietotajs piesledzas sistemai.',
+            'description' => 'Lietotājs pieslēdzas sistēmai.',
             'severity' => 'info',
         ]);
 
@@ -375,14 +375,14 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->actingAs($admin)
             ->post(route('repair-requests.store'), [
                 'device_id' => $device->id,
-                'description' => 'Adminam nevajadzetu pieteikt remontu caur lietotaja formu.',
+            'description' => 'Adminam nevajadzētu pieteikt remontu caur lietotāja formu.',
             ])
             ->assertForbidden();
 
         $this->actingAs($admin)
             ->post(route('writeoff-requests.store'), [
                 'device_id' => $device->id,
-                'reason' => 'Adminam nevajadzetu pieteikt norakstisanu caur lietotaja formu.',
+            'reason' => 'Adminam nevajadzētu pieteikt norakstīšanu caur lietotāja formu.',
             ])
             ->assertForbidden();
     }
@@ -453,7 +453,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->actingAs($admin)
             ->post(route('devices.store'), [
                 'code' => 'DEV-STORE-DEFAULTS',
-                'name' => 'Noklusetais dators',
+                'name' => 'Noklusētais dators',
                 'device_type_id' => $typeId,
                 'model' => 'OptiPlex 7000',
                 'status' => Device::STATUS_ACTIVE,
@@ -476,13 +476,13 @@ class AuthAndRequestFlowsTest extends TestCase
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-store-force-active@example.com');
         $typeId = DB::table('device_types')->insertGetId([
-            'type_name' => 'Plansete',
+            'type_name' => 'Planšete',
         ]);
 
         $this->actingAs($admin)
             ->post(route('devices.store'), [
                 'code' => 'DEV-FORCE-ACT',
-                'name' => 'Vienmer aktiva ierice',
+                'name' => 'Vienmēr aktīva ierīce',
                 'device_type_id' => $typeId,
                 'model' => 'Tab 11',
                 'status' => Device::STATUS_REPAIR,
@@ -813,7 +813,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $repairRequestId = DB::table('repair_requests')->insertGetId([
             'device_id' => $device->id,
             'responsible_user_id' => $user->id,
-            'description' => 'Nepieciesams remonts.',
+            'description' => 'Nepieciešams remonts.',
             'status' => RepairRequest::STATUS_SUBMITTED,
             'created_at' => now(),
             'updated_at' => now(),
@@ -854,7 +854,7 @@ class AuthAndRequestFlowsTest extends TestCase
 
         $repair = Repair::create([
             'device_id' => $device->id,
-            'description' => 'Gaida remonta uzsaksanu.',
+            'description' => 'Gaida remonta uzsākšanu.',
             'status' => 'waiting',
             'repair_type' => 'internal',
             'priority' => 'medium',
@@ -936,7 +936,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $writeoffRequestId = DB::table('writeoff_requests')->insertGetId([
             'device_id' => $device->id,
             'responsible_user_id' => $user->id,
-            'reason' => 'Ierice ir novecojusi.',
+            'reason' => 'Ierīce ir novecojusi.',
             'status' => WriteoffRequest::STATUS_SUBMITTED,
             'created_at' => now(),
             'updated_at' => now(),
@@ -1028,14 +1028,14 @@ class AuthAndRequestFlowsTest extends TestCase
         $repairRequest = RepairRequest::create([
             'device_id' => $repairDevice->id,
             'responsible_user_id' => $employee->id,
-            'description' => 'Nepieciesams jauns remonta pieteikums.',
+            'description' => 'Nepieciešams jauns remonta pieteikums.',
             'status' => RepairRequest::STATUS_SUBMITTED,
         ]);
 
         $writeoffRequest = WriteoffRequest::create([
             'device_id' => $writeoffDevice->id,
             'responsible_user_id' => $employee->id,
-            'reason' => 'Ierice ir nolietota.',
+            'reason' => 'Ierīce ir nolietota.',
             'status' => WriteoffRequest::STATUS_SUBMITTED,
         ]);
 
@@ -1073,7 +1073,7 @@ class AuthAndRequestFlowsTest extends TestCase
             'device_id' => $incomingDevice->id,
             'responsible_user_id' => $sender->id,
             'transfered_to_id' => $recipient->id,
-            'transfer_reason' => 'Ienakoss nodosanas pieprasijums.',
+            'transfer_reason' => 'Ienākošs nodošanas pieprasījums.',
             'status' => DeviceTransfer::STATUS_SUBMITTED,
         ]);
 
@@ -1339,7 +1339,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $response = $this->actingAs($admin)->post(route('device-transfers.store'), [
             'device_id' => $device->id,
             'transfered_to_id' => $recipient->id,
-            'transfer_reason' => 'Admins sakarto ierices parsutisanu.',
+            'transfer_reason' => 'Admins sakārto ierīces pārsūtīšanu.',
         ]);
 
         $response->assertRedirect(route('device-transfers.index'));
@@ -1371,7 +1371,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->actingAs($admin)
             ->post(route('device-transfers.review', $transferId), [
                 'status' => DeviceTransfer::STATUS_APPROVED,
-                'review_notes' => 'Admins nevar apstiprinat svesu parsutisanu.',
+                'review_notes' => 'Admins nevar apstiprināt svešu pārsūtīšanu.',
             ])
             ->assertForbidden();
     }
@@ -1489,7 +1489,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $device = $this->createDevice($assignee->id, Device::STATUS_ACTIVE, 'DEV-DASH-META');
 
         DB::table('users')->where('id', $assignee->id)->update([
-            'full_name' => 'Maris Vitols',
+            'full_name' => 'Māris Vītols',
             'job_title' => null,
         ]);
 
@@ -1513,7 +1513,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->assertIsString($content);
         $this->assertMatchesRegularExpression('/DEV-DASH-META.*SN-HP-800/s', $content);
         $this->assertMatchesRegularExpression('/Darba stacija.*Dators.*HP EliteDesk 800/s', $content);
-        $this->assertMatchesRegularExpression('/Maris Vitols.*Nav amata/s', $content);
+        $this->assertMatchesRegularExpression('/Māris Vītols.*Nav amata/s', $content);
         $this->assertStringNotContainsString('Aktivie remonti', $content);
         $this->assertStringNotContainsString('Jaunakas darbibas', $content);
     }
@@ -1627,7 +1627,7 @@ class AuthAndRequestFlowsTest extends TestCase
         WriteoffRequest::create([
             'device_id' => $device->id,
             'responsible_user_id' => $user->id,
-            'reason' => 'Ar norakstisanu saistits ieraksts.',
+            'reason' => 'Ar norakstīšanu saistīts ieraksts.',
             'status' => WriteoffRequest::STATUS_REJECTED,
         ]);
 
@@ -1734,7 +1734,7 @@ class AuthAndRequestFlowsTest extends TestCase
         DB::table('writeoff_requests')->insert([
             'device_id' => $pendingWriteoffDevice->id,
             'responsible_user_id' => $user->id,
-            'reason' => 'Gaida norakstisanu.',
+            'reason' => 'Gaida norakstīšanu.',
             'status' => WriteoffRequest::STATUS_SUBMITTED,
             'created_at' => now(),
             'updated_at' => now(),
@@ -1798,38 +1798,38 @@ class AuthAndRequestFlowsTest extends TestCase
         RepairRequest::create([
             'device_id' => $repairDevice->id,
             'responsible_user_id' => $user->id,
-            'description' => 'Remonts iesniegts pec noklusejuma.',
+            'description' => 'Remonts iesniegts pēc noklusējuma.',
             'status' => RepairRequest::STATUS_SUBMITTED,
         ]);
         RepairRequest::create([
             'device_id' => $repairDevice->id,
             'responsible_user_id' => $user->id,
-            'description' => 'Remonts apstiprinats pec noklusejuma.',
+            'description' => 'Remonts apstiprināts pēc noklusējuma.',
             'status' => RepairRequest::STATUS_APPROVED,
         ]);
         RepairRequest::create([
             'device_id' => $repairDevice->id,
             'responsible_user_id' => $user->id,
-            'description' => 'Remonts noraidits pec noklusejuma.',
+            'description' => 'Remonts noraidīts pēc noklusējuma.',
             'status' => RepairRequest::STATUS_REJECTED,
         ]);
 
         WriteoffRequest::create([
             'device_id' => $writeoffDevice->id,
             'responsible_user_id' => $user->id,
-            'reason' => 'Norakstisana iesniegta pec noklusejuma.',
+            'reason' => 'Norakstīšana iesniegta pēc noklusējuma.',
             'status' => WriteoffRequest::STATUS_SUBMITTED,
         ]);
         WriteoffRequest::create([
             'device_id' => $writeoffDevice->id,
             'responsible_user_id' => $user->id,
-            'reason' => 'Norakstisana apstiprinata pec noklusejuma.',
+            'reason' => 'Norakstīšana apstiprināta pēc noklusējuma.',
             'status' => WriteoffRequest::STATUS_APPROVED,
         ]);
         WriteoffRequest::create([
             'device_id' => $writeoffDevice->id,
             'responsible_user_id' => $user->id,
-            'reason' => 'Norakstisana noraidita pec noklusejuma.',
+            'reason' => 'Norakstīšana noraidīta pēc noklusējuma.',
             'status' => WriteoffRequest::STATUS_REJECTED,
         ]);
 
@@ -1837,44 +1837,44 @@ class AuthAndRequestFlowsTest extends TestCase
             'device_id' => $transferDevice->id,
             'responsible_user_id' => $user->id,
             'transfered_to_id' => $recipient->id,
-            'transfer_reason' => 'Nodosana iesniegta pec noklusejuma.',
+            'transfer_reason' => 'Nodošana iesniegta pēc noklusējuma.',
             'status' => DeviceTransfer::STATUS_SUBMITTED,
         ]);
         DeviceTransfer::create([
             'device_id' => $transferDevice->id,
             'responsible_user_id' => $user->id,
             'transfered_to_id' => $recipient->id,
-            'transfer_reason' => 'Nodosana apstiprinata pec noklusejuma.',
+            'transfer_reason' => 'Nodošana apstiprināta pēc noklusējuma.',
             'status' => DeviceTransfer::STATUS_APPROVED,
         ]);
         DeviceTransfer::create([
             'device_id' => $transferDevice->id,
             'responsible_user_id' => $user->id,
             'transfered_to_id' => $recipient->id,
-            'transfer_reason' => 'Nodosana noraidita pec noklusejuma.',
+            'transfer_reason' => 'Nodošana noraidīta pēc noklusējuma.',
             'status' => DeviceTransfer::STATUS_REJECTED,
         ]);
 
         $this->actingAs($admin)
             ->get(route('repair-requests.index'))
             ->assertOk()
-            ->assertSee('Remonts iesniegts pec noklusejuma.')
-            ->assertDontSee('Remonts apstiprinats pec noklusejuma.')
-            ->assertDontSee('Remonts noraidits pec noklusejuma.');
+            ->assertSee('Remonts iesniegts pēc noklusējuma.')
+            ->assertDontSee('Remonts apstiprināts pēc noklusējuma.')
+            ->assertDontSee('Remonts noraidīts pēc noklusējuma.');
 
         $this->actingAs($admin)
             ->get(route('writeoff-requests.index'))
             ->assertOk()
-            ->assertSee('Norakstisana iesniegta pec noklusejuma.')
-            ->assertDontSee('Norakstisana apstiprinata pec noklusejuma.')
-            ->assertDontSee('Norakstisana noraidita pec noklusejuma.');
+            ->assertSee('Norakstīšana iesniegta pēc noklusējuma.')
+            ->assertDontSee('Norakstīšana apstiprināta pēc noklusējuma.')
+            ->assertDontSee('Norakstīšana noraidīta pēc noklusējuma.');
 
         $this->actingAs($admin)
             ->get(route('device-transfers.index'))
             ->assertOk()
-            ->assertSee('Nodosana iesniegta pec noklusejuma.')
-            ->assertSee('Nodosana apstiprinata pec noklusejuma.')
-            ->assertSee('Nodosana noraidita pec noklusejuma.');
+            ->assertSee('Nodošana iesniegta pēc noklusējuma.')
+            ->assertSee('Nodošana apstiprināta pēc noklusējuma.')
+            ->assertSee('Nodošana noraidīta pēc noklusējuma.');
     }
 
     public function test_regular_user_can_edit_submitted_repair_request_text_from_unified_center(): void
@@ -1884,7 +1884,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $repairRequest = RepairRequest::create([
             'device_id' => $device->id,
             'responsible_user_id' => $user->id,
-            'description' => 'Sakotnejs remonta apraksts.',
+            'description' => 'Sākotnējais remonta apraksts.',
             'status' => RepairRequest::STATUS_SUBMITTED,
         ]);
 
@@ -1917,14 +1917,14 @@ class AuthAndRequestFlowsTest extends TestCase
         $repairRequest = RepairRequest::create([
             'device_id' => $device->id,
             'responsible_user_id' => $admin->id,
-            'description' => 'Iesniegts remonta pieteikums pogu parbaudei.',
+            'description' => 'Iesniegts remonta pieteikums pogu pārbaudei.',
             'status' => RepairRequest::STATUS_SUBMITTED,
         ]);
 
         $writeoffRequest = WriteoffRequest::create([
             'device_id' => $device->id,
             'responsible_user_id' => $admin->id,
-            'reason' => 'Iesniegts norakstisanas pieteikums pogu parbaudei.',
+            'reason' => 'Iesniegts norakstīšanas pieteikums pogu pārbaudei.',
             'status' => WriteoffRequest::STATUS_SUBMITTED,
         ]);
 
@@ -1932,7 +1932,7 @@ class AuthAndRequestFlowsTest extends TestCase
             'device_id' => $device->id,
             'responsible_user_id' => $admin->id,
             'transfered_to_id' => $recipient->id,
-            'transfer_reason' => 'Iesniegts nodosanas pieteikums pogu parbaudei.',
+            'transfer_reason' => 'Iesniegts nodošanas pieteikums pogu pārbaudei.',
             'status' => DeviceTransfer::STATUS_SUBMITTED,
         ]);
 
@@ -1971,13 +1971,13 @@ class AuthAndRequestFlowsTest extends TestCase
             'device_id' => $device->id,
             'responsible_user_id' => $user->id,
             'transfered_to_id' => $recipient->id,
-            'transfer_reason' => 'Sakotnejs nodosanas iemesls.',
+            'transfer_reason' => 'Sākotnējais nodošanas iemesls.',
             'status' => DeviceTransfer::STATUS_SUBMITTED,
         ]);
 
         $this->actingAs($user)
             ->patch(route('my-requests.update', ['requestType' => 'transfer', 'requestId' => $transfer->id]), [
-                'transfer_reason' => 'Atjaunots nodosanas iemesls.',
+                'transfer_reason' => 'Atjaunots nodošanas iemesls.',
                 'transfered_to_id' => $otherRecipient->id,
             ])
             ->assertRedirect(route('device-transfers.index'));
@@ -1985,7 +1985,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->assertDatabaseHas('device_transfers', [
             'id' => $transfer->id,
             'transfered_to_id' => $recipient->id,
-            'transfer_reason' => 'Atjaunots nodosanas iemesls.',
+            'transfer_reason' => 'Atjaunots nodošanas iemesls.',
             'status' => DeviceTransfer::STATUS_SUBMITTED,
         ]);
     }
@@ -1997,7 +1997,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $writeoffRequest = WriteoffRequest::create([
             'device_id' => $device->id,
             'responsible_user_id' => $user->id,
-            'reason' => 'Atcelams norakstisanas pieteikums.',
+            'reason' => 'Atceļams norakstīšanas pieteikums.',
             'status' => WriteoffRequest::STATUS_SUBMITTED,
         ]);
 
@@ -2017,7 +2017,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $repairRequest = RepairRequest::create([
             'device_id' => $device->id,
             'responsible_user_id' => $user->id,
-            'description' => 'Jau izskatits remonta pieteikums.',
+            'description' => 'Jau izskatīts remonta pieteikums.',
             'status' => RepairRequest::STATUS_APPROVED,
         ]);
 
@@ -2043,7 +2043,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $device = $this->createDevice($sender->id, Device::STATUS_ACTIVE, 'DEV-TRANSFER-ROOM');
 
         $newBuildingId = DB::table('buildings')->insertGetId([
-            'building_name' => 'Jauna eka',
+            'building_name' => 'Jauna ēka',
             'address' => 'Adrese 2',
             'city' => 'Ludza',
             'total_floors' => 2,
@@ -2092,7 +2092,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $device = $this->createDevice($user->id, Device::STATUS_ACTIVE, 'DEV-USER-ROOM');
 
         $newBuildingId = DB::table('buildings')->insertGetId([
-            'building_name' => 'Papildus eka',
+            'building_name' => 'Papildus ēka',
             'address' => 'Adrese 3',
             'city' => 'Ludza',
             'total_floors' => 1,
@@ -2132,7 +2132,7 @@ class AuthAndRequestFlowsTest extends TestCase
         RepairRequest::create([
             'device_id' => $device->id,
             'responsible_user_id' => $user->id,
-            'description' => 'Gaida remonta izskatisanu.',
+            'description' => 'Gaida remonta izskatīšanu.',
             'status' => RepairRequest::STATUS_SUBMITTED,
         ]);
 
@@ -2155,7 +2155,7 @@ class AuthAndRequestFlowsTest extends TestCase
         WriteoffRequest::create([
             'device_id' => $device->id,
             'responsible_user_id' => $user->id,
-            'reason' => 'Gaida norakstisanas izskatisanu.',
+            'reason' => 'Gaida norakstīšanas izskatīšanu.',
             'status' => WriteoffRequest::STATUS_SUBMITTED,
         ]);
 
@@ -2180,7 +2180,7 @@ class AuthAndRequestFlowsTest extends TestCase
             'device_id' => $device->id,
             'responsible_user_id' => $user->id,
             'transfered_to_id' => $recipient->id,
-            'transfer_reason' => 'Gaida nodosanas izskatisanu.',
+            'transfer_reason' => 'Gaida nodošanas izskatīšanu.',
             'status' => DeviceTransfer::STATUS_SUBMITTED,
         ]);
 
@@ -2200,7 +2200,7 @@ class AuthAndRequestFlowsTest extends TestCase
 
         Repair::create([
             'device_id' => $device->id,
-            'description' => 'Ierice jau ir remonta.',
+            'description' => 'Ierīce jau ir remontā.',
             'status' => 'in-progress',
             'repair_type' => 'internal',
             'priority' => 'medium',
@@ -2248,8 +2248,8 @@ class AuthAndRequestFlowsTest extends TestCase
             ->get(route('dashboard', ['floor' => 1, 'room_id' => $firstDevice->room_id]))
             ->assertOk()
             ->assertSee('DEV-FLOOR-ONE')
-            ->assertSee('Testa ierice DEV-FLOOR-ONE')
-            ->assertDontSee('Testa ierice DEV-FLOOR-TWO')
+            ->assertSee('Testa ierīce DEV-FLOOR-ONE')
+            ->assertDontSee('Testa ierīce DEV-FLOOR-TWO')
             ->assertSee('Telpas filtrs ieslēgts');
     }
 
@@ -2270,8 +2270,8 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->actingAs($admin)
             ->get(route('devices.index', ['type_query' => 'Komut']))
             ->assertOk()
-            ->assertSee('Testa ierice DEV-TYPE-ONE')
-            ->assertDontSee('Testa ierice DEV-TYPE-TWO');
+            ->assertSee('Testa ierīce DEV-TYPE-ONE')
+            ->assertDontSee('Testa ierīce DEV-TYPE-TWO');
     }
 
     public function test_active_device_update_requires_assignee_and_room(): void
@@ -2393,7 +2393,7 @@ class AuthAndRequestFlowsTest extends TestCase
         RepairRequest::create([
             'device_id' => $device->id,
             'responsible_user_id' => $user->id,
-            'description' => 'Nepieciesams remonts.',
+            'description' => 'Nepieciešams remonts.',
             'status' => RepairRequest::STATUS_SUBMITTED,
         ]);
 
@@ -2469,7 +2469,7 @@ class AuthAndRequestFlowsTest extends TestCase
 
         Repair::create([
             'device_id' => $device->id,
-            'description' => 'Ierice jau ir remonta.',
+            'description' => 'Ierīce jau ir remontā.',
             'status' => 'in-progress',
             'repair_type' => 'internal',
             'priority' => 'medium',
@@ -2521,7 +2521,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->assertMatchesRegularExpression('/DEV-DASH-PENDING.*Apskatīt.*Remonts/s', $content);
         $this->assertMatchesRegularExpression('/DEV-DASH-REPAIR.*Remonts.*Procesā/s', $content);
         $this->assertStringContainsString($admin->full_name, $content);
-        $this->assertStringNotContainsString('Bez gaidosa remonta', $content);
+        $this->assertStringNotContainsString('Bez gaidoša remonta', $content);
     }
 
     public function test_runtime_schema_syncs_device_repair_statuses_with_active_repairs(): void
@@ -2555,7 +2555,7 @@ class AuthAndRequestFlowsTest extends TestCase
 
         Repair::create([
             'device_id' => $device->id,
-            'description' => 'Vests remonta ieraksts bez statusa sinonizacijas.',
+            'description' => 'Vēsts remonta ieraksts bez statusa sinonizācijas.',
             'status' => 'waiting',
             'repair_type' => 'internal',
             'priority' => 'medium',
@@ -2578,7 +2578,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $requestId = DB::table('repair_requests')->insertGetId([
             'device_id' => $device->id,
             'responsible_user_id' => $user->id,
-            'description' => 'Ekrans mirgo un dators izsledzas.',
+            'description' => 'Ekrāns mirgo un dators izslēdzas.',
             'status' => RepairRequest::STATUS_APPROVED,
             'reviewed_by_user_id' => $admin->id,
             'created_at' => now(),
@@ -2657,7 +2657,7 @@ class AuthAndRequestFlowsTest extends TestCase
 
         Repair::create([
             'device_id' => $completedDevice->id,
-            'description' => 'Pabeigts remonts notirisanas testam.',
+            'description' => 'Pabeigts remonts notīrīšanas testam.',
             'status' => 'completed',
             'repair_type' => 'internal',
             'priority' => 'high',
@@ -2802,7 +2802,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $secondDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-BUILDING-FLOOR-TWO');
 
         DB::table('buildings')->where('id', $firstDevice->building_id)->update([
-            'building_name' => 'AdministrÄcijas centrs',
+            'building_name' => 'Administrācijas centrs',
             'total_floors' => 5,
         ]);
 
@@ -2815,7 +2815,7 @@ class AuthAndRequestFlowsTest extends TestCase
             ->get(route('buildings.index', ['total_floors' => 5]));
 
         $response->assertOk()
-            ->assertSee('AdministrÄcijas centrs')
+            ->assertSee('Administrācijas centrs')
             ->assertDontSee('Sporta halle');
     }
 
@@ -2849,15 +2849,15 @@ class AuthAndRequestFlowsTest extends TestCase
             $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, sprintf('DEV-BUILDING-SEARCH-%03d', $i));
 
             DB::table('buildings')->where('id', $device->building_id)->update([
-                'building_name' => 'Testa Ä“ka '.str_pad((string) $i, 3, '0', STR_PAD_LEFT),
-                'address' => $i === 21 ? 'BrÄ«vÄ«bas iela 99' : 'BrÄ«vÄ«bas iela '.$i,
+                'building_name' => 'Testa ēka '.str_pad((string) $i, 3, '0', STR_PAD_LEFT),
+                'address' => $i === 21 ? 'Brīvības iela 99' : 'Brīvības iela '.$i,
                 'total_floors' => 3,
             ]);
         }
 
         $response = $this->actingAs($admin)
             ->getJson(route('buildings.find-by-name', [
-                'search' => 'BrÄ«vÄ«bas iela 99',
+                'search' => 'Brīvības iela 99',
                 'sort' => 'building_name',
                 'direction' => 'asc',
             ]));
@@ -2895,7 +2895,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $repairRequest = RepairRequest::create([
             'device_id' => $device->id,
             'responsible_user_id' => $user->id,
-            'description' => 'Apraksts atrajam skatam.',
+            'description' => 'Apraksts ātrajam skatam.',
             'status' => RepairRequest::STATUS_APPROVED,
         ]);
 
@@ -2904,7 +2904,7 @@ class AuthAndRequestFlowsTest extends TestCase
             'request_id' => $repairRequest->id,
             'issue_reported_by' => $user->id,
             'accepted_by' => $admin->id,
-            'description' => 'Remonta apraksts atrajam skatam.',
+            'description' => 'Remonta apraksts ātrajam skatam.',
             'status' => 'in-progress',
             'repair_type' => 'external',
             'priority' => 'high',
@@ -2932,7 +2932,7 @@ class AuthAndRequestFlowsTest extends TestCase
             'action' => 'LOGIN',
             'entity_type' => 'User',
             'entity_id' => (string) $admin->id,
-            'description' => 'Admins piesledzas auditam.',
+            'description' => 'Admins pieslēdzas auditam.',
             'severity' => 'warning',
         ]);
 
@@ -2945,7 +2945,7 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->assertIsString($content);
         $this->assertStringNotContainsString('open-request-detail', $content);
         $this->assertStringContainsString('audit-description-text', $content);
-        $this->assertStringContainsString('Admins piesledzas auditam.', $content);
+        $this->assertStringContainsString('Admins pieslēdzas auditam.', $content);
         $this->assertStringContainsString('warning', $content);
     }
 
@@ -3129,7 +3129,7 @@ class AuthAndRequestFlowsTest extends TestCase
     private function createDevice(int $assignedToId, string $status, string $code): Device
     {
         $buildingId = DB::table('buildings')->insertGetId([
-            'building_name' => 'Testa eka '.$code,
+            'building_name' => 'Testa ēka '.$code,
             'address' => 'Adrese 1',
             'city' => 'Ludza',
             'total_floors' => 3,
@@ -3149,12 +3149,12 @@ class AuthAndRequestFlowsTest extends TestCase
         ]);
 
         $typeId = DB::table('device_types')->insertGetId([
-            'type_name' => 'Klepjdators '.$code,
+            'type_name' => 'Klēpjdators '.$code,
         ]);
 
         return Device::create([
             'code' => $code,
-            'name' => 'Testa ierice '.$code,
+            'name' => 'Testa ierīce '.$code,
             'device_type_id' => $typeId,
             'model' => 'Modelis '.$code,
             'status' => $status,

@@ -72,7 +72,7 @@
         'label' => $statusLabels[$status] ?? ucfirst($status),
         'description' => match ($status) {
             \App\Models\Device::STATUS_ACTIVE => 'Ierīce ir lietosana',
-            \App\Models\Device::STATUS_REPAIR => 'Ierīce atrodas remonta',
+            \App\Models\Device::STATUS_REPAIR => 'Ierīce atrodas remontā',
             \App\Models\Device::STATUS_WRITEOFF => 'Ierīce ir norakstīta',
             default => '',
         },

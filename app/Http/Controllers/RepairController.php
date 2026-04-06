@@ -179,7 +179,7 @@ class RepairController extends Controller
     }
 
     /**
-     * Par?da jauna remonta formu administratoram.
+     * Parāda jauna remonta formu administratoram.
      */
     public function create(Request $request)
     {
@@ -321,7 +321,7 @@ class RepairController extends Controller
         $draft = $this->validatedTransitionDraft($request, $repair, $validated['target_status']);
 
         if (! in_array($validated['target_status'], $this->allowedTransitionTargets($repair->status), true)) {
-            return back()->with('error', '??du remonta statusa mai?u veikt nevar.');
+            return back()->with('error', 'Šādu remonta statusa maiņu veikt nevar.');
         }
 
         if ($validated['target_status'] === 'completed' && ! filled($draft['description'])) {

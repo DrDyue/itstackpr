@@ -327,7 +327,7 @@
                                             <input type="hidden" name="target_status" value="repair">
                                             <button type="submit" class="table-action-button table-action-button-amber" formmethod="POST">
                                                 <x-icon name="repair" size="h-4 w-4" />
-                                                <span>Atdot remonta</span>
+                                                <span>Atdot remontā</span>
                                             </button>
                                         </form>
 

@@ -182,7 +182,7 @@ class AuditTrail
             $user->id,
             self::ACTION_LOGOUT,
             $user,
-            'Lietotājs izrakstijas: ' . self::labelFor($user),
+            'Lietotājs izrakstījās: ' . self::labelFor($user),
             self::SEVERITY_INFO
         );
     }
@@ -743,7 +743,7 @@ class AuditTrail
         }
 
         if (preg_match('/^User logged out: (?<label>.+)$/i', $text, $matches)) {
-            return 'Lietotājs izrakstijas: ' . $matches['label'];
+            return 'Lietotājs izrakstījās: ' . $matches['label'];
         }
 
         if (preg_match('/^User account deleted: (?<label>.+)$/i', $text, $matches)) {
@@ -796,7 +796,7 @@ class AuditTrail
         if (preg_match('/^(?<entity>.+?) updated: (?<label>.+?) \| details: (?<details>.+)$/i', $text, $matches)) {
             return self::entityLabel($matches['entity']) . ' atjaunināts: '
                 . $matches['label']
-                . ' | detalas: '
+                . ' | detaļas: '
                 . self::translateDetails($matches['details']);
         }
 
@@ -886,7 +886,7 @@ class AuditTrail
             })
             ->implode('; ');
 
-        return $entity . ' atjaunināts: ' . $label . ' | detalas: ' . $details;
+        return $entity . ' atjaunināts: ' . $label . ' | detaļas: ' . $details;
     }
 
     private static function severityFor(string $action, ?Model $model = null): string
