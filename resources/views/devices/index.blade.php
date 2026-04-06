@@ -61,8 +61,8 @@
             'search' => $floor . ' ' . $floor . '. stāvs',
         ])->values();
         $toolbarGridClass = $canManageDevices
-            ? 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,1.5fr)_minmax(0,1.5fr)]'
-            : 'surface-toolbar grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,1.5fr)_minmax(0,1.5fr)]';
+            ? 'devices-toolbar-main grid gap-2 md:grid-cols-2 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.75fr)_minmax(0,1.15fr)_minmax(0,1fr)]'
+            : 'devices-toolbar-main grid gap-2 md:grid-cols-2 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)_minmax(0,0.75fr)_minmax(0,1.15fr)_minmax(0,1fr)]';
         $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
     @endphp
 
@@ -141,7 +141,7 @@
                             <x-icon name="search" size="h-4 w-4" />
                             <span>Meklēšana</span>
                         </h3>
-                        <div class="devices-filter-grid">
+                        <div class="{{ $toolbarGridClass }}">
                             <div class="devices-search-group">
                                 <label class="devices-search-label">
                                     <span>Meklēt pēc koda</span>

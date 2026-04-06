@@ -111,7 +111,7 @@
                                 </button>
                             </div>
                             <label class="devices-text-search">
-                                <span>Meklēt</span>
+                                <span>Filtrēt pēc teksta</span>
                                 <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, pieteicējs vai iemesls">
                             </label>
                             <label class="block">
@@ -196,7 +196,7 @@
 
             <x-active-filters
                 :items="[
-                    ['label' => 'Meklēt', 'value' => $filters['q']],
+                    ['label' => 'Filtrēt tekstu', 'value' => $filters['q']],
                     ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
                     ['label' => 'Pieteicējs', 'value' => $canReview ? $selectedRequesterLabel : null],
                     ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],

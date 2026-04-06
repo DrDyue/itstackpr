@@ -138,6 +138,12 @@
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             @forelse ($buildings as $building)
+                                @php
+                                    $canDelete = (int) $building->rooms_count === 0 && (int) $building->devices_count === 0;
+                                    $deleteMessage = ((int) $building->rooms_count > 0 || (int) $building->devices_count > 0)
+                                        ? 'Ēku nevar dzēst, kamēr tai ir piesaistītas telpas vai ierīces.'
+                                        : '';
+                                @endphp
                                 <tr
                                     class="app-table-row"
                                     data-table-row-id="building-{{ $building->id }}"
@@ -154,20 +160,13 @@
                                     <td class="px-4 py-3">{{ $building->city ?: '-' }}</td>
                                     <td class="px-4 py-3 text-slate-600">{{ $building->notes ?: '-' }}</td>
                                     <td class="px-4 py-3">
-                                        <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">
-                                            <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
-                                                <span>Darbības</span>
-                                                <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                                                </svg>
-                                            </button>
+                                        <div class="flex flex-wrap gap-2">
+                                            <a href="{{ route('buildings.edit', $building) }}" class="btn-edit">
+                                                <x-icon name="edit" size="h-4 w-4" />
+                                                <span>Rediģēt</span>
+                                            </a>
 
-                                            <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
-                                                <a href="{{ route('buildings.edit', $building) }}" class="table-action-item table-action-item-amber" @click="open = false">
-                                                    <x-icon name="edit" size="h-4 w-4" />
-                                                    <span>Rediģēt</span>
-                                                </a>
-
+                                            @if ($canDelete)
                                                 <form
                                                     method="POST"
                                                     action="{{ route('buildings.destroy', $building) }}"
@@ -179,12 +178,23 @@
                                                 >
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="table-action-button table-action-button-rose">
+                                                    <button type="submit" class="btn-danger">
                                                         <x-icon name="trash" size="h-4 w-4" />
                                                         <span>Dzēst</span>
                                                     </button>
                                                 </form>
-                                            </div>
+                                            @else
+                                                <button
+                                                    type="button"
+                                                    class="btn-disabled"
+                                                    data-app-toast-title="Dzēšana nav pieejama"
+                                                    data-app-toast-message="{{ $deleteMessage }}"
+                                                    data-app-toast-tone="info"
+                                                >
+                                                    <x-icon name="trash" size="h-4 w-4" />
+                                                    <span>Dzēst</span>
+                                                </button>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>

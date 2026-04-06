@@ -145,6 +145,8 @@
                     @forelse ($rooms as $room)
                         @php
                             $roomDevicesUrl = route('devices.index', ['room_id' => $room->id, 'room_query' => trim(implode(' ', array_filter([$room->room_name, $room->room_number])))]);
+                            $canDelete = (int) $room->devices_count === 0;
+                            $deleteMessage = 'Telpu nevar dzēst, jo tai joprojām ir piesaistītas ierīces. Vispirms pārvieto vai atsien visas ierīces no šīs telpas.';
                         @endphp
                         <tr class="app-table-row border-t border-slate-100" data-table-row-id="room-{{ $room->id }}" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim(implode(' ', array_filter([$room->room_number, $room->room_name])))) }}">
                             <td class="px-4 py-3">{{ $room->building?->building_name }}</td>
@@ -171,19 +173,32 @@
                             <td class="px-4 py-3">
                                 <div class="flex flex-wrap gap-2">
 <a href="{{ route('rooms.edit', $room) }}" class="btn-edit"><x-icon name="edit" size="h-4 w-4" /><span>Rediģēt</span></a>
-                                    <form
-                                        method="POST"
-                                        action="{{ route('rooms.destroy', $room) }}"
-                                        data-app-confirm-title="Dzēst telpu?"
-                                        data-app-confirm-message="Vai tiešām dzēst šo telpu?"
-                                        data-app-confirm-accept="Jā, dzēst"
-                                        data-app-confirm-cancel="Nē"
-                                        data-app-confirm-tone="danger"
-                                    >
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn-danger"><x-icon name="trash" size="h-4 w-4" /><span>Dzēst</span></button>
-                                    </form>
+                                    @if ($canDelete)
+                                        <form
+                                            method="POST"
+                                            action="{{ route('rooms.destroy', $room) }}"
+                                            data-app-confirm-title="Dzēst telpu?"
+                                            data-app-confirm-message="Vai tiešām dzēst šo telpu?"
+                                            data-app-confirm-accept="Jā, dzēst"
+                                            data-app-confirm-cancel="Nē"
+                                            data-app-confirm-tone="danger"
+                                        >
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn-danger"><x-icon name="trash" size="h-4 w-4" /><span>Dzēst</span></button>
+                                        </form>
+                                    @else
+                                        <button
+                                            type="button"
+                                            class="btn-disabled"
+                                            data-app-toast-title="Dzēšana nav pieejama"
+                                            data-app-toast-message="{{ $deleteMessage }}"
+                                            data-app-toast-tone="info"
+                                        >
+                                            <x-icon name="trash" size="h-4 w-4" />
+                                            <span>Dzēst</span>
+                                        </button>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

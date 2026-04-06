@@ -118,7 +118,7 @@
                                 </button>
                             </div>
                             <label class="devices-text-search">
-                                <span>Meklēt tabulā</span>
+                                <span>Filtrēt pēc teksta</span>
                                 <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, pieteicējs, saņēmējs vai iemesls">
                             </label>
                         </div>
@@ -273,7 +273,7 @@
 
             <x-active-filters
                 :items="[
-                    ['label' => 'Meklēt', 'value' => $filters['q']],
+                    ['label' => 'Filtrēt tekstu', 'value' => $filters['q']],
                     ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
                     ['label' => 'Pieteicējs', 'value' => $isAdmin ? $selectedRequesterLabel : ($isIncomingFilter ? null : $selectedRequesterLabel)],
                     ['label' => 'Saņēmējs', 'value' => $isAdmin ? $selectedRecipientLabel : ($isIncomingFilter ? null : $selectedRecipientLabel)],
@@ -373,6 +373,9 @@
                                         ? route('devices.index', array_filter([
                                             'code' => $device->code,
                                             'q' => $device->code ? null : $device->name,
+                                            'highlight' => $device->code ?: $device->name,
+                                            'highlight_mode' => $device->code ? 'exact' : 'contains',
+                                            'highlight_id' => 'device-' . $device->id,
                                         ]))
                                         : null;
                                     $deviceMeta = collect([$device?->manufacturer, $device?->model])->filter()->implode(' | ');
@@ -472,7 +475,7 @@
                                                     </div>
 
                                                     @if ($isAdmin && $deviceFilterUrl)
-                                                        <a href="{{ $deviceFilterUrl }}" class="table-action-item" @click="open = false">
+                                                        <a href="{{ $deviceFilterUrl }}" class="table-action-item table-action-item-sky text-sky-700" @click="open = false">
                                                             <x-icon name="view" size="h-4 w-4" />
                                                             <span>Skatīt saistīto ierīci</span>
                                                         </a>

@@ -71,7 +71,7 @@
             <form
                 method="GET"
                 action="{{ route('audit-log.index') }}"
-                class="surface-toolbar grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]"
+                class="surface-toolbar audit-toolbar-surface"
                 data-async-table-form
                 data-async-root="#audit-log-index-root"
                 data-search-endpoint="{{ route('audit-log.find-entry') }}"
@@ -79,74 +79,75 @@
                 <input type="hidden" name="sort" value="{{ $filters['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $filters['direction'] }}" data-sort-hidden="direction">
 
-                <div class="xl:col-span-full">
-                    <div class="repair-toolbar-search-grid">
-                        <label class="block">
-                            <span class="crud-label">Meklēt ierakstu</span>
-                            <div class="flex items-center gap-2">
-                                <input
-                                    type="text"
-                                    name="lookup"
-                                    value="{{ $filters['lookup'] }}"
-                                    class="crud-control"
-                                    placeholder="Apraksts, darbība, lietotājs vai ID"
-                                    data-async-manual="true"
-                                    data-table-manual-search="true"
-                                >
-                                <button type="submit" class="btn-search shrink-0" data-table-search-submit="true">
-                                    <x-icon name="search" size="h-4 w-4" />
-                                    <span>Meklēt</span>
-                                </button>
-                            </div>
-                        </label>
+                <div class="audit-toolbar-main">
+                    <label class="block audit-toolbar-search-field">
+                        <span class="crud-label">Meklēt ierakstu</span>
+                        <div class="flex items-center gap-2">
+                            <input
+                                type="text"
+                                name="lookup"
+                                value="{{ $filters['lookup'] }}"
+                                class="crud-control"
+                                placeholder="Apraksts, darbība, lietotājs vai ID"
+                                data-async-manual="true"
+                                data-table-manual-search="true"
+                            >
+                            <button type="submit" class="btn-search shrink-0" data-table-search-submit="true">
+                                <x-icon name="search" size="h-4 w-4" />
+                                <span>Meklēt</span>
+                            </button>
+                        </div>
+                    </label>
+
+                    <div>
+                        <span class="crud-label">Darbība</span>
+                        <x-searchable-select
+                            name="action"
+                            query-name="action_query"
+                            :options="$actionOptions"
+                            :selected="$filters['action']"
+                            :query="$selectedActionLabel"
+                            identifier="audit-action"
+                            placeholder="Visas darbības"
+                        />
+                    </div>
+
+                    <div>
+                        <span class="crud-label">Objekts</span>
+                        <x-searchable-select
+                            name="entity_type"
+                            query-name="entity_query"
+                            :options="$entityOptions"
+                            :selected="$filters['entity_type']"
+                            :query="$selectedEntityLabel"
+                            identifier="audit-entity"
+                            placeholder="Visi objekti"
+                        />
+                    </div>
+
+                    <div>
+                        <span class="crud-label">Lietotājs</span>
+                        <x-searchable-select
+                            name="user_id"
+                            query-name="user_query"
+                            :options="$actorOptions"
+                            :selected="$filters['user_id']"
+                            :query="$selectedUserLabel"
+                            identifier="audit-user"
+                            placeholder="Visi lietotāji"
+                        />
+                    </div>
+
+                    <div class="audit-toolbar-date-field">
+                        <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
+                    </div>
+
+                    <div class="audit-toolbar-date-field">
+                        <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
                     </div>
                 </div>
 
-                <div>
-                    <span class="crud-label">Darbība</span>
-                    <x-searchable-select
-                        name="action"
-                        query-name="action_query"
-                        :options="$actionOptions"
-                        :selected="$filters['action']"
-                        :query="$selectedActionLabel"
-                        identifier="audit-action"
-                        placeholder="Visas darbības"
-                    />
-                </div>
-
-                <div>
-                    <span class="crud-label">Objekts</span>
-                    <x-searchable-select
-                        name="entity_type"
-                        query-name="entity_query"
-                        :options="$entityOptions"
-                        :selected="$filters['entity_type']"
-                        :query="$selectedEntityLabel"
-                        identifier="audit-entity"
-                        placeholder="Visi objekti"
-                    />
-                </div>
-
-                <div>
-                    <span class="crud-label">Lietotājs</span>
-                    <x-searchable-select
-                        name="user_id"
-                        query-name="user_query"
-                        :options="$actorOptions"
-                        :selected="$filters['user_id']"
-                        :query="$selectedUserLabel"
-                        identifier="audit-user"
-                        placeholder="Visi lietotāji"
-                    />
-                </div>
-
-                <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
-                    <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
-                    <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
-                </div>
-
-                <div class="xl:col-span-full">
+                <div class="audit-toolbar-footer">
                     <div class="filter-toolbar-footer">
                         <div class="quick-filter-groups">
                             <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($selectedSeverities), minimum: 0 })">

@@ -70,6 +70,9 @@
                             ? route('devices.index', array_filter([
                                 'code' => $device->code,
                                 'q' => $device->code ? null : $device->name,
+                                'highlight' => $device->code ?: $device->name,
+                                'highlight_mode' => $device->code ? 'exact' : 'contains',
+                                'highlight_id' => 'device-' . $device->id,
                             ]))
                             : null;
                         $deviceMeta = collect([$device?->manufacturer, $device?->model])->filter()->implode(' | ');
@@ -151,7 +154,7 @@
                                     </div>
 
                                     @if ($deviceFilterUrl)
-                                        <a href="{{ $deviceFilterUrl }}" class="table-action-item" @click="open = false">
+                                        <a href="{{ $deviceFilterUrl }}" class="table-action-item table-action-item-sky text-sky-700" @click="open = false">
                                             <x-icon name="view" size="h-4 w-4" />
                                             <span>Skatīt saistīto ierīci</span>
                                         </a>

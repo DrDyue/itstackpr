@@ -639,7 +639,7 @@ const shouldRunManualSearch = (form, submitter) => {
     return document.activeElement === searchInput;
 };
 
-const restoreHighlightedSearchFromUrl = () => {
+const restoreHighlightedSearchFromUrl = async () => {
     const currentUrl = new URL(window.location.href);
     const term = currentUrl.searchParams.get('highlight');
     const mode = currentUrl.searchParams.get('highlight_mode') || 'contains';
@@ -649,7 +649,61 @@ const restoreHighlightedSearchFromUrl = () => {
         return;
     }
 
-    const match = findTableRowById(document, highlightId) || findMatchingTableRow(document, term, mode);
+    let match = findTableRowById(document, highlightId) || findMatchingTableRow(document, term, mode);
+    if (!match) {
+        const form = term ? document.querySelector('[data-async-table-form][data-search-endpoint]') : null;
+
+        if (form?.dataset?.searchEndpoint) {
+            try {
+                const endpointUrl = new URL(form.dataset.searchEndpoint, window.location.origin);
+                const formData = new FormData(form);
+
+                for (const [key, value] of formData.entries()) {
+                    if (value === '') {
+                        continue;
+                    }
+
+                    endpointUrl.searchParams.append(key, value);
+                }
+
+                const response = await fetch(endpointUrl.toString(), {
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+
+                    if (result?.found) {
+                        const targetUrl = buildSearchNavigationUrl(form, result.page, term, mode, result.highlight_id ?? highlightId ?? '');
+                        const targetUrlString = targetUrl.toString();
+
+                        if (targetUrlString !== window.location.href) {
+                            const swapped = await submitAsyncTableForm(form, {
+                                url: targetUrl,
+                                resetPage: false,
+                            });
+
+                            if (swapped) {
+                                await restoreHighlightedSearchFromUrl();
+                                return;
+                            }
+
+                            window.location.assign(targetUrlString);
+                            return;
+                        }
+
+                        match = findTableRowById(document, result.highlight_id ?? highlightId) || findMatchingTableRow(document, term, mode);
+                    }
+                }
+            } catch (error) {
+                // Ja automātiskā atrašana neizdodas, lietotājs paliek pašreizējā skatā bez papildu kļūdas paziņojuma.
+            }
+        }
+    }
+
     if (!match) {
         return;
     }
@@ -731,6 +785,19 @@ const initializeAsyncTableFilters = () => {
     });
 
     document.addEventListener('click', (event) => {
+        const toastTrigger = event.target.closest('[data-app-toast-message]');
+        if (toastTrigger) {
+            event.preventDefault();
+
+            window.dispatchAppToast({
+                title: toastTrigger.dataset.appToastTitle || 'Darbība nav pieejama',
+                message: toastTrigger.dataset.appToastMessage || '',
+                tone: toastTrigger.dataset.appToastTone || 'info',
+            });
+
+            return;
+        }
+
         const sortTrigger = event.target.closest('[data-sort-trigger]');
         if (sortTrigger) {
             const root = findAsyncTableRoot(sortTrigger);

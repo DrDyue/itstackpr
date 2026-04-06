@@ -126,44 +126,41 @@
                                         </a>
                                     </td>
                                     <td class="px-4 py-4">
-                                        <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">
-                                            <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
-                                                <span>Darbības</span>
-                                                <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                                                </svg>
-                                            </button>
+                                        <div class="flex flex-wrap justify-end gap-2">
+                                            <a href="{{ route('device-types.edit', $type) }}" class="btn-edit">
+                                                <x-icon name="edit" size="h-4 w-4" />
+                                                <span>Rediģēt</span>
+                                            </a>
 
-                                            <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
-<a href="{{ route('device-types.edit', $type) }}" class="table-action-item table-action-item-amber" @click="open = false">
-                                                    <x-icon name="edit" size="h-4 w-4" />
-                                                    <span>Rediģēt</span>
-                                                </a>
-
-                                                @if ($canDelete)
-                                                    <form
-                                                        method="POST"
-                                                        action="{{ route('device-types.destroy', $type) }}"
-                                                        data-app-confirm-title="Dzēst ierīces tipu?"
-                                                        data-app-confirm-message="Vai tiešām dzēst šo ierīces tipu?"
-                                                        data-app-confirm-accept="Jā, dzēst"
-                                                        data-app-confirm-cancel="Nē"
-                                                        data-app-confirm-tone="danger"
-                                                    >
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="table-action-button table-action-button-rose">
-                                                            <x-icon name="trash" size="h-4 w-4" />
-                                                            <span>Dzēst</span>
-                                                        </button>
-                                                    </form>
-                                                @else
-                                                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">
-                                                        <div class="font-semibold text-slate-700">Dzēšana nav pieejama</div>
-                                                        <div class="mt-1">{{ $deleteTooltip }}</div>
-                                                    </div>
-                                                @endif
-                                            </div>
+                                            @if ($canDelete)
+                                                <form
+                                                    method="POST"
+                                                    action="{{ route('device-types.destroy', $type) }}"
+                                                    data-app-confirm-title="Dzēst ierīces tipu?"
+                                                    data-app-confirm-message="Vai tiešām dzēst šo ierīces tipu?"
+                                                    data-app-confirm-accept="Jā, dzēst"
+                                                    data-app-confirm-cancel="Nē"
+                                                    data-app-confirm-tone="danger"
+                                                >
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn-danger">
+                                                        <x-icon name="trash" size="h-4 w-4" />
+                                                        <span>Dzēst</span>
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <button
+                                                    type="button"
+                                                    class="btn-disabled"
+                                                    data-app-toast-title="Dzēšana nav pieejama"
+                                                    data-app-toast-message="{{ $deleteTooltip }}"
+                                                    data-app-toast-tone="info"
+                                                >
+                                                    <x-icon name="trash" size="h-4 w-4" />
+                                                    <span>Dzēst</span>
+                                                </button>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
