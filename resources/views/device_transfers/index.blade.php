@@ -97,9 +97,9 @@
                     <div class="devices-filter-section">
                         <h3 class="devices-filter-title">
                             <x-icon name="search" size="h-4 w-4" />
-                            <span>Meklēšana</span>
+                            <span>Meklēšana un filtri</span>
                         </h3>
-                        <div class="transfer-search-grid">
+                        <div class="{{ $isAdmin ? 'transfer-toolbar-main transfer-toolbar-main-admin' : 'transfer-toolbar-main' }}">
                             <div class="devices-search-group">
                                 <label class="devices-search-label">
                                     <span>Meklēt pēc koda</span>
@@ -117,21 +117,12 @@
                                     <span>Meklēt</span>
                                 </button>
                             </div>
+
                             <label class="devices-text-search">
                                 <span>Filtrēt pēc teksta</span>
                                 <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, pieteicējs, saņēmējs vai iemesls">
                             </label>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="devices-filter-surface devices-filter-surface-elevated">
-                    <div class="devices-filter-section">
-                        <h3 class="devices-filter-title">
-                            <x-icon name="filter" size="h-4 w-4" />
-                            <span>Filtri</span>
-                        </h3>
-                        <div class="{{ $isAdmin ? 'transfer-filters-grid transfer-filters-grid-admin' : 'transfer-filters-grid' }}">
                             <label class="block">
                                 <span class="crud-label">Ierīce</span>
                                 <x-searchable-select
@@ -207,11 +198,8 @@
                             <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
                             <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
                         </div>
-                    </div>
-                </div>
 
-                <div class="devices-filter-surface devices-filter-surface-elevated">
-                <div class="filter-toolbar-footer">
+                        <div class="filter-toolbar-footer">
                     <div class="quick-filter-groups">
                         @if (! $isAdmin)
                             <div class="quick-filter-group">
@@ -267,7 +255,8 @@
                             <span>Notīrīt filtrus</span>
                         </a>
                     </div>
-                </div>
+                        </div>
+                    </div>
                 </div>
             </form>
 
@@ -294,7 +283,7 @@
             @endif
 
             @if (($incomingPendingCount ?? 0) > 0 && ! $isAdmin)
-                <div class="rounded-[1.5rem] border border-amber-200 bg-amber-50/90 px-5 py-4 shadow-sm">
+                <div class="mt-4 rounded-[1.5rem] border border-amber-200 bg-amber-50/90 px-5 py-4 shadow-sm">
                     <div class="flex flex-wrap items-center gap-3">
                         <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-sm">
                             <x-icon name="exclamation-triangle" size="h-5 w-5" />
@@ -307,7 +296,7 @@
                 </div>
             @endif
 
-            <div class="device-table-shell">
+            <div class="mt-4 device-table-shell">
                 <div class="device-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
                     <table class="min-w-full text-sm">
                         <thead class="bg-slate-50 text-left text-slate-500">

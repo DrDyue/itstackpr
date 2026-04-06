@@ -98,6 +98,11 @@ const dismissAppToast = (toast) => {
         return;
     }
 
+    if (toast.dataset.dismissTimer) {
+        window.clearTimeout(Number(toast.dataset.dismissTimer));
+        delete toast.dataset.dismissTimer;
+    }
+
     toast.dataset.closing = '1';
     toast.style.opacity = '0';
     toast.style.transform = 'translateY(16px) scale(0.97)';
@@ -115,8 +120,23 @@ window.dispatchAppToast = ({ message = '', tone = 'info', title = '' } = {}) => 
     const root = ensureAppToastRoot();
     const toast = document.createElement('div');
     const normalizedTone = tone === 'success' ? 'success' : 'info';
+    const toastKey = `${normalizedTone}::${title || ''}::${message}`;
+    const existingToast = root.querySelector(`[data-toast-key="${CSS.escape(toastKey)}"]`);
+
+    if (existingToast && existingToast.dataset.closing !== '1') {
+        if (existingToast.dataset.dismissTimer) {
+            window.clearTimeout(Number(existingToast.dataset.dismissTimer));
+        }
+
+        existingToast.dataset.dismissTimer = String(window.setTimeout(() => dismissAppToast(existingToast), 3800));
+        existingToast.style.opacity = '1';
+        existingToast.style.transform = 'translateY(0) scale(1)';
+        root.prepend(existingToast);
+        return;
+    }
 
     toast.className = `flash-toast flash-toast-${normalizedTone} pointer-events-auto`;
+    toast.dataset.toastKey = toastKey;
     toast.style.opacity = '0';
     toast.style.transform = 'translateY(16px) scale(0.96)';
     toast.style.transition = 'opacity 260ms ease, transform 260ms ease';
@@ -141,7 +161,7 @@ window.dispatchAppToast = ({ message = '', tone = 'info', title = '' } = {}) => 
         toast.style.transform = 'translateY(0) scale(1)';
     });
 
-    window.setTimeout(() => dismissAppToast(toast), 3800);
+    toast.dataset.dismissTimer = String(window.setTimeout(() => dismissAppToast(toast), 3800));
 };
 
 const ensureAppConfirmRoot = () => {

@@ -282,7 +282,15 @@
                                                 >
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="table-action-button table-action-button-rose" @disabled(auth()->id() === $managedUser->id)>
+                                                    <button
+                                                        type="{{ auth()->id() === $managedUser->id ? 'button' : 'submit' }}"
+                                                        class="{{ auth()->id() === $managedUser->id ? 'btn-disabled' : 'table-action-button table-action-button-rose' }}"
+                                                        @if (auth()->id() === $managedUser->id)
+                                                            data-app-toast-title="Dzēšana nav pieejama"
+                                                            data-app-toast-message="Paša lietotāja kontu no šīs tabulas dzēst nevar. Izmanto citu administratora kontu, ja šo profilu tiešām vajag noņemt."
+                                                            data-app-toast-tone="info"
+                                                        @endif
+                                                    >
                                                         <x-icon name="trash" size="h-4 w-4" />
                                                         <span>Dzēst</span>
                                                     </button>

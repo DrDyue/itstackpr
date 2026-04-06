@@ -2734,6 +2734,14 @@ tbody td {
     @apply 2xl:grid-cols-5;
 }
 
+.transfer-toolbar-main {
+    @apply grid grid-cols-1 gap-2 md:grid-cols-2 2xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.76fr)_minmax(0,0.76fr)];
+}
+
+.transfer-toolbar-main-admin {
+    @apply xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.76fr)_minmax(0,0.76fr)];
+}
+
 .devices-search-group {
     @apply grid grid-cols-[minmax(0,1fr)_auto] gap-2 md:items-end;
 }
@@ -2762,6 +2770,16 @@ tbody td {
 .transfer-filters-grid .crud-control,
 .transfer-filters-grid .searchable-select-trigger {
     min-height: 2.75rem;
+}
+
+.transfer-toolbar-main .crud-control,
+.transfer-toolbar-main .searchable-select-trigger,
+.transfer-toolbar-main .localized-date-trigger {
+    min-height: 2.75rem;
+}
+
+.transfer-toolbar-main .devices-search-group {
+    gap: 0.625rem;
 }
 
 .devices-filter-divider {

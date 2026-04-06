@@ -60,9 +60,7 @@
             'description' => 'Filtrs pēc stāva',
             'search' => $floor . ' ' . $floor . '. stāvs',
         ])->values();
-        $toolbarGridClass = $canManageDevices
-            ? 'devices-toolbar-main grid gap-2 md:grid-cols-2 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.75fr)_minmax(0,1.15fr)_minmax(0,1fr)]'
-            : 'devices-toolbar-main grid gap-2 md:grid-cols-2 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)_minmax(0,0.75fr)_minmax(0,1.15fr)_minmax(0,1fr)]';
+        $toolbarGridClass = 'devices-filter-grid';
         $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
     @endphp
 
