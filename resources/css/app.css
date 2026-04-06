@@ -4065,7 +4065,7 @@ tbody td {
 }
 
 .table-action-summary {
-    @apply inline-flex min-h-[2.5rem] min-w-[8.5rem] cursor-pointer list-none items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition duration-200 hover:-translate-y-[1px] hover:border-sky-200 hover:from-sky-50/90 hover:to-white hover:text-sky-800 hover:shadow-md;
+    @apply inline-flex min-h-[2.5rem] min-w-[8.5rem] cursor-pointer list-none items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900;
 }
 
 .table-action-summary::-webkit-details-marker {
@@ -4073,15 +4073,15 @@ tbody td {
 }
 
 .table-action-summary svg {
-    @apply rounded-full bg-slate-100 p-1 text-slate-500 transition duration-200;
+    @apply text-slate-400 transition duration-200;
 }
 
 .table-action-summary:hover svg {
-    @apply bg-sky-100 text-sky-700;
+    @apply text-slate-600;
 }
 
 .table-action-list {
-    @apply absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white/95 p-3 shadow-2xl ring-1 ring-slate-200/60 backdrop-blur-xl;
+    @apply absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-xl ring-1 ring-slate-200/70;
     transform-origin: top right;
 }
 
@@ -4090,15 +4090,15 @@ tbody td {
 }
 
 .table-action-section {
-    @apply space-y-2.5;
+    @apply space-y-2;
 }
 
 .table-action-section-title {
-    @apply flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400;
+    @apply flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400;
 }
 
 .table-action-divider {
-    @apply my-3 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent;
+    @apply my-2.5 h-px bg-slate-200/80;
 }
 
 .table-action-grid {
@@ -4106,12 +4106,12 @@ tbody td {
 }
 
 .table-action-item {
-    @apply flex min-h-[3rem] w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white/90 px-3.5 py-2.5 text-left text-sm font-semibold text-slate-700 shadow-sm transition duration-200 hover:-translate-y-[1px] hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 hover:shadow;
+    @apply flex min-h-[2.85rem] w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm font-medium text-slate-700 shadow-sm transition duration-150 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900;
 }
 
 .table-action-item > svg,
 .table-action-button > svg {
-    @apply h-9 w-9 shrink-0 rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-500 shadow-sm;
+    @apply h-4 w-4 shrink-0 text-slate-400;
 }
 
 .table-action-item > span,
@@ -4120,76 +4120,76 @@ tbody td {
 }
 
 .table-action-item-primary {
-    @apply border-slate-900 bg-slate-900 text-white shadow-md hover:border-slate-800 hover:bg-slate-800 hover:text-white;
+    @apply border-slate-200 bg-slate-900 font-semibold text-white hover:border-slate-900 hover:bg-slate-800 hover:text-white;
 }
 
 .table-action-item-primary > svg {
-    @apply border-white/10 bg-white/10 text-white;
+    @apply text-white/90;
 }
 
 .table-action-item-amber {
-    @apply border-amber-200 bg-amber-50/95 text-amber-700 hover:border-amber-300 hover:bg-amber-100;
+    @apply text-amber-700 hover:bg-amber-50;
 }
 
 .table-action-item-amber > svg,
 .table-action-button-amber > svg {
-    @apply border-amber-200 bg-amber-100 text-amber-700;
+    @apply text-amber-600;
 }
 
 .table-action-item-sky {
-    @apply border-sky-200 bg-sky-50/95 font-semibold text-sky-700 hover:border-sky-300 hover:bg-sky-100;
+    @apply text-sky-700 hover:bg-sky-50;
 }
 
 .table-action-item-sky > svg,
 .table-action-button-sky > svg {
-    @apply border-sky-200 bg-sky-100 text-sky-700;
+    @apply text-sky-600;
 }
 
 .table-action-item-violet {
-    @apply border-violet-200 bg-violet-50/95 font-semibold text-violet-700 hover:border-violet-300 hover:bg-violet-100;
+    @apply text-violet-700 hover:bg-violet-50;
 }
 
 .table-action-item-violet > svg {
-    @apply border-violet-200 bg-violet-100 text-violet-700;
+    @apply text-violet-600;
 }
 
 .table-action-item-rose {
-    @apply border-rose-200 bg-rose-50/95 font-semibold text-rose-700 hover:border-rose-300 hover:bg-rose-100;
+    @apply text-rose-700 hover:bg-rose-50;
 }
 
 .table-action-item-rose > svg,
 .table-action-button-rose > svg {
-    @apply border-rose-200 bg-rose-100 text-rose-700;
+    @apply text-rose-600;
 }
 
 .table-action-item-emerald {
-    @apply border-emerald-200 bg-emerald-50/95 font-semibold text-emerald-700 hover:border-emerald-300 hover:bg-emerald-100;
+    @apply text-emerald-700 hover:bg-emerald-50;
 }
 
 .table-action-item-emerald > svg,
 .table-action-button-emerald > svg {
-    @apply border-emerald-200 bg-emerald-100 text-emerald-700;
+    @apply text-emerald-600;
 }
 
 .table-action-button {
-    @apply flex min-h-[3rem] w-full items-center gap-3 rounded-2xl border bg-white/90 px-3.5 py-2.5 text-left text-sm font-semibold shadow-sm transition duration-200 hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-50;
+    @apply flex min-h-[2.85rem] w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm font-medium text-slate-700 shadow-sm transition duration-150 hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50;
 }
 
 .table-action-button-amber {
-    @apply border-amber-200 bg-amber-50/95 text-amber-700 hover:border-amber-300 hover:bg-amber-100;
+    @apply text-amber-700 hover:bg-amber-50;
 }
 
 .table-action-button-rose {
-    @apply border-rose-200 bg-rose-50/95 text-rose-700 hover:border-rose-300 hover:bg-rose-100;
+    @apply text-rose-700 hover:bg-rose-50;
 }
 
 .table-action-inline-panel {
-    @apply absolute right-0 z-50 mt-2 w-[31rem] overflow-hidden rounded-[1.6rem] border border-slate-200 bg-white/95 p-0 shadow-2xl ring-1 ring-slate-200/60 backdrop-blur-xl;
+    @apply absolute right-0 z-50 mt-2 w-[31rem] overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 shadow-xl ring-1 ring-slate-200/70;
     transform-origin: top right;
 }
 
 .table-action-inline-head {
-    @apply flex items-start justify-between gap-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white px-4 py-4;
+    @apply flex items-start justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-4;
 }
 
 .table-action-inline-title {
@@ -4201,11 +4201,21 @@ tbody td {
 }
 
 .table-action-inline-close {
-    @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-700;
+    @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-700;
 }
 
 .table-action-inline-actions {
-    @apply flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50/80 px-4 py-3;
+    @apply flex items-stretch justify-end gap-2 border-t border-slate-200 bg-slate-50/80 px-4 py-3;
+}
+
+.table-action-inline-actions > * {
+    @apply flex-1;
+}
+
+.table-action-inline-actions button,
+.table-action-inline-actions .btn-approve,
+.table-action-inline-actions .btn-reject {
+    @apply min-h-[2.85rem] w-full rounded-xl;
 }
 
 .table-action-inline-panel > .table-action-item,
@@ -5319,40 +5329,38 @@ html[data-theme='dark'] .app-dropdown-content button {
 }
 
 html[data-theme='dark'] .table-action-summary {
-    background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9)) !important;
-    border-color: rgba(71, 85, 105, 0.9) !important;
+    background: rgba(15, 23, 42, 0.96) !important;
+    border-color: rgba(71, 85, 105, 0.88) !important;
     color: #e2e8f0 !important;
-    box-shadow: 0 12px 24px rgba(2, 6, 23, 0.26) !important;
+    box-shadow: 0 10px 24px rgba(2, 6, 23, 0.18) !important;
 }
 
 html[data-theme='dark'] .table-action-summary svg {
-    background-color: rgba(30, 41, 59, 0.95) !important;
-    border-color: rgba(71, 85, 105, 0.85) !important;
     color: #94a3b8 !important;
 }
 
 html[data-theme='dark'] .table-action-list,
 html[data-theme='dark'] .table-action-inline-panel {
-    background: rgba(15, 23, 42, 0.96) !important;
-    border-color: rgba(71, 85, 105, 0.9) !important;
-    box-shadow: 0 24px 48px rgba(2, 6, 23, 0.45) !important;
+    background: rgba(15, 23, 42, 0.97) !important;
+    border-color: rgba(71, 85, 105, 0.88) !important;
+    box-shadow: 0 24px 48px rgba(2, 6, 23, 0.34) !important;
 }
 
 html[data-theme='dark'] .table-action-inline-head {
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.9)) !important;
+    background: rgba(15, 23, 42, 0.94) !important;
     border-bottom-color: rgba(71, 85, 105, 0.72) !important;
 }
 
 html[data-theme='dark'] .table-action-item,
 html[data-theme='dark'] .table-action-button {
-    background-color: rgba(15, 23, 42, 0.9) !important;
+    background-color: rgba(15, 23, 42, 0.92) !important;
     border-color: rgba(71, 85, 105, 0.82) !important;
 }
 
 html[data-theme='dark'] .table-action-item > svg,
 html[data-theme='dark'] .table-action-button > svg {
-    background-color: rgba(30, 41, 59, 0.92) !important;
-    border-color: rgba(71, 85, 105, 0.82) !important;
+    background-color: transparent !important;
+    border-color: transparent !important;
     box-shadow: none !important;
 }
 
@@ -5365,7 +5373,7 @@ html[data-theme='dark'] .table-action-item:hover,
 html[data-theme='dark'] .table-action-button:hover,
 html[data-theme='dark'] .app-dropdown-content a:hover,
 html[data-theme='dark'] .app-dropdown-content button:hover {
-    background-color: #1e293b !important;
+    background-color: rgba(30, 41, 59, 0.92) !important;
     color: #f8fafc !important;
 }
 
