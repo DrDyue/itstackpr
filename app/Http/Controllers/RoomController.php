@@ -32,7 +32,11 @@ class RoomController extends Controller
         ];
 
         $rooms = Room::query()
-            ->with(['building', 'user'])
+            ->select(['id', 'building_id', 'floor_number', 'room_number', 'room_name', 'department', 'user_id', 'notes'])
+            ->with([
+                'building:id,building_name',
+                'user:id,full_name',
+            ])
             ->withCount('devices')
             ->when($filters['building_id'] !== '' && ctype_digit($filters['building_id']), fn (Builder $query) => $query->where('building_id', (int) $filters['building_id']))
             ->when($filters['floor'] !== '' && is_numeric($filters['floor']), fn (Builder $query) => $query->where('floor_number', (int) $filters['floor']))
@@ -54,14 +58,21 @@ class RoomController extends Controller
                 'total' => Room::query()->count(),
             ],
             'filters' => $filters,
-            'buildings' => Building::orderBy('building_name')->get(),
+            'buildings' => Building::query()
+                ->select(['id', 'building_name', 'city', 'address'])
+                ->orderBy('building_name')
+                ->get(),
             'floors' => Room::query()
                 ->select('floor_number')
                 ->distinct()
                 ->orderBy('floor_number')
                 ->pluck('floor_number')
                 ->values(),
-            'responsibleUsers' => User::active()->orderBy('full_name')->get(),
+            'responsibleUsers' => User::query()
+                ->active()
+                ->select(['id', 'full_name', 'job_title', 'email'])
+                ->orderBy('full_name')
+                ->get(),
         ]);
     }
 
@@ -128,8 +139,15 @@ class RoomController extends Controller
         $this->requireManager();
 
         return view('rooms.create', [
-            'buildings' => Building::orderBy('building_name')->get(),
-            'users' => User::active()->orderBy('full_name')->get(),
+            'buildings' => Building::query()
+                ->select(['id', 'building_name'])
+                ->orderBy('building_name')
+                ->get(),
+            'users' => User::query()
+                ->active()
+                ->select(['id', 'full_name', 'job_title', 'email'])
+                ->orderBy('full_name')
+                ->get(),
         ]);
     }
 
@@ -155,8 +173,15 @@ class RoomController extends Controller
 
         return view('rooms.edit', [
             'room' => $room,
-            'buildings' => Building::orderBy('building_name')->get(),
-            'users' => User::active()->orderBy('full_name')->get(),
+            'buildings' => Building::query()
+                ->select(['id', 'building_name'])
+                ->orderBy('building_name')
+                ->get(),
+            'users' => User::query()
+                ->active()
+                ->select(['id', 'full_name', 'job_title', 'email'])
+                ->orderBy('full_name')
+                ->get(),
         ]);
     }
 

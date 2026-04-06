@@ -540,7 +540,16 @@
                                                 </div>
                                             </div>
                                         @else
-                                            <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">Nav darbību</span>
+                                            <button
+                                                type="button"
+                                                class="btn-disabled"
+                                                data-app-toast-title="Darbības nav pieejamas"
+                                                data-app-toast-message="Šim pārsūtīšanas pieteikumam pašlaik nav pieejamu darbību. Tas jau ir izskatīts vai arī tava lomai nav atļauts to mainīt."
+                                                data-app-toast-tone="info"
+                                            >
+                                                <x-icon name="information-circle" size="h-4 w-4" />
+                                                <span>Nav darbību</span>
+                                            </button>
                                         @endif
                                     </td>
                                 </tr>

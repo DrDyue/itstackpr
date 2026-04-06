@@ -19,12 +19,6 @@
     $typeOptions = $types->map(fn ($type) => [
         'value' => (string) $type->id,
         'label' => $type->type_name,
-        'description' => $type->category ?: ($type->description ?: 'Ierīces tips'),
-        'search' => implode(' ', array_filter([$type->type_name, $type->category, $type->description])),
-    ])->values();
-    $typeOptions = $types->map(fn ($type) => [
-        'value' => (string) $type->id,
-        'label' => $type->type_name,
         'description' => 'Ierīces tips',
         'search' => $type->type_name,
     ])->values();

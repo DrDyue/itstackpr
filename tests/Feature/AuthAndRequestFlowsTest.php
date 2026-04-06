@@ -167,6 +167,22 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertSeeInOrder([$secondUser->email, $firstUser->email]);
     }
 
+    public function test_admin_can_filter_users_by_inactive_status(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'users-status-admin@example.com');
+        $inactiveUser = $this->createUser(role: User::ROLE_USER, email: 'inactive-user@example.com');
+        $activeUser = $this->createUser(role: User::ROLE_USER, email: 'active-user@example.com');
+
+        $inactiveUser->update(['is_active' => false, 'full_name' => 'Neaktīvais darbinieks']);
+        $activeUser->update(['full_name' => 'Aktīvais darbinieks']);
+
+        $this->actingAs($admin)
+            ->get(route('users.index', ['is_active' => '0']))
+            ->assertOk()
+            ->assertSee('Neaktīvais darbinieks')
+            ->assertDontSee('Aktīvais darbinieks');
+    }
+
     public function test_admin_can_filter_devices_by_assigned_user_from_user_list_shortcut(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'user-device-shortcut-admin@example.com');
@@ -2803,6 +2819,28 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertDontSee('Sporta halle');
     }
 
+    public function test_buildings_index_can_sort_by_total_floors_descending(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'buildings-sort-admin@example.com');
+        $firstDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-BUILDING-SORT-ONE');
+        $secondDevice = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-BUILDING-SORT-TWO');
+
+        DB::table('buildings')->where('id', $firstDevice->building_id)->update([
+            'building_name' => 'Mazā ēka',
+            'total_floors' => 2,
+        ]);
+
+        DB::table('buildings')->where('id', $secondDevice->building_id)->update([
+            'building_name' => 'Lielā ēka',
+            'total_floors' => 7,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('buildings.index', ['sort' => 'total_floors', 'direction' => 'desc']))
+            ->assertOk()
+            ->assertSeeInOrder(['Lielā ēka', 'Mazā ēka']);
+    }
+
     public function test_buildings_find_by_name_can_match_address_on_second_page(): void
     {
         $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'buildings-search-admin@example.com');
@@ -2908,6 +2946,107 @@ class AuthAndRequestFlowsTest extends TestCase
         $this->assertStringContainsString('open-request-detail', $content);
         $this->assertStringContainsString('tertiary_label', $content);
         $this->assertStringContainsString('details_intro_label', $content);
+    }
+
+    public function test_audit_log_can_sort_by_action_ascending(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'audit-sort-admin@example.com');
+
+        AuditLog::create([
+            'timestamp' => now()->subMinute(),
+            'user_id' => $admin->id,
+            'action' => 'UPDATE',
+            'entity_type' => 'User',
+            'entity_id' => (string) $admin->id,
+            'description' => 'Update darbības tests.',
+            'severity' => 'info',
+        ]);
+
+        AuditLog::create([
+            'timestamp' => now(),
+            'user_id' => $admin->id,
+            'action' => 'CREATE',
+            'entity_type' => 'User',
+            'entity_id' => (string) $admin->id,
+            'description' => 'Create darbības tests.',
+            'severity' => 'info',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('audit-log.index', ['sort' => 'action', 'direction' => 'asc']))
+            ->assertOk()
+            ->assertSeeInOrder(['Create darbības tests.', 'Update darbības tests.']);
+    }
+
+    public function test_regular_user_cannot_open_admin_user_profile_page(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'users-show-admin@example.com');
+        $regularUser = $this->createUser(role: User::ROLE_USER, email: 'users-show-regular@example.com');
+
+        $this->actingAs($regularUser)
+            ->get(route('users.show', $admin))
+            ->assertForbidden();
+    }
+
+    public function test_regular_user_cannot_open_repair_create_page(): void
+    {
+        $regularUser = $this->createUser(role: User::ROLE_USER, email: 'repairs-create-regular@example.com');
+
+        $this->actingAs($regularUser)
+            ->get(route('repairs.create'))
+            ->assertForbidden();
+    }
+
+    public function test_admin_can_open_user_create_and_edit_pages(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'users-form-admin@example.com');
+        $managedUser = $this->createUser(role: User::ROLE_USER, email: 'users-form-managed@example.com');
+
+        $this->actingAs($admin)
+            ->get(route('users.create'))
+            ->assertOk()
+            ->assertSee('Saglabā jauno lietotāju');
+
+        $this->actingAs($admin)
+            ->get(route('users.edit', $managedUser))
+            ->assertOk()
+            ->assertSee('Saglabā lietotāja izmaiņas');
+    }
+
+    public function test_admin_can_open_polished_building_room_and_device_forms(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'polish-forms-admin@example.com');
+        $device = $this->createDevice($admin->id, Device::STATUS_ACTIVE, 'DEV-POLISH-FORMS');
+
+        $this->actingAs($admin)
+            ->get(route('buildings.create'))
+            ->assertOk()
+            ->assertSee('Saglabā ēkas ierakstu');
+
+        $this->actingAs($admin)
+            ->get(route('buildings.edit', $device->building_id))
+            ->assertOk()
+            ->assertSee('Atjaunini ēkas datus');
+
+        $this->actingAs($admin)
+            ->get(route('rooms.create'))
+            ->assertOk()
+            ->assertSee('Saglabā telpu');
+
+        $this->actingAs($admin)
+            ->get(route('rooms.edit', $device->room_id))
+            ->assertOk()
+            ->assertSee('Saglabā telpas izmaiņas');
+
+        $this->actingAs($admin)
+            ->get(route('devices.create'))
+            ->assertOk()
+            ->assertSee('Pirms saglabāšanas pārbaudi pamata datus');
+
+        $this->actingAs($admin)
+            ->get(route('devices.edit', $device))
+            ->assertOk()
+            ->assertSee('Saglabāšanas zona');
     }
 
     private function createUser(string $role, ?string $email = null): User

@@ -209,6 +209,8 @@ window.openAppConfirm = (options = {}) => {
     const titleNode = root.querySelector('#app-confirm-title');
     const messageNode = root.querySelector('[data-app-confirm-message]');
     const acceptButton = root.querySelector('[data-app-confirm-accept]');
+    const dialogNode = root.querySelector('.app-confirm-dialog');
+    const iconNode = root.querySelector('.app-confirm-icon');
     const cancelButtons = root.querySelectorAll('[data-app-confirm-cancel]');
     const dismissButtons = root.querySelectorAll('[data-app-confirm-cancel], [data-app-confirm-close]');
 
@@ -219,8 +221,12 @@ window.openAppConfirm = (options = {}) => {
         button.textContent = cancelLabel;
     });
 
+    dialogNode?.classList.remove('app-confirm-dialog-danger', 'app-confirm-dialog-warning');
+    iconNode?.classList.remove('app-confirm-icon-danger', 'app-confirm-icon-warning');
     acceptButton.classList.toggle('btn-danger-solid', tone !== 'warning');
     acceptButton.classList.toggle('btn-approve', tone === 'warning');
+    dialogNode?.classList.add(tone === 'warning' ? 'app-confirm-dialog-warning' : 'app-confirm-dialog-danger');
+    iconNode?.classList.add(tone === 'warning' ? 'app-confirm-icon-warning' : 'app-confirm-icon-danger');
 
     root.classList.remove('hidden');
     document.body.classList.add('overflow-hidden');
@@ -232,6 +238,8 @@ window.openAppConfirm = (options = {}) => {
             root.classList.remove('is-visible');
             document.body.classList.remove('overflow-hidden');
             window.setTimeout(() => root.classList.add('hidden'), 180);
+            dialogNode?.classList.remove('app-confirm-dialog-danger', 'app-confirm-dialog-warning');
+            iconNode?.classList.remove('app-confirm-icon-danger', 'app-confirm-icon-warning');
 
             acceptButton.removeEventListener('click', handleAccept);
             dismissButtons.forEach((button) => button.removeEventListener('click', handleCancel));

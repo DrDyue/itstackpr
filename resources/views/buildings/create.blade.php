@@ -1,4 +1,4 @@
-{{--
+{--
     Lapa: Jaunas ēkas izveide.
     Atbildība: ļauj administratoram sagatavot jaunu ēkas ierakstu telpu un ierīču piesaistei.
     Datu avots: BuildingController@create, saglabāšana caur BuildingController@store.
@@ -28,40 +28,58 @@
         <x-validation-summary />
 
         {{-- Ēkas forma satur pamatdatus, kurus vēlāk izmantos telpu un ierīču piesaistei. --}}
-        <form method="POST" action="{{ route('buildings.store') }}" class="surface-card space-y-4">
+        <form method="POST" action="{{ route('buildings.store') }}" class="space-y-6">
             @csrf
 
-            <div>
-                <label class="crud-label">Nosaukums *</label>
-                <input type="text" name="building_name" value="{{ old('building_name') }}" class="crud-control" required>
-            </div>
+            <div class="form-page-grid">
+                <div class="form-page-main">
+                    <div class="surface-card space-y-4">
+                        <div>
+                            <label class="crud-label">Nosaukums *</label>
+                            <input type="text" name="building_name" value="{{ old('building_name') }}" class="crud-control" required>
+                        </div>
 
-            <div class="grid gap-4 sm:grid-cols-2">
-                <div>
-                    <label class="crud-label">Pilsēta</label>
-                    <input type="text" name="city" value="{{ old('city') }}" class="crud-control">
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="crud-label">Pilsēta</label>
+                                <input type="text" name="city" value="{{ old('city') }}" class="crud-control">
+                            </div>
+                            <div>
+                                <label class="crud-label">Stāvu skaits</label>
+                                <input type="number" name="total_floors" value="{{ old('total_floors') }}" class="crud-control" min="0">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="crud-label">Adrese</label>
+                            <input type="text" name="address" value="{{ old('address') }}" class="crud-control">
+                        </div>
+
+                        <div>
+                            <label class="crud-label">Piezīmes</label>
+                            <textarea name="notes" rows="3" class="crud-control">{{ old('notes') }}</textarea>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label class="crud-label">Stavu skaits</label>
-                    <input type="number" name="total_floors" value="{{ old('total_floors') }}" class="crud-control" min="0">
+
+                <aside class="form-page-aside">
+                    <div class="form-page-note">
+                        <div class="form-page-note-title">Kas ir svarīgākais</div>
+                        <div class="form-page-note-copy">Ēkas nosaukums un stāvu skaits vēlāk ietekmēs telpu filtrēšanu un saistīto ierīču pārskatus.</div>
+                    </div>
+                </aside>
+            </div>
+
+            <div class="form-page-actions">
+                <div class="form-page-actions-copy">
+                    <div class="form-page-actions-title">Saglabā ēkas ierakstu</div>
+                    <div class="form-page-actions-text">Kad ēka būs izveidota, tai varēsi piesaistīt telpas un pēc tam arī inventāru.</div>
                 </div>
-            </div>
-
-            <div>
-                <label class="crud-label">Adrese</label>
-                <input type="text" name="address" value="{{ old('address') }}" class="crud-control">
-            </div>
-
-            <div>
-                <label class="crud-label">Piezīmes</label>
-                <textarea name="notes" rows="3" class="crud-control">{{ old('notes') }}</textarea>
-            </div>
-
-            <div class="flex gap-3 pt-2">
-                <button type="submit" class="btn-create"><x-icon name="save" size="h-4 w-4" /><span>Saglabāt</span></button>
-                <a href="{{ route('buildings.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Atcelt</span></a>
+                <div class="form-page-actions-buttons">
+                    <button type="submit" class="btn-create"><x-icon name="save" size="h-4 w-4" /><span>Saglabāt</span></button>
+                    <a href="{{ route('buildings.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Atcelt</span></a>
+                </div>
             </div>
         </form>
     </section>
 </x-app-layout>
-

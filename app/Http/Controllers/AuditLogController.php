@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\User;
 use App\Support\AuditTrail;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -61,7 +62,7 @@ class AuditLogController extends Controller
         }
 
         $logQuery = AuditLog::query()
-            ->with('user')
+            ->with('user:id,full_name,email')
             ->when($filters['action'] !== '', fn ($query) => $query->where('action', $filters['action']))
             ->when($filters['severities'] !== [], fn ($query) => $query->whereIn('severity', $filters['severities']))
             ->when($filters['entity_type'] !== '', fn ($query) => $query->where('entity_type', $filters['entity_type']))
@@ -110,10 +111,16 @@ class AuditLogController extends Controller
 
         $logs = (clone $logQuery)->paginate(50)->withQueryString();
 
+        $summaryRow = AuditLog::query()
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('SUM(CASE WHEN timestamp >= ? THEN 1 ELSE 0 END) as today', [now()->startOfDay()])
+            ->selectRaw('SUM(CASE WHEN severity = ? THEN 1 ELSE 0 END) as critical', ['critical'])
+            ->first();
+
         $summary = [
-            'total' => AuditLog::count(),
-            'today' => AuditLog::query()->where('timestamp', '>=', now()->startOfDay())->count(),
-            'critical' => AuditLog::query()->where('severity', 'critical')->count(),
+            'total' => (int) ($summaryRow->total ?? 0),
+            'today' => (int) ($summaryRow->today ?? 0),
+            'critical' => (int) ($summaryRow->critical ?? 0),
         ];
 
         $actionOptions = AuditLog::query()
@@ -205,7 +212,7 @@ class AuditLogController extends Controller
         ];
 
         $logs = AuditLog::query()
-            ->with('user')
+            ->with('user:id,full_name,email')
             ->when($filters['action'] !== '', fn ($query) => $query->where('action', $filters['action']))
             ->when($filters['severities'] !== [], fn ($query) => $query->whereIn('severity', $filters['severities']))
             ->when($filters['entity_type'] !== '', fn ($query) => $query->where('entity_type', $filters['entity_type']))

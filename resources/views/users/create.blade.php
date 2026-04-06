@@ -1,4 +1,4 @@
-{{--
+{--
     Lapa: Jauna lietotāja izveide.
     Atbildība: ļauj administratoram izveidot pilnu sistēmas lietotāja kontu.
     Datu avots: UserController@create, saglabāšana caur UserController@store.
@@ -17,7 +17,7 @@
                         <div class="page-title-icon page-title-icon-emerald"><x-icon name="user" size="h-7 w-7" /></div>
                         <div>
                             <h1 class="page-title">Jauns lietotājs</h1>
-                            <p class="page-subtitle">Izveido pilnu lietotāja ierakstu viena tabula.</p>
+                            <p class="page-subtitle">Izveido pilnu lietotāja ierakstu vienā skatā.</p>
                         </div>
                     </div>
                 </div>
@@ -28,54 +28,72 @@
         <x-validation-summary />
 
         {{-- Lietotāja forma apvieno kontaktus, lomu, paroli un konta statusu. --}}
-        <form method="POST" action="{{ route('users.store') }}" class="surface-card space-y-6 p-6">
+        <form method="POST" action="{{ route('users.store') }}" class="space-y-6">
             @csrf
 
-            <div class="grid gap-4 md:grid-cols-2">
-                <label class="block md:col-span-2">
-                    <span class="crud-label">Vārds un uzvārds</span>
-                    <input type="text" name="full_name" value="{{ old('full_name') }}" class="crud-control" required>
-                </label>
-                <label class="block">
-                    <span class="crud-label">E-pasts</span>
-                    <input type="email" name="email" value="{{ old('email') }}" class="crud-control" required>
-                </label>
-                <label class="block">
-                    <span class="crud-label">Tālrunis</span>
-                    <input type="text" name="phone" value="{{ old('phone') }}" class="crud-control">
-                </label>
-                <label class="block">
-                    <span class="crud-label">Amats</span>
-                    <input type="text" name="job_title" value="{{ old('job_title') }}" class="crud-control">
-                </label>
-                <label class="block">
-                    <span class="crud-label">Loma</span>
-                    <select name="role" class="crud-control" required>
-                        @foreach ($roles as $role)
-                            <option value="{{ $role }}" @selected(old('role') === $role)>{{ $roleLabels[$role] ?? $role }}</option>
-                        @endforeach
-                    </select>
-                </label>
-                <label class="block">
-                    <span class="crud-label">Parole</span>
-                    <input type="password" name="password" class="crud-control" required>
-                </label>
-                <label class="block">
-                    <span class="crud-label">Apstiprināt paroli</span>
-                    <input type="password" name="password_confirmation" class="crud-control" required>
-                </label>
+            <div class="form-page-grid">
+                <div class="form-page-main">
+                    <div class="surface-card space-y-6 p-6">
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <label class="block md:col-span-2">
+                                <span class="crud-label">Vārds un uzvārds</span>
+                                <input type="text" name="full_name" value="{{ old('full_name') }}" class="crud-control" required>
+                            </label>
+                            <label class="block">
+                                <span class="crud-label">E-pasts</span>
+                                <input type="email" name="email" value="{{ old('email') }}" class="crud-control" required>
+                            </label>
+                            <label class="block">
+                                <span class="crud-label">Tālrunis</span>
+                                <input type="text" name="phone" value="{{ old('phone') }}" class="crud-control">
+                            </label>
+                            <label class="block">
+                                <span class="crud-label">Amats</span>
+                                <input type="text" name="job_title" value="{{ old('job_title') }}" class="crud-control">
+                            </label>
+                            <label class="block">
+                                <span class="crud-label">Loma</span>
+                                <select name="role" class="crud-control" required>
+                                    @foreach ($roles as $role)
+                                        <option value="{{ $role }}" @selected(old('role') === $role)>{{ $roleLabels[$role] ?? $role }}</option>
+                                    @endforeach
+                                </select>
+                            </label>
+                            <label class="block">
+                                <span class="crud-label">Parole</span>
+                                <input type="password" name="password" class="crud-control" required>
+                            </label>
+                            <label class="block">
+                                <span class="crud-label">Apstiprināt paroli</span>
+                                <input type="password" name="password_confirmation" class="crud-control" required>
+                            </label>
+                        </div>
+
+                        <label class="inline-flex items-center gap-3">
+                            <input type="checkbox" name="is_active" value="1" @checked(old('is_active', true)) class="rounded border-gray-300 text-blue-600">
+                            <span class="text-sm text-slate-700">Konts aktīvs</span>
+                        </label>
+                    </div>
+                </div>
+
+                <aside class="form-page-aside">
+                    <div class="form-page-note">
+                        <div class="form-page-note-title">Ko pārbaudīt</div>
+                        <div class="form-page-note-copy">Norādi korektu lomu, e-pastu un sākotnējo paroli. Ja kontu vēl nevajag aktivizēt, noņem aktīva konta atzīmi.</div>
+                    </div>
+                </aside>
             </div>
 
-            <label class="inline-flex items-center gap-3">
-                <input type="checkbox" name="is_active" value="1" @checked(old('is_active', true)) class="rounded border-gray-300 text-blue-600">
-                <span class="text-sm text-slate-700">Konts aktīvs</span>
-            </label>
-
-            <div class="flex flex-wrap gap-3">
-                <button type="submit" class="btn-create"><x-icon name="save" size="h-4 w-4" /><span>Saglabāt</span></button>
-                <a href="{{ route('users.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Atcelt</span></a>
+            <div class="form-page-actions">
+                <div class="form-page-actions-copy">
+                    <div class="form-page-actions-title">Saglabā jauno lietotāju</div>
+                    <div class="form-page-actions-text">Pēc saglabāšanas lietotāju varēsi uzreiz rediģēt vai atvērt viņa pilno profilu.</div>
+                </div>
+                <div class="form-page-actions-buttons">
+                    <button type="submit" class="btn-create"><x-icon name="save" size="h-4 w-4" /><span>Saglabāt</span></button>
+                    <a href="{{ route('users.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Atcelt</span></a>
+                </div>
             </div>
         </form>
     </section>
 </x-app-layout>
-

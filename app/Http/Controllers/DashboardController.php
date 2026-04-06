@@ -87,7 +87,8 @@ class DashboardController extends Controller
 
         $locationRooms = $hasRooms && $isManager
             ? Room::query()
-                ->with(['building'])
+                ->select(['id', 'building_id', 'floor_number', 'room_number', 'room_name', 'department'])
+                ->with(['building:id,building_name'])
                 ->withCount(['devices'])
                 ->orderBy('floor_number')
                 ->orderBy('room_number')
@@ -130,20 +131,23 @@ class DashboardController extends Controller
         $dashboardDevices = $deviceQuery
             ? (clone $deviceQuery)
                 ->with([
-                    'room.building',
-                    'building',
-                    'type',
-                    'assignedTo',
-                    'activeRepair.acceptedBy',
-                    'activeRepair.request.responsibleUser',
-                    'activeRepair.request.reviewedBy',
-                    'latestRepair.acceptedBy',
-                    'latestRepair.request.responsibleUser',
-                    'latestRepair.request.reviewedBy',
-                    'pendingRepairRequest.responsibleUser',
-                    'pendingWriteoffRequest.responsibleUser',
-                    'pendingTransferRequest.responsibleUser',
-                    'pendingTransferRequest.transferTo',
+                    'room:id,building_id,room_number,room_name,floor_number',
+                    'room.building:id,building_name',
+                    'building:id,building_name',
+                    'type:id,type_name',
+                    'assignedTo:id,full_name,job_title',
+                    'activeRepair.acceptedBy:id,full_name',
+                    'activeRepair.request:id,responsible_user_id,reviewed_by',
+                    'activeRepair.request.responsibleUser:id,full_name',
+                    'activeRepair.request.reviewedBy:id,full_name',
+                    'latestRepair.acceptedBy:id,full_name',
+                    'latestRepair.request:id,responsible_user_id,reviewed_by',
+                    'latestRepair.request.responsibleUser:id,full_name',
+                    'latestRepair.request.reviewedBy:id,full_name',
+                    'pendingRepairRequest.responsibleUser:id,full_name',
+                    'pendingWriteoffRequest.responsibleUser:id,full_name',
+                    'pendingTransferRequest.responsibleUser:id,full_name',
+                    'pendingTransferRequest.transferTo:id,full_name',
                 ])
                 ->withExists([
                     'repairRequests as has_pending_repair_request' => fn ($query) => $query->where('status', RepairRequest::STATUS_SUBMITTED),

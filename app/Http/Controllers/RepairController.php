@@ -444,7 +444,24 @@ class RepairController extends Controller
     {
         $devices = $repair
             ? Device::query()
-                ->with(['assignedTo', 'building', 'room', 'type'])
+                ->select([
+                    'id',
+                    'code',
+                    'name',
+                    'manufacturer',
+                    'model',
+                    'device_type_id',
+                    'assigned_to_id',
+                    'building_id',
+                    'room_id',
+                    'status',
+                ])
+                ->with([
+                    'assignedTo:id,full_name',
+                    'building:id,building_name',
+                    'room:id,room_number,room_name',
+                    'type:id,type_name',
+                ])
                 ->where('status', '!=', Device::STATUS_WRITEOFF)
                 ->when($repair->device_id, fn (Builder $query) => $query->orWhere('id', $repair->device_id))
                 ->orderBy('name')
@@ -454,7 +471,10 @@ class RepairController extends Controller
         return [
             'devices' => $devices,
             'deviceOptions' => $this->deviceOptions($devices),
-            'users' => User::active()->orderBy('full_name')->get(),
+            'users' => User::active()
+                ->select(['id', 'full_name', 'job_title', 'email'])
+                ->orderBy('full_name')
+                ->get(),
             'statuses' => self::STATUSES,
             'repairTypes' => self::TYPES,
             'priorities' => self::PRIORITIES,
@@ -601,7 +621,24 @@ class RepairController extends Controller
     private function availableDevicesForCreate(): Builder
     {
         return Device::query()
-            ->with(['assignedTo', 'building', 'room', 'type'])
+            ->select([
+                'id',
+                'code',
+                'name',
+                'manufacturer',
+                'model',
+                'device_type_id',
+                'assigned_to_id',
+                'building_id',
+                'room_id',
+                'status',
+            ])
+            ->with([
+                'assignedTo:id,full_name',
+                'building:id,building_name',
+                'room:id,room_number,room_name',
+                'type:id,type_name',
+            ])
             ->where('status', Device::STATUS_ACTIVE)
             ->whereDoesntHave('repairs', fn (Builder $query) => $query->whereIn('status', ['waiting', 'in-progress']))
             ->whereNotExists(function ($query) {

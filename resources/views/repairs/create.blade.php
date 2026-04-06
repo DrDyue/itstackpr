@@ -50,9 +50,15 @@
         >
             @csrf
             @include('repairs.partials.form-fields', ['repair' => null])
-            <div class="flex flex-wrap gap-3">
-                <button type="submit" class="btn-create"><x-icon name="save" size="h-4 w-4" /><span>Saglabāt</span></button>
-                <a href="{{ route('repairs.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Atcelt</span></a>
+            <div class="form-page-actions">
+                <div class="form-page-actions-copy">
+                    <div class="form-page-actions-title">Saglabā jauno remonta ierakstu</div>
+                    <div class="form-page-actions-text">Pirms saglabāšanas pārbaudi ierīci, remonta tipu un prioritāti. Pārējos laukus vajadzības gadījumā varēsi papildināt vēlāk.</div>
+                </div>
+                <div class="form-page-actions-buttons">
+                    <button type="submit" class="btn-create"><x-icon name="save" size="h-4 w-4" /><span>Saglabāt</span></button>
+                    <a href="{{ route('repairs.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Atcelt</span></a>
+                </div>
             </div>
         </form>
     </section>

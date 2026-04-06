@@ -86,7 +86,7 @@
             <form
                 method="GET"
                 action="{{ route('repairs.index') }}"
-                class="surface-toolbar repairs-toolbar-surface"
+                class="surface-toolbar surface-toolbar-elevated repairs-toolbar-surface"
                 data-async-table-form
                 data-async-root="#repairs-index-root"
                 data-search-endpoint="{{ route('repairs.find-by-code') }}"
@@ -612,7 +612,16 @@
                                                         </form>
                                                     @endif
                                                 @elseif (! $linkedRequestUrl)
-                                                    <div class="px-3 py-2 text-xs font-medium text-slate-400">Nav darbību</div>
+                                                    <button
+                                                        type="button"
+                                                        class="btn-disabled"
+                                                        data-app-toast-title="Darbības nav pieejamas"
+                                                        data-app-toast-message="Šim remonta ierakstam nav saistīta pieprasījuma, un tavai lomai šobrīd nav pieejamu papildu darbību."
+                                                        data-app-toast-tone="info"
+                                                    >
+                                                        <x-icon name="information-circle" size="h-4 w-4" />
+                                                        <span>Nav darbību</span>
+                                                    </button>
                                                 @endif
                                             </div>
                                         </div>

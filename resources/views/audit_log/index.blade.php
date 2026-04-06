@@ -71,7 +71,7 @@
             <form
                 method="GET"
                 action="{{ route('audit-log.index') }}"
-                class="surface-toolbar audit-toolbar-surface"
+                class="surface-toolbar surface-toolbar-elevated audit-toolbar-surface"
                 data-async-table-form
                 data-async-root="#audit-log-index-root"
                 data-search-endpoint="{{ route('audit-log.find-entry') }}"

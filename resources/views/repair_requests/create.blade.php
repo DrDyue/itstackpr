@@ -51,10 +51,10 @@
                         <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
                     @enderror
                 </div>
-                <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                    <div class="font-semibold text-slate-900">Ieteikums</div>
-                    <div class="mt-2 leading-6">
-                        Ierīču saraksta redzēsi nosaukumu, kodu, tipu, ražotāju ar modeli un atrašanās vietu, lai butu vieglak izvēleties isto ierīci.
+                <div class="form-page-note">
+                    <div class="form-page-note-title">Ieteikums</div>
+                    <div class="form-page-note-copy">
+                        Ierīču sarakstā redzēsi nosaukumu, kodu, tipu, ražotāju ar modeli un atrašanās vietu, lai būtu vieglāk izvēlēties īsto ierīci.
                     </div>
                 </div>
             </div>
@@ -62,9 +62,15 @@
                 <span class="crud-label">Apraksts</span>
                 <textarea name="description" rows="5" class="crud-control" required>{{ old('description') }}</textarea>
             </label>
-            <div class="flex flex-wrap gap-3">
-                <button type="submit" class="btn-create"><x-icon name="send" size="h-4 w-4" /><span>Nosutit</span></button>
-                <a href="{{ route('repair-requests.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Atcelt</span></a>
+            <div class="form-page-actions">
+                <div class="form-page-actions-copy">
+                    <div class="form-page-actions-title">Pabeidz iesniegšanu</div>
+                    <div class="form-page-actions-text">Kad apraksts ir gatavs, nosūti pieteikumu administratora izskatīšanai.</div>
+                </div>
+                <div class="form-page-actions-buttons">
+                    <button type="submit" class="btn-create"><x-icon name="send" size="h-4 w-4" /><span>Nosūtīt</span></button>
+                    <a href="{{ route('repair-requests.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Atcelt</span></a>
+                </div>
             </div>
         </form>
     </section>

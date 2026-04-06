@@ -90,9 +90,16 @@ class DeviceController extends Controller
         $filters = $this->normalizedIndexFilters($request);
         $sorting = $this->normalizedDeviceSorting($request);
         $accessibleRooms = $this->accessibleRooms($user);
-        $types = DeviceType::query()->orderBy('type_name')->get();
+        $types = DeviceType::query()
+            ->select(['id', 'type_name'])
+            ->orderBy('type_name')
+            ->get();
         $assignableUsers = $canManageDevices
-            ? User::query()->active()->orderBy('full_name')->get()
+            ? User::query()
+                ->active()
+                ->select(['id', 'full_name', 'job_title', 'email'])
+                ->orderBy('full_name')
+                ->get()
             : collect();
 
         $selectedRoom = ctype_digit($filters['room_id'])
@@ -780,7 +787,8 @@ SQL;
     private function accessibleRooms(User $user): Collection
     {
         return Room::query()
-            ->with('building')
+            ->select(['id', 'building_id', 'floor_number', 'room_number', 'room_name', 'department'])
+            ->with('building:id,building_name')
             ->whereHas('devices', function (Builder $query) use ($user) {
                 $query->where('status', '!=', Device::STATUS_WRITEOFF);
 
@@ -806,10 +814,10 @@ SQL;
         $user = $this->user();
 
         return [
-            'types' => DeviceType::orderBy('type_name')->get(),
-            'buildings' => Building::orderBy('building_name')->get(),
-            'rooms' => Room::with('building')->orderBy('room_number')->get(),
-            'users' => User::active()->orderBy('full_name')->get(),
+            'types' => DeviceType::query()->select(['id', 'type_name'])->orderBy('type_name')->get(),
+            'buildings' => Building::query()->select(['id', 'building_name'])->orderBy('building_name')->get(),
+            'rooms' => Room::query()->select(['id', 'building_id', 'room_number', 'room_name'])->with('building:id,building_name')->orderBy('room_number')->get(),
+            'users' => User::query()->active()->select(['id', 'full_name', 'job_title', 'email'])->orderBy('full_name')->get(),
             'statuses' => self::STATUSES,
             'statusLabels' => $this->statusLabels(),
             'defaultAssignedToId' => $user?->id,

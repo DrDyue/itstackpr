@@ -60,15 +60,15 @@
         </div>
 
         <div id="rooms-index-root" data-async-table-root>
-        <form method="GET" action="{{ route('rooms.index') }}" class="surface-toolbar grid gap-4 md:grid-cols-2 lg:grid-cols-4" data-async-table-form data-async-root="#rooms-index-root" data-search-endpoint="{{ route('rooms.find-by-name') }}">
-            <label class="block">
+        <form method="GET" action="{{ route('rooms.index') }}" class="surface-toolbar surface-toolbar-elevated surface-toolbar-grid-compact" data-async-table-form data-async-root="#rooms-index-root" data-search-endpoint="{{ route('rooms.find-by-name') }}">
+            <label class="surface-toolbar-field">
                 <span class="crud-label">Telpas nosaukums</span>
                 <div class="flex items-center gap-2">
                     <input type="text" name="search" value="{{ $filters['search'] }}" class="crud-control" placeholder="Nosaukums vai numurs" data-async-manual="true" data-table-manual-search="true" data-search-mode="contains">
                     <button type="submit" class="btn-search shrink-0" data-table-search-submit="true"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
                 </div>
             </label>
-            <label class="block">
+            <label class="surface-toolbar-field">
                 <span class="crud-label">Ēka</span>
                 <x-searchable-select
                     name="building_id"
@@ -81,7 +81,7 @@
                     empty-message="Neviena ēka neatbilst meklējumam."
                 />
             </label>
-            <label class="block">
+            <label class="surface-toolbar-field">
                 <span class="crud-label">Stāvs</span>
                 <x-searchable-select
                     name="floor"
@@ -94,7 +94,7 @@
                     empty-message="Neviens stāvs neatbilst meklējumam."
                 />
             </label>
-            <label class="block">
+            <label class="surface-toolbar-field">
                 <span class="crud-label">Atbildīgais</span>
                 <x-searchable-select
                     name="user_id"
@@ -107,25 +107,27 @@
                     empty-message="Neviens lietotājs neatbilst meklējumam."
                 />
             </label>
-            <div class="toolbar-actions md:col-span-2 lg:col-span-4">
-                <a href="{{ route('rooms.index') }}" class="btn-clear" data-async-link="true"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt</span></a>
+            <div class="surface-toolbar-actions lg:col-span-4">
+                <a href="{{ route('rooms.index') }}" class="btn-clear" data-async-link="true"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt filtrus</span></a>
             </div>
         </form>
 
-        <x-active-filters
-            :items="[
-                ['label' => 'Ēka', 'value' => $filters['building_id'] !== '' ? optional($buildings->firstWhere('id', (int) $filters['building_id']))->building_name : null],
-                ['label' => 'Stāvs', 'value' => $selectedFloorLabel],
-                ['label' => 'Atbildīgais', 'value' => $filters['user_id'] !== '' ? optional($responsibleUsers->firstWhere('id', (int) $filters['user_id']))->full_name : null],
-            ]"
-            :clear-url="route('rooms.index')"
-        />
+        <div class="mt-4">
+            <x-active-filters
+                :items="[
+                    ['label' => 'Ēka', 'value' => $filters['building_id'] !== '' ? optional($buildings->firstWhere('id', (int) $filters['building_id']))->building_name : null],
+                    ['label' => 'Stāvs', 'value' => $selectedFloorLabel],
+                    ['label' => 'Atbildīgais', 'value' => $filters['user_id'] !== '' ? optional($responsibleUsers->firstWhere('id', (int) $filters['user_id']))->full_name : null],
+                ]"
+                :clear-url="route('rooms.index')"
+            />
+        </div>
 
         @if (session('error'))
             <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
         @endif
 
-        <div class="app-table-shell">
+        <div class="app-table-shell mt-4">
             <div class="app-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
             <table class="app-table-content app-table-content-compact min-w-full text-sm">
                 <thead class="app-table-head bg-slate-50 text-left text-slate-500">

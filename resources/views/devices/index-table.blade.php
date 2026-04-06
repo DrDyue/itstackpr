@@ -253,13 +253,16 @@
                                                 <span>Skatīt pieteikumu</span>
                                             </a>
                                         @endif
-                                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">
-                                            <div class="inline-flex items-center gap-2 font-semibold text-slate-700">
-                                                <x-icon :name="$pendingRequestBadge['icon'] ?? 'clock'" size="h-3.5 w-3.5" />
-                                                <span>{{ $pendingRequestBadge['label'] ?? 'Pieteikums nav pieejams' }}</span>
-                                            </div>
-                                            <div class="mt-1">{{ $requestAvailability['reason'] }}</div>
-                                        </div>
+                                        <button
+                                            type="button"
+                                            class="btn-disabled w-full justify-start text-left"
+                                            data-app-toast-title="{{ $pendingRequestBadge['label'] ?? 'Pieteikums nav pieejams' }}"
+                                            data-app-toast-message="{{ $requestAvailability['reason'] }}"
+                                            data-app-toast-tone="info"
+                                        >
+                                            <x-icon :name="$pendingRequestBadge['icon'] ?? 'clock'" size="h-4 w-4" />
+                                            <span>{{ $pendingRequestBadge['label'] ?? 'Pieteikums nav pieejams' }}</span>
+                                        </button>
                                     @endif
                                 @endif
 
@@ -280,7 +283,15 @@
                                             <span>Mainīt atbildīgo</span>
                                         </button>
 
-                                        <form method="POST" action="{{ route('devices.quick-update', $device) }}">
+                                        <form
+                                            method="POST"
+                                            action="{{ route('devices.quick-update', $device) }}"
+                                            data-app-confirm-title="Norakstīt ierīci?"
+                                            data-app-confirm-message="Vai tiešām norakstīt šo ierīci? Pēc norakstīšanas tā vairs nebūs piešķirta lietotājam vai telpai."
+                                            data-app-confirm-accept="Jā, norakstīt"
+                                            data-app-confirm-cancel="Nē"
+                                            data-app-confirm-tone="danger"
+                                        >
                                             @csrf
                                             <input type="hidden" name="action" value="status">
                                             <input type="hidden" name="target_status" value="writeoff">
@@ -288,7 +299,6 @@
                                                 type="submit"
                                                 class="table-action-button table-action-button-rose"
                                                 formmethod="POST"
-                                                onclick="return confirm('Vai tiešām norakstīt šo ierīci? Pēc norakstīšanas tā vairs nebūs piešķirta lietotājam vai telpai.')"
                                             >
                                                 <x-icon name="writeoff" size="h-4 w-4" />
                                                 <span>Norakstīt</span>

@@ -1,6 +1,6 @@
-{{--
+{--
     Lapa: Lietotāja pieprasījuma labošanas skats.
-    Atbildība: ļauj labot tikai iesniegta pieprasījuma aprakstošo lauku, kamēr admins to vēl nav izskatījis.
+    Atbildība: Ļauj labot tikai iesniegta pieprasījuma aprakstošo lauku, kamēr admins to vēl nav izskatījis.
     Datu avots: UserRequestCenterController@edit, saglabāšana caur UserRequestCenterController@update.
     Galvenās daļas:
     1. Hero ar pieprasījuma tipu.
@@ -49,9 +49,9 @@
                     <div class="mt-2 text-base font-semibold text-slate-900">{{ $editableRequest->device?->name ?: 'Ierīce nav atrasta' }}</div>
                     <div class="mt-1 text-sm text-slate-500">{{ $editableRequest->device?->code ?: 'bez koda' }}</div>
                 </div>
-                <div class="rounded-[1.5rem] border border-sky-200 bg-sky-50/80 px-5 py-4">
-                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Piezīme</div>
-                    <div class="mt-2 text-sm leading-6 text-sky-900">
+                <div class="form-page-note border-sky-200 bg-sky-50/80">
+                    <div class="form-page-note-title text-sky-800">Piezīme</div>
+                    <div class="form-page-note-copy text-sky-900">
                         Šeit vari mainīt tikai tekstu. Ierīci un citas saistītās vērtības sistēma saglabā nemainīgas.
                     </div>
                 </div>
@@ -65,19 +65,25 @@
                 @enderror
             </label>
 
-            <div class="flex flex-wrap gap-3">
-                <button type="submit" class="btn-create">
-                    <x-icon name="check" size="h-4 w-4" />
-                    <span>Saglabāt izmainas</span>
-                </button>
-                <a href="{{ route(match ($requestType) {
-                    'repair' => 'repair-requests.index',
-                    'writeoff' => 'writeoff-requests.index',
-                    'transfer' => 'device-transfers.index',
-                }) }}" class="btn-clear">
-                    <x-icon name="clear" size="h-4 w-4" />
-                    <span>Atcelt</span>
-                </a>
+            <div class="form-page-actions">
+                <div class="form-page-actions-copy">
+                    <div class="form-page-actions-title">Saglabā labojumus</div>
+                    <div class="form-page-actions-text">Tiks atjaunots tikai pieprasījuma teksts, kamēr administrators to vēl nav izskatījis.</div>
+                </div>
+                <div class="form-page-actions-buttons">
+                    <button type="submit" class="btn-create">
+                        <x-icon name="check" size="h-4 w-4" />
+                        <span>Saglabāt izmaiņas</span>
+                    </button>
+                    <a href="{{ route(match ($requestType) {
+                        'repair' => 'repair-requests.index',
+                        'writeoff' => 'writeoff-requests.index',
+                        'transfer' => 'device-transfers.index',
+                    }) }}" class="btn-clear">
+                        <x-icon name="clear" size="h-4 w-4" />
+                        <span>Atcelt</span>
+                    </a>
+                </div>
             </div>
         </form>
     </section>

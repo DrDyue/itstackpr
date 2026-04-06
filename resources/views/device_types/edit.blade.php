@@ -1,6 +1,6 @@
-{{--
+{--
     Lapa: Ierīces tipa rediģēšana.
-    Atbildība: ļauj atjaunot tikai tipa nosaukumu vienkāršotajā vārdnīcā.
+    Atbildība: Ļauj atjaunot tikai tipa nosaukumu vienkāršotajā vārdnīcā.
     Datu avots: DeviceTypeController@edit, saglabāšana caur DeviceTypeController@update.
     Galvenās daļas:
     1. Hero zona.
@@ -51,19 +51,25 @@
                     <div class="type-form-section-head">
                         <div class="device-form-section-name">Darbības</div>
                     </div>
-                    <div class="mt-4 flex flex-wrap gap-3">
-                        <button type="submit" class="btn-edit">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
-                            </svg>
-                            Atjaunot
-                        </button>
-                        <a href="{{ route('device-types.index') }}" class="btn-clear">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
-                            </svg>
-                            Atcelt
-                        </a>
+                    <div class="form-page-actions mt-4">
+                        <div class="form-page-actions-copy">
+                            <div class="form-page-actions-title">Pabeidz atjaunināšanu</div>
+                            <div class="form-page-actions-text">Nosaukuma maiņa uzreiz atspoguļosies visās vietās, kur šis tips tiek lietots.</div>
+                        </div>
+                        <div class="form-page-actions-buttons">
+                            <button type="submit" class="btn-edit">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+                                </svg>
+                                Atjaunot
+                            </button>
+                            <a href="{{ route('device-types.index') }}" class="btn-clear">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                                </svg>
+                                Atcelt
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

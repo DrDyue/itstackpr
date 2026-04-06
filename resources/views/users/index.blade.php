@@ -78,7 +78,7 @@
             <form
                 method="GET"
                 action="{{ route('users.index') }}"
-                class="surface-toolbar grid gap-4 md:grid-cols-3 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,1fr)]"
+                class="surface-toolbar surface-toolbar-elevated surface-toolbar-grid-tight xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,1fr)]"
                 data-async-table-form
                 data-async-root="#users-index-root"
                 data-search-endpoint="{{ route('users.find-by-name') }}"
@@ -86,7 +86,7 @@
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
 
-                <label class="block">
+                <label class="surface-toolbar-field">
                     <span class="crud-label">Vārds un uzvārds</span>
                     <div class="flex items-center gap-2">
                         <input
@@ -106,7 +106,7 @@
                     </div>
                 </label>
 
-                <div class="block">
+                <div class="surface-toolbar-field">
                     <span class="crud-label">Statuss</span>
                     <div class="status-segmented-control" x-data="{ value: @js($filters['is_active']) }">
                         <input type="hidden" name="is_active" :value="value">
@@ -125,7 +125,7 @@
                     </div>
                 </div>
 
-                <label class="block">
+                <label class="surface-toolbar-field">
                     <span class="crud-label">Pēdējā pieslēgšanās</span>
                     <x-searchable-select
                         name="last_login"
@@ -169,12 +169,13 @@
                     <div class="toolbar-actions justify-end">
                         <a href="{{ route('users.index') }}" class="btn-clear" data-async-link="true">
                             <x-icon name="clear" size="h-4 w-4" />
-                            <span>Notīrīt</span>
+                            <span>Notīrīt filtrus</span>
                         </a>
                     </div>
                 </div>
             </form>
 
+            <div class="mt-4">
             <x-active-filters
                 :items="[
                     ['label' => 'Loma', 'value' => $filters['has_role_filter'] ? collect($filters['roles'])->map(fn ($role) => $roleLabels[$role] ?? $role)->implode(', ') : null],
@@ -183,12 +184,13 @@
                 ]"
                 :clear-url="route('users.index')"
             />
+            </div>
 
             @if (session('error'))
                 <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
             @endif
 
-            <div class="app-table-shell">
+            <div class="app-table-shell mt-4">
                 <div class="app-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
                     <table class="app-table-content app-table-content-users min-w-full text-sm">
                         <thead class="app-table-head bg-slate-50 text-left text-slate-500">

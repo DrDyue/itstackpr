@@ -44,6 +44,7 @@ class UserController extends Controller
         $legacyEmail = trim((string) $request->query('email', ''));
 
         $usersQuery = User::query()
+            ->select(['id', 'full_name', 'email', 'phone', 'job_title', 'role', 'is_active', 'last_login'])
             ->when($legacyName !== '', fn ($query) => $query->where('full_name', 'like', '%' . $legacyName . '%'))
             ->when($legacyEmail !== '', fn ($query) => $query->where('email', 'like', '%' . $legacyEmail . '%'))
             ->when($filters['search'] !== '', fn ($query) => $query->where('full_name', 'like', '%' . $filters['search'] . '%'))
@@ -144,6 +145,7 @@ class UserController extends Controller
         $this->requireAdmin();
 
         $managedUser = User::query()
+            ->select(['id', 'full_name', 'email', 'phone', 'job_title', 'role', 'is_active', 'last_login', 'created_at'])
             ->withCount([
                 'assignedDevices',
                 'repairRequests as active_repair_requests_count' => fn ($query) => $query->where('status', RepairRequest::STATUS_SUBMITTED),

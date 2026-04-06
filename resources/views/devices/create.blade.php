@@ -39,12 +39,12 @@
         <form method="POST" action="{{ route('devices.store') }}" enctype="multipart/form-data" class="space-y-6">
             @csrf
             @include('devices.partials.form-fields', ['device' => null])
-            <div class="surface-card flex flex-wrap items-center justify-between gap-4 p-6">
-                <div>
-                    <div class="text-sm font-semibold text-slate-900">Pirms saglabāšanas pārbaudi pamata datus</div>
-                    <div class="mt-1 text-sm text-slate-500">Svarīgākais ir kods, nosaukums, tips un modelis. Pārējo informāciju vari papildināt arī vēlāk.</div>
+            <div class="form-page-actions">
+                <div class="form-page-actions-copy">
+                    <div class="form-page-actions-title">Pirms saglabāšanas pārbaudi pamata datus</div>
+                    <div class="form-page-actions-text">Svarīgākais ir kods, nosaukums, tips un modelis. Pārējo informāciju vari papildināt arī vēlāk.</div>
                 </div>
-                <div class="flex flex-wrap gap-3">
+                <div class="form-page-actions-buttons">
                     <button type="submit" class="btn-create">
                         <x-icon name="save" size="h-4 w-4" />
                         <span>Saglabāt</span>

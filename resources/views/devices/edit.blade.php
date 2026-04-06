@@ -14,7 +14,7 @@
                 <div class="max-w-3xl">
                     <div class="page-eyebrow">
                         <x-icon name="edit" size="h-4 w-4" />
-                        <span>Labosana</span>
+                        <span>Labošana</span>
                     </div>
                     <div class="page-title-group mt-4">
                         <div class="page-title-icon page-title-icon-amber">
@@ -40,12 +40,12 @@
             @csrf
             @method('PUT')
             @include('devices.partials.form-fields', ['device' => $device])
-            <div class="surface-card flex flex-wrap items-center justify-between gap-4 p-6">
-                <div>
+            <div class="form-page-actions">
+                <div class="form-page-actions-copy">
                     <div class="text-sm font-semibold text-slate-900">Saglabāšanas zona</div>
                     <div class="mt-1 text-sm text-slate-500">Atjauno tikai izmainītos laukus. Ja ierīce ir norakstīta, piesaistes lauki paliek bloķeti.</div>
                 </div>
-                <div class="flex flex-wrap gap-3">
+                <div class="form-page-actions-buttons">
                     <button type="submit" class="btn-edit">
                         <x-icon name="save" size="h-4 w-4" />
                         <span>Saglabāt</span>

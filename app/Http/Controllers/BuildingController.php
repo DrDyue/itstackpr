@@ -35,6 +35,7 @@ class BuildingController extends Controller
         $sorting = $this->resolveSorting($request);
 
         $buildingsQuery = Building::query()
+            ->select(['id', 'building_name', 'address', 'city', 'total_floors', 'notes', 'created_at'])
             ->withCount(['rooms', 'devices'])
             ->when($filters['search'] !== '', function (Builder $query) use ($filters) {
                 $search = $filters['search'];

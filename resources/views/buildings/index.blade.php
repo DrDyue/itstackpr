@@ -42,7 +42,7 @@
             <form
                 method="GET"
                 action="{{ route('buildings.index') }}"
-                class="surface-toolbar grid gap-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]"
+                class="surface-toolbar surface-toolbar-elevated surface-toolbar-grid-tight"
                 data-async-table-form
                 data-async-root="#buildings-index-root"
                 data-search-endpoint="{{ route('buildings.find-by-name') }}"
@@ -50,7 +50,7 @@
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
 
-                <label class="block">
+                <label class="surface-toolbar-field">
                     <span class="crud-label">Ēkas nosaukums vai adrese</span>
                     <div class="flex items-center gap-2">
                         <input
@@ -70,7 +70,7 @@
                     </div>
                 </label>
 
-                <label class="block">
+                <label class="surface-toolbar-field">
                     <span class="crud-label">Stāvu skaits</span>
                     <input
                         type="number"
@@ -84,23 +84,25 @@
                     >
                 </label>
 
-                <div class="toolbar-actions md:col-span-2">
-                    <a href="{{ route('buildings.index') }}" class="btn-clear" data-async-link="true"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt</span></a>
+                <div class="surface-toolbar-actions lg:col-span-2">
+                    <a href="{{ route('buildings.index') }}" class="btn-clear" data-async-link="true"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt filtrus</span></a>
                 </div>
             </form>
 
-            <x-active-filters
-                :items="[
-                    ['label' => 'Stāvu skaits', 'value' => $filters['total_floors'] !== '' ? $filters['total_floors'] : null],
-                ]"
-                :clear-url="route('buildings.index')"
-            />
+            <div class="mt-4">
+                <x-active-filters
+                    :items="[
+                        ['label' => 'Stāvu skaits', 'value' => $filters['total_floors'] !== '' ? $filters['total_floors'] : null],
+                    ]"
+                    :clear-url="route('buildings.index')"
+                />
+            </div>
 
             @if (session('error'))
                 <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
             @endif
 
-            <div class="app-table-shell">
+            <div class="app-table-shell mt-4">
                 <div class="app-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
                     <table class="app-table-content app-table-content-compact min-w-full text-sm">
                         <thead class="app-table-head bg-slate-50 text-xs uppercase tracking-wide text-slate-600">

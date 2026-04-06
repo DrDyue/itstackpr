@@ -72,9 +72,15 @@
                 <span class="crud-label">Iemesls</span>
                 <textarea name="transfer_reason" rows="5" class="crud-control" required>{{ old('transfer_reason') }}</textarea>
             </label>
-            <div class="flex flex-wrap gap-3">
-                <button type="submit" class="btn-create"><x-icon name="send" size="h-4 w-4" /><span>Nosutit</span></button>
-                <a href="{{ route('device-transfers.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Atcelt</span></a>
+            <div class="form-page-actions">
+                <div class="form-page-actions-copy">
+                    <div class="form-page-actions-title">Pārsūtīšanas sagatavošana</div>
+                    <div class="form-page-actions-text">Pārbaudi ierīci, saņēmēju un iemeslu, pēc tam nosūti pārsūtīšanas pieprasījumu apstiprināšanai.</div>
+                </div>
+                <div class="form-page-actions-buttons">
+                    <button type="submit" class="btn-create"><x-icon name="send" size="h-4 w-4" /><span>Nosūtīt</span></button>
+                    <a href="{{ route('device-transfers.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Atcelt</span></a>
+                </div>
             </div>
         </form>
     </section>

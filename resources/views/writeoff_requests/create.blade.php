@@ -51,9 +51,9 @@
                         <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
                     @enderror
                 </div>
-                <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                    <div class="font-semibold text-slate-900">Pirms iesniegsanas</div>
-                    <div class="mt-2 leading-6">
+                <div class="form-page-note">
+                    <div class="form-page-note-title">Pirms iesniegšanas</div>
+                    <div class="form-page-note-copy">
                         Izvēloties ierīci, redzēsi tipu, ražotāju ar modeli un telpu, lai norakstīšanas pieteikums tiktu piesaistīts pareizajam inventāram.
                     </div>
                 </div>
@@ -62,9 +62,15 @@
                 <span class="crud-label">Iemesls</span>
                 <textarea name="reason" rows="5" class="crud-control" required>{{ old('reason') }}</textarea>
             </label>
-            <div class="flex flex-wrap gap-3">
-                <button type="submit" class="btn-danger-solid"><x-icon name="send" size="h-4 w-4" /><span>Nosutit</span></button>
-                <a href="{{ route('writeoff-requests.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Atcelt</span></a>
+            <div class="form-page-actions">
+                <div class="form-page-actions-copy">
+                    <div class="form-page-actions-title">Apstiprini iesniegšanu</div>
+                    <div class="form-page-actions-text">Pārskati iemeslu un nosūti norakstīšanas pieteikumu tālākai izskatīšanai.</div>
+                </div>
+                <div class="form-page-actions-buttons">
+                    <button type="submit" class="btn-danger-solid"><x-icon name="send" size="h-4 w-4" /><span>Nosūtīt</span></button>
+                    <a href="{{ route('writeoff-requests.index') }}" class="btn-clear"><x-icon name="clear" size="h-4 w-4" /><span>Atcelt</span></a>
+                </div>
             </div>
         </form>
     </section>

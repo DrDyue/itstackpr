@@ -1,6 +1,6 @@
-{{--
+{--
     Lapa: Jauna ierīces tipa izveide.
-    Atbildība: ļauj pievienot jaunu tipu, ko vēlāk izmanto ierīces formās un filtros.
+    Atbildība: Ļauj pievienot jaunu tipu, ko vēlāk izmanto ierīces formās un filtros.
     Datu avots: DeviceTypeController@create, saglabāšana caur DeviceTypeController@store.
     Galvenās daļas:
     1. Hero.
@@ -50,19 +50,25 @@
                     <div class="type-form-section-head">
                         <div class="device-form-section-name">Darbības</div>
                     </div>
-                    <div class="mt-4 flex flex-wrap gap-3">
-                        <button type="submit" class="btn-create">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
-                            </svg>
-                            Saglabāt
-                        </button>
-                        <a href="{{ route('device-types.index') }}" class="btn-clear">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
-                            </svg>
-                            Atcelt
-                        </a>
+                    <div class="form-page-actions mt-4">
+                        <div class="form-page-actions-copy">
+                            <div class="form-page-actions-title">Saglabā tipu</div>
+                            <div class="form-page-actions-text">Jaunais nosaukums būs pieejams ierīču formās un filtros uzreiz pēc saglabāšanas.</div>
+                        </div>
+                        <div class="form-page-actions-buttons">
+                            <button type="submit" class="btn-create">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+                                </svg>
+                                Saglabāt
+                            </button>
+                            <a href="{{ route('device-types.index') }}" class="btn-clear">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                                </svg>
+                                Atcelt
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
