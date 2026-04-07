@@ -49,15 +49,18 @@ class DeviceTypeController extends Controller
             'types' => $types,
             'sorting' => $sorting,
             'sortOptions' => $this->sortOptions(),
+            'deviceTypeModal' => $this->deviceTypeModalState($request, $types),
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $this->requireManager();
-        AuditTrail::viewed($this->user(), 'DeviceType', null, 'Atvērta ierīces tipa izveides forma.');
+        AuditTrail::viewed($this->user(), 'DeviceType', null, 'Atvērts ierīces tipa pievienošanas modālis.');
 
-        return view('device_types.create');
+        return redirect()->to(route('device-types.index').'?'.http_build_query([
+            'modal' => 'create',
+        ]));
     }
 
     public function store(Request $request)
@@ -75,9 +78,12 @@ class DeviceTypeController extends Controller
     public function edit(DeviceType $deviceType)
     {
         $this->requireManager();
-        AuditTrail::viewed($this->user(), 'DeviceType', (string) $deviceType->id, 'Atvērta ierīces tipa labošanas forma: '.AuditTrail::labelFor($deviceType));
+        AuditTrail::viewed($this->user(), 'DeviceType', (string) $deviceType->id, 'Atvērts ierīces tipa labošanas modālis: '.AuditTrail::labelFor($deviceType));
 
-        return view('device_types.edit', ['type' => $deviceType]);
+        return redirect()->to(route('device-types.index').'?'.http_build_query([
+            'modal' => 'edit',
+            'device_type' => $deviceType->id,
+        ]));
     }
 
     public function update(Request $request, DeviceType $deviceType)
@@ -180,5 +186,34 @@ class DeviceTypeController extends Controller
         }
 
         return $data;
+    }
+
+    private function deviceTypeModalState(Request $request, $types): array
+    {
+        $mode = (string) (old('_device_type_modal_mode') ?? session('device_type_modal', ''));
+        $id = (string) (old('_device_type_modal_id') ?? session('device_type_modal_id', ''));
+
+        if (! in_array($mode, ['create', 'edit'], true)) {
+            $mode = '';
+        }
+
+        $selectedType = null;
+
+        if ($mode === 'edit' && $id !== '') {
+            $normalizedId = (int) $id;
+            $selectedType = $types->getCollection()->firstWhere('id', $normalizedId)
+                ?? DeviceType::query()->select(['id', 'type_name'])->find($normalizedId);
+
+            if (! $selectedType) {
+                $mode = '';
+                $id = '';
+            }
+        }
+
+        return [
+            'mode' => $mode,
+            'id' => $id,
+            'type' => $selectedType,
+        ];
     }
 }

@@ -1,11 +1,6 @@
-﻿{{--
+{{--
     Lapa: Ierīču tipu saraksts.
-    Atbildība: rāda visu tipu vārdnīcu klasiskā tabulā un ļauj to pārvaldīt bez lapas pārlādes.
-    Datu avots: DeviceTypeController@index.
-    Galvenās daļas:
-    1. Hero un ātrā darbība tipa pievienošanai.
-    2. Vienkārša tabula ar kārtošanu pēc nosaukuma un piesaistīto ierīču skaita.
-    3. Darbības ar rediģēšanu un drošu dzēšanas bloķēšanu.
+    Atbildība: rāda tipu vārdnīcu vienā tabulā un pārvalda create/edit darbības ar modāļiem tajā pašā lapā.
 --}}
 <x-app-layout>
     @php
@@ -15,9 +10,13 @@
             'devices_count' => ['label' => 'piesaistīto ierīču skaita'],
         ];
         $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
+        $modalState = $deviceTypeModal ?? ['mode' => '', 'id' => '', 'type' => null];
+        $modalMode = (string) ($modalState['mode'] ?? '');
+        $modalTypeId = (string) ($modalState['id'] ?? '');
+        $selectedModalType = $modalState['type'] ?? null;
     @endphp
 
-    <section class="app-shell app-shell-wide">
+    <section class="app-shell app-shell-wide" x-data>
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-4xl">
@@ -41,16 +40,16 @@
                         </div>
                         <div>
                             <h1 class="page-title">Ierīču tipi</h1>
-                            <p class="page-subtitle">Vienkāršota tipu vārdnīca ar saistīto ierīču skaitu un pārvaldības darbībām.</p>
+                            <p class="page-subtitle">Vienkāršota tipu vārdnīca ar saistīto ierīču skaitu un ātru pārvaldību modernās modālajās formās.</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="page-actions">
-                    <a href="{{ route('device-types.create') }}" class="btn-create">
+                    <button type="button" class="btn-create" x-on:click.prevent="$dispatch('open-modal', 'create-device-type')">
                         <x-icon name="plus" size="h-4 w-4" />
                         <span>Pievienot tipu</span>
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -63,6 +62,10 @@
 
             @if (session('error'))
                 <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
+            @endif
+
+            @if (session('success'))
+                <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
             @endif
 
             <div class="app-table-shell">
@@ -140,10 +143,10 @@
                                     </td>
                                     <td class="px-4 py-4">
                                         <div class="device-type-actions">
-                                            <a href="{{ route('device-types.edit', $type) }}" class="btn-edit">
+                                            <button type="button" class="btn-edit" x-on:click.prevent="$dispatch('open-modal', 'edit-device-type-{{ $type->id }}')">
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Rediģēt</span>
-                                            </a>
+                                            </button>
 
                                             @if ($canDelete)
                                                 <form
@@ -197,7 +200,64 @@
             @if ($types->hasPages())
                 <div class="mt-5">{{ $types->links() }}</div>
             @endif
+
+            <x-modal name="create-device-type" :show="$modalMode === 'create'" maxWidth="xl" focusable>
+                <div class="p-0">
+                    @if ($modalMode === 'create')
+                        <x-validation-summary class="m-5 mb-0" />
+                    @endif
+
+                    @include('device_types.partials.modal-form', [
+                        'mode' => 'create',
+                        'action' => route('device-types.store'),
+                        'modalName' => 'create-device-type',
+                        'title' => 'Jauns ierīces tips',
+                        'subtitle' => 'Pievieno jaunu klasifikatora ierakstu bez lapas maiņas.',
+                        'submitLabel' => 'Saglabāt tipu',
+                        'submitClass' => 'btn-create',
+                    ])
+                </div>
+            </x-modal>
+
+            @foreach ($types as $type)
+                <x-modal name="edit-device-type-{{ $type->id }}" :show="$modalMode === 'edit' && $modalTypeId === (string) $type->id" maxWidth="xl" focusable>
+                    <div class="p-0">
+                        @if ($modalMode === 'edit' && $modalTypeId === (string) $type->id)
+                            <x-validation-summary class="m-5 mb-0" />
+                        @endif
+
+                        @include('device_types.partials.modal-form', [
+                            'mode' => 'edit',
+                            'action' => route('device-types.update', $type),
+                            'modalName' => 'edit-device-type-' . $type->id,
+                            'type' => $type,
+                            'title' => 'Rediģēt ierīces tipu',
+                            'subtitle' => 'Atjauno tipa nosaukumu un uzreiz saglabā to pašā saraksta lapā.',
+                            'submitLabel' => 'Saglabāt izmaiņas',
+                            'submitClass' => 'btn-edit',
+                        ])
+                    </div>
+                </x-modal>
+            @endforeach
+
+            @if ($modalMode === 'edit' && $selectedModalType && ! $types->getCollection()->contains('id', $selectedModalType->id))
+                <x-modal name="edit-device-type-{{ $selectedModalType->id }}" :show="true" maxWidth="xl" focusable>
+                    <div class="p-0">
+                        <x-validation-summary class="m-5 mb-0" />
+
+                        @include('device_types.partials.modal-form', [
+                            'mode' => 'edit',
+                            'action' => route('device-types.update', $selectedModalType),
+                            'modalName' => 'edit-device-type-' . $selectedModalType->id,
+                            'type' => $selectedModalType,
+                            'title' => 'Rediģēt ierīces tipu',
+                            'subtitle' => 'Atjauno tipa nosaukumu un uzreiz saglabā to pašā saraksta lapā.',
+                            'submitLabel' => 'Saglabāt izmaiņas',
+                            'submitClass' => 'btn-edit',
+                        ])
+                    </div>
+                </x-modal>
+            @endif
         </div>
     </section>
 </x-app-layout>
-

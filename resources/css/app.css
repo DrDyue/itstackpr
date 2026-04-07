@@ -1042,28 +1042,101 @@ tbody td {
     @apply font-semibold text-slate-900;
 }
 
-.type-form-shell {
-    @apply mx-auto max-w-6xl px-4 sm:px-6 lg:px-8;
+.device-type-modal-shell {
+    @apply overflow-hidden rounded-[2rem] bg-white;
 }
 
-.type-form-grid {
-    @apply grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_280px];
+.device-type-modal-head {
+    @apply relative overflow-hidden border-b border-slate-200 px-6 py-6 sm:px-7;
+    background:
+        radial-gradient(circle at top right, rgba(14, 165, 233, 0.14), transparent 38%),
+        radial-gradient(circle at left center, rgba(56, 189, 248, 0.12), transparent 32%),
+        linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(255, 255, 255, 0.98));
 }
 
-.type-form-card {
-    @apply rounded-3xl border border-slate-200 bg-white p-5 shadow-sm;
+.device-type-modal-head::after {
+    content: '';
+    @apply pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-sky-200/80 to-transparent;
 }
 
-.type-form-section-head {
+.device-type-modal-head-copy {
+    @apply space-y-4 pr-14;
+}
+
+.device-type-modal-badge {
+    @apply inline-flex items-center gap-2 rounded-full border border-sky-200/80 bg-white/80 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-sky-700 shadow-sm backdrop-blur;
+}
+
+.device-type-modal-title-row {
+    @apply flex items-start gap-4;
+}
+
+.device-type-modal-icon {
+    @apply flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.35rem] border border-sky-200/80 bg-white/80 text-sky-700 shadow-sm backdrop-blur;
+}
+
+.device-type-modal-title {
+    @apply text-2xl font-semibold tracking-tight text-slate-950;
+}
+
+.device-type-modal-subtitle {
+    @apply mt-1 max-w-2xl text-sm leading-6 text-slate-600;
+}
+
+.device-type-modal-close {
+    @apply absolute right-5 top-5 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white/80 text-slate-500 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white hover:text-slate-700;
+}
+
+.device-type-modal-body {
+    @apply bg-slate-50/60 px-6 py-6 sm:px-7;
+}
+
+.device-type-modal-card {
+    @apply rounded-[1.7rem] border border-slate-200/90 bg-white/90 p-5 shadow-sm backdrop-blur-sm;
+}
+
+.device-type-modal-card-head {
     @apply border-b border-slate-100 pb-3;
 }
 
-.type-back-link {
-    @apply inline-flex whitespace-nowrap rounded-full border border-sky-200 bg-white px-4 py-2 text-sm font-medium text-sky-700 transition hover:bg-sky-50;
+.device-type-modal-card-title {
+    @apply text-base font-semibold text-slate-900;
 }
 
-.type-form-actions {
-    @apply sticky top-4 rounded-3xl border border-sky-100 bg-white p-4 shadow-sm;
+.device-type-modal-card-copy {
+    @apply mt-1 text-sm leading-6 text-slate-500;
+}
+
+.device-type-modal-field-wrap {
+    @apply mt-5 space-y-2;
+}
+
+.device-type-modal-field-note {
+    @apply text-xs leading-5 text-slate-500;
+}
+
+.device-type-modal-error {
+    @apply rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700;
+}
+
+.device-type-modal-actions {
+    @apply flex flex-col gap-4 border-t border-slate-200 bg-white px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7;
+}
+
+.device-type-modal-actions-copy {
+    @apply min-w-0;
+}
+
+.device-type-modal-actions-title {
+    @apply text-sm font-semibold text-slate-900;
+}
+
+.device-type-modal-actions-text {
+    @apply mt-1 text-sm leading-6 text-slate-500;
+}
+
+.device-type-modal-actions-buttons {
+    @apply flex flex-wrap items-center justify-end gap-2;
 }
 
 .device-type-count-link {
@@ -4105,6 +4178,19 @@ tbody td {
     @apply grid grid-cols-2 gap-2;
 }
 
+.table-action-stack {
+    @apply space-y-2;
+}
+
+.table-action-grid > form,
+.table-action-grid > a,
+.table-action-grid > button,
+.table-action-stack > form,
+.table-action-stack > a,
+.table-action-stack > button {
+    @apply block w-full;
+}
+
 .table-action-item {
     @apply flex min-h-[2.85rem] w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm font-medium text-slate-700 shadow-sm transition duration-150 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900;
 }
@@ -4186,6 +4272,11 @@ tbody td {
 .table-action-inline-panel {
     @apply absolute right-0 z-50 mt-2 w-[31rem] overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 shadow-xl ring-1 ring-slate-200/70;
     transform-origin: top right;
+}
+
+.table-action-menu .table-action-list,
+.table-action-menu .table-action-inline-panel {
+    will-change: transform, opacity;
 }
 
 .table-action-inline-head {
@@ -5976,6 +6067,70 @@ html[data-theme='dark'] .device-type-count-value {
 
 html[data-theme='dark'] .device-type-count-label {
     color: #7dd3fc !important;
+}
+
+html[data-theme='dark'] .device-type-modal-shell {
+    background-color: #0f172a !important;
+}
+
+html[data-theme='dark'] .device-type-modal-head {
+    background:
+        radial-gradient(circle at top right, rgba(56, 189, 248, 0.16), transparent 44%),
+        radial-gradient(circle at top left, rgba(14, 165, 233, 0.12), transparent 38%),
+        linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(17, 24, 39, 0.96)) !important;
+    border-bottom-color: rgba(51, 65, 85, 0.92) !important;
+}
+
+html[data-theme='dark'] .device-type-modal-badge,
+html[data-theme='dark'] .device-type-modal-close,
+html[data-theme='dark'] .device-type-modal-card {
+    background-color: rgba(15, 23, 42, 0.88) !important;
+    border-color: rgba(71, 85, 105, 0.82) !important;
+}
+
+html[data-theme='dark'] .device-type-modal-icon {
+    background-color: rgba(15, 23, 42, 0.86) !important;
+    border-color: rgba(56, 189, 248, 0.28) !important;
+    color: #7dd3fc !important;
+    box-shadow: 0 18px 30px rgba(2, 6, 23, 0.26) !important;
+}
+
+html[data-theme='dark'] .device-type-modal-title,
+html[data-theme='dark'] .device-type-modal-actions-title {
+    color: #f8fafc !important;
+}
+
+html[data-theme='dark'] .device-type-modal-subtitle,
+html[data-theme='dark'] .device-type-modal-card-copy,
+html[data-theme='dark'] .device-type-modal-field-note,
+html[data-theme='dark'] .device-type-modal-actions-text {
+    color: #94a3b8 !important;
+}
+
+html[data-theme='dark'] .device-type-modal-badge {
+    color: #bae6fd !important;
+}
+
+html[data-theme='dark'] .device-type-modal-close {
+    color: #94a3b8 !important;
+}
+
+html[data-theme='dark'] .device-type-modal-close:hover {
+    background-color: rgba(30, 41, 59, 0.94) !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-theme='dark'] .device-type-modal-card-head,
+html[data-theme='dark'] .device-type-modal-actions {
+    border-color: rgba(51, 65, 85, 0.92) !important;
+}
+
+html[data-theme='dark'] .device-type-modal-card-title {
+    color: #94a3b8 !important;
+}
+
+html[data-theme='dark'] .device-type-modal-actions {
+    background-color: rgba(15, 23, 42, 0.82) !important;
 }
 
 html[data-theme='dark'] .quick-status-filter-rose {

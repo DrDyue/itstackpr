@@ -224,13 +224,27 @@
                                 </svg>
                             </button>
 
-                            <div class="table-action-list" :class="panel ? 'table-action-list-wide' : ''" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false; panel = null">
+                            <div
+                                class="table-action-list"
+                                :class="panel ? 'table-action-list-wide' : ''"
+                                x-cloak
+                                x-show="open"
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                                x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                                x-transition:leave-end="opacity-0 -translate-y-1 scale-95"
+                                @click.outside="open = false; panel = null"
+                            >
                                 <div class="table-action-section">
                                     <div class="table-action-section-title">Pārskats</div>
+                                    <div class="table-action-stack">
                                 <a href="{{ route('devices.show', $device) }}" class="table-action-item table-action-item-primary" @click="open = false; panel = null">
                                     <x-icon name="view" size="h-4 w-4" />
                                     <span>Skatīt</span>
                                 </a>
+                                    </div>
                                 </div>
 
                                 @if (! $canManageDevices)
@@ -238,7 +252,7 @@
                                     <div class="table-action-section">
                                         <div class="table-action-section-title">Pieprasījumi</div>
                                     @if ($requestAvailability['can_create_any'])
-                                        <div class="table-action-grid">
+                                        <div class="table-action-stack">
                                         <a href="{{ route('repair-requests.create', ['device_id' => $device->id]) }}" class="table-action-item table-action-item-sky" @click="open = false; panel = null">
                                             <x-icon name="repair" size="h-4 w-4" />
                                             <span>Pieteikt remontu</span>
@@ -279,13 +293,14 @@
                                     <div class="table-action-divider"></div>
                                     <div class="table-action-section">
                                         <div class="table-action-section-title">Pārvaldība</div>
+                                        <div class="table-action-stack">
                                     <a href="{{ route('devices.edit', $device) }}" class="table-action-item table-action-item-amber" @click="open = false; panel = null">
                                         <x-icon name="edit" size="h-4 w-4" />
                                         <span>Rediģēt</span>
                                     </a>
 
                                     @if ($device->status === 'active')
-                                        <div class="table-action-grid">
+                                        <div class="table-action-stack">
                                         <button type="button" class="table-action-item table-action-item-sky" @click="panel = panel === 'room' ? null : 'room'">
                                             <x-icon name="room" size="h-4 w-4" />
                                             <span>Mainīt telpu</span>
@@ -298,7 +313,7 @@
 
                                         </div>
 
-                                        <div class="table-action-grid">
+                                        <div class="table-action-stack">
                                         <form
                                             method="POST"
                                             action="{{ route('devices.quick-update', $device) }}"
@@ -332,8 +347,9 @@
                                         </form>
 
                                         </div>
+                                        </div>
 
-                                        <div class="table-action-inline-panel" x-cloak x-show="panel === 'room'" x-transition.opacity>
+                                        <div class="table-action-inline-panel" x-cloak x-show="panel === 'room'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0 scale-100" x-transition:leave-end="opacity-0 translate-y-1 scale-95">
                                             <div class="table-action-inline-head">
                                                 <div>
                                                     <div class="table-action-inline-title">Mainīt telpu</div>
@@ -367,7 +383,7 @@
                                             </form>
                                         </div>
 
-                                        <div class="table-action-inline-panel" x-cloak x-show="panel === 'assignee'" x-transition.opacity>
+                                        <div class="table-action-inline-panel" x-cloak x-show="panel === 'assignee'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0 scale-100" x-transition:leave-end="opacity-0 translate-y-1 scale-95">
                                             <div class="table-action-inline-head">
                                                 <div>
                                                     <div class="table-action-inline-title">Mainīt atbildīgo</div>
