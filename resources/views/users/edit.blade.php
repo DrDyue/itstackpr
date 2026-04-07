@@ -1,4 +1,4 @@
-{--
+{{--
     Lapa: Lietotāja rediģēšana.
     Atbildība: ļauj administratoram atjaunot lietotāja kontaktus, lomu un konta statusu.
     Datu avots: UserController@edit, saglabāšana caur UserController@update.
@@ -51,14 +51,22 @@
                                 <span class="crud-label">Amats</span>
                                 <input type="text" name="job_title" value="{{ old('job_title', $user->job_title) }}" class="crud-control">
                             </label>
-                            <label class="block">
+                            <div class="block md:col-start-2">
                                 <span class="crud-label">Loma</span>
-                                <select name="role" class="crud-control" required>
-                                    @foreach ($roles as $role)
-                                        <option value="{{ $role }}" @selected(old('role', $user->role) === $role)>{{ $roleLabels[$role] ?? $role }}</option>
-                                    @endforeach
-                                </select>
-                            </label>
+                                <div class="mt-2" x-data="{ role: @js(old('role', $user->role)) }">
+                                    <input type="hidden" name="role" :value="role">
+                                    <div class="role-toggle role-toggle-compact">
+                                        <button type="button" class="role-toggle-btn" :class="role === 'admin' ? 'role-toggle-active' : ''" @click="role = 'admin'">
+                                            <x-icon name="users" size="h-4 w-4" />
+                                            <span>Admins</span>
+                                        </button>
+                                        <button type="button" class="role-toggle-btn" :class="role === 'user' ? 'role-toggle-active' : ''" @click="role = 'user'">
+                                            <x-icon name="profile" size="h-4 w-4" />
+                                            <span>Darbinieks</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                             <label class="block">
                                 <span class="crud-label">Jauna parole</span>
                                 <input type="password" name="password" class="crud-control">
@@ -75,13 +83,6 @@
                         </label>
                     </div>
                 </div>
-
-                <aside class="form-page-aside">
-                    <div class="form-page-note">
-                        <div class="form-page-note-title">Pirms saglabāšanas</div>
-                        <div class="form-page-note-copy">Pārbaudi, vai e-pasts nav kļūdains, loma ir pareiza un paroles lauki aizpildīti tikai tad, ja tiešām jāmaina piekļuve.</div>
-                    </div>
-                </aside>
             </div>
 
             <div class="form-page-actions">

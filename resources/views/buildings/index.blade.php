@@ -42,7 +42,7 @@
             <form
                 method="GET"
                 action="{{ route('buildings.index') }}"
-                class="surface-toolbar surface-toolbar-elevated surface-toolbar-grid-tight"
+                class="devices-filter-surface devices-filter-surface-elevated"
                 data-async-table-form
                 data-async-root="#buildings-index-root"
                 data-search-endpoint="{{ route('buildings.find-by-name') }}"
@@ -50,42 +50,65 @@
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
 
-                <label class="surface-toolbar-field">
-                    <span class="crud-label">Ēkas nosaukums vai adrese</span>
-                    <div class="flex items-center gap-2">
-                        <input
-                            type="text"
-                            name="search"
-                            value="{{ $filters['search'] }}"
-                            class="crud-control"
-                            placeholder="Ievadi ēkas nosaukumu vai adresi"
-                            data-async-manual="true"
-                            data-table-manual-search="true"
-                            data-search-mode="contains"
-                        >
-                        <button type="submit" class="btn-search shrink-0" data-table-search-submit="true">
+                <div class="devices-filter-header">
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
                             <x-icon name="search" size="h-4 w-4" />
-                            <span>Meklēt</span>
-                        </button>
+                            <span>Meklēšana</span>
+                        </h3>
+                        <div class="devices-search-group">
+                            <label class="devices-search-label">
+                                <span>Meklēt pēc nosaukuma vai adreses</span>
+                                <input
+                                    type="text"
+                                    name="search"
+                                    value="{{ $filters['search'] }}"
+                                    class="devices-code-input"
+                                    placeholder="Ievadi ēkas nosaukumu vai adresi"
+                                    data-async-manual="true"
+                                    data-table-manual-search="true"
+                                    data-search-mode="contains"
+                                >
+                            </label>
+                            <button type="submit" class="devices-code-search-btn" data-table-search-submit="true">
+                                <x-icon name="search" size="h-4 w-4" />
+                                <span>Atrast ēku</span>
+                            </button>
+                        </div>
                     </div>
-                </label>
 
-                <label class="surface-toolbar-field">
-                    <span class="crud-label">Stāvu skaits</span>
-                    <input
-                        type="number"
-                        name="total_floors"
-                        value="{{ $filters['total_floors'] }}"
-                        class="crud-control"
-                        placeholder="Ievadi stāvu skaitu"
-                        min="0"
-                        step="1"
-                        inputmode="numeric"
-                    >
-                </label>
+                    <div class="devices-filter-divider-vertical"></div>
 
-                <div class="surface-toolbar-actions lg:col-span-2">
-                    <a href="{{ route('buildings.index') }}" class="btn-clear" data-async-link="true"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt filtrus</span></a>
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
+                            <x-icon name="filter" size="h-4 w-4" />
+                            <span>Filtri</span>
+                        </h3>
+                        <div class="buildings-filters-grid">
+                            <label class="block">
+                                <span class="crud-label">Stāvu skaits</span>
+                                <input
+                                    type="number"
+                                    name="total_floors"
+                                    value="{{ $filters['total_floors'] }}"
+                                    class="crud-control"
+                                    placeholder="Ievadi stāvu skaitu"
+                                    min="0"
+                                    step="1"
+                                    inputmode="numeric"
+                                >
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-toolbar-footer">
+                    <div class="toolbar-actions">
+                        <a href="{{ route('buildings.index') }}" class="btn-clear" data-async-link="true">
+                            <x-icon name="clear" size="h-4 w-4" />
+                            <span>Notīrīt filtrus</span>
+                        </a>
+                    </div>
                 </div>
             </form>
 

@@ -112,7 +112,8 @@
       "Bash(new_grid *)",
       "Bash(old_grid, *)",
       "Bash(f.write)",
-      "Bash(print)"
+      "Bash(print)",
+      "Bash(npm run *)"
     ]
   },
   "$version": 3

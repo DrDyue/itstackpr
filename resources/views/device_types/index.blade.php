@@ -117,29 +117,21 @@
                                 @endphp
                                 <tr class="app-table-row border-t border-slate-100 align-middle" data-table-row-id="device-type-{{ $type->id }}" data-table-search-value="{{ \Illuminate\Support\Str::lower($type->type_name) }}">
                                     <td class="px-4 py-4">
-                                        <div class="device-type-cell">
-                                            <div class="device-type-cell-icon">
-                                                <x-icon name="type" size="h-4 w-4" />
-                                            </div>
-                                            <div class="device-type-cell-copy">
-                                                <div class="app-table-cell-strong">{{ $type->type_name }}</div>
-                                                <div class="app-table-cell-subline">Izmanto ierīču klasifikācijai un filtrēšanai.</div>
-                                            </div>
-                                        </div>
+                                        <div class="app-table-cell-strong">{{ $type->type_name }}</div>
                                     </td>
                                     <td class="px-4 py-4">
-                                        <a
-                                            href="{{ route('devices.index', ['type' => $type->id, 'type_query' => $type->type_name]) }}"
-                                            class="device-type-count-link"
-                                        >
-                                            <span class="device-type-count-icon">
-                                                <x-icon name="device" size="h-4 w-4" />
+                                        @if ($type->devices_count > 0)
+                                            <a
+                                                href="{{ route('devices.index', ['type' => $type->id, 'type_query' => $type->type_name]) }}"
+                                                class="inline-flex items-center justify-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 transition hover:bg-sky-100"
+                                            >
+                                                {{ $type->devices_count }} ierīces
+                                            </a>
+                                        @else
+                                            <span class="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500">
+                                                0 ierīces
                                             </span>
-                                            <span class="device-type-count-copy">
-                                                <span class="device-type-count-value">{{ $type->devices_count }}</span>
-                                                <span class="device-type-count-label">{{ \Illuminate\Support\Str::plural('ierīce', (int) $type->devices_count) }}</span>
-                                            </span>
-                                        </a>
+                                        @endif
                                     </td>
                                     <td class="px-4 py-4">
                                         <div class="device-type-actions">
