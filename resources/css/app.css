@@ -4129,7 +4129,7 @@ tbody td {
 }
 
 .table-action-list {
-    @apply absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-200/50;
+    @apply absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl ring-1 ring-slate-200/50;
     transform-origin: top right;
 }
 
@@ -4146,7 +4146,7 @@ tbody td {
 }
 
 .table-action-section {
-    @apply px-2 py-2;
+    @apply px-3 py-2.5 space-y-2;
 }
 
 .table-action-section-title {
@@ -4158,7 +4158,11 @@ tbody td {
 }
 
 .table-action-grid {
-    @apply grid grid-cols-2 gap-2;
+    @apply grid grid-cols-2 gap-2.5;
+}
+
+.table-action-divider {
+    @apply mx-3 my-3 h-px bg-slate-100;
 }
 
 .table-action-item {
