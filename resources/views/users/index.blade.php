@@ -298,53 +298,68 @@
                                     <td class="px-4 py-4">
                                         <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">
                                             <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
-                                                <span>Darbības</span>
-                                                <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
                                                 </svg>
                                             </button>
 
                                             <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
-                                                <a href="{{ route('users.show', $managedUser) }}" class="table-action-item" @click="open = false">
-                                                    <x-icon name="view" size="h-4 w-4" />
-                                                    <span>Profils</span>
-                                                </a>
+                                                <div class="table-action-header">
+                                                    <div class="table-action-header-title">Darbības</div>
+                                                </div>
 
-                                                <a href="{{ route('users.edit', $managedUser) }}" class="table-action-item table-action-item-amber" @click="open = false">
-                                                    <x-icon name="edit" size="h-4 w-4" />
-                                                    <span>Rediģēt</span>
-                                                </a>
+                                                <div class="table-action-section">
+                                                    <div class="table-action-section-title">Pārskats</div>
+                                                    <a href="{{ route('users.show', $managedUser) }}" class="table-action-item table-action-item-primary" @click="open = false">
+                                                        <x-icon name="view" size="h-4 w-4" />
+                                                        <span>Profils</span>
+                                                    </a>
+                                                </div>
 
-                                                <a href="{{ $assignedDevicesUrl }}" class="table-action-item" @click="open = false">
-                                                    <x-icon name="device" size="h-4 w-4" />
-                                                    <span>Apskatīt piesaistītās ierīces</span>
-                                                </a>
+                                                <div class="table-action-divider"></div>
 
-                                                <form
-                                                    method="POST"
-                                                    action="{{ route('users.destroy', $managedUser) }}"
-                                                    class="contents"
-                                                    data-app-confirm-title="Dzēst lietotāju?"
-                                                    data-app-confirm-message="Vai tiešām dzēst šo lietotāju?"
-                                                    data-app-confirm-accept="Jā, dzēst"
-                                                    data-app-confirm-cancel="Nē"
-                                                    data-app-confirm-tone="danger"
-                                                >
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button
-                                                        type="{{ auth()->id() === $managedUser->id ? 'button' : 'submit' }}"
-                                                        class="{{ auth()->id() === $managedUser->id ? 'btn-disabled' : 'table-action-button table-action-button-rose' }}"
-                                                        @if (auth()->id() === $managedUser->id)
-                                                            data-app-toast-title="Dzēšana nav pieejama"
-                                                            data-app-toast-message="Paša lietotāja kontu no šīs tabulas dzēst nevar. Izmanto citu administratora kontu, ja šo profilu tiešām vajag noņemt."
-                                                            data-app-toast-tone="info"
-                                                        @endif
+                                                <div class="table-action-section">
+                                                    <div class="table-action-section-title">Pārvaldība</div>
+                                                    <a href="{{ route('users.edit', $managedUser) }}" class="table-action-item table-action-item-amber" @click="open = false">
+                                                        <x-icon name="edit" size="h-4 w-4" />
+                                                        <span>Rediģēt</span>
+                                                    </a>
+
+                                                    <a href="{{ $assignedDevicesUrl }}" class="table-action-item" @click="open = false">
+                                                        <x-icon name="device" size="h-4 w-4" />
+                                                        <span>Piesaistītās ierīces</span>
+                                                    </a>
+                                                </div>
+
+                                                <div class="table-action-divider"></div>
+
+                                                <div class="table-action-section">
+                                                    <form
+                                                        method="POST"
+                                                        action="{{ route('users.destroy', $managedUser) }}"
+                                                        data-app-confirm-title="Dzēst lietotāju?"
+                                                        data-app-confirm-message="Vai tiešām dzēst šo lietotāju?"
+                                                        data-app-confirm-accept="Jā, dzēst"
+                                                        data-app-confirm-cancel="Nē"
+                                                        data-app-confirm-tone="danger"
                                                     >
-                                                        <x-icon name="trash" size="h-4 w-4" />
-                                                        <span>Dzēst</span>
-                                                    </button>
-                                                </form>
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button
+                                                            type="{{ auth()->id() === $managedUser->id ? 'button' : 'submit' }}"
+                                                            class="table-action-item table-action-item-rose"
+                                                            @if (auth()->id() === $managedUser->id)
+                                                                data-app-toast-title="Dzēšana nav pieejama"
+                                                                data-app-toast-message="Paša lietotāja kontu no šīs tabulas dzēst nevar. Izmanto citu administratora kontu, ja šo profilu tiešām vajag noņemt."
+                                                                data-app-toast-tone="info"
+                                                                disabled
+                                                            @endif
+                                                        >
+                                                            <x-icon name="trash" size="h-4 w-4" />
+                                                            <span>Dzēst</span>
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             </div>
                                         </div>
                                     </td>

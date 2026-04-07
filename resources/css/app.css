@@ -4214,25 +4214,44 @@ tbody td {
     @apply text-rose-600;
 }
 
-.table-action-item-emerald {
-    @apply text-emerald-700 hover:bg-emerald-50;
-}
-
-.table-action-item-emerald > svg,
-.table-action-button-emerald > svg {
-    @apply text-emerald-600;
-}
-
 .table-action-button {
     @apply flex h-10 w-full items-center gap-2.5 rounded-lg px-3 text-sm font-medium text-slate-700 transition-all duration-150 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.table-action-button > svg {
+    @apply text-slate-500;
 }
 
 .table-action-button-amber {
     @apply text-amber-700 hover:bg-amber-50;
 }
 
+.table-action-button-amber > svg {
+    @apply text-amber-600;
+}
+
+.table-action-button-sky {
+    @apply text-sky-700 hover:bg-sky-50;
+}
+
+.table-action-button-sky > svg {
+    @apply text-sky-600;
+}
+
 .table-action-button-rose {
     @apply text-rose-700 hover:bg-rose-50;
+}
+
+.table-action-button-rose > svg {
+    @apply text-rose-600;
+}
+
+.table-action-button-emerald {
+    @apply text-emerald-700 hover:bg-emerald-50;
+}
+
+.table-action-button-emerald > svg {
+    @apply text-emerald-600;
 }
 
 .table-action-inline-panel {
@@ -5466,6 +5485,67 @@ html[data-theme='dark'] .table-action-button-emerald > svg {
 }
 
 html[data-theme='dark'] .table-action-item-emerald:hover,
+html[data-theme='dark'] .table-action-button-emerald:hover {
+    background-color: rgba(52, 211, 153, 0.1) !important;
+}
+
+html[data-theme='dark'] .table-action-button {
+    color: #cbd5e1 !important;
+}
+
+html[data-theme='dark'] .table-action-button > svg {
+    color: #64748b !important;
+}
+
+html[data-theme='dark'] .table-action-button:hover {
+    background-color: rgba(30, 41, 59, 0.5) !important;
+    color: #f1f5f9 !important;
+}
+
+html[data-theme='dark'] .table-action-button-sky {
+    color: #38bdf8 !important;
+}
+
+html[data-theme='dark'] .table-action-button-sky > svg {
+    color: #38bdf8 !important;
+}
+
+html[data-theme='dark'] .table-action-button-sky:hover {
+    background-color: rgba(56, 189, 248, 0.1) !important;
+}
+
+html[data-theme='dark'] .table-action-button-amber {
+    color: #fbbf24 !important;
+}
+
+html[data-theme='dark'] .table-action-button-amber > svg {
+    color: #fbbf24 !important;
+}
+
+html[data-theme='dark'] .table-action-button-amber:hover {
+    background-color: rgba(251, 191, 36, 0.1) !important;
+}
+
+html[data-theme='dark'] .table-action-button-rose {
+    color: #fb7185 !important;
+}
+
+html[data-theme='dark'] .table-action-button-rose > svg {
+    color: #fb7185 !important;
+}
+
+html[data-theme='dark'] .table-action-button-rose:hover {
+    background-color: rgba(251, 113, 133, 0.1) !important;
+}
+
+html[data-theme='dark'] .table-action-button-emerald {
+    color: #34d399 !important;
+}
+
+html[data-theme='dark'] .table-action-button-emerald > svg {
+    color: #34d399 !important;
+}
+
 html[data-theme='dark'] .table-action-button-emerald:hover {
     background-color: rgba(52, 211, 153, 0.1) !important;
 }
