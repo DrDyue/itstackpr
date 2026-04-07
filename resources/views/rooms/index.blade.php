@@ -60,55 +60,86 @@
         </div>
 
         <div id="rooms-index-root" data-async-table-root>
-        <form method="GET" action="{{ route('rooms.index') }}" class="surface-toolbar surface-toolbar-elevated surface-toolbar-grid-compact" data-async-table-form data-async-root="#rooms-index-root" data-search-endpoint="{{ route('rooms.find-by-name') }}">
-            <label class="surface-toolbar-field">
-                <span class="crud-label">Telpas nosaukums</span>
-                <div class="flex items-center gap-2">
-                    <input type="text" name="search" value="{{ $filters['search'] }}" class="crud-control" placeholder="Nosaukums vai numurs" data-async-manual="true" data-table-manual-search="true" data-search-mode="contains">
-                    <button type="submit" class="btn-search shrink-0" data-table-search-submit="true"><x-icon name="search" size="h-4 w-4" /><span>Meklēt</span></button>
+        <form method="GET" action="{{ route('rooms.index') }}" class="devices-filter-surface devices-filter-surface-elevated" data-async-table-form data-async-root="#rooms-index-root" data-search-endpoint="{{ route('rooms.find-by-name') }}">
+            <input type="hidden" name="sort" value="{{ $sorting['sort'] ?? 'id' }}" data-sort-hidden="field">
+            <input type="hidden" name="direction" value="{{ $sorting['direction'] ?? 'asc' }}" data-sort-hidden="direction">
+
+            <div class="devices-filter-header">
+                <div class="devices-filter-section">
+                    <h3 class="devices-filter-title">
+                        <x-icon name="search" size="h-4 w-4" />
+                        <span>Meklēšana</span>
+                    </h3>
+                    <div class="devices-search-group">
+                        <label class="devices-search-label">
+                            <span>Meklēt pēc nosaukuma vai numura</span>
+                            <input type="text" name="search" value="{{ $filters['search'] }}" class="devices-code-input" placeholder="Nosaukums vai numurs" data-async-manual="true" data-table-manual-search="true" data-search-mode="contains">
+                        </label>
+                        <button type="submit" class="devices-code-search-btn" data-table-search-submit="true">
+                            <x-icon name="search" size="h-4 w-4" />
+                            <span>Atrast telpu</span>
+                        </button>
+                    </div>
                 </div>
-            </label>
-            <label class="surface-toolbar-field">
-                <span class="crud-label">Ēka</span>
-                <x-searchable-select
-                    name="building_id"
-                    query-name="building_query"
-                    identifier="room-building-filter"
-                    :options="$buildingOptions"
-                    :selected="$filters['building_id']"
-                    :query="$selectedBuildingLabel"
-                    placeholder="Izvēlies ēku"
-                    empty-message="Neviena ēka neatbilst meklējumam."
-                />
-            </label>
-            <label class="surface-toolbar-field">
-                <span class="crud-label">Stāvs</span>
-                <x-searchable-select
-                    name="floor"
-                    query-name="floor_query"
-                    identifier="room-floor-filter"
-                    :options="$floorOptions"
-                    :selected="$filters['floor']"
-                    :query="$selectedFloorLabel"
-                    placeholder="Izvēlies stāvu"
-                    empty-message="Neviens stāvs neatbilst meklējumam."
-                />
-            </label>
-            <label class="surface-toolbar-field">
-                <span class="crud-label">Atbildīgais</span>
-                <x-searchable-select
-                    name="user_id"
-                    query-name="user_query"
-                    identifier="room-user-filter"
-                    :options="$userOptions"
-                    :selected="$filters['user_id']"
-                    :query="$selectedUserLabel"
-                    placeholder="Izvēlies atbildīgo"
-                    empty-message="Neviens lietotājs neatbilst meklējumam."
-                />
-            </label>
-            <div class="surface-toolbar-actions lg:col-span-4">
-                <a href="{{ route('rooms.index') }}" class="btn-clear" data-async-link="true"><x-icon name="clear" size="h-4 w-4" /><span>Notīrīt filtrus</span></a>
+
+                <div class="devices-filter-divider-vertical"></div>
+
+                <div class="devices-filter-section">
+                    <h3 class="devices-filter-title">
+                        <x-icon name="filter" size="h-4 w-4" />
+                        <span>Filtri</span>
+                    </h3>
+                    <div class="rooms-filters-grid">
+                        <label class="block">
+                            <span class="crud-label">Ēka</span>
+                            <x-searchable-select
+                                name="building_id"
+                                query-name="building_query"
+                                identifier="room-building-filter"
+                                :options="$buildingOptions"
+                                :selected="$filters['building_id']"
+                                :query="$selectedBuildingLabel"
+                                placeholder="Izvēlies ēku"
+                                empty-message="Neviena ēka neatbilst meklējumam."
+                            />
+                        </label>
+                        <label class="block">
+                            <span class="crud-label">Stāvs</span>
+                            <x-searchable-select
+                                name="floor"
+                                query-name="floor_query"
+                                identifier="room-floor-filter"
+                                :options="$floorOptions"
+                                :selected="$filters['floor']"
+                                :query="$selectedFloorLabel"
+                                placeholder="Izvēlies stāvu"
+                                empty-message="Neviens stāvs neatbilst meklējumam."
+                            />
+                        </label>
+                        <label class="block">
+                            <span class="crud-label">Atbildīgais</span>
+                            <x-searchable-select
+                                name="user_id"
+                                query-name="user_query"
+                                identifier="room-user-filter"
+                                :options="$userOptions"
+                                :selected="$filters['user_id']"
+                                :query="$selectedUserLabel"
+                                placeholder="Izvēlies atbildīgo"
+                                empty-message="Neviens lietotājs neatbilst meklējumam."
+                            />
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-toolbar-footer">
+                <div class="toolbar-actions">
+                    <a href="{{ route('rooms.index') }}" class="btn-clear" data-async-link="true">
+                        <x-icon name="clear" size="h-4 w-4" />
+                        <span>Notīrīt filtrus</span>
+                    </a>
+                </div>
             </div>
         </form>
 

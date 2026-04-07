@@ -3049,6 +3049,10 @@ tbody td {
     @apply grid w-full gap-3 md:grid-cols-2 xl:grid-cols-3;
 }
 
+.rooms-filters-grid {
+    @apply grid w-full gap-3 md:grid-cols-2 xl:grid-cols-3;
+}
+
 .filter-toolbar-footer {
     @apply flex flex-col gap-2 border-t border-slate-200 pt-2 md:flex-row md:items-center md:justify-between;
 }
