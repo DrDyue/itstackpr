@@ -4109,28 +4109,32 @@ tbody td {
 }
 
 .table-action-summary {
-    @apply inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700;
+    @apply inline-flex h-9 min-w-[9rem] cursor-pointer items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900;
 }
 
 .table-action-summary svg {
-    @apply h-4 w-4 transition-transform duration-200;
+    @apply h-4 w-4 text-slate-400 transition-all duration-200;
+}
+
+.table-action-summary:hover svg {
+    @apply text-slate-600;
 }
 
 .table-action-summary[aria-expanded="true"] {
-    @apply border-sky-200 bg-sky-50 text-sky-600 shadow-sm;
+    @apply border-sky-200 bg-sky-50 text-sky-700 shadow-sm;
 }
 
 .table-action-summary[aria-expanded="true"] svg {
-    @apply rotate-180;
+    @apply rotate-180 text-sky-600;
 }
 
 .table-action-list {
-    @apply absolute right-0 z-50 mt-2 w-72 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-200/50;
+    @apply absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-200/50;
     transform-origin: top right;
 }
 
 .table-action-list-wide {
-    @apply w-[32rem];
+    @apply w-[36rem];
 }
 
 .table-action-header {
