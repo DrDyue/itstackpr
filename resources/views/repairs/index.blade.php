@@ -439,8 +439,8 @@
                                     <td class="px-4 py-4 tabular-nums">
                                         <div class="font-semibold text-slate-900">{{ $repair->end_date?->format('d.m.Y') ?: '-' }}</div>
                                     </td>
-                                    <td class="px-4 py-4 text-right repair-table-actions-cell">
-                                        <div class="table-action-menu inline-block" x-data="{ open: false }" @keydown.escape.window="open = false">
+                                    <td class="px-4 py-4">
+                                        <div class="table-action-menu" x-data="{ open: false, panel: null }" @keydown.escape.window="open = false; panel = null">
                                             <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
                                                 <span>Darbības</span>
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -448,186 +448,200 @@
                                                 </svg>
                                             </button>
 
-                                            <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
+                                            <div class="table-action-list" :class="panel ? 'table-action-list-wide' : ''" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false; panel = null">
+                                                <div class="table-action-header">
+                                                    <div class="table-action-header-title">Darbības</div>
+                                                </div>
+
                                                 @if ($linkedRequestUrl)
-                                                    <a href="{{ $linkedRequestUrl }}" class="table-action-item table-action-item-violet" @click="open = false">
-                                                        <x-icon name="repair-request" size="h-4 w-4" />
-                                                        <span>Skatīt saistīto pieprasījumu</span>
-                                                    </a>
+                                                    <div class="table-action-section">
+                                                        <div class="table-action-section-title">Saistītie ieraksti</div>
+                                                        <a href="{{ $linkedRequestUrl }}" class="table-action-item table-action-item-violet" @click="open = false; panel = null">
+                                                            <x-icon name="repair-request" size="h-4 w-4" />
+                                                            <span>Skatīt saistīto pieprasījumu</span>
+                                                        </a>
+                                                    </div>
                                                 @endif
 
                                                 @if ($canManageRepairs)
-                                                    <a href="{{ route('repairs.edit', $repair) }}" class="table-action-item table-action-item-amber" @click="open = false">
-                                                        <x-icon name="edit" size="h-4 w-4" />
-                                                        <span>Rediģēt</span>
-                                                    </a>
+                                                    <div class="table-action-divider"></div>
+                                                    <div class="table-action-section">
+                                                        <div class="table-action-section-title">Pārvaldība</div>
+                                                        
+                                                        <a href="{{ route('repairs.edit', $repair) }}" class="table-action-item table-action-item-amber" @click="open = false; panel = null">
+                                                            <x-icon name="edit" size="h-4 w-4" />
+                                                            <span>Rediģēt</span>
+                                                        </a>
 
-                                                    @if ($repair->status === 'waiting')
-                                                        <form
-                                                            method="POST"
-                                                            action="{{ route('repairs.transition', $repair) }}"
-                                                            data-app-confirm-title="Sākt remontu?"
-                                                            data-app-confirm-message="Vai tiešām pārvietot šo remontu uz statusu "Procesā"?"
-                                                            data-app-confirm-accept="Jā, sākt"
-                                                            data-app-confirm-cancel="Nē"
-                                                            data-app-confirm-tone="warning"
-                                                        >
-                                                            @csrf
-                                                            <input type="hidden" name="target_status" value="in-progress">
-                                                            <button type="submit" class="table-action-item table-action-item-sky" @click="open = false">
-                                                                <x-icon name="stats" size="h-4 w-4" />
-                                                                <span>Pārvietot uz procesu</span>
-                                                            </button>
-                                                        </form>
-                                                    @elseif ($repair->status === 'in-progress')
-                                                        <form
-                                                            method="POST"
-                                                            action="{{ route('repairs.transition', $repair) }}"
-                                                            data-app-confirm-title="Pabeigt remontu?"
-                                                            data-app-confirm-message="Vai tiešām pabeigt šo remonta ierakstu?"
-                                                            data-app-confirm-accept="Jā, pabeigt"
-                                                            data-app-confirm-cancel="Nē"
-                                                            data-app-confirm-tone="warning"
-                                                        >
-                                                            @csrf
-                                                            <input type="hidden" name="target_status" value="completed">
-                                                            <button type="submit" class="table-action-item table-action-item-emerald" @click="open = false">
-                                                                <x-icon name="check-circle" size="h-4 w-4" />
-                                                                <span>Pabeigt</span>
-                                                            </button>
-                                                        </form>
-                                                    @endif
+                                                        @if ($repair->status === 'waiting')
+                                                            <form
+                                                                method="POST"
+                                                                action="{{ route('repairs.transition', $repair) }}"
+                                                                data-app-confirm-title="Sākt remontu?"
+                                                                data-app-confirm-message="Vai tiešām pārvietot šo remontu uz statusu "Procesā"?"
+                                                                data-app-confirm-accept="Jā, sākt"
+                                                                data-app-confirm-cancel="Nē"
+                                                                data-app-confirm-tone="warning"
+                                                            >
+                                                                @csrf
+                                                                <input type="hidden" name="target_status" value="in-progress">
+                                                                <button type="submit" class="table-action-item table-action-item-sky" @click="open = false; panel = null">
+                                                                    <x-icon name="stats" size="h-4 w-4" />
+                                                                    <span>Pārvietot uz procesu</span>
+                                                                </button>
+                                                            </form>
+                                                        @elseif ($repair->status === 'in-progress')
+                                                            <form
+                                                                method="POST"
+                                                                action="{{ route('repairs.transition', $repair) }}"
+                                                                data-app-confirm-title="Pabeigt remontu?"
+                                                                data-app-confirm-message="Vai tiešām pabeigt šo remonta ierakstu?"
+                                                                data-app-confirm-accept="Jā, pabeigt"
+                                                                data-app-confirm-cancel="Nē"
+                                                                data-app-confirm-tone="warning"
+                                                            >
+                                                                @csrf
+                                                                <input type="hidden" name="target_status" value="completed">
+                                                                <button type="submit" class="table-action-item table-action-item-emerald" @click="open = false; panel = null">
+                                                                    <x-icon name="check-circle" size="h-4 w-4" />
+                                                                    <span>Pabeigt</span>
+                                                                </button>
+                                                            </form>
+                                                        @endif
 
-                                                    <button
-                                                        type="button"
-                                                        class="table-action-item"
-                                                        @click="open = false; $dispatch('open-request-detail', @js([
-                                                            'drawer_title' => 'Remonta ātrais skats',
-                                                            'drawer_subtitle' => 'Galvenā informācija par remonta statusu, saistīto pieprasījumu un izpildes gaitu.',
-                                                            'status_label' => $statusLabels[$repair->status] ?? $repair->status,
-                                                            'status_badge_class' => $detailStatusClasses[$repair->status] ?? 'request-detail-status-slate',
-                                                            'submitted_at' => $repair->created_at?->format('d.m.Y H:i') ?: '-',
-                                                            'hero_icon' => 'repair',
-                                                            'hero_tone' => match ($repair->status) {
-                                                                'waiting' => 'amber',
-                                                                'in-progress' => 'sky',
-                                                                'completed' => 'emerald',
-                                                                'cancelled' => 'rose',
-                                                                default => 'slate',
-                                                            },
-                                                            'hero_title' => $device?->name ?: 'Ierīce nav atrasta',
-                                                            'hero_meta' => collect([
-                                                                $device?->code ? 'Kods: '.$device->code : null,
-                                                                $device?->serial_number ? 'Sērija: '.$device->serial_number : null,
-                                                            ])->filter()->implode(' | ') ?: 'Ierīces identifikācija nav pilnīga',
-                                                            'hero_note' => collect([$device?->manufacturer, $device?->model, $device?->type?->type_name])->filter()->implode(' | ') ?: 'Ražotājs, modelis vai tips nav pilnībā norādīts',
-                                                            'primary_label' => 'Statuss un nozīme',
-                                                            'primary_icon' => 'information-circle',
-                                                            'primary_tone' => match ($repair->status) {
-                                                                'waiting' => 'amber',
-                                                                'in-progress' => 'sky',
-                                                                'completed' => 'emerald',
-                                                                'cancelled' => 'rose',
-                                                                default => 'slate',
-                                                            },
-                                                            'primary_value' => $statusLabels[$repair->status] ?? $repair->status,
-                                                            'primary_meta' => match ($repair->status) {
-                                                                'waiting' => 'Remonts ir reģistrēts un gaida uzsākšanu.',
-                                                                'in-progress' => 'Remonts pašlaik tiek veikts.',
-                                                                'completed' => 'Remonts ir pabeigts un ieraksts noslēgts.',
-                                                                'cancelled' => 'Remonts ir atcelts un vairs netiek turpināts.',
-                                                                default => 'Statusa skaidrojums nav pieejams.',
-                                                            },
-                                                            'primary_note' => $linkedRequestUrl ? 'Šim remontam ir saistīts pieprasījums, kuru var atvērt atsevišķi.' : 'Remonts izveidots bez saistīta pieprasījuma.',
-                                                            'primary_note_secondary' => $locationPrimary !== '' ? 'Atrašanās vieta: '.$locationPrimary : 'Atrašanās vieta nav norādīta.',
-                                                            'primary_link_url' => $linkedRequestUrl ?: $deviceShowUrl,
-                                                            'primary_link_label' => $linkedRequestUrl ? 'Atvērt saistīto pieprasījumu' : 'Atvērt ierīces kartīti',
-                                                            'secondary_label' => 'Saistītais pieprasījums',
-                                                            'secondary_icon' => 'repair-request',
-                                                            'secondary_tone' => $repair->request ? 'violet' : 'slate',
-                                                            'secondary_value' => $repair->request ? 'Remonta pieteikums' : 'Nav pievienots',
-                                                            'secondary_meta' => $repair->request
-                                                                ? ('Statuss: '.match ($repair->request->status) {
-                                                                    'submitted' => 'iesniegts',
-                                                                    'approved' => 'apstiprināts',
-                                                                    'rejected' => 'noraidīts',
-                                                                    default => $repair->request->status,
-                                                                }.($repair->request?->created_at ? ' · iesniegts '.$repair->request->created_at->format('d.m.Y H:i') : ''))
-                                                                : 'Saistīts remonta pieteikums nav pievienots.',
-                                                            'secondary_note' => $repair->request
-                                                                ? (\Illuminate\Support\Str::limit(trim((string) $repair->request->description) !== '' ? preg_replace('/\s+/u', ' ', trim((string) $repair->request->description)) : 'Pieteikumā apraksts nav pievienots.', 140))
-                                                                : 'Šis remonts izveidots tieši no remonta sadaļas bez sākotnējā pieteikuma.',
-                                                            'tertiary_label' => 'Prioritāte, tips un izmaksas',
-                                                            'tertiary_icon' => match ($repair->priority) {
-                                                                'critical' => 'flag',
-                                                                'high' => 'exclamation-triangle',
-                                                                'medium' => 'tag',
-                                                                default => 'stats',
-                                                            },
-                                                            'tertiary_tone' => match ($repair->priority) {
-                                                                'critical' => 'rose',
-                                                                'high' => 'amber',
-                                                                'medium' => 'sky',
-                                                                default => 'slate',
-                                                            },
-                                                            'tertiary_value' => $priorityLabels[$repair->priority] ?? 'Prioritāte nav norādīta',
-                                                            'tertiary_meta' => 'Remonta tips: '.($typeLabels[$repair->repair_type] ?? 'Nav norādīts'),
-                                                            'tertiary_note' => collect([
-                                                                $repair->cost !== null ? 'Izmaksas: '.number_format((float) $repair->cost, 2, '.', ' ').' EUR' : 'Izmaksas nav norādītas',
-                                                                $assignedUser?->full_name ? 'Par ierīci atbild: '.$assignedUser->full_name : null,
-                                                            ])->filter()->implode("\n"),
-                                                            'description_label' => 'Remonta apraksts',
-                                                            'description_icon' => 'repair',
-                                                            'description_tone' => 'sky',
-                                                            'description' => trim((string) $repair->description) !== ''
-                                                                ? $repair->description
-                                                                : 'Remonta apraksts vēl nav pievienots.',
-                                                            'details_title' => 'Izpildes laika līnija',
-                                                            'details_icon' => 'calendar',
-                                                            'details_tone' => 'emerald',
-                                                            'details_intro_label' => 'Pašreizējā gatavība:',
-                                                            'details_intro' => match ($repair->status) {
-                                                                'waiting' => 'Remonts vēl nav uzsākts.',
-                                                                'in-progress' => 'Remonts notiek un gaida pabeigšanu.',
-                                                                'completed' => 'Remonts ir pilnībā noslēgts.',
-                                                                'cancelled' => 'Remonta process ir pārtraukts.',
-                                                                default => 'Gatavības informācija nav pieejama.',
-                                                            },
-                                                            'details_body' => collect([
-                                                                $requester?->full_name ? 'Pieteikumu iesniedza: '.$requester->full_name : null,
-                                                                $repair->acceptedBy?->full_name ? 'Remontu pieņēma: '.$repair->acceptedBy->full_name : null,
-                                                                $repair->start_date?->format('d.m.Y') ? 'Sākuma datums: '.$repair->start_date->format('d.m.Y') : null,
-                                                                $repair->end_date?->format('d.m.Y') ? 'Beigu datums: '.$repair->end_date->format('d.m.Y') : null,
-                                                                $locationSecondary ? 'Ēka: '.$locationSecondary : null,
-                                                            ])->filter()->implode("\n"),
-                                                            'details_link_url' => $deviceShowUrl,
-                                                            'details_link_label' => 'Atvērt ierīces kartīti',
-                                                            'details_link_icon' => 'device',
-                                                        ]))"
-                                                    >
-                                                        <x-icon name="view" size="h-4 w-4" />
-                                                        <span>Ātrais skats</span>
-                                                    </button>
-
-                                                    @if (in_array($repair->status, ['waiting', 'in-progress'], true))
-                                                        <form
-                                                            method="POST"
-                                                            action="{{ route('repairs.transition', $repair) }}"
-                                                            data-app-confirm-title="Atcelt remontu?"
-                                                            data-app-confirm-message="Vai tiešām atcelt šo remonta ierakstu?"
-                                                            data-app-confirm-accept="Jā, atcelt"
-                                                            data-app-confirm-cancel="Nē"
-                                                            data-app-confirm-tone="danger"
+                                                        <button
+                                                            type="button"
+                                                            class="table-action-item"
+                                                            @click="open = false; panel = null; $dispatch('open-request-detail', @js([
+                                                                'drawer_title' => 'Remonta ātrais skats',
+                                                                'drawer_subtitle' => 'Galvenā informācija par remonta statusu, saistīto pieprasījumu un izpildes gaitu.',
+                                                                'status_label' => $statusLabels[$repair->status] ?? $repair->status,
+                                                                'status_badge_class' => $detailStatusClasses[$repair->status] ?? 'request-detail-status-slate',
+                                                                'submitted_at' => $repair->created_at?->format('d.m.Y H:i') ?: '-',
+                                                                'hero_icon' => 'repair',
+                                                                'hero_tone' => match ($repair->status) {
+                                                                    'waiting' => 'amber',
+                                                                    'in-progress' => 'sky',
+                                                                    'completed' => 'emerald',
+                                                                    'cancelled' => 'rose',
+                                                                    default => 'slate',
+                                                                },
+                                                                'hero_title' => $device?->name ?: 'Ierīce nav atrasta',
+                                                                'hero_meta' => collect([
+                                                                    $device?->code ? 'Kods: '.$device->code : null,
+                                                                    $device?->serial_number ? 'Sērija: '.$device->serial_number : null,
+                                                                ])->filter()->implode(' | ') ?: 'Ierīces identifikācija nav pilnīga',
+                                                                'hero_note' => collect([$device?->manufacturer, $device?->model, $device?->type?->type_name])->filter()->implode(' | ') ?: 'Ražotājs, modelis vai tips nav pilnībā norādīts',
+                                                                'primary_label' => 'Statuss un nozīme',
+                                                                'primary_icon' => 'information-circle',
+                                                                'primary_tone' => match ($repair->status) {
+                                                                    'waiting' => 'amber',
+                                                                    'in-progress' => 'sky',
+                                                                    'completed' => 'emerald',
+                                                                    'cancelled' => 'rose',
+                                                                    default => 'slate',
+                                                                },
+                                                                'primary_value' => $statusLabels[$repair->status] ?? $repair->status,
+                                                                'primary_meta' => match ($repair->status) {
+                                                                    'waiting' => 'Remonts ir reģistrēts un gaida uzsākšanu.',
+                                                                    'in-progress' => 'Remonts pašlaik tiek veikts.',
+                                                                    'completed' => 'Remonts ir pabeigts un ieraksts noslēgts.',
+                                                                    'cancelled' => 'Remonts ir atcelts un vairs netiek turpināts.',
+                                                                    default => 'Statusa skaidrojums nav pieejams.',
+                                                                },
+                                                                'primary_note' => $linkedRequestUrl ? 'Šim remontam ir saistīts pieprasījums, kuru var atvērt atsevišķi.' : 'Remonts izveidots bez saistīta pieprasījuma.',
+                                                                'primary_note_secondary' => $locationPrimary !== '' ? 'Atrašanās vieta: '.$locationPrimary : 'Atrašanās vieta nav norādīta.',
+                                                                'primary_link_url' => $linkedRequestUrl ?: $deviceShowUrl,
+                                                                'primary_link_label' => $linkedRequestUrl ? 'Atvērt saistīto pieprasījumu' : 'Atvērt ierīces kartīti',
+                                                                'secondary_label' => 'Saistītais pieprasījums',
+                                                                'secondary_icon' => 'repair-request',
+                                                                'secondary_tone' => $repair->request ? 'violet' : 'slate',
+                                                                'secondary_value' => $repair->request ? 'Remonta pieteikums' : 'Nav pievienots',
+                                                                'secondary_meta' => $repair->request
+                                                                    ? ('Statuss: '.match ($repair->request->status) {
+                                                                        'submitted' => 'iesniegts',
+                                                                        'approved' => 'apstiprināts',
+                                                                        'rejected' => 'noraidīts',
+                                                                        default => $repair->request->status,
+                                                                    }.($repair->request?->created_at ? ' · iesniegts '.$repair->request->created_at->format('d.m.Y H:i') : ''))
+                                                                    : 'Saistīts remonta pieteikums nav pievienots.',
+                                                                'secondary_note' => $repair->request
+                                                                    ? (\Illuminate\Support\Str::limit(trim((string) $repair->request->description) !== '' ? preg_replace('/\s+/u', ' ', trim((string) $repair->request->description)) : 'Pieteikumā apraksts nav pievienots.', 140))
+                                                                    : 'Šis remonts izveidots tieši no remonta sadaļas bez sākotnējā pieteikuma.',
+                                                                'tertiary_label' => 'Prioritāte, tips un izmaksas',
+                                                                'tertiary_icon' => match ($repair->priority) {
+                                                                    'critical' => 'flag',
+                                                                    'high' => 'exclamation-triangle',
+                                                                    'medium' => 'tag',
+                                                                    default => 'stats',
+                                                                },
+                                                                'tertiary_tone' => match ($repair->priority) {
+                                                                    'critical' => 'rose',
+                                                                    'high' => 'amber',
+                                                                    'medium' => 'sky',
+                                                                    default => 'slate',
+                                                                },
+                                                                'tertiary_value' => $priorityLabels[$repair->priority] ?? 'Prioritāte nav norādīta',
+                                                                'tertiary_meta' => 'Remonta tips: '.($typeLabels[$repair->repair_type] ?? 'Nav norādīts'),
+                                                                'tertiary_note' => collect([
+                                                                    $repair->cost !== null ? 'Izmaksas: '.number_format((float) $repair->cost, 2, '.', ' ').' EUR' : 'Izmaksas nav norādītas',
+                                                                    $assignedUser?->full_name ? 'Par ierīci atbild: '.$assignedUser->full_name : null,
+                                                                ])->filter()->implode("\n"),
+                                                                'description_label' => 'Remonta apraksts',
+                                                                'description_icon' => 'repair',
+                                                                'description_tone' => 'sky',
+                                                                'description' => trim((string) $repair->description) !== ''
+                                                                    ? $repair->description
+                                                                    : 'Remonta apraksts vēl nav pievienots.',
+                                                                'details_title' => 'Izpildes laika līnija',
+                                                                'details_icon' => 'calendar',
+                                                                'details_tone' => 'emerald',
+                                                                'details_intro_label' => 'Pašreizējā gatavība:',
+                                                                'details_intro' => match ($repair->status) {
+                                                                    'waiting' => 'Remonts vēl nav uzsākts.',
+                                                                    'in-progress' => 'Remonts notiek un gaida pabeigšanu.',
+                                                                    'completed' => 'Remonts ir pilnībā noslēgts.',
+                                                                    'cancelled' => 'Remonta process ir pārtraukts.',
+                                                                    default => 'Gatavības informācija nav pieejama.',
+                                                                },
+                                                                'details_body' => collect([
+                                                                    $requester?->full_name ? 'Pieteikumu iesniedza: '.$requester->full_name : null,
+                                                                    $repair->acceptedBy?->full_name ? 'Remontu pieņēma: '.$repair->acceptedBy->full_name : null,
+                                                                    $repair->start_date?->format('d.m.Y') ? 'Sākuma datums: '.$repair->start_date->format('d.m.Y') : null,
+                                                                    $repair->end_date?->format('d.m.Y') ? 'Beigu datums: '.$repair->end_date->format('d.m.Y') : null,
+                                                                    $locationSecondary ? 'Ēka: '.$locationSecondary : null,
+                                                                ])->filter()->implode("\n"),
+                                                                'details_link_url' => $deviceShowUrl,
+                                                                'details_link_label' => 'Atvērt ierīces kartīti',
+                                                                'details_link_icon' => 'device',
+                                                            ]))"
                                                         >
-                                                            @csrf
-                                                            <input type="hidden" name="target_status" value="cancelled">
-                                                            <button type="submit" class="table-action-item table-action-item-rose" @click="open = false">
-                                                                <x-icon name="clear" size="h-4 w-4" />
-                                                                <span>Atcelt remontu</span>
-                                                            </button>
-                                                        </form>
-                                                    @endif
+                                                            <x-icon name="view" size="h-4 w-4" />
+                                                            <span>Ātrais skats</span>
+                                                        </button>
+
+                                                        @if (in_array($repair->status, ['waiting', 'in-progress'], true))
+                                                            <div class="table-action-divider"></div>
+                                                            <form
+                                                                method="POST"
+                                                                action="{{ route('repairs.transition', $repair) }}"
+                                                                data-app-confirm-title="Atcelt remontu?"
+                                                                data-app-confirm-message="Vai tiešām atcelt šo remonta ierakstu?"
+                                                                data-app-confirm-accept="Jā, atcelt"
+                                                                data-app-confirm-cancel="Nē"
+                                                                data-app-confirm-tone="danger"
+                                                            >
+                                                                @csrf
+                                                                <input type="hidden" name="target_status" value="cancelled">
+                                                                <button type="submit" class="table-action-item table-action-item-rose" @click="open = false; panel = null">
+                                                                    <x-icon name="clear" size="h-4 w-4" />
+                                                                    <span>Atcelt remontu</span>
+                                                                </button>
+                                                            </form>
+                                                        @endif
+                                                    </div>
                                                 @elseif (! $linkedRequestUrl)
+                                                    <div class="table-action-divider"></div>
                                                     <button
                                                         type="button"
                                                         class="btn-disabled"
