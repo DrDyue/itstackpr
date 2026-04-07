@@ -7,12 +7,6 @@ use App\Support\AuditTrail;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
-/**
- * Ierīču tipu vārdnīcas pārvaldība.
- *
- * Šis kontrolieris apkalpo vienkāršotu tipu struktūru, kur katram tipam
- * paliek tikai nosaukums un saistīto ierīču skaits.
- */
 class DeviceTypeController extends Controller
 {
     private const SORTABLE_COLUMNS = ['type_name', 'devices_count'];
@@ -33,7 +27,7 @@ class DeviceTypeController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        AuditTrail::viewed($this->user(), 'DeviceType', null, 'Atvērts ierīču tipu saraksts.');
+        AuditTrail::viewed($this->user(), 'DeviceType', null, 'Atverts iericu tipu saraksts.');
 
         if (($sorting['sort'] ?? 'type_name') !== 'type_name' || ($sorting['direction'] ?? 'asc') !== 'asc' || $request->has('sort')) {
             AuditTrail::sort(
@@ -41,7 +35,7 @@ class DeviceTypeController extends Controller
                 'DeviceType',
                 $this->sortOptions()[$sorting['sort']]['label'] ?? 'tipa nosaukuma',
                 $sorting['direction'] ?? 'asc',
-                'Kārtots ierīču tipu saraksts pēc '.($this->sortOptions()[$sorting['sort']]['label'] ?? 'tipa nosaukuma').' '.(($sorting['direction'] ?? 'asc') === 'asc' ? 'augošajā secībā' : 'dilstošajā secībā').'.'
+                'Kartots iericu tipu saraksts pec '.($this->sortOptions()[$sorting['sort']]['label'] ?? 'tipa nosaukuma').' '.(($sorting['direction'] ?? 'asc') === 'asc' ? 'augoja seciba' : 'dilstosa seciba').'.'
             );
         }
 
@@ -56,7 +50,13 @@ class DeviceTypeController extends Controller
     public function create(Request $request)
     {
         $this->requireManager();
-        AuditTrail::viewed($this->user(), 'DeviceType', null, 'Atvērts ierīces tipa pievienošanas modālis.');
+        AuditTrail::viewed($this->user(), 'DeviceType', null, 'Atverts ierices tipa pievienosanas modalis.');
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'modal' => 'create',
+            ]);
+        }
 
         return redirect()
             ->route('device-types.index')
@@ -72,13 +72,27 @@ class DeviceTypeController extends Controller
         $deviceType = DeviceType::create($data);
         AuditTrail::created(auth()->id(), $deviceType);
 
-        return redirect()->route('device-types.index')->with('success', 'Ierīces tips veiksmīgi pievienots.');
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Ierices tips veiksmigi pievienots.',
+                'device_type' => $this->deviceTypePayload($deviceType),
+            ]);
+        }
+
+        return redirect()->route('device-types.index')->with('success', 'Ierices tips veiksmigi pievienots.');
     }
 
-    public function edit(DeviceType $deviceType)
+    public function edit(Request $request, DeviceType $deviceType)
     {
         $this->requireManager();
-        AuditTrail::viewed($this->user(), 'DeviceType', (string) $deviceType->id, 'Atvērts ierīces tipa labošanas modālis: '.AuditTrail::labelFor($deviceType));
+        AuditTrail::viewed($this->user(), 'DeviceType', (string) $deviceType->id, 'Atverts ierices tipa labosanas modalis: '.AuditTrail::labelFor($deviceType));
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'modal' => 'edit',
+                'device_type' => $this->deviceTypePayload($deviceType),
+            ]);
+        }
 
         return redirect()
             ->route('device-types.index')
@@ -97,7 +111,14 @@ class DeviceTypeController extends Controller
         $after = $deviceType->fresh()->only(['type_name']);
         AuditTrail::updatedFromState(auth()->id(), $deviceType, $before, $after);
 
-        return redirect()->route('device-types.index')->with('success', 'Ierīces tips atjaunināts.');
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Ierices tips atjauninats.',
+                'device_type' => $this->deviceTypePayload($deviceType->fresh()),
+            ]);
+        }
+
+        return redirect()->route('device-types.index')->with('success', 'Ierices tips atjauninats.');
     }
 
     public function destroy(DeviceType $deviceType)
@@ -107,13 +128,13 @@ class DeviceTypeController extends Controller
         if ($deviceType->devices()->exists()) {
             return redirect()
                 ->route('device-types.index')
-                ->with('error', 'Ierīces tipu nevar dzēst, kamēr tam vēl ir piesaistītas ierīces.');
+                ->with('error', 'Ierices tipu nevar dzest, kamer tam vel ir piesaistitas ierices.');
         }
 
         AuditTrail::deleted(auth()->id(), $deviceType);
         $deviceType->delete();
 
-        return redirect()->route('device-types.index')->with('success', 'Ierīces tips dzēsts.');
+        return redirect()->route('device-types.index')->with('success', 'Ierices tips dzests.');
     }
 
     public function show(DeviceType $deviceType)
@@ -123,9 +144,6 @@ class DeviceTypeController extends Controller
         return redirect()->route('device-types.index');
     }
 
-    /**
-     * Normalizē drošu kārtošanas konfigurāciju.
-     */
     private function normalizedSorting(Request $request): array
     {
         $sort = trim((string) $request->query('sort', 'type_name'));
@@ -146,14 +164,11 @@ class DeviceTypeController extends Controller
         ];
     }
 
-    /**
-     * Lietotāja paziņojumiem un kolonnu galvām izmantojamās kārtošanas etiķetes.
-     */
     private function sortOptions(): array
     {
         return [
             'type_name' => ['label' => 'tipa nosaukuma'],
-            'devices_count' => ['label' => 'piesaistīto ierīču skaita'],
+            'devices_count' => ['label' => 'piesaistito iericu skaita'],
         ];
     }
 
@@ -162,15 +177,15 @@ class DeviceTypeController extends Controller
         $data = $request->validate([
             'type_name' => ['required', 'string', 'max:30'],
         ], [
-            'type_name.required' => 'Ievadi ierīces tipa nosaukumu.',
-            'type_name.max' => 'Ierīces tipa nosaukums nedrīkst būt garāks par 30 rakstzīmēm.',
+            'type_name.required' => 'Ievadi ierices tipa nosaukumu.',
+            'type_name.max' => 'Ierices tipa nosaukums nedrikst but garaks par 30 rakstzimem.',
         ]);
 
         $data['type_name'] = trim($data['type_name']);
 
         if ($data['type_name'] === '') {
             throw ValidationException::withMessages([
-                'type_name' => ['Ievadi ierīces tipa nosaukumu.'],
+                'type_name' => ['Ievadi ierices tipa nosaukumu.'],
             ]);
         }
 
@@ -181,7 +196,7 @@ class DeviceTypeController extends Controller
 
         if ($exists) {
             throw ValidationException::withMessages([
-                'type_name' => ['Ierīces tips ar šādu nosaukumu jau eksistē.'],
+                'type_name' => ['Ierices tips ar sadu nosaukumu jau eksiste.'],
             ]);
         }
 
@@ -222,6 +237,14 @@ class DeviceTypeController extends Controller
             'mode' => $mode,
             'id' => $id,
             'type' => $selectedType,
+        ];
+    }
+
+    private function deviceTypePayload(DeviceType $deviceType): array
+    {
+        return [
+            'id' => (string) $deviceType->id,
+            'type_name' => (string) $deviceType->type_name,
         ];
     }
 }

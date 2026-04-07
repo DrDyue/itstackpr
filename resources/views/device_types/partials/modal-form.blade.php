@@ -1,6 +1,7 @@
 @props([
     'mode' => 'create',
     'action',
+    'modalName',
     'type' => null,
     'title' => '',
     'subtitle' => '',
@@ -8,7 +9,19 @@
     'submitClass' => 'btn-create',
 ])
 
-<form method="POST" action="{{ $action }}" class="device-type-modal-shell">
+@php
+    $typeNameError = $errors->first('type_name');
+    $hasServerErrors = $errors->any();
+@endphp
+
+<form
+    method="POST"
+    action="{{ $action }}"
+    class="device-type-modal-shell"
+    data-device-type-modal-form="true"
+    data-modal-name="{{ $modalName }}"
+    data-success-message="{{ $mode === 'create' ? 'Ierīces tips veiksmīgi pievienots.' : 'Ierīces tips atjaunināts.' }}"
+>
     @csrf
     @if ($mode === 'edit')
         @method('PUT')
@@ -43,6 +56,18 @@
     </div>
 
     <div class="device-type-modal-body">
+        <div
+            class="{{ $hasServerErrors ? '' : 'hidden ' }}mx-5 mb-0 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
+            data-device-type-form-summary
+        >
+            <div class="font-semibold">Formu nevarēja saglabāt.</div>
+            <ul class="mt-2 list-disc pl-5" data-device-type-form-summary-list>
+                @foreach ($errors->all() as $message)
+                    <li>{{ $message }}</li>
+                @endforeach
+            </ul>
+        </div>
+
         <div class="device-type-modal-card">
             <div class="device-type-modal-card-head">
                 <div class="device-type-modal-card-title">Tipa informācija</div>
@@ -56,18 +81,20 @@
                     type="text"
                     name="type_name"
                     value="{{ old('type_name', $type?->type_name) }}"
-                    class="crud-control @error('type_name') border-rose-300 bg-rose-50/60 focus:border-rose-400 focus:ring-rose-200 @enderror"
+                    class="crud-control {{ $typeNameError ? 'border-rose-300 bg-rose-50/60 focus:border-rose-400 focus:ring-rose-200' : '' }}"
                     maxlength="30"
                     required
                     autofocus
+                    data-device-type-field="type_name"
                 >
                 <div class="device-type-modal-field-note">Nosaukumam jābūt unikālam un skaidri saprotamam lietotājiem.</div>
 
-                @error('type_name')
-                    <div class="device-type-modal-error">
-                        {{ $message }}
-                    </div>
-                @enderror
+                <div
+                    class="{{ $typeNameError ? '' : 'hidden ' }}device-type-modal-error"
+                    data-device-type-field-error="type_name"
+                >
+                    {{ $typeNameError }}
+                </div>
             </div>
         </div>
     </div>
@@ -88,7 +115,7 @@
                 <span>Atcelt</span>
             </button>
 
-            <button type="submit" class="{{ $submitClass }}">
+            <button type="submit" class="{{ $submitClass }}" data-device-type-submit>
                 <x-icon name="save" size="h-4 w-4" />
                 <span>{{ $submitLabel }}</span>
             </button>

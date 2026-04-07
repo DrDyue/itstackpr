@@ -321,6 +321,46 @@ class AuthAndRequestFlowsTest extends TestCase
         ]);
     }
 
+    public function test_device_type_store_returns_json_for_async_modal_submit(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-type-modal-json-store@example.com');
+
+        $this->actingAs($admin)
+            ->postJson(route('device-types.store'), [
+                '_device_type_modal_mode' => 'create',
+                'type_name' => 'Planšetes',
+            ])
+            ->assertOk()
+            ->assertJsonPath('message', 'Ierices tips veiksmigi pievienots.')
+            ->assertJsonPath('device_type.type_name', 'Planšetes');
+
+        $this->assertDatabaseHas('device_types', [
+            'type_name' => 'Planšetes',
+        ]);
+    }
+
+    public function test_device_type_update_returns_json_for_async_modal_submit(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-type-modal-json-update@example.com');
+        $typeId = DB::table('device_types')->insertGetId(['type_name' => 'Vecais tips']);
+
+        $this->actingAs($admin)
+            ->putJson(route('device-types.update', $typeId), [
+                '_device_type_modal_mode' => 'edit',
+                '_device_type_modal_id' => (string) $typeId,
+                'type_name' => 'Jaunais tips',
+            ])
+            ->assertOk()
+            ->assertJsonPath('message', 'Ierices tips atjauninats.')
+            ->assertJsonPath('device_type.id', (string) $typeId)
+            ->assertJsonPath('device_type.type_name', 'Jaunais tips');
+
+        $this->assertDatabaseHas('device_types', [
+            'id' => $typeId,
+            'type_name' => 'Jaunais tips',
+        ]);
+    }
+
     public function test_regular_user_cannot_open_admin_only_routes(): void
     {
         $user = $this->createUser(role: User::ROLE_USER, email: 'admin-blocked@example.com');

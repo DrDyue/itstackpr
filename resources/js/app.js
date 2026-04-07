@@ -902,6 +902,165 @@ const initializeAsyncTableFilters = () => {
     });
 };
 
+const deviceTypeModalFieldErrorClasses = [
+    'border-rose-300',
+    'bg-rose-50/60',
+    'focus:border-rose-400',
+    'focus:ring-rose-200',
+];
+
+const resetDeviceTypeModalErrors = (form) => {
+    form.querySelector('[data-device-type-form-summary]')?.classList.add('hidden');
+    const summaryList = form.querySelector('[data-device-type-form-summary-list]');
+    if (summaryList) {
+        summaryList.innerHTML = '';
+    }
+
+    form.querySelectorAll('[data-device-type-field]').forEach((field) => {
+        deviceTypeModalFieldErrorClasses.forEach((className) => field.classList.remove(className));
+    });
+
+    form.querySelectorAll('[data-device-type-field-error]').forEach((node) => {
+        node.textContent = '';
+        node.classList.add('hidden');
+    });
+};
+
+const showDeviceTypeModalErrors = (form, errors = {}) => {
+    resetDeviceTypeModalErrors(form);
+
+    const messages = Object.values(errors)
+        .flatMap((value) => Array.isArray(value) ? value : [value])
+        .filter(Boolean);
+
+    if (messages.length > 0) {
+        const summary = form.querySelector('[data-device-type-form-summary]');
+        const summaryList = form.querySelector('[data-device-type-form-summary-list]');
+
+        summary?.classList.remove('hidden');
+
+        if (summaryList) {
+            summaryList.innerHTML = '';
+            messages.forEach((message) => {
+                const item = document.createElement('li');
+                item.textContent = message;
+                summaryList.appendChild(item);
+            });
+        }
+    }
+
+    Object.entries(errors).forEach(([fieldName, fieldMessages]) => {
+        const field = form.querySelector(`[data-device-type-field="${fieldName}"]`);
+        const errorNode = form.querySelector(`[data-device-type-field-error="${fieldName}"]`);
+        const firstMessage = Array.isArray(fieldMessages) ? fieldMessages[0] : fieldMessages;
+
+        if (field) {
+            deviceTypeModalFieldErrorClasses.forEach((className) => field.classList.add(className));
+        }
+
+        if (errorNode && firstMessage) {
+            errorNode.textContent = firstMessage;
+            errorNode.classList.remove('hidden');
+        }
+    });
+};
+
+const setDeviceTypeModalSubmitting = (form, isSubmitting) => {
+    const submitButton = form.querySelector('[data-device-type-submit]');
+
+    form.dataset.submitting = isSubmitting ? 'true' : 'false';
+
+    if (!submitButton) {
+        return;
+    }
+
+    submitButton.disabled = isSubmitting;
+    submitButton.classList.toggle('opacity-70', isSubmitting);
+    submitButton.classList.toggle('cursor-wait', isSubmitting);
+};
+
+const initializeDeviceTypeModalForms = () => {
+    if (window.__deviceTypeModalFormsInitialized) {
+        return;
+    }
+
+    window.__deviceTypeModalFormsInitialized = true;
+
+    document.addEventListener('submit', async (event) => {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement) || form.dataset.deviceTypeModalForm !== 'true') {
+            return;
+        }
+
+        event.preventDefault();
+
+        if (form.dataset.submitting === 'true') {
+            return;
+        }
+
+        resetDeviceTypeModalErrors(form);
+        setDeviceTypeModalSubmitting(form, true);
+
+        try {
+            const response = await window.fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            if (response.status === 422) {
+                const result = await response.json();
+                showDeviceTypeModalErrors(form, result?.errors ?? {});
+
+                const firstInvalidField = form.querySelector('[data-device-type-field-error]:not(.hidden)');
+                const fieldName = firstInvalidField?.dataset?.deviceTypeFieldError;
+                form.querySelector(`[data-device-type-field="${fieldName}"]`)?.focus();
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error('Device type modal request failed.');
+            }
+
+            const result = await response.json();
+            const modalName = form.dataset.modalName || '';
+            const asyncRoot = findAsyncTableRoot(form);
+            const asyncTableForm = asyncRoot?.querySelector('[data-async-table-form]');
+
+            if (modalName) {
+                window.dispatchEvent(new CustomEvent('close-modal', {
+                    detail: modalName,
+                }));
+            }
+
+            document.body.classList.remove('overflow-y-hidden');
+
+            if (asyncTableForm) {
+                await submitAsyncTableForm(asyncTableForm, {
+                    url: new URL(window.location.href),
+                    resetPage: false,
+                });
+            }
+
+            window.dispatchAppToast({
+                message: form.dataset.successMessage || result?.message || 'Ieraksts saglabāts.',
+                tone: 'success',
+            });
+        } catch (error) {
+            window.dispatchAppToast({
+                title: 'Saglabāšana neizdevās',
+                message: 'Neizdevās saglabāt ierīces tipu. Pamēģini vēlreiz.',
+                tone: 'info',
+            });
+        } finally {
+            setDeviceTypeModalSubmitting(form, false);
+        }
+    });
+};
+
 const registerAlpineData = () => {
     if (!Alpine || window.__appAlpineDataRegistered) {
         return;
@@ -2215,12 +2374,14 @@ document.addEventListener('alpine:init', registerAlpineData);
 document.addEventListener('DOMContentLoaded', initializeThemeToggle);
 document.addEventListener('DOMContentLoaded', initializeAppConfirm);
 document.addEventListener('DOMContentLoaded', initializeAsyncTableFilters);
+document.addEventListener('DOMContentLoaded', initializeDeviceTypeModalForms);
 document.addEventListener('DOMContentLoaded', restoreHighlightedSearchFromUrl);
 
 if (document.readyState !== 'loading') {
     initializeThemeToggle();
     initializeAppConfirm();
     initializeAsyncTableFilters();
+    initializeDeviceTypeModalForms();
     restoreHighlightedSearchFromUrl();
 }
 

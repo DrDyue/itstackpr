@@ -1,7 +1,3 @@
-{{--
-    Lapa: Ierīču tipu saraksts.
-    Atbildība: rāda tipu vārdnīcu vienā tabulā un pārvalda create/edit darbības ar modāļiem tajā pašā lapā.
---}}
 <x-app-layout>
     @php
         $sorting = $sorting ?? ['sort' => 'type_name', 'direction' => 'asc'];
@@ -14,9 +10,152 @@
         $modalMode = (string) ($modalState['mode'] ?? '');
         $modalTypeId = (string) ($modalState['id'] ?? '');
         $selectedModalType = $modalState['type'] ?? null;
+        $createTypeName = old('type_name', '');
+        $editTypeName = old('type_name', $selectedModalType?->type_name ?? '');
+        $createErrors = $modalMode === 'create' && $errors->has('type_name')
+            ? ['type_name' => $errors->first('type_name')]
+            : [];
+        $editErrors = $modalMode === 'edit' && $errors->has('type_name')
+            ? ['type_name' => $errors->first('type_name')]
+            : [];
+        $editModalAction = $selectedModalType
+            ? route('device-types.update', $selectedModalType)
+            : route('device-types.index');
     @endphp
 
-    <section class="app-shell app-shell-wide" x-data>
+    <section
+        class="app-shell app-shell-wide"
+        x-data='{
+            tableForm: null,
+            createAction: @js(route("device-types.store")),
+            updateActionTemplate: @js(route("device-types.update", ["device_type" => "__TYPE_ID__"])),
+            editAction: @js(route("device-types.update", ["device_type" => "__TYPE_ID__"])),
+            createForm: { type_name: @js($createTypeName) },
+            editForm: { id: @js($modalTypeId), type_name: @js($editTypeName) },
+            createErrors: @js($createErrors),
+            editErrors: @js($editErrors),
+            init() {
+                this.tableForm = this.$root.querySelector("[data-async-table-form]");
+
+                if (this.editForm.id) {
+                    this.editAction = this.updateActionTemplate.replace("__TYPE_ID__", encodeURIComponent(String(this.editForm.id)));
+                }
+            },
+            openCreate() {
+                this.clearErrors("create");
+                window.dispatchEvent(new CustomEvent("open-modal", { detail: "create-device-type" }));
+            },
+            openEdit(type) {
+                if (!type) {
+                    return;
+                }
+
+                this.clearErrors("edit");
+                this.editForm.id = String(type.id ?? "");
+                this.editForm.type_name = String(type.type_name ?? "");
+                this.editAction = this.updateActionTemplate.replace("__TYPE_ID__", encodeURIComponent(String(this.editForm.id)));
+                window.dispatchEvent(new CustomEvent("open-modal", { detail: "edit-device-type" }));
+            },
+            closeModal(name) {
+                window.dispatchEvent(new CustomEvent("close-modal", { detail: name }));
+            },
+            clearErrors(mode) {
+                if (mode === "edit") {
+                    this.editErrors = {};
+                    return;
+                }
+
+                this.createErrors = {};
+            },
+            setErrors(mode, errors = {}) {
+                const normalized = Object.entries(errors || {}).reduce((carry, [key, value]) => {
+                    carry[key] = Array.isArray(value) ? String(value[0] ?? "") : String(value ?? "");
+                    return carry;
+                }, {});
+
+                if (mode === "edit") {
+                    this.editErrors = normalized;
+                    return;
+                }
+
+                this.createErrors = normalized;
+            },
+            async refreshTable() {
+                if (!this.tableForm || typeof window.submitAsyncTableForm !== "function") {
+                    return;
+                }
+
+                await window.submitAsyncTableForm(this.tableForm, { resetPage: false });
+            },
+            async submitDeviceType(mode, event) {
+                const form = event.currentTarget;
+                const submitButton = form.querySelector("[data-device-type-submit]");
+                const action = form.getAttribute("action") || (mode === "edit" ? this.editAction : this.createAction);
+
+                if (submitButton) {
+                    submitButton.disabled = true;
+                }
+
+                try {
+                    const response = await fetch(action, {
+                        method: "POST",
+                        headers: {
+                            "Accept": "application/json",
+                            "X-Requested-With": "XMLHttpRequest",
+                        },
+                        body: new FormData(form),
+                    });
+
+                    const payload = await response.json().catch(() => ({}));
+
+                    if (!response.ok) {
+                        if (response.status === 422 && payload.errors) {
+                            this.setErrors(mode, payload.errors);
+
+                            const firstField = Object.keys(payload.errors)[0];
+                            if (firstField) {
+                                window.requestAnimationFrame(() => {
+                                    form.querySelector(`[name="${firstField}"]`)?.focus();
+                                });
+                            }
+
+                            return;
+                        }
+
+                        window.dispatchAppToast({
+                            title: "Saglabāšana neizdevās",
+                            message: payload.message || "Neizdevās saglabāt ierīces tipu.",
+                            tone: "info",
+                        });
+
+                        return;
+                    }
+
+                    this.clearErrors(mode);
+                    window.dispatchAppToast({
+                        title: "Veiksmīgi",
+                        message: payload.message || (mode === "create" ? "Ierīces tips veiksmīgi pievienots." : "Ierīces tips atjaunināts."),
+                        tone: "success",
+                    });
+
+                    this.closeModal(mode === "create" ? "create-device-type" : "edit-device-type");
+                    await new Promise((resolve) => window.requestAnimationFrame(resolve));
+                    await this.refreshTable();
+                } catch (error) {
+                    window.dispatchAppToast({
+                        title: "Savienojuma kļūda",
+                        message: "Neizdevās saglabāt ierīces tipu.",
+                        tone: "info",
+                    });
+                } finally {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                    }
+                }
+            },
+        }'
+        x-init="init()"
+    >
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-4xl">
@@ -46,7 +185,7 @@
                 </div>
 
                 <div class="page-actions">
-                    <a href="{{ route('device-types.create') }}" class="btn-create">
+                    <a href="{{ route('device-types.create') }}" class="btn-create" @click.prevent="openCreate()">
                         <x-icon name="plus" size="h-4 w-4" />
                         <span>Pievienot tipu</span>
                     </a>
@@ -80,7 +219,9 @@
                                     @php
                                         $isCurrentSort = $sorting['sort'] === $column;
                                         $defaultDirection = $column === 'devices_count' ? 'desc' : 'asc';
-                                        $nextDirection = $isCurrentSort && $sorting['direction'] === 'asc' ? 'desc' : ($isCurrentSort && $sorting['direction'] === 'desc' ? 'asc' : $defaultDirection);
+                                        $nextDirection = $isCurrentSort && $sorting['direction'] === 'asc'
+                                            ? 'desc'
+                                            : ($isCurrentSort && $sorting['direction'] === 'desc' ? 'asc' : $defaultDirection);
                                         $sortMessage = 'Tabula "Ierīču tipi" kārtota pēc ' . ($sortOptions[$column]['label'] ?? mb_strtolower($label)) . ' ' . ($sortDirectionLabels[$nextDirection] ?? '');
                                     @endphp
                                     <th class="{{ match ($column) {
@@ -135,7 +276,11 @@
                                     </td>
                                     <td class="px-4 py-4">
                                         <div class="device-type-actions">
-                                            <a href="{{ route('device-types.edit', $type) }}" class="btn-edit">
+                                            <a
+                                                href="{{ route('device-types.edit', $type) }}"
+                                                class="btn-edit"
+                                                @click.prevent="openEdit({ id: {{ $type->id }}, type_name: @js($type->type_name) })"
+                                            >
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Rediģēt</span>
                                             </a>
@@ -195,10 +340,6 @@
 
             <x-modal name="create-device-type" :show="$modalMode === 'create'" maxWidth="xl" focusable>
                 <div class="p-0">
-                    @if ($modalMode === 'create')
-                        <x-validation-summary class="m-5 mb-0" />
-                    @endif
-
                     @include('device_types.partials.modal-form', [
                         'mode' => 'create',
                         'action' => route('device-types.store'),
@@ -211,45 +352,20 @@
                 </div>
             </x-modal>
 
-            @foreach ($types as $type)
-                <x-modal name="edit-device-type-{{ $type->id }}" :show="$modalMode === 'edit' && $modalTypeId === (string) $type->id" maxWidth="xl" focusable>
-                    <div class="p-0">
-                        @if ($modalMode === 'edit' && $modalTypeId === (string) $type->id)
-                            <x-validation-summary class="m-5 mb-0" />
-                        @endif
-
-                        @include('device_types.partials.modal-form', [
-                            'mode' => 'edit',
-                            'action' => route('device-types.update', $type),
-                            'modalName' => 'edit-device-type-' . $type->id,
-                            'type' => $type,
-                            'title' => 'Rediģēt ierīces tipu',
-                            'subtitle' => 'Atjauno tipa nosaukumu un uzreiz saglabā to pašā saraksta lapā.',
-                            'submitLabel' => 'Saglabāt izmaiņas',
-                            'submitClass' => 'btn-edit',
-                        ])
-                    </div>
-                </x-modal>
-            @endforeach
-
-            @if ($modalMode === 'edit' && $selectedModalType && ! $types->getCollection()->contains('id', $selectedModalType->id))
-                <x-modal name="edit-device-type-{{ $selectedModalType->id }}" :show="true" maxWidth="xl" focusable>
-                    <div class="p-0">
-                        <x-validation-summary class="m-5 mb-0" />
-
-                        @include('device_types.partials.modal-form', [
-                            'mode' => 'edit',
-                            'action' => route('device-types.update', $selectedModalType),
-                            'modalName' => 'edit-device-type-' . $selectedModalType->id,
-                            'type' => $selectedModalType,
-                            'title' => 'Rediģēt ierīces tipu',
-                            'subtitle' => 'Atjauno tipa nosaukumu un uzreiz saglabā to pašā saraksta lapā.',
-                            'submitLabel' => 'Saglabāt izmaiņas',
-                            'submitClass' => 'btn-edit',
-                        ])
-                    </div>
-                </x-modal>
-            @endif
+            <x-modal name="edit-device-type" :show="$modalMode === 'edit'" maxWidth="xl" focusable>
+                <div class="p-0">
+                    @include('device_types.partials.modal-form', [
+                        'mode' => 'edit',
+                        'action' => $editModalAction,
+                        'modalName' => 'edit-device-type',
+                        'type' => $selectedModalType,
+                        'title' => 'Rediģēt ierīces tipu',
+                        'subtitle' => 'Atjauno tipa nosaukumu un uzreiz saglabā to pašā saraksta lapā.',
+                        'submitLabel' => 'Saglabāt izmaiņas',
+                        'submitClass' => 'btn-edit',
+                    ])
+                </div>
+            </x-modal>
         </div>
     </section>
 </x-app-layout>
