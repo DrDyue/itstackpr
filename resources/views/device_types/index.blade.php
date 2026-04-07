@@ -1,3 +1,7 @@
+{{--
+    Lapa: Ierīču tipu saraksts.
+    Atbildība: rāda tipu vārdnīcu vienā tabulā un pārvalda create/edit darbības ar modāļiem tajā pašā lapā.
+--}}
 <x-app-layout>
     @php
         $sorting = $sorting ?? ['sort' => 'type_name', 'direction' => 'asc'];
@@ -8,154 +12,11 @@
         $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
         $modalState = $deviceTypeModal ?? ['mode' => '', 'id' => '', 'type' => null];
         $modalMode = (string) ($modalState['mode'] ?? '');
-        $modalTypeId = (string) ($modalState['id'] ?? '');
         $selectedModalType = $modalState['type'] ?? null;
-        $createTypeName = old('type_name', '');
-        $editTypeName = old('type_name', $selectedModalType?->type_name ?? '');
-        $createErrors = $modalMode === 'create' && $errors->has('type_name')
-            ? ['type_name' => $errors->first('type_name')]
-            : [];
-        $editErrors = $modalMode === 'edit' && $errors->has('type_name')
-            ? ['type_name' => $errors->first('type_name')]
-            : [];
-        $editModalAction = $selectedModalType
-            ? route('device-types.update', $selectedModalType)
-            : route('device-types.index');
+        $editModalAction = $selectedModalType ? route('device-types.update', $selectedModalType) : route('device-types.store');
     @endphp
 
-    <section
-        class="app-shell app-shell-wide"
-        x-data='{
-            tableForm: null,
-            createAction: @js(route("device-types.store")),
-            updateActionTemplate: @js(route("device-types.update", ["device_type" => "__TYPE_ID__"])),
-            editAction: @js(route("device-types.update", ["device_type" => "__TYPE_ID__"])),
-            createForm: { type_name: @js($createTypeName) },
-            editForm: { id: @js($modalTypeId), type_name: @js($editTypeName) },
-            createErrors: @js($createErrors),
-            editErrors: @js($editErrors),
-            init() {
-                this.tableForm = this.$root.querySelector("[data-async-table-form]");
-
-                if (this.editForm.id) {
-                    this.editAction = this.updateActionTemplate.replace("__TYPE_ID__", encodeURIComponent(String(this.editForm.id)));
-                }
-            },
-            openCreate() {
-                this.clearErrors("create");
-                window.dispatchEvent(new CustomEvent("open-modal", { detail: "create-device-type" }));
-            },
-            openEdit(type) {
-                if (!type) {
-                    return;
-                }
-
-                this.clearErrors("edit");
-                this.editForm.id = String(type.id ?? "");
-                this.editForm.type_name = String(type.type_name ?? "");
-                this.editAction = this.updateActionTemplate.replace("__TYPE_ID__", encodeURIComponent(String(this.editForm.id)));
-                window.dispatchEvent(new CustomEvent("open-modal", { detail: "edit-device-type" }));
-            },
-            closeModal(name) {
-                window.dispatchEvent(new CustomEvent("close-modal", { detail: name }));
-            },
-            clearErrors(mode) {
-                if (mode === "edit") {
-                    this.editErrors = {};
-                    return;
-                }
-
-                this.createErrors = {};
-            },
-            setErrors(mode, errors = {}) {
-                const normalized = Object.entries(errors || {}).reduce((carry, [key, value]) => {
-                    carry[key] = Array.isArray(value) ? String(value[0] ?? "") : String(value ?? "");
-                    return carry;
-                }, {});
-
-                if (mode === "edit") {
-                    this.editErrors = normalized;
-                    return;
-                }
-
-                this.createErrors = normalized;
-            },
-            async refreshTable() {
-                if (!this.tableForm || typeof window.submitAsyncTableForm !== "function") {
-                    return;
-                }
-
-                await window.submitAsyncTableForm(this.tableForm, { resetPage: false });
-            },
-            async submitDeviceType(mode, event) {
-                const form = event.currentTarget;
-                const submitButton = form.querySelector("[data-device-type-submit]");
-                const action = form.getAttribute("action") || (mode === "edit" ? this.editAction : this.createAction);
-
-                if (submitButton) {
-                    submitButton.disabled = true;
-                }
-
-                try {
-                    const response = await fetch(action, {
-                        method: "POST",
-                        headers: {
-                            "Accept": "application/json",
-                            "X-Requested-With": "XMLHttpRequest",
-                        },
-                        body: new FormData(form),
-                    });
-
-                    const payload = await response.json().catch(() => ({}));
-
-                    if (!response.ok) {
-                        if (response.status === 422 && payload.errors) {
-                            this.setErrors(mode, payload.errors);
-
-                            const firstField = Object.keys(payload.errors)[0];
-                            if (firstField) {
-                                window.requestAnimationFrame(() => {
-                                    form.querySelector(`[name="${firstField}"]`)?.focus();
-                                });
-                            }
-
-                            return;
-                        }
-
-                        window.dispatchAppToast({
-                            title: "Saglabāšana neizdevās",
-                            message: payload.message || "Neizdevās saglabāt ierīces tipu.",
-                            tone: "info",
-                        });
-
-                        return;
-                    }
-
-                    this.clearErrors(mode);
-                    window.dispatchAppToast({
-                        title: "Veiksmīgi",
-                        message: payload.message || (mode === "create" ? "Ierīces tips veiksmīgi pievienots." : "Ierīces tips atjaunināts."),
-                        tone: "success",
-                    });
-
-                    this.closeModal(mode === "create" ? "create-device-type" : "edit-device-type");
-                    await new Promise((resolve) => window.requestAnimationFrame(resolve));
-                    await this.refreshTable();
-                } catch (error) {
-                    window.dispatchAppToast({
-                        title: "Savienojuma kļūda",
-                        message: "Neizdevās saglabāt ierīces tipu.",
-                        tone: "info",
-                    });
-                } finally {
-                    if (submitButton) {
-                        submitButton.disabled = false;
-                    }
-                }
-            },
-        }'
-        x-init="init()"
-    >
+    <section class="app-shell app-shell-wide">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-4xl">
@@ -185,10 +46,10 @@
                 </div>
 
                 <div class="page-actions">
-                    <a href="{{ route('device-types.create') }}" class="btn-create" @click.prevent="openCreate()">
+                    <button type="button" class="btn-create" data-device-type-open="create">
                         <x-icon name="plus" size="h-4 w-4" />
                         <span>Pievienot tipu</span>
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -276,14 +137,17 @@
                                     </td>
                                     <td class="px-4 py-4">
                                         <div class="device-type-actions">
-                                            <a
-                                                href="{{ route('device-types.edit', $type) }}"
+                                            <button
+                                                type="button"
                                                 class="btn-edit"
-                                                @click.prevent="openEdit({ id: {{ $type->id }}, type_name: @js($type->type_name) })"
+                                                data-device-type-open="edit"
+                                                data-device-type-id="{{ $type->id }}"
+                                                data-device-type-name="{{ $type->type_name }}"
+                                                data-device-type-update-url="{{ route('device-types.update', $type) }}"
                                             >
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Rediģēt</span>
-                                            </a>
+                                            </button>
 
                                             @if ($canDelete)
                                                 <form

@@ -1061,6 +1061,71 @@ const initializeDeviceTypeModalForms = () => {
     });
 };
 
+const openDeviceTypeModal = (trigger) => {
+    const mode = trigger?.dataset?.deviceTypeOpen === 'edit' ? 'edit' : 'create';
+    const modalName = mode === 'edit' ? 'edit-device-type' : 'create-device-type';
+    const modal = document.querySelector(`[data-modal-name="${modalName}"]`);
+
+    if (!(modal instanceof HTMLFormElement)) {
+        return;
+    }
+
+    resetDeviceTypeModalErrors(modal);
+
+    const nameInput = modal.querySelector('[data-device-type-name-input]');
+    const idInput = modal.querySelector('[data-device-type-id-input]');
+    const modeInput = modal.querySelector('[data-device-type-mode-input]');
+
+    if (modeInput) {
+        modeInput.value = mode;
+    }
+
+    if (mode === 'edit') {
+        if (idInput) {
+            idInput.value = trigger.dataset.deviceTypeId || '';
+        }
+
+        if (nameInput) {
+            nameInput.value = trigger.dataset.deviceTypeName || '';
+        }
+
+        modal.action = trigger.dataset.deviceTypeUpdateUrl || modal.action;
+    } else {
+        if (nameInput) {
+            nameInput.value = '';
+        }
+    }
+
+    window.dispatchEvent(new CustomEvent('open-modal', {
+        detail: modalName,
+    }));
+
+    window.setTimeout(() => {
+        nameInput?.focus();
+        if (mode === 'edit') {
+            nameInput?.select?.();
+        }
+    }, 120);
+};
+
+const initializeDeviceTypeModalOpeners = () => {
+    if (window.__deviceTypeModalOpenersInitialized) {
+        return;
+    }
+
+    window.__deviceTypeModalOpenersInitialized = true;
+
+    document.addEventListener('click', (event) => {
+        const trigger = event.target.closest('[data-device-type-open]');
+        if (!trigger) {
+            return;
+        }
+
+        event.preventDefault();
+        openDeviceTypeModal(trigger);
+    });
+};
+
 const registerAlpineData = () => {
     if (!Alpine || window.__appAlpineDataRegistered) {
         return;
@@ -2374,6 +2439,7 @@ document.addEventListener('alpine:init', registerAlpineData);
 document.addEventListener('DOMContentLoaded', initializeThemeToggle);
 document.addEventListener('DOMContentLoaded', initializeAppConfirm);
 document.addEventListener('DOMContentLoaded', initializeAsyncTableFilters);
+document.addEventListener('DOMContentLoaded', initializeDeviceTypeModalOpeners);
 document.addEventListener('DOMContentLoaded', initializeDeviceTypeModalForms);
 document.addEventListener('DOMContentLoaded', restoreHighlightedSearchFromUrl);
 
@@ -2381,6 +2447,7 @@ if (document.readyState !== 'loading') {
     initializeThemeToggle();
     initializeAppConfirm();
     initializeAsyncTableFilters();
+    initializeDeviceTypeModalOpeners();
     initializeDeviceTypeModalForms();
     restoreHighlightedSearchFromUrl();
 }
