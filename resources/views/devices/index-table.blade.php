@@ -334,59 +334,60 @@
 
                                         </div>
 
-                                        <div class="table-action-inline-panel" x-cloak x-show="panel === 'room'" x-transition.opacity>
-                                            <div class="table-action-inline-head">
-                                                <div>
-                                                    <div class="table-action-inline-title">Mainīt telpu</div>
-                                                    <div class="table-action-inline-copy">Ierīce tiks uzreiz pārvietota uz citu telpu.</div>
-                                                </div>
-                                                <button type="button" class="table-action-inline-close" @click="panel = null">
-                                                    <x-icon name="x-mark" size="h-4 w-4" />
-                                                </button>
-                                            </div>
-
-                                            <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="space-y-3">
-                                                @csrf
-                                                <input type="hidden" name="action" value="room">
-                                                <x-searchable-select
-                                                    name="target_room_id"
-                                                    query-name="target_room_query"
-                                                    identifier="device-quick-room-{{ $device->id }}"
-                                                    :options="$quickRoomSelectOptions"
-                                                    :selected="(string) ($device->room_id ?? '')"
-                                                    :query="$quickRoomLabel"
-                                                    placeholder="Izvēlies telpu"
-                                                    empty-message="Neviena telpa neatbilst meklējumam."
-                                                />
-                                                <div class="table-action-inline-actions">
-                                                    <button type="button" class="btn-clear" @click="panel = null">Atcelt</button>
-                                                    <button type="submit" class="btn-search">
-                                                        <x-icon name="save" size="h-4 w-4" />
-                                                        <span>Saglabāt</span>
+                                        <div class="relative mt-3" x-show="panel" x-transition.opacity>
+                                            <div class="table-action-inline-panel" x-show="panel === 'room'" x-transition.opacity>
+                                                <div class="table-action-inline-head">
+                                                    <div>
+                                                        <div class="table-action-inline-title">Mainīt telpu</div>
+                                                        <div class="table-action-inline-copy">Ierīce tiks uzreiz pārvietota uz citu telpu.</div>
+                                                    </div>
+                                                    <button type="button" class="table-action-inline-close" @click="panel = null">
+                                                        <x-icon name="x-mark" size="h-4 w-4" />
                                                     </button>
                                                 </div>
-                                            </form>
-                                        </div>
 
-                                        <div class="table-action-inline-panel" x-cloak x-show="panel === 'assignee'" x-transition.opacity>
-                                            <div class="table-action-inline-head">
-                                                <div>
-                                                    <div class="table-action-inline-title">Mainīt atbildīgo</div>
-                                                    <div class="table-action-inline-copy">Izvēlies citu personu, kurai piešķirt ierīci.</div>
-                                                </div>
-                                                <button type="button" class="table-action-inline-close" @click="panel = null">
-                                                    <x-icon name="x-mark" size="h-4 w-4" />
-                                                </button>
+                                                <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="space-y-3">
+                                                    @csrf
+                                                    <input type="hidden" name="action" value="room">
+                                                    <x-searchable-select
+                                                        name="target_room_id"
+                                                        query-name="target_room_query"
+                                                        identifier="device-quick-room-{{ $device->id }}"
+                                                        :options="$quickRoomSelectOptions"
+                                                        :selected="(string) ($device->room_id ?? '')"
+                                                        :query="$quickRoomLabel"
+                                                        placeholder="Izvēlies telpu"
+                                                        empty-message="Neviena telpa neatbilst meklējumam."
+                                                    />
+                                                    <div class="table-action-inline-actions">
+                                                        <button type="button" class="btn-clear" @click="panel = null">Atcelt</button>
+                                                        <button type="submit" class="btn-search">
+                                                            <x-icon name="save" size="h-4 w-4" />
+                                                            <span>Saglabāt</span>
+                                                        </button>
+                                                    </div>
+                                                </form>
                                             </div>
 
-                                            <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="space-y-3">
-                                                @csrf
-                                                <input type="hidden" name="action" value="assignee">
-                                                <x-searchable-select
-                                                    name="target_assigned_to_id"
-                                                    query-name="target_assigned_to_query"
-                                                    identifier="device-quick-assignee-{{ $device->id }}"
-                                                    :options="$quickAssigneeSelectOptions"
+                                            <div class="table-action-inline-panel" x-show="panel === 'assignee'" x-transition.opacity>
+                                                <div class="table-action-inline-head">
+                                                    <div>
+                                                        <div class="table-action-inline-title">Mainīt atbildīgo</div>
+                                                        <div class="table-action-inline-copy">Izvēlies citu personu, kurai piešķirt ierīci.</div>
+                                                    </div>
+                                                    <button type="button" class="table-action-inline-close" @click="panel = null">
+                                                        <x-icon name="x-mark" size="h-4 w-4" />
+                                                    </button>
+                                                </div>
+
+                                                <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="space-y-3">
+                                                    @csrf
+                                                    <input type="hidden" name="action" value="assignee">
+                                                    <x-searchable-select
+                                                        name="target_assigned_to_id"
+                                                        query-name="target_assigned_to_query"
+                                                        identifier="device-quick-assignee-{{ $device->id }}"
+                                                        :options="$quickAssigneeSelectOptions"
                                                     :selected="(string) ($device->assigned_to_id ?? '')"
                                                     :query="$quickAssigneeLabel"
                                                     placeholder="Izvēlies atbildīgo personu"
