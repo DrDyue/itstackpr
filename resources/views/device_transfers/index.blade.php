@@ -454,7 +454,14 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-4 text-right">
-                                        @if ($hasActions)
+                                        @if ($isAdmin && $deviceFilterUrl)
+                                            {{-- Adminam - tikai viena poga bez dropdown --}}
+                                            <a href="{{ $deviceFilterUrl }}" class="table-action-summary table-action-summary-single">
+                                                <x-icon name="view" size="h-4 w-4" />
+                                                <span>Saistītā ierīce</span>
+                                            </a>
+                                        @elseif ($hasActions)
+                                            {{-- Pārējiem - dropdown ar darbībām --}}
                                             <div class="table-action-menu inline-block" x-data="{ open: false }" @keydown.escape.window="open = false">
                                                 <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
                                                     <span>Darbības</span>
@@ -463,19 +470,9 @@
                                                     </svg>
                                                 </button>
 
-                                                <div class="table-action-inline-panel" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
-                                                    <div class="table-action-inline-head">
-                                                        <div>
-                                                            <div class="table-action-inline-title">Pieteikuma darbības</div>
-                                                            <div class="table-action-inline-copy">Apskati saistīto ierīci un pieņem lēmumu par nodošanas pieprasījumu.</div>
-                                                        </div>
-                                                        <button type="button" class="table-action-inline-close" @click="open = false">
-                                                            <x-icon name="x-mark" size="h-4 w-4" />
-                                                        </button>
-                                                    </div>
-
-                                                    @if ($isAdmin && $deviceFilterUrl)
-                                                        <a href="{{ $deviceFilterUrl }}" class="table-action-item table-action-item-sky text-sky-700" @click="open = false">
+                                                <div class="table-action-list table-action-list-dropdown" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
+                                                    @if ($deviceFilterUrl)
+                                                        <a href="{{ $deviceFilterUrl }}" class="table-action-item table-action-item-sky table-action-item-wide text-sky-700" @click="open = false">
                                                             <x-icon name="view" size="h-4 w-4" />
                                                             <span>Skatīt saistīto ierīci</span>
                                                         </a>
@@ -497,53 +494,53 @@
                                                             method="POST"
                                                             action="{{ route('my-requests.destroy', ['requestType' => 'transfer', 'requestId' => $transfer->id]) }}"
                                                             data-app-confirm-title="Atcelt nodošanu?"
-                                                            data-app-confirm-message="Vai tiešām atcelt šo ierīces nodošanas pieprasījumu?"
+                                                            data-app-confirm-message="Vai tiešām atcelt šo nodošanas pieteikumu?"
                                                             data-app-confirm-accept="Jā, atcelt"
                                                             data-app-confirm-cancel="Nē"
                                                             data-app-confirm-tone="danger"
                                                         >
                                                             @csrf
                                                             @method('DELETE')
-                                                            <button type="submit" class="table-action-button table-action-button-rose">
-                                                                <x-icon name="x-circle" size="h-4 w-4" />
-                                                                <span>Atcelt pieprasījumu</span>
+                                                            <button type="submit" class="table-action-item table-action-item-rose" @click="open = false">
+                                                                <x-icon name="x-mark" size="h-4 w-4" />
+                                                                <span>Atcelt pieteikumu</span>
                                                             </button>
                                                         </form>
                                                     @endif
 
                                                     @if ($isIncomingPending)
-                                                        <div class="table-action-inline-actions">
-                                                            <form
-                                                                method="POST"
-                                                                action="{{ route('device-transfers.review', $transfer) }}"
-                                                                data-app-confirm-title="Apstiprināt nodošanu?"
-                                                                data-app-confirm-message="Vai tiešām apstiprināt šo ierīces nodošanas pieprasījumu?"
-                                                                data-app-confirm-accept="Jā, apstiprināt"
-                                                                data-app-confirm-cancel="Nē"
-                                                                data-app-confirm-tone="warning"
-                                                            >
-                                                                @csrf
-                                                                <input type="hidden" name="status" value="approved">
-                                                                <button type="submit" class="btn-approve">
-                                                                    <x-icon name="check-circle" size="h-4 w-4" />
-                                                                    <span>Apstiprināt</span>
-                                                                </button>
-                                                            </form>
-
+                                                        <div class="table-action-grid-actions">
                                                             <form
                                                                 method="POST"
                                                                 action="{{ route('device-transfers.review', $transfer) }}"
                                                                 data-app-confirm-title="Noraidīt nodošanu?"
-                                                                data-app-confirm-message="Vai tiešām noraidīt šo ierīces nodošanas pieprasījumu?"
+                                                                data-app-confirm-message="Vai tiešām noraidīt šo ierīces nodošanas pieteikumu?"
                                                                 data-app-confirm-accept="Jā, noraidīt"
                                                                 data-app-confirm-cancel="Nē"
                                                                 data-app-confirm-tone="danger"
                                                             >
                                                                 @csrf
                                                                 <input type="hidden" name="status" value="rejected">
-                                                                <button type="submit" class="btn-reject">
+                                                                <button type="submit" class="table-action-item table-action-item-rose">
                                                                     <x-icon name="x-circle" size="h-4 w-4" />
                                                                     <span>Noraidīt</span>
+                                                                </button>
+                                                            </form>
+
+                                                            <form
+                                                                method="POST"
+                                                                action="{{ route('device-transfers.review', $transfer) }}"
+                                                                data-app-confirm-title="Apstiprināt nodošanu?"
+                                                                data-app-confirm-message="Vai tiešām apstiprināt šo ierīces nodošanas pieteikumu?"
+                                                                data-app-confirm-accept="Jā, apstiprināt"
+                                                                data-app-confirm-cancel="Nē"
+                                                                data-app-confirm-tone="warning"
+                                                            >
+                                                                @csrf
+                                                                <input type="hidden" name="status" value="approved">
+                                                                <button type="submit" class="table-action-item table-action-item-emerald">
+                                                                    <x-icon name="check-circle" size="h-4 w-4" />
+                                                                    <span>Apstiprināt</span>
                                                                 </button>
                                                             </form>
                                                         </div>
