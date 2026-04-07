@@ -442,88 +442,85 @@
                                     <td class="px-4 py-4">
                                         <div class="table-action-menu" x-data="{ open: false, panel: null }" @keydown.escape.window="open = false; panel = null">
                                             <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="h-4 w-4">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
+                                                <span>Darbības</span>
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                                 </svg>
                                             </button>
 
                                             <div class="table-action-list" :class="panel ? 'table-action-list-wide' : ''" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false; panel = null">
+                                                <div class="table-action-header">
+                                                    <div class="table-action-header-title">Darbības</div>
+                                                </div>
 
                                                 @if ($linkedRequestUrl)
-                                                    <div class="table-action-section">
-                                                        <div class="table-action-section-title">Saistītie ieraksti</div>
-                                                        <a href="{{ $linkedRequestUrl }}" class="table-action-item table-action-item-violet" @click="open = false; panel = null">
-                                                            <x-icon name="repair-request" size="h-4 w-4" />
-                                                            <span>Skatīt saistīto pieprasījumu</span>
-                                                        </a>
-                                                    </div>
+                                                    <a href="{{ $linkedRequestUrl }}" class="table-action-item table-action-item-violet" @click="open = false; panel = null">
+                                                        <x-icon name="repair-request" size="h-4 w-4" />
+                                                        <span>Skatīt saistīto pieprasījumu</span>
+                                                    </a>
                                                 @endif
 
                                                 @if ($canManageRepairs)
-                                                    <div class="table-action-divider"></div>
-
                                                     <a href="{{ route('repairs.edit', $repair) }}" class="table-action-item table-action-item-amber" @click="open = false; panel = null">
-                                                            <x-icon name="edit" size="h-4 w-4" />
-                                                            <span>Rediģēt</span>
-                                                        </a>
+                                                        <x-icon name="edit" size="h-4 w-4" />
+                                                        <span>Rediģēt</span>
+                                                    </a>
 
-                                                        @if ($repair->status === 'waiting')
-                                                            <form
-                                                                method="POST"
-                                                                action="{{ route('repairs.transition', $repair) }}"
-                                                                data-app-confirm-title="Sākt remontu?"
-                                                                data-app-confirm-message="Vai tiešām pārvietot šo remontu uz statusu "Procesā"?"
-                                                                data-app-confirm-accept="Jā, sākt"
-                                                                data-app-confirm-cancel="Nē"
-                                                                data-app-confirm-tone="warning"
-                                                            >
-                                                                @csrf
-                                                                <input type="hidden" name="target_status" value="in-progress">
-                                                                <button type="submit" class="table-action-item table-action-item-sky" @click="open = false; panel = null">
-                                                                    <x-icon name="stats" size="h-4 w-4" />
-                                                                    <span>Pārvietot uz procesu</span>
-                                                                </button>
-                                                            </form>
-                                                        @elseif ($repair->status === 'in-progress')
-                                                            <form
-                                                                method="POST"
-                                                                action="{{ route('repairs.transition', $repair) }}"
-                                                                data-app-confirm-title="Pabeigt remontu?"
-                                                                data-app-confirm-message="Vai tiešām pabeigt šo remonta ierakstu?"
-                                                                data-app-confirm-accept="Jā, pabeigt"
-                                                                data-app-confirm-cancel="Nē"
-                                                                data-app-confirm-tone="warning"
-                                                            >
-                                                                @csrf
-                                                                <input type="hidden" name="target_status" value="completed">
-                                                                <button type="submit" class="table-action-item table-action-item-emerald" @click="open = false; panel = null">
-                                                                    <x-icon name="check-circle" size="h-4 w-4" />
-                                                                    <span>Pabeigt</span>
-                                                                </button>
-                                                            </form>
-                                                        @endif
+                                                    @if ($repair->status === 'waiting')
+                                                        <form
+                                                            method="POST"
+                                                            action="{{ route('repairs.transition', $repair) }}"
+                                                            data-app-confirm-title="Sākt remontu?"
+                                                            data-app-confirm-message="Vai tiešām pārvietot šo remontu uz statusu "Procesā"?"
+                                                            data-app-confirm-accept="Jā, sākt"
+                                                            data-app-confirm-cancel="Nē"
+                                                            data-app-confirm-tone="warning"
+                                                        >
+                                                            @csrf
+                                                            <input type="hidden" name="target_status" value="in-progress">
+                                                            <button type="submit" class="table-action-item table-action-item-sky" @click="open = false; panel = null">
+                                                                <x-icon name="stats" size="h-4 w-4" />
+                                                                <span>Pārvietot uz procesu</span>
+                                                            </button>
+                                                        </form>
+                                                    @elseif ($repair->status === 'in-progress')
+                                                        <form
+                                                            method="POST"
+                                                            action="{{ route('repairs.transition', $repair) }}"
+                                                            data-app-confirm-title="Pabeigt remontu?"
+                                                            data-app-confirm-message="Vai tiešām pabeigt šo remonta ierakstu?"
+                                                            data-app-confirm-accept="Jā, pabeigt"
+                                                            data-app-confirm-cancel="Nē"
+                                                            data-app-confirm-tone="warning"
+                                                        >
+                                                            @csrf
+                                                            <input type="hidden" name="target_status" value="completed">
+                                                            <button type="submit" class="table-action-item table-action-item-emerald" @click="open = false; panel = null">
+                                                                <x-icon name="check-circle" size="h-4 w-4" />
+                                                                <span>Pabeigt</span>
+                                                            </button>
+                                                        </form>
+                                                    @endif
 
-                                                        @if (in_array($repair->status, ['waiting', 'in-progress'], true))
-                                                            <div class="table-action-divider"></div>
-                                                            <form
-                                                                method="POST"
-                                                                action="{{ route('repairs.transition', $repair) }}"
-                                                                data-app-confirm-title="Atcelt remontu?"
-                                                                data-app-confirm-message="Vai tiešām atcelt šo remonta ierakstu?"
-                                                                data-app-confirm-accept="Jā, atcelt"
-                                                                data-app-confirm-cancel="Nē"
-                                                                data-app-confirm-tone="danger"
-                                                            >
-                                                                @csrf
-                                                                <input type="hidden" name="target_status" value="cancelled">
-                                                                <button type="submit" class="table-action-item table-action-item-rose" @click="open = false; panel = null">
-                                                                    <x-icon name="clear" size="h-4 w-4" />
-                                                                    <span>Atcelt remontu</span>
-                                                                </button>
-                                                            </form>
-                                                        @endif
+                                                    @if (in_array($repair->status, ['waiting', 'in-progress'], true))
+                                                        <form
+                                                            method="POST"
+                                                            action="{{ route('repairs.transition', $repair) }}"
+                                                            data-app-confirm-title="Atcelt remontu?"
+                                                            data-app-confirm-message="Vai tiešām atcelt šo remonta ierakstu?"
+                                                            data-app-confirm-accept="Jā, atcelt"
+                                                            data-app-confirm-cancel="Nē"
+                                                            data-app-confirm-tone="danger"
+                                                        >
+                                                            @csrf
+                                                            <input type="hidden" name="target_status" value="cancelled">
+                                                            <button type="submit" class="table-action-item table-action-item-rose" @click="open = false; panel = null">
+                                                                <x-icon name="clear" size="h-4 w-4" />
+                                                                <span>Atcelt remontu</span>
+                                                            </button>
+                                                        </form>
+                                                    @endif
                                                 @elseif (! $linkedRequestUrl)
-                                                    <div class="table-action-divider"></div>
                                                     <button
                                                         type="button"
                                                         class="btn-disabled"
