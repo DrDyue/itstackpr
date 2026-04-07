@@ -196,6 +196,28 @@
                                                     </button>
                                                 </form>
                                             </div>
+                                        @elseif (! $canReview && $repairRequest->status === 'submitted')
+                                            <a href="{{ route('my-requests.edit', ['requestType' => 'repair', 'requestId' => $repairRequest->id]) }}" class="table-action-item table-action-item-amber" @click="open = false">
+                                                <x-icon name="edit" size="h-4 w-4" />
+                                                <span>Labot aprakstu</span>
+                                            </a>
+
+                                            <form
+                                                method="POST"
+                                                action="{{ route('my-requests.destroy', ['requestType' => 'repair', 'requestId' => $repairRequest->id]) }}"
+                                                data-app-confirm-title="Atcelt pieteikumu?"
+                                                data-app-confirm-message="Vai tiešām atcelt šo remonta pieteikumu?"
+                                                data-app-confirm-accept="Jā, atcelt"
+                                                data-app-confirm-cancel="Nē"
+                                                data-app-confirm-tone="danger"
+                                            >
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="table-action-item table-action-item-rose" @click="open = false">
+                                                    <x-icon name="x-mark" size="h-4 w-4" />
+                                                    <span>Atcelt pieteikumu</span>
+                                                </button>
+                                            </form>
                                         @endif
                                     </div>
                                 </div>

@@ -471,7 +471,7 @@
                                                 </button>
 
                                                 <div class="table-action-list table-action-list-dropdown" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
-                                                    @if ($deviceFilterUrl)
+                                                    @if ($deviceFilterUrl && ! $isIncomingPending)
                                                         <a href="{{ $deviceFilterUrl }}" class="table-action-item table-action-item-sky table-action-item-wide text-sky-700" @click="open = false">
                                                             <x-icon name="view" size="h-4 w-4" />
                                                             <span>Skatīt saistīto ierīci</span>
