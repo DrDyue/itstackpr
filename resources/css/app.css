@@ -4129,8 +4129,9 @@ tbody td {
 }
 
 .table-action-list {
-    @apply absolute right-0 z-50 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl ring-1 ring-slate-200/50 w-max min-w-[18rem] max-w-[95vw];
+    @apply absolute right-0 z-50 mt-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl ring-1 ring-slate-200/50 w-max min-w-[18rem] max-w-[95vw];
     transform-origin: top right;
+    overflow: visible;
 }
 
 .table-action-list-wide {
@@ -4147,6 +4148,7 @@ tbody td {
 
 .table-action-section {
     @apply relative px-3 py-2 space-y-2;
+    overflow: visible;
 }
 
 .table-action-section-title {
@@ -4278,7 +4280,8 @@ tbody td {
 }
 
 .table-action-inline-panel {
-    @apply relative w-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 shadow-xl ring-1 ring-slate-200/70;
+    @apply fixed left-1/2 top-1/2 z-[110] w-[32rem] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-slate-200 bg-white p-0 shadow-2xl ring-1 ring-slate-200/70;
+    overflow: visible;
 }
 
 .table-action-inline-head {
