@@ -1,4 +1,4 @@
-{--
+{{--
     Lapa: Lietotāja rediģēšana.
     Atbildība: ļauj administratoram atjaunot lietotāja kontaktus, lomu un konta statusu.
     Datu avots: UserController@edit, saglabāšana caur UserController@update.
@@ -51,7 +51,7 @@
                                 <span class="crud-label">Amats</span>
                                 <input type="text" name="job_title" value="{{ old('job_title', $user->job_title) }}" class="crud-control">
                             </label>
-                            <div class="block">
+                            <div class="block md:col-span-2">
                                 <span class="crud-label">Loma</span>
                                 <div class="mt-2" x-data="{ role: @js(old('role', $user->role)) }">
                                     <input type="hidden" name="role" :value="role">

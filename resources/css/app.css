@@ -3042,7 +3042,7 @@ tbody td {
 }
 
 .role-toggle-compact {
-    @apply max-w-[280px];
+    @apply max-w-[calc(50%-0.5rem)];
 }
 
 .devices-filter-divider-vertical {
