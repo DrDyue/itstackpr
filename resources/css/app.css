@@ -4174,8 +4174,12 @@ tbody td {
 }
 
 .table-action-section {
-    @apply relative overflow-visible;
+    @apply relative overflow-visible px-4 py-1.5;
     overflow: visible;
+}
+
+.table-action-section + .table-action-section {
+    @apply mt-2;
 }
 
 .table-action-section-title {
@@ -4188,6 +4192,10 @@ tbody td {
 
 .table-action-grid {
     @apply grid grid-cols-2 gap-3;
+}
+
+.table-action-grid + .table-action-grid {
+    @apply mt-3;
 }
 
 .table-action-item {
