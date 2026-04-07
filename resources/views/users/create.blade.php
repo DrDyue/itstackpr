@@ -51,7 +51,7 @@
                                 <span class="crud-label">Amats</span>
                                 <input type="text" name="job_title" value="{{ old('job_title') }}" class="crud-control">
                             </label>
-                            <div class="block md:col-span-2">
+                            <div class="block md:col-start-2">
                                 <span class="crud-label">Loma</span>
                                 <div class="mt-2" x-data="{ role: @js(old('role', 'admin')) }">
                                     <input type="hidden" name="role" :value="role">
