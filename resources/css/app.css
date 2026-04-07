@@ -4162,7 +4162,8 @@ tbody td {
 }
 
 .table-action-item {
-    @apply flex h-10 w-full items-center justify-start gap-2.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-all duration-150 hover:bg-slate-50 whitespace-nowrap;
+    @apply flex h-10 w-full items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-all duration-150 hover:bg-slate-50 whitespace-nowrap;
+    justify-content: flex-start !important;
 }
 
 .table-action-divider {
@@ -4170,7 +4171,8 @@ tbody td {
 }
 
 .table-action-item {
-    @apply flex h-10 w-full items-center justify-start gap-2.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-all duration-150 hover:bg-slate-50 whitespace-nowrap;
+    @apply flex h-10 w-full items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-all duration-150 hover:bg-slate-50 whitespace-nowrap;
+    justify-content: flex-start !important;
 }
 
 .table-action-item > svg,
@@ -4180,7 +4182,7 @@ tbody td {
 
 .table-action-item > span,
 .table-action-button > span {
-    @apply min-w-0 flex-1 leading-5;
+    @apply min-w-0 flex-1 leading-5 text-left;
 }
 
 .table-action-item-primary {
