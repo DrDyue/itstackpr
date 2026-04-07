@@ -4089,7 +4089,7 @@ tbody td {
 }
 
 .btn-disabled {
-    @apply inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-200 bg-slate-100 px-3.5 py-2 text-sm font-semibold text-slate-500 shadow-sm transition hover:bg-slate-200 cursor-not-allowed;
+    @apply inline-flex items-center justify-start gap-1.5 whitespace-nowrap rounded-lg border border-slate-200 bg-slate-100 px-3.5 py-2 text-sm font-semibold text-slate-500 shadow-sm transition hover:bg-slate-200 cursor-not-allowed;
 }
 
 .btn-danger-solid {
@@ -4138,7 +4138,7 @@ tbody td {
 }
 
 .table-action-header {
-    @apply border-b border-slate-100 px-4 py-3;
+    @apply border-b border-slate-100 px-4 py-2.5;
 }
 
 .table-action-header-title {
@@ -4146,11 +4146,11 @@ tbody td {
 }
 
 .table-action-section {
-    @apply px-3 py-3 space-y-2.5;
+    @apply px-3 py-2 space-y-2;
 }
 
 .table-action-section-title {
-    @apply mb-2 px-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400;
+    @apply mb-1.5 px-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400;
 }
 
 .table-action-divider {
