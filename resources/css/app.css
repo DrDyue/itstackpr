@@ -4137,6 +4137,30 @@ tbody td {
     overflow: visible;
 }
 
+.table-action-list-dropdown {
+    @apply w-[24rem];
+}
+
+.table-action-grid-actions {
+    @apply grid grid-cols-2 gap-1.5;
+}
+
+.table-action-item-wide {
+    @apply col-span-2;
+}
+
+.table-action-summary-single {
+    @apply inline-flex h-10 items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-all duration-150 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-800 whitespace-nowrap;
+}
+
+.table-action-summary-single > svg {
+    @apply h-4 w-4 shrink-0 text-slate-500;
+}
+
+.table-action-summary-single > span {
+    @apply font-medium;
+}
+
 .table-action-list-wide {
     @apply w-[30rem];
 }
