@@ -365,6 +365,11 @@ const swapAsyncTableRoot = (rootSelector, html) => {
 
     currentRoot.outerHTML = nextRoot.outerHTML;
 
+    const mountedRoot = document.querySelector(rootSelector);
+    if (mountedRoot && window.Alpine?.initTree) {
+        window.Alpine.initTree(mountedRoot);
+    }
+
     return true;
 };
 

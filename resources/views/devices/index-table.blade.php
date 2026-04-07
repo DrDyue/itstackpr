@@ -219,12 +219,11 @@
                         <div class="table-action-menu" x-data="{ open: false, panel: null }" @keydown.escape.window="open = false; panel = null">
                             <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
                                 <span>Darbības</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                 </svg>
                             </button>
 
-<<<<<<< HEAD
                             <div
                                 class="table-action-list"
                                 :class="panel ? 'table-action-list-wide' : ''"
@@ -246,23 +245,12 @@
                                     <span>Skatīt</span>
                                 </a>
                                     </div>
-=======
-                            <div class="table-action-list" :class="panel ? 'table-action-list-wide' : ''" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false; panel = null">
-                                <div class="table-action-header">
-                                    <div class="table-action-header-title">Darbības</div>
-                                </div>
-
-                                <div class="table-action-section">
-                                    <a href="{{ route('devices.show', $device) }}" class="table-action-item table-action-item-primary" @click="open = false; panel = null">
-                                        <x-icon name="view" size="h-4 w-4" />
-                                        <span>Skatīt</span>
-                                    </a>
->>>>>>> 6bdbe1a9bb8cfa218c6b08bdf8a17f562ff21b4f
                                 </div>
 
                                 @if (! $canManageDevices)
                                     <div class="table-action-divider"></div>
                                     <div class="table-action-section">
+                                        <div class="table-action-section-title">Pieprasījumi</div>
                                     @if ($requestAvailability['can_create_any'])
                                         <div class="table-action-stack">
                                         <a href="{{ route('repair-requests.create', ['device_id' => $device->id]) }}" class="table-action-item table-action-item-sky" @click="open = false; panel = null">
@@ -304,67 +292,54 @@
                                 @if ($canManageDevices)
                                     <div class="table-action-divider"></div>
                                     <div class="table-action-section">
-<<<<<<< HEAD
                                         <div class="table-action-section-title">Pārvaldība</div>
                                         <div class="table-action-stack">
-=======
->>>>>>> 6bdbe1a9bb8cfa218c6b08bdf8a17f562ff21b4f
-                                    <a href="{{ route('devices.edit', $device) }}" class="table-action-item table-action-item-amber" @click="open = false; panel = null">
-                                        <x-icon name="edit" size="h-4 w-4" />
-                                        <span>Rediģēt</span>
-                                    </a>
+                                            <a href="{{ route('devices.edit', $device) }}" class="table-action-item table-action-item-amber" @click="open = false; panel = null">
+                                                <x-icon name="edit" size="h-4 w-4" />
+                                                <span>Rediģēt</span>
+                                            </a>
 
-                                    @if ($device->status === 'active')
-                                        <div class="table-action-stack">
-                                        <button type="button" class="table-action-item table-action-item-sky" @click="panel = panel === 'room' ? null : 'room'">
-                                            <x-icon name="room" size="h-4 w-4" />
-                                            <span>Mainīt telpu</span>
-                                        </button>
+                                            @if ($device->status === 'active')
+                                                <button type="button" class="table-action-item table-action-item-sky" @click="panel = panel === 'room' ? null : 'room'">
+                                                    <x-icon name="room" size="h-4 w-4" />
+                                                    <span>Mainīt telpu</span>
+                                                </button>
 
-                                        <button type="button" class="table-action-item table-action-item-violet" @click="panel = panel === 'assignee' ? null : 'assignee'">
-                                            <x-icon name="user" size="h-4 w-4" />
-                                            <span>Mainīt atbildīgo</span>
-                                        </button>
+                                                <button type="button" class="table-action-item table-action-item-violet" @click="panel = panel === 'assignee' ? null : 'assignee'">
+                                                    <x-icon name="user" size="h-4 w-4" />
+                                                    <span>Mainīt atbildīgo</span>
+                                                </button>
 
+                                                <form
+                                                    method="POST"
+                                                    action="{{ route('devices.quick-update', $device) }}"
+                                                    data-app-confirm-title="Norakstīt ierīci?"
+                                                    data-app-confirm-message="Vai tiešām norakstīt šo ierīci? Pēc norakstīšanas tā vairs nebūs piešķirta lietotājam vai telpai."
+                                                    data-app-confirm-accept="Jā, norakstīt"
+                                                    data-app-confirm-cancel="Nē"
+                                                    data-app-confirm-tone="danger"
+                                                >
+                                                    @csrf
+                                                    <input type="hidden" name="action" value="status">
+                                                    <input type="hidden" name="target_status" value="writeoff">
+                                                    <button type="submit" class="table-action-button table-action-button-rose" formmethod="POST">
+                                                        <x-icon name="writeoff" size="h-4 w-4" />
+                                                        <span>Norakstīt</span>
+                                                    </button>
+                                                </form>
+
+                                                <form method="POST" action="{{ route('devices.quick-update', $device) }}">
+                                                    @csrf
+                                                    <input type="hidden" name="action" value="status">
+                                                    <input type="hidden" name="target_status" value="repair">
+                                                    <button type="submit" class="table-action-button table-action-button-amber" formmethod="POST">
+                                                        <x-icon name="repair" size="h-4 w-4" />
+                                                        <span>Atdot remontā</span>
+                                                    </button>
+                                                </form>
+                                            @endif
                                         </div>
 
-                                        <div class="table-action-stack">
-                                        <form
-                                            method="POST"
-                                            action="{{ route('devices.quick-update', $device) }}"
-                                            data-app-confirm-title="Norakstīt ierīci?"
-                                            data-app-confirm-message="Vai tiešām norakstīt šo ierīci? Pēc norakstīšanas tā vairs nebūs piešķirta lietotājam vai telpai."
-                                            data-app-confirm-accept="Jā, norakstīt"
-                                            data-app-confirm-cancel="Nē"
-                                            data-app-confirm-tone="danger"
-                                        >
-                                            @csrf
-                                            <input type="hidden" name="action" value="status">
-                                            <input type="hidden" name="target_status" value="writeoff">
-                                            <button
-                                                type="submit"
-                                                class="table-action-button table-action-button-rose"
-                                                formmethod="POST"
-                                            >
-                                                <x-icon name="writeoff" size="h-4 w-4" />
-                                                <span>Norakstīt</span>
-                                            </button>
-                                        </form>
-
-                                        <form method="POST" action="{{ route('devices.quick-update', $device) }}">
-                                            @csrf
-                                            <input type="hidden" name="action" value="status">
-                                            <input type="hidden" name="target_status" value="repair">
-                                            <button type="submit" class="table-action-button table-action-button-amber" formmethod="POST">
-                                                <x-icon name="repair" size="h-4 w-4" />
-                                                <span>Atdot remontā</span>
-                                            </button>
-                                        </form>
-
-                                        </div>
-                                        </div>
-
-<<<<<<< HEAD
                                         <div class="table-action-inline-panel" x-cloak x-show="panel === 'room'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0 scale-100" x-transition:leave-end="opacity-0 translate-y-1 scale-95">
                                             <div class="table-action-inline-head">
                                                 <div>
@@ -432,83 +407,13 @@
                                                 </div>
                                             </form>
                                         </div>
-=======
->>>>>>> 6bdbe1a9bb8cfa218c6b08bdf8a17f562ff21b4f
-                                    @endif
                                     </div>
                                 @endif
-
-                                <!-- Quick action panels (fixed position) -->
-                                <div x-show="panel" x-transition.opacity x-cloak class="fixed inset-0 z-[90] bg-slate-950/50 backdrop-blur-sm" @click="panel = null"></div>
-                                
-                                <div x-show="panel === 'room'" x-transition x-cloak class="table-action-inline-panel" x-data="{ hasChanges: false, saving: false, initialValue: @if($device->room_id) '{{ $device->room_id }}' @else '' @endif }">
-                                    <div class="table-action-inline-head">
-                                        <div>
-                                            <div class="table-action-inline-title">Mainīt telpu</div>
-                                            <div class="table-action-inline-copy">Ierīce tiks uzreiz pārvietota uz citu telpu.</div>
-                                        </div>
-                                    </div>
-
-                                    <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="space-y-3" @submit="saving = true">
-                                        @csrf
-                                        <input type="hidden" name="action" value="room">
-                                        <x-searchable-select
-                                            name="target_room_id"
-                                            query-name="target_room_query"
-                                            identifier="device-quick-room-{{ $device->id }}"
-                                            :options="$quickRoomSelectOptions"
-                                            :selected="(string) ($device->room_id ?? '')"
-                                            :query="$quickRoomLabel"
-                                            placeholder="Izvēlies telpu"
-                                            empty-message="Neviena telpa neatbilst meklējumam."
-                                            @change="hasChanges = true"
-                                        />
-                                        <div class="table-action-inline-actions">
-                                            <button type="button" class="btn-clear" @click="panel = null; hasChanges = false">Atcelt</button>
-                                            <button type="submit" class="btn-search" :disabled="!hasChanges || saving" :class="(!hasChanges || saving) ? 'opacity-50 cursor-not-allowed' : ''">
-                                                <x-icon name="save" size="h-4 w-4" />
-                                                <span x-text="saving ? 'Saglabā...' : 'Saglabāt'"></span>
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-
-                                <div x-show="panel === 'assignee'" x-transition x-cloak class="table-action-inline-panel" x-data="{ hasChanges: false, saving: false, initialValue: @if($device->assigned_to_id) '{{ $device->assigned_to_id }}' @else '' @endif }">
-                                    <div class="table-action-inline-head">
-                                        <div>
-                                            <div class="table-action-inline-title">Mainīt atbildīgo</div>
-                                            <div class="table-action-inline-copy">Izvēlies citu personu, kurai piešķirt ierīci.</div>
-                                        </div>
-                                    </div>
-
-                                    <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="space-y-3" @submit="saving = true">
-                                        @csrf
-                                        <input type="hidden" name="action" value="assignee">
-                                        <x-searchable-select
-                                            name="target_assigned_to_id"
-                                            query-name="target_assigned_to_query"
-                                            identifier="device-quick-assignee-{{ $device->id }}"
-                                            :options="$quickAssigneeSelectOptions"
-                                            :selected="(string) ($device->assigned_to_id ?? '')"
-                                            :query="$quickAssigneeLabel"
-                                            placeholder="Izvēlies atbildīgo personu"
-                                            empty-message="Neviena persona neatbilst meklējumam."
-                                            @change="hasChanges = true"
-                                        />
-                                                <div class="table-action-inline-actions">
-                                                    <button type="button" class="btn-clear" @click="panel = null; hasChanges = false">Atcelt</button>
-                                                    <button type="submit" class="btn-search" :disabled="!hasChanges || saving" :class="(!hasChanges || saving) ? 'opacity-50 cursor-not-allowed' : ''">
-                                                        <x-icon name="save" size="h-4 w-4" />
-                                                        <span x-text="saving ? 'Saglabā...' : 'Saglabāt'"></span>
-                                                    </button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            @empty
                 <tr>
                     <td colspan="8" class="px-4 py-6">
                         <x-empty-state
@@ -523,8 +428,8 @@
         </tbody>
     </table>
     </div>
-
-    @if ($devices->hasPages())
-        <div class="mt-5 relative z-10 px-4">{{ $devices->links() }}</div>
-    @endif
 </div>
+
+@if ($devices->hasPages())
+    <div class="mt-5">{{ $devices->links() }}</div>
+@endif

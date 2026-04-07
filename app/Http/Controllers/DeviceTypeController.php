@@ -58,9 +58,9 @@ class DeviceTypeController extends Controller
         $this->requireManager();
         AuditTrail::viewed($this->user(), 'DeviceType', null, 'Atvērts ierīces tipa pievienošanas modālis.');
 
-        return redirect()->to(route('device-types.index').'?'.http_build_query([
-            'modal' => 'create',
-        ]));
+        return redirect()
+            ->route('device-types.index')
+            ->with('device_type_modal', 'create');
     }
 
     public function store(Request $request)
@@ -80,10 +80,10 @@ class DeviceTypeController extends Controller
         $this->requireManager();
         AuditTrail::viewed($this->user(), 'DeviceType', (string) $deviceType->id, 'Atvērts ierīces tipa labošanas modālis: '.AuditTrail::labelFor($deviceType));
 
-        return redirect()->to(route('device-types.index').'?'.http_build_query([
-            'modal' => 'edit',
-            'device_type' => $deviceType->id,
-        ]));
+        return redirect()
+            ->route('device-types.index')
+            ->with('device_type_modal', 'edit')
+            ->with('device_type_modal_id', (string) $deviceType->id);
     }
 
     public function update(Request $request, DeviceType $deviceType)
@@ -190,8 +190,16 @@ class DeviceTypeController extends Controller
 
     private function deviceTypeModalState(Request $request, $types): array
     {
-        $mode = (string) (old('_device_type_modal_mode') ?? session('device_type_modal', ''));
-        $id = (string) (old('_device_type_modal_id') ?? session('device_type_modal_id', ''));
+        $mode = (string) (
+            old('_device_type_modal_mode')
+            ?? session('device_type_modal')
+            ?? $request->query('modal', '')
+        );
+        $id = (string) (
+            old('_device_type_modal_id')
+            ?? session('device_type_modal_id')
+            ?? $request->query('device_type', '')
+        );
 
         if (! in_array($mode, ['create', 'edit'], true)) {
             $mode = '';

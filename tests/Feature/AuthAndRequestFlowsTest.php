@@ -276,14 +276,14 @@ class AuthAndRequestFlowsTest extends TestCase
 
         $this->actingAs($admin)
             ->get(route('device-types.create'))
-            ->assertRedirect(route('device-types.index', ['modal' => 'create']));
+            ->assertRedirect(route('device-types.index'))
+            ->assertSessionHas('device_type_modal', 'create');
 
         $this->actingAs($admin)
             ->get(route('device-types.edit', $typeId))
-            ->assertRedirect(route('device-types.index', [
-                'modal' => 'edit',
-                'device_type' => $typeId,
-            ]));
+            ->assertRedirect(route('device-types.index'))
+            ->assertSessionHas('device_type_modal', 'edit')
+            ->assertSessionHas('device_type_modal_id', (string) $typeId);
     }
 
     public function test_device_type_duplicate_validation_preserves_modal_state(): void
@@ -3224,6 +3224,8 @@ class AuthAndRequestFlowsTest extends TestCase
 
     private function markSchemaAsDirtyForNextTest(): void
     {
+        DB::disconnect();
+        app('db')->purge();
         RefreshDatabaseState::$migrated = false;
     }
 }

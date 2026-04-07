@@ -46,10 +46,10 @@
                 </div>
 
                 <div class="page-actions">
-                    <button type="button" class="btn-create" x-on:click.prevent="$dispatch('open-modal', 'create-device-type')">
+                    <a href="{{ route('device-types.create') }}" class="btn-create">
                         <x-icon name="plus" size="h-4 w-4" />
                         <span>Pievienot tipu</span>
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -135,10 +135,10 @@
                                     </td>
                                     <td class="px-4 py-4">
                                         <div class="device-type-actions">
-                                            <button type="button" class="btn-edit" x-on:click.prevent="$dispatch('open-modal', 'edit-device-type-{{ $type->id }}')">
+                                            <a href="{{ route('device-types.edit', $type) }}" class="btn-edit">
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Rediģēt</span>
-                                            </button>
+                                            </a>
 
                                             @if ($canDelete)
                                                 <form

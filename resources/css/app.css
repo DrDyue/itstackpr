@@ -4275,6 +4275,10 @@ tbody td {
     @apply space-y-2;
 }
 
+.table-action-stack > .table-action-stack {
+    @apply space-y-2;
+}
+
 .table-action-grid > form,
 .table-action-grid > a,
 .table-action-grid > button,
@@ -4282,6 +4286,11 @@ tbody td {
 .table-action-stack > a,
 .table-action-stack > button {
     @apply block w-full;
+}
+
+.table-action-stack > form > .table-action-item,
+.table-action-stack > form > .table-action-button {
+    @apply w-full;
 }
 
 .table-action-item {
@@ -4458,6 +4467,91 @@ tbody td {
 
 .table-action-inline-panel > .table-action-inline-actions:last-child {
     @apply mt-3;
+}
+
+.table-action-menu .btn-disabled {
+    @apply inline-flex min-h-[2.5rem] items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-500;
+}
+
+.table-action-menu .btn-disabled > span {
+    @apply text-left leading-5;
+}
+
+/* Final polish overrides for action dropdowns */
+.table-action-list {
+    @apply min-w-[19rem] rounded-2xl p-2.5;
+}
+
+.table-action-list-wide {
+    @apply w-[28rem];
+}
+
+.table-action-section {
+    @apply px-0 py-0;
+}
+
+.table-action-section + .table-action-section {
+    @apply mt-3 pt-3;
+}
+
+.table-action-divider {
+    @apply hidden;
+}
+
+.table-action-section-title {
+    @apply mb-2 px-2 text-[11px] tracking-[0.18em];
+}
+
+.table-action-stack {
+    @apply space-y-1.5;
+}
+
+.table-action-item,
+.table-action-button,
+.table-action-menu .btn-disabled {
+    @apply min-h-[2.75rem] rounded-xl px-3.5 py-2 shadow-sm;
+}
+
+.table-action-item,
+.table-action-button {
+    @apply items-center;
+}
+
+.table-action-item > span,
+.table-action-button > span,
+.table-action-menu .btn-disabled > span {
+    @apply text-sm font-medium;
+}
+
+.table-action-item-primary,
+.table-action-item-amber,
+.table-action-item-sky,
+.table-action-item-violet,
+.table-action-item-rose,
+.table-action-item-emerald,
+.table-action-button-amber,
+.table-action-button-sky,
+.table-action-button-rose,
+.table-action-button-emerald {
+    @apply bg-white;
+}
+
+.table-action-inline-panel {
+    @apply w-[30rem];
+}
+
+.table-action-inline-head {
+    @apply px-4 py-3.5;
+}
+
+.table-action-inline-actions {
+    @apply gap-2.5 px-4 py-3;
+}
+
+.table-action-inline-panel > .table-action-item,
+.table-action-inline-panel > form,
+.table-action-inline-panel > .btn-disabled {
+    @apply mx-4 mt-4;
 }
 
 .app-table-shell,
