@@ -331,7 +331,7 @@ class AuthAndRequestFlowsTest extends TestCase
                 'type_name' => 'Planšetes',
             ])
             ->assertOk()
-            ->assertJsonPath('message', 'Ierices tips veiksmigi pievienots.')
+            ->assertJsonPath('message', 'Ierīces tips veiksmīgi pievienots.')
             ->assertJsonPath('device_type.type_name', 'Planšetes');
 
         $this->assertDatabaseHas('device_types', [
@@ -351,7 +351,7 @@ class AuthAndRequestFlowsTest extends TestCase
                 'type_name' => 'Jaunais tips',
             ])
             ->assertOk()
-            ->assertJsonPath('message', 'Ierices tips atjauninats.')
+            ->assertJsonPath('message', 'Ierīces tips atjaunināts.')
             ->assertJsonPath('device_type.id', (string) $typeId)
             ->assertJsonPath('device_type.type_name', 'Jaunais tips');
 
