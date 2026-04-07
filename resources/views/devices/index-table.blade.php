@@ -230,7 +230,6 @@
                                 </div>
 
                                 <div class="table-action-section">
-                                    <div class="table-action-section-title">Pārskats</div>
                                     <a href="{{ route('devices.show', $device) }}" class="table-action-item table-action-item-primary" @click="open = false; panel = null">
                                         <x-icon name="view" size="h-4 w-4" />
                                         <span>Skatīt</span>
@@ -240,7 +239,6 @@
                                 @if (! $canManageDevices)
                                     <div class="table-action-divider"></div>
                                     <div class="table-action-section">
-                                        <div class="table-action-section-title">Pieprasījumi</div>
                                     @if ($requestAvailability['can_create_any'])
                                         <div class="table-action-grid">
                                         <a href="{{ route('repair-requests.create', ['device_id' => $device->id]) }}" class="table-action-item table-action-item-sky" @click="open = false; panel = null">
@@ -282,7 +280,6 @@
                                 @if ($canManageDevices)
                                     <div class="table-action-divider"></div>
                                     <div class="table-action-section">
-                                        <div class="table-action-section-title">Pārvaldība</div>
                                     <a href="{{ route('devices.edit', $device) }}" class="table-action-item table-action-item-amber" @click="open = false; panel = null">
                                         <x-icon name="edit" size="h-4 w-4" />
                                         <span>Rediģēt</span>

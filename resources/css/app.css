@@ -4129,7 +4129,7 @@ tbody td {
 }
 
 .table-action-list {
-    @apply absolute right-0 z-50 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl ring-1 ring-slate-200/50 w-[24rem];
+    @apply absolute right-0 z-50 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl ring-1 ring-slate-200/50 w-[20rem];
     transform-origin: top right;
 }
 
