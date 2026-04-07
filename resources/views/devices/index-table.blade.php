@@ -341,18 +341,15 @@
                                 <!-- Quick action panels (fixed position) -->
                                 <div x-show="panel" x-transition.opacity x-cloak class="fixed inset-0 z-[90] bg-slate-950/50 backdrop-blur-sm" @click="panel = null"></div>
                                 
-                                <div x-show="panel === 'room'" x-transition x-cloak class="table-action-inline-panel">
+                                <div x-show="panel === 'room'" x-transition x-cloak class="table-action-inline-panel" x-data="{ hasChanges: false, saving: false, initialValue: @if($device->room_id) '{{ $device->room_id }}' @else '' @endif }">
                                     <div class="table-action-inline-head">
                                         <div>
                                             <div class="table-action-inline-title">Mainīt telpu</div>
                                             <div class="table-action-inline-copy">Ierīce tiks uzreiz pārvietota uz citu telpu.</div>
                                         </div>
-                                        <button type="button" class="table-action-inline-close" @click="panel = null">
-                                            <x-icon name="x-mark" size="h-4 w-4" />
-                                        </button>
                                     </div>
 
-                                    <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="space-y-3">
+                                    <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="space-y-3" @submit="saving = true">
                                         @csrf
                                         <input type="hidden" name="action" value="room">
                                         <x-searchable-select
@@ -364,29 +361,27 @@
                                             :query="$quickRoomLabel"
                                             placeholder="Izvēlies telpu"
                                             empty-message="Neviena telpa neatbilst meklējumam."
+                                            @change="hasChanges = true"
                                         />
                                         <div class="table-action-inline-actions">
-                                            <button type="button" class="btn-clear" @click="panel = null">Atcelt</button>
-                                            <button type="submit" class="btn-search">
+                                            <button type="button" class="btn-clear" @click="panel = null; hasChanges = false">Atcelt</button>
+                                            <button type="submit" class="btn-search" :disabled="!hasChanges || saving" :class="(!hasChanges || saving) ? 'opacity-50 cursor-not-allowed' : ''">
                                                 <x-icon name="save" size="h-4 w-4" />
-                                                <span>Saglabāt</span>
+                                                <span x-text="saving ? 'Saglabā...' : 'Saglabāt'"></span>
                                             </button>
                                         </div>
                                     </form>
                                 </div>
 
-                                <div x-show="panel === 'assignee'" x-transition x-cloak class="table-action-inline-panel">
+                                <div x-show="panel === 'assignee'" x-transition x-cloak class="table-action-inline-panel" x-data="{ hasChanges: false, saving: false, initialValue: @if($device->assigned_to_id) '{{ $device->assigned_to_id }}' @else '' @endif }">
                                     <div class="table-action-inline-head">
                                         <div>
                                             <div class="table-action-inline-title">Mainīt atbildīgo</div>
                                             <div class="table-action-inline-copy">Izvēlies citu personu, kurai piešķirt ierīci.</div>
                                         </div>
-                                        <button type="button" class="table-action-inline-close" @click="panel = null">
-                                            <x-icon name="x-mark" size="h-4 w-4" />
-                                        </button>
                                     </div>
 
-                                    <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="space-y-3">
+                                    <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="space-y-3" @submit="saving = true">
                                         @csrf
                                         <input type="hidden" name="action" value="assignee">
                                         <x-searchable-select
@@ -394,16 +389,17 @@
                                             query-name="target_assigned_to_query"
                                             identifier="device-quick-assignee-{{ $device->id }}"
                                             :options="$quickAssigneeSelectOptions"
-                                                    :selected="(string) ($device->assigned_to_id ?? '')"
-                                                    :query="$quickAssigneeLabel"
-                                                    placeholder="Izvēlies atbildīgo personu"
-                                                    empty-message="Neviena persona neatbilst meklējumam."
-                                                />
+                                            :selected="(string) ($device->assigned_to_id ?? '')"
+                                            :query="$quickAssigneeLabel"
+                                            placeholder="Izvēlies atbildīgo personu"
+                                            empty-message="Neviena persona neatbilst meklējumam."
+                                            @change="hasChanges = true"
+                                        />
                                                 <div class="table-action-inline-actions">
-                                                    <button type="button" class="btn-clear" @click="panel = null">Atcelt</button>
-                                                    <button type="submit" class="btn-search">
+                                                    <button type="button" class="btn-clear" @click="panel = null; hasChanges = false">Atcelt</button>
+                                                    <button type="submit" class="btn-search" :disabled="!hasChanges || saving" :class="(!hasChanges || saving) ? 'opacity-50 cursor-not-allowed' : ''">
                                                         <x-icon name="save" size="h-4 w-4" />
-                                                        <span>Saglabāt</span>
+                                                        <span x-text="saving ? 'Saglabā...' : 'Saglabāt'"></span>
                                                     </button>
                                                 </div>
                                             </form>
