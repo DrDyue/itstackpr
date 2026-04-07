@@ -2815,11 +2815,11 @@ tbody td {
 }
 
 .devices-filter-header {
-    @apply mb-0;
+    @apply mb-0 flex flex-col gap-4 lg:flex-row lg:items-start;
 }
 
 .devices-filter-section {
-    @apply space-y-2 rounded-[1.25rem] border border-slate-200/80 bg-slate-50/50 p-2.5;
+    @apply space-y-2 rounded-[1.25rem] border border-slate-200/80 bg-slate-50/50 p-2.5 lg:flex-1;
 }
 
 .devices-filter-title {
