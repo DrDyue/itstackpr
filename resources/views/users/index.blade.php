@@ -92,39 +92,35 @@
                             <x-icon name="search" size="h-4 w-4" />
                             <span>Meklēšana</span>
                         </h3>
-                        <div class="devices-filters-grid">
-                            <div class="devices-search-group">
-                                <label class="devices-search-label">
-                                    <span>Meklēt pēc vārda un uzvārda</span>
-                                    <input
-                                        type="text"
-                                        name="search"
-                                        value="{{ $filters['search'] }}"
-                                        class="devices-code-input"
-                                        placeholder="Ievadi vārdu un uzvārdu"
-                                        data-async-manual="true"
-                                        data-table-manual-search="true"
-                                        data-search-mode="contains"
-                                    >
-                                </label>
-                                <button type="submit" class="devices-code-search-btn" data-table-search-submit="true">
-                                    <x-icon name="search" size="h-4 w-4" />
-                                    <span>Atrast lietotāju</span>
-                                </button>
-                            </div>
+                        <div class="devices-search-group">
+                            <label class="devices-search-label">
+                                <span>Meklēt pēc vārda un uzvārda</span>
+                                <input
+                                    type="text"
+                                    name="search"
+                                    value="{{ $filters['search'] }}"
+                                    class="devices-code-input"
+                                    placeholder="Ievadi vārdu un uzvārdu"
+                                    data-async-manual="true"
+                                    data-table-manual-search="true"
+                                    data-search-mode="contains"
+                                >
+                            </label>
+                            <button type="submit" class="devices-code-search-btn" data-table-search-submit="true">
+                                <x-icon name="search" size="h-4 w-4" />
+                                <span>Atrast lietotāju</span>
+                            </button>
                         </div>
                     </div>
-                </div>
 
-                <div class="devices-filter-divider"></div>
+                    <div class="devices-filter-divider-vertical"></div>
 
-                <div class="devices-filter-header">
                     <div class="devices-filter-section">
                         <h3 class="devices-filter-title">
                             <x-icon name="filter" size="h-4 w-4" />
                             <span>Filtri</span>
                         </h3>
-                        <div class="devices-filters-grid">
+                        <div class="users-filters-grid">
                             <label class="block">
                                 <span class="crud-label">Pēdējā pieslēgšanās</span>
                                 <x-searchable-select

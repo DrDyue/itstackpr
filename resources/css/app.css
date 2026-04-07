@@ -3018,7 +3018,7 @@ tbody td {
 }
 
 .role-toggle {
-    @apply inline-flex w-full items-center gap-2 rounded-[1.25rem] border border-slate-200 bg-slate-50 p-1.5 transition-all duration-200;
+    @apply inline-flex w-full items-center gap-3 rounded-[1.25rem] border border-slate-200 bg-slate-50 p-2 transition-all duration-200;
 }
 
 .role-toggle:hover {
@@ -3039,6 +3039,14 @@ tbody td {
 
 .role-toggle-active:hover {
     @apply bg-white;
+}
+
+.devices-filter-divider-vertical {
+    @apply hidden h-auto w-px self-stretch bg-slate-200 lg:block;
+}
+
+.users-filters-grid {
+    @apply grid w-full gap-3 md:grid-cols-2 xl:grid-cols-3;
 }
 
 .filter-toolbar-footer {
@@ -6066,6 +6074,10 @@ html[data-theme='dark'] .role-toggle-active {
 
 html[data-theme='dark'] .role-toggle-active:hover {
     background-color: rgba(30, 41, 59, 0.96);
+}
+
+html[data-theme='dark'] .devices-filter-divider-vertical {
+    background-color: rgba(71, 85, 105, 0.5);
 }
 
 html[data-theme='dark'] .device-sort-trigger {
