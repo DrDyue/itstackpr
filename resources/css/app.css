@@ -4158,12 +4158,12 @@ tbody td {
 }
 
 .table-action-item {
-    @apply flex h-10 items-center gap-2.5 rounded-xl px-3 text-sm font-medium text-slate-700 transition-all duration-150 hover:bg-slate-50 hover:text-slate-900;
+    @apply flex h-10 w-full items-center gap-2.5 rounded-lg px-3 text-sm font-medium text-slate-700 transition-all duration-150 hover:bg-slate-50;
 }
 
 .table-action-item > svg,
 .table-action-button > svg {
-    @apply h-4 w-4 shrink-0;
+    @apply h-4 w-4 shrink-0 text-slate-500;
 }
 
 .table-action-item > span,
@@ -4224,7 +4224,7 @@ tbody td {
 }
 
 .table-action-button {
-    @apply flex min-h-[2.85rem] w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm font-medium text-slate-700 shadow-sm transition duration-150 hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply flex h-10 w-full items-center gap-2.5 rounded-lg px-3 text-sm font-medium text-slate-700 transition-all duration-150 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50;
 }
 
 .table-action-button-amber {
@@ -5374,85 +5374,32 @@ html[data-theme='dark'] .quick-status-filter-active {
 }
 
 html[data-theme='dark'] .table-action-item,
-html[data-theme='dark'] .table-action-button,
-html[data-theme='dark'] .app-dropdown-content a,
-html[data-theme='dark'] .app-dropdown-content button {
-    color: #cbd5e1 !important;
-}
-
-html[data-theme='dark'] .table-action-summary {
-    background: rgba(15, 23, 42, 0.96) !important;
-    border-color: rgba(71, 85, 105, 0.88) !important;
-    color: #94a3b8 !important;
-    box-shadow: 0 10px 24px rgba(2, 6, 23, 0.18) !important;
-}
-
-html[data-theme='dark'] .table-action-summary:hover {
-    background: rgba(30, 41, 59, 0.96) !important;
-    color: #cbd5e1 !important;
-}
-
-html[data-theme='dark'] .table-action-summary[aria-expanded="true"] {
-    background: rgba(14, 165, 233, 0.15) !important;
-    border-color: rgba(56, 189, 248, 0.35) !important;
-    color: #38bdf8 !important;
-}
-
-html[data-theme='dark'] .table-action-summary svg {
-    color: #94a3b8 !important;
-}
-
-html[data-theme='dark'] .table-action-summary[aria-expanded="true"] svg {
-    color: #38bdf8 !important;
-}
-
-html[data-theme='dark'] .table-action-list,
-html[data-theme='dark'] .table-action-inline-panel {
-    background: rgba(15, 23, 42, 0.97) !important;
-    border-color: rgba(71, 85, 105, 0.88) !important;
-    box-shadow: 0 24px 48px rgba(2, 6, 23, 0.34) !important;
-}
-
-html[data-theme='dark'] .table-action-header {
-    border-bottom-color: rgba(71, 85, 105, 0.72) !important;
-}
-
-html[data-theme='dark'] .table-action-header-title {
-    color: #e2e8f0 !important;
-}
-
-html[data-theme='dark'] .table-action-section-title {
-    color: #64748b !important;
-}
-
-html[data-theme='dark'] .table-action-divider {
-    background: rgba(71, 85, 105, 0.6) !important;
-}
-
-html[data-theme='dark'] .table-action-inline-head {
-    background: rgba(15, 23, 42, 0.94) !important;
-    border-bottom-color: rgba(71, 85, 105, 0.72) !important;
-}
-
-html[data-theme='dark'] .table-action-item,
 html[data-theme='dark'] .table-action-button {
-    background-color: transparent !important;
-    border-color: transparent !important;
+    color: #cbd5e1 !important;
 }
 
 html[data-theme='dark'] .table-action-item > svg,
 html[data-theme='dark'] .table-action-button > svg {
-    background-color: transparent !important;
-    border-color: transparent !important;
-    box-shadow: none !important;
+    color: #64748b !important;
+}
+
+html[data-theme='dark'] .table-action-item:hover,
+html[data-theme='dark'] .table-action-button:hover {
+    background-color: rgba(30, 41, 59, 0.5) !important;
+    color: #f1f5f9 !important;
 }
 
 html[data-theme='dark'] .table-action-item-primary {
     background-color: rgba(14, 165, 233, 0.15) !important;
+    color: #38bdf8 !important;
 }
 
 html[data-theme='dark'] .table-action-item-primary > svg {
     color: #38bdf8 !important;
+}
+
+html[data-theme='dark'] .table-action-item-primary:hover {
+    background-color: rgba(14, 165, 233, 0.25) !important;
 }
 
 html[data-theme='dark'] .table-action-item-amber {
@@ -5464,21 +5411,63 @@ html[data-theme='dark'] .table-action-button-amber > svg {
     color: #fbbf24 !important;
 }
 
+html[data-theme='dark'] .table-action-item-amber:hover,
+html[data-theme='dark'] .table-action-button-amber:hover {
+    background-color: rgba(251, 191, 36, 0.1) !important;
+}
+
 html[data-theme='dark'] .table-action-item-sky {
     color: #38bdf8 !important;
 }
 
-html[data-theme='dark'] .table-action-inline-actions {
-    background-color: rgba(15, 23, 42, 0.78) !important;
-    border-top-color: rgba(71, 85, 105, 0.72) !important;
+html[data-theme='dark'] .table-action-item-sky > svg,
+html[data-theme='dark'] .table-action-button-sky > svg {
+    color: #38bdf8 !important;
 }
 
-html[data-theme='dark'] .table-action-item:hover,
-html[data-theme='dark'] .table-action-button:hover,
-html[data-theme='dark'] .app-dropdown-content a:hover,
-html[data-theme='dark'] .app-dropdown-content button:hover {
-    background-color: rgba(30, 41, 59, 0.92) !important;
-    color: #f8fafc !important;
+html[data-theme='dark'] .table-action-item-sky:hover,
+html[data-theme='dark'] .table-action-button-sky:hover {
+    background-color: rgba(56, 189, 248, 0.1) !important;
+}
+
+html[data-theme='dark'] .table-action-item-violet {
+    color: #a78bfa !important;
+}
+
+html[data-theme='dark'] .table-action-item-violet > svg {
+    color: #a78bfa !important;
+}
+
+html[data-theme='dark'] .table-action-item-violet:hover {
+    background-color: rgba(167, 139, 250, 0.1) !important;
+}
+
+html[data-theme='dark'] .table-action-item-rose {
+    color: #fb7185 !important;
+}
+
+html[data-theme='dark'] .table-action-item-rose > svg,
+html[data-theme='dark'] .table-action-button-rose > svg {
+    color: #fb7185 !important;
+}
+
+html[data-theme='dark'] .table-action-item-rose:hover,
+html[data-theme='dark'] .table-action-button-rose:hover {
+    background-color: rgba(251, 113, 133, 0.1) !important;
+}
+
+html[data-theme='dark'] .table-action-item-emerald {
+    color: #34d399 !important;
+}
+
+html[data-theme='dark'] .table-action-item-emerald > svg,
+html[data-theme='dark'] .table-action-button-emerald > svg {
+    color: #34d399 !important;
+}
+
+html[data-theme='dark'] .table-action-item-emerald:hover,
+html[data-theme='dark'] .table-action-button-emerald:hover {
+    background-color: rgba(52, 211, 153, 0.1) !important;
 }
 
 html[data-theme='dark'] .app-main-nav a,
@@ -5842,75 +5831,12 @@ html[data-theme='dark'] .notification-toast-close:hover {
     color: #f8fafc !important;
 }
 
-html[data-theme='dark'] .table-action-item.text-sky-700:hover,
-html[data-theme='dark'] .table-action-button-sky:hover,
-html[data-theme='dark'] .table-action-item-sky:hover {
-    background-color: rgba(14, 165, 233, 0.16) !important;
-    color: #e0f2fe !important;
-}
-
-html[data-theme='dark'] .table-action-item-sky {
-    background-color: rgba(14, 165, 233, 0.14) !important;
-    border-color: rgba(56, 189, 248, 0.28) !important;
-    color: #bae6fd !important;
-}
-
-html[data-theme='dark'] .table-action-item-primary {
-    background-color: #e2e8f0 !important;
-    border-color: rgba(148, 163, 184, 0.4) !important;
-    color: #0f172a !important;
-}
-
-html[data-theme='dark'] .table-action-item-primary:hover {
-    background-color: #f8fafc !important;
-    color: #020617 !important;
-}
-
 html[data-theme='dark'] .searchable-select-empty {
     background-color: rgba(15, 23, 42, 0.82) !important;
     border-color: rgba(51, 65, 85, 0.82) !important;
     color: #94a3b8 !important;
 }
 
-html[data-theme='dark'] .table-action-item.text-amber-700:hover,
-html[data-theme='dark'] .table-action-button-amber:hover {
-    background-color: rgba(245, 158, 11, 0.16) !important;
-    color: #fde68a !important;
-}
-
-html[data-theme='dark'] .table-action-item-violet {
-    background-color: rgba(109, 40, 217, 0.14) !important;
-    border-color: rgba(167, 139, 250, 0.28) !important;
-    color: #ddd6fe !important;
-}
-
-html[data-theme='dark'] .table-action-item-violet:hover {
-    background-color: rgba(109, 40, 217, 0.2) !important;
-    color: #ede9fe !important;
-}
-
-html[data-theme='dark'] .table-action-item.text-rose-700:hover,
-html[data-theme='dark'] .table-action-button-rose:hover {
-    background-color: rgba(244, 63, 94, 0.16) !important;
-    color: #fecdd3 !important;
-}
-
-html[data-theme='dark'] .table-action-item-rose {
-    background-color: rgba(244, 63, 94, 0.14) !important;
-    border-color: rgba(251, 113, 133, 0.28) !important;
-    color: #fecdd3 !important;
-}
-
-html[data-theme='dark'] .table-action-item-emerald {
-    background-color: rgba(16, 185, 129, 0.14) !important;
-    border-color: rgba(52, 211, 153, 0.28) !important;
-    color: #a7f3d0 !important;
-}
-
-html[data-theme='dark'] .table-action-item-emerald:hover {
-    background-color: rgba(16, 185, 129, 0.2) !important;
-    color: #d1fae5 !important;
-}
 
 html[data-theme='dark'] .table-action-section-title {
     color: #64748b !important;
