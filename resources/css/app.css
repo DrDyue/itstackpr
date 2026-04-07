@@ -4109,7 +4109,7 @@ tbody td {
 }
 
 .table-action-summary {
-    @apply inline-flex h-9 min-w-[9rem] cursor-pointer items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900;
+    @apply inline-flex h-9 cursor-pointer items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900;
 }
 
 .table-action-summary svg {
@@ -4129,12 +4129,12 @@ tbody td {
 }
 
 .table-action-list {
-    @apply absolute right-0 z-50 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl ring-1 ring-slate-200/50 min-w-[400px];
+    @apply absolute right-0 z-50 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl ring-1 ring-slate-200/50 min-w-[16rem];
     transform-origin: top right;
 }
 
 .table-action-list-wide {
-    @apply w-[44rem];
+    @apply w-[28rem];
 }
 
 .table-action-header {
@@ -4162,7 +4162,7 @@ tbody td {
 }
 
 .table-action-item {
-    @apply flex h-10 w-full items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-all duration-150 hover:bg-slate-50 whitespace-nowrap;
+    @apply flex h-10 items-center justify-start gap-2.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-all duration-150 hover:bg-slate-50 whitespace-nowrap;
 }
 
 .table-action-divider {
@@ -4170,7 +4170,7 @@ tbody td {
 }
 
 .table-action-item {
-    @apply flex h-10 w-full items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-all duration-150 hover:bg-slate-50 whitespace-nowrap;
+    @apply flex h-10 items-center justify-start gap-2.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-all duration-150 hover:bg-slate-50 whitespace-nowrap;
 }
 
 .table-action-item > svg,
@@ -4236,7 +4236,7 @@ tbody td {
 }
 
 .table-action-button {
-    @apply flex h-10 w-full items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-all duration-150 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 whitespace-nowrap;
+    @apply flex h-10 items-center justify-start gap-2.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-all duration-150 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 whitespace-nowrap;
 }
 
 .table-action-button > svg {
