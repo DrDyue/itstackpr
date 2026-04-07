@@ -3041,6 +3041,10 @@ tbody td {
     @apply bg-white;
 }
 
+.role-toggle-compact {
+    @apply max-w-[280px];
+}
+
 .devices-filter-divider-vertical {
     @apply hidden h-auto w-px self-stretch bg-slate-200 lg:block;
 }

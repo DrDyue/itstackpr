@@ -51,11 +51,11 @@
                                 <span class="crud-label">Amats</span>
                                 <input type="text" name="job_title" value="{{ old('job_title', $user->job_title) }}" class="crud-control">
                             </label>
-                            <div class="block md:col-span-2">
+                            <div class="block">
                                 <span class="crud-label">Loma</span>
                                 <div class="mt-2" x-data="{ role: @js(old('role', $user->role)) }">
                                     <input type="hidden" name="role" :value="role">
-                                    <div class="role-toggle">
+                                    <div class="role-toggle role-toggle-compact">
                                         <button type="button" class="role-toggle-btn" :class="role === 'admin' ? 'role-toggle-active' : ''" @click="role = 'admin'">
                                             <x-icon name="users" size="h-4 w-4" />
                                             <span>Admins</span>
@@ -83,13 +83,6 @@
                         </label>
                     </div>
                 </div>
-
-                <aside class="form-page-aside">
-                    <div class="form-page-note">
-                        <div class="form-page-note-title">Pirms saglabāšanas</div>
-                        <div class="form-page-note-copy">Pārbaudi, vai e-pasts nav kļūdains, loma ir pareiza un paroles lauki aizpildīti tikai tad, ja tiešām jāmaina piekļuve.</div>
-                    </div>
-                </aside>
             </div>
 
             <div class="form-page-actions">
