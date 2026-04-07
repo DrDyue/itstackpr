@@ -4284,7 +4284,9 @@ tbody td {
     overflow: visible;
 }
 
-.table-action-inline-panel * {
+.table-action-inline-head,
+.table-action-inline-actions,
+.table-action-inline-panel > .table-action-item {
     @apply rounded-none;
 }
 
