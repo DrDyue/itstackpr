@@ -2196,10 +2196,13 @@ tbody td {
 
 .app-pagination-links {
     @apply flex flex-wrap items-center gap-2;
+    pointer-events: auto;
 }
 
 .app-pagination-btn {
     @apply inline-flex min-w-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-800;
+    cursor: pointer;
+    pointer-events: auto;
 }
 
 .app-pagination-btn-active {

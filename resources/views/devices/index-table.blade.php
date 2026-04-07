@@ -423,8 +423,8 @@
         </tbody>
     </table>
     </div>
-</div>
 
-@if ($devices->hasPages())
-    <div class="mt-5">{{ $devices->links() }}</div>
-@endif
+    @if ($devices->hasPages())
+        <div class="mt-5 relative z-10 px-4">{{ $devices->links() }}</div>
+    @endif
+</div>
