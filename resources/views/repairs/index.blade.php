@@ -450,7 +450,7 @@
 
                                             <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
                                                 @if ($linkedRequestUrl)
-                                                    <a href="{{ $linkedRequestUrl }}" class="table-action-item" @click="open = false">
+                                                    <a href="{{ $linkedRequestUrl }}" class="table-action-item table-action-item-violet" @click="open = false">
                                                         <x-icon name="repair-request" size="h-4 w-4" />
                                                         <span>Skatīt saistīto pieprasījumu</span>
                                                     </a>
@@ -467,14 +467,14 @@
                                                             method="POST"
                                                             action="{{ route('repairs.transition', $repair) }}"
                                                             data-app-confirm-title="Sākt remontu?"
-                                                            data-app-confirm-message="Vai tiešām pārvietot šo remontu uz statusu “Procesā”?"
+                                                            data-app-confirm-message="Vai tiešām pārvietot šo remontu uz statusu "Procesā"?"
                                                             data-app-confirm-accept="Jā, sākt"
                                                             data-app-confirm-cancel="Nē"
                                                             data-app-confirm-tone="warning"
                                                         >
                                                             @csrf
                                                             <input type="hidden" name="target_status" value="in-progress">
-                                                            <button type="submit" class="table-action-button table-action-button-sky">
+                                                            <button type="submit" class="table-action-item table-action-item-sky" @click="open = false">
                                                                 <x-icon name="stats" size="h-4 w-4" />
                                                                 <span>Pārvietot uz procesu</span>
                                                             </button>
@@ -491,7 +491,7 @@
                                                         >
                                                             @csrf
                                                             <input type="hidden" name="target_status" value="completed">
-                                                            <button type="submit" class="table-action-button table-action-button-emerald">
+                                                            <button type="submit" class="table-action-item table-action-item-emerald" @click="open = false">
                                                                 <x-icon name="check-circle" size="h-4 w-4" />
                                                                 <span>Pabeigt</span>
                                                             </button>
@@ -621,7 +621,7 @@
                                                         >
                                                             @csrf
                                                             <input type="hidden" name="target_status" value="cancelled">
-                                                            <button type="submit" class="table-action-button table-action-button-rose">
+                                                            <button type="submit" class="table-action-item table-action-item-rose" @click="open = false">
                                                                 <x-icon name="clear" size="h-4 w-4" />
                                                                 <span>Atcelt remontu</span>
                                                             </button>
