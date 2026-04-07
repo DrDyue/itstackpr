@@ -78,7 +78,7 @@
             <form
                 method="GET"
                 action="{{ route('users.index') }}"
-                class="surface-toolbar surface-toolbar-elevated surface-toolbar-grid-tight xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,1fr)]"
+                class="devices-filter-surface devices-filter-surface-elevated"
                 data-async-table-form
                 data-async-root="#users-index-root"
                 data-search-endpoint="{{ route('users.find-by-name') }}"
@@ -86,87 +86,136 @@
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
 
-                <label class="surface-toolbar-field">
-                    <span class="crud-label">Vārds un uzvārds</span>
-                    <div class="flex items-center gap-2">
-                        <input
-                            type="text"
-                            name="search"
-                            value="{{ $filters['search'] }}"
-                            class="crud-control"
-                            placeholder="Ievadi vārdu un uzvārdu"
-                            data-async-manual="true"
-                            data-table-manual-search="true"
-                            data-search-mode="contains"
-                        >
-                        <button type="submit" class="btn-search shrink-0" data-table-search-submit="true">
+                <div class="devices-filter-header">
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
                             <x-icon name="search" size="h-4 w-4" />
-                            <span>Meklēt</span>
-                        </button>
-                    </div>
-                </label>
-
-                <div class="surface-toolbar-field">
-                    <span class="crud-label">Statuss</span>
-                    <div class="status-segmented-control" x-data="{ value: @js($filters['is_active']) }">
-                        <input type="hidden" name="is_active" :value="value">
-                        <button type="button" class="status-segment status-segment-emerald" :class="value === '1' ? 'status-segment-active' : ''" @click="value = '1'; $nextTick(() => $el.closest('form').requestSubmit())">
-                            <x-icon name="check-circle" size="h-4 w-4" />
-                            <span>Aktīvi</span>
-                        </button>
-                        <button type="button" class="status-segment status-segment-slate" :class="value === '' ? 'status-segment-active' : ''" @click="value = ''; $nextTick(() => $el.closest('form').requestSubmit())">
-                            <x-icon name="filter" size="h-4 w-4" />
-                            <span>Visi</span>
-                        </button>
-                        <button type="button" class="status-segment status-segment-rose" :class="value === '0' ? 'status-segment-active' : ''" @click="value = '0'; $nextTick(() => $el.closest('form').requestSubmit())">
-                            <x-icon name="x-circle" size="h-4 w-4" />
-                            <span>Neaktīvi</span>
-                        </button>
+                            <span>Meklēšana</span>
+                        </h3>
+                        <div class="devices-filters-grid">
+                            <div class="devices-search-group">
+                                <label class="devices-search-label">
+                                    <span>Meklēt pēc vārda un uzvārda</span>
+                                    <input
+                                        type="text"
+                                        name="search"
+                                        value="{{ $filters['search'] }}"
+                                        class="devices-code-input"
+                                        placeholder="Ievadi vārdu un uzvārdu"
+                                        data-async-manual="true"
+                                        data-table-manual-search="true"
+                                        data-search-mode="contains"
+                                    >
+                                </label>
+                                <button type="submit" class="devices-code-search-btn" data-table-search-submit="true">
+                                    <x-icon name="search" size="h-4 w-4" />
+                                    <span>Atrast lietotāju</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <label class="surface-toolbar-field">
-                    <span class="crud-label">Pēdējā pieslēgšanās</span>
-                    <x-searchable-select
-                        name="last_login"
-                        query-name="last_login_query"
-                        identifier="user-last-login-filter"
-                        :options="$lastLoginOptions"
-                        :selected="$filters['last_login']"
-                        :query="$selectedLastLoginLabel"
-                        placeholder="Izvēlies periodu"
-                        empty-message="Neviens periods neatbilst meklējumam."
-                    />
-                </label>
+                <div class="devices-filter-divider"></div>
 
-                <div class="filter-toolbar-footer md:col-span-3 xl:col-span-4">
-                    <div class="quick-status-filters">
-                        @foreach ($roleFilterLinks as $roleFilter)
-                            @php
-                                $query = request()->except('page', 'role');
-                                $roleValues = collect($selectedRoles);
-                                $isActive = $roleValues->contains($roleFilter['value']);
-                                $nextRoles = $isActive
-                                    ? $roleValues->reject(fn ($value) => $value === $roleFilter['value'])->values()->all()
-                                    : $roleValues->push($roleFilter['value'])->unique()->values()->all();
+                <div class="devices-filter-header">
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
+                            <x-icon name="filter" size="h-4 w-4" />
+                            <span>Filtri</span>
+                        </h3>
+                        <div class="devices-filters-grid">
+                            <label class="block">
+                                <span class="crud-label">Pēdējā pieslēgšanās</span>
+                                <x-searchable-select
+                                    name="last_login"
+                                    query-name="last_login_query"
+                                    identifier="user-last-login-filter"
+                                    :options="$lastLoginOptions"
+                                    :selected="$filters['last_login']"
+                                    :query="$selectedLastLoginLabel"
+                                    placeholder="Izvēlies periodu"
+                                    empty-message="Neviens periods neatbilst meklējumam."
+                                />
+                            </label>
 
-                                if (count($nextRoles) === 0 || count($nextRoles) === count($roleFilterLinks)) {
-                                    unset($query['role']);
-                                } else {
-                                    $query['role'] = $nextRoles;
-                                }
-                            @endphp
-                            <a
-                                href="{{ route('users.index', $query) }}"
-                                class="quick-status-filter quick-status-filter-{{ $roleFilter['tone'] }} {{ $isActive ? 'quick-status-filter-active' : '' }}"
-                            >
-                                <x-icon :name="$roleFilter['icon']" size="h-4 w-4" />
-                                <span>{{ $roleFilter['label'] }}</span>
-                            </a>
-                        @endforeach
+                            <label class="block">
+                                <span class="crud-label">Amats</span>
+                                <input
+                                    type="text"
+                                    name="job_title_query"
+                                    value="{{ $filters['job_title_query'] ?? '' }}"
+                                    class="crud-control"
+                                    placeholder="Filtrēt pēc amata"
+                                >
+                            </label>
+
+                            <label class="block">
+                                <span class="crud-label">E-pasts</span>
+                                <input
+                                    type="text"
+                                    name="email_query"
+                                    value="{{ $filters['email_query'] ?? '' }}"
+                                    class="crud-control"
+                                    placeholder="Filtrēt pēc e-pasta"
+                                >
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-toolbar-footer">
+                    <div class="quick-filter-groups">
+                        <div class="quick-filter-group">
+                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Lietotāja statuss</div>
+                            <div class="quick-status-filters" x-data="{ value: @js($filters['is_active']) }">
+                                <input type="hidden" name="is_active" :value="value">
+                                <button type="button" class="quick-status-filter quick-status-filter-emerald" :class="value === '1' ? 'quick-status-filter-active' : ''" @click="value = '1'; $nextTick(() => $el.closest('form').requestSubmit())">
+                                    <x-icon name="check-circle" size="h-4 w-4" />
+                                    <span>Aktīvi</span>
+                                </button>
+                                <button type="button" class="quick-status-filter quick-status-filter-slate" :class="value === '' ? 'quick-status-filter-active' : ''" @click="value = ''; $nextTick(() => $el.closest('form').requestSubmit())">
+                                    <x-icon name="filter" size="h-4 w-4" />
+                                    <span>Visi</span>
+                                </button>
+                                <button type="button" class="quick-status-filter quick-status-filter-rose" :class="value === '0' ? 'quick-status-filter-active' : ''" @click="value = '0'; $nextTick(() => $el.closest('form').requestSubmit())">
+                                    <x-icon name="x-circle" size="h-4 w-4" />
+                                    <span>Neaktīvi</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="quick-filter-group">
+                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Loma</div>
+                            <div class="quick-status-filters">
+                                @foreach ($roleFilterLinks as $roleFilter)
+                                    @php
+                                        $query = request()->except('page', 'role');
+                                        $roleValues = collect($selectedRoles);
+                                        $isActive = $roleValues->contains($roleFilter['value']);
+                                        $nextRoles = $isActive
+                                            ? $roleValues->reject(fn ($value) => $value === $roleFilter['value'])->values()->all()
+                                            : $roleValues->push($roleFilter['value'])->unique()->values()->all();
+
+                                        if (count($nextRoles) === 0 || count($nextRoles) === count($roleFilterLinks)) {
+                                            unset($query['role']);
+                                        } else {
+                                            $query['role'] = $nextRoles;
+                                        }
+                                    @endphp
+                                    <a
+                                        href="{{ route('users.index', $query) }}"
+                                        class="quick-status-filter quick-status-filter-{{ $roleFilter['tone'] }} {{ $isActive ? 'quick-status-filter-active' : '' }}"
+                                    >
+                                        <x-icon :name="$roleFilter['icon']" size="h-4 w-4" />
+                                        <span>{{ $roleFilter['label'] }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="toolbar-actions justify-end">
+                    <div class="toolbar-actions">
                         <a href="{{ route('users.index') }}" class="btn-clear" data-async-link="true">
                             <x-icon name="clear" size="h-4 w-4" />
                             <span>Notīrīt filtrus</span>
@@ -178,6 +227,9 @@
             <div class="mt-4">
             <x-active-filters
                 :items="[
+                    ['label' => 'Vārds', 'value' => $filters['search']],
+                    ['label' => 'Amats', 'value' => $filters['job_title_query']],
+                    ['label' => 'E-pasts', 'value' => $filters['email_query']],
                     ['label' => 'Loma', 'value' => $filters['has_role_filter'] ? collect($filters['roles'])->map(fn ($role) => $roleLabels[$role] ?? $role)->implode(', ') : null],
                     ['label' => 'Statuss', 'value' => $filters['is_active'] === '1' ? 'Aktīvs' : ($filters['is_active'] === '0' ? 'Neaktīvs' : null)],
                     ['label' => 'Pēdējā pieslēgšanās', 'value' => $filters['last_login'] === 'today' ? 'Šodien' : ($filters['last_login'] === 'recent' ? 'Pēdējās 7 dienas' : ($filters['last_login'] === 'never' ? 'Nav pieslēdzies' : null))],

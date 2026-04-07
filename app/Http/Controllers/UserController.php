@@ -36,6 +36,8 @@ class UserController extends Controller
                 ->all(),
             'is_active' => (string) $request->query('is_active', ''),
             'last_login' => trim((string) $request->query('last_login', '')),
+            'job_title_query' => trim((string) $request->query('job_title_query', '')),
+            'email_query' => trim((string) $request->query('email_query', '')),
         ];
         $filters['has_role_filter'] = count($filters['roles']) > 0 && count($filters['roles']) < count(self::ROLES);
         $sorting = $this->normalizedSorting($request);
@@ -48,6 +50,8 @@ class UserController extends Controller
             ->when($legacyName !== '', fn ($query) => $query->where('full_name', 'like', '%' . $legacyName . '%'))
             ->when($legacyEmail !== '', fn ($query) => $query->where('email', 'like', '%' . $legacyEmail . '%'))
             ->when($filters['search'] !== '', fn ($query) => $query->where('full_name', 'like', '%' . $filters['search'] . '%'))
+            ->when($filters['job_title_query'] !== '', fn ($query) => $query->where('job_title', 'like', '%' . $filters['job_title_query'] . '%'))
+            ->when($filters['email_query'] !== '', fn ($query) => $query->where('email', 'like', '%' . $filters['email_query'] . '%'))
             ->when($filters['has_role_filter'], fn ($query) => $query->whereIn('role', $filters['roles']))
             ->when($filters['is_active'] !== '', fn ($query) => $query->where('is_active', $filters['is_active'] === '1'))
             ->when($filters['last_login'] === 'today', fn ($query) => $query->whereDate('last_login', today()))
@@ -64,9 +68,11 @@ class UserController extends Controller
 
         AuditTrail::viewed($this->user(), 'User', null, 'Atvērts lietotāju saraksts.');
 
-        if ($filters['search'] !== '' || $filters['has_role_filter'] || $filters['is_active'] !== '' || $filters['last_login'] !== '') {
+        if ($filters['search'] !== '' || $filters['has_role_filter'] || $filters['is_active'] !== '' || $filters['last_login'] !== '' || $filters['job_title_query'] !== '' || $filters['email_query'] !== '') {
             AuditTrail::filter($this->user(), 'User', [
-                'teksts' => $filters['search'],
+                'vārds' => $filters['search'],
+                'amats' => $filters['job_title_query'],
+                'e-pasts' => $filters['email_query'],
                 'lomas' => $filters['has_role_filter'] ? ($filters['roles'] ?? []) : [],
                 'statuss' => $filters['is_active'],
                 'pēdējā pieslēgšanās' => $filters['last_login'],
