@@ -3119,7 +3119,7 @@ tbody td {
 }
 
 .searchable-select-panel {
-    @apply absolute right-0 z-50 mt-2.5 w-full overflow-visible rounded-2xl border border-slate-200 bg-white shadow-[0_28px_55px_-35px_rgba(15,23,42,0.38)] ring-1 ring-slate-100;
+    @apply absolute right-0 z-[120] mt-2.5 w-full overflow-visible rounded-2xl border border-slate-200 bg-white shadow-[0_28px_55px_-35px_rgba(15,23,42,0.38)] ring-1 ring-slate-100;
 }
 
 .searchable-select-list {
