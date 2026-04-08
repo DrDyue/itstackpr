@@ -4304,7 +4304,7 @@ tbody td {
 
 .table-action-item > span,
 .table-action-button > span {
-    @apply min-w-0 flex-1 leading-5 text-left;
+    @apply font-medium leading-5 text-left whitespace-nowrap;
 }
 
 .table-action-item-primary {
@@ -4507,7 +4507,7 @@ tbody td {
 .table-action-item > span,
 .table-action-button > span,
 .table-action-menu .btn-disabled > span {
-    @apply min-w-0 flex-1 text-sm font-medium text-left leading-5;
+    @apply font-medium text-left leading-5 whitespace-nowrap;
 }
 
 .table-action-item-primary {
