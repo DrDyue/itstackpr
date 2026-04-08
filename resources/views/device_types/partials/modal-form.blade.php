@@ -52,14 +52,11 @@
 
     <div class="device-type-modal-body">
         <div
-            class="device-type-form-errors {{ $hasServerErrors ? '' : 'hidden ' }}mx-5 mb-0 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
+            class="device-type-form-errors hidden mx-5 mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
             data-device-type-form-errors
         >
             <div class="font-semibold">Kļūda formas aizpildīšanā</div>
             <ul class="mt-2 list-disc pl-5" data-device-type-error-list>
-                @foreach ($errors->all() as $message)
-                    <li>{{ $message }}</li>
-                @endforeach
             </ul>
         </div>
 
