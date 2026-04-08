@@ -529,6 +529,7 @@
                                                             </button>
                                                         </form>
                                                     @endif
+                                                @endif
                                                 @if (! $canManageRepairs && ! $linkedRequestUrl)
                                                     <button
                                                         type="button"
