@@ -4,6 +4,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== Z-INDEX SYSTEM (Consistent Stacking Order) ===== */
+/* Do NOT add z-index values outside this system */
+/* Base: 1-10 | Dropdowns: 20-30 | Modals: 40-60 | Fixed Headers: 70-90 | Overlays: 100+ */
+/* .sidebar: 1000 (fixed navigation - should be lower, see TODO below) */
+/* .device-action-bar: 10 | .request-detail-overlay: 100 | .searchable-select: 20 */
+
 /* Reset and Base Styles */
 * {
     margin: 0;
@@ -234,7 +240,7 @@ body {
     padding: 20px 0;
     position: fixed;
     height: 100vh;
-    overflow-y: auto;
+    overflow-y: hidden; /* Fixed elements shouldn't scroll - prevents sticky child breakage */
 }
 
 .sidebar-item {
@@ -1845,44 +1851,38 @@ tbody td {
     @apply space-y-3 p-4;
 }
 
-.dash-structure-card,
-.dash-floor-card {
+.dash-structure-card {
     @apply overflow-hidden rounded-[1.35rem] border border-slate-200 bg-slate-50/80;
 }
 
-.dash-structure-summary,
-.dash-floor-summary {
+.dash-structure-summary {
     @apply flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5;
 }
 
-.dash-structure-summary::-webkit-details-marker,
-.dash-floor-summary::-webkit-details-marker {
+.dash-structure-summary::-webkit-details-marker {
     display: none;
 }
 
-.dash-structure-title,
-.dash-floor-title {
+.dash-structure-title {
     @apply text-sm font-semibold text-slate-900;
 }
 
 .dash-structure-meta,
-.dash-floor-meta,
 .dash-room-meta {
     @apply mt-1 text-xs text-slate-500;
 }
 
-.dash-structure-badge,
-.dash-floor-pill {
+.dash-structure-badge {
     @apply inline-flex min-w-12 justify-center rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-200;
 }
 
 .dash-floor-list,
 .dash-room-list {
-    @apply space-y-2 border-t border-slate-200 px-3 py-3;
+    @apply space-y-3 border-t border-slate-200 px-4 py-3;
 }
 
 .dash-room-item {
-    @apply block rounded-2xl border border-slate-200 bg-white px-3 py-3 transition hover:border-sky-200 hover:shadow-sm;
+    @apply block rounded-2xl border border-slate-200 bg-white px-4 py-3 transition hover:border-sky-200 hover:shadow-sm;
 }
 
 .dash-room-title {
@@ -1890,7 +1890,7 @@ tbody td {
 }
 
 .dash-quick-grid {
-    @apply grid gap-4 p-5 md:grid-cols-3;
+    @apply grid gap-5 p-5 md:grid-cols-3;
 }
 
 .dash-quick-card {
@@ -2319,17 +2319,52 @@ tbody td {
 @media (max-width: 767px) {
     .dash-kpi-grid,
     .dash-quick-grid {
-        @apply grid-cols-1;
+        @apply grid-cols-1 gap-2;
     }
 
     .dash-workspace-grid,
     .dash-split-grid,
     .dash-device-grid {
-        @apply grid-cols-1;
+        @apply grid-cols-1 gap-3;
+    }
+
+    .dash-layout-grid {
+        @apply gap-3;
+    }
+
+    .dash-column,
+    .dash-content-stack,
+    .dash-side-stack {
+        @apply space-y-3;
     }
 
     .dash-toolbar {
         @apply p-4;
+    }
+
+    /* Responsive toolbar grids for mobile - gap cascade */
+    .surface-toolbar-grid,
+    .surface-toolbar-grid-compact,
+    .surface-toolbar-grid-tight,
+    .devices-filters-grid,
+    .request-toolbar-filters-grid,
+    .transfer-toolbar-filters-grid,
+    .repairs-toolbar-filters-grid,
+    .audit-toolbar-filters-grid {
+        @apply grid-cols-1 gap-2;
+    }
+
+    .devices-index-page > form.devices-filter-surface {
+        display: block;
+    }
+
+    /* Mobile gap adjustments for grids with gap-4+ */
+    .type-search-grid {
+        @apply gap-2;
+    }
+
+    .type-results-grid {
+        @apply gap-2;
     }
 }
 
@@ -2451,7 +2486,7 @@ tbody td {
 }
 
 .form-page-main {
-    @apply min-w-0;
+    @apply min-w-0 space-y-4;
 }
 
 .form-page-aside {
@@ -2852,7 +2887,9 @@ tbody td {
 
 /* Devices index - new filter and search design */
 .devices-filter-surface {
-    @apply mb-4 rounded-[1.5rem] border border-slate-200 bg-white px-3 py-2.5 shadow-sm transition duration-200;
+    @apply relative mb-4 rounded-[1.5rem] border border-slate-200 bg-white px-3 py-2.5 shadow-sm transition duration-200;
+    position: relative;
+    z-index: 10;
 }
 
 .devices-filter-surface-elevated {
@@ -2868,7 +2905,7 @@ tbody td {
 }
 
 .devices-filter-section {
-    @apply space-y-2 rounded-[1.25rem] border border-slate-200/80 bg-slate-50/50 p-2.5 lg:flex-1;
+    @apply space-y-3 rounded-[1.25rem] border border-slate-200/80 bg-slate-50/50 p-3 lg:flex-1;
 }
 
 .devices-filter-title {
@@ -2876,11 +2913,11 @@ tbody td {
 }
 
 .devices-filter-grid {
-    @apply grid grid-cols-1 gap-2.5;
+    @apply grid grid-cols-1 gap-3;
 }
 
 .devices-filters-grid {
-    @apply grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6;
+    @apply grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6;
 }
 
 .toolbar-panels {
@@ -2892,7 +2929,7 @@ tbody td {
 }
 
 .request-toolbar-filters-grid {
-    @apply grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5;
+    @apply grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5;
 }
 
 .request-toolbar-filters-grid-admin {
@@ -2904,7 +2941,7 @@ tbody td {
 }
 
 .transfer-toolbar-filters-grid {
-    @apply grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5;
+    @apply grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5;
 }
 
 .transfer-toolbar-filters-grid-admin {
@@ -2912,7 +2949,7 @@ tbody td {
 }
 
 .transfer-filters-grid {
-    @apply grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4;
+    @apply grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4;
 }
 
 .transfer-filters-grid-admin {
@@ -2928,7 +2965,7 @@ tbody td {
 }
 
 .devices-search-group {
-    @apply grid grid-cols-[minmax(0,1fr)_auto] gap-2 md:items-end;
+    @apply grid grid-cols-[minmax(0,1fr)_auto] gap-3 md:items-end;
 }
 
 .devices-search-label {
@@ -2972,11 +3009,11 @@ tbody td {
 }
 
 .repairs-toolbar-filters-grid {
-    @apply grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-5;
+    @apply grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5;
 }
 
 .audit-toolbar-filters-grid {
-    @apply grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-5;
+    @apply grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5;
 }
 
 @media (min-width: 1280px) {
@@ -2984,7 +3021,7 @@ tbody td {
         display: grid;
         grid-template-columns: minmax(18rem, 0.92fr) minmax(0, 3.08fr);
         align-items: start;
-        gap: 0.75rem;
+        gap: 1rem;
     }
 
     .devices-index-page > form.devices-filter-surface .devices-filter-header {
@@ -2997,12 +3034,12 @@ tbody td {
 
     .devices-index-page > form.devices-filter-surface .devices-filter-grid {
         grid-template-columns: minmax(0, 1fr);
-        gap: 0.625rem;
+        gap: 0.75rem;
     }
 
     .devices-index-page > form.devices-filter-surface .devices-filters-grid {
         grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 0.72fr) minmax(0, 1.15fr) minmax(0, 1fr);
-        gap: 0.625rem;
+        gap: 0.75rem;
     }
 
     .devices-index-page > form.devices-filter-surface .devices-filter-section {
@@ -3010,7 +3047,7 @@ tbody td {
     }
 
     .devices-index-page > form.devices-filter-surface .devices-search-group {
-        gap: 0.625rem;
+        gap: 0.75rem;
     }
 
     .devices-index-page > form.devices-filter-surface .devices-code-search-btn {
@@ -3168,7 +3205,7 @@ tbody td {
 }
 
 .searchable-select-panel {
-    @apply absolute right-0 z-[120] mt-2.5 w-full overflow-visible rounded-2xl border border-slate-200 bg-white shadow-[0_28px_55px_-35px_rgba(15,23,42,0.38)] ring-1 ring-slate-100;
+    @apply absolute right-0 z-20 mt-2.5 w-full overflow-visible rounded-2xl border border-slate-200 bg-white shadow-[0_28px_55px_-35px_rgba(15,23,42,0.38)] ring-1 ring-slate-100;
 }
 
 .searchable-select-list {
@@ -3354,7 +3391,7 @@ tbody td {
 }
 
 .metric-card-soft-amber {
-    @apply border-amber-200 bg-amber-50;
+    @apply border border-sky-200 bg-sky-50;
 }
 
 .metric-card-soft-rose {
@@ -3503,7 +3540,7 @@ tbody td {
 .request-detail-overlay {
     position: fixed;
     inset: 0;
-    z-index: 78;
+    z-index: 100; /* Overlay base layer */
     display: flex;
     justify-content: flex-end;
     padding-left: 1rem;
@@ -4376,7 +4413,7 @@ tbody td {
 }
 
 .table-action-inline-panel {
-    @apply fixed left-1/2 top-1/2 z-[110] w-[32rem] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-200/70;
+    @apply fixed left-1/2 top-1/2 z-30 w-[32rem] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-200/70;
     overflow: visible;
 }
 
@@ -5163,14 +5200,6 @@ tbody td {
 
 .device-file-input {
     @apply w-full rounded-[1.25rem] border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:font-semibold file:text-white hover:file:bg-slate-800;
-}
-
-/* Auth enhancements */
-.btn-primary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
 }
 
 /* REMOVED CSS: */
