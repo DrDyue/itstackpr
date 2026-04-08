@@ -23,6 +23,7 @@
 - Front-end iniciācija tiek centralizēta `resources/js/app.js`, lai mazinātu dublēšanos.
 - Mazas atkārtoti lietojamas JS utilītas glabā `resources/js/utils/` (piem., query param helperi).
 - DOM-ready un localStorage drošas darbības tiek turētas atsevišķās utilītās (`domReady.js`, `safeStorage.js`), lai samazinātu dublēšanos `app.js`.
+- Tabulu filtru URL būvēšana ir iznesta uz `tableFilters.js`, lai filtrēšanas loģika būtu vienuviet.
 - CSS tiek kompilēts ar Vite/Tailwind, tāpēc jāizvairās no nevalidiem `@apply` tokeniem.
 - Produkcijas domēns: `https://itstack.gt.tc`.
 

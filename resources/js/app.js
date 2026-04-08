@@ -1,7 +1,7 @@
 import './bootstrap';
 import { runOnDomReady } from './utils/domReady';
-import { appendInputValueParam } from './utils/queryParams';
 import { readStorageValue, writeStorageValue } from './utils/safeStorage';
+import { buildClearFiltersUrl, isAsyncTableFilterForm } from './utils/tableFilters';
 
 const Alpine = window.Alpine;
 const THEME_STORAGE_KEY = 'itstack-theme';
@@ -2455,17 +2455,8 @@ if (Alpine && !window.__appAlpineStarted) {
 
 window.clearAllFilters = function (button) {
     const form = button.closest('form[data-async-table-form]');
-    if (!form || !form.closest('[data-async-table-root]')) return;
-
-    const url = new URL(form.action, window.location.origin);
-    const sortField = form.querySelector('input[data-sort-hidden="field"]');
-    const sortDirection = form.querySelector('input[data-sort-hidden="direction"]');
-
-    const params = new URLSearchParams();
-    params.append('statuses_filter', '1');
-    appendInputValueParam(params, 'sort', sortField);
-    appendInputValueParam(params, 'direction', sortDirection);
-    url.search = `?${params.toString()}`;
+    if (!isAsyncTableFilterForm(form)) return;
+    const url = buildClearFiltersUrl(form);
 
     window.submitAsyncTableForm(form, {
         url,
