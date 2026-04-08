@@ -1,11 +1,6 @@
-﻿{{--
+{{--
     Lapa: Ierīču tipu saraksts.
-    Atbildība: rāda visu tipu vārdnīcu klasiskā tabulā un ļauj to pārvaldīt bez lapas pārlādes.
-    Datu avots: DeviceTypeController@index.
-    Galvenās daļas:
-    1. Hero un ātrā darbība tipa pievienošanai.
-    2. Vienkārša tabula ar kārtošanu pēc nosaukuma un piesaistīto ierīču skaita.
-    3. Darbības ar rediģēšanu un drošu dzēšanas bloķēšanu.
+    Atbildība: rāda tipu vārdnīcu vienā tabulā un pārvalda create/edit darbības ar modāļiem tajā pašā lapā.
 --}}
 <x-app-layout>
     @php
@@ -15,6 +10,10 @@
             'devices_count' => ['label' => 'piesaistīto ierīču skaita'],
         ];
         $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
+        $modalState = $deviceTypeModal ?? ['mode' => '', 'id' => '', 'type' => null];
+        $modalMode = (string) ($modalState['mode'] ?? '');
+        $selectedModalType = $modalState['type'] ?? null;
+        $editModalAction = $selectedModalType ? route('device-types.update', $selectedModalType) : route('device-types.store');
     @endphp
 
     <section class="app-shell app-shell-wide">
@@ -41,16 +40,16 @@
                         </div>
                         <div>
                             <h1 class="page-title">Ierīču tipi</h1>
-                            <p class="page-subtitle">Vienkāršota tipu vārdnīca ar saistīto ierīču skaitu un pārvaldības darbībām.</p>
+                            <p class="page-subtitle">Vienkāršota tipu vārdnīca ar saistīto ierīču skaitu un ātru pārvaldību modernās modālajās formās.</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="page-actions">
-                    <a href="{{ route('device-types.create') }}" class="btn-create">
+                    <button type="button" class="btn-create" data-device-type-open="create">
                         <x-icon name="plus" size="h-4 w-4" />
                         <span>Pievienot tipu</span>
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -65,6 +64,10 @@
                 <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
             @endif
 
+            @if (session('success'))
+                <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
+            @endif
+
             <div class="app-table-shell">
                 <div class="app-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
                     <table class="app-table-content app-table-content-compact min-w-full text-sm">
@@ -77,7 +80,9 @@
                                     @php
                                         $isCurrentSort = $sorting['sort'] === $column;
                                         $defaultDirection = $column === 'devices_count' ? 'desc' : 'asc';
-                                        $nextDirection = $isCurrentSort && $sorting['direction'] === 'asc' ? 'desc' : ($isCurrentSort && $sorting['direction'] === 'desc' ? 'asc' : $defaultDirection);
+                                        $nextDirection = $isCurrentSort && $sorting['direction'] === 'asc'
+                                            ? 'desc'
+                                            : ($isCurrentSort && $sorting['direction'] === 'desc' ? 'asc' : $defaultDirection);
                                         $sortMessage = 'Tabula "Ierīču tipi" kārtota pēc ' . ($sortOptions[$column]['label'] ?? mb_strtolower($label)) . ' ' . ($sortDirectionLabels[$nextDirection] ?? '');
                                     @endphp
                                     <th class="{{ match ($column) {
@@ -132,10 +137,17 @@
                                     </td>
                                     <td class="px-4 py-4">
                                         <div class="device-type-actions">
-                                            <a href="{{ route('device-types.edit', $type) }}" class="btn-edit">
+                                            <button
+                                                type="button"
+                                                class="btn-edit"
+                                                data-device-type-open="edit"
+                                                data-device-type-id="{{ $type->id }}"
+                                                data-device-type-name="{{ $type->type_name }}"
+                                                data-device-type-update-url="{{ route('device-types.update', $type) }}"
+                                            >
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Rediģēt</span>
-                                            </a>
+                                            </button>
 
                                             @if ($canDelete)
                                                 <form
@@ -189,7 +201,35 @@
             @if ($types->hasPages())
                 <div class="mt-5">{{ $types->links() }}</div>
             @endif
+
+            <x-modal name="create-device-type" :show="$modalMode === 'create'" maxWidth="xl" focusable>
+                <div class="p-0">
+                    @include('device_types.partials.modal-form', [
+                        'mode' => 'create',
+                        'action' => route('device-types.store'),
+                        'modalName' => 'create-device-type',
+                        'title' => 'Jauns ierīces tips',
+                        'subtitle' => 'Pievieno jaunu klasifikatora ierakstu bez lapas maiņas.',
+                        'submitLabel' => 'Saglabāt tipu',
+                        'submitClass' => 'btn-create',
+                    ])
+                </div>
+            </x-modal>
+
+            <x-modal name="edit-device-type" :show="$modalMode === 'edit'" maxWidth="xl" focusable>
+                <div class="p-0">
+                    @include('device_types.partials.modal-form', [
+                        'mode' => 'edit',
+                        'action' => $editModalAction,
+                        'modalName' => 'edit-device-type',
+                        'type' => $selectedModalType,
+                        'title' => 'Rediģēt ierīces tipu',
+                        'subtitle' => 'Atjauno tipa nosaukumu un uzreiz saglabā to pašā saraksta lapā.',
+                        'submitLabel' => 'Saglabāt izmaiņas',
+                        'submitClass' => 'btn-edit',
+                    ])
+                </div>
+            </x-modal>
         </div>
     </section>
 </x-app-layout>
-

@@ -10,6 +10,7 @@ use App\Models\RepairRequest;
 use App\Models\User;
 use App\Models\WriteoffRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
@@ -266,6 +267,98 @@ class AuthAndRequestFlowsTest extends TestCase
             ->get(route('device-types.index', ['sort' => 'devices_count', 'direction' => 'asc']))
             ->assertOk()
             ->assertSeeInOrder(['Monitoru tips', 'Printeru tips']);
+    }
+
+    public function test_device_type_create_and_edit_routes_redirect_to_index_modals(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-type-modal-routes@example.com');
+        $typeId = DB::table('device_types')->insertGetId(['type_name' => 'Maršrutētāji']);
+
+        $this->actingAs($admin)
+            ->get(route('device-types.create'))
+            ->assertRedirect(route('device-types.index'))
+            ->assertSessionHas('device_type_modal', 'create');
+
+        $this->actingAs($admin)
+            ->get(route('device-types.edit', $typeId))
+            ->assertRedirect(route('device-types.index'))
+            ->assertSessionHas('device_type_modal', 'edit')
+            ->assertSessionHas('device_type_modal_id', (string) $typeId);
+    }
+
+    public function test_device_type_duplicate_validation_preserves_modal_state(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-type-modal-validation@example.com');
+        $typeId = DB::table('device_types')->insertGetId(['type_name' => 'Skeneri']);
+
+        $this->actingAs($admin)
+            ->from(route('device-types.index'))
+            ->post(route('device-types.store'), [
+                '_device_type_modal_mode' => 'create',
+                'type_name' => 'Skeneri',
+            ])
+            ->assertRedirect(route('device-types.index'))
+            ->assertSessionHasErrors('type_name')
+            ->assertSessionHasInput('_device_type_modal_mode', 'create');
+
+        $secondTypeId = DB::table('device_types')->insertGetId(['type_name' => 'Serveri']);
+
+        $this->actingAs($admin)
+            ->from(route('device-types.index'))
+            ->put(route('device-types.update', $secondTypeId), [
+                '_device_type_modal_mode' => 'edit',
+                '_device_type_modal_id' => (string) $secondTypeId,
+                'type_name' => 'Skeneri',
+            ])
+            ->assertRedirect(route('device-types.index'))
+            ->assertSessionHasErrors('type_name')
+            ->assertSessionHasInput('_device_type_modal_mode', 'edit')
+            ->assertSessionHasInput('_device_type_modal_id', (string) $secondTypeId);
+
+        $this->assertDatabaseHas('device_types', [
+            'id' => $typeId,
+            'type_name' => 'Skeneri',
+        ]);
+    }
+
+    public function test_device_type_store_returns_json_for_async_modal_submit(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-type-modal-json-store@example.com');
+
+        $this->actingAs($admin)
+            ->postJson(route('device-types.store'), [
+                '_device_type_modal_mode' => 'create',
+                'type_name' => 'Planšetes',
+            ])
+            ->assertOk()
+            ->assertJsonPath('message', 'Ierīces tips veiksmīgi pievienots.')
+            ->assertJsonPath('device_type.type_name', 'Planšetes');
+
+        $this->assertDatabaseHas('device_types', [
+            'type_name' => 'Planšetes',
+        ]);
+    }
+
+    public function test_device_type_update_returns_json_for_async_modal_submit(): void
+    {
+        $admin = $this->createUser(role: User::ROLE_ADMIN, email: 'device-type-modal-json-update@example.com');
+        $typeId = DB::table('device_types')->insertGetId(['type_name' => 'Vecais tips']);
+
+        $this->actingAs($admin)
+            ->putJson(route('device-types.update', $typeId), [
+                '_device_type_modal_mode' => 'edit',
+                '_device_type_modal_id' => (string) $typeId,
+                'type_name' => 'Jaunais tips',
+            ])
+            ->assertOk()
+            ->assertJsonPath('message', 'Ierīces tips atjaunināts.')
+            ->assertJsonPath('device_type.id', (string) $typeId)
+            ->assertJsonPath('device_type.type_name', 'Jaunais tips');
+
+        $this->assertDatabaseHas('device_types', [
+            'id' => $typeId,
+            'type_name' => 'Jaunais tips',
+        ]);
     }
 
     public function test_regular_user_cannot_open_admin_only_routes(): void
@@ -1441,6 +1534,7 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertOk();
 
         $this->assertTrue(Schema::hasTable('writeoff_requests'));
+        $this->markSchemaAsDirtyForNextTest();
     }
 
     public function test_missing_device_transfers_table_is_bootstrapped_on_demand(): void
@@ -1454,6 +1548,7 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertOk();
 
         $this->assertTrue(Schema::hasTable('device_transfers'));
+        $this->markSchemaAsDirtyForNextTest();
     }
 
     public function test_missing_repair_requests_table_is_bootstrapped_on_demand(): void
@@ -1467,6 +1562,7 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertOk();
 
         $this->assertTrue(Schema::hasTable('repair_requests'));
+        $this->markSchemaAsDirtyForNextTest();
     }
 
     public function test_missing_audit_log_table_does_not_break_dashboard(): void
@@ -1480,6 +1576,7 @@ class AuthAndRequestFlowsTest extends TestCase
             ->assertOk();
 
         $this->assertTrue(Schema::hasTable('audit_log'));
+        $this->markSchemaAsDirtyForNextTest();
     }
 
     public function test_dashboard_device_table_shows_serial_number_job_title_and_device_metadata(): void
@@ -3163,5 +3260,12 @@ class AuthAndRequestFlowsTest extends TestCase
             'assigned_to_id' => $assignedToId,
             'created_by' => $assignedToId,
         ]);
+    }
+
+    private function markSchemaAsDirtyForNextTest(): void
+    {
+        DB::disconnect();
+        app('db')->purge();
+        RefreshDatabaseState::$migrated = false;
     }
 }
