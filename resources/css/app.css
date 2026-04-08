@@ -4499,26 +4499,89 @@ tbody td {
 .table-action-item,
 .table-action-button,
 .table-action-menu .btn-disabled {
-    @apply flex w-full items-center justify-start gap-2.5 min-h-[2.75rem] rounded-xl px-3.5 py-2 shadow-sm;
+    @apply flex w-full items-center justify-start gap-2.5 border border-slate-200 bg-white text-slate-700 text-sm font-medium min-h-[2.75rem] rounded-xl px-3.5 py-2 shadow-sm transition-all duration-150 hover:bg-slate-50 whitespace-nowrap;
 }
 
 .table-action-item > span,
 .table-action-button > span,
 .table-action-menu .btn-disabled > span {
-    @apply text-sm font-medium text-left leading-5;
+    @apply min-w-0 flex-1 text-sm font-medium text-left leading-5;
 }
 
-.table-action-item-primary,
-.table-action-item-amber,
-.table-action-item-sky,
-.table-action-item-violet,
-.table-action-item-rose,
-.table-action-item-emerald,
-.table-action-button-amber,
-.table-action-button-sky,
-.table-action-button-rose,
+.table-action-item-primary {
+    @apply border-slate-200 bg-sky-50 text-sky-700 hover:bg-sky-100;
+}
+
+.table-action-item-primary > svg {
+    @apply text-sky-600;
+}
+
+.table-action-item-amber {
+    @apply border-amber-200 text-amber-700 hover:bg-amber-50;
+}
+
+.table-action-item-amber > svg,
+.table-action-button-amber > svg {
+    @apply text-amber-600;
+}
+
+.table-action-item-sky {
+    @apply border-sky-200 text-sky-700 hover:bg-sky-50;
+}
+
+.table-action-item-sky > svg,
+.table-action-button-sky > svg {
+    @apply text-sky-600;
+}
+
+.table-action-item-violet {
+    @apply border-violet-200 text-violet-700 hover:bg-violet-50;
+}
+
+.table-action-item-violet > svg {
+    @apply text-violet-600;
+}
+
+.table-action-item-rose {
+    @apply border-rose-200 text-rose-700 hover:bg-rose-50;
+}
+
+.table-action-item-rose > svg,
+.table-action-button-rose > svg {
+    @apply text-rose-600;
+}
+
+.table-action-item-emerald {
+    @apply border-emerald-200 text-emerald-700 hover:bg-emerald-50;
+}
+
+.table-action-item-emerald > svg,
+.table-action-button-emerald > svg {
+    @apply text-emerald-600;
+}
+
+.table-action-button-sky {
+    @apply border-sky-200 text-sky-700 hover:bg-sky-50;
+}
+
+.table-action-button-sky > svg {
+    @apply text-sky-600;
+}
+
+.table-action-button-rose {
+    @apply border-rose-200 text-rose-700 hover:bg-rose-50;
+}
+
+.table-action-button-rose > svg {
+    @apply text-rose-600;
+}
+
 .table-action-button-emerald {
-    @apply bg-white;
+    @apply border-emerald-200 text-emerald-700 hover:bg-emerald-50;
+}
+
+.table-action-button-emerald > svg {
+    @apply text-emerald-600;
 }
 
 .table-action-inline-panel {
