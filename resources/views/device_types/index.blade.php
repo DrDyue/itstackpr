@@ -150,22 +150,17 @@
                                             </button>
 
                                             @if ($canDelete)
-                                                <form
-                                                    method="POST"
-                                                    action="{{ route('device-types.destroy', $type) }}"
-                                                    data-app-confirm-title="Dzēst ierīces tipu?"
-                                                    data-app-confirm-message="Vai tiešām dzēst šo ierīces tipu?"
-                                                    data-app-confirm-accept="Jā, dzēst"
-                                                    data-app-confirm-cancel="Nē"
-                                                    data-app-confirm-tone="danger"
+                                                <button
+                                                    type="button"
+                                                    class="btn-danger"
+                                                    data-device-type-delete-url="{{ route('device-types.destroy', $type) }}"
+                                                    data-device-type-delete-name="{{ $type->type_name }}"
+                                                    aria-label="Dzēst {{ $type->type_name }}"
+                                                    onclick="deleteDeviceType(this.dataset.deviceTypeDeleteUrl, this.dataset.deviceTypeDeleteName)"
                                                 >
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn-danger">
-                                                        <x-icon name="trash" size="h-4 w-4" />
-                                                        <span>Dzēst</span>
-                                                    </button>
-                                                </form>
+                                                    <x-icon name="trash" size="h-4 w-4" />
+                                                    <span>Dzēst</span>
+                                                </button>
                                             @else
                                                 <button
                                                     type="button"
@@ -173,6 +168,8 @@
                                                     data-app-toast-title="Dzēšana nav pieejama"
                                                     data-app-toast-message="{{ $deleteTooltip }}"
                                                     data-app-toast-tone="info"
+                                                    aria-label="Dzēšana nav pieejama"
+                                                    onclick="event.preventDefault(); window.dispatchAppToast({ title: this.dataset.appToastTitle, message: this.dataset.appToastMessage, tone: this.dataset.appToastTone })"
                                                 >
                                                     <x-icon name="trash" size="h-4 w-4" />
                                                     <span>Dzēst</span>

@@ -3354,7 +3354,7 @@ tbody td {
 }
 
 .metric-card-soft-amber {
-    @apply border-amber-200 bg-amber-50;
+    @apply border border-sky-200 bg-sky-50r-50;
 }
 
 .metric-card-soft-rose {
