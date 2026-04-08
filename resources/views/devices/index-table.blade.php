@@ -240,10 +240,10 @@
                                 <div class="table-action-section">
                                     <div class="table-action-section-title">Pārskats</div>
                                     <div class="table-action-stack">
-                                <a href="{{ route('devices.show', $device) }}" class="table-action-item table-action-item-primary" @click="open = false; panel = null">
-                                    <x-icon name="view" size="h-4 w-4" />
-                                    <span>Skatīt</span>
-                                </a>
+                                        <a href="{{ route('devices.show', $device) }}" class="table-action-item table-action-item-primary" @click="open = false; panel = null">
+                                            <x-icon name="view" size="h-4 w-4" />
+                                            <span>Skatīt</span>
+                                        </a>
                                     </div>
                                 </div>
 
@@ -251,41 +251,43 @@
                                     <div class="table-action-divider"></div>
                                     <div class="table-action-section">
                                         <div class="table-action-section-title">Pieprasījumi</div>
-                                    @if ($requestAvailability['can_create_any'])
-                                        <div class="table-action-stack">
-                                        <a href="{{ route('repair-requests.create', ['device_id' => $device->id]) }}" class="table-action-item table-action-item-sky" @click="open = false; panel = null">
-                                            <x-icon name="repair" size="h-4 w-4" />
-                                            <span>Pieteikt remontu</span>
-                                        </a>
+                                        @if ($requestAvailability['can_create_any'])
+                                            <div class="table-action-stack">
+                                                <a href="{{ route('repair-requests.create', ['device_id' => $device->id]) }}" class="table-action-item table-action-item-sky" @click="open = false; panel = null">
+                                                    <x-icon name="repair" size="h-4 w-4" />
+                                                    <span>Pieteikt remontu</span>
+                                                </a>
 
-                                        <a href="{{ route('writeoff-requests.create', ['device_id' => $device->id]) }}" class="table-action-item table-action-item-rose" @click="open = false; panel = null">
-                                            <x-icon name="writeoff" size="h-4 w-4" />
-                                            <span>Pieteikt norakstīšanu</span>
-                                        </a>
+                                                <a href="{{ route('writeoff-requests.create', ['device_id' => $device->id]) }}" class="table-action-item table-action-item-rose" @click="open = false; panel = null">
+                                                    <x-icon name="writeoff" size="h-4 w-4" />
+                                                    <span>Pieteikt norakstīšanu</span>
+                                                </a>
 
-                                        <a href="{{ route('device-transfers.create', ['device_id' => $device->id]) }}" class="table-action-item table-action-item-emerald" @click="open = false; panel = null">
-                                            <x-icon name="transfer" size="h-4 w-4" />
-                                            <span>Nodot citam</span>
-                                        </a>
-                                        </div>
-                                    @elseif ($requestAvailability['reason'])
-                                        @if (! empty($pendingRequestBadge['url']))
-                                            <a href="{{ $pendingRequestBadge['url'] }}" class="table-action-item table-action-item-sky" @click="open = false; panel = null">
-                                                <x-icon :name="$pendingRequestBadge['icon'] ?? 'view'" size="h-4 w-4" />
-                                                <span>Skatīt pieteikumu</span>
-                                            </a>
+                                                <a href="{{ route('device-transfers.create', ['device_id' => $device->id]) }}" class="table-action-item table-action-item-emerald" @click="open = false; panel = null">
+                                                    <x-icon name="transfer" size="h-4 w-4" />
+                                                    <span>Nodot citam</span>
+                                                </a>
+                                            </div>
+                                        @elseif ($requestAvailability['reason'])
+                                            <div class="table-action-stack">
+                                                @if (! empty($pendingRequestBadge['url']))
+                                                    <a href="{{ $pendingRequestBadge['url'] }}" class="table-action-item table-action-item-sky" @click="open = false; panel = null">
+                                                        <x-icon :name="$pendingRequestBadge['icon'] ?? 'view'" size="h-4 w-4" />
+                                                        <span>Skatīt pieteikumu</span>
+                                                    </a>
+                                                @endif
+                                                <button
+                                                    type="button"
+                                                    class="btn-disabled w-full justify-start text-left"
+                                                    data-app-toast-title="{{ $pendingRequestBadge['label'] ?? 'Pieteikums nav pieejams' }}"
+                                                    data-app-toast-message="{{ $requestAvailability['reason'] }}"
+                                                    data-app-toast-tone="info"
+                                                >
+                                                    <x-icon :name="$pendingRequestBadge['icon'] ?? 'clock'" size="h-4 w-4" />
+                                                    <span>{{ $pendingRequestBadge['label'] ?? 'Pieteikums nav pieejams' }}</span>
+                                                </button>
+                                            </div>
                                         @endif
-                                        <button
-                                            type="button"
-                                            class="btn-disabled w-full justify-start text-left"
-                                            data-app-toast-title="{{ $pendingRequestBadge['label'] ?? 'Pieteikums nav pieejams' }}"
-                                            data-app-toast-message="{{ $requestAvailability['reason'] }}"
-                                            data-app-toast-tone="info"
-                                        >
-                                            <x-icon :name="$pendingRequestBadge['icon'] ?? 'clock'" size="h-4 w-4" />
-                                            <span>{{ $pendingRequestBadge['label'] ?? 'Pieteikums nav pieejams' }}</span>
-                                        </button>
-                                    @endif
                                     </div>
                                 @endif
 
