@@ -20,23 +20,18 @@
     class="device-type-modal-shell"
     data-device-type-modal-form="true"
     data-modal-name="{{ $modalName }}"
-    data-success-message="{{ $mode === 'create' ? 'Ierices tips veiksmigi pievienots.' : 'Ierices tips atjauninats.' }}"
+    data-success-message="{{ $mode === 'create' ? 'Ierīces tips veiksmīgi pievienots.' : 'Ierīces tips veiksmīgi atjaunināts.' }}"
 >
     @csrf
     @if ($mode === 'edit')
         @method('PUT')
     @endif
 
-    <input type="hidden" name="_device_type_modal_mode" value="{{ $mode }}" data-device-type-mode-input>
-    @if ($mode === 'edit')
-        <input type="hidden" name="_device_type_modal_id" value="{{ $type?->id ?? '' }}" data-device-type-id-input>
-    @endif
-
     <div class="device-type-modal-head">
         <div class="device-type-modal-head-copy">
             <div class="device-type-modal-badge">
                 <x-icon name="type" size="h-4 w-4" />
-                <span>{{ $mode === 'create' ? 'Jauns ieraksts' : 'Labosana' }}</span>
+                <span>{{ $mode === 'create' ? 'Jauns ieraksts' : 'Rediģēšana' }}</span>
             </div>
 
             <div class="device-type-modal-title-row">
@@ -50,18 +45,18 @@
             </div>
         </div>
 
-        <button type="button" class="device-type-modal-close" x-on:click="$dispatch('close')">
+        <button type="button" class="device-type-modal-close" data-close-modal aria-label="Aizvērt">
             <x-icon name="x-mark" size="h-4 w-4" />
         </button>
     </div>
 
     <div class="device-type-modal-body">
         <div
-            class="{{ $hasServerErrors ? '' : 'hidden ' }}mx-5 mb-0 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
-            data-device-type-form-summary
+            class="device-type-form-errors {{ $hasServerErrors ? '' : 'hidden ' }}mx-5 mb-0 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
+            data-device-type-form-errors
         >
-            <div class="font-semibold">Formu neizdevas saglabat.</div>
-            <ul class="mt-2 list-disc pl-5" data-device-type-form-summary-list>
+            <div class="font-semibold">Kļūda formas aizpildīšanā</div>
+            <ul class="mt-2 list-disc pl-5" data-device-type-error-list>
                 @foreach ($errors->all() as $message)
                     <li>{{ $message }}</li>
                 @endforeach
@@ -70,31 +65,30 @@
 
         <div class="device-type-modal-card">
             <div class="device-type-modal-card-head">
-                <div class="device-type-modal-card-title">Tipa informacija</div>
-                <div class="device-type-modal-card-copy">Nosaukums bus pieejams iericu formas, filtros un sarakstos.</div>
+                <div class="device-type-modal-card-title">Tipa informācija</div>
+                <div class="device-type-modal-card-copy">Nosaukums būs pieejams ierīču formās, filtros un sarakstos.</div>
             </div>
 
             <div class="device-type-modal-field-wrap">
-                <label class="crud-label" for="{{ $mode }}-device-type-name{{ $type ? '-'.$type->id : '' }}">Tipa nosaukums *</label>
+                <label class="crud-label" for="device-type-input-{{ $mode }}">Tipa nosaukums *</label>
                 <input
-                    id="{{ $mode }}-device-type-name{{ $type ? '-'.$type->id : '' }}"
+                    id="device-type-input-{{ $mode }}"
                     type="text"
                     name="type_name"
-                    value="{{ old('type_name', $type?->type_name) }}"
-                    class="crud-control {{ $typeNameError ? 'border-rose-300 bg-rose-50/60 focus:border-rose-400 focus:ring-rose-200' : '' }}"
+                    value="{{ old('type_name', $type?->type_name ?? '') }}"
+                    class="crud-control"
                     maxlength="30"
                     required
                     autofocus
-                    data-device-type-name-input
-                    data-device-type-field="type_name"
+                    data-device-type-input
+                    placeholder="Piemēram: Dators, Monitors, Klaviatūra"
                 >
-                <div class="device-type-modal-field-note">Nosaukumam jabut unikalam un skaidri saprotamam lietotajiem.</div>
+                <div class="device-type-modal-field-note">Nosaukumam jābūt unikālam un skaidri saprotamam lietotājiem.</div>
 
                 <div
-                    class="{{ $typeNameError ? '' : 'hidden ' }}device-type-modal-error"
-                    data-device-type-field-error="type_name"
+                    class="device-type-modal-error hidden"
+                    data-device-type-input-error
                 >
-                    {{ $typeNameError }}
                 </div>
             </div>
         </div>
@@ -102,16 +96,16 @@
 
     <div class="device-type-modal-actions">
         <div class="device-type-modal-actions-copy">
-            <div class="device-type-modal-actions-title">{{ $mode === 'create' ? 'Saglabat jauno tipu' : 'Saglabat izmainas' }}</div>
+            <div class="device-type-modal-actions-title">{{ $mode === 'create' ? 'Saglabāt jauno tipu' : 'Saglabāt izmaiņas' }}</div>
             <div class="device-type-modal-actions-text">
                 {{ $mode === 'create'
-                    ? 'Pec saglabasanas tips uzreiz bus pieejams visaas iericu formas.'
-                    : 'Nosaukuma izmainas uzreiz atspogulosies visur, kur sis tips tiek izmantots.' }}
+                    ? 'Pēc saglabāšanas tips uzreiz būs pieejams visās ierīču formās.'
+                    : 'Nosaukuma izmaiņas uzreiz atspogulosies visur, kur šis tips tiek izmantots.' }}
             </div>
         </div>
 
         <div class="device-type-modal-actions-buttons">
-            <button type="button" class="btn-clear" x-on:click="$dispatch('close')">
+            <button type="button" class="btn-clear" data-close-modal>
                 <x-icon name="clear" size="h-4 w-4" />
                 <span>Atcelt</span>
             </button>

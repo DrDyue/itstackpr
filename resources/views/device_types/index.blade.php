@@ -199,7 +199,7 @@
                 <div class="mt-5">{{ $types->links() }}</div>
             @endif
 
-            <x-modal name="create-device-type" :show="$modalMode === 'create'" maxWidth="xl" focusable>
+            <x-modal name="create-device-type" :show="$modalMode === 'create'" maxWidth="xl">
                 <div class="p-0">
                     @include('device_types.partials.modal-form', [
                         'mode' => 'create',
@@ -213,7 +213,7 @@
                 </div>
             </x-modal>
 
-            <x-modal name="edit-device-type" :show="$modalMode === 'edit'" maxWidth="xl" focusable>
+            <x-modal name="edit-device-type" :show="$modalMode === 'edit'" maxWidth="xl">
                 <div class="p-0">
                     @include('device_types.partials.modal-form', [
                         'mode' => 'edit',
