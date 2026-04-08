@@ -146,58 +146,7 @@ class AuthBootstrapper
                 ->update(['full_name' => DB::raw('name')]);
         }
 
-        if (
-            ! Schema::hasTable('employees')
-            || ! $this->hasUsersColumn('employee_id')
-            || ! $this->hasUsersColumn('full_name')
-            || ! $this->hasUsersColumn('email')
-        ) {
-            return;
-        }
-
-        $employees = DB::table('employees')->get()->keyBy('id');
-        $users = DB::table('users')
-            ->select(['id', 'employee_id', 'full_name', 'email', 'phone', 'job_title', 'is_active', 'created_at', 'updated_at'])
-            ->whereNotNull('employee_id')
-            ->get();
-
-        foreach ($users as $user) {
-            $employee = $employees->get($user->employee_id);
-
-            if (! $employee) {
-                continue;
-            }
-
-            $payload = [];
-
-            if (($user->full_name === null || $user->full_name === '') && isset($employee->full_name)) {
-                $payload['full_name'] = $employee->full_name;
-            }
-
-            if (($user->email === null || $user->email === '') && isset($employee->email)) {
-                $payload['email'] = $employee->email;
-            }
-
-            if ($this->hasUsersColumn('phone') && empty($user->phone) && isset($employee->phone)) {
-                $payload['phone'] = $employee->phone;
-            }
-
-            if ($this->hasUsersColumn('job_title') && empty($user->job_title) && isset($employee->job_title)) {
-                $payload['job_title'] = $employee->job_title;
-            }
-
-            if ($this->hasUsersColumn('is_active') && isset($employee->is_active)) {
-                $payload['is_active'] = (bool) $employee->is_active;
-            }
-
-            if ($this->hasUsersColumn('updated_at') && empty($user->updated_at)) {
-                $payload['updated_at'] = $employee->created_at ?? now();
-            }
-
-            if ($payload !== []) {
-                DB::table('users')->where('id', $user->id)->update($payload);
-            }
-        }
+        // Legacy employees table sync removed - employees table is dropped in migration 2026_03_18_010000_drop_unused_legacy_features
     }
 
     private function normalizeLegacyRoles(): void
