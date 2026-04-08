@@ -1,10 +1,71 @@
 import './bootstrap';
-import { runOnDomReady } from './utils/domReady';
-import { readStorageValue, writeStorageValue } from './utils/safeStorage';
-import { buildClearFiltersUrl, isAsyncTableFilterForm } from './utils/tableFilters';
 
 const Alpine = window.Alpine;
 const THEME_STORAGE_KEY = 'itstack-theme';
+
+/* ==========================================================================
+   Shared helpers (kept in this file by request to minimize file count)
+   ========================================================================== */
+const runOnDomReady = (callback) => {
+    if (typeof callback !== 'function') {
+        return;
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', callback, { once: true });
+        return;
+    }
+
+    callback();
+};
+
+const readStorageValue = (key, fallback = null) => {
+    try {
+        return window.localStorage.getItem(key) ?? fallback;
+    } catch (error) {
+        return fallback;
+    }
+};
+
+const writeStorageValue = (key, value) => {
+    try {
+        window.localStorage.setItem(key, value);
+        return true;
+    } catch (error) {
+        return false;
+    }
+};
+
+const appendInputValueParam = (params, key, input) => {
+    if (!input || !key) {
+        return;
+    }
+
+    const value = String(input.value ?? '').trim();
+    if (value === '') {
+        return;
+    }
+
+    params.append(key, value);
+};
+
+const isAsyncTableFilterForm = (form) => {
+    return Boolean(form && form.closest('[data-async-table-root]'));
+};
+
+const buildClearFiltersUrl = (form) => {
+    const url = new URL(form.action, window.location.origin);
+    const sortField = form.querySelector('input[data-sort-hidden="field"]');
+    const sortDirection = form.querySelector('input[data-sort-hidden="direction"]');
+    const params = new URLSearchParams();
+
+    params.append('statuses_filter', '1');
+    appendInputValueParam(params, 'sort', sortField);
+    appendInputValueParam(params, 'direction', sortDirection);
+    url.search = `?${params.toString()}`;
+
+    return url;
+};
 
 const getStoredTheme = () => {
     return readStorageValue(THEME_STORAGE_KEY, 'light') === 'dark' ? 'dark' : 'light';
