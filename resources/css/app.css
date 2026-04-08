@@ -4132,7 +4132,7 @@ tbody td {
 }
 
 .table-action-list {
-    @apply absolute right-0 z-50 mt-2 flex flex-col gap-1.5 rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl ring-1 ring-slate-200/50 w-max min-w-[18rem] max-w-[95vw];
+    @apply absolute right-0 z-50 mt-2 flex flex-col gap-1.5 rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl ring-1 ring-slate-200/50 w-max min-w-[18rem] max-w-[95vw] text-left;
     transform-origin: top right;
     overflow: visible;
 }
@@ -4174,7 +4174,7 @@ tbody td {
 }
 
 .table-action-section {
-    @apply relative overflow-visible px-4 py-1.5;
+    @apply relative overflow-visible px-4 py-1.5 text-left;
     overflow: visible;
 }
 
@@ -4191,7 +4191,7 @@ tbody td {
 }
 
 .table-action-grid {
-    @apply grid grid-cols-2 gap-3;
+    @apply grid grid-cols-2 gap-3 text-left;
 }
 
 .table-action-grid + .table-action-grid {
@@ -4199,17 +4199,7 @@ tbody td {
 }
 
 .table-action-item {
-    @apply flex h-10 w-full items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-all duration-150 hover:bg-slate-50 whitespace-nowrap;
-    justify-content: flex-start !important;
-}
-
-.table-action-divider {
-    @apply mx-3 my-3 h-px bg-slate-100;
-}
-
-.table-action-item {
-    @apply flex h-10 w-full items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-all duration-150 hover:bg-slate-50 whitespace-nowrap;
-    justify-content: flex-start !important;
+    @apply flex h-10 w-full items-center justify-start gap-2.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-all duration-150 hover:bg-slate-50 whitespace-nowrap;
 }
 
 .table-action-item > svg,
