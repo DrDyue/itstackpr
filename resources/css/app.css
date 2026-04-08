@@ -4281,11 +4281,14 @@ tbody td {
 
 .table-action-grid > form,
 .table-action-grid > a,
-.table-action-grid > button,
+.table-action-grid > button {
+    @apply block w-full;
+}
+
 .table-action-stack > form,
 .table-action-stack > a,
 .table-action-stack > button {
-    @apply block w-full;
+    @apply flex w-full;
 }
 
 .table-action-stack > form > .table-action-item,
