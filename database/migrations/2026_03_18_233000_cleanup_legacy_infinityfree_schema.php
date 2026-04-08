@@ -288,14 +288,8 @@ return new class extends Migration
 
     private function dropLegacyTables(string $driver): void
     {
-        if ($driver !== 'mysql') {
-            return;
-        }
-
-        Schema::dropIfExists('device_set_items');
-        Schema::dropIfExists('device_sets');
-        Schema::dropIfExists('device_history');
-        Schema::dropIfExists('employees');
+        // Legacy tables already dropped in 2026_03_18_010000_drop_unused_legacy_features.php
+        // This is a no-op to maintain migration compatibility.
     }
 
     private function dropForeignIfExists(string $table, string $foreign): void
