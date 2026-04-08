@@ -127,7 +127,7 @@ body {
     width: 18px;
     height: 18px;
     cursor: pointer;
-    accent-cdirektīves | Konsolidācija | ⏳ |;irektīves | Konsolidācija | ⏳ |;lor: #555;
+    accent-color: #555;
     cursor: pointer;
     user-select: none;
 }
@@ -162,7 +162,7 @@ body {
     text-decoration: none;
     font-weight: 500;
     transition: color 0.15s ease;
-}inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-white
+}
 
 /* Error Styles */
 .error-message {
@@ -1352,7 +1352,7 @@ tbody td {
 }
 
 .repair-action-edit {
-    @apply border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100sky-100;
+    @apply border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100;
 }
 
 .repair-action-delete {
@@ -1744,11 +1744,11 @@ tbody td {
 }
 
 .dash-kpi-card-emerald {
-    @apply bg-emerald-50rald-50 border border-emerald-200;
+    @apply border border-emerald-200 bg-emerald-50;
 }
 
 .dash-kpi-card-sky {
-    @apply bg-sky-50-sky-50 border border-sky-200;
+    @apply border border-sky-200 bg-sky-50;
 }
 
 .dash-kpi-card-rose {
@@ -2160,7 +2160,7 @@ tbody td {
 }
 
 .dash-workspace-grid {
-    @apply xl:grid-cols-[340px_min-[max(0,1fr)] grid gap-6;
+    @apply grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)];
 }
 
 .dash-location-panel {
@@ -2200,7 +2200,7 @@ tbody td {
 }
 
 .dash-floor-filter-active {
-    @apply ring-sky-100sky-100 border border-sky-200 bg-sky-50 text-sky-800;
+    @apply border border-sky-200 bg-sky-50 text-sky-800 ring-sky-100;
 }
 
 .dash-room-list {
@@ -2212,7 +2212,7 @@ tbody td {
 }
 
 .dash-room-link-active {
-    @apply shadow-smadow-sm border border-sky-200 bg-sky-50;
+    @apply border border-sky-200 bg-sky-50 shadow-sm;
 }
 
 .dash-room-name {
@@ -2625,15 +2625,15 @@ tbody td {
 }
 
 .surface-toolbar-grid {
-    @apply xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.2fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.72fr)_min-[max(0,0.72fr)] grid gap-2.5;
+    @apply grid gap-2.5 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.2fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.72fr)_minmax(0,0.72fr)];
 }
 
 .surface-toolbar-grid-compact {
-    @apply lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)_minmax(0,0.72fr)_min-[max(0,0.95fr)] grid gap-2.5.5;
+    @apply grid gap-2.5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)_minmax(0,0.72fr)_minmax(0,0.95fr)];
 }
 
 .surface-toolbar-grid-tight {
-    @apply lg:grid-cols-[minmax(0,1.15fr)_min-[max(0,1fr)] grid gap-2.5.5;
+    @apply grid gap-2.5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)];
 }
 
 .surface-toolbar-field {
@@ -2641,7 +2641,7 @@ tbody td {
 }
 
 .surface-toolbar-actions {
-    @apply lg:grid-cols-[minmax(0,1.15fr)_min-[max(0,1fr)] gap-2.5.5 grid pt-3 md:justify-end;
+    @apply grid gap-2.5 pt-3 md:justify-end lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)];
 }
 
 .user-profile-section-head {
@@ -2884,11 +2884,11 @@ tbody td {
 }
 
 .toolbar-panels {
-    @apply xl:grid-cols-[minmax(16rem,0.8fr)_min-[max(0,2.2fr)] grid grid-cols-1 gap-3;
+    @apply grid grid-cols-1 gap-3 xl:grid-cols-[minmax(16rem,0.8fr)_minmax(0,2.2fr)];
 }
 
 .toolbar-panels-wide {
-    @apply xl:grid-cols-[minmax(16rem,0.76fr)_min-[max(0,2.24fr)];
+    @apply xl:grid-cols-[minmax(16rem,0.76fr)_minmax(0,2.24fr)];
 }
 
 .request-toolbar-filters-grid {
@@ -2900,7 +2900,7 @@ tbody td {
 }
 
 .transfer-search-grid {
-    @apply xl:grid-cols-[minmax(0,0.9fr)_min-[max(0,1.35fr)] grid grid-cols-1 gap-2;
+    @apply grid grid-cols-1 gap-2 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.35fr)];
 }
 
 .transfer-toolbar-filters-grid {
@@ -2920,11 +2920,11 @@ tbody td {
 }
 
 .transfer-toolbar-main {
-    @apply 2xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.76fr)_min-[max(0,0.76fr)] grid grid-cols-1 gap-2 md:grid-cols-2;
+    @apply grid grid-cols-1 gap-2 md:grid-cols-2 2xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.76fr)_minmax(0,0.76fr)];
 }
 
 .transfer-toolbar-main-admin {
-    @apply xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.76fr)_min-[max(0,0.76fr)];
+    @apply xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.76fr)_minmax(0,0.76fr)];
 }
 
 .devices-search-group {
@@ -3313,7 +3313,7 @@ tbody td {
 }
 
 .quick-status-filter-rose.quick-status-filter-active {
-    @apply border border-sky-300 bg-sky-100 text-sky-900 ring-sky-300-300;
+    @apply border border-sky-300 bg-sky-100 text-sky-900 ring-sky-300;
 }
 
 .filter-summary {
