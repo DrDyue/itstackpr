@@ -4499,18 +4499,13 @@ tbody td {
 .table-action-item,
 .table-action-button,
 .table-action-menu .btn-disabled {
-    @apply min-h-[2.75rem] rounded-xl px-3.5 py-2 shadow-sm;
-}
-
-.table-action-item,
-.table-action-button {
-    @apply items-center;
+    @apply flex w-full items-center justify-start gap-2.5 min-h-[2.75rem] rounded-xl px-3.5 py-2 shadow-sm;
 }
 
 .table-action-item > span,
 .table-action-button > span,
 .table-action-menu .btn-disabled > span {
-    @apply text-sm font-medium;
+    @apply text-sm font-medium text-left leading-5;
 }
 
 .table-action-item-primary,
