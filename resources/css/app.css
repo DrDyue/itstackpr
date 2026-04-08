@@ -1850,44 +1850,38 @@ tbody td {
     @apply space-y-3 p-4;
 }
 
-.dash-structure-card,
-.dash-floor-card {
+.dash-structure-card {
     @apply overflow-hidden rounded-[1.35rem] border border-slate-200 bg-slate-50/80;
 }
 
-.dash-structure-summary,
-.dash-floor-summary {
+.dash-structure-summary {
     @apply flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5;
 }
 
-.dash-structure-summary::-webkit-details-marker,
-.dash-floor-summary::-webkit-details-marker {
+.dash-structure-summary::-webkit-details-marker {
     display: none;
 }
 
-.dash-structure-title,
-.dash-floor-title {
+.dash-structure-title {
     @apply text-sm font-semibold text-slate-900;
 }
 
 .dash-structure-meta,
-.dash-floor-meta,
 .dash-room-meta {
     @apply mt-1 text-xs text-slate-500;
 }
 
-.dash-structure-badge,
-.dash-floor-pill {
+.dash-structure-badge {
     @apply inline-flex min-w-12 justify-center rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-200;
 }
 
 .dash-floor-list,
 .dash-room-list {
-    @apply space-y-2 border-t border-slate-200 px-3 py-3;
+    @apply space-y-3 border-t border-slate-200 px-4 py-3;
 }
 
 .dash-room-item {
-    @apply block rounded-2xl border border-slate-200 bg-white px-3 py-3 transition hover:border-sky-200 hover:shadow-sm;
+    @apply block rounded-2xl border border-slate-200 bg-white px-4 py-3 transition hover:border-sky-200 hover:shadow-sm;
 }
 
 .dash-room-title {
@@ -1895,7 +1889,7 @@ tbody td {
 }
 
 .dash-quick-grid {
-    @apply grid gap-4 p-5 md:grid-cols-3;
+    @apply grid gap-5 p-5 md:grid-cols-3;
 }
 
 .dash-quick-card {
@@ -2208,10 +2202,6 @@ tbody td {
     @apply ring-sky-100 border border-sky-200 bg-sky-50 text-sky-800;
 }
 
-.dash-room-list {
-    @apply space-y-2 border-t border-slate-200 pt-3;
-}
-
 .dash-room-link {
     @apply block rounded-[1.15rem] border border-slate-200 bg-white px-3 py-3 transition hover:border-sky-200 hover:bg-sky-50/60;
 }
@@ -2331,6 +2321,16 @@ tbody td {
     .dash-split-grid,
     .dash-device-grid {
         @apply grid-cols-1 gap-3;
+    }
+
+    .dash-layout-grid {
+        @apply gap-3;
+    }
+
+    .dash-column,
+    .dash-content-stack,
+    .dash-side-stack {
+        @apply space-y-3;
     }
 
     .dash-toolbar {
@@ -5195,14 +5195,6 @@ tbody td {
 
 .device-file-input {
     @apply w-full rounded-[1.25rem] border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:font-semibold file:text-white hover:file:bg-slate-800;
-}
-
-/* Auth enhancements */
-.btn-primary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
 }
 
 /* REMOVED CSS: */
