@@ -4,8 +4,10 @@
     "private": true,
     "type": "module",
     "scripts": {
+        "prebuild": "node scripts/verify-css-integrity.mjs",
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "verify:css": "node scripts/verify-css-integrity.mjs"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.2",

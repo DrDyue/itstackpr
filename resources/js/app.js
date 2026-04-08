@@ -3,12 +3,72 @@ import './bootstrap';
 const Alpine = window.Alpine;
 const THEME_STORAGE_KEY = 'itstack-theme';
 
-const getStoredTheme = () => {
-    try {
-        return window.localStorage.getItem(THEME_STORAGE_KEY) === 'dark' ? 'dark' : 'light';
-    } catch (error) {
-        return 'light';
+/* ==========================================================================
+   Shared helpers (kept in this file by request to minimize file count)
+   ========================================================================== */
+const runOnDomReady = (callback) => {
+    if (typeof callback !== 'function') {
+        return;
     }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', callback, { once: true });
+        return;
+    }
+
+    callback();
+};
+
+const readStorageValue = (key, fallback = null) => {
+    try {
+        return window.localStorage.getItem(key) ?? fallback;
+    } catch (error) {
+        return fallback;
+    }
+};
+
+const writeStorageValue = (key, value) => {
+    try {
+        window.localStorage.setItem(key, value);
+        return true;
+    } catch (error) {
+        return false;
+    }
+};
+
+const appendInputValueParam = (params, key, input) => {
+    if (!input || !key) {
+        return;
+    }
+
+    const value = String(input.value ?? '').trim();
+    if (value === '') {
+        return;
+    }
+
+    params.append(key, value);
+};
+
+const isAsyncTableFilterForm = (form) => {
+    return Boolean(form && form.closest('[data-async-table-root]'));
+};
+
+const buildClearFiltersUrl = (form) => {
+    const url = new URL(form.action, window.location.origin);
+    const sortField = form.querySelector('input[data-sort-hidden="field"]');
+    const sortDirection = form.querySelector('input[data-sort-hidden="direction"]');
+    const params = new URLSearchParams();
+
+    params.append('statuses_filter', '1');
+    appendInputValueParam(params, 'sort', sortField);
+    appendInputValueParam(params, 'direction', sortDirection);
+    url.search = `?${params.toString()}`;
+
+    return url;
+};
+
+const getStoredTheme = () => {
+    return readStorageValue(THEME_STORAGE_KEY, 'light') === 'dark' ? 'dark' : 'light';
 };
 
 const applyTheme = (theme) => {
@@ -50,11 +110,7 @@ const initializeThemeToggle = () => {
         button.addEventListener('click', () => {
             const nextTheme = button.dataset.themeValue === 'dark' ? 'dark' : 'light';
 
-            try {
-                window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-            } catch (error) {
-                // Ja localStorage nav pieejams, tema darbosies vismaz konkretas sesijas laika.
-            }
+            writeStorageValue(THEME_STORAGE_KEY, nextTheme);
 
             applyTheme(nextTheme);
             syncThemeToggleUi();
@@ -2498,53 +2554,36 @@ window.repairProcess = (config) => ({
 
 registerAlpineData();
 document.addEventListener('alpine:init', registerAlpineData);
-document.addEventListener('DOMContentLoaded', initializeThemeToggle);
-document.addEventListener('DOMContentLoaded', initializeAppConfirm);
-document.addEventListener('DOMContentLoaded', initializeAsyncTableFilters);
-document.addEventListener('DOMContentLoaded', initializeDeviceTypeModalOpeners);
-document.addEventListener('DOMContentLoaded', initializeDeviceTypeModalForms);
-document.addEventListener('DOMContentLoaded', restoreHighlightedSearchFromUrl);
 
-if (document.readyState !== 'loading') {
-    initializeThemeToggle();
-    initializeAppConfirm();
-    initializeAsyncTableFilters();
-    initializeDeviceTypeModalOpeners();
-    initializeDeviceTypeModalForms();
-    restoreHighlightedSearchFromUrl();
-}
+// Keep one explicit startup pipeline so future refactors are easy to follow.
+const appInitializers = Object.freeze([
+    initializeThemeToggle,
+    initializeAppConfirm,
+    initializeAsyncTableFilters,
+    initializeDeviceTypeModalOpeners,
+    initializeDeviceTypeModalForms,
+    restoreHighlightedSearchFromUrl,
+]);
+
+const runAppInitializers = () => {
+    appInitializers.forEach((initializer) => initializer());
+};
+
+runOnDomReady(runAppInitializers);
 
 if (Alpine && !window.__appAlpineStarted) {
     window.__appAlpineStarted = true;
     Alpine.start();
 }
 
-// Clear all filters function for request index pages
-window.clearAllFilters = function(button) {
+window.clearAllFilters = function (button) {
     const form = button.closest('form[data-async-table-form]');
-    if (!form) return;
+    if (!isAsyncTableFilterForm(form)) return;
+    const url = buildClearFiltersUrl(form);
 
-    const root = form.closest('[data-async-table-root]');
-    if (!root) return;
-
-    // Build URL with only statuses_filter=1 (to indicate filters were cleared)
-    const url = new URL(form.action, window.location.origin);
-    
-    // Keep sort params
-    const sortField = form.querySelector('input[data-sort-hidden="field"]');
-    const sortDirection = form.querySelector('input[data-sort-hidden="direction"]');
-    
-    const params = new URLSearchParams();
-    params.append('statuses_filter', '1');
-    if (sortField) params.append('sort', sortField.value);
-    if (sortDirection) params.append('direction', sortDirection.value);
-    
-    url.search = '?' + params.toString();
-
-    // Use the existing submitAsyncTableForm function
     window.submitAsyncTableForm(form, {
-        url: url,
+        url,
         resetPage: true,
-        toastMessage: 'Filtri notīrīti'
+        toastMessage: 'Filtri notīrīti',
     });
 };
