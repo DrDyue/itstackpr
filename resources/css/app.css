@@ -1,3 +1,5 @@
+@import url('./globals.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -128,9 +130,7 @@ body {
     accent-color: #0071e3;
 }
 
-.checkbox-label {
-    font-size: 14px;
-    color: #555;
+.checkbox-labdirektīves | Konsolidācija | ⏳ |;lor: #555;
     cursor: pointer;
     user-select: none;
 }
@@ -907,7 +907,7 @@ tbody td {
 }
 
 .device-timeline-line {
-    @apply absolute left-[1.45rem] top-10 bottom-[-1.5rem] w-0.5 bg-slate-200;
+    @apply absolute bottom-[-1.5rem] left-[1.45rem] top-10 w-0.5 bg-slate-200;
 }
 
 .device-lightbox {
@@ -919,7 +919,7 @@ tbody td {
 }
 
 .device-lightbox-image {
-    @apply max-h-[82vh] w-full rounded-2xl object-contain bg-slate-950;
+    @apply max-h-[82vh] w-full rounded-2xl bg-slate-950 object-contain;
 }
 
 .device-lightbox-close {
@@ -1272,11 +1272,11 @@ tbody td {
 }
 
 .user-action:disabled {
-    @apply cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 hover:bg-slate-100;
+    @apply cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400 hover:bg-slate-100;
 }
 
 .user-action-edit {
-    @apply border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100;
+    @apply border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100;
 }
 
 .user-action-delete {
@@ -1360,7 +1360,7 @@ tbody td {
 }
 
 .repair-action-edit {
-    @apply border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100;
+    @apply border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100sky-100;
 }
 
 .repair-action-delete {
@@ -1384,15 +1384,15 @@ tbody td {
 }
 
 .repair-action-start {
-    @apply border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100;
+    @apply border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100;
 }
 
 .repair-action-back {
-    @apply border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100;
+    @apply border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100;
 }
 
 .repair-action-complete {
-    @apply border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100;
+    @apply border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100;
 }
 
 /* Guest layout page */
@@ -1752,11 +1752,11 @@ tbody td {
 }
 
 .dash-kpi-card-emerald {
-    @apply border-emerald-200 bg-emerald-50;
+    @apply bg-emerald-50rald-50 border border-emerald-200;
 }
 
 .dash-kpi-card-sky {
-    @apply border-sky-200 bg-sky-50;
+    @apply bg-sky-50-sky-50 border border-sky-200;
 }
 
 .dash-kpi-card-rose {
@@ -1764,7 +1764,7 @@ tbody td {
 }
 
 .dash-kpi-card-violet {
-    @apply border-violet-200 bg-violet-50;
+    @apply border border-violet-200 bg-violet-50;
 }
 
 .dash-kpi-top {
@@ -1906,15 +1906,15 @@ tbody td {
 }
 
 .dash-quick-card-blue {
-    @apply border-sky-200 bg-sky-50;
+    @apply border border-sky-200 bg-sky-50;
 }
 
 .dash-quick-card-amber {
-    @apply border-amber-200 bg-amber-50;
+    @apply border border-amber-200 bg-amber-50;
 }
 
 .dash-quick-card-emerald {
-    @apply border-emerald-200 bg-emerald-50;
+    @apply border border-emerald-200 bg-emerald-50;
 }
 
 .dash-quick-label {
@@ -2052,11 +2052,11 @@ tbody td {
 }
 
 .dash-status-card-emerald {
-    @apply border-emerald-200 bg-emerald-50;
+    @apply border border-emerald-200 bg-emerald-50;
 }
 
 .dash-status-card-slate {
-    @apply border-slate-200 bg-slate-50;
+    @apply border border-slate-200 bg-slate-50;
 }
 
 .dash-status-head {
@@ -2168,7 +2168,7 @@ tbody td {
 }
 
 .dash-workspace-grid {
-    @apply grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)];
+    @apply xl:grid-cols-[340px_min-[max(0,1fr)] grid gap-6;
 }
 
 .dash-location-panel {
@@ -2208,7 +2208,7 @@ tbody td {
 }
 
 .dash-floor-filter-active {
-    @apply border-sky-200 bg-sky-50 text-sky-800 ring-sky-100;
+    @apply ring-sky-100sky-100 border border-sky-200 bg-sky-50 text-sky-800;
 }
 
 .dash-room-list {
@@ -2220,7 +2220,7 @@ tbody td {
 }
 
 .dash-room-link-active {
-    @apply border-sky-200 bg-sky-50 shadow-sm;
+    @apply shadow-smadow-sm border border-sky-200 bg-sky-50;
 }
 
 .dash-room-name {
@@ -2252,39 +2252,24 @@ tbody td {
 }
 
 .dashboard-pagination-btn-active {
-    @apply border-sky-200 bg-sky-50 text-sky-800 shadow-sm;
+    @apply border border-sky-200 bg-sky-50 text-sky-800 shadow-sm;
 }
 
 .dashboard-pagination-btn-disabled {
-    @apply cursor-default border-slate-200 bg-slate-50 text-slate-400 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-400;
+    @apply cursor-default border border-slate-200 bg-slate-50 text-slate-400 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-400;
 }
 
-.app-pagination {
-    @apply mt-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between;
-}
+/* REMOVED CSS: */
 
-.app-pagination-meta {
-    @apply flex flex-wrap items-center gap-3 text-sm font-medium text-slate-500;
-}
+/* REMOVED CSS: */
 
-.app-pagination-links {
-    @apply flex flex-wrap items-center gap-2;
-    pointer-events: auto;
-}
+/* REMOVED CSS: */
 
-.app-pagination-btn {
-    @apply inline-flex min-w-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-800;
-    cursor: pointer;
-    pointer-events: auto;
-}
+/* REMOVED CSS: */
 
-.app-pagination-btn-active {
-    @apply border-sky-200 bg-sky-50 text-sky-800 shadow-sm;
-}
+/* REMOVED CSS: */
 
-.app-pagination-btn-disabled {
-    @apply cursor-default border-slate-200 bg-slate-50 text-slate-400 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-400;
-}
+/* REMOVED CSS: */
 
 .dash-device-list {
     @apply mt-5 space-y-3;
@@ -2357,13 +2342,9 @@ tbody td {
 }
 
 /* Shared page chrome */
-.app-shell {
-    @apply mx-auto max-w-full space-y-6 px-6 py-6 sm:px-8 lg:px-12;
-}
+/* REMOVED CSS: */
 
-.app-shell-wide {
-    @apply max-w-[140rem] px-4 sm:px-6 lg:px-8 2xl:px-10;
-}
+/* REMOVED CSS: */
 
 .page-hero {
     @apply rounded-[2rem] border border-slate-200 bg-white/95 p-5 shadow-sm backdrop-blur sm:p-6;
@@ -2603,7 +2584,7 @@ tbody td {
     }
 
     .request-type-divider-chip {
-        @apply w-full justify-center gap-2.5 px-4 py-3 tracking-[0.12em];
+        @apply flex w-full justify-center gap-2.5 px-4 py-3 tracking-[0.12em];
     }
 
     .request-type-divider-line {
@@ -2652,15 +2633,15 @@ tbody td {
 }
 
 .surface-toolbar-grid {
-    @apply grid gap-2.5 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.2fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.72fr)_minmax(0,0.72fr)];
+    @apply xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.2fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.72fr)_min-[max(0,0.72fr)] grid gap-2.5;
 }
 
 .surface-toolbar-grid-compact {
-    @apply grid gap-2.5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)_minmax(0,0.72fr)_minmax(0,0.95fr)];
+    @apply lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)_minmax(0,0.72fr)_min-[max(0,0.95fr)] grid gap-2.5.5;
 }
 
 .surface-toolbar-grid-tight {
-    @apply grid gap-2.5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)];
+    @apply lg:grid-cols-[minmax(0,1.15fr)_min-[max(0,1fr)] grid gap-2.5.5;
 }
 
 .surface-toolbar-field {
@@ -2744,7 +2725,7 @@ tbody td {
 }
 
 .user-profile-request-item-incoming {
-    @apply border-sky-200 bg-sky-50/60;
+    @apply border border-sky-200 bg-sky-50/60;
 }
 
 .user-profile-request-title {
@@ -2860,7 +2841,7 @@ tbody td {
 }
 
 .request-notification-target:target {
-    @apply ring-2 ring-sky-300 shadow-[0_22px_60px_-38px_rgba(14,165,233,0.5)];
+    @apply shadow-[0_22px_60px_-38px_rgba(14,165,233,0.5)] ring-2 ring-sky-300;
 }
 
 .surface-toolbar + .filter-summary,
@@ -2879,7 +2860,7 @@ tbody td {
 
 /* Devices index - new filter and search design */
 .devices-filter-surface {
-    @apply rounded-[1.5rem] border border-slate-200 bg-white px-3 py-2.5 shadow-sm mb-4 transition duration-200;
+    @apply mb-4 rounded-[1.5rem] border border-slate-200 bg-white px-3 py-2.5 shadow-sm transition duration-200;
 }
 
 .devices-filter-surface-elevated {
@@ -2911,11 +2892,11 @@ tbody td {
 }
 
 .toolbar-panels {
-    @apply grid grid-cols-1 gap-3 xl:grid-cols-[minmax(16rem,0.8fr)_minmax(0,2.2fr)];
+    @apply xl:grid-cols-[minmax(16rem,0.8fr)_min-[max(0,2.2fr)] grid grid-cols-1 gap-3;
 }
 
 .toolbar-panels-wide {
-    @apply xl:grid-cols-[minmax(16rem,0.76fr)_minmax(0,2.24fr)];
+    @apply xl:grid-cols-[minmax(16rem,0.76fr)_min-[max(0,2.24fr)];
 }
 
 .request-toolbar-filters-grid {
@@ -2927,7 +2908,7 @@ tbody td {
 }
 
 .transfer-search-grid {
-    @apply grid grid-cols-1 gap-2 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.35fr)];
+    @apply xl:grid-cols-[minmax(0,0.9fr)_min-[max(0,1.35fr)] grid grid-cols-1 gap-2;
 }
 
 .transfer-toolbar-filters-grid {
@@ -2947,11 +2928,11 @@ tbody td {
 }
 
 .transfer-toolbar-main {
-    @apply grid grid-cols-1 gap-2 md:grid-cols-2 2xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.76fr)_minmax(0,0.76fr)];
+    @apply 2xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.76fr)_min-[max(0,0.76fr)] grid grid-cols-1 gap-2 md:grid-cols-2;
 }
 
 .transfer-toolbar-main-admin {
-    @apply xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.76fr)_minmax(0,0.76fr)];
+    @apply xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.76fr)_min-[max(0,0.76fr)];
 }
 
 .devices-search-group {
@@ -3098,7 +3079,7 @@ tbody td {
 }
 
 .role-toggle:hover {
-    @apply border-slate-300 bg-slate-100;
+    @apply border border-slate-300 bg-slate-100;
 }
 
 .role-toggle-btn {
@@ -3154,7 +3135,7 @@ tbody td {
 }
 
 .searchable-select-surface {
-    @apply absolute inset-0 z-10 rounded-lg cursor-ns-resize bg-transparent;
+    @apply absolute inset-0 z-10 cursor-ns-resize rounded-lg bg-transparent;
     touch-action: none;
 }
 
@@ -3163,7 +3144,7 @@ tbody td {
 }
 
 .searchable-select-toggle-active {
-    @apply border-sky-200 bg-sky-50 text-sky-700 ring-2 ring-sky-100;
+    @apply border border-sky-200 bg-sky-50 text-sky-700 ring-2 ring-sky-100;
 }
 
 .searchable-select-scrub-preview {
@@ -3300,35 +3281,35 @@ tbody td {
 }
 
 .quick-status-filter-active {
-    @apply ring-2 ring-offset-2 shadow-sm;
+    @apply shadow-sm ring-2 ring-offset-2;
 }
 
 .quick-status-filter-slate {
-    @apply border-slate-200 bg-white text-slate-700 hover:bg-slate-50;
+    @apply border border-slate-200 bg-white text-slate-700 hover:bg-slate-50;
 }
 
 .quick-status-filter-slate.quick-status-filter-active {
-    @apply border-slate-300 bg-slate-50 text-slate-900 ring-slate-300;
+    @apply border border-slate-300 bg-slate-50 text-slate-900 ring-slate-300;
 }
 
 .quick-status-filter-emerald {
-    @apply border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100;
+    @apply border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100;
 }
 
 .quick-status-filter-emerald.quick-status-filter-active {
-    @apply border-emerald-300 bg-emerald-100 text-emerald-900 ring-emerald-300;
+    @apply border border-emerald-300 bg-emerald-100 text-emerald-900 ring-emerald-300;
 }
 
 .quick-status-filter-amber {
-    @apply border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100;
+    @apply border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100;
 }
 
 .quick-status-filter-amber.quick-status-filter-active {
-    @apply border-amber-300 bg-amber-100 text-amber-900 ring-amber-300;
+    @apply border border-amber-300 bg-amber-100 text-amber-900 ring-amber-300;
 }
 
 .quick-status-filter-sky {
-    @apply border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100;
+    @apply border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100;
 }
 
 .quick-status-filter-sky.quick-status-filter-active {
@@ -5200,25 +5181,15 @@ tbody td {
     gap: 10px;
 }
 
-.auth-demo-list {
-    @apply mt-6 space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600;
-}
+/* REMOVED CSS: */
 
-.auth-demo-item {
-    @apply flex items-start gap-3 rounded-xl bg-white px-3 py-3 ring-1 ring-slate-200;
-}
+/* REMOVED CSS: */
 
-.auth-demo-icon {
-    @apply mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ring-1;
-}
+/* REMOVED CSS: */
 
-.auth-demo-icon-admin {
-    @apply bg-sky-100 text-sky-700 ring-sky-200;
-}
+/* REMOVED CSS: */
 
-.auth-demo-icon-user {
-    @apply bg-emerald-100 text-emerald-700 ring-emerald-200;
-}
+/* REMOVED CSS: */
 
 /* Theme switcher and dark mode */
 :root {
@@ -6595,18 +6566,7 @@ html[data-theme='dark'] textarea::placeholder {
     color: #64748b !important;
 }
 
-.app-confirm-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 80;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 180ms ease;
-}
+/* REMOVED CSS: */
 
 .app-confirm-overlay.is-visible {
     pointer-events: auto;
@@ -6622,23 +6582,9 @@ html[data-theme='dark'] textarea::placeholder {
     transform: translateY(0) scale(1);
 }
 
-.app-confirm-backdrop {
-    position: absolute;
-    inset: 0;
-    background: rgba(2, 6, 23, 0.6);
-    backdrop-filter: blur(6px);
-}
+/* REMOVED CSS: */
 
-.app-confirm-dialog {
-    position: relative;
-    width: min(34rem, calc(100vw - 2rem));
-    border-radius: 1.25rem;
-    border: 1px solid rgba(148, 163, 184, 0.3);
-    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-    padding: 1.35rem;
-    overflow: hidden;
-    box-shadow: 0 32px 90px -38px rgba(15, 23, 42, 0.58);
-}
+/* REMOVED CSS: */
 
 .app-confirm-dialog::before,
 .app-confirm-dialog::after {
@@ -6680,49 +6626,17 @@ html[data-theme='dark'] textarea::placeholder {
     background: radial-gradient(circle, rgba(245, 158, 11, 0.18) 0%, rgba(245, 158, 11, 0) 72%);
 }
 
-.app-confirm-icon {
-    display: inline-flex;
-    height: 2.25rem;
-    width: 2.25rem;
-    align-items: center;
-    justify-content: center;
-    border-radius: 9999px;
-    background: rgba(244, 63, 94, 0.12);
-    color: #e11d48;
-    box-shadow: inset 0 0 0 1px rgba(244, 63, 94, 0.15);
-}
+/* REMOVED CSS: */
 
-.app-confirm-icon-danger {
-    background: rgba(244, 63, 94, 0.12);
-    color: #e11d48;
-    box-shadow: inset 0 0 0 1px rgba(244, 63, 94, 0.18);
-}
+/* REMOVED CSS: */
 
-.app-confirm-icon-warning {
-    background: rgba(245, 158, 11, 0.12);
-    color: #d97706;
-    box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.18);
-}
+/* REMOVED CSS: */
 
-.app-confirm-title {
-    margin-top: 0.75rem;
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: #0f172a;
-}
+/* REMOVED CSS: */
 
-.app-confirm-message {
-    margin-top: 0.5rem;
-    color: #475569;
-    line-height: 1.5;
-}
+/* REMOVED CSS: */
 
-.app-confirm-actions {
-    margin-top: 1rem;
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.625rem;
-}
+/* REMOVED CSS: */
 
 html[data-theme='dark'] .app-confirm-dialog {
     border-color: rgba(51, 65, 85, 0.95);

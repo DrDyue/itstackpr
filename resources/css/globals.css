@@ -1,0 +1,221 @@
+/**
+ * CSS GLOBALS - Centralizēta stilu centralizācija
+ * ============================================
+ * 
+ * Vietā, kur definējam VISAS primārās krāsas, размеры un stili
+ * projekta mērogā. Mainīt šeit = mainīt VISUR.
+ */
+
+/* ========== PRIMĀRO KRĀVU PALETA ========== */
+:root {
+    /* Zi brīdināšanas krāsu konstantes */
+    --color-primary: #0ea5e9;
+    --color-primary-hover: #0077ed;
+    --color-primary-dark: #0284c7;
+    
+    --color-success: #10b981;
+    --color-success-light: #d1fae5;
+    --color-success-dark: #047857;
+    
+    --color-warning: #f59e0b;
+    --color-warning-light: #fef3c7;
+    --color-warning-dark: #92400e;
+    
+    --color-danger: #ef4444;
+    --color-danger-light: #fecaca;
+    --color-danger-dark: #991b1b;
+    
+    --color-info: #3b82f6;
+    --color-info-light: #dbeafe;
+    --color-info-dark: #1e3a8a;
+    
+    /* Skala krāvas */
+    --color-slate-50: #f8fafc;
+    --color-slate-100: #f1f5f9;
+    --color-slate-200: #e2e8f0;
+    --color-slate-300: #cbd5e1;
+    --color-slate-400: #94a3b8;
+    --color-slate-500: #64748b;
+    --color-slate-600: #475569;
+    --color-slate-700: #334155;
+    --color-slate-800: #1e293b;
+    --color-slate-900: #0f172a;
+    
+    /* Dark theme */
+    --color-dark-bg: #020617;
+    --color-dark-surface: #0f172a;
+    --color-dark-text: #e2e8f0;
+    
+    /* Borders */
+    --border-radius-small: 8px;
+    --border-radius-medium: 12px;
+    --border-radius-large: 16px;
+    --border-radius-xl: 20px;
+    --border-radius-2xl: 24px;
+    
+    /* Spacing */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 12px;
+    --space-lg: 16px;
+    --space-xl: 20px;
+    --space-2xl: 24px;
+    --space-3xl: 32px;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+    
+    /* Typography */
+    --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-size-xs: 12px;
+    --font-size-sm: 14px;
+    --font-size-base: 16px;
+    --font-size-lg: 18px;
+    --font-size-xl: 20px;
+    --font-size-2xl: 24px;
+    --font-size-3xl: 32px;
+}
+
+/* ========== REUSABLE COMPONENT CLASSES ========== */
+
+/* Buttons - Global */
+.btn-base {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-md) var(--space-lg);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    border-radius: var(--border-radius-large);
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+}
+(ja nepieciešams);er {
+    background-color: var(--color-primary-dark);
+    box-shadow: var(--shadow-md)inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-white    color: white;
+}
+
+.btn-danger:hover {
+    background-color: var(--color-danger-dark);
+}
+
+.btn-success {
+    background-color: var(--color-success);
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: var(--color-success-dark);
+}
+
+/* Cards - Global */
+.card-base {
+    background-color: white;
+    border: 1px solid var(--color-slate-200);
+    border-radius: var(--border-radius-xl);
+    padding: var(--space-xl);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+}
+
+.card-base:hover {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-md);
+}
+
+/* Status Pills */
+.status-base {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+}
+
+.status-success {
+    background-color: var(--color-success-light);
+    color: var(--color-success-dark);
+}
+
+.status-warning {
+    background-color: var(--color-warning-light);
+    color: var(--color-warning-dark);
+}
+
+.status-danger {
+    background-color: var(--color-danger-light);
+    color: var(--color-danger-dark);
+}
+
+/* ========== DARK THEME ========== */
+:root[data-theme='dark'] {
+    --color-primary: #7dd3fc;
+    --color-primary-dark: #bae6fd;
+    
+    --color-slate-50: #1e293b;
+    --color-slate-100: #0f172a;
+    --color-slate-200: #0c1b2e;
+    --color-slate-300: #1e293b;
+    --color-slate-600: #cbd5e1;
+    --color-slate-700: #e2e8f0;
+    --color-slate-900: #f8fafc;
+}
+
+:root[data-theme='dark'] .card-base {
+    background-color: #0f172a;
+    border-color: #1e293b;
+}
+
+:root[data-theme='dark'] .btn-primary {
+    background-color: var(--color-primary);
+    color: #0f172a;
+}
+
+/* ========== UTILITIES ========== */
+
+/* Spacing utility classes */
+.pb-sm { padding-bottom: var(--space-sm); }
+.pb-md { padding-bottom: var(--space-md); }
+.pb-lg { padding-bottom: var(--space-lg); }
+
+.gap-sm { gap: var(--space-sm); }
+.gap-md { gap: var(--space-md); }
+.gap-lg { gap: var(--space-lg); }
+
+/* Text & Links */
+.text-muted {
+    color: var(--color-slate-500);
+}
+
+.text-primary {
+    color: var(--color-primary);
+}
+
+/* Borders */
+.border-primary {
+    border-color: var(--color-primary);
+}
+
+.border-slate {
+    border-color: var(--color-slate-200);
+}
+
+/* Background */
+.bg-slate-light {
+    background-color: var(--color-slate-50);
+}
+
+.bg-primary-light {
+    background-color: rgba(14, 165, 233, 0.1);
+}
