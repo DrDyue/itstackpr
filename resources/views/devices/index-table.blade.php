@@ -1,7 +1,3 @@
-{{--
-    Partial skats: Ierīču tabula.
-    Izmantots async filtrēšanai bez lapas atjaunošanas.
---}}
 @props(['devices', 'deviceStates', 'sorting', 'sortOptions', 'statusLabels', 'canManageDevices', 'quickRoomSelectOptions', 'quickAssigneeSelectOptions'])
 
 <x-ui.table-shell

@@ -1,11 +1,3 @@
-{{--
-    Partialis: Ierīces formas lauki.
-    Atbildība: glabā visus ievades laukus, ko izmanto gan jaunās ierīces izveide, gan esošas ierīces rediģēšana.
-    Kāpēc tas ir svarīgi:
-    1. Viena un tā pati biznesa loģika netiek dublēta create un edit lapās.
-    2. Šeit tiek sagatavoti noklusējumi, dropdown izvēles un datu piesaistes vērtības.
-    3. Tieši šeit ir redzams, kuri lauki ir obligāti un kā tie ir sasaistīti ar backend validāciju.
---}}
 @php
     $current = $device;
     $isCreating = ! $current;
@@ -89,16 +81,16 @@
         'building_query',
         optional($buildings->firstWhere('id', (int) $selectedBuildingId))->building_name ?? ''
     );
+    $selectedRoom = $rooms->firstWhere('id', (int) $selectedRoomId);
     $selectedRoomLabel = old(
         'room_query',
-        optional($rooms->firstWhere('id', (int) $selectedRoomId))->room_number
-            ? optional($rooms->firstWhere('id', (int) $selectedRoomId))->room_number . (optional($rooms->firstWhere('id', (int) $selectedRoomId))->room_name ? ' - ' . optional($rooms->firstWhere('id', (int) $selectedRoomId))->room_name : '')
+        $selectedRoom?->room_number
+            ? $selectedRoom->room_number . ($selectedRoom->room_name ? ' - ' . $selectedRoom->room_name : '')
             : ''
     );
     $selectedStatusLabel = old('status_query', $statusLabels[$selectedStatus] ?? 'Aktīva');
 @endphp
 
-{{-- Forma sadalīta pa semantiskām kartītēm: pamata dati, piesaiste, finanses, attēls un piezīmes. --}}
 <div class="device-form-grid">
     <div class="space-y-6">
         @if ($isWrittenOff)
