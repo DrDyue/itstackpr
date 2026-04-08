@@ -4299,12 +4299,12 @@ tbody td {
 
 .table-action-item > svg,
 .table-action-button > svg {
-    @apply h-4 w-4 shrink-0 text-slate-500;
+    @apply h-4 w-4 shrink-0 text-slate-500 inline-block;
 }
 
 .table-action-item > span,
 .table-action-button > span {
-    @apply font-medium leading-5 text-left whitespace-nowrap;
+    @apply font-medium leading-5 text-left whitespace-nowrap inline-block;
 }
 
 .table-action-item-primary {
@@ -4507,7 +4507,7 @@ tbody td {
 .table-action-item > span,
 .table-action-button > span,
 .table-action-menu .btn-disabled > span {
-    @apply font-medium text-left leading-5 whitespace-nowrap;
+    @apply font-medium text-left leading-5 whitespace-nowrap inline-block;
 }
 
 .table-action-item-primary {
