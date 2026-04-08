@@ -4460,7 +4460,7 @@ tbody td {
 }
 
 .table-action-menu .btn-disabled {
-    @apply inline-flex min-h-[2.5rem] items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-500;
+    @apply inline-flex min-h-[2.5rem] w-full items-center justify-start gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-500;
 }
 
 .table-action-menu .btn-disabled > span {
@@ -4469,7 +4469,9 @@ tbody td {
 
 /* Final polish overrides for action dropdowns */
 .table-action-list {
-    @apply min-w-[19rem] rounded-2xl p-2.5;
+    @apply absolute right-0 z-50 mt-2 flex flex-col gap-1.5 border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-200/50 w-max max-w-[95vw] text-left min-w-[19rem] rounded-2xl p-2.5;
+    transform-origin: top right;
+    overflow: visible;
 }
 
 .table-action-list-wide {
@@ -4477,7 +4479,7 @@ tbody td {
 }
 
 .table-action-section {
-    @apply px-0 py-0;
+    @apply px-0 py-0 text-left;
 }
 
 .table-action-section + .table-action-section {
@@ -4489,7 +4491,7 @@ tbody td {
 }
 
 .table-action-section-title {
-    @apply mb-2 px-2 text-[11px] tracking-[0.18em];
+    @apply mb-2 px-2 text-[11px] tracking-[0.18em] text-left;
 }
 
 .table-action-stack {
