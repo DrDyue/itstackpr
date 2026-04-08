@@ -2641,7 +2641,7 @@ tbody td {
 }
 
 .surface-toolbar-actions {
-    @apply flex flex-wrap items-center gap-3 border-t border-slate-200/80 pt-3 md:justify-end;
+    @apply lg:grid-cols-[minmax(0,1.15fr)_min-[max(0,1fr)] gap-2.5.5 grid pt-3 md:justify-end;
 }
 
 .user-profile-section-head {
@@ -3313,7 +3313,7 @@ tbody td {
 }
 
 .quick-status-filter-rose.quick-status-filter-active {
-    @apply border-rose-300 bg-rose-100 text-rose-900 ring-rose-300;
+    @apply border border-sky-300 bg-sky-100 text-sky-900 ring-sky-300-300;
 }
 
 .filter-summary {
@@ -3346,7 +3346,7 @@ tbody td {
 }
 
 .metric-card-soft-sky {
-    @apply border-sky-200 bg-sky-50;
+    @apply border border-slate-300 bg-white text-slate-700 transition hover:border-slate-400 hover:bg-slate-50
 }
 
 .metric-card-soft-emerald {
