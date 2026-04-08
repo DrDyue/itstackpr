@@ -4,9 +4,12 @@
 --}}
 @props(['devices', 'deviceStates', 'sorting', 'sortOptions', 'statusLabels', 'canManageDevices', 'quickRoomSelectOptions', 'quickAssigneeSelectOptions'])
 
-<div class="device-table-shell device-table-shell-wide" id="devices-table-root">
-    <div class="device-table-scroll device-table-scroll-balanced rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
-    <table class="device-table-content min-w-full text-sm">
+<x-ui.table-shell
+    id="devices-table-root"
+    shell-class="device-table-shell device-table-shell-wide"
+    scroll-class="device-table-scroll device-table-scroll-balanced rounded-[1.75rem] border border-slate-200 bg-white shadow-sm"
+    table-class="device-table-content min-w-full text-sm"
+>
         <thead class="device-table-head bg-slate-50 text-left text-slate-500">
             <tr>
                 <th class="table-col-image px-3 py-3 text-center">Attēls</th>
@@ -428,9 +431,7 @@
                 </tr>
             @endforelse
         </tbody>
-    </table>
-    </div>
-</div>
+    </x-ui.table-shell>
 
 @if ($devices->hasPages())
     <div class="mt-5">{{ $devices->links() }}</div>
