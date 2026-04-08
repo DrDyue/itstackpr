@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\HasRepairStatusLabels;
 use App\Models\Building;
 use App\Models\Device;
 use App\Models\DeviceTransfer;
@@ -13,6 +14,7 @@ use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
 use App\Support\DeviceAssetManager;
 use App\Support\RuntimeSchemaBootstrapper;
+use App\Support\WarehouseConfig;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -32,15 +34,11 @@ use Illuminate\Support\Facades\Route;
  */
 class DeviceController extends Controller
 {
+    use HasRepairStatusLabels;
+
     private const STATUSES = [Device::STATUS_ACTIVE, Device::STATUS_REPAIR, Device::STATUS_WRITEOFF];
 
     private const SORTABLE_COLUMNS = ['code', 'name', 'location', 'created_at', 'assigned_to', 'status'];
-
-    private const DEFAULT_WAREHOUSE_ROOM_NAME = 'Noliktava';
-
-    private const DEFAULT_WAREHOUSE_ROOM_NUMBER_PREFIX = 'NOL-';
-
-    private const DEFAULT_BUILDING_NAME = 'Ludzas novada pašvaldība';
 
     /**
      * Parāda ierīču sarakstu ar lomām atkarīgu filtrēšanu un statusu palīgdatiem.
@@ -1007,7 +1005,7 @@ SQL;
             'building_id' => $building->id,
             'floor_number' => 1,
             'room_number' => $this->nextWarehouseRoomNumber($building->id),
-            'room_name' => self::DEFAULT_WAREHOUSE_ROOM_NAME,
+            'room_name' => WarehouseConfig::DEFAULT_ROOM_NAME,
             'user_id' => $this->user()?->id,
             'department' => 'Inventārs',
             'notes' => 'Automātiski izveidota noklusētā noliktavas telpa.',
@@ -1043,7 +1041,7 @@ SQL;
         }
 
         return Building::query()->create([
-            'building_name' => self::DEFAULT_BUILDING_NAME,
+            'building_name' => WarehouseConfig::DEFAULT_BUILDING_NAME,
             'city' => 'Ludza',
             'total_floors' => 1,
             'notes' => 'Automātiski izveidota noklusētā ēka noliktavas telpai.',
@@ -1062,7 +1060,7 @@ SQL;
         $sequence = 1;
 
         do {
-            $candidate = self::DEFAULT_WAREHOUSE_ROOM_NUMBER_PREFIX.str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
+            $candidate = WarehouseConfig::DEFAULT_ROOM_NUMBER_PREFIX.str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
             $sequence++;
         } while (in_array($candidate, $existingNumbers, true));
 
@@ -1164,14 +1162,7 @@ SQL;
             ->all();
     }
 
-    private function repairStatusLabel(?string $status): ?string
-    {
-        return match ($status) {
-            'waiting' => 'Gaida',
-            'in-progress' => 'Procesā',
-            default => null,
-        };
-    }
+
 
     private function visibleRepairStatusLabel(Device $device): ?string
     {

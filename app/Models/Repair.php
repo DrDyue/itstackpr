@@ -59,16 +59,26 @@ class Repair extends Model
         return $this->belongsTo(User::class, 'issue_reported_by');
     }
 
+    /**
+     * Lietotājs, kurš izpilda remonta darbus.
+     * Alias uz acceptedBy jeb assigned to.
+     */
     public function executor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'issue_reported_by');
+        return $this->belongsTo(User::class, 'accepted_by');
     }
 
+    /**
+     * Lietotājs, kurš pieņēmis remonta darbu.
+     */
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'accepted_by');
     }
 
+    /**
+     * Lietotājs, kurš apstiprināja remonta pieņemšanu.
+     */
     public function acceptedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'accepted_by');
@@ -113,41 +123,11 @@ class Repair extends Model
     /**
      * Pieprasījums, no kura izveidots remonts.
      */
+    /**
+     * Pieprasījums, no kura izveidots remonts.
+     */
     public function request(): BelongsTo
     {
         return $this->belongsTo(RepairRequest::class, 'request_id');
-    }
-
-    public function getReportedByUserIdAttribute(): mixed
-    {
-        return $this->attributes['issue_reported_by'] ?? $this->attributes['reported_by_user_id'] ?? null;
-    }
-
-    public function setReportedByUserIdAttribute(mixed $value): void
-    {
-        $this->attributes['issue_reported_by'] = $value;
-        $this->attributes['reported_by_user_id'] = $value;
-    }
-
-    public function getAcceptedByUserIdAttribute(): mixed
-    {
-        return $this->attributes['accepted_by'] ?? $this->attributes['accepted_by_user_id'] ?? null;
-    }
-
-    public function setAcceptedByUserIdAttribute(mixed $value): void
-    {
-        $this->attributes['accepted_by'] = $value;
-        $this->attributes['accepted_by_user_id'] = $value;
-    }
-
-    public function getActualCompletionAttribute(): mixed
-    {
-        return $this->attributes['end_date'] ?? $this->attributes['actual_completion'] ?? null;
-    }
-
-    public function setActualCompletionAttribute(mixed $value): void
-    {
-        $this->attributes['end_date'] = $value;
-        $this->attributes['actual_completion'] = $value;
     }
 }

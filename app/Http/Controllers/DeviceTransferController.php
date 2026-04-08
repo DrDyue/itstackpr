@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\HasRepairStatusLabels;
 use App\Models\Device;
 use App\Models\DeviceTransfer;
 use App\Models\RepairRequest;
@@ -23,6 +24,8 @@ use Illuminate\Validation\ValidationException;
  */
 class DeviceTransferController extends Controller
 {
+    use HasRepairStatusLabels;
+
     private const SORTABLE_COLUMNS = ['code', 'name', 'requester', 'recipient', 'created_at', 'status'];
 
     /**
@@ -501,17 +504,6 @@ class DeviceTransferController extends Controller
                 'device_id' => ['Šai ierīcei jau ir gaidošs norakstīšanas pieteikums, tāpēc nodošanas pieteikumu veidot nevar.'],
             ]);
         }
-    }
-
-    private function repairStatusLabel(?string $status): string
-    {
-        return match ($status) {
-            'waiting' => 'Gaida',
-            'in-progress' => 'Procesā',
-            'completed' => 'Pabeigts',
-            'cancelled' => 'Atcelts',
-            default => 'Remonta',
-        };
     }
 
     private function transferOwnerId(User $actor, Device $device): ?int

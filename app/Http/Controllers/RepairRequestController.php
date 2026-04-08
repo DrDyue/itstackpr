@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\HasRepairStatusLabels;
 use App\Models\Device;
 use App\Models\DeviceTransfer;
 use App\Models\Repair;
@@ -23,6 +24,8 @@ use Illuminate\Validation\ValidationException;
  */
 class RepairRequestController extends Controller
 {
+    use HasRepairStatusLabels;
+
     private const SORTABLE_COLUMNS = ['code', 'name', 'requester', 'created_at', 'status'];
 
     /**
@@ -447,17 +450,6 @@ class RepairRequestController extends Controller
                 'device_id' => ['Šai ierīcei jau ir gaidošs nodošanas pieteikums, tāpēc remonta pieteikumu veidot nevar.'],
             ]);
         }
-    }
-
-    private function repairStatusLabel(?string $status): string
-    {
-        return match ($status) {
-            'waiting' => 'Gaida',
-            'in-progress' => 'Procesā',
-            'completed' => 'Pabeigts',
-            'cancelled' => 'Atcelts',
-            default => 'Remonta',
-        };
     }
 
     /**

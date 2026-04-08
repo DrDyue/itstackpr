@@ -88,11 +88,9 @@ class User extends Authenticatable
         return $this->hasMany(Repair::class, 'issue_reported_by');
     }
 
-    public function assignedRepairs(): HasMany
-    {
-        return $this->hasMany(Repair::class, 'accepted_by');
-    }
-
+    /**
+     * Remontie, kurus šis lietotājs ir pieņēmis un izpilda.
+     */
     public function acceptedRepairs(): HasMany
     {
         return $this->hasMany(Repair::class, 'accepted_by');

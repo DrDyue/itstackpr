@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\HasRepairStatusLabels;
 use App\Models\Device;
 use App\Models\DeviceTransfer;
 use App\Models\RepairRequest;
@@ -21,6 +22,8 @@ use Illuminate\Validation\ValidationException;
  */
 class UserRequestCenterController extends Controller
 {
+    use HasRepairStatusLabels;
+
     /**
      * Lietotāju nosūta uz remonta pieteikumu sarakstu kā galveno ieejas punktu.
      */
@@ -288,16 +291,7 @@ class UserRequestCenterController extends Controller
         }
     }
 
-    private function repairStatusLabel(?string $status): string
-    {
-        return match ($status) {
-            'waiting' => 'Gaida',
-            'in-progress' => 'Procesā',
-            'completed' => 'Pabeigts',
-            'cancelled' => 'Atcelts',
-            default => 'Remonta',
-        };
-    }
+
 
     private function editableRequestForUser(User $user, string $requestType, int $requestId): array
     {

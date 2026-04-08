@@ -34,6 +34,7 @@ class Device extends Model
         'purchase_date',
         'purchase_price',
         'warranty_until',
+        'warranty_photo_name',
         'serial_number',
         'manufacturer',
         'notes',

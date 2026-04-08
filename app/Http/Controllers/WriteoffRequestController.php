@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\HasRepairStatusLabels;
 use App\Models\Building;
 use App\Models\Device;
 use App\Models\DeviceTransfer;
@@ -10,6 +11,7 @@ use App\Models\Room;
 use App\Models\User;
 use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
+use App\Support\WarehouseConfig;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,11 +23,9 @@ use Illuminate\Validation\ValidationException;
  */
 class WriteoffRequestController extends Controller
 {
-    private const DEFAULT_WAREHOUSE_ROOM_NAME = 'Noliktava';
+    use HasRepairStatusLabels;
 
-    private const DEFAULT_WAREHOUSE_ROOM_NUMBER_PREFIX = 'NOL-';
 
-    private const DEFAULT_BUILDING_NAME = 'Ludzas novada pašvaldība';
 
     private const SORTABLE_COLUMNS = ['code', 'name', 'requester', 'created_at', 'status'];
 
@@ -402,17 +402,6 @@ class WriteoffRequestController extends Controller
         }
     }
 
-    private function repairStatusLabel(?string $status): string
-    {
-        return match ($status) {
-            'waiting' => 'Gaida',
-            'in-progress' => 'Procesā',
-            'completed' => 'Pabeigts',
-            'cancelled' => 'Atcelts',
-            default => 'Remonta',
-        };
-    }
-
     private function deviceOptions($devices)
     {
         return collect($devices)->map(function (Device $device) {
@@ -473,7 +462,7 @@ class WriteoffRequestController extends Controller
             'building_id' => $building->id,
             'floor_number' => 1,
             'room_number' => $this->nextWarehouseRoomNumber($building->id),
-            'room_name' => self::DEFAULT_WAREHOUSE_ROOM_NAME,
+            'room_name' => WarehouseConfig::DEFAULT_ROOM_NAME,
             'user_id' => $preferredUserId,
             'department' => 'Inventārs',
             'notes' => 'Automātiski izveidota noklusētā noliktavas telpa.',
@@ -498,7 +487,7 @@ class WriteoffRequestController extends Controller
         }
 
         return Building::query()->create([
-            'building_name' => self::DEFAULT_BUILDING_NAME,
+            'building_name' => WarehouseConfig::DEFAULT_BUILDING_NAME,
             'city' => 'Ludza',
             'total_floors' => 1,
             'notes' => 'Automātiski izveidota noklusētā ēka noliktavas telpai.',
@@ -517,7 +506,7 @@ class WriteoffRequestController extends Controller
         $sequence = 1;
 
         do {
-            $candidate = self::DEFAULT_WAREHOUSE_ROOM_NUMBER_PREFIX.str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
+            $candidate = WarehouseConfig::DEFAULT_ROOM_NUMBER_PREFIX.str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
             $sequence++;
         } while (in_array($candidate, $existingNumbers, true));
 

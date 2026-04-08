@@ -63,21 +63,4 @@ class DeviceTransfer extends Model
     {
         return $this->belongsTo(User::class, 'reviewed_by_user_id');
     }
-
-    /**
-     * Savietojamības getteris alternatīvam lauka nosaukumam.
-     */
-    public function getTransferToUserIdAttribute(): mixed
-    {
-        return $this->attributes['transfered_to_id'] ?? $this->attributes['transfer_to_user_id'] ?? null;
-    }
-
-    /**
-     * Savietojamības setteris alternatīvam lauka nosaukumam.
-     */
-    public function setTransferToUserIdAttribute(mixed $value): void
-    {
-        $this->attributes['transfered_to_id'] = $value;
-        $this->attributes['transfer_to_user_id'] = $value;
-    }
 }
