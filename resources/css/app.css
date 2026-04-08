@@ -2481,7 +2481,7 @@ tbody td {
 }
 
 .form-page-main {
-    @apply min-w-0;
+    @apply min-w-0 space-y-4;
 }
 
 .form-page-aside {
