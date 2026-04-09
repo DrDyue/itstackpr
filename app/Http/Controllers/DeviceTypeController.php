@@ -126,6 +126,12 @@ class DeviceTypeController extends Controller
         $this->requireManager();
 
         if ($deviceType->devices()->exists()) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'message' => 'Ierīces tipu nevar dzēst, kamēr tam vēl ir piesaistītas ierīces.',
+                ], 422);
+            }
+
             return redirect()
                 ->route('device-types.index')
                 ->with('error', 'Ierīces tipu nevar dzēst, kamēr tam vēl ir piesaistītas ierīces.');
@@ -133,6 +139,12 @@ class DeviceTypeController extends Controller
 
         AuditTrail::deleted(auth()->id(), $deviceType);
         $deviceType->delete();
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'message' => 'Ierīces tips dzēsts.',
+            ]);
+        }
 
         return redirect()->route('device-types.index')->with('success', 'Ierīces tips dzēsts.');
     }
