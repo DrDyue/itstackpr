@@ -7,6 +7,7 @@ use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * Ēku pārvaldības CRUD kontrolieris.
@@ -178,7 +179,7 @@ class BuildingController extends Controller
         $this->requireManager();
 
         $before = $building->only(['building_name', 'address', 'city', 'total_floors', 'notes']);
-        $building->update($this->validatedData($request));
+        $building->update($this->validatedData($request, $building));
         $after = $building->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState(auth()->id(), $building, $before, $after);
 
@@ -227,16 +228,23 @@ class BuildingController extends Controller
         return redirect()->route('buildings.index');
     }
 
-    private function validatedData(Request $request): array
+    private function validatedData(Request $request, ?Building $building = null): array
     {
         $data = $this->validateInput($request, [
-            'building_name' => ['required', 'string', 'max:100'],
+            'building_name' => [
+                'bail',
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('buildings', 'building_name')->ignore($building?->id),
+            ],
             'address' => ['nullable', 'string', 'max:200'],
             'city' => ['nullable', 'string', 'max:100'],
             'total_floors' => ['nullable', 'integer', 'min:0', 'max:200'],
             'notes' => ['nullable', 'string', 'max:200'],
         ], [
             'building_name.required' => 'Norādi ēkas nosaukumu.',
+            'building_name.unique' => 'Ēka ar šādu nosaukumu jau eksistē.',
         ]);
 
         $data['notes'] = $data['notes'] ?? self::NOTES_DEFAULT;

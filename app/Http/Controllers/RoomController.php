@@ -247,9 +247,10 @@ class RoomController extends Controller
     private function validatedData(Request $request, ?Room $room = null): array
     {
         $data = $this->validateInput($request, [
-            'building_id' => ['required', 'exists:buildings,id'],
-            'floor_number' => ['required', 'integer', 'min:-10', 'max:200'],
+            'building_id' => ['bail', 'required', 'exists:buildings,id'],
+            'floor_number' => ['bail', 'required', 'integer', 'min:-10', 'max:200'],
             'room_number' => [
+                'bail',
                 'required',
                 'string',
                 'max:20',
@@ -264,6 +265,7 @@ class RoomController extends Controller
         ], [
             'building_id.required' => 'Izvēlies ēku, kurai telpa pieder.',
             'room_number.required' => 'Norādi telpas numuru.',
+            'room_number.unique' => 'Šāds telpas numurs šajā ēkā jau eksistē.',
         ]);
 
         $data['user_id'] = $data['user_id'] ?: null;

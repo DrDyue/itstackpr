@@ -32,6 +32,8 @@
             ? ($filters['floor'] . '. stāvs')
             : ($filters['floor_query'] !== '' ? $filters['floor_query'] : null);
         $selectedUserLabel = optional($responsibleUsers->firstWhere('id', (int) $filters['user_id']))->full_name;
+        $createSelectedBuildingLabel = optional($buildings->firstWhere('id', (int) old('building_id')))->building_name;
+        $createSelectedUserLabel = old('user_id') !== '' ? optional($responsibleUsers->firstWhere('id', (int) old('user_id')))->full_name : null;
     @endphp
     <section class="app-shell app-shell-wide">
         <div class="page-hero">
@@ -55,7 +57,10 @@
                         </div>
                     </div>
                 </div>
-                <a href="{{ route('rooms.create') }}" class="btn-create"><x-icon name="plus" size="h-4 w-4" /><span>Jauna telpa</span></a>
+                <button type="button" class="btn-create" x-data @click="$dispatch('open-modal', 'room-create-modal')">
+                    <x-icon name="plus" size="h-4 w-4" />
+                    <span>Jauna telpa</span>
+                </button>
             </div>
         </div>
 
@@ -205,7 +210,10 @@
                             <td class="px-4 py-3 text-slate-600">{{ $room->notes ?: '-' }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex flex-wrap gap-2">
-<a href="{{ route('rooms.edit', $room) }}" class="btn-edit"><x-icon name="edit" size="h-4 w-4" /><span>Rediģēt</span></a>
+                                    <button type="button" class="btn-edit" x-data @click="$dispatch('open-modal', 'room-edit-modal-{{ $room->id }}')">
+                                        <x-icon name="edit" size="h-4 w-4" />
+                                        <span>Rediģēt</span>
+                                    </button>
                                     @if ($canDelete)
                                         <form
                                             method="POST"
@@ -254,6 +262,151 @@
 
         {{ $rooms->links() }}
         </div>
-    </section>
-</x-app-layout>
 
+        <x-modal name="room-create-modal" maxWidth="2xl" focusable>
+            <div class="p-6">
+                <h2 class="text-lg font-semibold text-slate-900">Jauna telpa</h2>
+                <p class="mt-1 text-sm text-slate-500">Izveido telpu tieši no saraksta lapas.</p>
+
+                <form method="POST" action="{{ route('rooms.store') }}" class="mt-5 space-y-4">
+                    @csrf
+                    <input type="hidden" name="modal_form" value="room_create">
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <x-ui.form-field label="Ēka" name="building_id" :required="true">
+                            <x-searchable-select
+                                name="building_id"
+                                query-name="building_query"
+                                identifier="room-modal-create-building"
+                                :options="$buildingOptions"
+                                :selected="(string) old('building_id')"
+                                :query="$createSelectedBuildingLabel"
+                                placeholder="Izvēlies ēku"
+                                empty-message="Neviena ēka neatbilst meklējumam."
+                            />
+                        </x-ui.form-field>
+                        <x-ui.form-field label="Stāvs" name="floor_number" :required="true">
+                            <input type="number" name="floor_number" value="{{ old('floor_number') }}" class="crud-control" required>
+                        </x-ui.form-field>
+                        <x-ui.form-field label="Telpas numurs" name="room_number" :required="true">
+                            <input type="text" name="room_number" value="{{ old('room_number') }}" class="crud-control" required>
+                        </x-ui.form-field>
+                        <x-ui.form-field label="Telpas nosaukums" name="room_name">
+                            <input type="text" name="room_name" value="{{ old('room_name') }}" class="crud-control">
+                        </x-ui.form-field>
+                        <x-ui.form-field label="Atbildīgais lietotājs" name="user_id">
+                            <x-searchable-select
+                                name="user_id"
+                                query-name="user_query"
+                                identifier="room-modal-create-user"
+                                :options="$userOptions"
+                                :selected="(string) old('user_id')"
+                                :query="$createSelectedUserLabel"
+                                placeholder="Izvēlies atbildīgo"
+                                empty-message="Neviens lietotājs neatbilst meklējumam."
+                            />
+                        </x-ui.form-field>
+                        <x-ui.form-field label="Nodaļa" name="department">
+                            <input type="text" name="department" value="{{ old('department') }}" class="crud-control">
+                        </x-ui.form-field>
+                        <x-ui.form-field class="md:col-span-2" label="Piezīmes" name="notes">
+                            <textarea name="notes" rows="3" class="crud-control">{{ old('notes') }}</textarea>
+                        </x-ui.form-field>
+                    </div>
+
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'room-create-modal')">
+                            <x-icon name="clear" size="h-4 w-4" />
+                            <span>Atcelt</span>
+                        </button>
+                        <button type="submit" class="btn-create">
+                            <x-icon name="save" size="h-4 w-4" />
+                            <span>Saglabāt</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </x-modal>
+
+        @foreach ($rooms as $room)
+            <x-modal name="room-edit-modal-{{ $room->id }}" maxWidth="2xl" focusable>
+                <div class="p-6">
+                    <h2 class="text-lg font-semibold text-slate-900">Rediģēt telpu</h2>
+                    <p class="mt-1 text-sm text-slate-500">{{ $room->room_number }}{{ $room->room_name ? ' — ' . $room->room_name : '' }}</p>
+
+                    <form method="POST" action="{{ route('rooms.update', $room) }}" class="mt-5 space-y-4">
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" name="modal_form" value="room_edit_{{ $room->id }}">
+                        @php
+                            $roomBuildingValue = old('modal_form') === 'room_edit_' . $room->id ? old('building_id') : $room->building_id;
+                            $roomBuildingLabel = optional($buildings->firstWhere('id', (int) $roomBuildingValue))->building_name;
+                            $roomUserValue = old('modal_form') === 'room_edit_' . $room->id ? old('user_id') : $room->user_id;
+                            $roomUserLabel = $roomUserValue !== null && $roomUserValue !== '' ? optional($responsibleUsers->firstWhere('id', (int) $roomUserValue))->full_name : null;
+                        @endphp
+
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <x-ui.form-field label="Ēka" name="building_id" :required="true">
+                                <x-searchable-select
+                                    name="building_id"
+                                    query-name="building_query"
+                                    identifier="room-modal-edit-building-{{ $room->id }}"
+                                    :options="$buildingOptions"
+                                    :selected="(string) $roomBuildingValue"
+                                    :query="$roomBuildingLabel"
+                                    placeholder="Izvēlies ēku"
+                                    empty-message="Neviena ēka neatbilst meklējumam."
+                                />
+                            </x-ui.form-field>
+                            <x-ui.form-field label="Stāvs" name="floor_number" :required="true">
+                                <input type="number" name="floor_number" value="{{ old('modal_form') === 'room_edit_' . $room->id ? old('floor_number') : $room->floor_number }}" class="crud-control" required>
+                            </x-ui.form-field>
+                            <x-ui.form-field label="Telpas numurs" name="room_number" :required="true">
+                                <input type="text" name="room_number" value="{{ old('modal_form') === 'room_edit_' . $room->id ? old('room_number') : $room->room_number }}" class="crud-control" required>
+                            </x-ui.form-field>
+                            <x-ui.form-field label="Telpas nosaukums" name="room_name">
+                                <input type="text" name="room_name" value="{{ old('modal_form') === 'room_edit_' . $room->id ? old('room_name') : $room->room_name }}" class="crud-control">
+                            </x-ui.form-field>
+                            <x-ui.form-field label="Atbildīgais lietotājs" name="user_id">
+                                <x-searchable-select
+                                    name="user_id"
+                                    query-name="user_query"
+                                    identifier="room-modal-edit-user-{{ $room->id }}"
+                                    :options="$userOptions"
+                                    :selected="(string) $roomUserValue"
+                                    :query="$roomUserLabel"
+                                    placeholder="Izvēlies atbildīgo"
+                                    empty-message="Neviens lietotājs neatbilst meklējumam."
+                                />
+                            </x-ui.form-field>
+                            <x-ui.form-field label="Nodaļa" name="department">
+                                <input type="text" name="department" value="{{ old('modal_form') === 'room_edit_' . $room->id ? old('department') : $room->department }}" class="crud-control">
+                            </x-ui.form-field>
+                            <x-ui.form-field class="md:col-span-2" label="Piezīmes" name="notes">
+                                <textarea name="notes" rows="3" class="crud-control">{{ old('modal_form') === 'room_edit_' . $room->id ? old('notes') : $room->notes }}</textarea>
+                            </x-ui.form-field>
+                        </div>
+
+                        <div class="flex justify-end gap-2 pt-2">
+                            <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'room-edit-modal-{{ $room->id }}')">
+                                <x-icon name="clear" size="h-4 w-4" />
+                                <span>Atcelt</span>
+                            </button>
+                            <button type="submit" class="btn-edit">
+                                <x-icon name="save" size="h-4 w-4" />
+                                <span>Saglabāt</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </x-modal>
+        @endforeach
+
+        @if (old('modal_form') === 'room_create')
+            <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'room-create-modal' })));</script>
+        @elseif (str_starts_with((string) old('modal_form'), 'room_edit_'))
+            @php($roomModalTarget = str_replace('room_edit_', '', (string) old('modal_form')))
+            <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'room-edit-modal-{{ $roomModalTarget }}' })));</script>
+        @endif
+        </section>
+</x-app-layout>

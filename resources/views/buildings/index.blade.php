@@ -32,8 +32,11 @@
                     </div>
                 </div>
                 <div class="page-actions">
-                    <a href="{{ route('rooms.create') }}" class="btn-view"><x-icon name="room" size="h-4 w-4" /><span>Pievienot telpu</span></a>
-                    <a href="{{ route('buildings.create') }}" class="btn-create"><x-icon name="plus" size="h-4 w-4" /><span>Pievienot ēku</span></a>
+                    <a href="{{ route('rooms.index') }}" class="btn-view"><x-icon name="room" size="h-4 w-4" /><span>Atvērt telpas</span></a>
+                    <button type="button" class="btn-create" x-data @click="$dispatch('open-modal', 'building-create-modal')">
+                        <x-icon name="plus" size="h-4 w-4" />
+                        <span>Pievienot ēku</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -186,10 +189,10 @@
                                     <td class="px-4 py-3 text-slate-600">{{ $building->notes ?: '-' }}</td>
                                     <td class="px-4 py-3">
                                         <div class="flex flex-wrap gap-2">
-                                            <a href="{{ route('buildings.edit', $building) }}" class="btn-edit">
+                                            <button type="button" class="btn-edit" x-data @click="$dispatch('open-modal', 'building-edit-modal-{{ $building->id }}')">
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Rediģēt</span>
-                                            </a>
+                                            </button>
 
                                             @if ($canDelete)
                                                 <form
@@ -242,5 +245,103 @@
 
             {{ $buildings->links() }}
         </div>
+
+        <x-modal name="building-create-modal" maxWidth="2xl" focusable>
+            <div class="p-6">
+                <h2 class="text-lg font-semibold text-slate-900">Jauna ēka</h2>
+                <p class="mt-1 text-sm text-slate-500">Pievieno ēkas ierakstu, neizejot no saraksta lapas.</p>
+
+                <form method="POST" action="{{ route('buildings.store') }}" class="mt-5 space-y-4">
+                    @csrf
+                    <input type="hidden" name="modal_form" value="building_create">
+
+                    <x-ui.form-field label="Nosaukums" name="building_name" :required="true">
+                        <input type="text" name="building_name" value="{{ old('building_name') }}" class="crud-control" required>
+                    </x-ui.form-field>
+
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <x-ui.form-field label="Pilsēta" name="city">
+                            <input type="text" name="city" value="{{ old('city') }}" class="crud-control">
+                        </x-ui.form-field>
+                        <x-ui.form-field label="Stāvu skaits" name="total_floors">
+                            <input type="number" min="0" step="1" name="total_floors" value="{{ old('total_floors') }}" class="crud-control">
+                        </x-ui.form-field>
+                    </div>
+
+                    <x-ui.form-field label="Adrese" name="address">
+                        <input type="text" name="address" value="{{ old('address') }}" class="crud-control">
+                    </x-ui.form-field>
+
+                    <x-ui.form-field label="Piezīmes" name="notes">
+                        <textarea name="notes" rows="3" class="crud-control">{{ old('notes') }}</textarea>
+                    </x-ui.form-field>
+
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'building-create-modal')">
+                            <x-icon name="clear" size="h-4 w-4" />
+                            <span>Atcelt</span>
+                        </button>
+                        <button type="submit" class="btn-create">
+                            <x-icon name="save" size="h-4 w-4" />
+                            <span>Saglabāt</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </x-modal>
+
+        @foreach ($buildings as $building)
+            <x-modal name="building-edit-modal-{{ $building->id }}" maxWidth="2xl" focusable>
+                <div class="p-6">
+                    <h2 class="text-lg font-semibold text-slate-900">Rediģēt ēku</h2>
+                    <p class="mt-1 text-sm text-slate-500">{{ $building->building_name }}</p>
+
+                    <form method="POST" action="{{ route('buildings.update', $building) }}" class="mt-5 space-y-4">
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" name="modal_form" value="building_edit_{{ $building->id }}">
+
+                        <x-ui.form-field label="Nosaukums" name="building_name" :required="true">
+                            <input type="text" name="building_name" value="{{ old('modal_form') === 'building_edit_' . $building->id ? old('building_name') : $building->building_name }}" class="crud-control" required>
+                        </x-ui.form-field>
+
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <x-ui.form-field label="Pilsēta" name="city">
+                                <input type="text" name="city" value="{{ old('modal_form') === 'building_edit_' . $building->id ? old('city') : $building->city }}" class="crud-control">
+                            </x-ui.form-field>
+                            <x-ui.form-field label="Stāvu skaits" name="total_floors">
+                                <input type="number" min="0" step="1" name="total_floors" value="{{ old('modal_form') === 'building_edit_' . $building->id ? old('total_floors') : $building->total_floors }}" class="crud-control">
+                            </x-ui.form-field>
+                        </div>
+
+                        <x-ui.form-field label="Adrese" name="address">
+                            <input type="text" name="address" value="{{ old('modal_form') === 'building_edit_' . $building->id ? old('address') : $building->address }}" class="crud-control">
+                        </x-ui.form-field>
+
+                        <x-ui.form-field label="Piezīmes" name="notes">
+                            <textarea name="notes" rows="3" class="crud-control">{{ old('modal_form') === 'building_edit_' . $building->id ? old('notes') : $building->notes }}</textarea>
+                        </x-ui.form-field>
+
+                        <div class="flex justify-end gap-2 pt-2">
+                            <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'building-edit-modal-{{ $building->id }}')">
+                                <x-icon name="clear" size="h-4 w-4" />
+                                <span>Atcelt</span>
+                            </button>
+                            <button type="submit" class="btn-edit">
+                                <x-icon name="save" size="h-4 w-4" />
+                                <span>Saglabāt</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </x-modal>
+        @endforeach
+
+        @if (old('modal_form') === 'building_create')
+            <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'building-create-modal' })));</script>
+        @elseif (str_starts_with((string) old('modal_form'), 'building_edit_'))
+            @php($buildingModalTarget = str_replace('building_edit_', '', (string) old('modal_form')))
+            <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'building-edit-modal-{{ $buildingModalTarget }}' })));</script>
+        @endif
     </section>
 </x-app-layout>
