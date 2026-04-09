@@ -635,6 +635,15 @@ tbody td {
     padding: 0;
 }
 
+/* App Shell - Main content container */
+.app-shell {
+    @apply mx-auto w-full max-w-7xl;
+}
+
+.app-shell-wide {
+    @apply max-w-[120rem];
+}
+
 .app-bg {
     background: #f5f5f7;
 }
@@ -2374,7 +2383,7 @@ tbody td {
 /* REMOVED CSS: */
 
 .page-hero {
-    @apply rounded-[2rem] border border-slate-200 bg-white/95 p-5 shadow-sm backdrop-blur sm:p-6;
+    @apply mb-6 rounded-[2rem] border border-slate-200 bg-white/95 p-5 shadow-sm backdrop-blur sm:p-6;
 }
 
 .page-hero-grid {
@@ -2882,7 +2891,7 @@ tbody td {
 .surface-toolbar + .overflow-hidden,
 .surface-toolbar + .device-table-shell,
 .surface-toolbar + .app-table-shell {
-    @apply mt-3;
+    @apply mt-6;
 }
 
 /* Devices index - new filter and search design */
