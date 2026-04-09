@@ -15,8 +15,7 @@
 
         <div class="mt-3 grid gap-4">
             @if ($currentRepair)
-                <div class="block">
-                    <span class="crud-label">Ierīce</span>
+                <x-ui.form-field label="Ierīce">
                     <input
                         type="text"
                         class="crud-control bg-slate-50 text-slate-600"
@@ -24,11 +23,9 @@
                         readonly
                     >
                     <input type="hidden" name="device_id" value="{{ old('device_id', $currentRepair->device_id) }}">
-                    <div class="mt-2 text-xs text-slate-500">Esošam remontam ierīci mainīt nevar.</div>
-                </div>
+                </x-ui.form-field>
             @else
-                <div class="block">
-                    <span class="crud-label">Ierīce</span>
+                <x-ui.form-field label="Ierīce" name="device_id">
                     <x-searchable-select
                         name="device_id"
                         query-name="device_query"
@@ -39,21 +36,17 @@
                         placeholder="Meklē pēc nosaukuma, koda vai telpas"
                         empty-message="Neviena ierīce neatbilst meklējumam."
                     />
-                    @error('device_id')
-                        <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
-                    @enderror
-                </div>
+                </x-ui.form-field>
             @endif
 
-            <label class="block">
-                <span class="crud-label">Apraksts</span>
+            <x-ui.form-field label="Apraksts" name="description">
                 <textarea name="description" rows="4" class="crud-control" x-model="description">{{ old('description', $currentRepair?->description) }}</textarea>
                 <div class="mt-2 text-xs text-slate-500">
                     <span x-show="repairStatus === 'waiting'">Apraksts vēl nav obligāts, lai pārietu uz procesa statusu.</span>
                     <span x-show="repairStatus === 'in-progress'">Apraksts ir obligāts, lai remontu varētu pabeigt.</span>
                     <span x-show="repairStatus === 'completed' || repairStatus === 'cancelled'">Apraksts paliek remonta vēsturei.</span>
                 </div>
-            </label>
+            </x-ui.form-field>
         </div>
     </div>
 
@@ -126,11 +119,10 @@
             </div>
 
             <div>
-                <label class="block">
-                    <span class="crud-label">Izmaksas</span>
+                <x-ui.form-field label="Izmaksas" name="cost">
                     <input type="number" step="0.01" name="cost" value="{{ old('cost', $currentRepair?->cost) }}" class="crud-control" x-model="cost">
                     <div class="mt-2 text-xs text-slate-500">Izmaksas nav obligātas ne iekšējam, ne ārējam remontam, bet tās vari saglabāt vēsturei.</div>
-                </label>
+                </x-ui.form-field>
             </div>
         </div>
     </div>
@@ -143,18 +135,15 @@
         <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ārējā remonta dati</div>
         <div class="mt-1 text-sm text-slate-500">Šie lauki kļūst obligāti tikai tad, kad ārējo remontu pabeidz.</div>
         <div class="mt-3 grid gap-4 md:grid-cols-3">
-            <label class="block">
-                <span class="crud-label">Pakalpojuma sniedzējs</span>
+            <x-ui.form-field label="Pakalpojuma sniedzējs" name="vendor_name">
                 <input type="text" name="vendor_name" value="{{ old('vendor_name', $currentRepair?->vendor_name) }}" class="crud-control" x-model="vendorName">
-            </label>
-            <label class="block">
-                <span class="crud-label">Vendora kontakts</span>
+            </x-ui.form-field>
+            <x-ui.form-field label="Vendora kontakts" name="vendor_contact">
                 <input type="text" name="vendor_contact" value="{{ old('vendor_contact', $currentRepair?->vendor_contact) }}" class="crud-control" x-model="vendorContact">
-            </label>
-            <label class="block">
-                <span class="crud-label">Rēķina numurs</span>
+            </x-ui.form-field>
+            <x-ui.form-field label="Rēķina numurs" name="invoice_number">
                 <input type="text" name="invoice_number" value="{{ old('invoice_number', $currentRepair?->invoice_number) }}" class="crud-control" x-model="invoiceNumber">
-            </label>
+            </x-ui.form-field>
         </div>
     </div>
 </div>
