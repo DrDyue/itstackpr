@@ -277,8 +277,14 @@
                     </x-ui.form-field>
 
                     <div class="flex justify-end gap-2 pt-2">
-                        <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'building-create-modal')">Atcelt</button>
-                        <button type="submit" class="btn-create">Saglabāt</button>
+                        <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'building-create-modal')">
+                            <x-icon name="clear" size="h-4 w-4" />
+                            <span>Atcelt</span>
+                        </button>
+                        <button type="submit" class="btn-create">
+                            <x-icon name="save" size="h-4 w-4" />
+                            <span>Saglabāt</span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -317,8 +323,14 @@
                         </x-ui.form-field>
 
                         <div class="flex justify-end gap-2 pt-2">
-                            <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'building-edit-modal-{{ $building->id }}')">Atcelt</button>
-                            <button type="submit" class="btn-edit">Saglabāt</button>
+                            <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'building-edit-modal-{{ $building->id }}')">
+                                <x-icon name="clear" size="h-4 w-4" />
+                                <span>Atcelt</span>
+                            </button>
+                            <button type="submit" class="btn-edit">
+                                <x-icon name="save" size="h-4 w-4" />
+                                <span>Saglabāt</span>
+                            </button>
                         </div>
                     </form>
                 </div>

@@ -32,6 +32,8 @@
             ? ($filters['floor'] . '. stāvs')
             : ($filters['floor_query'] !== '' ? $filters['floor_query'] : null);
         $selectedUserLabel = optional($responsibleUsers->firstWhere('id', (int) $filters['user_id']))->full_name;
+        $createSelectedBuildingLabel = optional($buildings->firstWhere('id', (int) old('building_id')))->building_name;
+        $createSelectedUserLabel = old('user_id') !== '' ? optional($responsibleUsers->firstWhere('id', (int) old('user_id')))->full_name : null;
     @endphp
     <section class="app-shell app-shell-wide">
         <div class="page-hero">
@@ -272,12 +274,16 @@
 
                     <div class="grid gap-4 md:grid-cols-2">
                         <x-ui.form-field label="Ēka" name="building_id" :required="true">
-                            <select name="building_id" class="crud-control" required>
-                                <option value="">Izvēlies ēku</option>
-                                @foreach ($buildings as $building)
-                                    <option value="{{ $building->id }}" @selected((string) old('building_id') === (string) $building->id)>{{ $building->building_name }}</option>
-                                @endforeach
-                            </select>
+                            <x-searchable-select
+                                name="building_id"
+                                query-name="building_query"
+                                identifier="room-modal-create-building"
+                                :options="$buildingOptions"
+                                :selected="(string) old('building_id')"
+                                :query="$createSelectedBuildingLabel"
+                                placeholder="Izvēlies ēku"
+                                empty-message="Neviena ēka neatbilst meklējumam."
+                            />
                         </x-ui.form-field>
                         <x-ui.form-field label="Stāvs" name="floor_number" :required="true">
                             <input type="number" name="floor_number" value="{{ old('floor_number') }}" class="crud-control" required>
@@ -289,12 +295,16 @@
                             <input type="text" name="room_name" value="{{ old('room_name') }}" class="crud-control">
                         </x-ui.form-field>
                         <x-ui.form-field label="Atbildīgais lietotājs" name="user_id">
-                            <select name="user_id" class="crud-control">
-                                <option value="">Nav norādīts</option>
-                                @foreach ($responsibleUsers as $responsibleUser)
-                                    <option value="{{ $responsibleUser->id }}" @selected((string) old('user_id') === (string) $responsibleUser->id)>{{ $responsibleUser->full_name }}</option>
-                                @endforeach
-                            </select>
+                            <x-searchable-select
+                                name="user_id"
+                                query-name="user_query"
+                                identifier="room-modal-create-user"
+                                :options="$userOptions"
+                                :selected="(string) old('user_id')"
+                                :query="$createSelectedUserLabel"
+                                placeholder="Izvēlies atbildīgo"
+                                empty-message="Neviens lietotājs neatbilst meklējumam."
+                            />
                         </x-ui.form-field>
                         <x-ui.form-field label="Nodaļa" name="department">
                             <input type="text" name="department" value="{{ old('department') }}" class="crud-control">
@@ -305,8 +315,14 @@
                     </div>
 
                     <div class="flex justify-end gap-2 pt-2">
-                        <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'room-create-modal')">Atcelt</button>
-                        <button type="submit" class="btn-create">Saglabāt</button>
+                        <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'room-create-modal')">
+                            <x-icon name="clear" size="h-4 w-4" />
+                            <span>Atcelt</span>
+                        </button>
+                        <button type="submit" class="btn-create">
+                            <x-icon name="save" size="h-4 w-4" />
+                            <span>Saglabāt</span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -322,18 +338,25 @@
                         @csrf
                         @method('PUT')
                         <input type="hidden" name="modal_form" value="room_edit_{{ $room->id }}">
+                        @php
+                            $roomBuildingValue = old('modal_form') === 'room_edit_' . $room->id ? old('building_id') : $room->building_id;
+                            $roomBuildingLabel = optional($buildings->firstWhere('id', (int) $roomBuildingValue))->building_name;
+                            $roomUserValue = old('modal_form') === 'room_edit_' . $room->id ? old('user_id') : $room->user_id;
+                            $roomUserLabel = $roomUserValue !== null && $roomUserValue !== '' ? optional($responsibleUsers->firstWhere('id', (int) $roomUserValue))->full_name : null;
+                        @endphp
 
                         <div class="grid gap-4 md:grid-cols-2">
                             <x-ui.form-field label="Ēka" name="building_id" :required="true">
-                                <select name="building_id" class="crud-control" required>
-                                    <option value="">Izvēlies ēku</option>
-                                    @foreach ($buildings as $building)
-                                        @php
-                                            $roomBuildingValue = old('modal_form') === 'room_edit_' . $room->id ? old('building_id') : $room->building_id;
-                                        @endphp
-                                        <option value="{{ $building->id }}" @selected((string) $roomBuildingValue === (string) $building->id)>{{ $building->building_name }}</option>
-                                    @endforeach
-                                </select>
+                                <x-searchable-select
+                                    name="building_id"
+                                    query-name="building_query"
+                                    identifier="room-modal-edit-building-{{ $room->id }}"
+                                    :options="$buildingOptions"
+                                    :selected="(string) $roomBuildingValue"
+                                    :query="$roomBuildingLabel"
+                                    placeholder="Izvēlies ēku"
+                                    empty-message="Neviena ēka neatbilst meklējumam."
+                                />
                             </x-ui.form-field>
                             <x-ui.form-field label="Stāvs" name="floor_number" :required="true">
                                 <input type="number" name="floor_number" value="{{ old('modal_form') === 'room_edit_' . $room->id ? old('floor_number') : $room->floor_number }}" class="crud-control" required>
@@ -345,15 +368,16 @@
                                 <input type="text" name="room_name" value="{{ old('modal_form') === 'room_edit_' . $room->id ? old('room_name') : $room->room_name }}" class="crud-control">
                             </x-ui.form-field>
                             <x-ui.form-field label="Atbildīgais lietotājs" name="user_id">
-                                @php
-                                    $roomUserValue = old('modal_form') === 'room_edit_' . $room->id ? old('user_id') : $room->user_id;
-                                @endphp
-                                <select name="user_id" class="crud-control">
-                                    <option value="">Nav norādīts</option>
-                                    @foreach ($responsibleUsers as $responsibleUser)
-                                        <option value="{{ $responsibleUser->id }}" @selected((string) $roomUserValue === (string) $responsibleUser->id)>{{ $responsibleUser->full_name }}</option>
-                                    @endforeach
-                                </select>
+                                <x-searchable-select
+                                    name="user_id"
+                                    query-name="user_query"
+                                    identifier="room-modal-edit-user-{{ $room->id }}"
+                                    :options="$userOptions"
+                                    :selected="(string) $roomUserValue"
+                                    :query="$roomUserLabel"
+                                    placeholder="Izvēlies atbildīgo"
+                                    empty-message="Neviens lietotājs neatbilst meklējumam."
+                                />
                             </x-ui.form-field>
                             <x-ui.form-field label="Nodaļa" name="department">
                                 <input type="text" name="department" value="{{ old('modal_form') === 'room_edit_' . $room->id ? old('department') : $room->department }}" class="crud-control">
@@ -364,8 +388,14 @@
                         </div>
 
                         <div class="flex justify-end gap-2 pt-2">
-                            <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'room-edit-modal-{{ $room->id }}')">Atcelt</button>
-                            <button type="submit" class="btn-edit">Saglabāt</button>
+                            <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'room-edit-modal-{{ $room->id }}')">
+                                <x-icon name="clear" size="h-4 w-4" />
+                                <span>Atcelt</span>
+                            </button>
+                            <button type="submit" class="btn-edit">
+                                <x-icon name="save" size="h-4 w-4" />
+                                <span>Saglabāt</span>
+                            </button>
                         </div>
                     </form>
                 </div>
