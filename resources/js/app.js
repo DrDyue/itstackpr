@@ -958,82 +958,67 @@ const initializeAsyncTableFilters = () => {
     });
 };
 
-const deviceTypeModalFieldErrorClasses = [
-    'border-rose-300',
-    'bg-rose-50/60',
-    'focus:border-rose-400',
-    'focus:ring-rose-200',
-];
-
 const resetDeviceTypeModalErrors = (form) => {
-    form.querySelector('[data-device-type-form-summary]')?.classList.add('hidden');
-    const summaryList = form.querySelector('[data-device-type-form-summary-list]');
-    if (summaryList) {
-        summaryList.innerHTML = '';
+    if (!form) return;
+    
+    const errorContainer = form.querySelector('[data-device-type-form-errors]');
+    const errorList = form.querySelector('[data-device-type-error-list]');
+    const inputError = form.querySelector('[data-device-type-input-error]');
+    
+    if (errorContainer) errorContainer.classList.add('hidden');
+    if (errorList) errorList.innerHTML = '';
+    if (inputError) {
+        inputError.textContent = '';
+        inputError.classList.add('hidden');
     }
-
-    form.querySelectorAll('[data-device-type-field]').forEach((field) => {
-        deviceTypeModalFieldErrorClasses.forEach((className) => field.classList.remove(className));
-    });
-
-    form.querySelectorAll('[data-device-type-field-error]').forEach((node) => {
-        node.textContent = '';
-        node.classList.add('hidden');
+    
+    form.querySelectorAll('[data-device-type-input]').forEach(input => {
+        input.classList.remove('border-rose-300', 'bg-rose-50/60', 'focus:border-rose-400', 'focus:ring-rose-200');
     });
 };
 
 const showDeviceTypeModalErrors = (form, errors = {}) => {
+    if (!form) return;
     resetDeviceTypeModalErrors(form);
-
-    const messages = Object.values(errors)
-        .flatMap((value) => Array.isArray(value) ? value : [value])
-        .filter(Boolean);
-
-    if (messages.length > 0) {
-        const summary = form.querySelector('[data-device-type-form-summary]');
-        const summaryList = form.querySelector('[data-device-type-form-summary-list]');
-
-        summary?.classList.remove('hidden');
-
-        if (summaryList) {
-            summaryList.innerHTML = '';
-            messages.forEach((message) => {
-                const item = document.createElement('li');
-                item.textContent = message;
-                summaryList.appendChild(item);
-            });
-        }
+    
+    const typeNameError = errors?.type_name?.[0] || null;
+    if (!typeNameError) return;
+    
+    const inputError = form.querySelector('[data-device-type-input-error]');
+    const input = form.querySelector('[data-device-type-input]');
+    
+    if (inputError) {
+        inputError.textContent = typeNameError;
+        inputError.classList.remove('hidden');
+    }
+    
+    if (input) {
+        input.classList.add('border-rose-300', 'bg-rose-50/60', 'focus:border-rose-400', 'focus:ring-rose-200');
+        input.focus();
     }
 
-    Object.entries(errors).forEach(([fieldName, fieldMessages]) => {
-        const field = form.querySelector(`[data-device-type-field="${fieldName}"]`);
-        const errorNode = form.querySelector(`[data-device-type-field-error="${fieldName}"]`);
-        const firstMessage = Array.isArray(fieldMessages) ? fieldMessages[0] : fieldMessages;
-
-        if (field) {
-            deviceTypeModalFieldErrorClasses.forEach((className) => field.classList.add(className));
+    const errorContainer = form.querySelector('[data-device-type-form-errors]');
+    if (errorContainer) {
+        errorContainer.classList.remove('hidden');
+        const list = errorContainer.querySelector('[data-device-type-error-list]');
+        if (list) {
+            list.innerHTML = `<li>${typeNameError}</li>`;
         }
-
-        if (errorNode && firstMessage) {
-            errorNode.textContent = firstMessage;
-            errorNode.classList.remove('hidden');
-        }
-    });
-};
-
-const setDeviceTypeModalSubmitting = (form, isSubmitting) => {
-    const submitButton = form.querySelector('[data-device-type-submit]');
-
-    form.dataset.submitting = isSubmitting ? 'true' : 'false';
-
-    if (!submitButton) {
-        return;
     }
-
-    submitButton.disabled = isSubmitting;
-    submitButton.classList.toggle('opacity-70', isSubmitting);
-    submitButton.classList.toggle('cursor-wait', isSubmitting);
 };
+
+const setDeviceTypeModalSubmitting = (form, submitting) => {
+    if (!form) return;
+    form.dataset.submitting = submitting ? 'true' : 'false';
+    
+    const btn = form.querySelector('[data-device-type-submit]');
+    if (btn) {
+        btn.disabled = submitting;
+        btn.classList.toggle('opacity-70', submitting);
+    }
+};
+
+
 
 const initializeDeviceTypeModalForms = () => {
     if (window.__deviceTypeModalFormsInitialized) {
@@ -1042,14 +1027,17 @@ const initializeDeviceTypeModalForms = () => {
 
     window.__deviceTypeModalFormsInitialized = true;
 
-    document.addEventListener('submit', async (event) => {
-        const form = event.target;
+    document.addEventListener('submit', async (e) => {
+        const form = e.target;
+        
+        // Jāpārbauda, vai tas ir Device Type forma
         if (!(form instanceof HTMLFormElement) || form.dataset.deviceTypeModalForm !== 'true') {
             return;
         }
 
-        event.preventDefault();
+        e.preventDefault();
 
+        // Nav dublētas iesniegšanas
         if (form.dataset.submitting === 'true') {
             return;
         }
@@ -1058,57 +1046,64 @@ const initializeDeviceTypeModalForms = () => {
         setDeviceTypeModalSubmitting(form, true);
 
         try {
-            const response = await window.fetch(form.action, {
+            // Sūtīt request
+            const response = await fetch(form.action, {
                 method: 'POST',
                 body: new FormData(form),
                 headers: {
-                    Accept: 'application/json',
+                    'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                 },
             });
 
+            // 422 = validācijas kļūdas
             if (response.status === 422) {
-                const result = await response.json();
-                showDeviceTypeModalErrors(form, result?.errors ?? {});
-
-                const firstInvalidField = form.querySelector('[data-device-type-field-error]:not(.hidden)');
-                const fieldName = firstInvalidField?.dataset?.deviceTypeFieldError;
-                form.querySelector(`[data-device-type-field="${fieldName}"]`)?.focus();
+                try {
+                    const data = await response.json();
+                    showDeviceTypeModalErrors(form, data.errors || {});
+                } catch (e) {
+                    // Parse error ignored
+                }
                 return;
             }
 
+            // Citas kļūdas
             if (!response.ok) {
-                throw new Error('Device type modal request failed.');
+                throw new Error(`HTTP ${response.status}`);
             }
 
-            const result = await response.json();
-            const modalName = form.dataset.modalName || '';
-            const asyncRoot = findAsyncTableRoot(form);
-            const asyncTableForm = asyncRoot?.querySelector('[data-async-table-form]');
+            // Veiksmīgi
+            const data = await response.json();
+            const modalName = form.dataset.modalName;
 
+            // Aizvērt modāli
             if (modalName) {
                 window.dispatchEvent(new CustomEvent('close-modal', {
                     detail: modalName,
                 }));
             }
 
-            document.body.classList.remove('overflow-y-hidden');
-
-            if (asyncTableForm) {
-                await submitAsyncTableForm(asyncTableForm, {
-                    url: new URL(window.location.href),
-                    resetPage: false,
-                });
-            }
-
+            // Paziņojums
             window.dispatchAppToast({
-                message: form.dataset.successMessage || result?.message || 'Ieraksts saglabāts.',
+                message: data.message || 'Veiksmīgi saglabāts',
                 tone: 'success',
             });
-        } catch (error) {
+
+            // Atsvaidzināt tabulu
+            const root = document.querySelector('[data-async-table-root]');
+            if (root) {
+                setTimeout(() => {
+                    const table = root.querySelector('[data-async-table-form]');
+                    if (table) {
+                        const btn = table.querySelector('button[type="submit"]');
+                        if (btn) btn.click();
+                    }
+                }, 200);
+            }
+        } catch (err) {
             window.dispatchAppToast({
-                title: 'Saglabāšana neizdevās',
-                message: 'Neizdevās saglabāt ierīces tipu. Pamēģini vēlreiz.',
+                title: 'Kļūda',
+                message: 'Neizdevās saglabāt',
                 tone: 'info',
             });
         } finally {
@@ -1117,51 +1112,104 @@ const initializeDeviceTypeModalForms = () => {
     });
 };
 
-const openDeviceTypeModal = (trigger) => {
-    const mode = trigger?.dataset?.deviceTypeOpen === 'edit' ? 'edit' : 'create';
-    const modalName = mode === 'edit' ? 'edit-device-type' : 'create-device-type';
-    const modal = document.querySelector(`[data-modal-name="${modalName}"]`);
 
-    if (!(modal instanceof HTMLFormElement)) {
-        return;
-    }
-
-    resetDeviceTypeModalErrors(modal);
-
-    const nameInput = modal.querySelector('[data-device-type-name-input]');
-    const idInput = modal.querySelector('[data-device-type-id-input]');
-    const modeInput = modal.querySelector('[data-device-type-mode-input]');
-
-    if (modeInput) {
-        modeInput.value = mode;
-    }
-
-    if (mode === 'edit') {
-        if (idInput) {
-            idInput.value = trigger.dataset.deviceTypeId || '';
-        }
-
-        if (nameInput) {
-            nameInput.value = trigger.dataset.deviceTypeName || '';
-        }
-
-        modal.action = trigger.dataset.deviceTypeUpdateUrl || modal.action;
+const openDeviceTypeModal = (btn) => {
+    if (!btn) return;
+    
+    const isEdit = btn.dataset.deviceTypeOpen === 'edit';
+    const modalName = isEdit ? 'edit-device-type' : 'create-device-type';
+    
+    const form = document.querySelector(`[data-modal-name="${modalName}"]`);
+    if (!form) return;
+    
+    resetDeviceTypeModalErrors(form);
+    
+    const input = form.querySelector('[data-device-type-input]');
+    if (!input) return;
+    
+    if (isEdit) {
+        // Rediģēšana
+        input.value = btn.dataset.deviceTypeName || '';
+        form.action = btn.dataset.deviceTypeUpdateUrl || '';
     } else {
-        if (nameInput) {
-            nameInput.value = '';
-        }
+        // Jauns
+        input.value = '';
+        form.action = form.getAttribute('action') || '';
     }
-
+    
+    // Atvērt modāli
     window.dispatchEvent(new CustomEvent('open-modal', {
         detail: modalName,
     }));
+    
+    // Fokusēt
+    setTimeout(() => {
+        input.focus();
+        if (isEdit) input.select?.();
+    }, 100);
+};
 
-    window.setTimeout(() => {
-        nameInput?.focus();
-        if (mode === 'edit') {
-            nameInput?.select?.();
+
+
+const deleteDeviceType = async (deleteUrl, deviceTypeName) => {
+    const accepted = await window.openAppConfirm({
+        title: 'Dzēst ierīces tipu?',
+        message: `Vai tiešām gribat dzēst ierīces tipu "${deviceTypeName}"?`,
+        confirmLabel: 'Jā, dzēst',
+        cancelLabel: 'Nē',
+        tone: 'danger',
+    });
+
+    if (!accepted) {
+        return;
+    }
+
+    try {
+        const response = await window.fetch(deleteUrl, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+            },
+        });
+
+        if (response.status === 422) {
+            const result = await response.json();
+            window.dispatchAppToast({
+                title: 'Dzēšana nav pieejama',
+                message: result?.message || 'Ierīces tipu nevar dzēst, kamēr tam vēl ir piesaistītas ierīces.',
+                tone: 'info',
+            });
+            return;
         }
-    }, 120);
+
+        if (!response.ok) {
+            throw new Error('Delete request failed.');
+        }
+
+        const result = await response.json();
+        const asyncRoot = document.querySelector('[data-async-table-root]');
+        const asyncTableForm = asyncRoot?.querySelector('[data-async-table-form]');
+
+        if (asyncTableForm) {
+            await submitAsyncTableForm(asyncTableForm, {
+                url: new URL(window.location.href),
+                resetPage: false,
+            });
+        }
+
+        window.dispatchAppToast({
+            message: result?.message || 'Ierīces tips dzēsts.',
+            tone: 'success',
+        });
+    } catch (error) {
+        window.dispatchAppToast({
+            title: 'Dzēšana neizdevās',
+            message: 'Neizdevās dzēst ierīces tipu. Pamēģini vēlreiz.',
+            tone: 'info',
+        });
+    }
 };
 
 const initializeDeviceTypeModalOpeners = () => {
@@ -1171,16 +1219,30 @@ const initializeDeviceTypeModalOpeners = () => {
 
     window.__deviceTypeModalOpenersInitialized = true;
 
+    // Atvērt modāli
     document.addEventListener('click', (event) => {
-        const trigger = event.target.closest('[data-device-type-open]');
-        if (!trigger) {
-            return;
-        }
-
+        const button = event.target.closest('[data-device-type-open]');
+        if (!button) return;
         event.preventDefault();
-        openDeviceTypeModal(trigger);
+        openDeviceTypeModal(button);
+    });
+
+    // Aizvērt modāli
+    document.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-close-modal]');
+        if (!button) return;
+        
+        const form = button.closest('[data-device-type-modal-form]');
+        if (form) {
+            const modalName = form.dataset.modalName;
+            window.dispatchEvent(new CustomEvent('close-modal', {
+                detail: modalName,
+            }));
+        }
     });
 };
+
+
 
 const registerAlpineData = () => {
     if (!Alpine || window.__appAlpineDataRegistered) {
