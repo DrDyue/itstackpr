@@ -13,7 +13,7 @@
 
         <x-validation-summary />
 
-        <!-- Paroles atiestatīšanas tokens -->
+        <!-- Paroles atiestatīšanas marķieris -->
         <input type="hidden" name="token" value="{{ $request->route('token') }}">
 
         <!-- E-pasta adrese -->
@@ -44,5 +44,3 @@
         </div>
     </form>
 </x-guest-layout>
-
-
