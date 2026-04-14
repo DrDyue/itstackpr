@@ -64,10 +64,14 @@
 
                 @unless ($canReview)
                     <div class="page-actions">
-                        <a href="{{ route('writeoff-requests.create') }}" class="btn-create">
+                        <button
+                            type="button"
+                            class="btn-create"
+                            @click="dispatch('open-modal', 'request-form-writeoff')"
+                        >
                             <x-icon name="plus" size="h-4 w-4" />
                             <span>Jauns pieteikums</span>
-                        </a>
+                        </button>
                     </div>
                 @endunless
             </div>
@@ -233,4 +237,10 @@
             'sortDirectionLabels' => $sortDirectionLabels,
         ])
     </section>
+
+    {{-- Modāļa forma jauna pieteikuma izveidei / rediģēšanai --}}
+    <x-request-form-modal
+        type="writeoff"
+        :device-options="$deviceOptions"
+    />
 </x-app-layout>

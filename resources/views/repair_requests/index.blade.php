@@ -64,10 +64,14 @@
 
                 @unless ($canReview)
                     <div class="page-actions">
-                        <a href="{{ route('repair-requests.create') }}" class="btn-create">
+                        <button
+                            type="button"
+                            class="btn-create"
+                            @click="dispatch('open-modal', 'request-form-repair')"
+                        >
                             <x-icon name="plus" size="h-4 w-4" />
                             <span>Jauns pieteikums</span>
-                        </a>
+                        </button>
                     </div>
                 @endunless
             </div>
@@ -238,4 +242,10 @@
             'sortDirectionLabels' => $sortDirectionLabels,
         ])
     </section>
+
+    {{-- Modāļa forma jauna pieteikuma izveidei / rediģēšanai --}}
+    <x-request-form-modal
+        type="repair"
+        :device-options="$deviceOptions"
+    />
 </x-app-layout>

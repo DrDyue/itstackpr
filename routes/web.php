@@ -104,17 +104,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/repair-requests/table', [RepairRequestController::class, 'table'])->name('repair-requests.table');
     Route::get('/repair-requests/create', [RepairRequestController::class, 'create'])->name('repair-requests.create');
     Route::post('/repair-requests', [RepairRequestController::class, 'store'])->name('repair-requests.store');
+    Route::put('/repair-requests/{repairRequest}', [RepairRequestController::class, 'update'])->name('repair-requests.update');
     Route::post('/repair-requests/{repairRequest}/review', [RepairRequestController::class, 'review'])->name('repair-requests.review');
     Route::get('/writeoff-requests', [WriteoffRequestController::class, 'index'])->name('writeoff-requests.index');
     Route::get('/writeoff-requests/find-by-code', [WriteoffRequestController::class, 'findByCode'])->name('writeoff-requests.find-by-code');
     Route::get('/writeoff-requests/table', [WriteoffRequestController::class, 'table'])->name('writeoff-requests.table');
     Route::get('/writeoff-requests/create', [WriteoffRequestController::class, 'create'])->name('writeoff-requests.create');
     Route::post('/writeoff-requests', [WriteoffRequestController::class, 'store'])->name('writeoff-requests.store');
+    Route::put('/writeoff-requests/{writeoffRequest}', [WriteoffRequestController::class, 'update'])->name('writeoff-requests.update');
     Route::post('/writeoff-requests/{writeoffRequest}/review', [WriteoffRequestController::class, 'review'])->name('writeoff-requests.review');
     Route::get('/device-transfers', [DeviceTransferController::class, 'index'])->name('device-transfers.index');
     Route::get('/device-transfers/find-by-code', [DeviceTransferController::class, 'findByCode'])->name('device-transfers.find-by-code');
     Route::get('/device-transfers/create', [DeviceTransferController::class, 'create'])->name('device-transfers.create');
     Route::post('/device-transfers', [DeviceTransferController::class, 'store'])->name('device-transfers.store');
+    Route::put('/device-transfers/{deviceTransfer}', [DeviceTransferController::class, 'update'])->name('device-transfers.update');
     Route::post('/device-transfers/{deviceTransfer}/review', [DeviceTransferController::class, 'review'])->name('device-transfers.review');
 });
 

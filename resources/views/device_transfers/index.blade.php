@@ -72,10 +72,14 @@
                 </div>
 
                 <div class="page-actions">
-                    <a href="{{ route('device-transfers.create') }}" class="btn-create">
+                    <button
+                        type="button"
+                        class="btn-create"
+                        @click="dispatch('open-modal', 'request-form-transfer')"
+                    >
                         <x-icon name="plus" size="h-4 w-4" />
                         <span>Jauns pieteikums</span>
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -485,10 +489,17 @@
                                                     @endphp
 
                                                     @if ($isOwnerCanEdit)
-                                                        <a href="{{ route('my-requests.edit', ['requestType' => 'transfer', 'requestId' => $transfer->id]) }}" class="table-action-item table-action-item-amber" @click="open = false">
+                                                        <button
+                                                            type="button"
+                                                            class="table-action-item table-action-item-amber w-full text-left"
+                                                            @click="
+                                                                open = false;
+                                                                dispatch('open-modal', 'request-form-transfer')
+                                                            "
+                                                        >
                                                             <x-icon name="edit" size="h-4 w-4" />
-                                                            <span>Rediģēt aprakstu</span>
-                                                        </a>
+                                                            <span>Rediģēt pieteikumu</span>
+                                                        </button>
 
                                                         <form
                                                             method="POST"
@@ -583,4 +594,11 @@
             @endif
         </div>
     </section>
+
+    {{-- Modāļa forma jauna pieteikuma izveidei / rediģēšanai --}}
+    <x-request-form-modal
+        type="transfer"
+        :device-options="$deviceOptions"
+        :user-options="$recipientOptions"
+    />
 </x-app-layout>
