@@ -45,6 +45,7 @@
         class="divide-y divide-gray-200"
     >
         @csrf
+        <input type="hidden" name="request_form_type" value="{{ $type }}">
 
         <!-- Galvene -->
         <div class="px-6 py-4">
