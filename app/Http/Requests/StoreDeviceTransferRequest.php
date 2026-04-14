@@ -30,8 +30,8 @@ class StoreDeviceTransferRequest extends FormRequest
             'transfered_to_id.exists' => 'Izvēlētais lietotājs neeksistē.',
             'transfered_to_id.not_in' => 'Nevar nodot ierīci sev pašam.',
             'transfer_reason.required' => 'Iemesls ir obligāts.',
-            'transfer_reason.min' => 'Iemesls jābūt vismaz 10 rakstzīmēm.',
-            'transfer_reason.max' => 'Iemesls ne vairāk kā 2000 rakstzīmes.',
+            'transfer_reason.min' => 'Iemeslam jābūt vismaz 10 rakstzīmēm.',
+            'transfer_reason.max' => 'Iemesls nedrīkst pārsniegt 2000 rakstzīmes.',
         ];
     }
 }

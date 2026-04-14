@@ -29,7 +29,7 @@ abstract class Controller
     }
 
     /**
-     * Pārbauda, kā darbību veic administrators.
+     * Pārbauda, vai darbību veic administrators.
      */
     protected function requireAdmin(): User
     {
@@ -41,7 +41,7 @@ abstract class Controller
     }
 
     /**
-     * Pārbauda, kā lietotājs drīkst pārvaldīt inventāru admina skatā.
+     * Pārbauda, vai lietotājs drīkst pārvaldīt inventāru admina skatā.
      */
     protected function requireManager(): User
     {
@@ -109,10 +109,10 @@ abstract class Controller
             'array' => 'Laukam ":attribute" jābūt sarakstam. Izvēlies vienu vai vairākus ierakstus no piedāvātā saraksta.',
             'image' => 'Lauks ":attribute" drīkst saturēt tikai attēlu failu. Izvēlies JPG, PNG vai citu atbalstītu attēla formātu.',
             'in' => 'Laukam ":attribute" ir nederīga vērtība. Izvēlies vienu no pieejamajām vērtībām.',
-            'max.string' => 'Lauks ":attribute" nedrīkst būt garāks par :max simboliem. Saīsini tekstu un mēģini vēlreiz.',
+            'max.string' => 'Lauks ":attribute" nedrīkst būt garāks par :max rakstzīmēm. Saīsini tekstu un mēģini vēlreiz.',
             'max.numeric' => 'Lauka ":attribute" vērtība nedrīkst pārsniegt :max. Samazini ievadīto vērtību.',
             'max.file' => 'Fails ":attribute" ir par lielu. Izvēlies mazāka izmēra failu.',
-            'min.string' => 'Lauks ":attribute" nedrīkst būt īsāks par :min simboliem. Papildini informāciju un mēģini vēlreiz.',
+            'min.string' => 'Lauks ":attribute" nedrīkst būt īsāks par :min rakstzīmēm. Papildini informāciju un mēģini vēlreiz.',
             'min.numeric' => 'Lauka ":attribute" vērtībai jābūt vismaz :min. Palielini ievadīto vērtību.',
             'min.array' => 'Izvēlies vismaz :min ":attribute" vienumu. Pievieno vēl trūkstošos ierakstus.',
         ];
@@ -142,7 +142,7 @@ abstract class Controller
             'email' => 'e-pasts',
             'end_date' => 'beigu datums',
             'floor_number' => 'stāvs',
-            'full_name' => 'pilnais vārds',
+            'full_name' => 'vārds un uzvārds',
             'invoice_number' => 'rēķina numurs',
             'is_active' => 'aktivitātes statuss',
             'issue_reported_by' => 'izpildītājs',
@@ -171,7 +171,7 @@ abstract class Controller
             'target_room_id' => 'mērķa telpa',
             'target_status' => 'mērķa statuss',
             'total_floors' => 'stāvu skaits',
-            'transfer_reason' => 'pārsūtīšanas iemesls',
+            'transfer_reason' => 'nodošanas iemesls',
             'transfered_to_id' => 'saņēmējs',
             'user_id' => 'atbildīgais lietotājs',
             'vendor_contact' => 'pakalpojuma sniedzēja kontakts',

@@ -146,7 +146,7 @@ class AuthBootstrapper
                 ->update(['full_name' => DB::raw('name')]);
         }
 
-        // Legacy employees table sync removed - employees table is dropped in migration 2026_03_18_010000_drop_unused_legacy_features
+        // Legacy employees tabulas sinhronizācija noņemta, jo tabula ir dzēsta migrācijā 2026_03_18_010000_drop_unused_legacy_features.
     }
 
     private function normalizeLegacyRoles(): void

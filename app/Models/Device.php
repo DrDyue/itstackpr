@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * Galvenais inventāra modelis.
  *
  * Šis modelis apvieno ierīces pamatdatus, piesaisti telpai un lietotājam,
- * kā arī šaites uz remontiem un dažādu tipu pieprasījumiem.
+ * kā arī saites uz remontiem un dažādu tipu pieprasījumiem.
  */
 class Device extends Model
 {
@@ -78,7 +78,7 @@ class Device extends Model
     }
 
     /**
-     * Pašreizējāis atbildīgais lietotājs.
+     * Pašreizējais atbildīgais lietotājs.
      */
     public function assignedTo(): BelongsTo
     {

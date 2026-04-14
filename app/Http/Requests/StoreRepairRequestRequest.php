@@ -25,8 +25,8 @@ class StoreRepairRequestRequest extends FormRequest
             'device_id.required' => 'Jāizvēlas ierīce.',
             'device_id.exists' => 'Izvēlētā ierīce neeksistē.',
             'description.required' => 'Apraksts ir obligāts.',
-            'description.min' => 'Apraksts jābūt vismaz 10 rakstzīmēm.',
-            'description.max' => 'Apraksts ne vairāk kā 2000 rakstzīmes.',
+            'description.min' => 'Aprakstam jābūt vismaz 10 rakstzīmēm.',
+            'description.max' => 'Apraksts nedrīkst pārsniegt 2000 rakstzīmes.',
         ];
     }
 }

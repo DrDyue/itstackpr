@@ -44,7 +44,7 @@ class LoginRequest extends FormRequest
     {
         return [
             'email.required' => 'Lauks "E-pasts" ir obligāts.',
-            'email.email' => 'Lauks "E-pasts" nav derīga e-pasta adrese.',
+            'email.email' => 'Lauks "E-pasts" nav derīgs e-pasta adreses formāts.',
             'password.required' => 'Lauks "Parole" ir obligāts.',
         ];
     }
@@ -72,8 +72,8 @@ class LoginRequest extends FormRequest
 
             $user = $userQuery->first();
         } catch (QueryException $e) {
-            // If the schema is out-of-sync (missing columns), treat it as a failed login
-            // to avoid a 500 error. Also log for debugging.
+            // Ja shēma nav sinhronizēta (trūkst kolonnas), uztveram to kā neveiksmīgu pieslēgšanos,
+            // lai izvairītos no 500 kļūdas. Papildus pierakstām to logā diagnostikai.
             Log::error('Login query failed (possible missing column): ' . $e->getMessage());
 
             $user = null;

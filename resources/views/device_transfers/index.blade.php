@@ -75,7 +75,7 @@
                     <button
                         type="button"
                         class="btn-create"
-                        @click="dispatch('open-modal', 'request-form-transfer')"
+                        @click="$dispatch('open-modal', 'request-form-transfer')"
                     >
                         <x-icon name="plus" size="h-4 w-4" />
                         <span>Jauns pieteikums</span>
@@ -84,7 +84,7 @@
             </div>
         </div>
 
-        <div id="device-transfers-index-root" data-async-table-root>
+        <div id="device-transfers-index-root" data-async-table-root class="device-transfers-index-page space-y-6">
             {{-- Filtru un meklēšanas josla --}}
             <form
                 method="GET"
