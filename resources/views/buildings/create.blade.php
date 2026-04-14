@@ -1,4 +1,4 @@
-{--
+{{--
     Lapa: Jaunas ēkas izveide.
     Atbildība: ļauj administratoram sagatavot jaunu ēkas ierakstu telpu un ierīču piesaistei.
     Datu avots: BuildingController@create, saglabāšana caur BuildingController@store.

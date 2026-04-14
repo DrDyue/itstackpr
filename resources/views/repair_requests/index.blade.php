@@ -16,6 +16,9 @@
             'approved' => 'request-detail-status-emerald',
             'rejected' => 'request-detail-status-rose',
         ];
+        $shouldOpenCreateModal = ! $canReview
+            && old('request_form_type') === 'repair'
+            && $errors->hasAny(['device_id', 'description']);
     @endphp
 
     <section class="app-shell">
@@ -67,6 +70,7 @@
                         <button
                             type="button"
                             class="btn-create"
+                            x-data
                             @click="$dispatch('open-modal', 'request-form-repair')"
                         >
                             <x-icon name="plus" size="h-4 w-4" />
@@ -241,11 +245,13 @@
             'statusLabels' => $statusLabels,
             'sortDirectionLabels' => $sortDirectionLabels,
         ])
+        </div>
     </section>
 
     {{-- Modāļa forma jauna pieteikuma izveidei / rediģēšanai --}}
     <x-request-form-modal
         type="repair"
+        :show="$shouldOpenCreateModal"
         :device-options="$deviceOptions"
     />
 </x-app-layout>

@@ -1,4 +1,4 @@
-{--
+{{--
     Lapa: Lietotāja pieprasījuma labošanas skats.
     Atbildība: Ļauj labot tikai iesniegta pieprasījuma aprakstošo lauku, kamēr admins to vēl nav izskatījis.
     Datu avots: UserRequestCenterController@edit, saglabāšana caur UserRequestCenterController@update.

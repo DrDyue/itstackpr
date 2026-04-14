@@ -1,4 +1,4 @@
-{--
+{{--
     Lapa: Jaunas telpas izveide.
     Atbildība: ļauj administratoram izveidot telpu, piesaistīt to ēkai un vajadzības gadījumā atbildīgajam.
     Datu avots: RoomController@create, saglabāšana caur RoomController@store.

@@ -16,6 +16,9 @@
             'approved' => 'request-detail-status-emerald',
             'rejected' => 'request-detail-status-rose',
         ];
+        $shouldOpenCreateModal = ! $canReview
+            && old('request_form_type') === 'writeoff'
+            && $errors->hasAny(['device_id', 'reason']);
     @endphp
 
     <section class="app-shell">
@@ -67,6 +70,7 @@
                         <button
                             type="button"
                             class="btn-create"
+                            x-data
                             @click="$dispatch('open-modal', 'request-form-writeoff')"
                         >
                             <x-icon name="plus" size="h-4 w-4" />
@@ -236,11 +240,13 @@
             'statusLabels' => $statusLabels,
             'sortDirectionLabels' => $sortDirectionLabels,
         ])
+        </div>
     </section>
 
     {{-- Modāļa forma jauna pieteikuma izveidei / rediģēšanai --}}
     <x-request-form-modal
         type="writeoff"
+        :show="$shouldOpenCreateModal"
         :device-options="$deviceOptions"
     />
 </x-app-layout>

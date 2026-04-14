@@ -4652,7 +4652,7 @@ tbody td {
 
 .app-table-shell,
 .device-table-shell {
-    @apply relative overflow-visible;
+    @apply relative w-full overflow-visible;
 }
 
 .app-table-shell-wide,
@@ -4698,7 +4698,7 @@ tbody td {
 
 .app-table-scroll,
 .device-table-scroll {
-    @apply relative overflow-visible rounded-[1.75rem];
+    @apply relative w-full overflow-x-auto overflow-y-visible rounded-[1.75rem];
     box-shadow:
         inset 0 0 0 1px rgba(226, 232, 240, 0.95),
         0 10px 24px rgba(15, 23, 42, 0.06);

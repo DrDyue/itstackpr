@@ -1,4 +1,4 @@
-{--
+{{--
     Lapa: Telpas rediģēšana.
     Atbildība: ļauj mainīt telpas datus, piesaisti ēkai vai atbildīgajam lietotājam.
     Datu avots: RoomController@edit, saglabāšana caur RoomController@update.
