@@ -641,7 +641,7 @@ tbody td {
 }
 
 .app-shell-wide {
-    @apply max-w-[120rem];
+    @apply mx-auto w-full max-w-[120rem];
 }
 
 .app-bg {

@@ -493,14 +493,17 @@
                                                     @endphp
 
                                                     @if ($isOwnerCanEdit)
-                                                        <a
-                                                            href="{{ route('my-requests.edit', ['requestType' => 'transfer', 'requestId' => $transfer->id]) }}"
-                                                            class="table-action-item table-action-item-amber"
-                                                            @click="open = false"
+                                                        <button
+                                                            type="button"
+                                                            class="table-action-item table-action-item-amber w-full text-left"
+                                                            @click="
+                                                                open = false;
+                                                                $dispatch('open-modal', 'request-form-transfer')
+                                                            "
                                                         >
                                                             <x-icon name="edit" size="h-4 w-4" />
                                                             <span>Rediģēt pieteikumu</span>
-                                                        </a>
+                                                        </button>
 
                                                         <form
                                                             method="POST"

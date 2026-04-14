@@ -21,7 +21,7 @@
             && $errors->hasAny(['device_id', 'reason']);
     @endphp
 
-    <section class="app-shell">
+    <section class="{{ $canReview ? 'app-shell app-shell-wide' : 'app-shell' }}">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-4xl">
