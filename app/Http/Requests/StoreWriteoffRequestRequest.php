@@ -25,8 +25,8 @@ class StoreWriteoffRequestRequest extends FormRequest
             'device_id.required' => 'Jāizvēlas ierīce.',
             'device_id.exists' => 'Izvēlētā ierīce neeksistē.',
             'reason.required' => 'Iemesls ir obligāts.',
-            'reason.min' => 'Iemesls jābūt vismaz 10 rakstzīmēm.',
-            'reason.max' => 'Iemesls ne vairāk kā 2000 rakstzīmes.',
+            'reason.min' => 'Iemeslam jābūt vismaz 10 rakstzīmēm.',
+            'reason.max' => 'Iemesls nedrīkst pārsniegt 2000 rakstzīmes.',
         ];
     }
 }

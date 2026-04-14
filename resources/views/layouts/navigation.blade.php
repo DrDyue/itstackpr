@@ -2,9 +2,9 @@
     Layout daļa: Augšējā navigācija.
     Atbildība: parāda galvenās sistēmas sadaļas atkarībā no lietotāja lomas un izvēlētā skata režīma.
     Kāpēc tas ir svarīgi:
-    1. Adminam šeit parādās pārvaldības sadaļas un view mode pārslēgs.
+    1. Adminam šeit parādās pārvaldības sadaļas un skata režīma pārslēgs.
     2. Lietotājam šeit paliek tikai tās sadaļas, kuras viņš drīkst izmantot.
-    3. Navigācijā tiek rādīti arī gaidošo pieteikumu indikatori un ātrās šaites.
+    3. Navigācijā tiek rādīti arī gaidošo pieteikumu indikatori un ātrās saites.
 --}}
 <nav x-data="{ open: false }" class="app-main-nav sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur">
     @php
@@ -25,7 +25,7 @@
         $requestNavigationItems = [
             ['route' => 'repair-requests.index', 'pattern' => 'repair-requests*', 'label' => 'Remonta pieteikumi', 'icon' => 'repair-request'],
             ['route' => 'writeoff-requests.index', 'pattern' => 'writeoff-requests*', 'label' => 'Norakstīšanas pieteikumi', 'icon' => 'writeoff'],
-            ['route' => 'device-transfers.index', 'pattern' => 'device-transfers*', 'label' => 'Pārsūtīšanas pieteikumi', 'icon' => 'transfer', 'pending_review_count' => $incomingTransferReviewCount],
+            ['route' => 'device-transfers.index', 'pattern' => 'device-transfers*', 'label' => 'Nodošanas pieteikumi', 'icon' => 'transfer', 'pending_review_count' => $incomingTransferReviewCount],
         ];
         $requestReviewNavigationItems = $canManageRequests ? collect($requestNavigationItems)->take(2)->values()->all() : $requestNavigationItems;
         $requestHistoryNavigationItems = $canManageRequests ? collect($requestNavigationItems)->slice(2)->values()->all() : [];

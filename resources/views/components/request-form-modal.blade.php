@@ -154,7 +154,7 @@
         <div class="flex justify-end gap-3 px-6 py-4">
             <button
                 type="button"
-                @click="dispatch('close-modal', '{{ 'request-form-'.$type }}')"
+                @click="$dispatch('close-modal', '{{ 'request-form-'.$type }}')"
                 class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
             >
                 Atcelt

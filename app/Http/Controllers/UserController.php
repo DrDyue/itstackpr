@@ -393,7 +393,7 @@ class UserController extends Controller
             'full_name.required' => 'Norādi lietotāja vārdu un uzvārdu.',
             'email.required' => 'Norādi lietotāja e-pastu.',
             'password.required' => 'Jaunam lietotājam parole ir obligāta.',
-            'password.min' => 'Parolei jābūt vismaz :min simbolus garai.',
+            'password.min' => 'Parolei jābūt vismaz :min simbolu garai.',
         ]);
 
         $validated['phone'] = $validated['phone'] ?: null;

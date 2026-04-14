@@ -325,7 +325,7 @@ class RepairController extends Controller
         }
 
         if ($validated['target_status'] === 'completed' && ! filled($draft['description'])) {
-            return back()->with('error', 'Lai pabeigtu remontu, jābūt aizpildītam aprakstam.');
+            return back()->with('error', 'Lai pabeigtu remontu, jāaizpilda apraksts.');
         }
 
         if (
@@ -333,7 +333,7 @@ class RepairController extends Controller
             && $draft['repair_type'] === 'external'
             && (! filled($draft['vendor_name']) || ! filled($draft['vendor_contact']) || ! filled($draft['invoice_number']))
         ) {
-            return back()->with('error', 'Lai pabeigtu ārējo remontu, jābūt norādītam pakalpojuma sniedzējam, vendora kontaktam un rēķina numuram.');
+            return back()->with('error', 'Lai pabeigtu ārējo remontu, jānorāda pakalpojuma sniedzējs, kontaktinformācija un rēķina numurs.');
         }
 
 
@@ -394,18 +394,18 @@ class RepairController extends Controller
         $draft = $this->validatedTransitionDraft($request, $repair, 'completed');
 
         if (! filled($draft['description'])) {
-            return back()->with('error', 'Lai pabeigtu remontu, ir jābūt aizpildītam aprakstam.');
+            return back()->with('error', 'Lai pabeigtu remontu, jāaizpilda apraksts.');
         }
 
         if ($draft['repair_type'] === 'external') {
             if (! filled($draft['vendor_name'])) {
-                return back()->with('error', 'Ārējam remontam ir jābūt norādītam pakalpojuma sniedzējam.');
+                return back()->with('error', 'Ārējam remontam jānorāda pakalpojuma sniedzējs.');
             }
             if (! filled($draft['vendor_contact'])) {
-                return back()->with('error', 'Ārējam remontam ir jābūt norādītam vendora kontaktam.');
+                return back()->with('error', 'Ārējam remontam jānorāda pakalpojuma sniedzēja kontaktinformācija.');
             }
             if (! filled($draft['invoice_number'])) {
-                return back()->with('error', 'Ārējam remontam ir jābūt norādītam rēķina numuram.');
+                return back()->with('error', 'Ārējam remontam jānorāda rēķina numurs.');
             }
         }
 

@@ -1505,7 +1505,7 @@ const registerAlpineData = () => {
         lastSessionId: null,
         lastViewMode: null,
         init() {
-            // Generate session ID to detect page reloads/navigation
+            // Ģenerē sesijas ID, lai noteiktu lapas pārlādi vai navigāciju
             this.lastSessionId = this.generateSessionId();
             this.lastViewMode = this.getViewMode();
             this.seenIds = this.readSeenIds();
@@ -1533,11 +1533,11 @@ const registerAlpineData = () => {
             }
         },
         generateSessionId() {
-            // Generate unique session ID for this page session
+            // Ģenerē unikālu sesijas ID šīs lapas sesijai
             return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         },
         getViewMode() {
-            // Get current view mode from the storage key
+            // Nolasa pašreizējo skata režīmu no glabātuves atslēgas
             const parts = this.storageKey.split(':');
             return parts.length > 2 ? parts[parts.length - 1] : 'user';
         },
@@ -1548,18 +1548,18 @@ const registerAlpineData = () => {
             return hasChanged;
         },
         cleanup() {
-            // Store session info for cleanup on next load
+            // Saglabā sesijas informāciju, lai nākamajā ielādē varētu veikt tīrīšanu
             try {
                 const staleData = sessionStorage.getItem(this.storageKey + ':stale');
                 if (staleData) {
                     const parsed = JSON.parse(staleData);
-                    // Remove old session data that's more than 5 minutes old
+                    // Noņem vecos sesijas datus, kas ir vecāki par 5 minūtēm
                     const now = Date.now();
                     const freshData = parsed.filter(item => (now - item.timestamp) < 300000);
                     sessionStorage.setItem(this.storageKey + ':stale', JSON.stringify(freshData));
                 }
             } catch (e) {
-                // Ignore storage errors
+                // Ignorē glabātuves kļūdas
             }
         },
         startPolling() {
@@ -1594,18 +1594,18 @@ const registerAlpineData = () => {
                     ? response.data.notifications
                     : [];
 
-                // Detect view mode change to reset seen notifications
+                // Nosaka skata režīma maiņu, lai atiestatītu redzētos paziņojumus
                 const viewModeChanged = this.detectViewModeChange();
 
                 if (!this.bootstrapped || isInitial) {
-                    // If view mode changed, don't mark notifications as seen immediately
-                    // This allows animations to show when switching between admin/user views
+                    // Ja skata režīms mainījies, neatzīmē paziņojumus kā redzētus uzreiz
+                    // Tas ļauj parādīt animācijas, pārslēdzoties starp admina un lietotāja skatu
                     if (viewModeChanged) {
-                        // Clear seen IDs for new view mode to show notifications with animation
+                        // Notīra redzēto ID sarakstu jaunajam skata režīmam, lai paziņojumi animētos
                         this.seenIds = [];
                         this.writeSeenIds();
                         this.bootstrapped = true;
-                        // Fall through to show notifications with animation
+                        // Turpina izpildi, lai paziņojumi tiktu parādīti ar animāciju
                     } else {
                         notifications.forEach((notification) => this.remember(notification.id));
                         this.bootstrapped = true;
@@ -1649,7 +1649,7 @@ const registerAlpineData = () => {
                     }
                 });
             } catch (error) {
-                // Ignore transient polling errors and retry on the next cycle.
+                // Ignorē īslaicīgas aptaujas kļūdas un mēģina vēlreiz nākamajā ciklā.
             }
         },
         hasSeen(id) {
@@ -1781,7 +1781,7 @@ const registerAlpineData = () => {
             try {
                 window.localStorage.setItem(this.storageKey, JSON.stringify(this.seenIds));
             } catch (error) {
-                // Ignore storage write issues; notifications will still work during the session.
+                // Ignorē glabātuves rakstīšanas kļūdas; paziņojumi sesijas laikā joprojām darbosies.
             }
         },
     }));
@@ -1840,7 +1840,7 @@ const registerAlpineData = () => {
             try {
                 window.localStorage.setItem(this.storageKey, String(timestamp));
             } catch (error) {
-                // Ignore storage issues; nav badge will still work for current render.
+                // Ignorē glabātuves kļūdas; navigācijas emblēma šajā attēlojumā joprojām darbosies.
             }
         },
         showFeedback() {
@@ -1876,7 +1876,7 @@ const registerAlpineData = () => {
                     return createdUnix > 0 && (createdUnix * 1000) > cutoff;
                 }).length;
             } catch (error) {
-                // Ignore transient badge refresh errors.
+                // Ignorē īslaicīgas emblēmas atjaunošanas kļūdas.
             }
         },
         async markAllAsRead() {
@@ -2080,7 +2080,7 @@ const registerAlpineData = () => {
                 try {
                     event.currentTarget.releasePointerCapture(event.pointerId);
                 } catch (error) {
-                    // Ignore capture release errors; they are harmless if capture was already lost.
+                    // Ignorē pointer capture atbrīvošanas kļūdas; tās ir nekaitīgas, ja tvērums jau bija zaudēts.
                 }
             }
 

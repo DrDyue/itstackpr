@@ -67,7 +67,7 @@
                         <button
                             type="button"
                             class="btn-create"
-                            @click="dispatch('open-modal', 'request-form-writeoff')"
+                            @click="$dispatch('open-modal', 'request-form-writeoff')"
                         >
                             <x-icon name="plus" size="h-4 w-4" />
                             <span>Jauns pieteikums</span>
@@ -77,7 +77,7 @@
             </div>
         </div>
 
-        <div id="writeoff-requests-index-root" data-async-table-root class="writeoff-requests-index-page">
+        <div id="writeoff-requests-index-root" data-async-table-root class="writeoff-requests-index-page space-y-6">
             {{-- Filtru un meklēšanas josla --}}
             <form
                 method="GET"
