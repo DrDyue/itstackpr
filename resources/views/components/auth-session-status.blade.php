@@ -1,4 +1,4 @@
-{{-- Ziņojums par autentifikācijas statusu, piemēram, paroles atjaunošanas šaites nosūtīšanu. --}}
+{{-- Ziņojums par autentifikācijas statusu, piemēram, paroles atjaunošanas saites nosūtīšanu. --}}
 @props(['status'])
 
 @if ($status)
@@ -6,5 +6,4 @@
         {{ $status }}
     </div>
 @endif
-
 

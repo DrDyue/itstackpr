@@ -43,7 +43,7 @@
             <div class="form-page-actions">
                 <div class="form-page-actions-copy">
                     <div class="text-sm font-semibold text-slate-900">Saglabāšanas zona</div>
-                    <div class="mt-1 text-sm text-slate-500">Atjauno tikai izmainītos laukus. Ja ierīce ir norakstīta, piesaistes lauki paliek bloķeti.</div>
+                    <div class="mt-1 text-sm text-slate-500">Atjauno tikai mainītos laukus. Ja ierīce ir norakstīta, piesaistes lauki paliek bloķēti.</div>
                 </div>
                 <div class="form-page-actions-buttons">
                     <button type="submit" class="btn-edit">

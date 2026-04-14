@@ -4,7 +4,7 @@
     Kāpēc tas ir svarīgi:
     1. Adminam šeit parādās pārvaldības sadaļas un view mode pārslēgs.
     2. Lietotājam šeit paliek tikai tās sadaļas, kuras viņš drīkst izmantot.
-    3. Navigācijā tiek rādīti arī gaidošo pieteikumu indikatori un ātrās šaites.
+    3. Navigācijā tiek rādīti arī gaidošo pieteikumu indikatori un ātrās saites.
 --}}
 <nav x-data="{ open: false }" class="app-main-nav sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur">
     @php

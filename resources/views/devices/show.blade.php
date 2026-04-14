@@ -120,8 +120,8 @@
                     <div class="rounded-[1.5rem] border border-slate-200 bg-white p-5">
                         <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Datumi un finanses</div>
                         <div class="mt-3 space-y-2 text-sm text-slate-700">
-                            <div><strong class="text-slate-900">Iegades datums:</strong> {{ $device->purchase_date?->format('d.m.Y') ?: '-' }}</div>
-                            <div><strong class="text-slate-900">Iegades cena:</strong> {{ $device->purchase_price !== null ? number_format((float) $device->purchase_price, 2, '.', ' ') . ' EUR' : '-' }}</div>
+                            <div><strong class="text-slate-900">Iegādes datums:</strong> {{ $device->purchase_date?->format('d.m.Y') ?: '-' }}</div>
+                            <div><strong class="text-slate-900">Iegādes cena:</strong> {{ $device->purchase_price !== null ? number_format((float) $device->purchase_price, 2, '.', ' ') . ' EUR' : '-' }}</div>
                             <div><strong class="text-slate-900">Garantija līdz:</strong> {{ $device->warranty_until?->format('d.m.Y') ?: '-' }}</div>
                             <div><strong class="text-slate-900">Izveidots:</strong> {{ $device->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
                         </div>
@@ -129,7 +129,7 @@
 
                     @if (! $canManageDevices)
                         <div class="rounded-[1.5rem] border border-slate-200 bg-white p-5">
-                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Kā ierīce nonaca pie tevis</div>
+                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Kā ierīce nonāca pie tevis</div>
                             <div class="mt-3 text-sm leading-6 text-slate-700">{{ $originLabel }}</div>
                         </div>
                     @endif
@@ -163,7 +163,7 @@
                                 </h2>
                                 <p class="mt-2 text-sm leading-6 text-slate-600">
                                     Šeit ir tikai tā informācija, kas papildina augšējo ierīces kartīti: kur ierīce atrodas šobrīd,
-                                    kā ta nonaca pie tevis un ko vari izdarīt tālāk.
+                                    kā tā nonāca pie tevis un ko vari izdarīt tālāk.
                                 </p>
                             </div>
                         </div>
@@ -182,7 +182,7 @@
                                 </div>
 
                                 <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
-                                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Kā ierīce nonaca pie tevis</div>
+                                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Kā ierīce nonāca pie tevis</div>
                                     <div class="mt-2 text-sm leading-6 text-slate-700">{{ $originLabel }}</div>
                                 </div>
 

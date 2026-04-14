@@ -796,7 +796,7 @@ SQL;
         ], [
             'device_ids.required' => 'Izvēlies vismaz vienu ierīci.',
             'device_ids.min' => 'Izvēlies vismaz vienu ierīci.',
-            'target_status.required' => 'Masveida statusa mainai izvēlies jauno statusu.',
+            'target_status.required' => 'Masveida statusa maiņai izvēlies jauno statusu.',
             'target_room_id.required' => 'Masveida pārvietošanai izvēlies telpu.',
         ]);
 
@@ -964,7 +964,7 @@ SQL;
             && strtotime((string) $data['warranty_until']) < strtotime((string) $data['purchase_date'])
         ) {
             throw ValidationException::withMessages([
-                'warranty_until' => ['Garantijas datums nevar būt agraks par pirkuma datumu.'],
+                'warranty_until' => ['Garantijas datums nevar būt agrāks par pirkuma datumu.'],
             ]);
         }
 

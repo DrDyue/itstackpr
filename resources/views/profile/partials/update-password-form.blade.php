@@ -9,7 +9,7 @@
 <section>
     <header class="border-b border-slate-200 pb-4">
         <h2 class="text-xl font-semibold text-slate-900">
-            Paroles maina
+            Paroles maiņa
         </h2>
 
         <p class="mt-2 text-sm text-slate-600">
@@ -48,6 +48,5 @@
         </div>
     </form>
 </section>
-
 
 

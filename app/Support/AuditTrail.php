@@ -1115,7 +1115,7 @@ class AuditTrail
             'responsible_user_id' => 'atbildīgais lietotājs',
             'reviewed_by_user_id' => 'izskatīja',
             'repair_id' => 'izveidotais remonts',
-            'request_id' => 'saiste ar pieteikumu',
+            'request_id' => 'saite ar pieteikumu',
             'transfered_to_id' => 'saņēmējs',
             'transfer_reason' => 'nodošanas iemesls',
             'review_notes' => 'izskatīšanas piezīmes',

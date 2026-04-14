@@ -270,11 +270,11 @@
             <div class="grid gap-4 md:grid-cols-2">
                 <x-localized-date-input
                     name="purchase_date"
-                    label="Iegades datums"
+                    label="Iegādes datums"
                     :value="old('purchase_date', $current?->purchase_date?->format('Y-m-d'))"
                 />
                 <label class="block">
-                    <span class="crud-label">Iegades cena</span>
+                    <span class="crud-label">Iegādes cena</span>
                     <input type="number" step="0.01" name="purchase_price" value="{{ old('purchase_price', $current?->purchase_price) }}" class="crud-control">
                 </label>
                 <x-localized-date-input
@@ -282,9 +282,20 @@
                     label="Garantija līdz"
                     :value="old('warranty_until', $current?->warranty_until?->format('Y-m-d'))"
                 />
-                <div class="block">
+                <div class="block" x-data="{ fileName: '' }">
                     <span class="crud-label">Ierīces attēls</span>
-                    <input type="file" name="device_image" class="device-file-input">
+                    <label class="device-file-input flex cursor-pointer items-center justify-between gap-3" for="device_image">
+                        <span class="inline-flex rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Izvēlieties failu</span>
+                        <span class="truncate text-sm text-slate-600" x-text="fileName || 'Neviens fails nav izvēlēts'"></span>
+                    </label>
+                    <input
+                        id="device_image"
+                        type="file"
+                        name="device_image"
+                        accept="image/*"
+                        class="sr-only"
+                        @change="fileName = $event.target.files?.length ? $event.target.files[0].name : ''"
+                    >
                     <div class="mt-2 text-xs text-slate-500">PNG, JPG vai WEBP līdz {{ (int) config('devices.max_upload_kb', 5120) / 1024 }} MB.</div>
                     @if ($current)
                         <label class="mt-3 inline-flex items-center gap-3">
