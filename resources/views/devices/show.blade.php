@@ -10,6 +10,16 @@
 <x-app-layout>
     @php
         $deviceMeta = collect([$device->manufacturer, $device->model])->filter(fn ($value) => filled($value))->implode(' | ');
+        $repairTypeLabels = [
+            'internal' => 'Iekšējais',
+            'external' => 'Ārējais',
+        ];
+        $repairPriorityLabels = [
+            'low' => 'Zema',
+            'medium' => 'Vidēja',
+            'high' => 'Augsta',
+            'critical' => 'Kritiska',
+        ];
     @endphp
 
     <section class="app-shell max-w-7xl">
@@ -296,8 +306,8 @@
                                 <x-status-pill context="repair" :value="$repair->status" />
                             </div>
                             <div class="mt-3 grid gap-2 text-xs text-slate-600 md:grid-cols-2">
-                                <div><span class="font-semibold text-slate-900">Tips:</span> {{ $repair->repair_type ?: '-' }}</div>
-                                <div><span class="font-semibold text-slate-900">Prioritate:</span> {{ $repair->priority ?: '-' }}</div>
+                                <div><span class="font-semibold text-slate-900">Tips:</span> {{ $repairTypeLabels[$repair->repair_type] ?? ($repair->repair_type ?: '-') }}</div>
+                                <div><span class="font-semibold text-slate-900">Prioritāte:</span> {{ $repairPriorityLabels[$repair->priority] ?? ($repair->priority ?: '-') }}</div>
                                 <div><span class="font-semibold text-slate-900">Pieņēma:</span> {{ $repair->approval_actor_name ?: '-' }}</div>
                                 <div><span class="font-semibold text-slate-900">Izpildītājs:</span> {{ $repair->executor?->full_name ?: '-' }}</div>
                                 <div><span class="font-semibold text-slate-900">Sākums:</span> {{ $repair->start_date?->format('d.m.Y') ?: '-' }}</div>

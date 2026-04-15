@@ -4662,7 +4662,7 @@ tbody td {
 
 .app-table-content,
 .device-table-content {
-    min-width: 88rem;
+    min-width: 100rem;
 }
 
 .app-table-content-compact {
@@ -4733,15 +4733,15 @@ tbody td {
 }
 
 .table-col-name {
-    width: 18rem;
+    width: 21rem;
 }
 
 .table-col-location {
-    width: 13rem;
+    width: 16rem;
 }
 
 .table-col-person {
-    width: 13rem;
+    width: 15rem;
 }
 
 .table-col-email {
