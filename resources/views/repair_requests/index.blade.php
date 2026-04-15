@@ -21,7 +21,7 @@
             && $errors->hasAny(['device_id', 'description']);
     @endphp
 
-    <section class="{{ $canReview ? 'app-shell app-shell-wide' : 'app-shell' }}">
+    <section class="app-shell app-shell-wide">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-4xl">
@@ -70,8 +70,7 @@
                         <button
                             type="button"
                             class="btn-create"
-                            x-data
-                            @click="$dispatch('open-modal', 'request-form-repair')"
+                            onclick="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'request-form-repair' }))"
                         >
                             <x-icon name="plus" size="h-4 w-4" />
                             <span>Jauns pieteikums</span>
@@ -254,4 +253,8 @@
         :show="$shouldOpenCreateModal"
         :device-options="$deviceOptions"
     />
+
+    @if (old('request_form_type') === 'repair' && $errors->any())
+        <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'request-form-repair' })));</script>
+    @endif
 </x-app-layout>

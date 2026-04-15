@@ -23,7 +23,7 @@
             && $errors->hasAny(['device_id', 'transfered_to_id', 'transfer_reason']);
     @endphp
 
-    <section class="{{ $isAdmin ? 'app-shell app-shell-wide' : 'app-shell' }}">
+    <section class="app-shell app-shell-wide">
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-4xl">
@@ -78,8 +78,7 @@
                     <button
                         type="button"
                         class="btn-create"
-                        x-data
-                        @click="$dispatch('open-modal', 'request-form-transfer')"
+                        onclick="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'request-form-transfer' }))"
                     >
                         <x-icon name="plus" size="h-4 w-4" />
                         <span>Jauns pieteikums</span>
@@ -497,10 +496,7 @@
                                                             type="button"
                                                             class="table-action-item table-action-item-amber w-full text-left"
                                                             @click="
-                                                                open = false;
-                                                                $dispatch('open-modal', 'request-form-transfer')
-                                                            "
-                                                        >
+                                                                openopen = false; window.dispatchEvent(new CustomEvent('open-modal', { detail: 'request-form-transfer' }))
                                                             <x-icon name="edit" size="h-4 w-4" />
                                                             <span>Rediģēt pieteikumu</span>
                                                         </button>
@@ -606,4 +602,8 @@
         :device-options="$deviceOptions"
         :user-options="$recipientOptions"
     />
+
+    @if (old('request_form_type') === 'transfer' && $errors->any())
+        <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'request-form-transfer' })));</script>
+    @endif
 </x-app-layout>
