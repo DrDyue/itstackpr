@@ -70,7 +70,8 @@
                         <button
                             type="button"
                             class="btn-create"
-                            onclick="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'request-form-repair' }))"
+                            x-data
+                            @click="$dispatch('open-modal', 'request-form-repair')"
                         >
                             <x-icon name="plus" size="h-4 w-4" />
                             <span>Jauns pieteikums</span>

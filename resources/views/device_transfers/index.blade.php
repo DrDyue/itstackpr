@@ -78,7 +78,8 @@
                     <button
                         type="button"
                         class="btn-create"
-                        onclick="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'request-form-transfer' }))"
+                        x-data
+                        @click="$dispatch('open-modal', 'request-form-transfer')"
                     >
                         <x-icon name="plus" size="h-4 w-4" />
                         <span>Jauns pieteikums</span>
@@ -496,7 +497,10 @@
                                                             type="button"
                                                             class="table-action-item table-action-item-amber w-full text-left"
                                                             @click="
-                                                                openopen = false; window.dispatchEvent(new CustomEvent('open-modal', { detail: 'request-form-transfer' }))
+                                                                open = false;
+                                                                $dispatch('open-modal', 'request-form-transfer')
+                                                            "
+                                                        >
                                                             <x-icon name="edit" size="h-4 w-4" />
                                                             <span>Rediģēt pieteikumu</span>
                                                         </button>
