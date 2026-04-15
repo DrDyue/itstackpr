@@ -1,11 +1,11 @@
 {{--
     Modāļa forma pieprasījumiem (jaunu pieteikumu izveidošanai).
-    
+
     Īpašības:
     - type: pieprasījuma tips ('repair', 'writeoff', 'transfer')
     - show: vai parādīt modāli (default: false)
-    - deviceOptions: ierīču variantus filtram
-    - userOptions: lietotāju variantus (tikai transfer tipam)
+    - deviceOptions: ierīču varianti jaunam pieteikumam
+    - userOptions: lietotāju varianti (tikai transfer tipam)
 --}}
 @props([
     'type' => 'repair',
@@ -15,22 +15,20 @@
 ])
 
 @php
-    // Route noskaidroša pēc tipa
     $routes = [
         'repair' => 'repair-requests.store',
         'writeoff' => 'writeoff-requests.store',
         'transfer' => 'device-transfers.store',
     ];
-    
+
     $submitRoute = route($routes[$type]);
-    
-    // Tituli un kopijas
+
     $titles = [
         'repair' => 'Jauns remonta pieteikums',
         'writeoff' => 'Jauns norakstīšanas pieteikums',
         'transfer' => 'Jauns ierīces nodošanas pieteikums',
     ];
-    
+
     $descriptions = [
         'repair' => 'Apraksti problēmu, kas jārisina.',
         'writeoff' => 'Norādi iemeslu, kāpēc ierīci vajadzētu norakstīt.',
@@ -47,15 +45,12 @@
         @csrf
         <input type="hidden" name="request_form_type" value="{{ $type }}">
 
-        <!-- Galvene -->
         <div>
             <h2 class="page-title">{{ $titles[$type] }}</h2>
             <p class="page-subtitle">{{ $descriptions[$type] }}</p>
         </div>
 
-        <!-- Satura daļa -->
         <div class="space-y-6">
-            <!-- Ierīces izvēle -->
             <div>
                 <label class="crud-label">
                     Ierīce <span class="text-rose-500">*</span>
@@ -75,9 +70,8 @@
                 @enderror
             </div>
 
-            <!-- Apraksts / Iemesls / Piezīmes -->
             <div>
-                @if($type === 'repair')
+                @if ($type === 'repair')
                     <label class="crud-label">
                         Apraksts <span class="text-rose-500">*</span>
                     </label>
@@ -91,7 +85,7 @@
                     @error('description')
                         <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
                     @enderror
-                @elseif($type === 'writeoff')
+                @elseif ($type === 'writeoff')
                     <label class="crud-label">
                         Iemesls <span class="text-rose-500">*</span>
                     </label>
@@ -105,33 +99,26 @@
                     @error('reason')
                         <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
                     @enderror
-                @elseif($type === 'transfer')
-                    <!-- Nodošana lietotājam -->
+                @elseif ($type === 'transfer')
                     <div>
                         <label class="crud-label">
                             Nodot lietotājam <span class="text-rose-500">*</span>
                         </label>
-                        <select
+                        <x-searchable-select
                             name="transfered_to_id"
-                            class="crud-control"
-                            required
-                        >
-                            <option value="">-- Izvēlies lietotāju --</option>
-                            @foreach($userOptions as $option)
-                                <option value="{{ $option['value'] }}" @selected(old('transfered_to_id') == $option['value'])>
-                                    {{ $option['label'] }}
-                                    @if(!empty($option['description']))
-                                        ({{ $option['description'] }})
-                                    @endif
-                                </option>
-                            @endforeach
-                        </select>
+                            query-name="transfered_to_query"
+                            :identifier="'request-form-recipient-' . $type"
+                            :options="$userOptions"
+                            :selected="old('transfered_to_id', '')"
+                            :query="old('transfered_to_query', '')"
+                            placeholder="Meklē lietotāju"
+                            empty-message="Neviens lietotājs neatbilst meklējumam."
+                        />
                         @error('transfered_to_id')
                             <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    <!-- Pārsūtīšanas iemesls -->
                     <div>
                         <label class="crud-label">
                             Iemesls <span class="text-rose-500">*</span>
@@ -151,7 +138,6 @@
             </div>
         </div>
 
-        <!-- Darbības poga -->
         <div class="flex justify-end gap-3">
             <button
                 type="button"
@@ -161,7 +147,7 @@
                 <x-icon name="clear" size="h-4 w-4" />
                 <span>Atcelt</span>
             </button>
-            
+
             <button
                 type="submit"
                 class="btn-create"

@@ -93,6 +93,7 @@ class WriteoffRequestController extends Controller
                 'sorting' => $sorting,
                 'sortOptions' => $this->sortOptions(),
                 'deviceOptions' => collect(),
+                'createDeviceOptions' => collect(),
                 'requesterOptions' => collect(),
                 'featureMessage' => 'Tabula writeoff_requests šobrīd nav pieejama.',
                 'sortDirectionLabels' => ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'],
@@ -113,6 +114,10 @@ class WriteoffRequestController extends Controller
                 ->with('responsibleUser')
                 ->get()
         );
+
+        $createDeviceOptions = ! $canReview
+            ? $this->deviceOptions($this->availableDevicesForUser($user)->get())
+            : collect();
 
         $requestsQuery = (clone $baseQuery)
             ->with(['device.type', 'responsibleUser', 'reviewedBy'])
@@ -140,6 +145,7 @@ class WriteoffRequestController extends Controller
             'sorting' => $sorting,
             'sortOptions' => $this->sortOptions(),
             'deviceOptions' => $deviceOptions,
+            'createDeviceOptions' => $createDeviceOptions,
             'requesterOptions' => $requesterOptions,
             'sortDirectionLabels' => ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'],
         ];

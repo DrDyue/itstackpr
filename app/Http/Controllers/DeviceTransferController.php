@@ -61,8 +61,10 @@ class DeviceTransferController extends Controller
                 'sorting' => $sorting,
                 'sortOptions' => $this->sortOptions(),
                 'deviceOptions' => collect(),
+                'createDeviceOptions' => collect(),
                 'requesterOptions' => collect(),
                 'recipientOptions' => collect(),
+                'createRecipientOptions' => collect(),
                 'currentUserId' => $user->id,
                 'incomingPendingCount' => 0,
                 'featureMessage' => 'Tabula device_transfers šobrīd nav pieejama.',
@@ -115,6 +117,14 @@ class DeviceTransferController extends Controller
                 ->values()
         );
 
+        $createDeviceOptions = $this->deviceOptions($this->availableDevicesForUser($user)->get());
+        $createRecipientOptions = $this->recipientOptions(
+            User::active()
+                ->whereKeyNot($user->id)
+                ->orderBy('full_name')
+                ->get()
+        );
+
         $transfersQuery = (clone $baseQuery)
             ->with(['device.type', 'responsibleUser', 'transferTo', 'reviewedBy'])
             ->select('device_transfers.*');
@@ -144,8 +154,10 @@ class DeviceTransferController extends Controller
             'sorting' => $sorting,
             'sortOptions' => $this->sortOptions(),
             'deviceOptions' => $deviceOptions,
+            'createDeviceOptions' => $createDeviceOptions,
             'requesterOptions' => $requesterOptions,
             'recipientOptions' => $recipientOptions,
+            'createRecipientOptions' => $createRecipientOptions,
             'currentUserId' => $user->id,
             'incomingPendingCount' => $incomingPendingCount,
         ]);

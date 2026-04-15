@@ -251,7 +251,7 @@
     <x-request-form-modal
         type="repair"
         :show="$shouldOpenCreateModal"
-        :device-options="$deviceOptions"
+        :device-options="$createDeviceOptions ?? []"
     />
 
     @if (old('request_form_type') === 'repair' && $errors->any())

@@ -492,14 +492,14 @@
                                                     @endphp
 
                                                     @if ($isOwnerCanEdit)
-                                                        <button
-                                                            type="button"
-                                                            class="table-action-item table-action-item-amber w-full text-left"
-                                                            @click="open = false; window.dispatchEvent(new CustomEvent('open-modal', { detail: 'request-form-transfer' }))"
+                                                        <a
+                                                            href="{{ route('my-requests.edit', ['requestType' => 'transfer', 'requestId' => $transfer->id]) }}"
+                                                            class="table-action-item table-action-item-amber"
+                                                            @click="open = false"
                                                         >
                                                             <x-icon name="edit" size="h-4 w-4" />
                                                             <span>Rediģēt pieteikumu</span>
-                                                        </button>
+                                                        </a>
 
                                                         <form
                                                             method="POST"
@@ -599,8 +599,8 @@
     <x-request-form-modal
         type="transfer"
         :show="$shouldOpenCreateModal"
-        :device-options="$deviceOptions"
-        :user-options="$recipientOptions"
+        :device-options="$createDeviceOptions ?? []"
+        :user-options="$createRecipientOptions ?? []"
     />
 
     @if (old('request_form_type') === 'transfer' && $errors->any())

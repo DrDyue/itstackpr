@@ -22,7 +22,7 @@ $maxWidth = [
     @keydown.escape.window="show = false"
     x-show="show"
     x-cloak
-    class="{{ $show ? 'block' : 'hidden' }} fixed inset-0 z-[70] overflow-y-auto px-4 py-6 sm:px-0"
+    class="fixed inset-0 z-[70] overflow-y-auto px-4 py-6 sm:px-0"
 >
     <!-- Fons -->
     <div

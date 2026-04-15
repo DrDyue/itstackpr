@@ -246,7 +246,7 @@
     <x-request-form-modal
         type="writeoff"
         :show="$shouldOpenCreateModal"
-        :device-options="$deviceOptions"
+        :device-options="$createDeviceOptions ?? []"
     />
 
     @if (old('request_form_type') === 'writeoff' && $errors->any())
