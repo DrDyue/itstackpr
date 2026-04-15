@@ -3235,7 +3235,7 @@ tbody td {
 }
 
 .searchable-select-toggle {
-    @apply absolute right-1.5 top-1/2 z-20 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg border border-slate-200/70 bg-white/90 text-slate-400 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-700 active:scale-[0.98];
+    @apply absolute right-2 top-1/2 z-20 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border border-slate-200/70 bg-white/90 text-slate-500 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-700 active:scale-[0.98] cursor-pointer;
 }
 
 .searchable-select-toggle-active {
@@ -3280,7 +3280,7 @@ tbody td {
 }
 
 .searchable-select-option {
-    @apply flex w-full flex-col rounded-xl px-3 py-2.5 text-left transition;
+    @apply flex w-full flex-col rounded-xl px-3.5 py-3 text-left transition cursor-pointer hover:bg-sky-50 font-medium;
 }
 
 .searchable-select-empty {
@@ -3292,7 +3292,7 @@ tbody td {
 }
 
 .localized-date-trigger {
-    @apply flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-left text-sm shadow-sm transition hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500;
+    @apply flex w-full items-center justify-between rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-left text-sm shadow-sm transition hover:border-slate-400 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500;
 }
 
 .localized-date-trigger-value {
@@ -3300,7 +3300,7 @@ tbody td {
 }
 
 .localized-date-trigger-icon {
-    @apply inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-500;
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-500 transition hover:bg-slate-100 hover:border-slate-300;
 }
 
 .localized-date-panel {
@@ -3316,7 +3316,7 @@ tbody td {
 }
 
 .localized-date-nav {
-    @apply inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100;
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold transition hover:bg-slate-50 hover:border-slate-300 active:bg-slate-100 cursor-pointer;
 }
 
 .localized-date-weekdays {
@@ -3332,19 +3332,19 @@ tbody td {
 }
 
 .localized-date-cell {
-    @apply inline-flex h-10 items-center justify-center rounded-xl text-sm font-medium transition;
+    @apply inline-flex h-11 items-center justify-center rounded-xl text-sm font-semibold transition cursor-pointer;
 }
 
 .localized-date-cell-current {
-    @apply bg-white text-slate-700 hover:bg-slate-100;
+    @apply bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 cursor-pointer;
 }
 
 .localized-date-cell-muted {
-    @apply text-slate-300 hover:bg-slate-50;
+    @apply text-slate-300 cursor-default;
 }
 
 .localized-date-cell-selected {
-    @apply bg-slate-900 text-white hover:bg-slate-900;
+    @apply bg-sky-600 text-white hover:bg-sky-700 font-semibold;
 }
 
 .localized-date-actions {
@@ -3368,15 +3368,15 @@ tbody td {
 }
 
 .quick-status-filter {
-    @apply inline-flex min-h-[2.25rem] cursor-pointer select-none items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-semibold leading-none transition-all duration-200;
+    @apply inline-flex min-h-[2.4rem] cursor-pointer select-none items-center gap-2 rounded-[1rem] border px-3.5 py-2 text-xs font-semibold leading-none transition-all duration-200 hover:shadow-md;
 }
 
 .quick-status-filter:hover {
-    @apply -translate-y-0.5 shadow-sm;
+    @apply -translate-y-0.5 shadow-md;
 }
 
 .quick-status-filter-active {
-    @apply shadow-sm ring-2 ring-offset-2;
+    @apply shadow-md ring-2 ring-offset-2;
 }
 
 .quick-status-filter-slate {
@@ -3591,7 +3591,7 @@ tbody td {
 }
 
 .btn-create {
-    @apply inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-emerald-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:-ring-offset-1;
+    @apply inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-emerald-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2;
 }
 
 .btn-submit {
@@ -4373,7 +4373,7 @@ tbody td {
 }
 
 .table-action-item {
-    @apply flex h-10 w-full items-center justify-start gap-2.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition-all duration-150 hover:bg-slate-50 whitespace-nowrap;
+    @apply flex h-10 w-full items-center justify-start gap-2.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition-all duration-150 hover:bg-slate-50 hover:border-slate-300 hover:shadow-sm whitespace-nowrap cursor-pointer;
 }
 
 .table-action-item > svg,
