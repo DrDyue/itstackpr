@@ -155,7 +155,7 @@
         <div class="flex justify-end gap-3">
             <button
                 type="button"
-                @click="$dispatch('close-modal', '{{ 'request-form-'.$type }}')"
+                @click="window.dispatchEvent(new CustomEvent('close-modal', { detail: '{{ 'request-form-'.$type }}' }))"
                 class="btn-clear"
             >
                 <x-icon name="clear" size="h-4 w-4" />

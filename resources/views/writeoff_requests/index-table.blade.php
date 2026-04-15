@@ -201,10 +201,7 @@
                                             <button
                                                 type="button"
                                                 class="table-action-item table-action-item-amber w-full text-left"
-                                                @click="
-                                                    open = false;
-                                                    $dispatch('open-modal', 'request-form-writeoff')
-                                                "
+                                                @click="open = false; window.dispatchEvent(new CustomEvent('open-modal', { detail: 'request-form-writeoff' }))"
                                             >
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Labot pieteikumu</span>
