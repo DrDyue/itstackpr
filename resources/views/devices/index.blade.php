@@ -110,10 +110,10 @@
                 </div>
                 @if ($canManageDevices)
                     <div class="page-actions">
-                        <a href="{{ route('devices.create') }}" class="btn-create">
+                        <button type="button" class="btn-create" x-data @click="$dispatch('open-modal', 'device-create-modal')">
                             <x-icon name="plus" size="h-4 w-4" />
                             <span>Jauna ierīce</span>
-                        </a>
+                        </button>
                     </div>
                 @endif
             </div>
@@ -298,6 +298,35 @@
             'canManageDevices' => $canManageDevices,
             'quickRoomSelectOptions' => $quickRoomSelectOptions,
             'quickAssigneeOptions' => $quickAssigneeSelectOptions,
+            'types' => $types ?? collect(),
+            'buildings' => $buildings ?? collect(),
+            'rooms' => $rooms ?? collect(),
+            'users' => $users ?? collect(),
+            'statuses' => $statuses ?? [],
+            'defaultAssignedToId' => $defaultAssignedToId ?? null,
+            'defaultRoomId' => $defaultRoomId ?? null,
+            'defaultBuildingId' => $defaultBuildingId ?? null,
         ])
+
+        </div>
+
+        @if ($canManageDevices)
+            @include('devices.partials.modal-form', [
+                'mode' => 'create',
+                'modalName' => 'device-create-modal',
+                'device' => null,
+            ])
+        @endif
+
+        @if (old('modal_form') === 'device_create')
+            <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-create-modal' })));</script>
+        @elseif (str_starts_with((string) old('modal_form'), 'device_edit_'))
+            @php($deviceModalTarget = str_replace('device_edit_', '', (string) old('modal_form')))
+            <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-edit-modal-{{ $deviceModalTarget }}' })));</script>
+        @elseif ($deviceModalQuery === 'create')
+            <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-create-modal' })));</script>
+        @elseif ($deviceModalQuery === 'edit' && $deviceModalDeviceId)
+            <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-edit-modal-{{ $deviceModalDeviceId }}' })));</script>
+        @endif
     </section>
 </x-app-layout>

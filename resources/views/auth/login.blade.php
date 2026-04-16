@@ -26,7 +26,7 @@
                 id="email"
                 type="email"
                 name="email"
-                placeholder="artis.berzins@ludzas.lv"
+                placeholder="Ievadiet e-pastu"
                 :value="old('email')"
                 required
                 autofocus
@@ -41,7 +41,7 @@
                 id="password"
                 type="password"
                 name="password"
-                placeholder="********"
+                placeholder="Ievadiet savu paroli"
                 required
                 autocomplete="current-password"
             />
@@ -61,7 +61,7 @@
         </div>
 
         <button type="submit" class="btn-primary">
-            <x-icon name="profile" size="h-5 w-5" />
+            <x-icon name="key" size="h-5 w-5" />
             Pierakstīties
         </button>
 

@@ -1,10 +1,13 @@
 @php
+    $formKey = $formKey ?? ($device?->id ? 'device-edit-'.$device->id : 'device-create');
+    $useOldInput = $useOldInput ?? true;
+    $fieldValue = fn (string $field, mixed $default = null) => $useOldInput ? old($field, $default) : $default;
     $current = $device;
     $isCreating = ! $current;
     $isWrittenOff = ($current?->status ?? null) === \App\Models\Device::STATUS_WRITEOFF;
     $deviceImageUrl = $current?->deviceImageUrl();
-    $selectedTypeId = (string) old('device_type_id', $current?->device_type_id ?? '');
-    $selectedTypeLabel = old(
+    $selectedTypeId = (string) $fieldValue('device_type_id', $current?->device_type_id ?? '');
+    $selectedTypeLabel = $fieldValue(
         'device_type_query',
         optional($types->firstWhere('id', (int) $selectedTypeId))->type_name ?? ''
     );
@@ -14,10 +17,10 @@
         'description' => 'Ierīces tips',
         'search' => $type->type_name,
     ])->values();
-    $selectedAssignedToId = old('assigned_to_id', $current?->assigned_to_id ?? $defaultAssignedToId ?? null);
-    $selectedBuildingId = old('building_id', $current?->building_id ?? $defaultBuildingId ?? null);
-    $selectedRoomId = old('room_id', $current?->room_id ?? $defaultRoomId ?? null);
-    $selectedStatus = old('status', $current?->status ?? \App\Models\Device::STATUS_ACTIVE);
+    $selectedAssignedToId = $fieldValue('assigned_to_id', $current?->assigned_to_id ?? $defaultAssignedToId ?? null);
+    $selectedBuildingId = $fieldValue('building_id', $current?->building_id ?? $defaultBuildingId ?? null);
+    $selectedRoomId = $fieldValue('room_id', $current?->room_id ?? $defaultRoomId ?? null);
+    $selectedStatus = $fieldValue('status', $current?->status ?? \App\Models\Device::STATUS_ACTIVE);
     $showBuildingField = $buildings->count() > 1;
     $buildingOptions = $buildings->map(fn ($building) => [
         'value' => (string) $building->id,
@@ -73,22 +76,22 @@
             $statusLabels[$status] ?? ucfirst($status),
         ])),
     ])->values();
-    $selectedAssignedToLabel = old(
+    $selectedAssignedToLabel = $fieldValue(
         'assigned_to_query',
         optional($users->firstWhere('id', (int) $selectedAssignedToId))->full_name ?? ''
     );
-    $selectedBuildingLabel = old(
+    $selectedBuildingLabel = $fieldValue(
         'building_query',
         optional($buildings->firstWhere('id', (int) $selectedBuildingId))->building_name ?? ''
     );
     $selectedRoom = $rooms->firstWhere('id', (int) $selectedRoomId);
-    $selectedRoomLabel = old(
+    $selectedRoomLabel = $fieldValue(
         'room_query',
         $selectedRoom?->room_number
             ? $selectedRoom->room_number . ($selectedRoom->room_name ? ' - ' . $selectedRoom->room_name : '')
             : ''
     );
-    $selectedStatusLabel = old('status_query', $statusLabels[$selectedStatus] ?? 'Aktīva');
+    $selectedStatusLabel = $fieldValue('status_query', $statusLabels[$selectedStatus] ?? 'Aktīva');
 @endphp
 
 <div class="device-form-grid">
@@ -111,18 +114,18 @@
                 </div>
             </div>
 
-            <div class="grid gap-4 md:grid-cols-2">
+            <div class="grid gap-4 md:grid-cols-3">
                 <x-ui.form-field label="Kods" name="code" :required="true">
-                    <input type="text" name="code" value="{{ old('code', $current?->code) }}" class="crud-control" required>
+                    <input type="text" name="code" value="{{ $fieldValue('code', $current?->code) }}" class="crud-control" required>
                 </x-ui.form-field>
                 <x-ui.form-field label="Nosaukums" name="name" :required="true">
-                    <input type="text" name="name" value="{{ old('name', $current?->name) }}" class="crud-control" required>
+                    <input type="text" name="name" value="{{ $fieldValue('name', $current?->name) }}" class="crud-control" required>
                 </x-ui.form-field>
                 <x-ui.form-field label="Tips" name="device_type_id" :required="true">
                     <x-searchable-select
                         name="device_type_id"
                         query-name="device_type_query"
-                        identifier="device-type-form-select"
+                        identifier="device-type-form-select-{{ $formKey }}"
                         :options="$typeOptions"
                         :selected="$selectedTypeId"
                         :query="$selectedTypeLabel"
@@ -131,13 +134,13 @@
                     />
                 </x-ui.form-field>
                 <x-ui.form-field label="Modelis" name="model" :required="true">
-                    <input type="text" name="model" value="{{ old('model', $current?->model) }}" class="crud-control" required>
+                    <input type="text" name="model" value="{{ $fieldValue('model', $current?->model) }}" class="crud-control" required>
                 </x-ui.form-field>
                 <x-ui.form-field label="Ražotājs" name="manufacturer">
-                    <input type="text" name="manufacturer" value="{{ old('manufacturer', $current?->manufacturer) }}" class="crud-control">
+                    <input type="text" name="manufacturer" value="{{ $fieldValue('manufacturer', $current?->manufacturer) }}" class="crud-control">
                 </x-ui.form-field>
                 <x-ui.form-field label="Sērijas numurs" name="serial_number">
-                    <input type="text" name="serial_number" value="{{ old('serial_number', $current?->serial_number) }}" class="crud-control">
+                    <input type="text" name="serial_number" value="{{ $fieldValue('serial_number', $current?->serial_number) }}" class="crud-control">
                 </x-ui.form-field>
             </div>
         </section>
@@ -154,7 +157,7 @@
                 </div>
             </div>
 
-            <div class="grid gap-4 md:grid-cols-2">
+            <div class="grid gap-4 md:grid-cols-3">
                 @if ($isCreating)
                     <div class="block">
                         <span class="crud-label">Statuss</span>
@@ -179,7 +182,7 @@
                             <x-searchable-select
                                 name="status"
                                 query-name="status_query"
-                                identifier="device-status-form-select"
+                                identifier="device-status-form-select-{{ $formKey }}"
                                 :options="$statusOptions"
                                 :selected="(string) $selectedStatus"
                                 :query="$selectedStatusLabel"
@@ -200,7 +203,7 @@
                         <x-searchable-select
                             name="assigned_to_id"
                             query-name="assigned_to_query"
-                            identifier="device-assigned-user-form-select"
+                            identifier="device-assigned-user-form-select-{{ $formKey }}"
                             :options="$assignedUserOptions"
                             :selected="(string) $selectedAssignedToId"
                             :query="$selectedAssignedToLabel"
@@ -209,30 +212,6 @@
                         />
                     @endif
                 </label>
-                @if ($showBuildingField)
-                    <label class="block">
-                        <span class="crud-label">Ēka</span>
-                        @if ($isWrittenOff)
-                            <input type="hidden" name="building_id" value="">
-                            <div class="crud-control flex items-center bg-slate-50 text-slate-700">
-                                <span>Nav piešķirta ēkai</span>
-                            </div>
-                        @else
-                            <x-searchable-select
-                                name="building_id"
-                                query-name="building_query"
-                                identifier="device-building-form-select"
-                                :options="$buildingOptions"
-                                :selected="(string) $selectedBuildingId"
-                                :query="$selectedBuildingLabel"
-                                placeholder="Meklē ēku"
-                                empty-message="Neviena ēka neatbilst meklējumam."
-                            />
-                        @endif
-                    </label>
-                @else
-                    <input type="hidden" name="building_id" value="{{ $isWrittenOff ? '' : $selectedBuildingId }}">
-                @endif
                 <label class="block">
                     <span class="crud-label">Telpa *</span>
                     @if ($isWrittenOff)
@@ -244,7 +223,7 @@
                         <x-searchable-select
                             name="room_id"
                             query-name="room_query"
-                            identifier="device-room-form-select"
+                            identifier="device-room-form-select-{{ $formKey }}"
                             :options="$roomOptions"
                             :selected="(string) $selectedRoomId"
                             :query="$selectedRoomLabel"
@@ -253,6 +232,11 @@
                         />
                     @endif
                 </label>
+                @if ($showBuildingField)
+                    <input type="hidden" name="building_id" value="{{ $isWrittenOff ? '' : $selectedBuildingId }}">
+                @else
+                    <input type="hidden" name="building_id" value="{{ $isWrittenOff ? '' : $selectedBuildingId }}">
+                @endif
             </div>
         </section>
 
@@ -262,25 +246,16 @@
                     <x-icon name="calendar" size="h-5 w-5" />
                 </div>
                 <div class="device-form-section-copy">
-                    <div class="device-form-section-name">Iegāde, garantija un piezīmes</div>
-                    <div class="device-form-section-note">Papildini datumu, cenu, attēla un piezīmju laukus, ja tie ir zināmi.</div>
+                    <div class="device-form-section-name">Iegāde un attēls</div>
+                    <div class="device-form-section-note">Papildini datumu, attēla un citu informācijas laukus, ja tie ir zināmi.</div>
                 </div>
             </div>
 
-            <div class="grid gap-4 md:grid-cols-2">
+            <div class="grid gap-4 md:grid-cols-3">
                 <x-localized-date-input
                     name="purchase_date"
                     label="Iegades datums"
-                    :value="old('purchase_date', $current?->purchase_date?->format('Y-m-d'))"
-                />
-                <label class="block">
-                    <span class="crud-label">Iegades cena</span>
-                    <input type="number" step="0.01" name="purchase_price" value="{{ old('purchase_price', $current?->purchase_price) }}" class="crud-control">
-                </label>
-                <x-localized-date-input
-                    name="warranty_until"
-                    label="Garantija līdz"
-                    :value="old('warranty_until', $current?->warranty_until?->format('Y-m-d'))"
+                    :value="$fieldValue('purchase_date', $current?->purchase_date?->format('Y-m-d'))"
                 />
                 <div class="block">
                     <span class="crud-label">Ierīces attēls</span>
@@ -289,14 +264,10 @@
                     @if ($current)
                         <label class="mt-3 inline-flex items-center gap-3">
                             <input type="checkbox" name="remove_device_image" value="1" class="rounded border-gray-300 text-blue-600">
-                            <span class="text-sm text-slate-700">Noņemt ierīces attēlu</span>
+                            <span class="text-sm text-slate-700">Noņemt attēlu</span>
                         </label>
                     @endif
                 </div>
-                <label class="block md:col-span-2">
-                    <span class="crud-label">Piezīmes</span>
-                    <textarea name="notes" rows="5" class="crud-control">{{ old('notes', $current?->notes) }}</textarea>
-                </label>
             </div>
         </section>
     </div>
@@ -311,7 +282,7 @@
                         <li>Kods, nosaukums, tips un modelis ir obligāti lauki.</li>
                         <li>Atbildīgā persona un telpa ir obligātas un pēc noklusējuma tiek aizpildītas automātiski.</li>
                         <li>Jauna ierīce vienmēr tiek saglabāta ar aktīvu statusu.</li>
-                        <li>Datumi, cena un piezīmes var palikt tukši, ja tie nav zināmi.</li>
+                        <li>Iegades datums un attēls ir neobligāti lauki.</li>
                     </ul>
                 </div>
 

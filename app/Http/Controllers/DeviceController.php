@@ -73,6 +73,14 @@ class DeviceController extends Controller
             'canManageDevices' => $viewData['canManageDevices'],
             'quickRoomSelectOptions' => $viewData['quickRoomOptions'],
             'quickAssigneeOptions' => $viewData['quickAssigneeOptions'],
+            'types' => $viewData['types'] ?? collect(),
+            'buildings' => $viewData['buildings'] ?? collect(),
+            'rooms' => $viewData['rooms'] ?? collect(),
+            'users' => $viewData['users'] ?? collect(),
+            'statuses' => $viewData['statuses'] ?? [],
+            'defaultAssignedToId' => $viewData['defaultAssignedToId'] ?? null,
+            'defaultRoomId' => $viewData['defaultRoomId'] ?? null,
+            'defaultBuildingId' => $viewData['defaultBuildingId'] ?? null,
         ]);
     }
 
@@ -291,7 +299,7 @@ class DeviceController extends Controller
             })
             ->all();
 
-        return [
+        return array_merge([
             'devices' => $devices,
             'deviceStates' => $deviceStates,
             'filters' => $filters,
@@ -315,7 +323,11 @@ class DeviceController extends Controller
             'quickRoomOptions' => $canManageDevices ? $this->quickRoomOptions() : collect(),
             'quickAssigneeOptions' => $canManageDevices ? $this->quickAssigneeOptions() : collect(),
             'sortOptions' => $this->deviceSortOptions(),
-        ];
+            'deviceModalQuery' => (string) $request->query('device_modal', ''),
+            'deviceModalDeviceId' => ctype_digit((string) $request->query('modal_device'))
+                ? (int) $request->query('modal_device')
+                : null,
+        ], $canManageDevices ? $this->formData() : []);
     }
 
     /**
@@ -539,7 +551,9 @@ SQL;
 
         AuditTrail::viewed($manager, 'Device', null, 'Atvērta ierīces izveides forma.');
 
-        return view('devices.create', $this->formData());
+        return redirect()->route('devices.index', [
+            'device_modal' => 'create',
+        ]);
     }
 
     /**
@@ -568,7 +582,10 @@ SQL;
 
         AuditTrail::viewed($manager, 'Device', (string) $device->id, 'Atvērta ierīces labošanas forma: '.AuditTrail::labelFor($device));
 
-        return view('devices.edit', array_merge(['device' => $device], $this->formData()));
+        return redirect()->route('devices.index', [
+            'device_modal' => 'edit',
+            'modal_device' => $device->id,
+        ]);
     }
 
     /**

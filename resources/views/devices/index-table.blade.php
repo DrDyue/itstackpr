@@ -1,4 +1,21 @@
-@props(['devices', 'deviceStates', 'sorting', 'sortOptions', 'statusLabels', 'canManageDevices', 'quickRoomSelectOptions', 'quickAssigneeSelectOptions'])
+@props([
+    'devices',
+    'deviceStates',
+    'sorting',
+    'sortOptions',
+    'statusLabels',
+    'canManageDevices',
+    'quickRoomSelectOptions',
+    'quickAssigneeSelectOptions',
+    'types' => collect(),
+    'buildings' => collect(),
+    'rooms' => collect(),
+    'users' => collect(),
+    'statuses' => [],
+    'defaultAssignedToId' => null,
+    'defaultRoomId' => null,
+    'defaultBuildingId' => null,
+])
 
 <x-ui.table-shell
     id="devices-table-root"
@@ -295,10 +312,14 @@
                                     <div class="table-action-section">
                                         <div class="table-action-section-title">Pārvaldība</div>
                                         <div class="table-action-stack">
-                                            <a href="{{ route('devices.edit', $device) }}" class="table-action-item table-action-item-amber" @click="open = false; panel = null">
+                                            <button
+                                                type="button"
+                                                class="table-action-item table-action-item-amber"
+                                                @click="open = false; panel = null; $dispatch('open-modal', 'device-edit-modal-{{ $device->id }}')"
+                                            >
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Rediģēt</span>
-                                            </a>
+                                            </button>
 
                                             @if ($device->status === 'active')
                                                 <button type="button" class="table-action-item table-action-item-sky" @click="panel = panel === 'room' ? null : 'room'">
@@ -431,4 +452,14 @@
 
 @if ($devices->hasPages())
     <div class="mt-5">{{ $devices->links() }}</div>
+@endif
+
+@if ($canManageDevices)
+    @foreach ($devices as $device)
+        @include('devices.partials.modal-form', [
+            'mode' => 'edit',
+            'modalName' => 'device-edit-modal-' . $device->id,
+            'device' => $device,
+        ])
+    @endforeach
 @endif

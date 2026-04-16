@@ -117,7 +117,9 @@ class DeviceTransferController extends Controller
                 ->values()
         );
 
-        $createDeviceOptions = $this->deviceOptions($this->availableDevicesForUser($user)->get());
+        $createDeviceOptions = ! $canManageTransfers
+            ? $this->deviceOptions($this->availableDevicesForUser($user)->get())
+            : collect();
         $createRecipientOptions = $this->recipientOptions(
             User::active()
                 ->whereKeyNot($user->id)
