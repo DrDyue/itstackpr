@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Lietotāja modelis ar lomām un skatīšanās režīmiem.
@@ -202,5 +203,29 @@ class User extends Authenticatable
     {
         return $this->canManageRequests()
             || ((int) $device->assigned_to_id === (int) $this->id);
+    }
+
+    /**
+     * Iegūt visus aktīvus lietotājus ar kešu (1 stundu).
+     */
+    public static function cachedActive()
+    {
+        return Cache::remember('users_active', 3600, function () {
+            return self::where('is_active', true)->orderBy('full_name')->get();
+        });
+    }
+
+    /**
+     * Notīrīt keš pēc izmaiņām.
+     */
+    protected static function booted()
+    {
+        static::saved(function () {
+            Cache::forget('users_active');
+        });
+
+        static::deleted(function () {
+            Cache::forget('users_active');
+        });
     }
 }

@@ -17,7 +17,7 @@
     $submitClass = $isEdit ? 'btn-edit' : 'btn-create';
     $summaryTitle = $isEdit ? 'Saglabāt ierīces izmaiņas' : 'Saglabāt jauno ierīci';
     $summaryText = $isEdit
-        ? 'Pārbaudi tikai mainītos laukus. Statusa un piesaistes lauki tiks saglabāti uzreiz.'
+        ? 'Pārbaudi tikai mainītos laukus. Statusa un piesaistes lauki var būt bloķēti.'
         : 'Svarīgākais ir kods, nosaukums, tips, modelis, atbildīgā persona un telpa. Pārējo vari papildināt arī vēlāk.';
     $badgeLabel = $isEdit ? 'Rediģēšana' : 'Jauns ieraksts';
     $iconName = $isEdit ? 'edit' : 'plus';
@@ -62,7 +62,7 @@
 
             <div class="mb-5 rounded-[1.7rem] border border-sky-100 bg-white/85 px-5 py-4 text-sm leading-6 text-slate-600 shadow-sm">
                 <div class="font-semibold text-slate-900">Lauku secība ir sakārtota pēc darba plūsmas</div>
-                <div class="mt-1">Vispirms ievadi ierīces identitāti, tad piesaisti, un beigās papildini iegādes, garantijas vai piezīmju laukus.</div>
+                <div class="mt-1">Vispirms ievadi ierīces identitāti (kods, nosaukums, tips, modelis), tad piesaisti personu un telpu.</div>
             </div>
 
             @include('devices.partials.form-fields', [

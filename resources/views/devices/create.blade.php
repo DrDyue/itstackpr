@@ -22,7 +22,7 @@
                         </div>
                         <div>
                             <h1 class="page-title">Jauna ierīce</h1>
-                            <p class="page-subtitle">Pievieno jaunu ierīci un piesaisti to lietotājam.</p>
+                            <p class="page-subtitle">Pievieno jaunu ierīci ar skaidri sakārtotu informāciju par modeli, atrašanās vietu un atbildīgo personu.</p>
                         </div>
                     </div>
                 </div>
