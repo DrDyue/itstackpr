@@ -24,7 +24,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Route;
 
 /**
  * Galvenais inventāra kontrolieris.
@@ -545,15 +544,13 @@ SQL;
         }
     }
 
-    public function create()
+    public function redirectToCreateModal(): RedirectResponse
     {
         $manager = $this->requireManager();
 
         AuditTrail::viewed($manager, 'Device', null, 'Atvērta ierīces izveides forma.');
 
-        return redirect()->route('devices.index', [
-            'device_modal' => 'create',
-        ]);
+        return $this->redirectToDeviceModal('create');
     }
 
     /**
@@ -576,16 +573,13 @@ SQL;
         return redirect()->route('devices.index')->with('success', 'Ierīce veiksmīgi pievienota');
     }
 
-    public function edit(Device $device)
+    public function redirectToEditModal(Device $device): RedirectResponse
     {
         $manager = $this->requireManager();
 
         AuditTrail::viewed($manager, 'Device', (string) $device->id, 'Atvērta ierīces labošanas forma: '.AuditTrail::labelFor($device));
 
-        return redirect()->route('devices.index', [
-            'device_modal' => 'edit',
-            'modal_device' => $device->id,
-        ]);
+        return $this->redirectToDeviceModal('edit', $device);
     }
 
     /**
@@ -889,6 +883,17 @@ SQL;
             'defaultRoomId' => $warehouseRoom->id,
             'defaultBuildingId' => $warehouseRoom->building_id,
         ];
+    }
+
+    private function redirectToDeviceModal(string $mode, ?Device $device = null): RedirectResponse
+    {
+        $parameters = ['device_modal' => $mode];
+
+        if ($device) {
+            $parameters['modal_device'] = $device->id;
+        }
+
+        return redirect()->route('devices.index', $parameters);
     }
 
     private function validatedData(Request $request, ?Device $device = null): array

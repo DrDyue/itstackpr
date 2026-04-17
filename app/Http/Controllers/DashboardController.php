@@ -212,7 +212,7 @@ class DashboardController extends Controller
         return [
             [
                 'label' => 'Jauna ierīce',
-                'url' => route('devices.create'),
+                'url' => route('devices.index', ['device_modal' => 'create']),
                 'icon' => 'plus',
                 'class' => 'btn-create',
                 'count' => null,

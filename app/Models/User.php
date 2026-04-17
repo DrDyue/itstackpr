@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Cache;
  */
 class User extends Authenticatable
 {
+    use HasFactory;
+
     public const ROLE_ADMIN = 'admin';
 
     public const ROLE_IT_WORKER = 'it_worker';

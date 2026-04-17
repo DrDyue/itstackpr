@@ -7,13 +7,27 @@
     3. Šeit var redzēt, kā no kļūdu atslēgām tiek veidoti cilvēkam saprotami padomi.
 --}}
 @props([
-    'title' => 'Pārbaudi ievadītos datus',
+    'title' => 'Neizdevās saglabāt formu',
     'bag' => null,
+    'fieldLabels' => [],
+    'focusFirstError' => true,
 ])
 
 @php
     $errorBag = $bag ?? $errors;
-    $errorKeys = collect($errorBag->keys());
+    $errorKeys = collect($errorBag->keys())->values();
+    $firstErrorField = $focusFirstError ? $errorKeys->first() : null;
+    $displayErrors = collect($errorBag->messages())
+        ->flatMap(function (array $messages, string $field) use ($fieldLabels) {
+            $label = $fieldLabels[$field] ?? null;
+
+            return collect($messages)->map(fn (string $message) => [
+                'field' => $field,
+                'label' => $label,
+                'message' => $message,
+            ]);
+        })
+        ->values();
     $tips = $errorKeys
         ->flatMap(function (string $field) {
             return match (true) {
@@ -31,7 +45,12 @@
 @endphp
 
 @if ($errorBag->any())
-    <div {{ $attributes->class('validation-summary') }}>
+    <div
+        {{ $attributes->class('validation-summary') }}
+        @if ($firstErrorField)
+            data-first-error-field="{{ $firstErrorField }}"
+        @endif
+    >
         <div class="validation-summary-head">
             <span class="validation-summary-icon">
                 <x-icon name="exclamation-triangle" size="h-5 w-5" />
@@ -39,17 +58,22 @@
             <div>
                 <div class="validation-summary-title">{{ $title }}</div>
                 <div class="validation-summary-subtitle">
-                    Atrastas {{ $errorBag->count() }} {{ \Illuminate\Support\Str::plural('problēma', $errorBag->count()) }}. Zemāk redzams, kas jāizlabo un ko darīt tālāk.
+                    Atrastas {{ $errorBag->count() }} {{ \Illuminate\Support\Str::plural('problēma', $errorBag->count()) }}. Izlabo atzīmētos laukus un saglabā vēlreiz.
                 </div>
             </div>
         </div>
 
         <div class="validation-summary-grid">
             <div>
-                <div class="validation-summary-section">Kādas kļūdas atrastas</div>
+                <div class="validation-summary-section">Kas jāizlabo</div>
                 <ul class="validation-summary-list">
-                    @foreach ($errorBag->all() as $error)
-                        <li>{{ $error }}</li>
+                    @foreach ($displayErrors as $error)
+                        <li>
+                            @if ($error['label'])
+                                <strong>{{ $error['label'] }}:</strong>
+                            @endif
+                            {{ $error['message'] }}
+                        </li>
                     @endforeach
                 </ul>
             </div>

@@ -42,7 +42,7 @@
                 </div>
                 <div class="page-actions">
                     @if ($canManageDevices)
-                        <a href="{{ route('devices.edit', $device) }}" class="btn-edit">
+                        <a href="{{ route('devices.index', ['device_modal' => 'edit', 'modal_device' => $device->id]) }}" class="btn-edit">
                             <x-icon name="edit" size="h-4 w-4" />
                             <span>Rediģēt</span>
                         </a>
@@ -130,8 +130,8 @@
                     <div class="rounded-[1.5rem] border border-slate-200 bg-white p-5">
                         <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Datumi un finanses</div>
                         <div class="mt-3 space-y-2 text-sm text-slate-700">
-                            <div><strong class="text-slate-900">Iegades datums:</strong> {{ $device->purchase_date?->format('d.m.Y') ?: '-' }}</div>
-                            <div><strong class="text-slate-900">Iegades cena:</strong> {{ $device->purchase_price !== null ? number_format((float) $device->purchase_price, 2, '.', ' ') . ' EUR' : '-' }}</div>
+                            <div><strong class="text-slate-900">Iegādes datums:</strong> {{ $device->purchase_date?->format('d.m.Y') ?: '-' }}</div>
+                            <div><strong class="text-slate-900">Iegādes cena:</strong> {{ $device->purchase_price !== null ? number_format((float) $device->purchase_price, 2, '.', ' ') . ' EUR' : '-' }}</div>
                             <div><strong class="text-slate-900">Garantija līdz:</strong> {{ $device->warranty_until?->format('d.m.Y') ?: '-' }}</div>
                             <div><strong class="text-slate-900">Izveidots:</strong> {{ $device->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
                         </div>

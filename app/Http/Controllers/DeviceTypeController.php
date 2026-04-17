@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\DeviceType;
 use App\Support\AuditTrail;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
 
 class DeviceTypeController extends Controller
@@ -43,24 +44,18 @@ class DeviceTypeController extends Controller
             'types' => $types,
             'sorting' => $sorting,
             'sortOptions' => $this->sortOptions(),
-            'deviceTypeModal' => $this->deviceTypeModalState($request, $types),
+            'selectedModalType' => ctype_digit((string) $request->query('modal_device_type'))
+                ? DeviceType::query()->select(['id', 'type_name'])->find((int) $request->query('modal_device_type'))
+                : null,
         ]);
     }
 
-    public function create(Request $request)
+    public function redirectToCreateModal(): RedirectResponse
     {
         $this->requireManager();
         AuditTrail::viewed($this->user(), 'DeviceType', null, 'Atvērts ierīces tipa pievienošanas modālis.');
 
-        if ($request->expectsJson()) {
-            return response()->json([
-                'modal' => 'create',
-            ]);
-        }
-
-        return redirect()
-            ->route('device-types.index')
-            ->with('device_type_modal', 'create');
+        return $this->redirectToDeviceTypeModal('create');
     }
 
     public function store(Request $request)
@@ -72,32 +67,15 @@ class DeviceTypeController extends Controller
         $deviceType = DeviceType::create($data);
         AuditTrail::created(auth()->id(), $deviceType);
 
-        if ($request->expectsJson()) {
-            return response()->json([
-                'message' => 'Ierīces tips veiksmīgi pievienots.',
-                'device_type' => $this->deviceTypePayload($deviceType),
-            ]);
-        }
-
         return redirect()->route('device-types.index')->with('success', 'Ierīces tips veiksmīgi pievienots.');
     }
 
-    public function edit(Request $request, DeviceType $deviceType)
+    public function redirectToEditModal(DeviceType $deviceType): RedirectResponse
     {
         $this->requireManager();
         AuditTrail::viewed($this->user(), 'DeviceType', (string) $deviceType->id, 'Atvērts ierīces tipa labošanas modālis: '.AuditTrail::labelFor($deviceType));
 
-        if ($request->expectsJson()) {
-            return response()->json([
-                'modal' => 'edit',
-                'device_type' => $this->deviceTypePayload($deviceType),
-            ]);
-        }
-
-        return redirect()
-            ->route('device-types.index')
-            ->with('device_type_modal', 'edit')
-            ->with('device_type_modal_id', (string) $deviceType->id);
+        return $this->redirectToDeviceTypeModal('edit', $deviceType);
     }
 
     public function update(Request $request, DeviceType $deviceType)
@@ -111,13 +89,6 @@ class DeviceTypeController extends Controller
         $after = $deviceType->fresh()->only(['type_name']);
         AuditTrail::updatedFromState(auth()->id(), $deviceType, $before, $after);
 
-        if ($request->expectsJson()) {
-            return response()->json([
-                'message' => 'Ierīces tips atjaunināts.',
-                'device_type' => $this->deviceTypePayload($deviceType->fresh()),
-            ]);
-        }
-
         return redirect()->route('device-types.index')->with('success', 'Ierīces tips atjaunināts.');
     }
 
@@ -126,12 +97,6 @@ class DeviceTypeController extends Controller
         $this->requireManager();
 
         if ($deviceType->devices()->exists()) {
-            if (request()->expectsJson()) {
-                return response()->json([
-                    'message' => 'Ierīces tipu nevar dzēst, kamēr tam vēl ir piesaistītas ierīces.',
-                ], 422);
-            }
-
             return redirect()
                 ->route('device-types.index')
                 ->with('error', 'Ierīces tipu nevar dzēst, kamēr tam vēl ir piesaistītas ierīces.');
@@ -139,12 +104,6 @@ class DeviceTypeController extends Controller
 
         AuditTrail::deleted(auth()->id(), $deviceType);
         $deviceType->delete();
-
-        if (request()->expectsJson()) {
-            return response()->json([
-                'message' => 'Ierīces tips dzēsts.',
-            ]);
-        }
 
         return redirect()->route('device-types.index')->with('success', 'Ierīces tips dzēsts.');
     }
@@ -215,48 +174,14 @@ class DeviceTypeController extends Controller
         return $data;
     }
 
-    private function deviceTypeModalState(Request $request, $types): array
+    private function redirectToDeviceTypeModal(string $mode, ?DeviceType $deviceType = null): RedirectResponse
     {
-        $mode = (string) (
-            old('_device_type_modal_mode')
-            ?? session('device_type_modal')
-            ?? $request->query('modal', '')
-        );
-        $id = (string) (
-            old('_device_type_modal_id')
-            ?? session('device_type_modal_id')
-            ?? $request->query('device_type', '')
-        );
+        $query = ['device_type_modal' => $mode];
 
-        if (! in_array($mode, ['create', 'edit'], true)) {
-            $mode = '';
+        if ($mode === 'edit' && $deviceType) {
+            $query['modal_device_type'] = $deviceType->id;
         }
 
-        $selectedType = null;
-
-        if ($mode === 'edit' && $id !== '') {
-            $normalizedId = (int) $id;
-            $selectedType = $types->getCollection()->firstWhere('id', $normalizedId)
-                ?? DeviceType::query()->select(['id', 'type_name'])->find($normalizedId);
-
-            if (! $selectedType) {
-                $mode = '';
-                $id = '';
-            }
-        }
-
-        return [
-            'mode' => $mode,
-            'id' => $id,
-            'type' => $selectedType,
-        ];
-    }
-
-    private function deviceTypePayload(DeviceType $deviceType): array
-    {
-        return [
-            'id' => (string) $deviceType->id,
-            'type_name' => (string) $deviceType->type_name,
-        ];
+        return redirect()->route('device-types.index', $query);
     }
 }

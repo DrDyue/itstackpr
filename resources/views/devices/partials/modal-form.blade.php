@@ -15,12 +15,24 @@
         : 'Pievieno jaunu ierīci ar skaidri sakārtotu informāciju par modeli, atrašanās vietu un atbildīgo personu.';
     $submitLabel = $isEdit ? 'Saglabāt izmaiņas' : 'Izveidot ierīci';
     $submitClass = $isEdit ? 'btn-edit' : 'btn-create';
-    $summaryTitle = $isEdit ? 'Saglabāt ierīces izmaiņas' : 'Saglabāt jauno ierīci';
-    $summaryText = $isEdit
-        ? 'Pārbaudi tikai mainītos laukus. Statusa un piesaistes lauki var būt bloķēti.'
-        : 'Svarīgākais ir kods, nosaukums, tips, modelis, atbildīgā persona un telpa. Pārējo vari papildināt arī vēlāk.';
     $badgeLabel = $isEdit ? 'Rediģēšana' : 'Jauns ieraksts';
     $iconName = $isEdit ? 'edit' : 'plus';
+    $validationFieldLabels = [
+        'code' => 'Kods',
+        'name' => 'Nosaukums',
+        'device_type_id' => 'Tips',
+        'model' => 'Modelis',
+        'status' => 'Statuss',
+        'assigned_to_id' => 'Atbildīgā persona',
+        'room_id' => 'Telpa',
+        'purchase_date' => 'Iegādes datums',
+        'purchase_price' => 'Iegādes cena',
+        'warranty_until' => 'Garantija līdz',
+        'serial_number' => 'Sērijas numurs',
+        'manufacturer' => 'Ražotājs',
+        'notes' => 'Piezīmes',
+        'device_image' => 'Ierīces attēls',
+    ];
 @endphp
 
 <x-modal :name="$modalName" maxWidth="6xl">
@@ -50,20 +62,19 @@
                 </div>
             </div>
 
-            <button type="button" class="device-type-modal-close" data-close-modal aria-label="Aizvērt">
+            <button type="button" class="device-type-modal-close" x-data @click="$dispatch('close-modal', '{{ $modalName }}')" aria-label="Aizvērt">
                 <x-icon name="x-mark" size="h-4 w-4" />
             </button>
         </div>
 
         <div class="device-type-modal-body overflow-y-auto">
             @if ($shouldUseOldInput && $errors->any())
-                <x-validation-summary class="mb-5" />
+                <x-validation-summary
+                    class="mb-5"
+                    title="{{ $isEdit ? 'Neizdevās saglabāt ierīces izmaiņas' : 'Neizdevās izveidot ierīci' }}"
+                    :field-labels="$validationFieldLabels"
+                />
             @endif
-
-            <div class="mb-5 rounded-[1.7rem] border border-sky-100 bg-white/85 px-5 py-4 text-sm leading-6 text-slate-600 shadow-sm">
-                <div class="font-semibold text-slate-900">Lauku secība ir sakārtota pēc darba plūsmas</div>
-                <div class="mt-1">Vispirms ievadi ierīces identitāti (kods, nosaukums, tips, modelis), tad piesaisti personu un telpu.</div>
-            </div>
 
             @include('devices.partials.form-fields', [
                 'device' => $device,
@@ -72,14 +83,9 @@
             ])
         </div>
 
-        <div class="device-type-modal-actions">
-            <div class="device-type-modal-actions-copy">
-                <div class="device-type-modal-actions-title">{{ $summaryTitle }}</div>
-                <div class="device-type-modal-actions-text">{{ $summaryText }}</div>
-            </div>
-
+        <div class="device-type-modal-actions justify-end">
             <div class="device-type-modal-actions-buttons">
-                <button type="button" class="btn-clear" data-close-modal>
+                <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', '{{ $modalName }}')">
                     <x-icon name="clear" size="h-4 w-4" />
                     <span>Atcelt</span>
                 </button>
@@ -92,3 +98,11 @@
         </div>
     </form>
 </x-modal>
+
+@if ($shouldUseOldInput && $errors->any())
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            window.setTimeout(() => window.focusValidationField?.('{{ array_key_first($errors->getMessages()) }}'), 180);
+        });
+    </script>
+@endif

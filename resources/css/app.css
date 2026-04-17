@@ -831,32 +831,24 @@ tbody td {
     @apply text-sm text-slate-500;
 }
 
-.device-form-shell {
-    @apply mx-auto max-w-6xl px-4 sm:px-6 lg:px-8;
-}
-
 .device-form-grid {
-    @apply grid gap-8 xl:grid-cols-[minmax(0,1.25fr)_360px];
+    @apply grid gap-5;
 }
 
 .device-form-card {
-    @apply rounded-[1.75rem] border border-slate-300 bg-white/95 p-8 shadow-sm transition hover:shadow-md hover:border-slate-400 hover:bg-white;
+    @apply rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md hover:border-slate-300;
 }
 
 .device-form-card + .device-form-card {
-    @apply mt-8;
-}
-
-.device-form-section-title {
-    @apply mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-slate-500;
+    @apply mt-5;
 }
 
 .device-form-section-header {
-    @apply mb-6 flex items-start gap-4 pb-5 border-b border-slate-200;
+    @apply mb-5 flex items-start gap-4 border-b border-slate-100 pb-4;
 }
 
 .device-form-section-icon {
-    @apply flex h-12 w-12 items-center justify-center rounded-[1.25rem] ring-1 flex-shrink-0;
+    @apply flex h-11 w-11 shrink-0 items-center justify-center rounded-[1rem] ring-1;
 }
 
 .device-form-section-copy {
@@ -864,11 +856,11 @@ tbody td {
 }
 
 .device-form-section-name {
-    @apply text-base font-bold text-slate-900;
+    @apply text-base font-semibold text-slate-900;
 }
 
 .device-form-section-note {
-    @apply mt-1 text-sm text-slate-600 leading-5;
+    @apply mt-1 text-sm leading-5 text-slate-500;
 }
 
 .device-upload-box {
@@ -2448,7 +2440,7 @@ tbody td {
 /* REMOVED CSS: */
 
 .page-hero {
-    @apply mb-8 rounded-[2rem] border border-slate-300 bg-white/98 p-8 shadow-sm backdrop-blur sm:p-8;
+    @apply mb-8 rounded-[2rem] border border-slate-300 bg-white p-8 shadow-sm backdrop-blur sm:p-8;
 }
 
 .page-hero-grid {
@@ -2481,11 +2473,11 @@ tbody td {
 
 .page-title-icon-rose {
     @apply bg-rose-100 text-rose-700 ring-rose-300;
-}}
+}
 
 .page-title-icon-violet {
     @apply bg-violet-100 text-violet-700 ring-violet-300;
-}}
+}
 
 .page-title-icon-slate {
     @apply bg-slate-100 text-slate-700 ring-slate-200;
@@ -3233,49 +3225,12 @@ tbody td {
     @apply relative overflow-visible transition-all duration-200 ease-out;
 }
 
-.searchable-select-control-scrubbing {
-    @apply z-[90];
-}
-
-.searchable-select-surface {
-    @apply absolute inset-0 z-10 cursor-ns-resize rounded-lg bg-transparent;
-    touch-action: none;
-}
-
 .searchable-select-toggle {
     @apply absolute right-2 top-1/2 z-20 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border border-slate-200/70 bg-white/90 text-slate-500 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-700 active:scale-[0.98] cursor-pointer;
 }
 
 .searchable-select-toggle-active {
     @apply border border-sky-200 bg-sky-50 text-sky-700 ring-2 ring-sky-100;
-}
-
-.searchable-select-scrub-preview {
-    @apply pointer-events-none absolute inset-x-0 top-1/2 z-30 -translate-y-1/2 overflow-hidden rounded-2xl border border-sky-200 bg-white/95 p-2 shadow-xl ring-1 ring-sky-100 backdrop-blur;
-}
-
-.searchable-select-scrub-stack {
-    @apply transition-transform duration-200 ease-out;
-}
-
-.searchable-select-scrub-row {
-    @apply rounded-xl px-3 py-2 text-center;
-}
-
-.searchable-select-scrub-row-active {
-    @apply bg-slate-900 text-white shadow-sm;
-}
-
-.searchable-select-scrub-row-muted {
-    @apply text-slate-500;
-}
-
-.searchable-select-scrub-label {
-    @apply text-sm font-semibold leading-5;
-}
-
-.searchable-select-scrub-meta {
-    @apply mt-1 text-xs leading-5 opacity-75;
 }
 
 .searchable-select-panel {
@@ -5747,7 +5702,6 @@ html[data-theme='dark'] .notification-toast-body,
 html[data-theme='dark'] .notification-toast-meta-item,
 html[data-theme='dark'] .localized-date-panel,
 html[data-theme='dark'] .searchable-select-panel,
-html[data-theme='dark'] .searchable-select-scrub-preview,
 html[data-theme='dark'] .auth-card,
 html[data-theme='dark'] .auth-footer,
 html[data-theme='dark'] .auth-demo-list,

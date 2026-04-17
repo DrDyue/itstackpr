@@ -18,6 +18,8 @@
 ])
 
 @php
+    $controlId = $identifier !== '' ? $identifier.'-input' : $queryName.'-input';
+    $panelId = $identifier !== '' ? $identifier.'-panel' : $queryName.'-panel';
     $optionsPayload = collect($options)
         ->map(function ($option) {
             if (is_array($option)) {
@@ -51,36 +53,26 @@
     })"
     class="searchable-select"
     @keydown.escape.window="close()"
-    @mousemove.window="handlePointerMove($event)"
-    @mouseup.window="stopPointer()"
     @searchable-select-clear.window="if (! $event.detail?.target || $event.detail.target === @js($identifier)) { clearSelection() }"
 >
     <input type="hidden" name="{{ $name }}" x-model="selected">
 
-    <div class="searchable-select-control" :class="pointerMode === 'scrub' ? 'searchable-select-control-scrubbing' : ''">
-        <button
-            x-cloak
-            x-show="!open"
-            type="button"
-            class="searchable-select-surface"
-            title="Klikšķini, lai atvērtu. Turi un velc uz augšu vai leju, lai ātri izvēlētos."
-            @pointerdown.prevent.stop="beginScrub($event)"
-            @pointermove.stop="handleSurfacePointerMove($event)"
-            @pointerup.stop="finishSurfacePointer($event)"
-            @pointercancel.stop="cancelSurfacePointer($event)"
-        ></button>
-
+    <div class="searchable-select-control">
         <input
             x-ref="input"
+            id="{{ $controlId }}"
             type="text"
             name="{{ $queryName }}"
             x-model="query"
             class="crud-control pr-14"
-            :class="[
-                open ? 'border-sky-300 ring-2 ring-sky-100 bg-white cursor-text' : 'cursor-default',
-                pointerMode === 'scrub' ? 'text-transparent caret-transparent' : '',
-            ]"
+            :class="open ? 'border-sky-300 ring-2 ring-sky-100 bg-white cursor-text' : 'cursor-default'"
             :readonly="!open"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-haspopup="listbox"
+            :aria-expanded="open.toString()"
+            aria-controls="{{ $panelId }}"
+            :aria-activedescendant="activeDescendantId"
             placeholder="{{ $placeholder }}"
             autocomplete="off"
             @focus="openPanel()"
@@ -94,8 +86,10 @@
         <button
             type="button"
             class="searchable-select-toggle"
-            :class="pointerMode === 'scrub' ? 'searchable-select-toggle-active' : ''"
-            title="Turi un velc uz augšu vai leju, lai ātri izvēlētos vērtību"
+            :class="open ? 'searchable-select-toggle-active' : ''"
+            title="Atvērt vai aizvērt izvēlni"
+            :aria-expanded="open.toString()"
+            aria-controls="{{ $panelId }}"
             @click="togglePanel()"
             @keydown.enter.prevent="togglePanel()"
             @keydown.space.prevent="togglePanel()"
@@ -104,60 +98,18 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
             </svg>
         </button>
-
-        <div
-            x-cloak
-            x-show="pointerMode === 'scrub'"
-            x-transition.opacity.duration.150ms
-            class="searchable-select-scrub-preview"
-        >
-            <div
-                class="searchable-select-scrub-stack"
-                :style="`transform: translateY(${scrubVisualOffset}px)`"
-            >
-                <div class="searchable-select-scrub-row searchable-select-scrub-row-muted">
-                    <template x-if="scrubPreviousOption">
-                        <div>
-                            <div class="searchable-select-scrub-label" x-text="scrubPreviousOption.label"></div>
-                            <div class="searchable-select-scrub-meta" x-show="scrubPreviousOption.description" x-text="scrubPreviousOption.description"></div>
-                        </div>
-                    </template>
-                </div>
-
-                <div class="searchable-select-scrub-row searchable-select-scrub-row-active">
-                    <template x-if="scrubCurrentOption">
-                        <div>
-                            <div class="searchable-select-scrub-label" x-text="scrubCurrentOption.label"></div>
-                            <div class="searchable-select-scrub-meta" x-show="scrubCurrentOption.description" x-text="scrubCurrentOption.description"></div>
-                        </div>
-                    </template>
-                </div>
-
-                <div class="searchable-select-scrub-row searchable-select-scrub-row-muted">
-                    <template x-if="scrubNextOption">
-                        <div>
-                            <div class="searchable-select-scrub-label" x-text="scrubNextOption.label"></div>
-                            <div class="searchable-select-scrub-meta" x-show="scrubNextOption.description" x-text="scrubNextOption.description"></div>
-                        </div>
-                    </template>
-                </div>
-            </div>
-        </div>
     </div>
 
     <div
         x-cloak
         x-show="open"
         x-transition.origin.top.left
+        id="{{ $panelId }}"
         class="searchable-select-panel"
+        role="listbox"
         @click.outside="close()"
     >
-        <div
-            x-ref="panel"
-            class="searchable-select-list"
-            :class="dragging ? 'cursor-grabbing select-none' : 'cursor-grab'"
-            @mousedown="startPointer($event)"
-        >
+        <div x-ref="panel" class="searchable-select-list">
             <template x-if="filteredOptions.length === 0">
                 <div class="searchable-select-empty" x-text="emptyMessage"></div>
             </template>
@@ -167,6 +119,9 @@
                     type="button"
                     class="searchable-select-option"
                     :data-index="index"
+                    :id="optionId(index)"
+                    role="option"
+                    :aria-selected="(selected === option.value).toString()"
                     :class="optionClasses(index, option)"
                     @mouseenter="highlightedIndex = index"
                     @click="choose(option)"

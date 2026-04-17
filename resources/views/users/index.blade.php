@@ -67,10 +67,10 @@
                     </div>
                 </div>
 
-                <a href="{{ route('users.create') }}" class="btn-create">
+                <button type="button" class="btn-create" x-data @click="$dispatch('open-modal', 'user-create-modal')">
                     <x-icon name="plus" size="h-4 w-4" />
                     <span>Jauns lietotājs</span>
-                </a>
+                </button>
             </div>
         </div>
 
@@ -321,10 +321,10 @@
 
                                                 <div class="table-action-section">
                                                     <div class="table-action-section-title">Pārvaldība</div>
-                                                    <a href="{{ route('users.edit', $managedUser) }}" class="table-action-item table-action-item-amber" @click="open = false">
+                                                    <button type="button" class="table-action-item table-action-item-amber" @click="open = false; $dispatch('open-modal', 'user-edit-modal-{{ $managedUser->id }}')">
                                                         <x-icon name="edit" size="h-4 w-4" />
                                                         <span>Rediģēt</span>
-                                                    </a>
+                                                    </button>
 
                                                     <a href="{{ $assignedDevicesUrl }}" class="table-action-item" @click="open = false">
                                                         <x-icon name="device" size="h-4 w-4" />
@@ -384,5 +384,44 @@
 
             {{ $users->links() }}
         </div>
+
+        @include('users.partials.modal-form', [
+            'mode' => 'create',
+            'modalName' => 'user-create-modal',
+            'user' => null,
+            'roles' => $roles,
+            'roleLabels' => $roleLabels,
+        ])
+
+        @foreach ($users as $managedUser)
+            @include('users.partials.modal-form', [
+                'mode' => 'edit',
+                'modalName' => 'user-edit-modal-' . $managedUser->id,
+                'user' => $managedUser,
+                'roles' => $roles,
+                'roleLabels' => $roleLabels,
+            ])
+        @endforeach
+
+        @if (($selectedModalUser?->id ?? null) && ! $users->getCollection()->contains('id', $selectedModalUser->id))
+            @include('users.partials.modal-form', [
+                'mode' => 'edit',
+                'modalName' => 'user-edit-modal-' . $selectedModalUser->id,
+                'user' => $selectedModalUser,
+                'roles' => $roles,
+                'roleLabels' => $roleLabels,
+            ])
+        @endif
+
+        @if (old('modal_form') === 'user_create')
+            <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'user-create-modal' })));</script>
+        @elseif (str_starts_with((string) old('modal_form'), 'user_edit_'))
+            @php($userModalTarget = str_replace('user_edit_', '', (string) old('modal_form')))
+            <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'user-edit-modal-{{ $userModalTarget }}' })));</script>
+        @elseif (request()->query('user_modal') === 'create')
+            <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'user-create-modal' })));</script>
+        @elseif (request()->query('user_modal') === 'edit' && request()->query('modal_user'))
+            <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'user-edit-modal-{{ request()->query('modal_user') }}' })));</script>
+        @endif
     </section>
 </x-app-layout>

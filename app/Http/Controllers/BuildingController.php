@@ -6,6 +6,7 @@ use App\Models\Building;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -84,6 +85,9 @@ class BuildingController extends Controller
                 'total_floors' => ['label' => 'stāvu skaita'],
                 'created_at' => ['label' => 'izveides datuma'],
             ],
+            'selectedModalBuilding' => ctype_digit((string) $request->query('modal_building'))
+                ? Building::query()->select(['id', 'building_name', 'address', 'city', 'total_floors', 'notes'])->find((int) $request->query('modal_building'))
+                : null,
         ]);
     }
 
@@ -139,12 +143,12 @@ class BuildingController extends Controller
     /**
      * Parāda jaunas ēkas izveides formu.
      */
-    public function create()
+    public function redirectToCreateModal(): RedirectResponse
     {
         $this->requireManager();
         AuditTrail::viewed($this->user(), 'Building', null, 'Atvērta ēkas izveides forma.');
 
-        return view('buildings.create');
+        return $this->redirectToBuildingModal('create');
     }
 
     /**
@@ -163,12 +167,12 @@ class BuildingController extends Controller
     /**
      * Parāda ēkas rediģēšanas formu.
      */
-    public function edit(Building $building)
+    public function redirectToEditModal(Building $building): RedirectResponse
     {
         $this->requireManager();
         AuditTrail::viewed($this->user(), 'Building', (string) $building->id, 'Atvērta ēkas labošanas forma: '.AuditTrail::labelFor($building));
 
-        return view('buildings.edit', compact('building'));
+        return $this->redirectToBuildingModal('edit', $building);
     }
 
     /**
@@ -291,5 +295,16 @@ class BuildingController extends Controller
         if ($column !== 'building_name') {
             $query->orderBy('building_name');
         }
+    }
+
+    private function redirectToBuildingModal(string $mode, ?Building $building = null): RedirectResponse
+    {
+        $parameters = ['building_modal' => $mode];
+
+        if ($building) {
+            $parameters['modal_building'] = $building->id;
+        }
+
+        return redirect()->route('buildings.index', $parameters);
     }
 }

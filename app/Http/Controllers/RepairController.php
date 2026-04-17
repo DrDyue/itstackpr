@@ -11,6 +11,7 @@ use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -119,6 +120,20 @@ class RepairController extends Controller
             'sortOptions' => $this->sortOptions(),
             'deviceOptions' => $deviceOptions,
             'requesterOptions' => $requesterOptions,
+            'selectedModalRepair' => ctype_digit((string) $request->query('modal_repair'))
+                ? Repair::query()
+                    ->with([
+                        'device.assignedTo',
+                        'device.building',
+                        'device.room',
+                        'device.type',
+                        'reporter',
+                        'acceptedBy',
+                        'request.responsibleUser',
+                        'request.reviewedBy',
+                    ])
+                    ->find((int) $request->query('modal_repair'))
+                : null,
         ]);
     }
 
@@ -181,24 +196,13 @@ class RepairController extends Controller
     /**
      * Parāda jauna remonta formu administratoram.
      */
-    public function create(Request $request)
+    public function redirectToCreateModal(Request $request): RedirectResponse
     {
         $manager = $this->requireManager();
 
         AuditTrail::viewed($manager, 'Repair', null, 'Atvērta remonta izveides forma.');
 
-        if (! $this->featureTableExists('repairs')) {
-            return view('repairs.create', array_merge($this->formData(), [
-                'preselectedDeviceId' => $request->query('device_id'),
-                'defaultExecutorId' => null,
-                'featureMessage' => 'Tabula repairs šobrīd nav pieejama.',
-            ]));
-        }
-
-        return view('repairs.create', array_merge($this->formData(), [
-            'preselectedDeviceId' => $request->query('device_id'),
-            'defaultExecutorId' => null,
-        ]));
+        return $this->redirectToRepairModal('create', null, $request);
     }
 
     /**
@@ -227,7 +231,7 @@ class RepairController extends Controller
     /**
      * Parāda remonta rediģēšanas formu.
      */
-    public function edit(Repair $repair)
+    public function redirectToEditModal(Repair $repair): RedirectResponse
     {
         $manager = $this->requireManager();
 
@@ -236,11 +240,8 @@ class RepairController extends Controller
         }
 
         AuditTrail::viewed($manager, 'Repair', (string) $repair->id, 'Atvērta remonta labošanas forma: '.AuditTrail::labelFor($repair));
-        $repair->load(['device', 'executor', 'acceptedBy', 'request.responsibleUser', 'request.reviewedBy']);
 
-        return view('repairs.edit', array_merge([
-            'repair' => $repair,
-        ], $this->formData($repair)));
+        return $this->redirectToRepairModal('edit', $repair);
     }
 
     /**
@@ -278,7 +279,7 @@ class RepairController extends Controller
         $after = $repair->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState(auth()->id(), $repair, $before, $after);
 
-        return redirect()->route('repairs.edit', $repair)->with('success', 'Remonts atjaunināts');
+        return redirect()->route('repairs.index')->with('success', 'Remonts atjaunināts');
     }
 
     /**
@@ -436,6 +437,21 @@ class RepairController extends Controller
     public function show(Repair $repair)
     {
         return redirect()->route('repairs.index');
+    }
+
+    private function redirectToRepairModal(string $mode, ?Repair $repair = null, ?Request $request = null): RedirectResponse
+    {
+        $parameters = ['repair_modal' => $mode];
+
+        if ($repair) {
+            $parameters['modal_repair'] = $repair->id;
+        }
+
+        if ($request && $request->filled('device_id')) {
+            $parameters['device_id'] = $request->query('device_id');
+        }
+
+        return redirect()->route('repairs.index', $parameters);
     }
 
     private function visibleRepairsQuery(User $user): Builder

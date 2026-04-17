@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -83,6 +84,9 @@ class RoomController extends Controller
                 ->select(['id', 'full_name', 'job_title', 'email'])
                 ->orderBy('full_name')
                 ->get(),
+            'selectedModalRoom' => ctype_digit((string) $request->query('modal_room'))
+                ? Room::query()->select(['id', 'building_id', 'floor_number', 'room_number', 'room_name', 'department', 'user_id', 'notes'])->find((int) $request->query('modal_room'))
+                : null,
         ]);
     }
 
@@ -146,22 +150,12 @@ class RoomController extends Controller
     /**
      * Parāda jaunas telpas izveides formu.
      */
-    public function create()
+    public function redirectToCreateModal(): RedirectResponse
     {
         $this->requireManager();
         AuditTrail::viewed($this->user(), 'Room', null, 'Atvērta telpas izveides forma.');
 
-        return view('rooms.create', [
-            'buildings' => Building::query()
-                ->select(['id', 'building_name'])
-                ->orderBy('building_name')
-                ->get(),
-            'users' => User::query()
-                ->active()
-                ->select(['id', 'full_name', 'job_title', 'email'])
-                ->orderBy('full_name')
-                ->get(),
-        ]);
+        return $this->redirectToRoomModal('create');
     }
 
     /**
@@ -180,23 +174,12 @@ class RoomController extends Controller
     /**
      * Parāda telpas rediģēšanas formu.
      */
-    public function edit(Room $room)
+    public function redirectToEditModal(Room $room): RedirectResponse
     {
         $this->requireManager();
         AuditTrail::viewed($this->user(), 'Room', (string) $room->id, 'Atvērta telpas labošanas forma: '.AuditTrail::labelFor($room));
 
-        return view('rooms.edit', [
-            'room' => $room,
-            'buildings' => Building::query()
-                ->select(['id', 'building_name'])
-                ->orderBy('building_name')
-                ->get(),
-            'users' => User::query()
-                ->active()
-                ->select(['id', 'full_name', 'job_title', 'email'])
-                ->orderBy('full_name')
-                ->get(),
-        ]);
+        return $this->redirectToRoomModal('edit', $room);
     }
 
     /**
@@ -274,5 +257,16 @@ class RoomController extends Controller
         $data['notes'] = $data['notes'] ?: null;
 
         return $data;
+    }
+
+    private function redirectToRoomModal(string $mode, ?Room $room = null): RedirectResponse
+    {
+        $parameters = ['room_modal' => $mode];
+
+        if ($room) {
+            $parameters['modal_room'] = $room->id;
+        }
+
+        return redirect()->route('rooms.index', $parameters);
     }
 }

@@ -337,11 +337,62 @@
             </x-modal>
         @endforeach
 
+        @if (($selectedModalBuilding?->id ?? null) && ! $buildings->getCollection()->contains('id', $selectedModalBuilding->id))
+            <x-modal name="building-edit-modal-{{ $selectedModalBuilding->id }}" maxWidth="2xl" focusable>
+                <div class="p-6">
+                    <h2 class="text-lg font-semibold text-slate-900">Rediģēt ēku</h2>
+                    <p class="mt-1 text-sm text-slate-500">{{ $selectedModalBuilding->building_name }}</p>
+
+                    <form method="POST" action="{{ route('buildings.update', $selectedModalBuilding) }}" class="mt-5 space-y-4">
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" name="modal_form" value="building_edit_{{ $selectedModalBuilding->id }}">
+
+                        <x-ui.form-field label="Nosaukums" name="building_name" :required="true">
+                            <input type="text" name="building_name" value="{{ old('modal_form') === 'building_edit_' . $selectedModalBuilding->id ? old('building_name') : $selectedModalBuilding->building_name }}" class="crud-control" required>
+                        </x-ui.form-field>
+
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <x-ui.form-field label="Pilsēta" name="city">
+                                <input type="text" name="city" value="{{ old('modal_form') === 'building_edit_' . $selectedModalBuilding->id ? old('city') : $selectedModalBuilding->city }}" class="crud-control">
+                            </x-ui.form-field>
+                            <x-ui.form-field label="Stāvu skaits" name="total_floors">
+                                <input type="number" min="0" step="1" name="total_floors" value="{{ old('modal_form') === 'building_edit_' . $selectedModalBuilding->id ? old('total_floors') : $selectedModalBuilding->total_floors }}" class="crud-control">
+                            </x-ui.form-field>
+                        </div>
+
+                        <x-ui.form-field label="Adrese" name="address">
+                            <input type="text" name="address" value="{{ old('modal_form') === 'building_edit_' . $selectedModalBuilding->id ? old('address') : $selectedModalBuilding->address }}" class="crud-control">
+                        </x-ui.form-field>
+
+                        <x-ui.form-field label="Piezīmes" name="notes">
+                            <textarea name="notes" rows="3" class="crud-control">{{ old('modal_form') === 'building_edit_' . $selectedModalBuilding->id ? old('notes') : $selectedModalBuilding->notes }}</textarea>
+                        </x-ui.form-field>
+
+                        <div class="flex justify-end gap-2 pt-2">
+                            <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'building-edit-modal-{{ $selectedModalBuilding->id }}')">
+                                <x-icon name="clear" size="h-4 w-4" />
+                                <span>Atcelt</span>
+                            </button>
+                            <button type="submit" class="btn-edit">
+                                <x-icon name="save" size="h-4 w-4" />
+                                <span>Saglabāt</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </x-modal>
+        @endif
+
         @if (old('modal_form') === 'building_create')
             <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'building-create-modal' })));</script>
         @elseif (str_starts_with((string) old('modal_form'), 'building_edit_'))
             @php($buildingModalTarget = str_replace('building_edit_', '', (string) old('modal_form')))
             <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'building-edit-modal-{{ $buildingModalTarget }}' })));</script>
+        @elseif (request()->query('building_modal') === 'create')
+            <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'building-create-modal' })));</script>
+        @elseif (request()->query('building_modal') === 'edit' && request()->query('modal_building'))
+            <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'building-edit-modal-{{ request()->query('modal_building') }}' })));</script>
         @endif
     </section>
 </x-app-layout>

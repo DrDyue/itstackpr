@@ -73,10 +73,10 @@
 
                 @if ($canManageRepairs)
                     <div class="page-actions">
-                        <a href="{{ route('repairs.create') }}" class="btn-create">
+                        <button type="button" class="btn-create" x-data @click="$dispatch('open-modal', 'repair-create-modal')">
                             <x-icon name="plus" size="h-4 w-4" />
                             <span>Jauns remonts</span>
-                        </a>
+                        </button>
                     </div>
                 @endif
             </div>
@@ -461,10 +461,10 @@
                                                 @endif
 
                                                 @if ($canManageRepairs)
-                                                    <a href="{{ route('repairs.edit', $repair) }}" class="table-action-item table-action-item-amber" @click="open = false; panel = null">
+                                                    <button type="button" class="table-action-item table-action-item-amber" @click="open = false; panel = null; $dispatch('open-modal', 'repair-edit-modal-{{ $repair->id }}')">
                                                         <x-icon name="edit" size="h-4 w-4" />
                                                         <span>Rediģēt</span>
-                                                    </a>
+                                                    </button>
 
                                                     @if ($repair->status === 'waiting')
                                                         <form
@@ -505,7 +505,7 @@
                                                     <button
                                                         type="button"
                                                         class="table-action-item"
-                                                        @click="open = false; window.location.href = '{{ route('repairs.show', $repair) }}'"
+                                                        @click="open = false; panel = null; $dispatch('open-modal', 'repair-edit-modal-{{ $repair->id }}')"
                                                     >
                                                         <x-icon name="view" size="h-4 w-4" />
                                                         <span>Ātrais skats</span>
@@ -565,6 +565,57 @@
 
             @if ($repairs->hasPages())
                 <div class="mt-5">{{ $repairs->links() }}</div>
+            @endif
+
+            @if ($canManageRepairs)
+                @include('repairs.partials.modal-form', [
+                    'mode' => 'create',
+                    'modalName' => 'repair-create-modal',
+                    'repair' => null,
+                    'deviceOptions' => $deviceOptions,
+                    'statusLabels' => $statusLabels,
+                    'priorityLabels' => $priorityLabels,
+                    'typeLabels' => $typeLabels,
+                    'preselectedDeviceId' => request()->query('device_id'),
+                    'featureMessage' => $featureMessage ?? null,
+                ])
+
+                @foreach ($repairs as $repair)
+                    @include('repairs.partials.modal-form', [
+                        'mode' => 'edit',
+                        'modalName' => 'repair-edit-modal-' . $repair->id,
+                        'repair' => $repair,
+                        'deviceOptions' => $deviceOptions,
+                        'statusLabels' => $statusLabels,
+                        'priorityLabels' => $priorityLabels,
+                        'typeLabels' => $typeLabels,
+                        'featureMessage' => $featureMessage ?? null,
+                    ])
+                @endforeach
+
+                @if (($selectedModalRepair?->id ?? null) && ! $repairs->getCollection()->contains('id', $selectedModalRepair->id))
+                    @include('repairs.partials.modal-form', [
+                        'mode' => 'edit',
+                        'modalName' => 'repair-edit-modal-' . $selectedModalRepair->id,
+                        'repair' => $selectedModalRepair,
+                        'deviceOptions' => $deviceOptions,
+                        'statusLabels' => $statusLabels,
+                        'priorityLabels' => $priorityLabels,
+                        'typeLabels' => $typeLabels,
+                        'featureMessage' => $featureMessage ?? null,
+                    ])
+                @endif
+            @endif
+
+            @if (old('modal_form') === 'repair_create')
+                <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'repair-create-modal' })));</script>
+            @elseif (str_starts_with((string) old('modal_form'), 'repair_edit_'))
+                @php($repairModalTarget = str_replace('repair_edit_', '', (string) old('modal_form')))
+                <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'repair-edit-modal-{{ $repairModalTarget }}' })));</script>
+            @elseif (request()->query('repair_modal') === 'create')
+                <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'repair-create-modal' })));</script>
+            @elseif (request()->query('repair_modal') === 'edit' && request()->query('modal_repair'))
+                <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'repair-edit-modal-{{ request()->query('modal_repair') }}' })));</script>
             @endif
 
             <x-request-detail-drawer />

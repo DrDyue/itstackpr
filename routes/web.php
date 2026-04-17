@@ -47,22 +47,51 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
     Route::get('/audit-log/find-entry', [AuditLogController::class, 'findEntry'])->name('audit-log.find-entry');
     Route::get('/users/find-by-name', [UserController::class, 'findByName'])->name('users.find-by-name');
-    Route::resource('users', UserController::class);
+    Route::get('/users/create', [UserController::class, 'redirectToCreateModal'])->name('users.create');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::get('/users/{user}/edit', [UserController::class, 'redirectToEditModal'])->name('users.edit');
+    Route::match(['put', 'patch'], '/users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
 });
 
 // Inventāra pārvaldības sadaļa administratoram un IT darbiniekam.
 Route::middleware(['auth', 'manager'])->group(function () {
-    Route::resource('buildings', BuildingController::class)->except(['show']);
+    Route::get('/buildings/create', [BuildingController::class, 'redirectToCreateModal'])->name('buildings.create');
+    Route::post('/buildings', [BuildingController::class, 'store'])->name('buildings.store');
+    Route::get('/buildings/{building}/edit', [BuildingController::class, 'redirectToEditModal'])->name('buildings.edit');
+    Route::match(['put', 'patch'], '/buildings/{building}', [BuildingController::class, 'update'])->name('buildings.update');
+    Route::delete('/buildings/{building}', [BuildingController::class, 'destroy'])->name('buildings.destroy');
+    Route::get('/buildings', [BuildingController::class, 'index'])->name('buildings.index');
     Route::get('/buildings/find-by-name', [BuildingController::class, 'findByName'])->name('buildings.find-by-name');
-    Route::resource('rooms', RoomController::class)->except(['show']);
+    Route::get('/rooms/create', [RoomController::class, 'redirectToCreateModal'])->name('rooms.create');
+    Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
+    Route::get('/rooms/{room}/edit', [RoomController::class, 'redirectToEditModal'])->name('rooms.edit');
+    Route::match(['put', 'patch'], '/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
+    Route::delete('/rooms/{room}', [RoomController::class, 'destroy'])->name('rooms.destroy');
+    Route::get('/rooms', [RoomController::class, 'index'])->name('rooms.index');
     Route::get('/rooms/find-by-name', [RoomController::class, 'findByName'])->name('rooms.find-by-name');
-    Route::resource('device-types', DeviceTypeController::class)->except(['show']);
+    Route::get('/device-types/create', [DeviceTypeController::class, 'redirectToCreateModal'])->name('device-types.create');
+    Route::post('/device-types', [DeviceTypeController::class, 'store'])->name('device-types.store');
+    Route::get('/device-types/{deviceType}/edit', [DeviceTypeController::class, 'redirectToEditModal'])->name('device-types.edit');
+    Route::match(['put', 'patch'], '/device-types/{deviceType}', [DeviceTypeController::class, 'update'])->name('device-types.update');
+    Route::delete('/device-types/{deviceType}', [DeviceTypeController::class, 'destroy'])->name('device-types.destroy');
+    Route::get('/device-types', [DeviceTypeController::class, 'index'])->name('device-types.index');
     Route::get('/devices/{device}/quick-update', [DeviceController::class, 'quickUpdateRedirect'])->name('devices.quick-update.redirect');
     Route::post('/devices/{device}/quick-update', [DeviceController::class, 'quickUpdate'])->name('devices.quick-update');
-    Route::resource('devices', DeviceController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
+    Route::get('/devices/create', [DeviceController::class, 'redirectToCreateModal'])->name('devices.create');
+    Route::post('/devices', [DeviceController::class, 'store'])->name('devices.store');
+    Route::get('/devices/{device}/edit', [DeviceController::class, 'redirectToEditModal'])->name('devices.edit');
+    Route::match(['put', 'patch'], '/devices/{device}', [DeviceController::class, 'update'])->name('devices.update');
+    Route::delete('/devices/{device}', [DeviceController::class, 'destroy'])->name('devices.destroy');
     Route::post('/repairs/{repair}/transition', [RepairController::class, 'transition'])->name('repairs.transition');
     Route::post('/repairs/{repair}/completion', [RepairController::class, 'completion'])->name('repairs.completion');
-    Route::resource('repairs', RepairController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
+    Route::get('/repairs/create', [RepairController::class, 'redirectToCreateModal'])->name('repairs.create');
+    Route::post('/repairs', [RepairController::class, 'store'])->name('repairs.store');
+    Route::get('/repairs/{repair}/edit', [RepairController::class, 'redirectToEditModal'])->name('repairs.edit');
+    Route::match(['put', 'patch'], '/repairs/{repair}', [RepairController::class, 'update'])->name('repairs.update');
+    Route::delete('/repairs/{repair}', [RepairController::class, 'destroy'])->name('repairs.destroy');
 });
 
 // Vispārēji autentificētā lietotāja maršruti.

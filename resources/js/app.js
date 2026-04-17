@@ -36,6 +36,55 @@ const writeStorageValue = (key, value) => {
     }
 };
 
+const resolveFocusableErrorField = (fieldName) => {
+    if (!fieldName) {
+        return null;
+    }
+
+    const queryFieldFallbacks = {
+        device_type_id: 'device_type_query',
+        assigned_to_id: 'assigned_to_query',
+        room_id: 'room_query',
+        building_id: 'building_query',
+        status: 'status_query',
+        transfered_to_id: 'transfered_to_query',
+        target_room_id: 'target_room_query',
+        target_assigned_to_id: 'target_assigned_to_query',
+        user_id: 'user_query',
+        floor: 'floor_query',
+        type: 'type_query',
+    };
+
+    const directField = document.querySelector(`[name="${CSS.escape(fieldName)}"]:not([type="hidden"])`);
+    if (directField) {
+        return directField;
+    }
+
+    const queryField = queryFieldFallbacks[fieldName]
+        ? document.querySelector(`[name="${CSS.escape(queryFieldFallbacks[fieldName])}"]`)
+        : null;
+
+    return queryField;
+};
+
+window.focusValidationField = (fieldName) => {
+    const field = resolveFocusableErrorField(fieldName);
+    if (!field) {
+        return false;
+    }
+
+    field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    window.setTimeout(() => {
+        field.focus({ preventScroll: true });
+        if (typeof field.select === 'function' && field instanceof HTMLInputElement && field.type !== 'file') {
+            field.select();
+        }
+    }, 40);
+
+    return true;
+};
+
 const appendInputValueParam = (params, key, input) => {
     if (!input || !key) {
         return;
@@ -958,199 +1007,6 @@ const initializeAsyncTableFilters = () => {
     });
 };
 
-const resetDeviceTypeModalErrors = (form) => {
-    if (!form) return;
-    
-    const errorContainer = form.querySelector('[data-device-type-form-errors]');
-    const errorList = form.querySelector('[data-device-type-error-list]');
-    const inputError = form.querySelector('[data-device-type-input-error]');
-    
-    if (errorContainer) errorContainer.classList.add('hidden');
-    if (errorList) errorList.innerHTML = '';
-    if (inputError) {
-        inputError.textContent = '';
-        inputError.classList.add('hidden');
-    }
-    
-    form.querySelectorAll('[data-device-type-input]').forEach(input => {
-        input.classList.remove('border-rose-300', 'bg-rose-50/60', 'focus:border-rose-400', 'focus:ring-rose-200');
-    });
-};
-
-const showDeviceTypeModalErrors = (form, errors = {}) => {
-    if (!form) return;
-    resetDeviceTypeModalErrors(form);
-    
-    const typeNameError = errors?.type_name?.[0] || null;
-    if (!typeNameError) return;
-    
-    const inputError = form.querySelector('[data-device-type-input-error]');
-    const input = form.querySelector('[data-device-type-input]');
-    
-    if (inputError) {
-        inputError.textContent = typeNameError;
-        inputError.classList.remove('hidden');
-    }
-    
-    if (input) {
-        input.classList.add('border-rose-300', 'bg-rose-50/60', 'focus:border-rose-400', 'focus:ring-rose-200');
-        input.focus();
-    }
-
-    const errorContainer = form.querySelector('[data-device-type-form-errors]');
-    if (errorContainer) {
-        errorContainer.classList.remove('hidden');
-        const list = errorContainer.querySelector('[data-device-type-error-list]');
-        if (list) {
-            list.innerHTML = `<li>${typeNameError}</li>`;
-        }
-    }
-};
-
-const setDeviceTypeModalSubmitting = (form, submitting) => {
-    if (!form) return;
-    form.dataset.submitting = submitting ? 'true' : 'false';
-    
-    const btn = form.querySelector('[data-device-type-submit]');
-    if (btn) {
-        btn.disabled = submitting;
-        btn.classList.toggle('opacity-70', submitting);
-    }
-};
-
-
-
-const initializeDeviceTypeModalForms = () => {
-    if (window.__deviceTypeModalFormsInitialized) {
-        return;
-    }
-
-    window.__deviceTypeModalFormsInitialized = true;
-
-    document.addEventListener('submit', async (e) => {
-        const form = e.target;
-        
-        // Jāpārbauda, vai tas ir Device Type forma
-        if (!(form instanceof HTMLFormElement) || form.dataset.deviceTypeModalForm !== 'true') {
-            return;
-        }
-
-        e.preventDefault();
-
-        // Nav dublētas iesniegšanas
-        if (form.dataset.submitting === 'true') {
-            return;
-        }
-
-        resetDeviceTypeModalErrors(form);
-        setDeviceTypeModalSubmitting(form, true);
-
-        try {
-            // Sūtīt request
-            const response = await fetch(form.action, {
-                method: 'POST',
-                body: new FormData(form),
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-            });
-
-            // 422 = validācijas kļūdas
-            if (response.status === 422) {
-                try {
-                    const data = await response.json();
-                    showDeviceTypeModalErrors(form, data.errors || {});
-                } catch (e) {
-                    // Parse error ignored
-                }
-                return;
-            }
-
-            // Citas kļūdas
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-
-            // Veiksmīgi
-            const data = await response.json();
-            const modalName = form.dataset.modalName;
-
-            // Aizvērt modāli
-            if (modalName) {
-                window.dispatchEvent(new CustomEvent('close-modal', {
-                    detail: modalName,
-                }));
-            }
-
-            // Paziņojums
-            window.dispatchAppToast({
-                message: data.message || 'Veiksmīgi saglabāts',
-                tone: 'success',
-            });
-
-            // Atsvaidzināt tabulu
-            const root = document.querySelector('[data-async-table-root]');
-            if (root) {
-                setTimeout(() => {
-                    const table = root.querySelector('[data-async-table-form]');
-                    if (table) {
-                        const btn = table.querySelector('button[type="submit"]');
-                        if (btn) btn.click();
-                    }
-                }, 200);
-            }
-        } catch (err) {
-            window.dispatchAppToast({
-                title: 'Kļūda',
-                message: 'Neizdevās saglabāt',
-                tone: 'info',
-            });
-        } finally {
-            setDeviceTypeModalSubmitting(form, false);
-        }
-    });
-};
-
-
-const openDeviceTypeModal = (btn) => {
-    if (!btn) return;
-    
-    const isEdit = btn.dataset.deviceTypeOpen === 'edit';
-    const modalName = isEdit ? 'edit-device-type' : 'create-device-type';
-    
-    const form = document.querySelector(`[data-modal-name="${modalName}"]`);
-    if (!form) return;
-    
-    resetDeviceTypeModalErrors(form);
-    
-    const input = form.querySelector('[data-device-type-input]');
-    if (!input) return;
-    
-    if (isEdit) {
-        // Rediģēšana
-        input.value = btn.dataset.deviceTypeName || '';
-        form.action = btn.dataset.deviceTypeUpdateUrl || '';
-    } else {
-        // Jauns
-        input.value = '';
-        form.action = form.getAttribute('action') || '';
-    }
-    
-    // Atvērt modāli
-    window.dispatchEvent(new CustomEvent('open-modal', {
-        detail: modalName,
-    }));
-    
-    // Fokusēt
-    setTimeout(() => {
-        input.focus();
-        if (isEdit) input.select?.();
-    }, 100);
-};
-
-
-
 const deleteDeviceType = async (deleteUrl, deviceTypeName) => {
     const accepted = await window.openAppConfirm({
         title: 'Dzēst ierīces tipu?',
@@ -1211,38 +1067,6 @@ const deleteDeviceType = async (deleteUrl, deviceTypeName) => {
         });
     }
 };
-
-const initializeDeviceTypeModalOpeners = () => {
-    if (window.__deviceTypeModalOpenersInitialized) {
-        return;
-    }
-
-    window.__deviceTypeModalOpenersInitialized = true;
-
-    // Atvērt modāli
-    document.addEventListener('click', (event) => {
-        const button = event.target.closest('[data-device-type-open]');
-        if (!button) return;
-        event.preventDefault();
-        openDeviceTypeModal(button);
-    });
-
-    // Aizvērt modāli
-    document.addEventListener('click', (event) => {
-        const button = event.target.closest('[data-close-modal]');
-        if (!button) return;
-        
-        const form = button.closest('[data-device-type-modal-form]');
-        if (form) {
-            const modalName = form.dataset.modalName;
-            window.dispatchEvent(new CustomEvent('close-modal', {
-                detail: modalName,
-            }));
-        }
-    });
-};
-
-
 
 const registerAlpineData = () => {
     if (!Alpine || window.__appAlpineDataRegistered) {
@@ -1924,19 +1748,6 @@ const registerAlpineData = () => {
         placeholder,
         emptyMessage,
         highlightedIndex: 0,
-        pointerActive: false,
-        pointerMode: null,
-        surfacePointerId: null,
-        wasOpenBeforePointer: false,
-        dragging: false,
-        suppressClick: false,
-        scrubDirection: null,
-        scrubVisualOffset: 0,
-        scrubAnimationFrame: null,
-        startY: 0,
-        startScrollTop: 0,
-        dragStartIndex: 0,
-        scrubStepPx: 50,
         init() {
             if (this.selected && !this.query) {
                 const current = this.options.find((option) => option.value === this.selected);
@@ -1958,22 +1769,22 @@ const registerAlpineData = () => {
 
             return this.options.filter((option) => option.search.includes(term));
         },
-        get scrubPreviousOption() {
-            return this.options[this.highlightedIndex - 1] ?? null;
+        get activeDescendantId() {
+            if (!this.open || this.filteredOptions.length === 0) {
+                return null;
+            }
+
+            return this.optionId(this.highlightedIndex);
         },
-        get scrubCurrentOption() {
-            return this.options[this.highlightedIndex] ?? null;
-        },
-        get scrubNextOption() {
-            return this.options[this.highlightedIndex + 1] ?? null;
+        optionId(index) {
+            const baseIdentifier = this.identifier || 'searchable-select';
+            return `${baseIdentifier}-option-${index}`;
         },
         togglePanel() {
             this.open = !this.open;
             if (this.open) {
                 this.showAllOptions = true;
                 this.preparePanel();
-            } else {
-                this.resetPointerState();
             }
         },
         openPanel() {
@@ -1985,35 +1796,14 @@ const registerAlpineData = () => {
             });
         },
         handleTriggerClick() {
-            if (this.suppressClick) {
-                this.suppressClick = false;
-                return;
-            }
-
             this.openPanel();
         },
         closePanelOnly() {
             this.open = false;
             this.showAllOptions = false;
         },
-        resetPointerState() {
-            this.pointerActive = false;
-            this.pointerMode = null;
-            this.surfacePointerId = null;
-            this.dragging = false;
-            this.suppressClick = false;
-            this.wasOpenBeforePointer = false;
-            this.scrubDirection = null;
-            this.scrubVisualOffset = 0;
-
-            if (this.scrubAnimationFrame) {
-                window.cancelAnimationFrame(this.scrubAnimationFrame);
-                this.scrubAnimationFrame = null;
-            }
-        },
         close() {
             this.closePanelOnly();
-            this.resetPointerState();
         },
         clearSelection() {
             this.selected = '';
@@ -2034,68 +1824,6 @@ const registerAlpineData = () => {
             const exact = this.options.find((option) => option.label.toLowerCase() === normalized);
             this.selected = exact ? exact.value : '';
             this.highlightedIndex = 0;
-        },
-        beginScrub(event) {
-            const isPrimaryButton = event.button === 0 || event.button === -1 || event.buttons === 1;
-            if (!isPrimaryButton) {
-                return;
-            }
-
-            this.wasOpenBeforePointer = this.open;
-            this.pointerActive = true;
-            this.pointerMode = 'scrub';
-            this.surfacePointerId = event.pointerId ?? null;
-            this.dragging = false;
-            this.suppressClick = false;
-            this.startY = event.clientY;
-            const selectedIndex = this.options.findIndex((option) => option.value === this.selected);
-            this.dragStartIndex = selectedIndex >= 0 ? selectedIndex : 0;
-            this.highlightedIndex = this.dragStartIndex;
-
-            if (typeof event.currentTarget?.setPointerCapture === 'function' && event.pointerId !== undefined) {
-                event.currentTarget.setPointerCapture(event.pointerId);
-            }
-        },
-        handleSurfacePointerMove(event) {
-            if (this.pointerMode !== 'scrub') {
-                return;
-            }
-
-            if (this.surfacePointerId !== null && event.pointerId !== this.surfacePointerId) {
-                return;
-            }
-
-            this.handleScrubMove(event);
-        },
-        finishSurfacePointer(event) {
-            if (this.pointerMode !== 'scrub') {
-                return;
-            }
-
-            if (this.surfacePointerId !== null && event.pointerId !== this.surfacePointerId) {
-                return;
-            }
-
-            if (typeof event.currentTarget?.releasePointerCapture === 'function' && event.pointerId !== undefined) {
-                try {
-                    event.currentTarget.releasePointerCapture(event.pointerId);
-                } catch (error) {
-                    // Ignorē pointer capture atbrīvošanas kļūdas; tās ir nekaitīgas, ja tvērums jau bija zaudēts.
-                }
-            }
-
-            this.stopPointer();
-        },
-        cancelSurfacePointer(event) {
-            if (this.pointerMode !== 'scrub') {
-                return;
-            }
-
-            if (this.surfacePointerId !== null && event.pointerId !== this.surfacePointerId) {
-                return;
-            }
-
-            this.resetPointerState();
         },
         move(direction) {
             if (!this.open) {
@@ -2118,11 +1846,7 @@ const registerAlpineData = () => {
 
             this.choose(option);
         },
-        choose(option, force = false) {
-            if (this.suppressClick && !force) {
-                return;
-            }
-
+        choose(option) {
             this.selected = option.value;
             this.query = option.label;
             this.dispatchUpdate();
@@ -2170,121 +1894,6 @@ const registerAlpineData = () => {
             } else if (optionBottom > viewBottom) {
                 panel.scrollTop = optionBottom - panel.clientHeight;
             }
-        },
-        startPointer(event) {
-            if (!this.open || !this.$refs.panel) {
-                return;
-            }
-
-            this.pointerActive = true;
-            this.pointerMode = 'panel';
-            this.dragging = false;
-            this.startY = event.clientY;
-            this.startScrollTop = this.$refs.panel.scrollTop;
-        },
-        handlePointerMove(event) {
-            if (!this.pointerActive) {
-                return;
-            }
-
-            if (!this.$refs.panel) {
-                return;
-            }
-
-            if (this.pointerMode === 'panel') {
-                const delta = event.clientY - this.startY;
-
-                if (Math.abs(delta) > 3) {
-                    this.dragging = true;
-                    this.suppressClick = true;
-                }
-
-                if (this.dragging) {
-                    this.$refs.panel.scrollTop = this.startScrollTop - delta;
-                    this.syncHighlightFromPointer(event);
-                }
-            }
-        },
-        stopPointer() {
-            if (!this.pointerActive) {
-                return;
-            }
-
-            if (this.pointerMode === 'scrub') {
-                this.finishScrub();
-            } else if (this.pointerMode === 'panel') {
-                if (this.suppressClick && this.filteredOptions[this.highlightedIndex]) {
-                    this.choose(this.filteredOptions[this.highlightedIndex], true);
-                }
-
-                if (this.suppressClick) {
-                    window.setTimeout(() => {
-                        this.suppressClick = false;
-                    }, 80);
-                }
-            }
-
-            this.pointerActive = false;
-            this.pointerMode = null;
-            this.dragging = false;
-        },
-        syncHighlightFromPointer(event) {
-            const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('.searchable-select-option');
-            if (!target) {
-                return;
-            }
-
-            const nextIndex = Number(target.dataset.index ?? '-1');
-            if (!Number.isNaN(nextIndex) && nextIndex >= 0) {
-                this.highlightedIndex = nextIndex;
-            }
-        },
-        handleScrubMove(event) {
-            if (this.options.length === 0) {
-                return;
-            }
-
-            const delta = event.clientY - this.startY;
-
-            if (Math.abs(delta) > 3) {
-                this.dragging = true;
-                this.suppressClick = true;
-            }
-
-            const offset = Math.trunc(delta / this.scrubStepPx);
-            const maxIndex = Math.max(0, this.options.length - 1);
-            const nextIndex = Math.min(maxIndex, Math.max(0, this.dragStartIndex + offset));
-
-            if (nextIndex !== this.highlightedIndex) {
-                const direction = nextIndex > this.highlightedIndex ? 'down' : 'up';
-                this.highlightedIndex = nextIndex;
-                this.query = this.options[nextIndex]?.label ?? this.query;
-                this.animateScrubPreview(direction);
-            }
-        },
-        animateScrubPreview(direction) {
-            this.scrubDirection = direction;
-            this.scrubVisualOffset = direction === 'down' ? -14 : 14;
-
-            if (this.scrubAnimationFrame) {
-                window.cancelAnimationFrame(this.scrubAnimationFrame);
-            }
-
-            this.scrubAnimationFrame = window.requestAnimationFrame(() => {
-                this.scrubVisualOffset = 0;
-                this.scrubAnimationFrame = null;
-            });
-        },
-        finishScrub() {
-            if (this.dragging && this.options[this.highlightedIndex]) {
-                this.choose(this.options[this.highlightedIndex], true);
-                window.setTimeout(() => {
-                    this.suppressClick = false;
-                }, 80);
-                return;
-            }
-
-            this.openPanel();
         },
     }));
 };
@@ -2560,8 +2169,6 @@ const appInitializers = Object.freeze([
     initializeThemeToggle,
     initializeAppConfirm,
     initializeAsyncTableFilters,
-    initializeDeviceTypeModalOpeners,
-    initializeDeviceTypeModalForms,
     restoreHighlightedSearchFromUrl,
 ]);
 

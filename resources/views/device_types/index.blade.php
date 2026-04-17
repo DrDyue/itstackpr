@@ -1,7 +1,3 @@
-{{--
-    Lapa: Ierīču tipu saraksts.
-    Atbildība: rāda tipu vārdnīcu vienā tabulā un pārvalda create/edit darbības ar modāļiem tajā pašā lapā.
---}}
 <x-app-layout>
     @php
         $sorting = $sorting ?? ['sort' => 'type_name', 'direction' => 'asc'];
@@ -10,10 +6,7 @@
             'devices_count' => ['label' => 'piesaistīto ierīču skaita'],
         ];
         $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
-        $modalState = $deviceTypeModal ?? ['mode' => '', 'id' => '', 'type' => null];
-        $modalMode = (string) ($modalState['mode'] ?? '');
-        $selectedModalType = $modalState['type'] ?? null;
-        $editModalAction = $selectedModalType ? route('device-types.update', $selectedModalType) : route('device-types.store');
+        $selectedModalType = $selectedModalType ?? null;
     @endphp
 
     <section class="app-shell app-shell-wide">
@@ -40,13 +33,13 @@
                         </div>
                         <div>
                             <h1 class="page-title">Ierīču tipi</h1>
-                            <p class="page-subtitle">Vienkāršota tipu vārdnīca ar saistīto ierīču skaitu un ātru pārvaldību modernās modālajās formās.</p>
+                            <p class="page-subtitle">Vienota tabulas un modāļu plūsma ierīču tipu klasifikatoram.</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="page-actions">
-                    <button type="button" class="btn-create" data-device-type-open="create">
+                    <button type="button" class="btn-create" x-data @click="$dispatch('open-modal', 'device-type-create-modal')">
                         <x-icon name="plus" size="h-4 w-4" />
                         <span>Pievienot tipu</span>
                     </button>
@@ -85,11 +78,7 @@
                                             : ($isCurrentSort && $sorting['direction'] === 'desc' ? 'asc' : $defaultDirection);
                                         $sortMessage = 'Tabula "Ierīču tipi" kārtota pēc ' . ($sortOptions[$column]['label'] ?? mb_strtolower($label)) . ' ' . ($sortDirectionLabels[$nextDirection] ?? '');
                                     @endphp
-                                    <th class="{{ match ($column) {
-                                        'type_name' => 'table-col-name',
-                                        'devices_count' => 'table-col-code',
-                                        default => '',
-                                    } }} px-4 py-3">
+                                    <th class="{{ $column === 'type_name' ? 'table-col-name' : 'table-col-code' }} px-4 py-3">
                                         <button
                                             type="button"
                                             class="device-sort-trigger {{ $isCurrentSort ? 'device-sort-trigger-active' : '' }}"
@@ -115,7 +104,7 @@
                             @forelse ($types as $type)
                                 @php
                                     $canDelete = (int) $type->devices_count === 0;
-                                    $deleteTooltip = 'Šo ierīces tipu nevar dzēst, kamēr nav atbrīvoti visi ieraksti, kas ir saistīti ar šo ierīces tipu.';
+                                    $deleteTooltip = 'Šo ierīces tipu nevar dzēst, kamēr tam vēl ir piesaistītas ierīces.';
                                 @endphp
                                 <tr class="app-table-row border-t border-slate-100 align-middle" data-table-row-id="device-type-{{ $type->id }}" data-table-search-value="{{ \Illuminate\Support\Str::lower($type->type_name) }}">
                                     <td class="px-4 py-4">
@@ -137,30 +126,20 @@
                                     </td>
                                     <td class="px-4 py-4">
                                         <div class="device-type-actions">
-                                            <button
-                                                type="button"
-                                                class="btn-edit"
-                                                data-device-type-open="edit"
-                                                data-device-type-id="{{ $type->id }}"
-                                                data-device-type-name="{{ $type->type_name }}"
-                                                data-device-type-update-url="{{ route('device-types.update', $type) }}"
-                                            >
+                                            <button type="button" class="btn-edit" x-data @click="$dispatch('open-modal', 'device-type-edit-modal-{{ $type->id }}')">
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Rediģēt</span>
                                             </button>
 
                                             @if ($canDelete)
-                                                <button
-                                                    type="button"
-                                                    class="btn-danger"
-                                                    data-device-type-delete-url="{{ route('device-types.destroy', $type) }}"
-                                                    data-device-type-delete-name="{{ $type->type_name }}"
-                                                    aria-label="Dzēst {{ $type->type_name }}"
-                                                    onclick="deleteDeviceType(this.dataset.deviceTypeDeleteUrl, this.dataset.deviceTypeDeleteName)"
-                                                >
-                                                    <x-icon name="trash" size="h-4 w-4" />
-                                                    <span>Dzēst</span>
-                                                </button>
+                                                <form method="POST" action="{{ route('device-types.destroy', $type) }}" onsubmit="return confirm('Dzēst ierīces tipu &quot;{{ e($type->type_name) }}&quot;?')" class="inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn-danger" aria-label="Dzēst {{ $type->type_name }}">
+                                                        <x-icon name="trash" size="h-4 w-4" />
+                                                        <span>Dzēst</span>
+                                                    </button>
+                                                </form>
                                             @else
                                                 <button
                                                     type="button"
@@ -199,34 +178,37 @@
                 <div class="mt-5">{{ $types->links() }}</div>
             @endif
 
-            <x-modal name="create-device-type" :show="$modalMode === 'create'" maxWidth="xl">
-                <div class="p-0">
-                    @include('device_types.partials.modal-form', [
-                        'mode' => 'create',
-                        'action' => route('device-types.store'),
-                        'modalName' => 'create-device-type',
-                        'title' => 'Jauns ierīces tips',
-                        'subtitle' => 'Pievieno jaunu klasifikatora ierakstu bez lapas maiņas.',
-                        'submitLabel' => 'Saglabāt tipu',
-                        'submitClass' => 'btn-create',
-                    ])
-                </div>
-            </x-modal>
+            @include('device_types.partials.modal-form', [
+                'mode' => 'create',
+                'modalName' => 'device-type-create-modal',
+            ])
 
-            <x-modal name="edit-device-type" :show="$modalMode === 'edit'" maxWidth="xl">
-                <div class="p-0">
-                    @include('device_types.partials.modal-form', [
-                        'mode' => 'edit',
-                        'action' => $editModalAction,
-                        'modalName' => 'edit-device-type',
-                        'type' => $selectedModalType,
-                        'title' => 'Rediģēt ierīces tipu',
-                        'subtitle' => 'Atjauno tipa nosaukumu un uzreiz saglabā to pašā saraksta lapā.',
-                        'submitLabel' => 'Saglabāt izmaiņas',
-                        'submitClass' => 'btn-edit',
-                    ])
-                </div>
-            </x-modal>
+            @foreach ($types as $type)
+                @include('device_types.partials.modal-form', [
+                    'mode' => 'edit',
+                    'modalName' => 'device-type-edit-modal-' . $type->id,
+                    'type' => $type,
+                ])
+            @endforeach
+
+            @if (($selectedModalType?->id ?? null) && ! $types->getCollection()->contains('id', $selectedModalType->id))
+                @include('device_types.partials.modal-form', [
+                    'mode' => 'edit',
+                    'modalName' => 'device-type-edit-modal-' . $selectedModalType->id,
+                    'type' => $selectedModalType,
+                ])
+            @endif
         </div>
     </section>
+
+    @if (old('modal_form') === 'device_type_create')
+        <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-type-create-modal' })));</script>
+    @elseif (str_starts_with((string) old('modal_form'), 'device_type_edit_'))
+        @php($deviceTypeModalTarget = str_replace('device_type_edit_', '', (string) old('modal_form')))
+        <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-type-edit-modal-{{ $deviceTypeModalTarget }}' })));</script>
+    @elseif (request()->query('device_type_modal') === 'create')
+        <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-type-create-modal' })));</script>
+    @elseif (request()->query('device_type_modal') === 'edit' && request()->filled('modal_device_type'))
+        <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-type-edit-modal-{{ request()->query('modal_device_type') }}' })));</script>
+    @endif
 </x-app-layout>

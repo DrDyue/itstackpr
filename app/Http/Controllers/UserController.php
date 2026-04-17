@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -101,6 +102,9 @@ class UserController extends Controller
             'sortOptions' => $this->sortOptions(),
             'roles' => self::ROLES,
             'roleLabels' => $this->roleLabels(),
+            'selectedModalUser' => ctype_digit((string) $request->query('modal_user'))
+                ? User::query()->select(['id', 'full_name', 'email', 'phone', 'job_title', 'role', 'is_active', 'last_login'])->find((int) $request->query('modal_user'))
+                : null,
         ]);
     }
 
@@ -159,15 +163,12 @@ class UserController extends Controller
         ]);
     }
 
-    public function create()
+    public function redirectToCreateModal(): RedirectResponse
     {
         $this->requireAdmin();
         AuditTrail::viewed($this->user(), 'User', null, 'Atvērta lietotāja izveides forma.');
 
-        return view('users.create', [
-            'roles' => self::ROLES,
-            'roleLabels' => $this->roleLabels(),
-        ]);
+        return $this->redirectToUserModal('create');
     }
 
     public function show(User $user)
@@ -300,16 +301,12 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Lietotājs veiksmīgi izveidots');
     }
 
-    public function edit(User $user)
+    public function redirectToEditModal(User $user): RedirectResponse
     {
         $this->requireAdmin();
         AuditTrail::viewed($this->user(), 'User', (string) $user->id, 'Atvērta lietotāja labošanas forma: '.AuditTrail::labelFor($user));
 
-        return view('users.edit', [
-            'user' => $user,
-            'roles' => self::ROLES,
-            'roleLabels' => $this->roleLabels(),
-        ]);
+        return $this->redirectToUserModal('edit', $user);
     }
 
     public function update(Request $request, User $user)
@@ -429,6 +426,17 @@ class UserController extends Controller
             'direction' => $direction,
             'label' => $this->sortOptions()[$sort]['label'] ?? 'vārda un uzvārda',
         ];
+    }
+
+    private function redirectToUserModal(string $mode, ?User $user = null): RedirectResponse
+    {
+        $parameters = ['user_modal' => $mode];
+
+        if ($user) {
+            $parameters['modal_user'] = $user->id;
+        }
+
+        return redirect()->route('users.index', $parameters);
     }
 
     private function applySorting($query, array $sorting): void

@@ -21,21 +21,6 @@
     $selectedBuildingId = $fieldValue('building_id', $current?->building_id ?? $defaultBuildingId ?? null);
     $selectedRoomId = $fieldValue('room_id', $current?->room_id ?? $defaultRoomId ?? null);
     $selectedStatus = $fieldValue('status', $current?->status ?? \App\Models\Device::STATUS_ACTIVE);
-    $showBuildingField = $buildings->count() > 1;
-    $buildingOptions = $buildings->map(fn ($building) => [
-        'value' => (string) $building->id,
-        'label' => $building->building_name,
-        'description' => collect([
-            $building->city,
-            $building->address,
-            $building->total_floors ? $building->total_floors . ' stāvi' : null,
-        ])->filter()->implode(' | '),
-        'search' => implode(' ', array_filter([
-            $building->building_name,
-            $building->city,
-            $building->address,
-        ])),
-    ])->values();
     $roomOptions = $rooms->map(fn ($room) => [
         'value' => (string) $room->id,
         'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
@@ -80,10 +65,6 @@
         'assigned_to_query',
         optional($users->firstWhere('id', (int) $selectedAssignedToId))->full_name ?? ''
     );
-    $selectedBuildingLabel = $fieldValue(
-        'building_query',
-        optional($buildings->firstWhere('id', (int) $selectedBuildingId))->building_name ?? ''
-    );
     $selectedRoom = $rooms->firstWhere('id', (int) $selectedRoomId);
     $selectedRoomLabel = $fieldValue(
         'room_query',
@@ -94,223 +75,14 @@
     $selectedStatusLabel = $fieldValue('status_query', $statusLabels[$selectedStatus] ?? 'Aktīva');
 @endphp
 
-<div class="device-form-grid">
-    <div class="space-y-6">
-        @if ($isWrittenOff)
-            <div class="rounded-[1.75rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-6 text-amber-900">
-                Norakstītai ierīcei var labot tikai informācijas laukus. Statuss, piesaiste lietotājam un telpa vairs netiek mainīti.
-            </div>
-        @endif
+<div class="space-y-5">
+    @if ($isWrittenOff)
+        <div class="rounded-[1.75rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-6 text-amber-900">
+            Norakstītai ierīcei var labot tikai informācijas laukus. Statuss, piesaiste lietotājam un telpa vairs netiek mainīti.
+        </div>
+    @endif
 
-        {{-- Ierīces identitāte: kods, nosaukums, tips, modelis un sērijas numurs. --}}
-        <section class="device-form-card">
-            <div class="device-form-section-header">
-                <div class="device-form-section-icon bg-sky-50 text-sky-700 ring-sky-200">
-                    <x-icon name="device" size="h-5 w-5" />
-                </div>
-                <div class="device-form-section-copy">
-                    <div class="device-form-section-name">Pamata dati</div>
-                    <div class="device-form-section-note">Ievadi galveno informāciju, pēc kuras ierīci atradīsi un atpazīsi sistēmā.</div>
-                </div>
-            </div>
-
-            <div class="grid gap-4 md:grid-cols-3">
-                <x-ui.form-field label="Kods" name="code" :required="true">
-                    <input type="text" name="code" value="{{ $fieldValue('code', $current?->code) }}" class="crud-control" required>
-                </x-ui.form-field>
-                <x-ui.form-field label="Nosaukums" name="name" :required="true">
-                    <input type="text" name="name" value="{{ $fieldValue('name', $current?->name) }}" class="crud-control" required>
-                </x-ui.form-field>
-                <x-ui.form-field label="Tips" name="device_type_id" :required="true">
-                    <x-searchable-select
-                        name="device_type_id"
-                        query-name="device_type_query"
-                        identifier="device-type-form-select-{{ $formKey }}"
-                        :options="$typeOptions"
-                        :selected="$selectedTypeId"
-                        :query="$selectedTypeLabel"
-                        placeholder="Izvēlies ierīces tipu"
-                        empty-message="Neviens ierīces tips neatbilst meklējumam."
-                    />
-                </x-ui.form-field>
-                <x-ui.form-field label="Modelis" name="model" :required="true">
-                    <input type="text" name="model" value="{{ $fieldValue('model', $current?->model) }}" class="crud-control" required>
-                </x-ui.form-field>
-                <x-ui.form-field label="Ražotājs" name="manufacturer">
-                    <input type="text" name="manufacturer" value="{{ $fieldValue('manufacturer', $current?->manufacturer) }}" class="crud-control">
-                </x-ui.form-field>
-                <x-ui.form-field label="Sērijas numurs" name="serial_number">
-                    <input type="text" name="serial_number" value="{{ $fieldValue('serial_number', $current?->serial_number) }}" class="crud-control">
-                </x-ui.form-field>
-            </div>
-        </section>
-
-        {{-- Statuss, atbildīgais lietotājs un fiziskā atrašanās vieta. --}}
-        <section class="device-form-card">
-            <div class="device-form-section-header">
-                <div class="device-form-section-icon bg-emerald-50 text-emerald-700 ring-emerald-200">
-                    <x-icon name="users" size="h-5 w-5" />
-                </div>
-                <div class="device-form-section-copy">
-                    <div class="device-form-section-name">Statuss un piesaiste</div>
-                    <div class="device-form-section-note">Norādi, kam ierīce piešķirta un kurā telpā tā atrodas ikdienā.</div>
-                </div>
-            </div>
-
-            <div class="grid gap-4 md:grid-cols-3">
-                @if ($isCreating)
-                    <div class="block">
-                        <span class="crud-label">Statuss</span>
-                        <input type="hidden" name="status" value="{{ \App\Models\Device::STATUS_ACTIVE }}">
-                        <div class="crud-control flex items-center justify-between bg-slate-50 text-slate-700">
-                            <span>Aktīva</span>
-                            <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">Noklusēts</span>
-                        </div>
-                        <div class="mt-2 text-xs text-slate-500">Jauna ierīce vienmēr tiek izveidota ar aktīvu statusu.</div>
-                    </div>
-                @else
-                    <label class="block">
-                        <span class="crud-label">Statuss</span>
-                        @if ($isWrittenOff)
-                            <input type="hidden" name="status" value="{{ $current?->status }}">
-                        @endif
-                        @if ($isWrittenOff)
-                            <div class="crud-control flex items-center bg-slate-50 text-slate-700">
-                                <span>{{ $statusLabels[$current?->status] ?? 'Norakstīta' }}</span>
-                            </div>
-                        @else
-                            <x-searchable-select
-                                name="status"
-                                query-name="status_query"
-                                identifier="device-status-form-select-{{ $formKey }}"
-                                :options="$statusOptions"
-                                :selected="(string) $selectedStatus"
-                                :query="$selectedStatusLabel"
-                                placeholder="Izvēlies statusu"
-                                empty-message="Neviens statuss neatbilst meklējumam."
-                            />
-                        @endif
-                    </label>
-                @endif
-                <label class="block">
-                    <span class="crud-label">Atbildīgā persona *</span>
-                    @if ($isWrittenOff)
-                        <input type="hidden" name="assigned_to_id" value="">
-                        <div class="crud-control flex items-center bg-slate-50 text-slate-700">
-                            <span>Nav piešķirts</span>
-                        </div>
-                    @else
-                        <x-searchable-select
-                            name="assigned_to_id"
-                            query-name="assigned_to_query"
-                            identifier="device-assigned-user-form-select-{{ $formKey }}"
-                            :options="$assignedUserOptions"
-                            :selected="(string) $selectedAssignedToId"
-                            :query="$selectedAssignedToLabel"
-                            placeholder="Meklē atbildīgo personu"
-                            empty-message="Neviens lietotājs neatbilst meklējumam."
-                        />
-                    @endif
-                </label>
-                <label class="block">
-                    <span class="crud-label">Telpa *</span>
-                    @if ($isWrittenOff)
-                        <input type="hidden" name="room_id" value="">
-                        <div class="crud-control flex items-center bg-slate-50 text-slate-700">
-                            <span>Nav piešķirta telpai</span>
-                        </div>
-                    @else
-                        <x-searchable-select
-                            name="room_id"
-                            query-name="room_query"
-                            identifier="device-room-form-select-{{ $formKey }}"
-                            :options="$roomOptions"
-                            :selected="(string) $selectedRoomId"
-                            :query="$selectedRoomLabel"
-                            placeholder="Meklē telpu"
-                            empty-message="Neviena telpa neatbilst meklējumam."
-                        />
-                    @endif
-                </label>
-                @if ($showBuildingField)
-                    <input type="hidden" name="building_id" value="{{ $isWrittenOff ? '' : $selectedBuildingId }}">
-                @else
-                    <input type="hidden" name="building_id" value="{{ $isWrittenOff ? '' : $selectedBuildingId }}">
-                @endif
-            </div>
-        </section>
-
-        <section class="device-form-card">
-            <div class="device-form-section-header">
-                <div class="device-form-section-icon bg-violet-50 text-violet-700 ring-violet-200">
-                    <x-icon name="calendar" size="h-5 w-5" />
-                </div>
-                <div class="device-form-section-copy">
-                    <div class="device-form-section-name">Iegāde un attēls</div>
-                    <div class="device-form-section-note">Papildini datumu, attēla un citu informācijas laukus, ja tie ir zināmi.</div>
-                </div>
-            </div>
-
-            <div class="grid gap-4 md:grid-cols-3">
-                <x-localized-date-input
-                    name="purchase_date"
-                    label="Iegades datums"
-                    :value="$fieldValue('purchase_date', $current?->purchase_date?->format('Y-m-d'))"
-                />
-                <div class="block">
-                    <span class="crud-label">Ierīces attēls</span>
-                    <input type="file" name="device_image" class="device-file-input">
-                    <div class="mt-2 text-xs text-slate-500">PNG, JPG vai WEBP līdz {{ (int) config('devices.max_upload_kb', 5120) / 1024 }} MB.</div>
-                    @if ($current)
-                        <label class="mt-3 inline-flex items-center gap-3">
-                            <input type="checkbox" name="remove_device_image" value="1" class="rounded border-gray-300 text-blue-600">
-                            <span class="text-sm text-slate-700">Noņemt attēlu</span>
-                        </label>
-                    @endif
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <aside class="space-y-6">
-        <section class="device-form-card">
-            <div class="device-form-section-title">Kopsavilkums</div>
-            <div class="space-y-4 text-sm text-slate-600">
-                <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
-                    <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Kas ir obligāti</div>
-                    <ul class="mt-3 space-y-2 leading-6">
-                        <li>Kods, nosaukums, tips un modelis ir obligāti lauki.</li>
-                        <li>Atbildīgā persona un telpa ir obligātas un pēc noklusējuma tiek aizpildītas automātiski.</li>
-                        <li>Jauna ierīce vienmēr tiek saglabāta ar aktīvu statusu.</li>
-                        <li>Iegades datums un attēls ir neobligāti lauki.</li>
-                    </ul>
-                </div>
-
-                <div class="rounded-[1.5rem] border border-slate-200 bg-white p-4">
-                    <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Attēla priekšskats</div>
-                    <div class="mt-3">
-                        @if ($deviceImageUrl)
-                            <img src="{{ $deviceImageUrl }}" alt="{{ $current?->name ?: 'Ierīce' }}" class="w-full rounded-[1.25rem] border border-slate-200 object-contain">
-                        @else
-                            <div class="rounded-[1.25rem] border border-dashed border-slate-300 px-4 py-12 text-center text-sm text-slate-500">
-                                Attēls tiks parādīts pēc pievienošanas.
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-                @if ($current)
-                    <div class="rounded-[1.5rem] border border-slate-200 bg-white p-4">
-                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Esošais ieraksts</div>
-                        <div class="mt-3 space-y-2">
-                            <div><strong class="text-slate-900">Statuss:</strong> {{ $statusLabels[$current->status] ?? $current->status }}</div>
-                            <div><strong class="text-slate-900">Kods:</strong> {{ $current->code ?: '-' }}</div>
-                            <div><strong class="text-slate-900">Lietotājs:</strong> {{ $current->assignedTo?->full_name ?: 'Nav piešķirts' }}</div>
-                            <div><strong class="text-slate-900">Atrašanās vieta:</strong> {{ $current->building?->building_name ?: 'Bez ēkas' }} / {{ $current->room?->room_number ?: 'Bez telpas' }}</div>
-                        </div>
-                    </div>
-                @endif
-            </div>
-        </section>
-    </aside>
+    @include('devices.partials.form-sections.identity-fields')
+    @include('devices.partials.form-sections.assignment-fields')
+    @include('devices.partials.form-sections.meta-fields')
 </div>
