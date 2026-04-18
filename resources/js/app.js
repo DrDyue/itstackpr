@@ -1007,67 +1007,6 @@ const initializeAsyncTableFilters = () => {
     });
 };
 
-const deleteDeviceType = async (deleteUrl, deviceTypeName) => {
-    const accepted = await window.openAppConfirm({
-        title: 'Dzēst ierīces tipu?',
-        message: `Vai tiešām gribat dzēst ierīces tipu "${deviceTypeName}"?`,
-        confirmLabel: 'Jā, dzēst',
-        cancelLabel: 'Nē',
-        tone: 'danger',
-    });
-
-    if (!accepted) {
-        return;
-    }
-
-    try {
-        const response = await window.fetch(deleteUrl, {
-            method: 'DELETE',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
-            },
-        });
-
-        if (response.status === 422) {
-            const result = await response.json();
-            window.dispatchAppToast({
-                title: 'Dzēšana nav pieejama',
-                message: result?.message || 'Ierīces tipu nevar dzēst, kamēr tam vēl ir piesaistītas ierīces.',
-                tone: 'info',
-            });
-            return;
-        }
-
-        if (!response.ok) {
-            throw new Error('Delete request failed.');
-        }
-
-        const result = await response.json();
-        const asyncRoot = document.querySelector('[data-async-table-root]');
-        const asyncTableForm = asyncRoot?.querySelector('[data-async-table-form]');
-
-        if (asyncTableForm) {
-            await submitAsyncTableForm(asyncTableForm, {
-                url: new URL(window.location.href),
-                resetPage: false,
-            });
-        }
-
-        window.dispatchAppToast({
-            message: result?.message || 'Ierīces tips dzēsts.',
-            tone: 'success',
-        });
-    } catch (error) {
-        window.dispatchAppToast({
-            title: 'Dzēšana neizdevās',
-            message: 'Neizdevās dzēst ierīces tipu. Pamēģini vēlreiz.',
-            tone: 'info',
-        });
-    }
-};
-
 const registerAlpineData = () => {
     if (!Alpine || window.__appAlpineDataRegistered) {
         return;
@@ -2145,19 +2084,13 @@ window.repairProcess = (config) => ({
             return;
         }
 
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `${config.transitionBaseUrl}/${config.repairId}/completion`;
-        form.style.display = 'none';
-
-        appendHiddenInput(form, '_token', config.csrfToken);
-
-        Object.entries(this.transitionFormPayload()).forEach(([key, value]) => {
-            appendHiddenInput(form, key, value);
-        });
-
-        document.body.appendChild(form);
-        form.submit();
+        window.submitRepairTransition(
+            config.transitionBaseUrl,
+            config.csrfToken,
+            config.repairId,
+            'completed',
+            this.transitionFormPayload(),
+        );
     },
 });
 

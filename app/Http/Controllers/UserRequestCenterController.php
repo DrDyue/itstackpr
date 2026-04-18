@@ -132,19 +132,11 @@ class UserRequestCenterController extends Controller
     public function edit(string $requestType, int $requestId)
     {
         $user = $this->requireRegularUser();
-        [$editableRequest, $config] = $this->editableRequestForUser($user, $requestType, $requestId);
-        $editableRequest->loadMissing('device');
+        [, $config] = $this->editableRequestForUser($user, $requestType, $requestId);
 
-        return view('my_requests.edit', [
-            'editableRequest' => $editableRequest,
-            'requestType' => $requestType,
-            'fieldName' => $config['field'],
-            'fieldLabel' => $config['label'],
-            'fieldValue' => (string) ($editableRequest->{$config['field']} ?? ''),
-            'pageTitle' => $config['title'],
-            'pageSubtitle' => $config['subtitle'],
-            'typeLabel' => $config['type_label'],
-            'icon' => $config['icon'],
+        return redirect()->route($config['index_route'], [
+            $config['modal_query_key'] => 'edit',
+            'modal_request' => $requestId,
         ]);
     }
 
@@ -323,6 +315,7 @@ class UserRequestCenterController extends Controller
                 'deleted_message' => 'Remonta pieteikums atcelts.',
                 'deleted_audit_message' => 'Lietotājs atcēla iesniegtu remonta pieteikumu.',
                 'index_route' => 'repair-requests.index',
+                'modal_query_key' => 'repair_request_modal',
                 'submitted_status' => RepairRequest::STATUS_SUBMITTED,
             ],
             'writeoff' => [
@@ -338,6 +331,7 @@ class UserRequestCenterController extends Controller
                 'deleted_message' => 'Norakstīšanas pieteikums atcelts.',
                 'deleted_audit_message' => 'Lietotājs atcēla iesniegtu norakstīšanas pieteikumu.',
                 'index_route' => 'writeoff-requests.index',
+                'modal_query_key' => 'writeoff_request_modal',
                 'submitted_status' => WriteoffRequest::STATUS_SUBMITTED,
             ],
             'transfer' => [
@@ -353,6 +347,7 @@ class UserRequestCenterController extends Controller
                 'deleted_message' => 'Nodošanas pieteikums atcelts.',
                 'deleted_audit_message' => 'Lietotājs atcēla iesniegtu nodošanas pieteikumu.',
                 'index_route' => 'device-transfers.index',
+                'modal_query_key' => 'device_transfer_modal',
                 'submitted_status' => DeviceTransfer::STATUS_SUBMITTED,
             ],
             default => abort(404),

@@ -10,6 +10,9 @@
 <x-app-layout>
     @php
         $deviceMeta = collect([$device->manufacturer, $device->model])->filter(fn ($value) => filled($value))->implode(' | ');
+        $activeRepair = $device->activeRepair;
+        $activeRepairUrl = $activeRepair ? route('repairs.show', $activeRepair) : null;
+        $repairCreateUrl = route('repairs.create', ['device_id' => $device->id]);
         $repairTypeLabels = [
             'internal' => 'Iekšējais',
             'external' => 'Ārējais',
@@ -46,6 +49,17 @@
                             <x-icon name="edit" size="h-4 w-4" />
                             <span>Rediģēt</span>
                         </a>
+                        @if ($activeRepairUrl)
+                            <a href="{{ $activeRepairUrl }}" class="btn-view">
+                                <x-icon name="repair" size="h-4 w-4" />
+                                <span>Atvērt remontu</span>
+                            </a>
+                        @elseif ($device->status !== \App\Models\Device::STATUS_WRITEOFF)
+                            <a href="{{ $repairCreateUrl }}" class="btn-view">
+                                <x-icon name="repair" size="h-4 w-4" />
+                                <span>Jauns remonts</span>
+                            </a>
+                        @endif
                     @else
                         @if ($requestAvailability['repair'])
                             <a href="{{ route('repair-requests.create', ['device_id' => $device->id]) }}" class="btn-edit">
@@ -303,7 +317,15 @@
                                     <div class="font-medium text-slate-900">Remonts #{{ $repair->id }}</div>
                                     <div class="mt-1 text-xs text-slate-500">{{ $repair->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
                                 </div>
-                                <x-status-pill context="repair" :value="$repair->status" />
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <x-status-pill context="repair" :value="$repair->status" />
+                                    @if ($canManageDevices)
+                                        <a href="{{ route('repairs.show', $repair) }}" class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-300 hover:text-slate-900">
+                                            <x-icon name="repair" size="h-3.5 w-3.5" />
+                                            <span>Atvērt</span>
+                                        </a>
+                                    @endif
+                                </div>
                             </div>
                             <div class="mt-3 grid gap-2 text-xs text-slate-600 md:grid-cols-2">
                                 <div><span class="font-semibold text-slate-900">Tips:</span> {{ $repairTypeLabels[$repair->repair_type] ?? ($repair->repair_type ?: '-') }}</div>

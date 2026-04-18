@@ -91,6 +91,9 @@
                     $pendingRequestBadge = $deviceState['pendingRequestBadge'] ?? null;
                     $repairStatusLabel = $deviceState['repairStatusLabel'] ?? null;
                     $repairPreview = $deviceState['repairPreview'] ?? null;
+                    $repairRecord = $device->activeRepair ?? $device->latestRepair;
+                    $repairModalUrl = $repairRecord ? route('repairs.show', $repairRecord) : null;
+                    $repairCreateUrl = route('repairs.create', ['device_id' => $device->id]);
                 @endphp
                 <tr class="device-table-row border-t border-slate-100 align-top" data-table-row-id="device-{{ $device->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) $device->code)) }}">
                     <td class="table-col-image px-3 py-4 text-center align-middle tabular-nums">
@@ -145,13 +148,23 @@
                         <div class="device-status-stack">
                             @if ($device->status === \App\Models\Device::STATUS_REPAIR && $repairStatusLabel)
                                 <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
-                                    <div class="device-status-split-chip device-status-split-chip-repair" @focusin="open = true" @focusout="open = false" tabindex="0">
-                                        <span class="device-status-split-main">
-                                            <x-icon name="repair" size="h-3.5 w-3.5" />
-                                            <span>Remonts</span>
-                                        </span>
-                                        <span class="device-status-split-sub">{{ $repairStatusLabel }}</span>
-                                    </div>
+                                    @if ($canManageDevices && $repairModalUrl)
+                                        <a href="{{ $repairModalUrl }}" class="device-status-split-chip device-status-split-chip-repair" @focusin="open = true" @focusout="open = false">
+                                            <span class="device-status-split-main">
+                                                <x-icon name="repair" size="h-3.5 w-3.5" />
+                                                <span>Remonts</span>
+                                            </span>
+                                            <span class="device-status-split-sub">{{ $repairStatusLabel }}</span>
+                                        </a>
+                                    @else
+                                        <div class="device-status-split-chip device-status-split-chip-repair" @focusin="open = true" @focusout="open = false" tabindex="0">
+                                            <span class="device-status-split-main">
+                                                <x-icon name="repair" size="h-3.5 w-3.5" />
+                                                <span>Remonts</span>
+                                            </span>
+                                            <span class="device-status-split-sub">{{ $repairStatusLabel }}</span>
+                                        </div>
+                                    @endif
 
                                     @if ($repairPreview)
                                         <div x-cloak x-show="open" x-transition.opacity.scale.origin.top.left class="device-request-popover">
@@ -260,6 +273,12 @@
                                             <x-icon name="view" size="h-4 w-4" />
                                             <span>Skatīt</span>
                                         </a>
+                                        @if ($canManageDevices && $repairModalUrl)
+                                            <a href="{{ $repairModalUrl }}" class="table-action-item table-action-item-sky" @click="open = false; panel = null">
+                                                <x-icon name="repair" size="h-4 w-4" />
+                                                <span>Atvērt remontu</span>
+                                            </a>
+                                        @endif
                                     </div>
                                 </div>
 
@@ -350,7 +369,12 @@
                                                     </button>
                                                 </form>
 
-                                                <form method="POST" action="{{ route('devices.quick-update', $device) }}">
+                                                <a href="{{ $repairCreateUrl }}" class="table-action-button table-action-button-amber">
+                                                    <x-icon name="repair" size="h-4 w-4" />
+                                                    <span>Atvērt remonta formu</span>
+                                                </a>
+
+                                                <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="hidden">
                                                     @csrf
                                                     <input type="hidden" name="action" value="status">
                                                     <input type="hidden" name="target_status" value="repair">

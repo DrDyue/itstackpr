@@ -18,9 +18,10 @@
             'approved' => 'request-detail-status-emerald',
             'rejected' => 'request-detail-status-rose',
         ];
-        $shouldOpenCreateModal = ! $isAdmin
-            && old('request_form_type') === 'transfer'
-            && $errors->hasAny(['device_id', 'transfered_to_id', 'transfer_reason']);
+        $createSelectedDeviceLabel = collect($createDeviceOptions ?? [])
+            ->firstWhere('value', (string) request()->query('device_id', ''))['label'] ?? '';
+        $shouldOpenCreateModal = (old('request_form_type') === 'transfer' && $errors->hasAny(['device_id', 'transfered_to_id', 'transfer_reason']))
+            || request()->query('device_transfer_modal') === 'create';
     @endphp
 
     <section class="app-shell app-shell-wide">
@@ -601,9 +602,47 @@
         :show="$shouldOpenCreateModal"
         :device-options="$createDeviceOptions ?? []"
         :user-options="$createRecipientOptions ?? []"
+        :selected-device-id="(string) request()->query('device_id', '')"
+        :selected-device-label="$createSelectedDeviceLabel"
     />
+
+    @unless ($isAdmin)
+        @foreach ($transfers as $transfer)
+            @if (
+                $transfer->status === \App\Models\DeviceTransfer::STATUS_SUBMITTED
+                && (int) $transfer->responsible_user_id === (int) $currentUserId
+            )
+                <x-request-edit-modal
+                    type="transfer"
+                    :modal-name="'transfer-request-edit-' . $transfer->id"
+                    :request-model="$transfer"
+                    field-name="transfer_reason"
+                    field-label="Nodošanas iemesls"
+                    :action="route('my-requests.update', ['requestType' => 'transfer', 'requestId' => $transfer->id])"
+                />
+            @endif
+        @endforeach
+
+        @if (($selectedEditableRequest?->id ?? null) && ! $transfers->getCollection()->contains('id', $selectedEditableRequest->id))
+            <x-request-edit-modal
+                type="transfer"
+                :modal-name="'transfer-request-edit-' . $selectedEditableRequest->id"
+                :request-model="$selectedEditableRequest"
+                field-name="transfer_reason"
+                field-label="Nodošanas iemesls"
+                :action="route('my-requests.update', ['requestType' => 'transfer', 'requestId' => $selectedEditableRequest->id])"
+            />
+        @endif
+    @endunless
 
     @if (old('request_form_type') === 'transfer' && $errors->any())
         <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'request-form-transfer' })));</script>
+    @elseif (str_starts_with((string) old('modal_form'), 'transfer_request_edit_'))
+        @php($transferRequestModalTarget = str_replace('transfer_request_edit_', '', (string) old('modal_form')))
+        <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'transfer-request-edit-{{ $transferRequestModalTarget }}' })));</script>
+    @elseif (request()->query('device_transfer_modal') === 'create')
+        <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'request-form-transfer' })));</script>
+    @elseif (request()->query('device_transfer_modal') === 'edit' && request()->query('modal_request') && ! $isAdmin)
+        <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'transfer-request-edit-{{ request()->query('modal_request') }}' })));</script>
     @endif
 </x-app-layout>

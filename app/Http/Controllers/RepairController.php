@@ -376,67 +376,15 @@ class RepairController extends Controller
 
         return back()->with('success', 'Remonta statuss atjaunināts');
     }
-
-    /**
-     * Pabeidz remontu (pāreja no in-progress uz completed).
-     */
-    public function completion(Request $request, Repair $repair)
-    {
-        $this->requireManager();
-
-        if (! $this->featureTableExists('repairs')) {
-            return back()->with('error', 'Tabula repairs šobrīd nav pieejama.');
-        }
-
-        if ($repair->status !== 'in-progress') {
-            return back()->with('error', 'Remontu var pabeigt tikai no procesa statusa.');
-        }
-
-        $draft = $this->validatedTransitionDraft($request, $repair, 'completed');
-
-        if (! filled($draft['description'])) {
-            return back()->with('error', 'Lai pabeigtu remontu, jāaizpilda apraksts.');
-        }
-
-        if ($draft['repair_type'] === 'external') {
-            if (! filled($draft['vendor_name'])) {
-                return back()->with('error', 'Ārējam remontam jānorāda pakalpojuma sniedzējs.');
-            }
-            if (! filled($draft['vendor_contact'])) {
-                return back()->with('error', 'Ārējam remontam jānorāda pakalpojuma sniedzēja kontaktinformācija.');
-            }
-            if (! filled($draft['invoice_number'])) {
-                return back()->with('error', 'Ārējam remontam jānorāda rēķina numurs.');
-            }
-        }
-
-        $before = $repair->only(['status', 'end_date', 'cost', 'vendor_name', 'vendor_contact', 'invoice_number', 'description']);
-
-        $payload = array_merge($draft, [
-            'status' => 'completed',
-            'end_date' => now()->toDateString(),
-        ]);
-
-        $repair->update($payload);
-        $this->syncDeviceStatus($repair, 'in-progress');
-
-        AuditTrail::updatedFromState(
-            auth()->id(),
-            $repair,
-            $before,
-            ['status' => 'completed', 'end_date' => now()->toDateString()],
-            description: 'Remonts pabeigts: ' . $this->labelForStatus('in-progress') . ' -> ' . $this->labelForStatus('completed')
-        );
-
-        return back()->with('success', 'Remonts pabeigts');
-    }
-
     /**
      * Vecais show ceļš projektā tiek izmantots kā pāradresācija uz rediģēšanu.
      */
     public function show(Repair $repair)
     {
-        return redirect()->route('repairs.index');
+        return redirect()->route('repairs.index', [
+            'repair_modal' => 'edit',
+            'modal_repair' => $repair->id,
+        ]);
     }
 
     private function redirectToRepairModal(string $mode, ?Repair $repair = null, ?Request $request = null): RedirectResponse

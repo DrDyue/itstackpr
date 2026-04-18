@@ -14,6 +14,7 @@ use App\Support\AuditTrail;
 use App\Support\WarehouseConfig;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -95,6 +96,7 @@ class WriteoffRequestController extends Controller
                 'deviceOptions' => collect(),
                 'createDeviceOptions' => collect(),
                 'requesterOptions' => collect(),
+                'selectedEditableRequest' => null,
                 'featureMessage' => 'Tabula writeoff_requests šobrīd nav pieejama.',
                 'sortDirectionLabels' => ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'],
             ];
@@ -147,6 +149,14 @@ class WriteoffRequestController extends Controller
             'deviceOptions' => $deviceOptions,
             'createDeviceOptions' => $createDeviceOptions,
             'requesterOptions' => $requesterOptions,
+            'selectedEditableRequest' => ! $canReview && ctype_digit((string) $request->query('modal_request'))
+                ? WriteoffRequest::query()
+                    ->with('device')
+                    ->whereKey((int) $request->query('modal_request'))
+                    ->where('responsible_user_id', $user->id)
+                    ->where('status', WriteoffRequest::STATUS_SUBMITTED)
+                    ->first()
+                : null,
             'sortDirectionLabels' => ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'],
         ];
     }
@@ -212,36 +222,20 @@ class WriteoffRequestController extends Controller
     /**
      * Parāda jauna norakstīšanas pieteikuma formu lietotājam.
      */
-    public function create(Request $request)
+    public function redirectToCreateModal(Request $request): RedirectResponse
     {
         $user = $this->user();
         abort_unless($user, 403);
         abort_if($user->canManageRequests(), 403);
 
-        AuditTrail::viewed($user, 'WriteoffRequest', null, 'Atvērta norakstīšanas pieteikuma forma.');
+        AuditTrail::viewed($user, 'WriteoffRequest', null, 'Atvērts norakstīšanas pieteikuma modālis.');
 
-        if (! $this->featureTableExists('writeoff_requests')) {
-            return view('writeoff_requests.create', [
-                'devices' => collect(),
-                'deviceOptions' => collect(),
-                'featureMessage' => 'Tabula writeoff_requests šobrīd nav pieejama.',
-            ]);
-        }
-
-        $devices = $this->availableDevicesForUser($user)->get();
-        $selectedDeviceId = (string) $request->query('device_id', '');
-        $selectedDevice = ctype_digit($selectedDeviceId)
-            ? $devices->firstWhere('id', (int) $selectedDeviceId)
-            : null;
-
-        return view('writeoff_requests.create', [
-            'devices' => $devices,
-            'deviceOptions' => $this->deviceOptions($devices),
-            'selectedDeviceId' => $selectedDevice?->id ? (string) $selectedDevice->id : '',
-            'selectedDeviceLabel' => $selectedDevice
-                ? $selectedDevice->name.' ('.($selectedDevice->code ?: 'bez koda').')'
-                : '',
-        ]);
+        return redirect()->route('writeoff-requests.index', array_filter([
+            'writeoff_request_modal' => 'create',
+            'device_id' => ctype_digit((string) $request->query('device_id', ''))
+                ? (int) $request->query('device_id')
+                : null,
+        ]));
     }
 
     /**

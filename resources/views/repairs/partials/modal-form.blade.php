@@ -22,6 +22,10 @@
         : 'Izveido faktisko remonta darbu bez lapas maiņas.';
     $submitLabel = $isEdit ? 'Saglabāt izmaiņas' : 'Saglabāt remontu';
     $submitClass = $isEdit ? 'btn-edit' : 'btn-create';
+    $linkedRequestUrl = $isEdit && $repair?->request_id
+        ? route('repair-requests.index', ['request_id' => $repair->request_id, 'statuses_filter' => 1])
+        : null;
+    $deviceShowUrl = $isEdit && $repair?->device ? route('devices.show', $repair->device) : null;
 @endphp
 
 <x-modal :name="$modalName" maxWidth="6xl">
@@ -94,10 +98,70 @@
                 <x-empty-state compact icon="information-circle" title="Funkcija īslaicīgi nav pieejama" :description="$featureMessage" />
             @endif
 
+            @if ($isEdit)
+                <div class="mb-5 rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <x-status-pill context="repair" :value="$repair->status" :label="$statusLabels[$repair->status] ?? null" />
+                        <x-status-pill context="priority" :value="$repair->priority" :label="$priorityLabels[$repair->priority] ?? null" />
+                        <x-status-pill context="repair-type" :value="$repair->repair_type" :label="$typeLabels[$repair->repair_type] ?? null" />
+                    </div>
+                    <div class="mt-3 flex flex-wrap gap-3 text-sm">
+                        @if ($deviceShowUrl)
+                            <a href="{{ $deviceShowUrl }}" class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 hover:border-slate-300 hover:text-slate-900">
+                                <x-icon name="device" size="h-4 w-4" />
+                                <span>Skatīt ierīci</span>
+                            </a>
+                        @endif
+                        @if ($linkedRequestUrl)
+                            <a href="{{ $linkedRequestUrl }}" class="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 font-semibold text-violet-700 hover:bg-violet-100">
+                                <x-icon name="repair-request" size="h-4 w-4" />
+                                <span>Saistītais pieprasījums</span>
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
             @include('repairs.partials.form-fields', ['repair' => $repair])
         </div>
 
-        <div class="device-type-modal-actions justify-end">
+        <div class="device-type-modal-actions justify-between gap-4">
+            @if ($isEdit)
+                <div class="flex flex-wrap items-center gap-2">
+                    @if ($repair->status === 'waiting')
+                        <button type="button" class="btn-search" @click="submitTransition({{ $repair->id }}, 'in-progress')">
+                            <x-icon name="stats" size="h-4 w-4" />
+                            <span>Pārvietot uz procesu</span>
+                        </button>
+                    @elseif ($repair->status === 'in-progress')
+                        <button type="button" class="btn-search" @click="submitTransition({{ $repair->id }}, 'waiting')">
+                            <x-icon name="clock" size="h-4 w-4" />
+                            <span>Atgriezt gaidīšanā</span>
+                        </button>
+                        <button type="button" class="btn-create" @click="submitTransition({{ $repair->id }}, 'completed')">
+                            <x-icon name="check-circle" size="h-4 w-4" />
+                            <span>Pabeigt remontu</span>
+                        </button>
+                    @elseif ($repair->status === 'completed')
+                        <button type="button" class="btn-search" @click="submitTransition({{ $repair->id }}, 'in-progress')">
+                            <x-icon name="repair" size="h-4 w-4" />
+                            <span>Atgriezt procesā</span>
+                        </button>
+                    @endif
+
+                    @if (in_array($repair->status, ['waiting', 'in-progress'], true))
+                        <button type="button" class="btn-danger-solid" @click="submitTransition({{ $repair->id }}, 'cancelled')">
+                            <x-icon name="clear" size="h-4 w-4" />
+                            <span>Atcelt remontu</span>
+                        </button>
+                    @endif
+                </div>
+            @else
+                <div class="text-sm text-slate-500">
+                    Remonta ieraksts tiks izveidots ar statusu "Gaida".
+                </div>
+            @endif
+
             <div class="device-type-modal-actions-buttons">
                 <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', '{{ $modalName }}')">
                     <x-icon name="clear" size="h-4 w-4" />

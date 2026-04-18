@@ -463,71 +463,14 @@
                                                 @if ($canManageRepairs)
                                                     <button type="button" class="table-action-item table-action-item-amber" @click="open = false; panel = null; $dispatch('open-modal', 'repair-edit-modal-{{ $repair->id }}')">
                                                         <x-icon name="edit" size="h-4 w-4" />
-                                                        <span>Rediģēt</span>
+                                                        <span>Atvērt remontu</span>
                                                     </button>
 
-                                                    @if ($repair->status === 'waiting')
-                                                        <form
-                                                            method="POST"
-                                                            action="{{ route('repairs.transition', $repair) }}"
-                                                            data-app-confirm-title="Sākt remontu?"
-                                                            data-app-confirm-message="Vai tiešām pārvietot šo remontu uz statusu "Procesā"?"
-                                                            data-app-confirm-accept="Jā, sākt"
-                                                            data-app-confirm-cancel="Nē"
-                                                            data-app-confirm-tone="warning"
-                                                        >
-                                                            @csrf
-                                                            <input type="hidden" name="target_status" value="in-progress">
-                                                            <button type="submit" class="table-action-item table-action-item-sky" @click="open = false; panel = null">
-                                                                <x-icon name="stats" size="h-4 w-4" />
-                                                                <span>Pārvietot uz procesu</span>
-                                                            </button>
-                                                        </form>
-                                                    @elseif ($repair->status === 'in-progress')
-                                                        <form
-                                                            method="POST"
-                                                            action="{{ route('repairs.transition', $repair) }}"
-                                                            data-app-confirm-title="Pabeigt remontu?"
-                                                            data-app-confirm-message="Vai tiešām pabeigt šo remonta ierakstu?"
-                                                            data-app-confirm-accept="Jā, pabeigt"
-                                                            data-app-confirm-cancel="Nē"
-                                                            data-app-confirm-tone="warning"
-                                                        >
-                                                            @csrf
-                                                            <input type="hidden" name="target_status" value="completed">
-                                                            <button type="submit" class="table-action-item table-action-item-emerald" @click="open = false; panel = null">
-                                                                <x-icon name="check-circle" size="h-4 w-4" />
-                                                                <span>Pabeigt</span>
-                                                            </button>
-                                                        </form>
-                                                    @endif
-
-                                                    <button
-                                                        type="button"
-                                                        class="table-action-item"
-                                                        @click="open = false; panel = null; $dispatch('open-modal', 'repair-edit-modal-{{ $repair->id }}')"
-                                                    >
-                                                        <x-icon name="view" size="h-4 w-4" />
-                                                        <span>Ātrais skats</span>
-                                                    </button>
-
-                                                    @if (in_array($repair->status, ['waiting', 'in-progress'], true))
-                                                        <form
-                                                            method="POST"
-                                                            action="{{ route('repairs.transition', $repair) }}"
-                                                            data-app-confirm-title="Atcelt remontu?"
-                                                            data-app-confirm-message="Vai tiešām atcelt šo remonta ierakstu?"
-                                                            data-app-confirm-accept="Jā, atcelt"
-                                                            data-app-confirm-cancel="Nē"
-                                                            data-app-confirm-tone="danger"
-                                                        >
-                                                            @csrf
-                                                            <input type="hidden" name="target_status" value="cancelled">
-                                                            <button type="submit" class="table-action-item table-action-item-rose" @click="open = false; panel = null">
-                                                                <x-icon name="clear" size="h-4 w-4" />
-                                                                <span>Atcelt remontu</span>
-                                                            </button>
-                                                        </form>
+                                                    @if ($deviceShowUrl)
+                                                        <a href="{{ $deviceShowUrl }}" class="table-action-item table-action-item-sky" @click="open = false; panel = null">
+                                                            <x-icon name="device" size="h-4 w-4" />
+                                                            <span>Skatīt ierīci</span>
+                                                        </a>
                                                     @endif
                                                 @endif
                                                 @if (! $canManageRepairs && ! $linkedRequestUrl)

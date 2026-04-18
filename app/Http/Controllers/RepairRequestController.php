@@ -12,6 +12,7 @@ use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -94,6 +95,7 @@ class RepairRequestController extends Controller
                 'deviceOptions' => collect(),
                 'createDeviceOptions' => collect(),
                 'requesterOptions' => collect(),
+                'selectedEditableRequest' => null,
                 'featureMessage' => 'Tabula repair_requests šobrīd nav pieejama.',
                 'sortDirectionLabels' => ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'],
             ];
@@ -150,6 +152,14 @@ class RepairRequestController extends Controller
             'deviceOptions' => $deviceOptions,
             'createDeviceOptions' => $createDeviceOptions,
             'requesterOptions' => $requesterOptions,
+            'selectedEditableRequest' => ! $canReview && ctype_digit((string) $request->query('modal_request'))
+                ? RepairRequest::query()
+                    ->with('device')
+                    ->whereKey((int) $request->query('modal_request'))
+                    ->where('responsible_user_id', $user->id)
+                    ->where('status', RepairRequest::STATUS_SUBMITTED)
+                    ->first()
+                : null,
             'sortDirectionLabels' => ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'],
         ];
     }
@@ -215,36 +225,20 @@ class RepairRequestController extends Controller
     /**
      * Parāda jauna remonta pieteikuma formu lietotājam.
      */
-    public function create(Request $request)
+    public function redirectToCreateModal(Request $request): RedirectResponse
     {
         $user = $this->user();
         abort_unless($user, 403);
         abort_if($user->canManageRequests(), 403);
 
-        AuditTrail::viewed($user, 'RepairRequest', null, 'Atvērta remonta pieteikuma forma.');
+        AuditTrail::viewed($user, 'RepairRequest', null, 'Atvērts remonta pieteikuma modālis.');
 
-        if (! $this->featureTableExists('repair_requests')) {
-            return view('repair_requests.create', [
-                'devices' => collect(),
-                'deviceOptions' => collect(),
-                'featureMessage' => 'Tabula repair_requests šobrīd nav pieejama.',
-            ]);
-        }
-
-        $devices = $this->availableDevicesForUser($user)->get();
-        $selectedDeviceId = (string) $request->query('device_id', '');
-        $selectedDevice = ctype_digit($selectedDeviceId)
-            ? $devices->firstWhere('id', (int) $selectedDeviceId)
-            : null;
-
-        return view('repair_requests.create', [
-            'devices' => $devices,
-            'deviceOptions' => $this->deviceOptions($devices),
-            'selectedDeviceId' => $selectedDevice?->id ? (string) $selectedDevice->id : '',
-            'selectedDeviceLabel' => $selectedDevice
-                ? $selectedDevice->name.' ('.($selectedDevice->code ?: 'bez koda').')'
-                : '',
-        ]);
+        return redirect()->route('repair-requests.index', array_filter([
+            'repair_request_modal' => 'create',
+            'device_id' => ctype_digit((string) $request->query('device_id', ''))
+                ? (int) $request->query('device_id')
+                : null,
+        ]));
     }
 
     /**
@@ -328,7 +322,9 @@ class RepairRequestController extends Controller
             'review_notes' => null,
         ];
 
-        DB::transaction(function () use ($validated, $repairRequest, $manager, &$payload) {
+        $createdRepair = null;
+
+        DB::transaction(function () use ($validated, $repairRequest, $manager, &$payload, &$createdRepair) {
             if ($validated['status'] === 'approved') {
                 $device = $repairRequest->device()->lockForUpdate()->first();
 
@@ -344,7 +340,7 @@ class RepairRequestController extends Controller
                     ]);
                 }
 
-                $repair = $this->createRepairRecord([
+                $createdRepair = $this->createRepairRecord([
                     'device_id' => $repairRequest->device_id,
                     'issue_reported_by' => $repairRequest->responsible_user_id,
                     'accepted_by' => $manager->id,
@@ -364,7 +360,7 @@ class RepairRequestController extends Controller
                 $device->forceFill(['status' => 'repair'])->save();
 
                 if (array_key_exists('repair_id', $repairRequest->getAttributes())) {
-                    $payload['repair_id'] = $repair->id;
+                    $payload['repair_id'] = $createdRepair->id;
                 }
             }
 
@@ -384,12 +380,22 @@ class RepairRequestController extends Controller
                 'message' => 'Remonta pieteikums izskatīts',
                 'status' => $validated['status'],
                 'request_id' => $repairRequest->id,
+                'repair_edit_url' => $createdRepair
+                    ? route('repairs.index', ['repair_modal' => 'edit', 'modal_repair' => $createdRepair->id])
+                    : null,
             ]);
+        }
+
+        if ($validated['status'] === RepairRequest::STATUS_APPROVED && $createdRepair) {
+            return redirect()->route('repairs.index', [
+                'repair_modal' => 'edit',
+                'modal_repair' => $createdRepair->id,
+            ])
+                ->with('success', 'Remonta pieteikums apstiprināts un atvērts remonta ieraksts.');
         }
 
         return back()->with('success', 'Remonta pieteikums izskatīts');
     }
-
     private function availableDevicesForUser(User $user): Builder
     {
         return Device::query()

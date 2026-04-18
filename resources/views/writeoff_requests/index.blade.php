@@ -16,9 +16,12 @@
             'approved' => 'request-detail-status-emerald',
             'rejected' => 'request-detail-status-rose',
         ];
-        $shouldOpenCreateModal = ! $canReview
-            && old('request_form_type') === 'writeoff'
-            && $errors->hasAny(['device_id', 'reason']);
+        $createSelectedDeviceLabel = collect($createDeviceOptions ?? [])
+            ->firstWhere('value', (string) request()->query('device_id', ''))['label'] ?? '';
+        $shouldOpenCreateModal = ! $canReview && (
+            (old('request_form_type') === 'writeoff' && $errors->hasAny(['device_id', 'reason']))
+            || request()->query('writeoff_request_modal') === 'create'
+        );
     @endphp
 
     <section class="app-shell app-shell-wide">
@@ -247,9 +250,44 @@
         type="writeoff"
         :show="$shouldOpenCreateModal"
         :device-options="$createDeviceOptions ?? []"
+        :selected-device-id="(string) request()->query('device_id', '')"
+        :selected-device-label="$createSelectedDeviceLabel"
     />
+
+    @unless ($canReview)
+        @foreach ($requests as $writeoffRequest)
+            @if ($writeoffRequest->status === \App\Models\WriteoffRequest::STATUS_SUBMITTED)
+                <x-request-edit-modal
+                    type="writeoff"
+                    :modal-name="'writeoff-request-edit-' . $writeoffRequest->id"
+                    :request-model="$writeoffRequest"
+                    field-name="reason"
+                    field-label="Iemesls"
+                    :action="route('my-requests.update', ['requestType' => 'writeoff', 'requestId' => $writeoffRequest->id])"
+                />
+            @endif
+        @endforeach
+
+        @if (($selectedEditableRequest?->id ?? null) && ! $requests->getCollection()->contains('id', $selectedEditableRequest->id))
+            <x-request-edit-modal
+                type="writeoff"
+                :modal-name="'writeoff-request-edit-' . $selectedEditableRequest->id"
+                :request-model="$selectedEditableRequest"
+                field-name="reason"
+                field-label="Iemesls"
+                :action="route('my-requests.update', ['requestType' => 'writeoff', 'requestId' => $selectedEditableRequest->id])"
+            />
+        @endif
+    @endunless
 
     @if (old('request_form_type') === 'writeoff' && $errors->any())
         <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'request-form-writeoff' })));</script>
+    @elseif (str_starts_with((string) old('modal_form'), 'writeoff_request_edit_'))
+        @php($writeoffRequestModalTarget = str_replace('writeoff_request_edit_', '', (string) old('modal_form')))
+        <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'writeoff-request-edit-{{ $writeoffRequestModalTarget }}' })));</script>
+    @elseif (request()->query('writeoff_request_modal') === 'create' && ! $canReview)
+        <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'request-form-writeoff' })));</script>
+    @elseif (request()->query('writeoff_request_modal') === 'edit' && request()->query('modal_request') && ! $canReview)
+        <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'writeoff-request-edit-{{ request()->query('modal_request') }}' })));</script>
     @endif
 </x-app-layout>

@@ -12,6 +12,7 @@ use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -65,6 +66,7 @@ class DeviceTransferController extends Controller
                 'requesterOptions' => collect(),
                 'recipientOptions' => collect(),
                 'createRecipientOptions' => collect(),
+                'selectedEditableRequest' => null,
                 'currentUserId' => $user->id,
                 'incomingPendingCount' => 0,
                 'featureMessage' => 'Tabula device_transfers šobrīd nav pieejama.',
@@ -160,6 +162,14 @@ class DeviceTransferController extends Controller
             'requesterOptions' => $requesterOptions,
             'recipientOptions' => $recipientOptions,
             'createRecipientOptions' => $createRecipientOptions,
+            'selectedEditableRequest' => ! $canManageTransfers && ctype_digit((string) $request->query('modal_request'))
+                ? DeviceTransfer::query()
+                    ->with('device')
+                    ->whereKey((int) $request->query('modal_request'))
+                    ->where('responsible_user_id', $user->id)
+                    ->where('status', DeviceTransfer::STATUS_SUBMITTED)
+                    ->first()
+                : null,
             'currentUserId' => $user->id,
             'incomingPendingCount' => $incomingPendingCount,
         ]);
@@ -231,43 +241,19 @@ class DeviceTransferController extends Controller
     /**
      * Parāda jauna nodošanas pieprasījuma formu.
      */
-    public function create(Request $request)
+    public function redirectToCreateModal(Request $request): RedirectResponse
     {
         $user = $this->user();
         abort_unless($user, 403);
-        $canManageTransfers = $user->canManageRequests();
 
-        AuditTrail::viewed($user, 'DeviceTransfer', null, 'Atvērta ierīces pārsūtīšanas pieteikuma forma.');
+        AuditTrail::viewed($user, 'DeviceTransfer', null, 'Atvērts ierīces pārsūtīšanas pieteikuma modālis.');
 
-        if (! $this->featureTableExists('device_transfers')) {
-            return view('device_transfers.create', [
-                'devices' => collect(),
-                'users' => collect(),
-                'deviceOptions' => collect(),
-                'recipientOptions' => collect(),
-                'featureMessage' => 'Tabula device_transfers šobrīd nav pieejama.',
-                'isAdmin' => $canManageTransfers,
-            ]);
-        }
-
-        $devices = $this->availableDevicesForUser($user)->get();
-        $recipients = User::active()->whereKeyNot($user->id)->orderBy('full_name')->get();
-        $selectedDeviceId = (string) $request->query('device_id', '');
-        $selectedDevice = ctype_digit($selectedDeviceId)
-            ? $devices->firstWhere('id', (int) $selectedDeviceId)
-            : null;
-
-        return view('device_transfers.create', [
-            'devices' => $devices,
-            'users' => $recipients,
-            'deviceOptions' => $this->deviceOptions($devices),
-            'recipientOptions' => $this->recipientOptions($recipients),
-            'isAdmin' => $canManageTransfers,
-            'selectedDeviceId' => $selectedDevice?->id ? (string) $selectedDevice->id : '',
-            'selectedDeviceLabel' => $selectedDevice
-                ? $selectedDevice->name.' ('.($selectedDevice->code ?: 'bez koda').')'
-                : '',
-        ]);
+        return redirect()->route('device-transfers.index', array_filter([
+            'device_transfer_modal' => 'create',
+            'device_id' => ctype_digit((string) $request->query('device_id', ''))
+                ? (int) $request->query('device_id')
+                : null,
+        ]));
     }
 
     /**

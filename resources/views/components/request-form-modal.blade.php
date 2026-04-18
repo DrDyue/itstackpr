@@ -12,6 +12,8 @@
     'show' => false,
     'deviceOptions' => [],
     'userOptions' => [],
+    'selectedDeviceId' => '',
+    'selectedDeviceLabel' => '',
 ])
 
 @php
@@ -34,6 +36,29 @@
         'writeoff' => 'Norādi iemeslu, kāpēc ierīci vajadzētu norakstīt.',
         'transfer' => 'Norādi, kam nodot ierīci, un izskaidro iemeslu.',
     ];
+
+    $validationTitles = [
+        'repair' => 'Neizdevās iesniegt remonta pieteikumu',
+        'writeoff' => 'Neizdevās iesniegt norakstīšanas pieteikumu',
+        'transfer' => 'Neizdevās iesniegt pārsūtīšanas pieteikumu',
+    ];
+
+    $validationFieldLabels = match ($type) {
+        'repair' => [
+            'device_id' => 'Ierīce',
+            'description' => 'Apraksts',
+        ],
+        'writeoff' => [
+            'device_id' => 'Ierīce',
+            'reason' => 'Iemesls',
+        ],
+        'transfer' => [
+            'device_id' => 'Ierīce',
+            'transfered_to_id' => 'Saņēmējs',
+            'transfer_reason' => 'Iemesls',
+        ],
+        default => [],
+    };
 @endphp
 
 <x-modal :name="'request-form-'.$type" :show="$show" maxWidth="lg">
@@ -50,6 +75,14 @@
             <p class="page-subtitle">{{ $descriptions[$type] }}</p>
         </div>
 
+        @if (old('request_form_type') === $type && $errors->any())
+            <x-validation-summary
+                class="mb-1"
+                :title="$validationTitles[$type] ?? 'Neizdevās iesniegt pieteikumu'"
+                :field-labels="$validationFieldLabels"
+            />
+        @endif
+
         <div class="space-y-6">
             <div>
                 <label class="crud-label">
@@ -60,8 +93,8 @@
                     query-name="device_query"
                     :identifier="'request-form-device-' . $type"
                     :options="$deviceOptions"
-                    :selected="old('device_id', '')"
-                    :query="old('device_query', '')"
+                    :selected="old('device_id', $selectedDeviceId)"
+                    :query="old('device_query', $selectedDeviceLabel)"
                     placeholder="Meklē pēc nosaukuma, koda vai telpas"
                     empty-message="Neviena ierīce neatbilst meklējumam."
                 />

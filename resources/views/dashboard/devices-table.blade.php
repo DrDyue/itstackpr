@@ -44,6 +44,8 @@
                         $repairStatusLabel = $deviceState['repairStatusLabel'] ?? null;
                         $repairPreview = $deviceState['repairPreview'] ?? null;
                         $pendingRequestBadge = $deviceState['pendingRequestBadge'] ?? null;
+                        $repairRecord = $device->activeRepair ?? $device->latestRepair;
+                        $repairModalUrl = $repairRecord ? route('repairs.show', $repairRecord) : null;
                     @endphp
                     <tr>
                         <td class="table-col-image px-3 py-4 text-center align-middle">
@@ -76,13 +78,23 @@
                             <div class="device-status-stack">
                                 @if ($device->status === \App\Models\Device::STATUS_REPAIR && $repairStatusLabel)
                                     <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
-                                        <div class="device-status-split-chip device-status-split-chip-repair" @focusin="open = true" @focusout="open = false" tabindex="0">
-                                            <span class="device-status-split-main">
-                                                <x-icon name="repair" size="h-3.5 w-3.5" />
-                                                <span>Remonts</span>
-                                            </span>
-                                            <span class="device-status-split-sub">{{ $repairStatusLabel }}</span>
-                                        </div>
+                                        @if ($repairModalUrl)
+                                            <a href="{{ $repairModalUrl }}" class="device-status-split-chip device-status-split-chip-repair" @focusin="open = true" @focusout="open = false">
+                                                <span class="device-status-split-main">
+                                                    <x-icon name="repair" size="h-3.5 w-3.5" />
+                                                    <span>Remonts</span>
+                                                </span>
+                                                <span class="device-status-split-sub">{{ $repairStatusLabel }}</span>
+                                            </a>
+                                        @else
+                                            <div class="device-status-split-chip device-status-split-chip-repair" @focusin="open = true" @focusout="open = false" tabindex="0">
+                                                <span class="device-status-split-main">
+                                                    <x-icon name="repair" size="h-3.5 w-3.5" />
+                                                    <span>Remonts</span>
+                                                </span>
+                                                <span class="device-status-split-sub">{{ $repairStatusLabel }}</span>
+                                            </div>
+                                        @endif
 
                                         @if ($repairPreview)
                                             <div x-cloak x-show="open" x-transition.opacity.scale.origin.top.right class="device-request-popover device-request-popover-end">

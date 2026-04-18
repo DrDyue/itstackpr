@@ -16,9 +16,12 @@
             'approved' => 'request-detail-status-emerald',
             'rejected' => 'request-detail-status-rose',
         ];
-        $shouldOpenCreateModal = ! $canReview
-            && old('request_form_type') === 'repair'
-            && $errors->hasAny(['device_id', 'description']);
+        $createSelectedDeviceLabel = collect($createDeviceOptions ?? [])
+            ->firstWhere('value', (string) request()->query('device_id', ''))['label'] ?? '';
+        $shouldOpenCreateModal = ! $canReview && (
+            (old('request_form_type') === 'repair' && $errors->hasAny(['device_id', 'description']))
+            || request()->query('repair_request_modal') === 'create'
+        );
     @endphp
 
     <section class="app-shell app-shell-wide">
@@ -252,9 +255,44 @@
         type="repair"
         :show="$shouldOpenCreateModal"
         :device-options="$createDeviceOptions ?? []"
+        :selected-device-id="(string) request()->query('device_id', '')"
+        :selected-device-label="$createSelectedDeviceLabel"
     />
+
+    @unless ($canReview)
+        @foreach ($requests as $repairRequest)
+            @if ($repairRequest->status === \App\Models\RepairRequest::STATUS_SUBMITTED)
+                <x-request-edit-modal
+                    type="repair"
+                    :modal-name="'repair-request-edit-' . $repairRequest->id"
+                    :request-model="$repairRequest"
+                    field-name="description"
+                    field-label="Apraksts"
+                    :action="route('my-requests.update', ['requestType' => 'repair', 'requestId' => $repairRequest->id])"
+                />
+            @endif
+        @endforeach
+
+        @if (($selectedEditableRequest?->id ?? null) && ! $requests->getCollection()->contains('id', $selectedEditableRequest->id))
+            <x-request-edit-modal
+                type="repair"
+                :modal-name="'repair-request-edit-' . $selectedEditableRequest->id"
+                :request-model="$selectedEditableRequest"
+                field-name="description"
+                field-label="Apraksts"
+                :action="route('my-requests.update', ['requestType' => 'repair', 'requestId' => $selectedEditableRequest->id])"
+            />
+        @endif
+    @endunless
 
     @if (old('request_form_type') === 'repair' && $errors->any())
         <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'request-form-repair' })));</script>
+    @elseif (str_starts_with((string) old('modal_form'), 'repair_request_edit_'))
+        @php($repairRequestModalTarget = str_replace('repair_request_edit_', '', (string) old('modal_form')))
+        <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'repair-request-edit-{{ $repairRequestModalTarget }}' })));</script>
+    @elseif (request()->query('repair_request_modal') === 'create' && ! $canReview)
+        <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'request-form-repair' })));</script>
+    @elseif (request()->query('repair_request_modal') === 'edit' && request()->query('modal_request') && ! $canReview)
+        <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'repair-request-edit-{{ request()->query('modal_request') }}' })));</script>
     @endif
 </x-app-layout>

@@ -576,7 +576,7 @@ class AuditTrail
 
             return match (self::normalizeEntityKey($entityType)) {
                 'device' => route('devices.show', $entityId),
-                'repair' => route('repairs.edit', $entityId),
+                'repair' => route('repairs.index', ['repair_modal' => 'edit', 'modal_repair' => $entityId]),
                 'repair_request' => route('repair-requests.index', ['q' => $entityId]) . '#repair-request-' . $entityId,
                 'writeoff_request' => route('writeoff-requests.index', ['q' => $entityId]) . '#writeoff-request-' . $entityId,
                 'device_transfer' => route('device-transfers.index', ['q' => $entityId]) . '#device-transfer-' . $entityId,

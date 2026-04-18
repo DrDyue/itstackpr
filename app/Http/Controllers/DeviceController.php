@@ -777,6 +777,15 @@ SQL;
             'target_assigned_to_id.required' => 'Izvēlies atbildīgo personu.',
         ]);
 
+        if (($validated['action'] ?? null) === 'status' && ($validated['target_status'] ?? null) === Device::STATUS_REPAIR) {
+            return redirect()
+                ->route('repairs.index', [
+                    'repair_modal' => 'create',
+                    'device_id' => $device->id,
+                ])
+                ->with('success', 'Atvērta remonta forma izvēlētajai ierīcei.');
+        }
+
         $result = $this->performDeviceAction($device, $validated);
 
         return $this->redirectAfterQuickAction($device, $result['level'], $result['message']);
