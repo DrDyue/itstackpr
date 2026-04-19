@@ -50,6 +50,7 @@
         ],
         "test": [
             "@php artisan config:clear --ansi",
+            "@php scripts/check-missing-static-imports.php",
             "@php artisan test"
         ],
         "post-autoload-dump": [
