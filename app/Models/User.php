@@ -8,10 +8,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 /**
- * LietotÄja modelis ar lomÄm un skatÄ«ÅanÄs reÅ¾Ä«miem.
+ * Lietotāja modelis ar lomām un skatīšanās režīmiem.
  *
- * Å eit glabÄjas gan autentifikÄcijas dati, gan arÄ« noteikumi,
- * kas nosaka, ko lietotÄjs drÄ«kst redzÄ“t admina un lietotÄja skatÄ.
+ * Šeit glabājas gan autentifikācijas dati, gan arī noteikumi,
+ * kas nosaka, ko lietotājs drīkst redzēt admina un lietotāja skatā.
  */
 class User extends Authenticatable
 {
@@ -58,7 +58,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Scope aktÄ«vo lietotÄju atlasÄ«Åanai.
+     * Scope aktīvo lietotāju atlasīšanai.
      */
     public function scopeActive(Builder $query): Builder
     {
@@ -66,7 +66,7 @@ class User extends Authenticatable
     }
 
     /**
-     * IerÄ«ces, kuras lietotÄjs ir izveidojis.
+     * Ierīces, kuras lietotājs ir izveidojis.
      */
     public function createdDevices(): HasMany
     {
@@ -74,7 +74,7 @@ class User extends Authenticatable
     }
 
     /**
-     * IerÄ«ces, kas ÅobrÄ«d piesaistÄ«tas lietotÄjam.
+     * Ierīces, kas šobrīd piesaistītas lietotājam.
      */
     public function assignedDevices(): HasMany
     {
@@ -92,7 +92,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Remontie, kurus Åis lietotÄjs ir pieÅ†Ä“mis un izpilda.
+     * Remonti, kurus šis lietotājs ir pieņēmis un izpilda.
      */
     public function acceptedRepairs(): HasMany
     {
@@ -140,7 +140,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Admins un IT darbinieks sistÄ“mÄ izmanto vienu paplaÅinÄto tiesÄ«bu kopu.
+     * Admins un IT darbinieks sistēmā izmanto vienu paplašināto tiesību kopu.
      */
     public function isAdmin(): bool
     {
@@ -148,7 +148,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Projekta biznesa loÄ£ikÄ IT darbinieks tiek apstrÄdÄts kÄ administrators.
+     * Projekta biznesa loģikā IT darbinieks tiek apstrādāts kā administrators.
      */
     public function isItWorker(): bool
     {
@@ -156,7 +156,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Nolasa paÅreizÄ“jo skatÄ«ÅanÄs reÅ¾Ä«mu no sesijas.
+     * Nolasa pašreizējo skatīšanās režīmu no sesijas.
      */
     public function currentViewMode(): string
     {
@@ -175,7 +175,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Vai administrators ÅobrÄ«d strÄdÄ pilnajÄ admina skatÄ.
+     * Vai administrators šobrīd strādā pilnajā admina skatā.
      */
     public function isInAdminView(): bool
     {
@@ -183,7 +183,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Vai lietotÄjs darbojas kÄ parasts darbinieks.
+     * Vai lietotājs darbojas kā parasts darbinieks.
      */
     public function isInUserView(): bool
     {
@@ -191,7 +191,7 @@ class User extends Authenticatable
     }
 
     /**
-     * CentralizÄ“ts palÄ«gs visÄm admina darbÄ«bu pÄrbaudÄ“m.
+     * Centralizēts palīgs visām admina darbību pārbaudēm.
      */
     public function canManageRequests(): bool
     {
@@ -199,7 +199,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Nosaka, vai lietotÄjs drÄ«kst skatÄ«t konkrÄ“to ierÄ«ci.
+     * Nosaka, vai lietotājs drīkst skatīt konkrēto ierīci.
      */
     public function canViewDevice(Device $device): bool
     {

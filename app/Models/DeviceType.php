@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * IerÄ«ces tipa vÄrdnÄ«cas modelis.
+ * Ierīces tipa vārdnīcas modelis.
  */
 class DeviceType extends Model
 {
@@ -18,7 +18,7 @@ class DeviceType extends Model
     public $timestamps = false;
 
     /**
-     * Visas ierÄ«ces, kurÄm pieÅÄ·irts Åis tips.
+     * Visas ierīces, kurām piešķirts šis tips.
      */
     public function devices(): HasMany
     {

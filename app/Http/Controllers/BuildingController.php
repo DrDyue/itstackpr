@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 /**
- * Ä’ku pÄrvaldÄ«bas CRUD kontrolieris.
+ * Ēku pārvaldības CRUD kontrolieris.
  */
 class BuildingController extends Controller
 {
@@ -23,7 +23,7 @@ class BuildingController extends Controller
     ];
 
     /**
-     * ParÄda Ä“ku sarakstu ar filtriem.
+     * Parāda ēku sarakstu ar filtriem.
      */
     public function index(Request $request)
     {
@@ -60,7 +60,7 @@ class BuildingController extends Controller
         if ($filters['search'] !== '' || $filters['total_floors'] !== '') {
             AuditTrail::filter($this->user(), 'Building', [
                 'teksts' => $filters['search'],
-                'stÄvu skaits' => $filters['total_floors'],
+                'stāvu skaits' => $filters['total_floors'],
             ], 'FiltrÄ“ts Ä“ku saraksts.');
         }
 
@@ -70,7 +70,7 @@ class BuildingController extends Controller
                 'Building',
                 $this->sortOptions()[$sorting['sort']]['label'] ?? 'nosaukuma',
                 $sorting['direction'] ?? 'asc',
-                'KÄrtots Ä“ku saraksts pÄ“c '.($this->sortOptions()[$sorting['sort']]['label'] ?? 'nosaukuma').' '.(($sorting['direction'] ?? 'asc') === 'asc' ? 'augoÅajÄ secÄ«bÄ' : 'dilstoÅajÄ secÄ«bÄ').'.'
+                'Kārtots ēku saraksts pēc '.($this->sortOptions()[$sorting['sort']]['label'] ?? 'nosaukuma').' '.(($sorting['direction'] ?? 'asc') === 'asc' ? 'augošajā secībā' : 'dilstošajā secībā').'.'
             );
         }
 
@@ -81,7 +81,7 @@ class BuildingController extends Controller
             'sortOptions' => [
                 'building_name' => ['label' => 'nosaukuma'],
                 'address' => ['label' => 'adreses'],
-                'total_floors' => ['label' => 'stÄvu skaita'],
+                'total_floors' => ['label' => 'stāvu skaita'],
                 'created_at' => ['label' => 'izveides datuma'],
             ],
             'selectedModalBuilding' => ctype_digit((string) $request->query('modal_building'))
@@ -91,7 +91,7 @@ class BuildingController extends Controller
     }
 
     /**
-     * Atrod Ä“ku pÄ“c nosaukuma aktÄ«vajÄ filtrÄ“tajÄ sarakstÄ.
+     * Atrod ēku pēc nosaukuma aktīvajā filtrētajā sarakstā.
      */
     public function findByName(Request $request): JsonResponse
     {
@@ -141,7 +141,7 @@ class BuildingController extends Controller
 
 
     /**
-     * SaglabÄ jaunu Ä“kas ierakstu.
+     * Saglabā jaunu ēkas ierakstu.
      */
     public function store(Request $request)
     {
@@ -166,11 +166,11 @@ class BuildingController extends Controller
         $after = $building->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState(auth()->id(), $building, $before, $after);
 
-        return redirect()->route('buildings.index')->with('success', 'Ä’kas dati atjauninÄti');
+        return redirect()->route('buildings.index')->with('success', 'Ēkas dati atjaunināti');
     }
 
     /**
-     * DzÄ“Å Ä“ku tikai tad, ja tai vairs nav piesaistÄ«tu telpu un ierÄ«Ä¨u.
+     * Dzēš ēku tikai tad, ja tai vairs nav piesaistītu telpu un ierīču.
      */
     public function destroy(Building $building)
     {
@@ -183,7 +183,7 @@ class BuildingController extends Controller
             $parts = [];
 
             if ($roomsCount > 0) {
-                $parts[] = "Ä“ka joprojÄm satur {$roomsCount} telpu" . ($roomsCount === 1 ? '' : 's');
+                $parts[] = "Ēka joprojām satur {$roomsCount} telpu" . ($roomsCount === 1 ? '' : 's');
             }
 
             if ($devicesCount > 0) {
@@ -192,7 +192,7 @@ class BuildingController extends Controller
 
             return redirect()
                 ->route('buildings.index')
-                ->with('error', 'Ä’ku nevar dzÄ“st, jo ' . implode(' un ', $parts) . '. Vispirms pÄrvieto vai dzÄ“s piesaistÄ«tas telpas un ierÄ«ces, tad mÄ“Ä£iniet vÄ“lreiz.');
+                ->with('error', 'Ēku nevar dzēst, jo ' . implode(' un ', $parts) . '. Vispirms pārvieto vai dzēs piesaistītas telpas un ierīces, tad mēģiniet vēlreiz.');
         }
 
         AuditTrail::deleted(auth()->id(), $building);
@@ -217,8 +217,8 @@ class BuildingController extends Controller
             'total_floors' => ['nullable', 'integer', 'min:0', 'max:200'],
             'notes' => ['nullable', 'string', 'max:200'],
         ], [
-            'building_name.required' => 'NorÄdi Ä“kas nosaukumu.',
-            'building_name.unique' => 'Ä’ka ar ÅÄdu nosaukumu jau eksistÄ“.',
+            'building_name.required' => 'Norādi ēkas nosaukumu.',
+            'building_name.unique' => 'Ēka ar šādu nosaukumu jau eksistē.',
         ]);
 
         $data['notes'] = $data['notes'] ?? self::NOTES_DEFAULT;
@@ -250,7 +250,7 @@ class BuildingController extends Controller
         return [
             'building_name' => ['label' => 'nosaukuma'],
             'address' => ['label' => 'adreses'],
-            'total_floors' => ['label' => 'stÄvu skaita'],
+            'total_floors' => ['label' => 'stāvu skaita'],
             'created_at' => ['label' => 'izveides datuma'],
         ];
     }

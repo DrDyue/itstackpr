@@ -12,12 +12,12 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 /**
- * Telpu pÄrvaldÄ«bas CRUD kontrolieris.
+ * Telpu pārvaldības CRUD kontrolieris.
  */
 class RoomController extends Controller
 {
     /**
-     * ParÄda telpu sarakstu ar filtriem un kopsavilkumu.
+     * Parāda telpu sarakstu ar filtriem un kopsavilkumu.
      */
     public function index(Request $request)
     {
@@ -57,7 +57,7 @@ class RoomController extends Controller
         if ($filters['building_id'] !== '' || $filters['floor'] !== '' || $filters['floor_query'] !== '' || $filters['user_id'] !== '') {
             AuditTrail::filter($this->user(), 'Room', [
                 'Ä“ka' => $filters['building_id'],
-                'stÄvs' => $filters['floor'] !== '' ? $filters['floor'] : $filters['floor_query'],
+                'stāvs' => $filters['floor'] !== '' ? $filters['floor'] : $filters['floor_query'],
                 'atbildÄ«gais' => $filters['user_id'],
             ], 'FiltrÄ“ts telpu saraksts.');
         }
@@ -90,7 +90,7 @@ class RoomController extends Controller
     }
 
     /**
-     * Atrod telpu pÄ“c nosaukuma vai numura aktÄ«vajÄ filtrÄ“tajÄ sarakstÄ.
+     * Atrod telpu pēc nosaukuma vai numura aktīvajā filtrētajā sarakstā.
      */
     public function findByName(Request $request): JsonResponse
     {
@@ -148,7 +148,7 @@ class RoomController extends Controller
 
 
     /**
-     * SaglabÄ jaunu telpu.
+     * Saglabā jaunu telpu.
      */
     public function store(Request $request)
     {
@@ -174,11 +174,11 @@ class RoomController extends Controller
 
         AuditTrail::updatedFromState(auth()->id(), $room, $before, $after);
 
-        return redirect()->route('rooms.index')->with('success', 'Telpas dati atjauninÄti');
+        return redirect()->route('rooms.index')->with('success', 'Telpas dati atjaunināti');
     }
 
     /**
-     * DzÄ“Å telpu tikai tad, ja tai vairs nav piesaistÄ«tu ierÄ«Ä¨u.
+     * Dzēš telpu tikai tad, ja tai vairs nav piesaistītu ierīču.
      */
     public function destroy(Room $room)
     {
@@ -189,7 +189,7 @@ class RoomController extends Controller
         if ($devicesCount > 0) {
             return redirect()
                 ->route('rooms.index')
-                ->with('error', 'Telpu nevar dzÄ“st, jo tai piesaistÄ«tas ' . $devicesCount . ' ierÄ«ce' . ($devicesCount === 1 ? '' : 's') . '. Vispirms pÄrvieto vai atsien ierÄ«ces no ÅÄ« ieraksta, tad mÄ“Ä£iniet vÄ“lreiz.');
+                ->with('error', 'Telpu nevar dzēst, jo tai piesaistītas ' . $devicesCount . ' ierīce' . ($devicesCount === 1 ? '' : 's') . '. Vispirms pārvieto vai atsien ierīces no šī ieraksta, tad mēģiniet vēlreiz.');
         }
 
         AuditTrail::deleted(auth()->id(), $room);
@@ -219,8 +219,8 @@ class RoomController extends Controller
             'notes' => ['nullable', 'string', 'max:200'],
         ], [
             'building_id.required' => 'IzvÄ“lies Ä“ku, kurai telpa pieder.',
-            'room_number.required' => 'NorÄdi telpas numuru.',
-            'room_number.unique' => 'Å Äds telpas numurs ÅajÄ Ä“kÄ jau eksistÄ“.',
+            'room_number.required' => 'Norādi telpas numuru.',
+            'room_number.unique' => 'Šāds telpas numurs šajā ēkā jau eksistē.',
         ]);
 
         $data['user_id'] = $data['user_id'] ?: null;

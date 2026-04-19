@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Ä’kas modelis, kas apvieno telpas un ierÄ«ces fiziskÄ lÄ«menÄ«.
+ * Ēkas modelis, kas apvieno telpas un ierīces fiziskā līmenī.
  */
 class Building extends Model
 {
@@ -29,7 +29,7 @@ class Building extends Model
     }
 
     /**
-     * Visas telpas konkrÄ“tajÄ Ä“kÄ.
+     * Visas telpas konkrētajā ēkā.
      */
     public function rooms(): HasMany
     {
@@ -37,7 +37,7 @@ class Building extends Model
     }
 
     /**
-     * Visas ierÄ«ces, kas saistÄ«tas ar Åo Ä“ku.
+     * Visas ierīces, kas saistītas ar šo ēku.
      */
     public function devices(): HasMany
     {

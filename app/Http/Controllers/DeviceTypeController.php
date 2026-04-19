@@ -35,7 +35,7 @@ class DeviceTypeController extends Controller
                 'DeviceType',
                 $this->sortOptions()[$sorting['sort']]['label'] ?? 'tipa nosaukuma',
                 $sorting['direction'] ?? 'asc',
-                'KÄrtots ierÄ«Ä¨u tipu saraksts pÄ“c '.($this->sortOptions()[$sorting['sort']]['label'] ?? 'tipa nosaukuma').' '.(($sorting['direction'] ?? 'asc') === 'asc' ? 'augoÅajÄ secÄ«bÄ' : 'dilstoÅajÄ secÄ«bÄ').'.'
+                'Kārtots ierīču tipu saraksts pēc '.($this->sortOptions()[$sorting['sort']]['label'] ?? 'tipa nosaukuma').' '.(($sorting['direction'] ?? 'asc') === 'asc' ? 'augošajā secībā' : 'dilstošajā secībā').'.'
             );
         }
 
@@ -72,7 +72,7 @@ class DeviceTypeController extends Controller
         $after = $deviceType->fresh()->only(['type_name']);
         AuditTrail::updatedFromState(auth()->id(), $deviceType, $before, $after);
 
-        return redirect()->route('device-types.index')->with('success', 'IerÄ«ces tips atjauninÄts.');
+        return redirect()->route('device-types.index')->with('success', 'Ierīces tips atjaunināts.');
     }
 
     public function destroy(DeviceType $deviceType)
@@ -132,7 +132,7 @@ class DeviceTypeController extends Controller
             'type_name' => ['required', 'string', 'max:30'],
         ], [
             'type_name.required' => 'Ievadi ierÄ«ces tipa nosaukumu.',
-            'type_name.max' => 'IerÄ«ces tipa nosaukums nedrÄ«kst bÅ«t garÄks par 30 rakstzÄ«mÄ“m.',
+            'type_name.max' => 'Ierīces tipa nosaukums nedrīkst būt garāks par 30 rakstzīmēm.',
         ]);
 
         $data['type_name'] = trim($data['type_name']);
@@ -150,7 +150,7 @@ class DeviceTypeController extends Controller
 
         if ($exists) {
             throw ValidationException::withMessages([
-                'type_name' => ['IerÄ«ces tips ar ÅÄdu nosaukumu jau eksistÄ“.'],
+                'type_name' => ['Ierīces tips ar šādu nosaukumu jau eksistē.'],
             ]);
         }
 

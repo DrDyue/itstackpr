@@ -17,10 +17,10 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
- * LietotĆ„Āju remonta pieteikumu plĆ…Ā«sma.
+ * Lietotāju remonta pieteikumu plūsma.
  *
- * Kontrolieris pĆ„Ārvalda gan lietotĆ„Āja iesniegĆ…ļ£¼anu, gan administratora
- * izskatĆ„Ā«Ć…ļ£¼anu un remonta ieraksta izveidi pĆ„ā€c apstiprinĆ„ĀĆ…ļ£¼anas.
+ * Kontrolieris pārvalda gan lietotāja iesniegšanu, gan administratora
+ * izskatīšanu un remonta ieraksta izveidi pēc apstiprināšanas.
  */
 class RepairRequestController extends Controller
 {
@@ -29,7 +29,7 @@ class RepairRequestController extends Controller
     private const SORTABLE_COLUMNS = ['code', 'name', 'requester', 'created_at', 'status'];
 
     /**
-     * ParĆ„Āda remonta pieteikumu sarakstu atbilstoĆ…ļ£¼i lomai un filtriem.
+     * Parāda remonta pieteikumu sarakstu atbilstoši lomai un filtriem.
      */
     public function index(Request $request)
     {
@@ -37,14 +37,14 @@ class RepairRequestController extends Controller
         abort_unless($user, 403);
         $viewData = $this->repairRequestsViewData($request, $user);
 
-        AuditTrail::viewed($user, 'RepairRequest', null, 'AtvĆ„ā€rts remonta pieteikumu saraksts.');
+        AuditTrail::viewed($user, 'RepairRequest', null, 'Atvērts remonta pieteikumu saraksts.');
         $this->auditRepairRequestListInteractions($request, $user, $viewData['filters'], $viewData['sorting']);
 
         return view('repair_requests.index', $viewData);
     }
 
     /**
-     * AtgrieĆ…Ā¾ filtrĆ„ā€tu remonta pieteikumu tabulu (async).
+     * Atgriež filtrētu remonta pieteikumu tabulu (async).
      */
     public function table(Request $request)
     {
@@ -63,7 +63,7 @@ class RepairRequestController extends Controller
     }
 
     /**
-     * KopĆ„Ā«ga metode remonta pieteikumu datu sagatavoĆ…ļ£¼anai.
+     * Kopīga metode remonta pieteikumu datu sagatavošanai.
      */
     private function repairRequestsViewData(Request $request, $user): array
     {
@@ -95,8 +95,8 @@ class RepairRequestController extends Controller
                 'createDeviceOptions' => collect(),
                 'requesterOptions' => collect(),
                 'selectedEditableRequest' => null,
-                'featureMessage' => 'Tabula repair_requests Ć…ļ£¼obrĆ„Ā«d nav pieejama.',
-                'sortDirectionLabels' => ['asc' => 'augoĆ…ļ£¼ajĆ„Ā secĆ„Ā«bĆ„Ā', 'desc' => 'dilstoĆ…ļ£¼ajĆ„Ā secĆ„Ā«bĆ„Ā'],
+                'featureMessage' => 'Tabula repair_requests šobrīd nav pieejama.',
+                'sortDirectionLabels' => ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'],
             ];
         }
 
@@ -159,12 +159,12 @@ class RepairRequestController extends Controller
                     ->where('status', RepairRequest::STATUS_SUBMITTED)
                     ->first()
                 : null,
-            'sortDirectionLabels' => ['asc' => 'augoĆ…ļ£¼ajĆ„Ā secĆ„Ā«bĆ„Ā', 'desc' => 'dilstoĆ…ļ£¼ajĆ„Ā secĆ„Ā«bĆ„Ā'],
+            'sortDirectionLabels' => ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'],
         ];
     }
 
     /**
-     * Atrod remonta pieteikumu pĆ„ā€c saistĆ„Ā«tĆ„Ās ierĆ„Ā«ces koda filtrĆ„ā€tajĆ„Ā sarakstĆ„Ā.
+     * Atrod remonta pieteikumu pēc saistītās ierīces koda filtrētajā sarakstā.
      */
     public function findByCode(Request $request)
     {
@@ -176,7 +176,7 @@ class RepairRequestController extends Controller
             return response()->json(['found' => false, 'page' => 1]);
         }
 
-        AuditTrail::search($user, 'RepairRequest', $code, 'MeklĆ„ā€ts remonta pieteikums pĆ„ā€c ierĆ„Ā«ces koda: '.$code);
+        AuditTrail::search($user, 'RepairRequest', $code, 'Meklēts remonta pieteikums pēc ierīces koda: '.$code);
 
         $canReview = $user->canManageRequests();
         $availableStatuses = [
@@ -223,7 +223,7 @@ class RepairRequestController extends Controller
 
 
     /**
-     * SaglabĆ„Ā jaunu remonta pieteikumu.
+     * Saglabā jaunu remonta pieteikumu.
      */
     public function store(Request $request)
     {
@@ -232,21 +232,21 @@ class RepairRequestController extends Controller
         abort_if($user->canManageRequests(), 403);
 
         if (! $this->featureTableExists('repair_requests')) {
-            return redirect()->route('repair-requests.index')->with('error', 'Remonta pieteikumus Ć…ļ£¼obrĆ„Ā«d nevar saglabĆ„Āt, jo tabula repair_requests nav pieejama.');
+            return redirect()->route('repair-requests.index')->with('error', 'Remonta pieteikumus šobrīd nevar saglabāt, jo tabula repair_requests nav pieejama.');
         }
 
         $validated = $this->validateInput($request, [
             'device_id' => ['required', 'exists:devices,id'],
             'description' => ['required', 'string'],
         ], [
-            'device_id.required' => 'IzvĆ„ā€lies ierĆ„Ā«ci, kurai piesaki remontu.',
-            'description.required' => 'Apraksti remonta problĆ„ā€mu.',
+            'device_id.required' => 'Izvēlies ierīci, kurai piesaki remontu.',
+            'description.required' => 'Apraksti remonta problēmu.',
         ]);
 
         $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
         if (! $device) {
             throw ValidationException::withMessages([
-                'device_id' => ['Vari pieteikt remontu tikai savai piesaistĆ„Ā«tai ierĆ„Ā«cei.'],
+                'device_id' => ['Vari pieteikt remontu tikai savai piesaistītai ierīcei.'],
             ]);
         }
 
@@ -262,11 +262,11 @@ class RepairRequestController extends Controller
         AuditTrail::created($user->id, $repairRequest);
         AuditTrail::submit($user->id, $repairRequest, 'Iesniegts remonta pieteikums: '.AuditTrail::labelFor($repairRequest));
 
-        return redirect()->route('repair-requests.index')->with('success', 'Remonta pieteikums nosĆ…Ā«tĆ„Ā«ts izskatĆ„Ā«Ć…ļ£¼anai');
+        return redirect()->route('repair-requests.index')->with('success', 'Remonta pieteikums nosūtīts izskatīšanai');
     }
 
     /**
-     * Administratora lĆ„ā€mums par remonta pieteikumu.
+     * Administratora lēmums par remonta pieteikumu.
      */
     public function review(Request $request, RepairRequest $repairRequest)
     {
@@ -274,24 +274,24 @@ class RepairRequestController extends Controller
 
         if (! $this->featureTableExists('repair_requests')) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Remonta pieteikumu tabula Ć…ļ£¼obrĆ„Ā«d nav pieejama.'], 503);
+                return response()->json(['message' => 'Remonta pieteikumu tabula šobrīd nav pieejama.'], 503);
             }
 
-            return back()->with('error', 'Remonta pieteikumu tabula Ć…ļ£¼obrĆ„Ā«d nav pieejama.');
+            return back()->with('error', 'Remonta pieteikumu tabula šobrīd nav pieejama.');
         }
 
         if ($repairRequest->status !== RepairRequest::STATUS_SUBMITTED) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Ć…Ā is pieteikums jau ir izskatĆ„Ā«ts.'], 409);
+                return response()->json(['message' => 'Šis pieteikums jau ir izskatīts.'], 409);
             }
 
-            return back()->with('error', 'Ć…Ā is pieteikums jau ir izskatĆ„Ā«ts.');
+            return back()->with('error', 'Šis pieteikums jau ir izskatīts.');
         }
 
         $validated = $this->validateInput($request, [
             'status' => ['required', Rule::in([RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED])],
         ], [
-            'status.required' => 'IzvĆ„ā€lies lĆ„ā€mumu remonta pieteikumam.',
+            'status.required' => 'Izvēlies lēmumu remonta pieteikumam.',
         ]);
 
         $repairRequest->loadMissing(['device', 'responsibleUser']);
@@ -311,13 +311,13 @@ class RepairRequestController extends Controller
 
                 if (! $device || $device->status === Device::STATUS_WRITEOFF) {
                     throw ValidationException::withMessages([
-                        'status' => ['Pieteikumu nevar apstiprinĆ„Āt, jo ierĆ„Ā«ce vairs nav pieejama remontam.'],
+                        'status' => ['Pieteikumu nevar apstiprināt, jo ierīce vairs nav pieejama remontam.'],
                     ]);
                 }
 
                 if ($device->repairs()->whereIn('status', ['waiting', 'in-progress'])->exists()) {
                     throw ValidationException::withMessages([
-                        'status' => ['Ć…Ā ai ierĆ„Ā«cei jau ir aktĆ„Ā«vs remonta ieraksts.'],
+                        'status' => ['Šai ierīcei jau ir aktīvs remonta ieraksts.'],
                     ]);
                 }
 
@@ -351,14 +351,14 @@ class RepairRequestController extends Controller
         $after = $repairRequest->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState($manager->id, $repairRequest, $before, $after);
         if ($validated['status'] === RepairRequest::STATUS_APPROVED) {
-            AuditTrail::approve($manager->id, $repairRequest, 'ApstiprinĆ„Āts remonta pieteikums: '.AuditTrail::labelFor($repairRequest));
+            AuditTrail::approve($manager->id, $repairRequest, 'Apstiprināts remonta pieteikums: '.AuditTrail::labelFor($repairRequest));
         } else {
-            AuditTrail::reject($manager->id, $repairRequest, null, 'NoraidĆ„Ā«ts remonta pieteikums: '.AuditTrail::labelFor($repairRequest));
+            AuditTrail::reject($manager->id, $repairRequest, null, 'Noraidīts remonta pieteikums: '.AuditTrail::labelFor($repairRequest));
         }
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'Remonta pieteikums izskatĆ„Ā«ts',
+                'message' => 'Remonta pieteikums izskatīts',
                 'status' => $validated['status'],
                 'request_id' => $repairRequest->id,
                 'repair_edit_url' => $createdRepair
@@ -372,10 +372,10 @@ class RepairRequestController extends Controller
                 'repair_modal' => 'edit',
                 'modal_repair' => $createdRepair->id,
             ])
-                ->with('success', 'Remonta pieteikums apstiprinĆ„Āts un atvĆ„ā€rts remonta ieraksts.');
+                ->with('success', 'Remonta pieteikums apstiprināts un atvērts remonta ieraksts.');
         }
 
-        return back()->with('success', 'Remonta pieteikums izskatĆ„Ā«ts');
+        return back()->with('success', 'Remonta pieteikums izskatīts');
     }
     private function availableDevicesForUser(User $user): Builder
     {
@@ -422,31 +422,31 @@ class RepairRequestController extends Controller
     {
         if ($device->status === Device::STATUS_REPAIR) {
             throw ValidationException::withMessages([
-                'device_id' => ['Ć…Ā ai ierĆ„Ā«cei jau notiek remonts ('.$this->repairStatusLabel($device->activeRepair?->status).'), tĆ„ĀpĆ„ā€c jaunu remonta pieteikumu veidot nevar.'],
+                'device_id' => ['Šai ierīcei jau notiek remonts ('.$this->repairStatusLabel($device->activeRepair?->status).'), tāpēc jaunu remonta pieteikumu veidot nevar.'],
             ]);
         }
 
         if (RepairRequest::query()->where('device_id', $device->id)->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Ć…Ā ai ierĆ„Ā«cei jau ir gaidoĆ…ļ£¼s remonta pieteikums.'],
+                'device_id' => ['Šai ierīcei jau ir gaidošs remonta pieteikums.'],
             ]);
         }
 
         if (WriteoffRequest::query()->where('device_id', $device->id)->where('status', 'submitted')->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Ć…Ā ai ierĆ„Ā«cei jau ir gaidoĆ…ļ£¼s norakstĆ„Ā«Ć…ļ£¼anas pieteikums, tĆ„ĀpĆ„ā€c remonta pieteikumu veidot nevar.'],
+                'device_id' => ['Šai ierīcei jau ir gaidošs norakstīšanas pieteikums, tāpēc remonta pieteikumu veidot nevar.'],
             ]);
         }
 
         if (DeviceTransfer::query()->where('device_id', $device->id)->where('status', 'submitted')->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Ć…Ā ai ierĆ„Ā«cei jau ir gaidoĆ…ļ£¼s nodoĆ…ļ£¼anas pieteikums, tĆ„ĀpĆ„ā€c remonta pieteikumu veidot nevar.'],
+                'device_id' => ['Šai ierīcei jau ir gaidošs nodošanas pieteikums, tāpēc remonta pieteikumu veidot nevar.'],
             ]);
         }
     }
 
     /**
-     * SakĆ„Ārto saraksta filtru stĆ„Āvokli, ieskaitot admina noklusĆ„ā€to "iesniegts".
+     * Sakārto saraksta filtru stāvokli, ieskaitot admina noklusēto "iesniegts".
      */
     private function normalizedIndexFilters(Request $request, array $availableStatuses, bool $canReview): array
     {
@@ -482,7 +482,7 @@ class RepairRequestController extends Controller
     }
 
     /**
-     * Pielieto meklĆ„ā€Ć…ļ£¼anu un filtrus pieteikumu vaicĆ„Ājumam.
+     * Pielieto meklēšanu un filtrus pieteikumu vaicājumam.
      */
     private function applyIndexFilters(Builder $query, array $filters, array $skip = []): Builder
     {
@@ -538,7 +538,7 @@ class RepairRequestController extends Controller
     }
 
     /**
-     * Pielieto droĆ…ļ£¼u kĆ„ĀrtoĆ…ļ£¼anu pĆ„ā€c atĆ„Ā¼autajĆ„Ām kolonnĆ„Ām.
+     * Pielieto drošu kārtošanu pēc atļautajām kolonnām.
      */
     private function applySorting(Builder $query, array $sorting): void
     {
@@ -576,7 +576,7 @@ class RepairRequestController extends Controller
     }
 
     /**
-     * NormalizĆ„ā€ kĆ„ĀrtoĆ…ļ£¼anas parametrus tabulas galvenei un toast paziĆ…ā€ ojumiem.
+     * Normalizē kārtošanas parametrus tabulas galvenei un toast paziņojumiem.
      */
     private function normalizedSorting(Request $request): array
     {
@@ -594,20 +594,20 @@ class RepairRequestController extends Controller
         return [
             'sort' => $sort,
             'direction' => $direction,
-            'label' => $this->sortOptions()[$sort]['label'] ?? 'iesniegĆ…ļ£¼anas datuma',
+            'label' => $this->sortOptions()[$sort]['label'] ?? 'iesniegšanas datuma',
         ];
     }
 
     /**
-     * LietotĆ„Āja paziĆ…ā€ ojumiem izmantojamĆ„Ās kĆ„ĀrtoĆ…ļ£¼anas etiĆ„Ā·etes.
+     * Lietotāja paziņojumiem izmantojamās kārtošanas etiķetes.
      */
     private function sortOptions(): array
     {
         return [
             'code' => ['label' => 'koda'],
             'name' => ['label' => 'nosaukuma'],
-            'requester' => ['label' => 'pieteicĆ„ā€ja'],
-            'created_at' => ['label' => 'iesniegĆ…ļ£¼anas datuma'],
+            'requester' => ['label' => 'pieteicēja'],
+            'created_at' => ['label' => 'iesniegšanas datuma'],
             'status' => ['label' => 'statusa'],
         ];
     }
@@ -616,10 +616,10 @@ class RepairRequestController extends Controller
     {
         $filterPayload = array_filter([
             'teksts' => $filters['q'] ?? '',
-            'ierĆ„Ā«ce' => $filters['device_query'] ?? '',
-            'pieteicĆ„ā€js' => $filters['requester_query'] ?? '',
+            'ierīce' => $filters['device_query'] ?? '',
+            'pieteicējs' => $filters['requester_query'] ?? '',
             'no datuma' => $filters['date_from'] ?? '',
-            'lĆ„Ā«dz datumam' => $filters['date_to'] ?? '',
+            'līdz datumam' => $filters['date_to'] ?? '',
             'statusi' => count($filters['statuses'] ?? []) > 0 && count($filters['statuses'] ?? []) < 3 ? ($filters['statuses'] ?? []) : [],
         ], fn (mixed $value) => $value !== null && $value !== '' && $value !== []);
 
@@ -628,7 +628,7 @@ class RepairRequestController extends Controller
                 $user,
                 'RepairRequest',
                 $filterPayload,
-                'FiltrĆ„ā€ti remonta pieteikumi: '.implode(' | ', collect($filterPayload)->map(function (mixed $value, string $label) {
+                'Filtrēti remonta pieteikumi: '.implode(' | ', collect($filterPayload)->map(function (mixed $value, string $label) {
                     if (is_array($value)) {
                         return $label.': '.implode(', ', $value);
                     }
@@ -642,15 +642,15 @@ class RepairRequestController extends Controller
             AuditTrail::sort(
                 $user,
                 'RepairRequest',
-                $sorting['label'] ?? 'iesniegĆ…ļ£¼anas datuma',
+                $sorting['label'] ?? 'iesniegšanas datuma',
                 $sorting['direction'] ?? 'desc',
-                'KĆ„Ārtoti remonta pieteikumi pĆ„ā€c '.($sorting['label'] ?? 'iesniegĆ…ļ£¼anas datuma').' '.(($sorting['direction'] ?? 'desc') === 'asc' ? 'augoĆ…ļ£¼ajĆ„Ā secĆ„Ā«bĆ„Ā' : 'dilstoĆ…ļ£¼ajĆ„Ā secĆ„Ā«bĆ„Ā').'.'
+                'Kārtoti remonta pieteikumi pēc '.($sorting['label'] ?? 'iesniegšanas datuma').' '.(($sorting['direction'] ?? 'desc') === 'asc' ? 'augošajā secībā' : 'dilstošajā secībā').'.'
             );
         }
     }
 
     /**
-     * Sagatavo ierĆ„Ā«Ć„ĀØu dropdown opcijas remonta pieteikumu filtram.
+     * Sagatavo ierīču dropdown opcijas remonta pieteikumu filtram.
      */
     private function repairDeviceOptions($requests)
     {
@@ -681,7 +681,7 @@ class RepairRequestController extends Controller
     }
 
     /**
-     * Sagatavo pieteicĆ„ā€ju dropdown opcijas remonta pieteikumu filtram.
+     * Sagatavo pieteicēju dropdown opcijas remonta pieteikumu filtram.
      */
     private function repairRequesterOptions($requests)
     {
