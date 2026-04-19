@@ -1,6 +1,6 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "drdyue/itstackpr",
     "type": "project",
     "description": "Ludzas novada pasvaldibas IT inventara uzskaites un pieprasijumu vadibas sistema.",
     "keywords": [
