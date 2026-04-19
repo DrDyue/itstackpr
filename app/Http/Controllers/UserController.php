@@ -10,7 +10,6 @@ use App\Models\User;
 use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -163,14 +162,6 @@ class UserController extends Controller
         ]);
     }
 
-    public function redirectToCreateModal(): RedirectResponse
-    {
-        $this->requireAdmin();
-        AuditTrail::viewed($this->user(), 'User', null, 'Atvērta lietotāja izveides forma.');
-
-        return $this->redirectToUserModal('create');
-    }
-
     public function show(User $user)
     {
         $this->requireAdmin();
@@ -301,14 +292,6 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Lietotājs veiksmīgi izveidots');
     }
 
-    public function redirectToEditModal(User $user): RedirectResponse
-    {
-        $this->requireAdmin();
-        AuditTrail::viewed($this->user(), 'User', (string) $user->id, 'Atvērta lietotāja labošanas forma: '.AuditTrail::labelFor($user));
-
-        return $this->redirectToUserModal('edit', $user);
-    }
-
     public function update(Request $request, User $user)
     {
         $this->requireAdmin();
@@ -426,17 +409,6 @@ class UserController extends Controller
             'direction' => $direction,
             'label' => $this->sortOptions()[$sort]['label'] ?? 'vārda un uzvārda',
         ];
-    }
-
-    private function redirectToUserModal(string $mode, ?User $user = null): RedirectResponse
-    {
-        $parameters = ['user_modal' => $mode];
-
-        if ($user) {
-            $parameters['modal_user'] = $user->id;
-        }
-
-        return redirect()->route('users.index', $parameters);
     }
 
     private function applySorting($query, array $sorting): void

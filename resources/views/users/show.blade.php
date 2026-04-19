@@ -58,7 +58,7 @@
                 </div>
 
                 <div class="page-actions">
-                    <a href="{{ route('users.edit', $managedUser) }}" class="btn-edit">
+                    <a href="{{ route('users.index', ['user_modal' => 'edit', 'modal_user' => $managedUser->id]) }}" class="btn-edit">
                         <x-icon name="edit" size="h-4 w-4" />
                         <span>Rediģēt</span>
                     </a>

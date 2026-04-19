@@ -494,7 +494,7 @@
 
                                                     @if ($isOwnerCanEdit)
                                                         <a
-                                                            href="{{ route('my-requests.edit', ['requestType' => 'transfer', 'requestId' => $transfer->id]) }}"
+                                                            href="{{ route('device-transfers.index', ['device_transfer_modal' => 'edit', 'modal_request' => $transfer->id]) }}"
                                                             class="table-action-item table-action-item-amber"
                                                             @click="open = false"
                                                         >

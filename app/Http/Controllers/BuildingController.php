@@ -6,12 +6,11 @@ use App\Models\Building;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 /**
- * Ēku pārvaldības CRUD kontrolieris.
+ * Ä’ku pÄrvaldÄ«bas CRUD kontrolieris.
  */
 class BuildingController extends Controller
 {
@@ -24,7 +23,7 @@ class BuildingController extends Controller
     ];
 
     /**
-     * Parāda ēku sarakstu ar filtriem.
+     * ParÄda Ä“ku sarakstu ar filtriem.
      */
     public function index(Request $request)
     {
@@ -56,13 +55,13 @@ class BuildingController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        AuditTrail::viewed($this->user(), 'Building', null, 'Atvērts ēku saraksts.');
+        AuditTrail::viewed($this->user(), 'Building', null, 'AtvÄ“rts Ä“ku saraksts.');
 
         if ($filters['search'] !== '' || $filters['total_floors'] !== '') {
             AuditTrail::filter($this->user(), 'Building', [
                 'teksts' => $filters['search'],
-                'stāvu skaits' => $filters['total_floors'],
-            ], 'Filtrēts ēku saraksts.');
+                'stÄvu skaits' => $filters['total_floors'],
+            ], 'FiltrÄ“ts Ä“ku saraksts.');
         }
 
         if (($sorting['sort'] ?? 'building_name') !== 'building_name' || ($sorting['direction'] ?? 'asc') !== 'asc' || $request->has('sort')) {
@@ -71,7 +70,7 @@ class BuildingController extends Controller
                 'Building',
                 $this->sortOptions()[$sorting['sort']]['label'] ?? 'nosaukuma',
                 $sorting['direction'] ?? 'asc',
-                'Kārtots ēku saraksts pēc '.($this->sortOptions()[$sorting['sort']]['label'] ?? 'nosaukuma').' '.(($sorting['direction'] ?? 'asc') === 'asc' ? 'augošajā secībā' : 'dilstošajā secībā').'.'
+                'KÄrtots Ä“ku saraksts pÄ“c '.($this->sortOptions()[$sorting['sort']]['label'] ?? 'nosaukuma').' '.(($sorting['direction'] ?? 'asc') === 'asc' ? 'augoÅajÄ secÄ«bÄ' : 'dilstoÅajÄ secÄ«bÄ').'.'
             );
         }
 
@@ -82,7 +81,7 @@ class BuildingController extends Controller
             'sortOptions' => [
                 'building_name' => ['label' => 'nosaukuma'],
                 'address' => ['label' => 'adreses'],
-                'total_floors' => ['label' => 'stāvu skaita'],
+                'total_floors' => ['label' => 'stÄvu skaita'],
                 'created_at' => ['label' => 'izveides datuma'],
             ],
             'selectedModalBuilding' => ctype_digit((string) $request->query('modal_building'))
@@ -92,7 +91,7 @@ class BuildingController extends Controller
     }
 
     /**
-     * Atrod ēku pēc nosaukuma aktīvajā filtrētajā sarakstā.
+     * Atrod Ä“ku pÄ“c nosaukuma aktÄ«vajÄ filtrÄ“tajÄ sarakstÄ.
      */
     public function findByName(Request $request): JsonResponse
     {
@@ -103,7 +102,7 @@ class BuildingController extends Controller
             return response()->json(['found' => false, 'page' => 1]);
         }
 
-        AuditTrail::search($this->user(), 'Building', $search, 'Meklēta ēka pēc nosaukuma vai adreses: '.$search);
+        AuditTrail::search($this->user(), 'Building', $search, 'MeklÄ“ta Ä“ka pÄ“c nosaukuma vai adreses: '.$search);
 
         $filters = [
             'total_floors' => trim((string) $request->query('total_floors', '')),
@@ -140,19 +139,9 @@ class BuildingController extends Controller
         ]);
     }
 
-    /**
-     * Parāda jaunas ēkas izveides formu.
-     */
-    public function redirectToCreateModal(): RedirectResponse
-    {
-        $this->requireManager();
-        AuditTrail::viewed($this->user(), 'Building', null, 'Atvērta ēkas izveides forma.');
-
-        return $this->redirectToBuildingModal('create');
-    }
 
     /**
-     * Saglabā jaunu ēkas ierakstu.
+     * SaglabÄ jaunu Ä“kas ierakstu.
      */
     public function store(Request $request)
     {
@@ -161,22 +150,12 @@ class BuildingController extends Controller
         $building = Building::create($this->validatedData($request));
         AuditTrail::created(auth()->id(), $building);
 
-        return redirect()->route('buildings.index')->with('success', 'Ēka veiksmīgi pievienota');
+        return redirect()->route('buildings.index')->with('success', 'Ä’ka veiksmÄ«gi pievienota');
     }
 
-    /**
-     * Parāda ēkas rediģēšanas formu.
-     */
-    public function redirectToEditModal(Building $building): RedirectResponse
-    {
-        $this->requireManager();
-        AuditTrail::viewed($this->user(), 'Building', (string) $building->id, 'Atvērta ēkas labošanas forma: '.AuditTrail::labelFor($building));
-
-        return $this->redirectToBuildingModal('edit', $building);
-    }
 
     /**
-     * Atjaunina ēkas datus.
+     * Atjaunina Ä“kas datus.
      */
     public function update(Request $request, Building $building)
     {
@@ -187,11 +166,11 @@ class BuildingController extends Controller
         $after = $building->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState(auth()->id(), $building, $before, $after);
 
-        return redirect()->route('buildings.index')->with('success', 'Ēkas dati atjaunināti');
+        return redirect()->route('buildings.index')->with('success', 'Ä’kas dati atjauninÄti');
     }
 
     /**
-     * Dzēš ēku tikai tad, ja tai vairs nav piesaistītu telpu un ierīču.
+     * DzÄ“Å Ä“ku tikai tad, ja tai vairs nav piesaistÄ«tu telpu un ierÄ«Ä¨u.
      */
     public function destroy(Building $building)
     {
@@ -204,33 +183,24 @@ class BuildingController extends Controller
             $parts = [];
 
             if ($roomsCount > 0) {
-                $parts[] = "ēka joprojām satur {$roomsCount} telpu" . ($roomsCount === 1 ? '' : 's');
+                $parts[] = "Ä“ka joprojÄm satur {$roomsCount} telpu" . ($roomsCount === 1 ? '' : 's');
             }
 
             if ($devicesCount > 0) {
-                $parts[] = "tai piesaistītas {$devicesCount} ierīce" . ($devicesCount === 1 ? '' : 's');
+                $parts[] = "tai piesaistÄ«tas {$devicesCount} ierÄ«ce" . ($devicesCount === 1 ? '' : 's');
             }
 
             return redirect()
                 ->route('buildings.index')
-                ->with('error', 'Ēku nevar dzēst, jo ' . implode(' un ', $parts) . '. Vispirms pārvieto vai dzēs piesaistītas telpas un ierīces, tad mēģiniet vēlreiz.');
+                ->with('error', 'Ä’ku nevar dzÄ“st, jo ' . implode(' un ', $parts) . '. Vispirms pÄrvieto vai dzÄ“s piesaistÄ«tas telpas un ierÄ«ces, tad mÄ“Ä£iniet vÄ“lreiz.');
         }
 
         AuditTrail::deleted(auth()->id(), $building);
         $building->delete();
 
-        return redirect()->route('buildings.index')->with('success', 'Ēka dzēsta');
+        return redirect()->route('buildings.index')->with('success', 'Ä’ka dzÄ“sta');
     }
 
-    /**
-     * Vecais show ceļš tiek novirzīts atpakaļ uz sarakstu.
-     */
-    public function show(Building $building)
-    {
-        $this->requireManager();
-
-        return redirect()->route('buildings.index');
-    }
 
     private function validatedData(Request $request, ?Building $building = null): array
     {
@@ -247,8 +217,8 @@ class BuildingController extends Controller
             'total_floors' => ['nullable', 'integer', 'min:0', 'max:200'],
             'notes' => ['nullable', 'string', 'max:200'],
         ], [
-            'building_name.required' => 'Norādi ēkas nosaukumu.',
-            'building_name.unique' => 'Ēka ar šādu nosaukumu jau eksistē.',
+            'building_name.required' => 'NorÄdi Ä“kas nosaukumu.',
+            'building_name.unique' => 'Ä’ka ar ÅÄdu nosaukumu jau eksistÄ“.',
         ]);
 
         $data['notes'] = $data['notes'] ?? self::NOTES_DEFAULT;
@@ -280,7 +250,7 @@ class BuildingController extends Controller
         return [
             'building_name' => ['label' => 'nosaukuma'],
             'address' => ['label' => 'adreses'],
-            'total_floors' => ['label' => 'stāvu skaita'],
+            'total_floors' => ['label' => 'stÄvu skaita'],
             'created_at' => ['label' => 'izveides datuma'],
         ];
     }
@@ -297,14 +267,4 @@ class BuildingController extends Controller
         }
     }
 
-    private function redirectToBuildingModal(string $mode, ?Building $building = null): RedirectResponse
-    {
-        $parameters = ['building_modal' => $mode];
-
-        if ($building) {
-            $parameters['modal_building'] = $building->id;
-        }
-
-        return redirect()->route('buildings.index', $parameters);
-    }
 }

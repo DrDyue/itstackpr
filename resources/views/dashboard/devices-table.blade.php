@@ -45,7 +45,9 @@
                         $repairPreview = $deviceState['repairPreview'] ?? null;
                         $pendingRequestBadge = $deviceState['pendingRequestBadge'] ?? null;
                         $repairRecord = $device->activeRepair ?? $device->latestRepair;
-                        $repairModalUrl = $repairRecord ? route('repairs.show', $repairRecord) : null;
+                        $repairModalUrl = $repairRecord
+                            ? route('repairs.index', ['repair_modal' => 'edit', 'modal_repair' => $repairRecord->id])
+                            : null;
                     @endphp
                     <tr>
                         <td class="table-col-image px-3 py-4 text-center align-middle">

@@ -16,33 +16,6 @@ class RequestTableModalFlowTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_repair_request_create_route_redirects_to_index_modal(): void
-    {
-        $employee = User::factory()->create(['role' => User::ROLE_USER]);
-
-        $response = $this->actingAs($employee)->get(route('repair-requests.create'));
-
-        $response->assertRedirect(route('repair-requests.index', ['repair_request_modal' => 'create']));
-    }
-
-    public function test_writeoff_request_create_route_redirects_to_index_modal(): void
-    {
-        $employee = User::factory()->create(['role' => User::ROLE_USER]);
-
-        $response = $this->actingAs($employee)->get(route('writeoff-requests.create'));
-
-        $response->assertRedirect(route('writeoff-requests.index', ['writeoff_request_modal' => 'create']));
-    }
-
-    public function test_device_transfer_create_route_redirects_to_index_modal(): void
-    {
-        $employee = User::factory()->create(['role' => User::ROLE_USER]);
-
-        $response = $this->actingAs($employee)->get(route('device-transfers.create'));
-
-        $response->assertRedirect(route('device-transfers.index', ['device_transfer_modal' => 'create']));
-    }
-
     public function test_repair_requests_index_contains_modal_when_requested(): void
     {
         $employee = User::factory()->create(['role' => User::ROLE_USER]);
@@ -74,74 +47,6 @@ class RequestTableModalFlowTest extends TestCase
         $response
             ->assertOk()
             ->assertSee('request-form-transfer', false);
-    }
-
-    public function test_my_requests_edit_redirects_repair_requests_to_edit_modal(): void
-    {
-        $employee = User::factory()->create(['role' => User::ROLE_USER]);
-        $device = $this->createDeviceFor($employee);
-        $repairRequest = RepairRequest::query()->create([
-            'device_id' => $device->id,
-            'responsible_user_id' => $employee->id,
-            'description' => 'Nedarbojas ekrāns',
-            'status' => RepairRequest::STATUS_SUBMITTED,
-        ]);
-
-        $response = $this->actingAs($employee)->get(route('my-requests.edit', [
-            'requestType' => 'repair',
-            'requestId' => $repairRequest->id,
-        ]));
-
-        $response->assertRedirect(route('repair-requests.index', [
-            'repair_request_modal' => 'edit',
-            'modal_request' => $repairRequest->id,
-        ]));
-    }
-
-    public function test_my_requests_edit_redirects_writeoff_requests_to_edit_modal(): void
-    {
-        $employee = User::factory()->create(['role' => User::ROLE_USER]);
-        $device = $this->createDeviceFor($employee);
-        $writeoffRequest = WriteoffRequest::query()->create([
-            'device_id' => $device->id,
-            'responsible_user_id' => $employee->id,
-            'reason' => 'Ierīce vairs nav lietojama',
-            'status' => WriteoffRequest::STATUS_SUBMITTED,
-        ]);
-
-        $response = $this->actingAs($employee)->get(route('my-requests.edit', [
-            'requestType' => 'writeoff',
-            'requestId' => $writeoffRequest->id,
-        ]));
-
-        $response->assertRedirect(route('writeoff-requests.index', [
-            'writeoff_request_modal' => 'edit',
-            'modal_request' => $writeoffRequest->id,
-        ]));
-    }
-
-    public function test_my_requests_edit_redirects_transfer_requests_to_edit_modal(): void
-    {
-        $employee = User::factory()->create(['role' => User::ROLE_USER]);
-        $recipient = User::factory()->create(['role' => User::ROLE_USER]);
-        $device = $this->createDeviceFor($employee);
-        $transfer = DeviceTransfer::query()->create([
-            'device_id' => $device->id,
-            'responsible_user_id' => $employee->id,
-            'transfered_to_id' => $recipient->id,
-            'transfer_reason' => 'Jānodod kolēģim',
-            'status' => DeviceTransfer::STATUS_SUBMITTED,
-        ]);
-
-        $response = $this->actingAs($employee)->get(route('my-requests.edit', [
-            'requestType' => 'transfer',
-            'requestId' => $transfer->id,
-        ]));
-
-        $response->assertRedirect(route('device-transfers.index', [
-            'device_transfer_modal' => 'edit',
-            'modal_request' => $transfer->id,
-        ]));
     }
 
     public function test_repair_requests_index_contains_edit_modal_when_requested(): void

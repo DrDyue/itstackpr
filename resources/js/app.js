@@ -1,7 +1,10 @@
 import './bootstrap';
+import { initializeThemeToggle } from './modules/theme';
+import { initializeAppConfirm, registerFeedbackGlobals } from './modules/feedback';
+import { initializeAsyncTableFilters, registerAsyncTableGlobals, restoreHighlightedSearchFromUrl } from './modules/async-table';
+import { registerRepairWorkflowGlobals } from './modules/repair-workflow';
 
 const Alpine = window.Alpine;
-const THEME_STORAGE_KEY = 'itstack-theme';
 
 /* ==========================================================================
    Shared helpers (kept in this file by request to minimize file count)
@@ -85,927 +88,9 @@ window.focusValidationField = (fieldName) => {
     return true;
 };
 
-const appendInputValueParam = (params, key, input) => {
-    if (!input || !key) {
-        return;
-    }
-
-    const value = String(input.value ?? '').trim();
-    if (value === '') {
-        return;
-    }
-
-    params.append(key, value);
-};
-
-const isAsyncTableFilterForm = (form) => {
-    return Boolean(form && form.closest('[data-async-table-root]'));
-};
-
-const buildClearFiltersUrl = (form) => {
-    const url = new URL(form.action, window.location.origin);
-    const sortField = form.querySelector('input[data-sort-hidden="field"]');
-    const sortDirection = form.querySelector('input[data-sort-hidden="direction"]');
-    const params = new URLSearchParams();
-
-    params.append('statuses_filter', '1');
-    appendInputValueParam(params, 'sort', sortField);
-    appendInputValueParam(params, 'direction', sortDirection);
-    url.search = `?${params.toString()}`;
-
-    return url;
-};
-
-const getStoredTheme = () => {
-    return readStorageValue(THEME_STORAGE_KEY, 'light') === 'dark' ? 'dark' : 'light';
-};
-
-const applyTheme = (theme) => {
-    const normalizedTheme = theme === 'dark' ? 'dark' : 'light';
-    document.documentElement.dataset.theme = normalizedTheme;
-    document.documentElement.style.colorScheme = normalizedTheme;
-
-    if (document.body) {
-        document.body.dataset.theme = normalizedTheme;
-    }
-
-    window.dispatchEvent(new CustomEvent('app-theme-changed', {
-        detail: { theme: normalizedTheme },
-    }));
-};
-
-const syncThemeToggleUi = () => {
-    const currentTheme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
-
-    document.querySelectorAll('[data-theme-choice]').forEach((button) => {
-        const buttonTheme = button.dataset.themeValue === 'dark' ? 'dark' : 'light';
-        const isActive = buttonTheme === currentTheme;
-
-        button.dataset.active = isActive ? 'true' : 'false';
-        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-    });
-};
-
-const initializeThemeToggle = () => {
-    applyTheme(getStoredTheme());
-    syncThemeToggleUi();
-
-    document.querySelectorAll('[data-theme-choice]').forEach((button) => {
-        if (button.dataset.themeBound === '1') {
-            return;
-        }
-
-        button.dataset.themeBound = '1';
-        button.addEventListener('click', () => {
-            const nextTheme = button.dataset.themeValue === 'dark' ? 'dark' : 'light';
-
-            writeStorageValue(THEME_STORAGE_KEY, nextTheme);
-
-            applyTheme(nextTheme);
-            syncThemeToggleUi();
-        });
-    });
-};
-
-const createToastIcon = (tone) => {
-    if (tone === 'success') {
-        return `
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m6 2.25a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-            </svg>
-        `;
-    }
-
-    return `
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25 12 11.25v4.5m0-8.25h.008v.008H12V7.5ZM21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-        </svg>
-    `;
-};
-
-const ensureAppToastRoot = () => {
-    let root = document.querySelector('[data-app-toast-root]');
-
-    if (root) {
-        return root;
-    }
-
-    root = document.createElement('div');
-    root.dataset.appToastRoot = 'true';
-    root.className = 'pointer-events-none fixed bottom-4 right-4 z-[68] flex w-[min(26rem,calc(100vw-1.5rem))] flex-col gap-3 sm:bottom-6 sm:right-6';
-    document.body.appendChild(root);
-
-    return root;
-};
-
-const dismissAppToast = (toast) => {
-    if (!toast || toast.dataset.closing === '1') {
-        return;
-    }
-
-    if (toast.dataset.dismissTimer) {
-        window.clearTimeout(Number(toast.dataset.dismissTimer));
-        delete toast.dataset.dismissTimer;
-    }
-
-    toast.dataset.closing = '1';
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(16px) scale(0.97)';
-
-    window.setTimeout(() => {
-        toast.remove();
-    }, 240);
-};
-
-window.dispatchAppToast = ({ message = '', tone = 'info', title = '' } = {}) => {
-    if (!message) {
-        return;
-    }
-
-    const root = ensureAppToastRoot();
-    const toast = document.createElement('div');
-    const normalizedTone = tone === 'success' ? 'success' : 'info';
-    const toastKey = `${normalizedTone}::${title || ''}::${message}`;
-    const existingToast = root.querySelector(`[data-toast-key="${CSS.escape(toastKey)}"]`);
-
-    if (existingToast && existingToast.dataset.closing !== '1') {
-        if (existingToast.dataset.dismissTimer) {
-            window.clearTimeout(Number(existingToast.dataset.dismissTimer));
-        }
-
-        existingToast.dataset.dismissTimer = String(window.setTimeout(() => dismissAppToast(existingToast), 3800));
-        existingToast.style.opacity = '1';
-        existingToast.style.transform = 'translateY(0) scale(1)';
-        root.prepend(existingToast);
-        return;
-    }
-
-    toast.className = `flash-toast flash-toast-${normalizedTone} pointer-events-auto`;
-    toast.dataset.toastKey = toastKey;
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(16px) scale(0.96)';
-    toast.style.transition = 'opacity 260ms ease, transform 260ms ease';
-    toast.innerHTML = `
-        <div class="flash-toast-icon">${createToastIcon(normalizedTone)}</div>
-        <div class="flash-toast-body">
-            <div class="flash-toast-title">${title || (normalizedTone === 'success' ? 'Veiksmīgi' : 'Paziņojums')}</div>
-            <div class="flash-toast-message">${message}</div>
-        </div>
-        <button type="button" class="flash-toast-close" aria-label="Aizvērt">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
-        </button>
-    `;
-
-    toast.querySelector('.flash-toast-close')?.addEventListener('click', () => dismissAppToast(toast));
-    root.prepend(toast);
-
-    window.requestAnimationFrame(() => {
-        toast.style.opacity = '1';
-        toast.style.transform = 'translateY(0) scale(1)';
-    });
-
-    toast.dataset.dismissTimer = String(window.setTimeout(() => dismissAppToast(toast), 3800));
-};
-
-const ensureAppConfirmRoot = () => {
-    let root = document.querySelector('[data-app-confirm-root]');
-
-    if (root) {
-        return root;
-    }
-
-    root = document.createElement('div');
-    root.dataset.appConfirmRoot = 'true';
-    root.className = 'app-confirm-overlay hidden';
-    root.innerHTML = `
-        <div class="app-confirm-backdrop" data-app-confirm-close="true"></div>
-        <div class="app-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="app-confirm-title">
-            <div class="app-confirm-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12v-.008ZM21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                </svg>
-            </div>
-            <h3 id="app-confirm-title" class="app-confirm-title">Apstiprini darbību</h3>
-            <p class="app-confirm-message" data-app-confirm-message></p>
-            <div class="app-confirm-actions">
-                <button type="button" class="btn-clear" data-app-confirm-cancel="true">Nē</button>
-                <button type="button" class="btn-danger-solid" data-app-confirm-accept="true">Jā</button>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(root);
-
-    return root;
-};
-
-window.openAppConfirm = (options = {}) => {
-    const {
-        title = 'Apstiprini darbību',
-        message = 'Vai tiešām vēlaties turpināt?',
-        confirmLabel = 'Jā',
-        cancelLabel = 'Nē',
-        tone = 'danger',
-    } = options;
-
-    const root = ensureAppConfirmRoot();
-    const titleNode = root.querySelector('#app-confirm-title');
-    const messageNode = root.querySelector('[data-app-confirm-message]');
-    const acceptButton = root.querySelector('[data-app-confirm-accept]');
-    const dialogNode = root.querySelector('.app-confirm-dialog');
-    const iconNode = root.querySelector('.app-confirm-icon');
-    const cancelButtons = root.querySelectorAll('[data-app-confirm-cancel]');
-    const dismissButtons = root.querySelectorAll('[data-app-confirm-cancel], [data-app-confirm-close]');
-
-    titleNode.textContent = title;
-    messageNode.textContent = message;
-    acceptButton.textContent = confirmLabel;
-    cancelButtons.forEach((button) => {
-        button.textContent = cancelLabel;
-    });
-
-    dialogNode?.classList.remove('app-confirm-dialog-danger', 'app-confirm-dialog-warning');
-    iconNode?.classList.remove('app-confirm-icon-danger', 'app-confirm-icon-warning');
-    acceptButton.classList.toggle('btn-danger-solid', tone !== 'warning');
-    acceptButton.classList.toggle('btn-approve', tone === 'warning');
-    dialogNode?.classList.add(tone === 'warning' ? 'app-confirm-dialog-warning' : 'app-confirm-dialog-danger');
-    iconNode?.classList.add(tone === 'warning' ? 'app-confirm-icon-warning' : 'app-confirm-icon-danger');
-
-    root.classList.remove('hidden');
-    document.body.classList.add('overflow-hidden');
-    window.requestAnimationFrame(() => root.classList.add('is-visible'));
-    acceptButton.focus();
-
-    return new Promise((resolve) => {
-        const cleanup = (result) => {
-            root.classList.remove('is-visible');
-            document.body.classList.remove('overflow-hidden');
-            window.setTimeout(() => root.classList.add('hidden'), 180);
-            dialogNode?.classList.remove('app-confirm-dialog-danger', 'app-confirm-dialog-warning');
-            iconNode?.classList.remove('app-confirm-icon-danger', 'app-confirm-icon-warning');
-
-            acceptButton.removeEventListener('click', handleAccept);
-            dismissButtons.forEach((button) => button.removeEventListener('click', handleCancel));
-            window.removeEventListener('keydown', handleKeyDown);
-
-            resolve(result);
-        };
-
-        const handleAccept = () => cleanup(true);
-        const handleCancel = () => cleanup(false);
-        const handleKeyDown = (event) => {
-            if (event.key === 'Escape') {
-                cleanup(false);
-            }
-        };
-
-        acceptButton.addEventListener('click', handleAccept);
-        dismissButtons.forEach((button) => button.addEventListener('click', handleCancel));
-        window.addEventListener('keydown', handleKeyDown);
-    });
-};
-
-const initializeAppConfirm = () => {
-    if (window.__appConfirmInitialized) {
-        return;
-    }
-
-    window.__appConfirmInitialized = true;
-
-    document.addEventListener('submit', async (event) => {
-        const form = event.target;
-        if (!(form instanceof HTMLFormElement)) {
-            return;
-        }
-
-        const message = form.dataset.appConfirmMessage;
-        if (!message) {
-            return;
-        }
-
-        if (form.dataset.appConfirmBypass === '1') {
-            form.dataset.appConfirmBypass = '0';
-            return;
-        }
-
-        event.preventDefault();
-
-        const accepted = await window.openAppConfirm({
-            title: form.dataset.appConfirmTitle || 'Apstiprini darbību',
-            message,
-            confirmLabel: form.dataset.appConfirmAccept || 'Jā',
-            cancelLabel: form.dataset.appConfirmCancel || 'Nē',
-            tone: form.dataset.appConfirmTone || 'danger',
-        });
-
-        if (!accepted) {
-            return;
-        }
-
-        form.dataset.appConfirmBypass = '1';
-        form.requestSubmit();
-    });
-};
-
-const asyncTableControllers = new Map();
-const asyncTableDebounceTimers = new WeakMap();
-
-const findAsyncTableRoot = (element) => {
-    if (!element) {
-        return null;
-    }
-
-    if (element.matches?.('[data-async-table-root]')) {
-        return element;
-    }
-
-    return element.closest?.('[data-async-table-root]') ?? null;
-};
-
-const findAsyncTableForm = (element) => {
-    if (!element) {
-        return null;
-    }
-
-    if (element.matches?.('[data-async-table-form]')) {
-        return element;
-    }
-
-    return element.closest?.('[data-async-table-form]') ?? null;
-};
-
-const buildAsyncTableUrl = (form, { resetPage = true } = {}) => {
-    const action = form.getAttribute('action') || window.location.href;
-    const url = new URL(action, window.location.origin);
-    const formData = new window.FormData(form);
-
-    url.search = '';
-
-    for (const [key, value] of formData.entries()) {
-        if (key === 'page' && resetPage) {
-            continue;
-        }
-
-        if (typeof value === 'string' && value.trim() === '') {
-            continue;
-        }
-
-        url.searchParams.append(key, value);
-    }
-
-    return url;
-};
-
-const swapAsyncTableRoot = (rootSelector, html) => {
-    const parser = new DOMParser();
-    const nextDocument = parser.parseFromString(html, 'text/html');
-    const nextRoot = nextDocument.querySelector(rootSelector);
-    const currentRoot = document.querySelector(rootSelector);
-
-    if (!nextRoot || !currentRoot) {
-        return false;
-    }
-
-    currentRoot.outerHTML = nextRoot.outerHTML;
-
-    const mountedRoot = document.querySelector(rootSelector);
-    if (mountedRoot && window.Alpine?.initTree) {
-        window.Alpine.initTree(mountedRoot);
-    }
-
-    return true;
-};
-
-window.submitAsyncTableForm = async (form, { url = null, resetPage = true, toastMessage = '' } = {}) => {
-    const rootSelector = form?.dataset?.asyncRoot;
-
-    if (!form || !rootSelector) {
-        return false;
-    }
-
-    const targetUrl = url instanceof URL ? url : buildAsyncTableUrl(form, { resetPage });
-    
-    // Add cache-busting timestamp for filter clear actions
-    if (targetUrl.searchParams.has('clear')) {
-        targetUrl.searchParams.set('_t', Date.now().toString());
-    }
-    
-    const requestKey = rootSelector;
-
-    if (asyncTableControllers.has(requestKey)) {
-        asyncTableControllers.get(requestKey)?.abort();
-    }
-
-    const controller = new AbortController();
-    asyncTableControllers.set(requestKey, controller);
-    form.dataset.asyncLoading = 'true';
-
-    try {
-        const response = await window.fetch(targetUrl.toString(), {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            signal: controller.signal,
-            priority: 'high',
-        });
-
-        if (!response.ok) {
-            throw new Error('Async table request failed.');
-        }
-
-        const html = await response.text();
-        const swapped = swapAsyncTableRoot(rootSelector, html);
-
-        if (!swapped) {
-            window.location.assign(targetUrl.toString());
-            return false;
-        }
-
-        window.history.replaceState({}, '', `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`);
-
-        if (toastMessage) {
-            window.dispatchAppToast({
-                message: toastMessage,
-                tone: 'info',
-            });
-        }
-
-        return true;
-    } catch (error) {
-        if (error.name !== 'AbortError') {
-            window.location.assign(targetUrl.toString());
-        }
-
-        return false;
-    } finally {
-        if (asyncTableControllers.get(requestKey) === controller) {
-            asyncTableControllers.delete(requestKey);
-        }
-
-        form.dataset.asyncLoading = 'false';
-    }
-};
-
-const debounceAsyncTableSubmit = (form, delay = 260) => {
-    if (asyncTableDebounceTimers.has(form)) {
-        window.clearTimeout(asyncTableDebounceTimers.get(form));
-    }
-
-    const timerId = window.setTimeout(() => {
-        submitAsyncTableForm(form, { resetPage: true });
-        asyncTableDebounceTimers.delete(form);
-    }, delay);
-
-    asyncTableDebounceTimers.set(form, timerId);
-};
-
-const normalizeTableSearchValue = (value) => String(value ?? '').trim().toLocaleLowerCase();
-
-const clearTableSearchHighlights = (root) => {
-    root?.querySelectorAll('.table-search-hit').forEach((row) => {
-        row.classList.remove('table-search-hit');
-    });
-};
-
-const highlightTableRow = (row) => {
-    row.classList.remove('table-search-hit');
-    void row.offsetWidth;
-    row.classList.add('table-search-hit');
-
-    window.setTimeout(() => {
-        row.classList.remove('table-search-hit');
-    }, 2400);
-};
-
-const getManualSearchInput = (form) => {
-    return form?.querySelector('[data-async-code-search="true"], [data-table-manual-search="true"]');
-};
-
-const getManualSearchMode = (input) => {
-    if (!input) {
-        return 'contains';
-    }
-
-    return input.dataset.searchMode || (input.matches('[data-async-code-search="true"]') ? 'exact' : 'contains');
-};
-
-const getRowSearchValue = (row) => {
-    return row.dataset.tableSearchValue || row.dataset.tableCode || '';
-};
-
-const getRowSearchId = (row) => {
-    return String(row?.dataset?.tableRowId || '').trim();
-};
-
-const rowMatchesSearch = (row, term, mode = 'contains') => {
-    const value = normalizeTableSearchValue(getRowSearchValue(row));
-    const normalizedTerm = normalizeTableSearchValue(term);
-
-    if (!value || !normalizedTerm) {
-        return false;
-    }
-
-    if (mode === 'exact') {
-        return value === normalizedTerm;
-    }
-
-    return value.includes(normalizedTerm);
-};
-
-const findMatchingTableRow = (root, term, mode = 'contains') => {
-    return Array.from(root?.querySelectorAll('[data-table-search-value], [data-table-code]') ?? [])
-        .find((row) => rowMatchesSearch(row, term, mode)) || null;
-};
-
-const findTableRowById = (root, rowId) => {
-    const normalizedRowId = String(rowId || '').trim();
-
-    if (!normalizedRowId) {
-        return null;
-    }
-
-    return root?.querySelector?.(`[data-table-row-id="${window.CSS?.escape ? window.CSS.escape(normalizedRowId) : normalizedRowId}"]`) || null;
-};
-
-const buildSearchNavigationUrl = (form, page, rawTerm, mode, highlightId = '') => {
-    const targetUrl = new URL(form.getAttribute('action') || window.location.href, window.location.origin);
-    const formData = new FormData(form);
-
-    for (const [key, value] of formData.entries()) {
-        if (value === '') {
-            continue;
-        }
-
-        targetUrl.searchParams.append(key, value);
-    }
-
-    targetUrl.searchParams.set('page', String(page));
-    targetUrl.searchParams.set('highlight', rawTerm);
-    targetUrl.searchParams.set('highlight_mode', mode);
-    if (highlightId) {
-        targetUrl.searchParams.set('highlight_id', String(highlightId));
-    } else {
-        targetUrl.searchParams.delete('highlight_id');
-    }
-
-    return targetUrl;
-};
-
-const performManualTableSearch = async (form) => {
-    const rootSelector = form?.dataset?.asyncRoot;
-    const searchInput = getManualSearchInput(form);
-
-    if (!rootSelector || !searchInput) {
-        return false;
-    }
-
-    const root = document.querySelector(rootSelector);
-    if (!root) {
-        return false;
-    }
-
-    const rawTerm = searchInput.value.trim();
-    const normalizedTerm = normalizeTableSearchValue(rawTerm);
-    const searchMode = getManualSearchMode(searchInput);
-
-    if (!normalizedTerm) {
-        window.dispatchAppToast({
-            title: 'Meklēšana',
-            message: 'Ievadi meklējamo vērtību, lai atrastu konkrēto ierakstu.',
-            tone: 'info',
-        });
-        searchInput.focus();
-
-        return true;
-    }
-
-    clearTableSearchHighlights(root);
-
-    const match = findMatchingTableRow(root, rawTerm, searchMode);
-
-    if (match) {
-        highlightTableRow(match);
-        match.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-            inline: 'nearest',
-        });
-
-        return true;
-    }
-
-    const searchEndpoint = form.dataset.searchEndpoint;
-    if (!searchEndpoint) {
-        window.dispatchAppToast({
-            title: 'Ieraksts netika atrasts',
-            message: `Pašreizējā skatā netika atrasts ieraksts "${rawTerm}".`,
-            tone: 'info',
-        });
-
-        return true;
-    }
-
-    try {
-        const endpointUrl = new URL(searchEndpoint, window.location.origin);
-        const formData = new FormData(form);
-
-        for (const [key, value] of formData.entries()) {
-            if (value === '') {
-                continue;
-            }
-
-            endpointUrl.searchParams.append(key, value);
-        }
-
-        const response = await fetch(endpointUrl.toString(), {
-            headers: {
-                Accept: 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error(`Search request failed: ${response.status}`);
-        }
-
-        const result = await response.json();
-        if (!result?.found) {
-            window.dispatchAppToast({
-                title: 'Ieraksts netika atrasts',
-                message: `Ieraksts "${rawTerm}" netika atrasts nevienā lapā.`,
-                tone: 'info',
-            });
-
-            return true;
-        }
-
-        const targetUrl = buildSearchNavigationUrl(form, result.page, rawTerm, searchMode, result.highlight_id ?? '');
-        const swapped = await submitAsyncTableForm(form, {
-            url: targetUrl,
-            resetPage: false,
-        });
-
-        if (swapped) {
-            restoreHighlightedSearchFromUrl();
-            return true;
-        }
-
-        window.location.assign(targetUrl.toString());
-    } catch (error) {
-        window.dispatchAppToast({
-            title: 'Meklēšana neizdevās',
-            message: 'Neizdevās atrast ierakstu. Mēģini vēlreiz.',
-            tone: 'error',
-        });
-    }
-
-    return true;
-};
-
-const shouldRunManualSearch = (form, submitter) => {
-    const searchInput = getManualSearchInput(form);
-    if (!searchInput) {
-        return false;
-    }
-
-    if (submitter?.matches?.('[data-code-search-submit="true"], [data-table-search-submit="true"]')) {
-        return true;
-    }
-
-    return document.activeElement === searchInput;
-};
-
-const restoreHighlightedSearchFromUrl = async () => {
-    const currentUrl = new URL(window.location.href);
-    const term = currentUrl.searchParams.get('highlight');
-    const mode = currentUrl.searchParams.get('highlight_mode') || 'contains';
-    const highlightId = currentUrl.searchParams.get('highlight_id');
-
-    if (!term && !highlightId) {
-        return;
-    }
-
-    let match = findTableRowById(document, highlightId) || findMatchingTableRow(document, term, mode);
-    if (!match) {
-        const form = term ? document.querySelector('[data-async-table-form][data-search-endpoint]') : null;
-
-        if (form?.dataset?.searchEndpoint) {
-            try {
-                const endpointUrl = new URL(form.dataset.searchEndpoint, window.location.origin);
-                const formData = new FormData(form);
-
-                for (const [key, value] of formData.entries()) {
-                    if (value === '') {
-                        continue;
-                    }
-
-                    endpointUrl.searchParams.append(key, value);
-                }
-
-                const response = await fetch(endpointUrl.toString(), {
-                    headers: {
-                        Accept: 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-
-                    if (result?.found) {
-                        const targetUrl = buildSearchNavigationUrl(form, result.page, term, mode, result.highlight_id ?? highlightId ?? '');
-                        const targetUrlString = targetUrl.toString();
-
-                        if (targetUrlString !== window.location.href) {
-                            const swapped = await submitAsyncTableForm(form, {
-                                url: targetUrl,
-                                resetPage: false,
-                            });
-
-                            if (swapped) {
-                                await restoreHighlightedSearchFromUrl();
-                                return;
-                            }
-
-                            window.location.assign(targetUrlString);
-                            return;
-                        }
-
-                        match = findTableRowById(document, result.highlight_id ?? highlightId) || findMatchingTableRow(document, term, mode);
-                    }
-                }
-            } catch (error) {
-                // Ja automātiskā atrašana neizdodas, lietotājs paliek pašreizējā skatā bez papildu kļūdas paziņojuma.
-            }
-        }
-    }
-
-    if (!match) {
-        return;
-    }
-
-    highlightTableRow(match);
-    window.setTimeout(() => {
-        match.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-            inline: 'nearest',
-        });
-    }, 120);
-
-    currentUrl.searchParams.delete('highlight');
-    currentUrl.searchParams.delete('highlight_mode');
-    currentUrl.searchParams.delete('highlight_id');
-    window.history.replaceState({}, '', `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`);
-};
-
-const initializeAsyncTableFilters = () => {
-    if (window.__asyncTableFiltersInitialized) {
-        return;
-    }
-
-    window.__asyncTableFiltersInitialized = true;
-
-    document.addEventListener('submit', async (event) => {
-        const form = findAsyncTableForm(event.target);
-
-        if (!form) {
-            return;
-        }
-
-        event.preventDefault();
-
-        if (shouldRunManualSearch(form, event.submitter) && await performManualTableSearch(form)) {
-            return;
-        }
-
-        submitAsyncTableForm(form, { resetPage: true });
-    });
-
-    document.addEventListener('input', (event) => {
-        const target = event.target;
-        const form = findAsyncTableForm(target);
-
-        if (!form) {
-            return;
-        }
-
-        if (target.closest('.searchable-select')) {
-            return;
-        }
-
-        if (target.matches('[data-async-manual=\"true\"]')) {
-            return;
-        }
-
-        if (!target.matches('input[type=\"text\"], input[type=\"search\"], input[type=\"number\"], textarea')) {
-            return;
-        }
-
-        debounceAsyncTableSubmit(form, 280);
-    });
-
-    document.addEventListener('change', (event) => {
-        const target = event.target;
-        const form = findAsyncTableForm(target);
-
-        if (!form) {
-            return;
-        }
-
-        if (target.matches('[data-sort-hidden]')) {
-            return;
-        }
-
-        submitAsyncTableForm(form, { resetPage: true });
-    });
-
-    document.addEventListener('click', (event) => {
-        const toastTrigger = event.target.closest('[data-app-toast-message]');
-        if (toastTrigger) {
-            event.preventDefault();
-
-            window.dispatchAppToast({
-                title: toastTrigger.dataset.appToastTitle || 'Darbība nav pieejama',
-                message: toastTrigger.dataset.appToastMessage || '',
-                tone: toastTrigger.dataset.appToastTone || 'info',
-            });
-
-            return;
-        }
-
-        const sortTrigger = event.target.closest('[data-sort-trigger]');
-        if (sortTrigger) {
-            const root = findAsyncTableRoot(sortTrigger);
-            const form = findAsyncTableForm(sortTrigger) || root?.querySelector('[data-async-table-form]');
-
-            if (!form) {
-                return;
-            }
-
-            event.preventDefault();
-
-            const fieldInput = form.querySelector('[data-sort-hidden=\"field\"]');
-            const directionInput = form.querySelector('[data-sort-hidden=\"direction\"]');
-
-            if (fieldInput) {
-                fieldInput.value = sortTrigger.dataset.sortField || '';
-            }
-
-            if (directionInput) {
-                directionInput.value = sortTrigger.dataset.sortDirection || 'asc';
-            }
-
-            // Don't show toast for sorting operations - too noisy
-            submitAsyncTableForm(form, {
-                resetPage: true,
-                toastMessage: '',
-            });
-
-            return;
-        }
-
-        const asyncLink = event.target.closest('a[data-async-link=\"true\"], a.quick-status-filter');
-        if (!asyncLink) {
-            return;
-        }
-
-        const root = findAsyncTableRoot(asyncLink);
-        if (!root) {
-            return;
-        }
-
-        const form = root.querySelector('[data-async-table-form]');
-        if (!form) {
-            return;
-        }
-
-        const href = asyncLink.getAttribute('href');
-        if (!href) {
-            return;
-        }
-
-        event.preventDefault();
-        submitAsyncTableForm(form, {
-            url: new URL(href, window.location.origin),
-            resetPage: false,
-        });
-    });
-
-    document.addEventListener('searchable-select-updated', (event) => {
-        const form = findAsyncTableForm(event.target);
-
-        if (!form) {
-            return;
-        }
-
-        window.setTimeout(() => {
-            submitAsyncTableForm(form, { resetPage: true });
-        }, 0);
-    });
-};
+registerFeedbackGlobals();
+registerAsyncTableGlobals();
+registerRepairWorkflowGlobals();
 
 const registerAlpineData = () => {
     if (!Alpine || window.__appAlpineDataRegistered) {
@@ -1190,7 +275,7 @@ const registerAlpineData = () => {
 
             if (this.item?.status_label) {
                 items.push({
-                    label: this.item.drawer_variant === 'audit' ? 'Svarīgums' : 'Statuss',
+                    label: this.item.drawer_variant === 'audit' ? 'SvarĆ„Ā«gums' : 'Statuss',
                     value: this.item.status_label,
                     icon: this.item.hero_icon || 'information-circle',
                     tone: this.item.hero_tone || 'slate',
@@ -1200,7 +285,7 @@ const registerAlpineData = () => {
 
             if (this.item?.submitted_at) {
                 items.push({
-                    label: this.item.drawer_variant === 'audit' ? 'Fiksēts' : 'Datums',
+                    label: this.item.drawer_variant === 'audit' ? 'FiksĆ„ā€ts' : 'Datums',
                     value: this.item.submitted_at,
                     icon: 'calendar',
                     tone: 'slate',
@@ -1221,7 +306,7 @@ const registerAlpineData = () => {
         infoCards() {
             return [
                 {
-                    label: this.item?.primary_label || 'Galvenā informācija',
+                    label: this.item?.primary_label || 'GalvenĆ„Ā informĆ„Ācija',
                     value: this.item?.primary_value || this.item?.device_code || '',
                     meta: this.item?.primary_meta || this.item?.device_serial || '',
                     notes: [this.item?.primary_note, this.item?.primary_note_secondary].filter(Boolean),
@@ -1229,7 +314,7 @@ const registerAlpineData = () => {
                     tone: this.item?.primary_tone || 'slate',
                 },
                 {
-                    label: this.item?.secondary_label || 'Papildinformācija',
+                    label: this.item?.secondary_label || 'PapildinformĆ„Ācija',
                     value: this.item?.secondary_value || this.item?.requester_name || '',
                     meta: this.item?.secondary_meta || this.item?.requester_meta || '',
                     notes: [this.item?.secondary_note].filter(Boolean),
@@ -1268,7 +353,7 @@ const registerAlpineData = () => {
         lastSessionId: null,
         lastViewMode: null,
         init() {
-            // Ģenerē sesijas ID, lai noteiktu lapas pārlādi vai navigāciju
+            // Ć„Ā¢enerĆ„ā€ sesijas ID, lai noteiktu lapas pĆ„ĀrlĆ„Ādi vai navigĆ„Āciju
             this.lastSessionId = this.generateSessionId();
             this.lastViewMode = this.getViewMode();
             this.seenIds = this.readSeenIds();
@@ -1296,11 +381,11 @@ const registerAlpineData = () => {
             }
         },
         generateSessionId() {
-            // Ģenerē unikālu sesijas ID šīs lapas sesijai
+            // Ć„Ā¢enerĆ„ā€ unikĆ„Ālu sesijas ID Ć…ļ£¼Ć„Ā«s lapas sesijai
             return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         },
         getViewMode() {
-            // Nolasa pašreizējo skata režīmu no glabātuves atslēgas
+            // Nolasa paĆ…ļ£¼reizĆ„ā€jo skata reĆ…Ā¾Ć„Ā«mu no glabĆ„Ātuves atslĆ„ā€gas
             const parts = this.storageKey.split(':');
             return parts.length > 2 ? parts[parts.length - 1] : 'user';
         },
@@ -1311,18 +396,18 @@ const registerAlpineData = () => {
             return hasChanged;
         },
         cleanup() {
-            // Saglabā sesijas informāciju, lai nākamajā ielādē varētu veikt tīrīšanu
+            // SaglabĆ„Ā sesijas informĆ„Āciju, lai nĆ„ĀkamajĆ„Ā ielĆ„ĀdĆ„ā€ varĆ„ā€tu veikt tĆ„Ā«rĆ„Ā«Ć…ļ£¼anu
             try {
                 const staleData = sessionStorage.getItem(this.storageKey + ':stale');
                 if (staleData) {
                     const parsed = JSON.parse(staleData);
-                    // Noņem vecos sesijas datus, kas ir vecāki par 5 minūtēm
+                    // NoĆ…ā€ em vecos sesijas datus, kas ir vecĆ„Āki par 5 minĆ…Ā«tĆ„ā€m
                     const now = Date.now();
                     const freshData = parsed.filter(item => (now - item.timestamp) < 300000);
                     sessionStorage.setItem(this.storageKey + ':stale', JSON.stringify(freshData));
                 }
             } catch (e) {
-                // Ignorē glabātuves kļūdas
+                // IgnorĆ„ā€ glabĆ„Ātuves kĆ„Ā¼Ć…Ā«das
             }
         },
         startPolling() {
@@ -1357,18 +442,18 @@ const registerAlpineData = () => {
                     ? response.data.notifications
                     : [];
 
-                // Nosaka skata režīma maiņu, lai atiestatītu redzētos paziņojumus
+                // Nosaka skata reĆ…Ā¾Ć„Ā«ma maiĆ…ā€ u, lai atiestatĆ„Ā«tu redzĆ„ā€tos paziĆ…ā€ ojumus
                 const viewModeChanged = this.detectViewModeChange();
 
                 if (!this.bootstrapped || isInitial) {
-                    // Ja skata režīms mainījies, neatzīmē paziņojumus kā redzētus uzreiz
-                    // Tas ļauj parādīt animācijas, pārslēdzoties starp admina un lietotāja skatu
+                    // Ja skata reĆ…Ā¾Ć„Ā«ms mainĆ„Ā«jies, neatzĆ„Ā«mĆ„ā€ paziĆ…ā€ ojumus kĆ„Ā redzĆ„ā€tus uzreiz
+                    // Tas Ć„Ā¼auj parĆ„ĀdĆ„Ā«t animĆ„Ācijas, pĆ„ĀrslĆ„ā€dzoties starp admina un lietotĆ„Āja skatu
                     if (viewModeChanged) {
-                        // Notīra redzēto ID sarakstu jaunajam skata režīmam, lai paziņojumi animētos
+                        // NotĆ„Ā«ra redzĆ„ā€to ID sarakstu jaunajam skata reĆ…Ā¾Ć„Ā«mam, lai paziĆ…ā€ ojumi animĆ„ā€tos
                         this.seenIds = [];
                         this.writeSeenIds();
                         this.bootstrapped = true;
-                        // Turpina izpildi, lai paziņojumi tiktu parādīti ar animāciju
+                        // Turpina izpildi, lai paziĆ…ā€ ojumi tiktu parĆ„ĀdĆ„Ā«ti ar animĆ„Āciju
                     } else {
                         notifications.forEach((notification) => this.remember(notification.id));
                         this.bootstrapped = true;
@@ -1412,7 +497,7 @@ const registerAlpineData = () => {
                     }
                 });
             } catch (error) {
-                // Ignorē īslaicīgas aptaujas kļūdas un mēģina vēlreiz nākamajā ciklā.
+                // IgnorĆ„ā€ Ć„Ā«slaicĆ„Ā«gas aptaujas kĆ„Ā¼Ć…Ā«das un mĆ„ā€Ć„Ā£ina vĆ„ā€lreiz nĆ„ĀkamajĆ„Ā ciklĆ„Ā.
             }
         },
         hasSeen(id) {
@@ -1517,10 +602,10 @@ const registerAlpineData = () => {
         badgeText(type) {
             return {
                 repair: 'Remonts',
-                writeoff: 'Norakstīšana',
-                transfer: 'Nodošana',
-                'incoming-transfer': 'Jāizskata',
-            }[type] ?? 'Pieprasījums';
+                writeoff: 'NorakstĆ„Ā«Ć…ļ£¼ana',
+                transfer: 'NodoĆ…ļ£¼ana',
+                'incoming-transfer': 'JĆ„Āizskata',
+            }[type] ?? 'PieprasĆ„Ā«jums';
         },
         actionClasses(tone) {
             return {
@@ -1544,7 +629,7 @@ const registerAlpineData = () => {
             try {
                 window.localStorage.setItem(this.storageKey, JSON.stringify(this.seenIds));
             } catch (error) {
-                // Ignorē glabātuves rakstīšanas kļūdas; paziņojumi sesijas laikā joprojām darbosies.
+                // IgnorĆ„ā€ glabĆ„Ātuves rakstĆ„Ā«Ć…ļ£¼anas kĆ„Ā¼Ć…Ā«das; paziĆ…ā€ ojumi sesijas laikĆ„Ā joprojĆ„Ām darbosies.
             }
         },
     }));
@@ -1603,7 +688,7 @@ const registerAlpineData = () => {
             try {
                 window.localStorage.setItem(this.storageKey, String(timestamp));
             } catch (error) {
-                // Ignorē glabātuves kļūdas; navigācijas emblēma šajā attēlojumā joprojām darbosies.
+                // IgnorĆ„ā€ glabĆ„Ātuves kĆ„Ā¼Ć…Ā«das; navigĆ„Ācijas emblĆ„ā€ma Ć…ļ£¼ajĆ„Ā attĆ„ā€lojumĆ„Ā joprojĆ„Ām darbosies.
             }
         },
         showFeedback() {
@@ -1639,7 +724,7 @@ const registerAlpineData = () => {
                     return createdUnix > 0 && (createdUnix * 1000) > cutoff;
                 }).length;
             } catch (error) {
-                // Ignorē īslaicīgas emblēmas atjaunošanas kļūdas.
+                // IgnorĆ„ā€ Ć„Ā«slaicĆ„Ā«gas emblĆ„ā€mas atjaunoĆ…ļ£¼anas kĆ„Ā¼Ć…Ā«das.
             }
         },
         async markAllAsRead() {
@@ -1837,269 +922,12 @@ const registerAlpineData = () => {
     }));
 };
 
-const repairTransitionRules = {
-    waiting: ['in-progress', 'cancelled'],
-    'in-progress': ['waiting', 'completed', 'cancelled'],
-    completed: [],
-    cancelled: [],
-};
-
-const appendHiddenInput = (form, name, value) => {
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = name;
-    input.value = value ?? '';
-    form.appendChild(input);
-};
-
-window.submitRepairTransition = (transitionBaseUrl, csrfToken, repairId, targetStatus, extra = {}) => {
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = `${transitionBaseUrl}/${repairId}/transition`;
-    form.style.display = 'none';
-
-    appendHiddenInput(form, '_token', csrfToken);
-    appendHiddenInput(form, 'target_status', targetStatus);
-
-    Object.entries(extra).forEach(([key, value]) => {
-        appendHiddenInput(form, key, value);
-    });
-
-    document.body.appendChild(form);
-    form.submit();
-};
-
-const canRepairTransition = (fromStatus, toStatus) => {
-    return (repairTransitionRules[fromStatus] ?? []).includes(toStatus);
-};
-
-window.repairBoard = (config) => ({
-    draggedRepair: null,
-    dropTargetStatus: null,
-    startDrag(repair, event) {
-        if (!repair?.id) {
-            return;
-        }
-
-        this.draggedRepair = repair;
-        event.dataTransfer.effectAllowed = 'move';
-        event.dataTransfer.setData('text/plain', String(repair.id));
-    },
-    clearDrag() {
-        this.draggedRepair = null;
-        this.dropTargetStatus = null;
-    },
-    canDrop(targetStatus) {
-        return Boolean(
-            this.draggedRepair
-            && this.draggedRepair.status !== targetStatus
-            && canRepairTransition(this.draggedRepair.status, targetStatus)
-        );
-    },
-    onDragOver(targetStatus) {
-        if (!this.canDrop(targetStatus)) {
-            return;
-        }
-
-        this.dropTargetStatus = targetStatus;
-    },
-    clearDropTarget(targetStatus = null) {
-        if (!targetStatus || this.dropTargetStatus === targetStatus) {
-            this.dropTargetStatus = null;
-        }
-    },
-    handleDrop(targetStatus) {
-        if (!this.canDrop(targetStatus)) {
-            return;
-        }
-
-        if (targetStatus === 'completed') {
-            this.submitCompletion(this.draggedRepair);
-            this.clearDrag();
-            return;
-        }
-
-        this.submitTransition(this.draggedRepair.id, targetStatus);
-        this.clearDrag();
-    },
-    submitTransition(repairId, targetStatus, extra = {}) {
-        if (targetStatus === 'in-progress' && this.showMissingRequirements('waiting', 'Remontu sākt')) {
-            return;
-        }
-
-        if (targetStatus === 'completed' && this.showMissingRequirements('in-progress', 'Remontu pabeigt')) {
-            return;
-        }
-
-        window.submitRepairTransition(config.transitionBaseUrl, config.csrfToken, repairId, targetStatus, extra);
-    },
-    async submitCompletion(repair) {
-        if (!repair?.id) {
-            return;
-        }
-
-        const repairName = repair.name ?? 'šo remontu';
-        const accepted = await window.openAppConfirm({
-            title: 'Pabeigt remontu?',
-            message: `Vai tiešām gribat pabeigt ierīces remontu "${repairName}"?`,
-            confirmLabel: 'Jā, pabeigt',
-            cancelLabel: 'Nē',
-            tone: 'warning',
-        });
-
-        if (!accepted) {
-            return;
-        }
-
-        this.submitTransition(repair.id, 'completed');
-    },
-});
-
-window.repairProcess = (config) => ({
-    repairType: config.repairType,
-    repairStatus: config.status,
-    priority: config.priority ?? 'medium',
-    description: config.description ?? '',
-    vendorName: config.vendorName ?? '',
-    vendorContact: config.vendorContact ?? '',
-    invoiceNumber: config.invoiceNumber ?? '',
-    cost: config.cost ?? '',
-    isExternal() {
-        return this.repairType === 'external';
-    },
-    normalizedCost() {
-        return String(this.cost ?? '').trim();
-    },
-    transitionFormPayload() {
-        return {
-            description: this.description ?? '',
-            repair_type: this.repairType ?? 'internal',
-            priority: this.priority ?? 'medium',
-            cost: this.normalizedCost(),
-            vendor_name: this.vendorName ?? '',
-            vendor_contact: this.vendorContact ?? '',
-            invoice_number: this.invoiceNumber ?? '',
-        };
-    },
-    requirementRows(targetStatus = this.repairStatus) {
-        if (targetStatus !== 'completed' && this.repairStatus !== 'in-progress') {
-            return [];
-        }
-
-        const rows = [
-            { key: 'description', label: 'Apraksts', done: String(this.description ?? '').trim() !== '' },
-        ];
-
-        if (this.isExternal()) {
-            rows.push(
-                { key: 'vendor_name', label: 'Pakalpojuma sniedzējs', done: String(this.vendorName ?? '').trim() !== '' },
-                { key: 'vendor_contact', label: 'Vendora kontakts', done: String(this.vendorContact ?? '').trim() !== '' },
-                { key: 'invoice_number', label: 'Rēķina numurs', done: String(this.invoiceNumber ?? '').trim() !== '' },
-            );
-        }
-
-        return rows;
-    },
-    nextStepLabel() {
-        if (this.repairStatus === 'in-progress') {
-            return this.isExternal()
-                ? 'Lai pabeigtu ārējo remontu, jāaizpilda apraksts, pakalpojuma sniedzējs, vendora kontakts un rēķina numurs.'
-                : 'Lai pabeigtu iekšējo remontu, jāaizpilda tikai apraksts.';
-        }
-
-        return 'Šim statusam papildu prasības nav nepieciešamas.';
-    },
-    nextStepReady() {
-        const rows = this.requirementRows();
-        return rows.length > 0 && rows.every((item) => item.done);
-    },
-    missingRequirementLabels(targetStatus) {
-        return this.requirementRows(targetStatus)
-            .filter((item) => !item.done)
-            .map((item) => item.label);
-    },
-    showMissingRequirements(targetStatus, actionLabel) {
-        const missing = this.missingRequirementLabels(targetStatus);
-        if (missing.length === 0) {
-            return false;
-        }
-
-        window.dispatchAppToast({
-            title: 'Darbību nevar izpildīt',
-            message: `${actionLabel} nevar, jo vēl trūkst: ${missing.join(', ')}.`,
-            tone: 'info',
-        });
-
-        return true;
-    },
-    async submitTransition(repairId, targetStatus, extra = {}) {
-        if (targetStatus === 'completed' && this.showMissingRequirements('completed', 'Remontu pabeigt')) {
-            return;
-        }
-
-        const actionLabels = {
-            waiting: 'atgriezt uz gaida',
-            'in-progress': 'sākt remontu',
-            completed: 'pabeigt remontu',
-            cancelled: 'atcelt remontu',
-        };
-
-        const accepted = await window.openAppConfirm({
-            title: 'Apstiprini statusa maiņu',
-            message: `Vai tiešām vēlaties ${actionLabels[targetStatus] ?? 'mainīt remonta statusu'}?`,
-            confirmLabel: 'Jā',
-            cancelLabel: 'Nē',
-            tone: targetStatus === 'cancelled' ? 'danger' : 'warning',
-        });
-
-        if (!accepted) {
-            return;
-        }
-
-        window.submitRepairTransition(
-            config.transitionBaseUrl,
-            config.csrfToken,
-            repairId,
-            targetStatus,
-            {
-                ...this.transitionFormPayload(),
-                ...extra,
-            },
-        );
-    },
-    async submitCompletion() {
-        if (this.showMissingRequirements('completed', 'Remontu pabeigt')) {
-            return;
-        }
-
-        const accepted = await window.openAppConfirm({
-            title: 'Pabeigt remontu?',
-            message: 'Vai tiešām gribat pabeigt šo ierīces remontu?',
-            confirmLabel: 'Jā, pabeigt',
-            cancelLabel: 'Nē',
-            tone: 'warning',
-        });
-
-        if (!accepted) {
-            return;
-        }
-
-        window.submitRepairTransition(
-            config.transitionBaseUrl,
-            config.csrfToken,
-            config.repairId,
-            'completed',
-            this.transitionFormPayload(),
-        );
-    },
-});
-
 registerAlpineData();
 document.addEventListener('alpine:init', registerAlpineData);
 
 // Keep one explicit startup pipeline so future refactors are easy to follow.
 const appInitializers = Object.freeze([
-    initializeThemeToggle,
+    () => initializeThemeToggle({ readStorageValue, writeStorageValue }),
     initializeAppConfirm,
     initializeAsyncTableFilters,
     restoreHighlightedSearchFromUrl,
@@ -2115,15 +943,3 @@ if (Alpine && !window.__appAlpineStarted) {
     window.__appAlpineStarted = true;
     Alpine.start();
 }
-
-window.clearAllFilters = function (button) {
-    const form = button.closest('form[data-async-table-form]');
-    if (!isAsyncTableFilterForm(form)) return;
-    const url = buildClearFiltersUrl(form);
-
-    window.submitAsyncTableForm(form, {
-        url,
-        resetPage: true,
-        toastMessage: 'Filtri notīrīti',
-    });
-};

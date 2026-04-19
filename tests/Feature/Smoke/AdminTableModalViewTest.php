@@ -36,6 +36,27 @@ class AdminTableModalViewTest extends TestCase
             ->assertSee('building-create-modal', false);
     }
 
+    public function test_buildings_index_contains_selected_edit_modal_when_requested(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $buildingId = DB::table('buildings')->insertGetId([
+            'building_name' => 'Galvenā ēka',
+            'address' => 'Brīvības iela 1',
+            'city' => 'Rīga',
+            'total_floors' => 4,
+            'notes' => '',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('buildings.index', [
+            'building_modal' => 'edit',
+            'modal_building' => $buildingId,
+        ]));
+
+        $response
+            ->assertOk()
+            ->assertSee('building-edit-modal-' . $buildingId, false);
+    }
+
     public function test_rooms_index_contains_create_modal_when_requested(): void
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
@@ -45,6 +66,37 @@ class AdminTableModalViewTest extends TestCase
         $response
             ->assertOk()
             ->assertSee('room-create-modal', false);
+    }
+
+    public function test_rooms_index_contains_selected_edit_modal_when_requested(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $buildingId = DB::table('buildings')->insertGetId([
+            'building_name' => 'Telpu ēka',
+            'address' => null,
+            'city' => 'Ludza',
+            'total_floors' => 3,
+            'notes' => '',
+        ]);
+        $roomId = DB::table('rooms')->insertGetId([
+            'building_id' => $buildingId,
+            'floor_number' => 2,
+            'room_number' => '204',
+            'room_name' => 'Kabineti',
+            'user_id' => $admin->id,
+            'department' => 'Administrācija',
+            'notes' => null,
+            'created_at' => now(),
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('rooms.index', [
+            'room_modal' => 'edit',
+            'modal_room' => $roomId,
+        ]));
+
+        $response
+            ->assertOk()
+            ->assertSee('room-edit-modal-' . $roomId, false);
     }
 
     public function test_repairs_index_contains_create_modal_when_requested(): void

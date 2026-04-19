@@ -4,15 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
 /**
- * Lietotāja modelis ar lomām un skatīšanās režīmiem.
+ * LietotÄja modelis ar lomÄm un skatÄ«ÅanÄs reÅ¾Ä«miem.
  *
- * Šeit glabājas gan autentifikācijas dati, gan arī noteikumi,
- * kas nosaka, ko lietotājs drīkst redzēt admina un lietotāja skatā.
+ * Å eit glabÄjas gan autentifikÄcijas dati, gan arÄ« noteikumi,
+ * kas nosaka, ko lietotÄjs drÄ«kst redzÄ“t admina un lietotÄja skatÄ.
  */
 class User extends Authenticatable
 {
@@ -59,7 +58,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Scope aktīvo lietotāju atlasīšanai.
+     * Scope aktÄ«vo lietotÄju atlasÄ«Åanai.
      */
     public function scopeActive(Builder $query): Builder
     {
@@ -67,7 +66,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Ierīces, kuras lietotājs ir izveidojis.
+     * IerÄ«ces, kuras lietotÄjs ir izveidojis.
      */
     public function createdDevices(): HasMany
     {
@@ -75,7 +74,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Ierīces, kas šobrīd piesaistītas lietotājam.
+     * IerÄ«ces, kas ÅobrÄ«d piesaistÄ«tas lietotÄjam.
      */
     public function assignedDevices(): HasMany
     {
@@ -93,7 +92,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Remontie, kurus šis lietotājs ir pieņēmis un izpilda.
+     * Remontie, kurus Åis lietotÄjs ir pieÅ†Ä“mis un izpilda.
      */
     public function acceptedRepairs(): HasMany
     {
@@ -141,7 +140,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Admins un IT darbinieks sistēmā izmanto vienu paplašināto tiesību kopu.
+     * Admins un IT darbinieks sistÄ“mÄ izmanto vienu paplaÅinÄto tiesÄ«bu kopu.
      */
     public function isAdmin(): bool
     {
@@ -149,7 +148,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Projekta biznesa loģikā IT darbinieks tiek apstrādāts kā administrators.
+     * Projekta biznesa loÄ£ikÄ IT darbinieks tiek apstrÄdÄts kÄ administrators.
      */
     public function isItWorker(): bool
     {
@@ -157,7 +156,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Nolasa pašreizējo skatīšanās režīmu no sesijas.
+     * Nolasa paÅreizÄ“jo skatÄ«ÅanÄs reÅ¾Ä«mu no sesijas.
      */
     public function currentViewMode(): string
     {
@@ -176,7 +175,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Vai administrators šobrīd strādā pilnajā admina skatā.
+     * Vai administrators ÅobrÄ«d strÄdÄ pilnajÄ admina skatÄ.
      */
     public function isInAdminView(): bool
     {
@@ -184,7 +183,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Vai lietotājs darbojas kā parasts darbinieks.
+     * Vai lietotÄjs darbojas kÄ parasts darbinieks.
      */
     public function isInUserView(): bool
     {
@@ -192,7 +191,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Centralizēts palīgs visām admina darbību pārbaudēm.
+     * CentralizÄ“ts palÄ«gs visÄm admina darbÄ«bu pÄrbaudÄ“m.
      */
     public function canManageRequests(): bool
     {
@@ -200,7 +199,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Nosaka, vai lietotājs drīkst skatīt konkrēto ierīci.
+     * Nosaka, vai lietotÄjs drÄ«kst skatÄ«t konkrÄ“to ierÄ«ci.
      */
     public function canViewDevice(Device $device): bool
     {
@@ -208,27 +207,4 @@ class User extends Authenticatable
             || ((int) $device->assigned_to_id === (int) $this->id);
     }
 
-    /**
-     * Iegūt visus aktīvus lietotājus ar kešu (1 stundu).
-     */
-    public static function cachedActive()
-    {
-        return Cache::remember('users_active', 3600, function () {
-            return self::where('is_active', true)->orderBy('full_name')->get();
-        });
-    }
-
-    /**
-     * Notīrīt keš pēc izmaiņām.
-     */
-    protected static function booted()
-    {
-        static::saved(function () {
-            Cache::forget('users_active');
-        });
-
-        static::deleted(function () {
-            Cache::forget('users_active');
-        });
-    }
 }

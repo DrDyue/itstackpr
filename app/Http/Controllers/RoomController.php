@@ -8,17 +8,16 @@ use App\Models\User;
 use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 /**
- * Telpu pārvaldības CRUD kontrolieris.
+ * Telpu pÄrvaldÄ«bas CRUD kontrolieris.
  */
 class RoomController extends Controller
 {
     /**
-     * Parāda telpu sarakstu ar filtriem un kopsavilkumu.
+     * ParÄda telpu sarakstu ar filtriem un kopsavilkumu.
      */
     public function index(Request $request)
     {
@@ -53,14 +52,14 @@ class RoomController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        AuditTrail::viewed($this->user(), 'Room', null, 'Atvērts telpu saraksts.');
+        AuditTrail::viewed($this->user(), 'Room', null, 'AtvÄ“rts telpu saraksts.');
 
         if ($filters['building_id'] !== '' || $filters['floor'] !== '' || $filters['floor_query'] !== '' || $filters['user_id'] !== '') {
             AuditTrail::filter($this->user(), 'Room', [
-                'ēka' => $filters['building_id'],
-                'stāvs' => $filters['floor'] !== '' ? $filters['floor'] : $filters['floor_query'],
-                'atbildīgais' => $filters['user_id'],
-            ], 'Filtrēts telpu saraksts.');
+                'Ä“ka' => $filters['building_id'],
+                'stÄvs' => $filters['floor'] !== '' ? $filters['floor'] : $filters['floor_query'],
+                'atbildÄ«gais' => $filters['user_id'],
+            ], 'FiltrÄ“ts telpu saraksts.');
         }
 
         return view('rooms.index', [
@@ -91,7 +90,7 @@ class RoomController extends Controller
     }
 
     /**
-     * Atrod telpu pēc nosaukuma vai numura aktīvajā filtrētajā sarakstā.
+     * Atrod telpu pÄ“c nosaukuma vai numura aktÄ«vajÄ filtrÄ“tajÄ sarakstÄ.
      */
     public function findByName(Request $request): JsonResponse
     {
@@ -102,7 +101,7 @@ class RoomController extends Controller
             return response()->json(['found' => false, 'page' => 1]);
         }
 
-        AuditTrail::search($this->user(), 'Room', $search, 'Meklēta telpa pēc nosaukuma vai numura: '.$search);
+        AuditTrail::search($this->user(), 'Room', $search, 'MeklÄ“ta telpa pÄ“c nosaukuma vai numura: '.$search);
 
         $filters = [
             'building_id' => trim((string) $request->query('building_id', '')),
@@ -147,19 +146,9 @@ class RoomController extends Controller
         ]);
     }
 
-    /**
-     * Parāda jaunas telpas izveides formu.
-     */
-    public function redirectToCreateModal(): RedirectResponse
-    {
-        $this->requireManager();
-        AuditTrail::viewed($this->user(), 'Room', null, 'Atvērta telpas izveides forma.');
-
-        return $this->redirectToRoomModal('create');
-    }
 
     /**
-     * Saglabā jaunu telpu.
+     * SaglabÄ jaunu telpu.
      */
     public function store(Request $request)
     {
@@ -168,19 +157,9 @@ class RoomController extends Controller
         $room = Room::create($this->validatedData($request));
         AuditTrail::created(auth()->id(), $room);
 
-        return redirect()->route('rooms.index')->with('success', 'Telpa veiksmīgi pievienota');
+        return redirect()->route('rooms.index')->with('success', 'Telpa veiksmÄ«gi pievienota');
     }
 
-    /**
-     * Parāda telpas rediģēšanas formu.
-     */
-    public function redirectToEditModal(Room $room): RedirectResponse
-    {
-        $this->requireManager();
-        AuditTrail::viewed($this->user(), 'Room', (string) $room->id, 'Atvērta telpas labošanas forma: '.AuditTrail::labelFor($room));
-
-        return $this->redirectToRoomModal('edit', $room);
-    }
 
     /**
      * Atjaunina telpas datus.
@@ -195,11 +174,11 @@ class RoomController extends Controller
 
         AuditTrail::updatedFromState(auth()->id(), $room, $before, $after);
 
-        return redirect()->route('rooms.index')->with('success', 'Telpas dati atjaunināti');
+        return redirect()->route('rooms.index')->with('success', 'Telpas dati atjauninÄti');
     }
 
     /**
-     * Dzēš telpu tikai tad, ja tai vairs nav piesaistītu ierīču.
+     * DzÄ“Å telpu tikai tad, ja tai vairs nav piesaistÄ«tu ierÄ«Ä¨u.
      */
     public function destroy(Room $room)
     {
@@ -210,22 +189,15 @@ class RoomController extends Controller
         if ($devicesCount > 0) {
             return redirect()
                 ->route('rooms.index')
-                ->with('error', 'Telpu nevar dzēst, jo tai piesaistītas ' . $devicesCount . ' ierīce' . ($devicesCount === 1 ? '' : 's') . '. Vispirms pārvieto vai atsien ierīces no šī ieraksta, tad mēģiniet vēlreiz.');
+                ->with('error', 'Telpu nevar dzÄ“st, jo tai piesaistÄ«tas ' . $devicesCount . ' ierÄ«ce' . ($devicesCount === 1 ? '' : 's') . '. Vispirms pÄrvieto vai atsien ierÄ«ces no ÅÄ« ieraksta, tad mÄ“Ä£iniet vÄ“lreiz.');
         }
 
         AuditTrail::deleted(auth()->id(), $room);
         $room->delete();
 
-        return redirect()->route('rooms.index')->with('success', 'Telpa dzēsta');
+        return redirect()->route('rooms.index')->with('success', 'Telpa dzÄ“sta');
     }
 
-    /**
-     * Vecais show ceļš tiek novirzīts uz telpu sarakstu.
-     */
-    public function show(Room $room)
-    {
-        return redirect()->route('rooms.index');
-    }
 
     private function validatedData(Request $request, ?Room $room = null): array
     {
@@ -246,9 +218,9 @@ class RoomController extends Controller
             'department' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:200'],
         ], [
-            'building_id.required' => 'Izvēlies ēku, kurai telpa pieder.',
-            'room_number.required' => 'Norādi telpas numuru.',
-            'room_number.unique' => 'Šāds telpas numurs šajā ēkā jau eksistē.',
+            'building_id.required' => 'IzvÄ“lies Ä“ku, kurai telpa pieder.',
+            'room_number.required' => 'NorÄdi telpas numuru.',
+            'room_number.unique' => 'Å Äds telpas numurs ÅajÄ Ä“kÄ jau eksistÄ“.',
         ]);
 
         $data['user_id'] = $data['user_id'] ?: null;
@@ -259,14 +231,4 @@ class RoomController extends Controller
         return $data;
     }
 
-    private function redirectToRoomModal(string $mode, ?Room $room = null): RedirectResponse
-    {
-        $parameters = ['room_modal' => $mode];
-
-        if ($room) {
-            $parameters['modal_room'] = $room->id;
-        }
-
-        return redirect()->route('rooms.index', $parameters);
-    }
 }

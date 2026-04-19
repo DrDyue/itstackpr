@@ -35,26 +35,7 @@ class UserRequestCenterController extends Controller
     }
 
     /**
-     * Novirza uz pareizo izveides formu pēc pieprasījuma tipa.
-     */
-    public function create(Request $request)
-    {
-        $this->requireRegularUser();
-
-        $type = (string) $request->query('type', '');
-        $deviceId = trim((string) $request->query('device_id', ''));
-        $params = $deviceId !== '' ? ['device_id' => $deviceId] : [];
-
-        return redirect()->route(match ($type) {
-            'writeoff' => 'writeoff-requests.create',
-            'transfer' => 'device-transfers.create',
-            'repair' => 'repair-requests.create',
-            default => 'repair-requests.create',
-        }, $params);
-    }
-
-    /**
-     * Saglabā pieprasījumu caur veco vienoto ieeju, ja tā vēl tiek izmantota.
+     * Saglab? piepras?jumu caur veco vienoto ieeju, ja t? v?l tiek izmantota.
      */
     public function store(Request $request)
     {
@@ -127,21 +108,7 @@ class UserRequestCenterController extends Controller
     }
 
     /**
-     * Parāda lietotājam atļautu pieprasījuma teksta lauka labošanu.
-     */
-    public function edit(string $requestType, int $requestId)
-    {
-        $user = $this->requireRegularUser();
-        [, $config] = $this->editableRequestForUser($user, $requestType, $requestId);
-
-        return redirect()->route($config['index_route'], [
-            $config['modal_query_key'] => 'edit',
-            'modal_request' => $requestId,
-        ]);
-    }
-
-    /**
-     * Atļauj labot tikai aprakstošo lauku iesniegtam pieprasījumam.
+     * At?auj labot tikai apraksto?o lauku iesniegtam piepras?jumam.
      */
     public function update(Request $request, string $requestType, int $requestId)
     {
@@ -315,7 +282,6 @@ class UserRequestCenterController extends Controller
                 'deleted_message' => 'Remonta pieteikums atcelts.',
                 'deleted_audit_message' => 'Lietotājs atcēla iesniegtu remonta pieteikumu.',
                 'index_route' => 'repair-requests.index',
-                'modal_query_key' => 'repair_request_modal',
                 'submitted_status' => RepairRequest::STATUS_SUBMITTED,
             ],
             'writeoff' => [
@@ -331,7 +297,6 @@ class UserRequestCenterController extends Controller
                 'deleted_message' => 'Norakstīšanas pieteikums atcelts.',
                 'deleted_audit_message' => 'Lietotājs atcēla iesniegtu norakstīšanas pieteikumu.',
                 'index_route' => 'writeoff-requests.index',
-                'modal_query_key' => 'writeoff_request_modal',
                 'submitted_status' => WriteoffRequest::STATUS_SUBMITTED,
             ],
             'transfer' => [
@@ -347,7 +312,6 @@ class UserRequestCenterController extends Controller
                 'deleted_message' => 'Nodošanas pieteikums atcelts.',
                 'deleted_audit_message' => 'Lietotājs atcēla iesniegtu nodošanas pieteikumu.',
                 'index_route' => 'device-transfers.index',
-                'modal_query_key' => 'device_transfer_modal',
                 'submitted_status' => DeviceTransfer::STATUS_SUBMITTED,
             ],
             default => abort(404),

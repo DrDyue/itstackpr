@@ -14,13 +14,12 @@ use App\Support\AuditTrail;
 use App\Support\WarehouseConfig;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Lietotāju norakstīšanas pieteikumu plūsma.
+ * LietotĆ„Āju norakstĆ„Ā«Ć…ļ£¼anas pieteikumu plĆ…Ā«sma.
  */
 class WriteoffRequestController extends Controller
 {
@@ -31,7 +30,7 @@ class WriteoffRequestController extends Controller
     private const SORTABLE_COLUMNS = ['code', 'name', 'requester', 'created_at', 'status'];
 
     /**
-     * Parāda norakstīšanas pieteikumu sarakstu.
+     * ParĆ„Āda norakstĆ„Ā«Ć…ļ£¼anas pieteikumu sarakstu.
      */
     public function index(Request $request)
     {
@@ -39,14 +38,14 @@ class WriteoffRequestController extends Controller
         abort_unless($user, 403);
         $viewData = $this->writeoffRequestsViewData($request, $user);
 
-        AuditTrail::viewed($user, 'WriteoffRequest', null, 'Atvērts norakstīšanas pieteikumu saraksts.');
+        AuditTrail::viewed($user, 'WriteoffRequest', null, 'AtvĆ„ā€rts norakstĆ„Ā«Ć…ļ£¼anas pieteikumu saraksts.');
         $this->auditWriteoffRequestListInteractions($request, $user, $viewData['filters'], $viewData['sorting']);
 
         return view('writeoff_requests.index', $viewData);
     }
 
     /**
-     * Atgriež filtrētu norakstīšanas pieteikumu tabulu (async).
+     * AtgrieĆ…Ā¾ filtrĆ„ā€tu norakstĆ„Ā«Ć…ļ£¼anas pieteikumu tabulu (async).
      */
     public function table(Request $request)
     {
@@ -65,7 +64,7 @@ class WriteoffRequestController extends Controller
     }
 
     /**
-     * Kopīga metode norakstīšanas pieteikumu datu sagatavošanai.
+     * KopĆ„Ā«ga metode norakstĆ„Ā«Ć…ļ£¼anas pieteikumu datu sagatavoĆ…ļ£¼anai.
      */
     private function writeoffRequestsViewData(Request $request, $user): array
     {
@@ -97,8 +96,8 @@ class WriteoffRequestController extends Controller
                 'createDeviceOptions' => collect(),
                 'requesterOptions' => collect(),
                 'selectedEditableRequest' => null,
-                'featureMessage' => 'Tabula writeoff_requests šobrīd nav pieejama.',
-                'sortDirectionLabels' => ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'],
+                'featureMessage' => 'Tabula writeoff_requests Ć…ļ£¼obrĆ„Ā«d nav pieejama.',
+                'sortDirectionLabels' => ['asc' => 'augoĆ…ļ£¼ajĆ„Ā secĆ„Ā«bĆ„Ā', 'desc' => 'dilstoĆ…ļ£¼ajĆ„Ā secĆ„Ā«bĆ„Ā'],
             ];
         }
 
@@ -157,12 +156,12 @@ class WriteoffRequestController extends Controller
                     ->where('status', WriteoffRequest::STATUS_SUBMITTED)
                     ->first()
                 : null,
-            'sortDirectionLabels' => ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'],
+            'sortDirectionLabels' => ['asc' => 'augoĆ…ļ£¼ajĆ„Ā secĆ„Ā«bĆ„Ā', 'desc' => 'dilstoĆ…ļ£¼ajĆ„Ā secĆ„Ā«bĆ„Ā'],
         ];
     }
 
     /**
-     * Atrod norakstīšanas pieteikumu pēc saistītās ierīces koda filtrētajā sarakstā.
+     * Atrod norakstĆ„Ā«Ć…ļ£¼anas pieteikumu pĆ„ā€c saistĆ„Ā«tĆ„Ās ierĆ„Ā«ces koda filtrĆ„ā€tajĆ„Ā sarakstĆ„Ā.
      */
     public function findByCode(Request $request)
     {
@@ -174,7 +173,7 @@ class WriteoffRequestController extends Controller
             return response()->json(['found' => false, 'page' => 1]);
         }
 
-        AuditTrail::search($user, 'WriteoffRequest', $code, 'Meklēts norakstīšanas pieteikums pēc ierīces koda: '.$code);
+        AuditTrail::search($user, 'WriteoffRequest', $code, 'MeklĆ„ā€ts norakstĆ„Ā«Ć…ļ£¼anas pieteikums pĆ„ā€c ierĆ„Ā«ces koda: '.$code);
 
         $canReview = $user->canManageRequests();
         $availableStatuses = [
@@ -219,27 +218,9 @@ class WriteoffRequestController extends Controller
         ]);
     }
 
-    /**
-     * Parāda jauna norakstīšanas pieteikuma formu lietotājam.
-     */
-    public function redirectToCreateModal(Request $request): RedirectResponse
-    {
-        $user = $this->user();
-        abort_unless($user, 403);
-        abort_if($user->canManageRequests(), 403);
-
-        AuditTrail::viewed($user, 'WriteoffRequest', null, 'Atvērts norakstīšanas pieteikuma modālis.');
-
-        return redirect()->route('writeoff-requests.index', array_filter([
-            'writeoff_request_modal' => 'create',
-            'device_id' => ctype_digit((string) $request->query('device_id', ''))
-                ? (int) $request->query('device_id')
-                : null,
-        ]));
-    }
 
     /**
-     * Saglabā jaunu norakstīšanas pieteikumu.
+     * SaglabĆ„Ā jaunu norakstĆ„Ā«Ć…ļ£¼anas pieteikumu.
      */
     public function store(Request $request)
     {
@@ -248,21 +229,21 @@ class WriteoffRequestController extends Controller
         abort_if($user->canManageRequests(), 403);
 
         if (! $this->featureTableExists('writeoff_requests')) {
-            return redirect()->route('writeoff-requests.index')->with('error', 'Norakstīšanas pieteikumus šobrīd nevar saglabāt, jo tabula writeoff_requests nav pieejama.');
+            return redirect()->route('writeoff-requests.index')->with('error', 'NorakstĆ„Ā«Ć…ļ£¼anas pieteikumus Ć…ļ£¼obrĆ„Ā«d nevar saglabĆ„Āt, jo tabula writeoff_requests nav pieejama.');
         }
 
         $validated = $this->validateInput($request, [
             'device_id' => ['required', 'exists:devices,id'],
             'reason' => ['required', 'string'],
         ], [
-            'device_id.required' => 'Izvēlies ierīci, kuru vēlies norakstīt.',
-            'reason.required' => 'Apraksti norakstīšanas iemeslu.',
+            'device_id.required' => 'IzvĆ„ā€lies ierĆ„Ā«ci, kuru vĆ„ā€lies norakstĆ„Ā«t.',
+            'reason.required' => 'Apraksti norakstĆ„Ā«Ć…ļ£¼anas iemeslu.',
         ]);
 
         $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
         if (! $device) {
             throw ValidationException::withMessages([
-                'device_id' => ['Vari pieteikt norakstīšanu tikai savai piesaistītai ierīcei.'],
+                'device_id' => ['Vari pieteikt norakstĆ„Ā«Ć…ļ£¼anu tikai savai piesaistĆ„Ā«tai ierĆ„Ā«cei.'],
             ]);
         }
 
@@ -276,13 +257,13 @@ class WriteoffRequestController extends Controller
         ]);
 
         AuditTrail::created($user->id, $writeoffRequest);
-        AuditTrail::submit($user->id, $writeoffRequest, 'Iesniegts norakstīšanas pieteikums: '.AuditTrail::labelFor($writeoffRequest));
+        AuditTrail::submit($user->id, $writeoffRequest, 'Iesniegts norakstĆ„Ā«Ć…ļ£¼anas pieteikums: '.AuditTrail::labelFor($writeoffRequest));
 
-        return redirect()->route('writeoff-requests.index')->with('success', 'Norakstīšanas pieteikums nosūtīts izskatīšanai');
+        return redirect()->route('writeoff-requests.index')->with('success', 'NorakstĆ„Ā«Ć…ļ£¼anas pieteikums nosĆ…Ā«tĆ„Ā«ts izskatĆ„Ā«Ć…ļ£¼anai');
     }
 
     /**
-     * Administratora lēmums par norakstīšanas pieprasījumu.
+     * Administratora lĆ„ā€mums par norakstĆ„Ā«Ć…ļ£¼anas pieprasĆ„Ā«jumu.
      */
     public function review(Request $request, WriteoffRequest $writeoffRequest)
     {
@@ -290,24 +271,24 @@ class WriteoffRequestController extends Controller
 
         if (! $this->featureTableExists('writeoff_requests')) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Norakstīšanas pieteikumu tabula šobrīd nav pieejama.'], 503);
+                return response()->json(['message' => 'NorakstĆ„Ā«Ć…ļ£¼anas pieteikumu tabula Ć…ļ£¼obrĆ„Ā«d nav pieejama.'], 503);
             }
 
-            return back()->with('error', 'Norakstīšanas pieteikumu tabula šobrīd nav pieejama.');
+            return back()->with('error', 'NorakstĆ„Ā«Ć…ļ£¼anas pieteikumu tabula Ć…ļ£¼obrĆ„Ā«d nav pieejama.');
         }
 
         if ($writeoffRequest->status !== WriteoffRequest::STATUS_SUBMITTED) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Šis pieteikums jau ir izskatīts.'], 409);
+                return response()->json(['message' => 'Ć…Ā is pieteikums jau ir izskatĆ„Ā«ts.'], 409);
             }
 
-            return back()->with('error', 'Šis pieteikums jau ir izskatīts.');
+            return back()->with('error', 'Ć…Ā is pieteikums jau ir izskatĆ„Ā«ts.');
         }
 
         $validated = $this->validateInput($request, [
             'status' => ['required', Rule::in([WriteoffRequest::STATUS_APPROVED, WriteoffRequest::STATUS_REJECTED])],
         ], [
-            'status.required' => 'Izvēlies lēmumu norakstīšanas pieteikumam.',
+            'status.required' => 'IzvĆ„ā€lies lĆ„ā€mumu norakstĆ„Ā«Ć…ļ£¼anas pieteikumam.',
         ]);
 
         $before = $writeoffRequest->only(['status', 'reviewed_by_user_id', 'review_notes']);
@@ -327,13 +308,13 @@ class WriteoffRequestController extends Controller
 
             if (! $device) {
                 throw ValidationException::withMessages([
-                    'status' => ['Ierīce norakstīšanai vairs nav atrasta.'],
+                    'status' => ['IerĆ„Ā«ce norakstĆ„Ā«Ć…ļ£¼anai vairs nav atrasta.'],
                 ]);
             }
 
             if ($device->status !== Device::STATUS_ACTIVE || $device->activeRepair()->exists()) {
                 throw ValidationException::withMessages([
-                    'status' => ['Norakstīt var tikai aktīvu ierīci bez aktīva remonta procesā.'],
+                    'status' => ['NorakstĆ„Ā«t var tikai aktĆ„Ā«vu ierĆ„Ā«ci bez aktĆ„Ā«va remonta procesĆ„Ā.'],
                 ]);
             }
 
@@ -346,20 +327,20 @@ class WriteoffRequestController extends Controller
         $after = $writeoffRequest->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState($manager->id, $writeoffRequest, $before, $after);
         if ($validated['status'] === WriteoffRequest::STATUS_APPROVED) {
-            AuditTrail::approve($manager->id, $writeoffRequest, 'Apstiprināts norakstīšanas pieteikums: '.AuditTrail::labelFor($writeoffRequest));
+            AuditTrail::approve($manager->id, $writeoffRequest, 'ApstiprinĆ„Āts norakstĆ„Ā«Ć…ļ£¼anas pieteikums: '.AuditTrail::labelFor($writeoffRequest));
         } else {
-            AuditTrail::reject($manager->id, $writeoffRequest, null, 'Noraidīts norakstīšanas pieteikums: '.AuditTrail::labelFor($writeoffRequest));
+            AuditTrail::reject($manager->id, $writeoffRequest, null, 'NoraidĆ„Ā«ts norakstĆ„Ā«Ć…ļ£¼anas pieteikums: '.AuditTrail::labelFor($writeoffRequest));
         }
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'Norakstīšanas pieteikums izskatīts',
+                'message' => 'NorakstĆ„Ā«Ć…ļ£¼anas pieteikums izskatĆ„Ā«ts',
                 'status' => $validated['status'],
                 'request_id' => $writeoffRequest->id,
             ]);
         }
 
-        return back()->with('success', 'Norakstīšanas pieteikums izskatīts');
+        return back()->with('success', 'NorakstĆ„Ā«Ć…ļ£¼anas pieteikums izskatĆ„Ā«ts');
     }
 
     private function availableDevicesForUser(User $user): Builder
@@ -379,25 +360,25 @@ class WriteoffRequestController extends Controller
     {
         if ($device->status === Device::STATUS_REPAIR) {
             throw ValidationException::withMessages([
-                'device_id' => ['Šai ierīcei jau notiek remonts ('.$this->repairStatusLabel($device->activeRepair?->status).'), tāpēc norakstīšanas pieteikumu veidot nevar.'],
+                'device_id' => ['Ć…Ā ai ierĆ„Ā«cei jau notiek remonts ('.$this->repairStatusLabel($device->activeRepair?->status).'), tĆ„ĀpĆ„ā€c norakstĆ„Ā«Ć…ļ£¼anas pieteikumu veidot nevar.'],
             ]);
         }
 
         if (WriteoffRequest::query()->where('device_id', $device->id)->where('status', WriteoffRequest::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Šai ierīcei jau ir gaidošs norakstīšanas pieteikums.'],
+                'device_id' => ['Ć…Ā ai ierĆ„Ā«cei jau ir gaidoĆ…ļ£¼s norakstĆ„Ā«Ć…ļ£¼anas pieteikums.'],
             ]);
         }
 
         if (RepairRequest::query()->where('device_id', $device->id)->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Šai ierīcei jau ir gaidošs remonta pieteikums, tāpēc norakstīšanas pieteikumu veidot nevar.'],
+                'device_id' => ['Ć…Ā ai ierĆ„Ā«cei jau ir gaidoĆ…ļ£¼s remonta pieteikums, tĆ„ĀpĆ„ā€c norakstĆ„Ā«Ć…ļ£¼anas pieteikumu veidot nevar.'],
             ]);
         }
 
         if (DeviceTransfer::query()->where('device_id', $device->id)->where('status', DeviceTransfer::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
-                'device_id' => ['Šai ierīcei jau ir gaidošs nodošanas pieteikums, tāpēc norakstīšanas pieteikumu veidot nevar.'],
+                'device_id' => ['Ć…Ā ai ierĆ„Ā«cei jau ir gaidoĆ…ļ£¼s nodoĆ…ļ£¼anas pieteikums, tĆ„ĀpĆ„ā€c norakstĆ„Ā«Ć…ļ£¼anas pieteikumu veidot nevar.'],
             ]);
         }
     }
@@ -464,8 +445,8 @@ class WriteoffRequestController extends Controller
             'room_number' => $this->nextWarehouseRoomNumber($building->id),
             'room_name' => WarehouseConfig::DEFAULT_ROOM_NAME,
             'user_id' => $preferredUserId,
-            'department' => 'Inventārs',
-            'notes' => 'Automātiski izveidota noklusētā noliktavas telpa.',
+            'department' => 'InventĆ„Ārs',
+            'notes' => 'AutomĆ„Ātiski izveidota noklusĆ„ā€tĆ„Ā noliktavas telpa.',
         ])->load('building');
     }
 
@@ -490,7 +471,7 @@ class WriteoffRequestController extends Controller
             'building_name' => WarehouseConfig::DEFAULT_BUILDING_NAME,
             'city' => 'Ludza',
             'total_floors' => 1,
-            'notes' => 'Automātiski izveidota noklusētā ēka noliktavas telpai.',
+            'notes' => 'AutomĆ„Ātiski izveidota noklusĆ„ā€tĆ„Ā Ć„ā€ka noliktavas telpai.',
         ]);
     }
 
@@ -532,7 +513,7 @@ class WriteoffRequestController extends Controller
     }
 
     /**
-     * Sakārto saraksta filtru stāvokli, ieskaitot admina noklusēto "iesniegts".
+     * SakĆ„Ārto saraksta filtru stĆ„Āvokli, ieskaitot admina noklusĆ„ā€to "iesniegts".
      */
     private function normalizedIndexFilters(Request $request, array $availableStatuses, bool $canReview): array
     {
@@ -567,7 +548,7 @@ class WriteoffRequestController extends Controller
     }
 
     /**
-     * Pielieto meklēšanu un filtrus pieteikumu vaicājumam.
+     * Pielieto meklĆ„ā€Ć…ļ£¼anu un filtrus pieteikumu vaicĆ„Ājumam.
      */
     private function applyIndexFilters(Builder $query, array $filters, array $skip = []): Builder
     {
@@ -619,7 +600,7 @@ class WriteoffRequestController extends Controller
     }
 
     /**
-     * Pielieto drošu kārtošanu pēc atļautajām kolonnām.
+     * Pielieto droĆ…ļ£¼u kĆ„ĀrtoĆ…ļ£¼anu pĆ„ā€c atĆ„Ā¼autajĆ„Ām kolonnĆ„Ām.
      */
     private function applySorting(Builder $query, array $sorting): void
     {
@@ -657,7 +638,7 @@ class WriteoffRequestController extends Controller
     }
 
     /**
-     * Normalizē kārtošanas parametrus tabulas galvenei un toast paziņojumiem.
+     * NormalizĆ„ā€ kĆ„ĀrtoĆ…ļ£¼anas parametrus tabulas galvenei un toast paziĆ…ā€ ojumiem.
      */
     private function normalizedSorting(Request $request): array
     {
@@ -675,20 +656,20 @@ class WriteoffRequestController extends Controller
         return [
             'sort' => $sort,
             'direction' => $direction,
-            'label' => $this->sortOptions()[$sort]['label'] ?? 'iesniegšanas datuma',
+            'label' => $this->sortOptions()[$sort]['label'] ?? 'iesniegĆ…ļ£¼anas datuma',
         ];
     }
 
     /**
-     * Lietotāja paziņojumiem izmantojamās kārtošanas etiķetes.
+     * LietotĆ„Āja paziĆ…ā€ ojumiem izmantojamĆ„Ās kĆ„ĀrtoĆ…ļ£¼anas etiĆ„Ā·etes.
      */
     private function sortOptions(): array
     {
         return [
             'code' => ['label' => 'koda'],
             'name' => ['label' => 'nosaukuma'],
-            'requester' => ['label' => 'pieteicēja'],
-            'created_at' => ['label' => 'iesniegšanas datuma'],
+            'requester' => ['label' => 'pieteicĆ„ā€ja'],
+            'created_at' => ['label' => 'iesniegĆ…ļ£¼anas datuma'],
             'status' => ['label' => 'statusa'],
         ];
     }
@@ -697,10 +678,10 @@ class WriteoffRequestController extends Controller
     {
         $filterPayload = array_filter([
             'teksts' => $filters['q'] ?? '',
-            'ierīce' => $filters['device_query'] ?? '',
-            'pieteicējs' => $filters['requester_query'] ?? '',
+            'ierĆ„Ā«ce' => $filters['device_query'] ?? '',
+            'pieteicĆ„ā€js' => $filters['requester_query'] ?? '',
             'no datuma' => $filters['date_from'] ?? '',
-            'līdz datumam' => $filters['date_to'] ?? '',
+            'lĆ„Ā«dz datumam' => $filters['date_to'] ?? '',
             'statusi' => count($filters['statuses'] ?? []) > 0 && count($filters['statuses'] ?? []) < 3 ? ($filters['statuses'] ?? []) : [],
         ], fn (mixed $value) => $value !== null && $value !== '' && $value !== []);
 
@@ -709,7 +690,7 @@ class WriteoffRequestController extends Controller
                 $user,
                 'WriteoffRequest',
                 $filterPayload,
-                'Filtrēti norakstīšanas pieteikumi: '.implode(' | ', collect($filterPayload)->map(function (mixed $value, string $label) {
+                'FiltrĆ„ā€ti norakstĆ„Ā«Ć…ļ£¼anas pieteikumi: '.implode(' | ', collect($filterPayload)->map(function (mixed $value, string $label) {
                     if (is_array($value)) {
                         return $label.': '.implode(', ', $value);
                     }
@@ -723,15 +704,15 @@ class WriteoffRequestController extends Controller
             AuditTrail::sort(
                 $user,
                 'WriteoffRequest',
-                $sorting['label'] ?? 'iesniegšanas datuma',
+                $sorting['label'] ?? 'iesniegĆ…ļ£¼anas datuma',
                 $sorting['direction'] ?? 'desc',
-                'Kārtoti norakstīšanas pieteikumi pēc '.($sorting['label'] ?? 'iesniegšanas datuma').' '.(($sorting['direction'] ?? 'desc') === 'asc' ? 'augošajā secībā' : 'dilstošajā secībā').'.'
+                'KĆ„Ārtoti norakstĆ„Ā«Ć…ļ£¼anas pieteikumi pĆ„ā€c '.($sorting['label'] ?? 'iesniegĆ…ļ£¼anas datuma').' '.(($sorting['direction'] ?? 'desc') === 'asc' ? 'augoĆ…ļ£¼ajĆ„Ā secĆ„Ā«bĆ„Ā' : 'dilstoĆ…ļ£¼ajĆ„Ā secĆ„Ā«bĆ„Ā').'.'
             );
         }
     }
 
     /**
-     * Sagatavo ierīču dropdown opcijas norakstīšanas pieteikumu filtram.
+     * Sagatavo ierĆ„Ā«Ć„ĀØu dropdown opcijas norakstĆ„Ā«Ć…ļ£¼anas pieteikumu filtram.
      */
     private function writeoffDeviceOptions($requests)
     {
@@ -762,7 +743,7 @@ class WriteoffRequestController extends Controller
     }
 
     /**
-     * Sagatavo pieteicēju dropdown opcijas norakstīšanas pieteikumu filtram.
+     * Sagatavo pieteicĆ„ā€ju dropdown opcijas norakstĆ„Ā«Ć…ļ£¼anas pieteikumu filtram.
      */
     private function writeoffRequesterOptions($requests)
     {

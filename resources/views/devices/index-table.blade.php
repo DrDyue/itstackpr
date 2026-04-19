@@ -92,8 +92,13 @@
                     $repairStatusLabel = $deviceState['repairStatusLabel'] ?? null;
                     $repairPreview = $deviceState['repairPreview'] ?? null;
                     $repairRecord = $device->activeRepair ?? $device->latestRepair;
-                    $repairModalUrl = $repairRecord ? route('repairs.show', $repairRecord) : null;
-                    $repairCreateUrl = route('repairs.create', ['device_id' => $device->id]);
+                    $repairModalUrl = $repairRecord
+                        ? route('repairs.index', ['repair_modal' => 'edit', 'modal_repair' => $repairRecord->id])
+                        : null;
+                    $repairCreateUrl = route('repairs.index', ['repair_modal' => 'create', 'device_id' => $device->id]);
+                    $repairRequestCreateUrl = route('repair-requests.index', ['repair_request_modal' => 'create', 'device_id' => $device->id]);
+                    $writeoffRequestCreateUrl = route('writeoff-requests.index', ['writeoff_request_modal' => 'create', 'device_id' => $device->id]);
+                    $transferCreateUrl = route('device-transfers.index', ['device_transfer_modal' => 'create', 'device_id' => $device->id]);
                 @endphp
                 <tr class="device-table-row border-t border-slate-100 align-top" data-table-row-id="device-{{ $device->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) $device->code)) }}">
                     <td class="table-col-image px-3 py-4 text-center align-middle tabular-nums">
@@ -288,17 +293,17 @@
                                         <div class="table-action-section-title">Pieprasījumi</div>
                                         @if ($requestAvailability['can_create_any'])
                                             <div class="table-action-stack">
-                                                <a href="{{ route('repair-requests.create', ['device_id' => $device->id]) }}" class="table-action-item table-action-item-sky" @click="open = false; panel = null">
+                                                <a href="{{ $repairRequestCreateUrl }}" class="table-action-item table-action-item-sky" @click="open = false; panel = null">
                                                     <x-icon name="repair" size="h-4 w-4" />
                                                     <span>Pieteikt remontu</span>
                                                 </a>
 
-                                                <a href="{{ route('writeoff-requests.create', ['device_id' => $device->id]) }}" class="table-action-item table-action-item-rose" @click="open = false; panel = null">
+                                                <a href="{{ $writeoffRequestCreateUrl }}" class="table-action-item table-action-item-rose" @click="open = false; panel = null">
                                                     <x-icon name="writeoff" size="h-4 w-4" />
                                                     <span>Pieteikt norakstīšanu</span>
                                                 </a>
 
-                                                <a href="{{ route('device-transfers.create', ['device_id' => $device->id]) }}" class="table-action-item table-action-item-emerald" @click="open = false; panel = null">
+                                                <a href="{{ $transferCreateUrl }}" class="table-action-item table-action-item-emerald" @click="open = false; panel = null">
                                                     <x-icon name="transfer" size="h-4 w-4" />
                                                     <span>Nodot citam</span>
                                                 </a>

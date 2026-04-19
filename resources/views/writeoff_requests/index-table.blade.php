@@ -199,7 +199,7 @@
                                             </div>
                                         @elseif (! $canReview && $writeoffRequest->status === 'submitted')
                                             <a
-                                                href="{{ route('my-requests.edit', ['requestType' => 'writeoff', 'requestId' => $writeoffRequest->id]) }}"
+                                                href="{{ route('writeoff-requests.index', ['writeoff_request_modal' => 'edit', 'modal_request' => $writeoffRequest->id]) }}"
                                                 class="table-action-item table-action-item-amber"
                                                 @click="open = false"
                                             >

@@ -580,10 +580,10 @@ class AuditTrail
                 'repair_request' => route('repair-requests.index', ['q' => $entityId]) . '#repair-request-' . $entityId,
                 'writeoff_request' => route('writeoff-requests.index', ['q' => $entityId]) . '#writeoff-request-' . $entityId,
                 'device_transfer' => route('device-transfers.index', ['q' => $entityId]) . '#device-transfer-' . $entityId,
-                'room' => route('rooms.edit', $entityId),
-                'building' => route('buildings.edit', $entityId),
+                'room' => route('rooms.index', ['room_modal' => 'edit', 'modal_room' => $entityId]),
+                'building' => route('buildings.index', ['building_modal' => 'edit', 'modal_building' => $entityId]),
                 'device_type' => $entity instanceof DeviceType ? self::deviceTypeIndexUrl($entity) : null,
-                'user' => route('users.edit', $entityId),
+                'user' => route('users.index', ['user_modal' => 'edit', 'modal_user' => $entityId]),
                 'audit_log' => route('audit-log.index', ['highlight_id' => 'audit-log-'.$entityId]),
                 default => null,
             };

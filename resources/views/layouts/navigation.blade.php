@@ -190,7 +190,7 @@
 
                     {{-- Paziņojumu centrs --}}
                     @php
-                        $showNotificationPreviewCards = ! request()->routeIs('*.create', '*.edit', 'my-requests.edit');
+                        $showNotificationPreviewCards = ! request()->routeIs('profile.edit');
                         $pendingNotificationsCount = $canManageRequests
                             ? (\App\Models\RepairRequest::query()->where('status', \App\Models\RepairRequest::STATUS_SUBMITTED)->count()
                                 + \App\Models\WriteoffRequest::query()->where('status', \App\Models\WriteoffRequest::STATUS_SUBMITTED)->count())

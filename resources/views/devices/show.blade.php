@@ -11,8 +11,13 @@
     @php
         $deviceMeta = collect([$device->manufacturer, $device->model])->filter(fn ($value) => filled($value))->implode(' | ');
         $activeRepair = $device->activeRepair;
-        $activeRepairUrl = $activeRepair ? route('repairs.show', $activeRepair) : null;
-        $repairCreateUrl = route('repairs.create', ['device_id' => $device->id]);
+        $activeRepairUrl = $activeRepair
+            ? route('repairs.index', ['repair_modal' => 'edit', 'modal_repair' => $activeRepair->id])
+            : null;
+        $repairCreateUrl = route('repairs.index', ['repair_modal' => 'create', 'device_id' => $device->id]);
+        $repairRequestCreateUrl = route('repair-requests.index', ['repair_request_modal' => 'create', 'device_id' => $device->id]);
+        $writeoffRequestCreateUrl = route('writeoff-requests.index', ['writeoff_request_modal' => 'create', 'device_id' => $device->id]);
+        $transferCreateUrl = route('device-transfers.index', ['device_transfer_modal' => 'create', 'device_id' => $device->id]);
         $repairTypeLabels = [
             'internal' => 'Iekšējais',
             'external' => 'Ārējais',
@@ -62,19 +67,19 @@
                         @endif
                     @else
                         @if ($requestAvailability['repair'])
-                            <a href="{{ route('repair-requests.create', ['device_id' => $device->id]) }}" class="btn-edit">
+                            <a href="{{ $repairRequestCreateUrl }}" class="btn-edit">
                                 <x-icon name="repair" size="h-4 w-4" />
                                 <span>Pieteikt remontu</span>
                             </a>
                         @endif
                         @if ($requestAvailability['writeoff'])
-                            <a href="{{ route('writeoff-requests.create', ['device_id' => $device->id]) }}" class="btn-danger">
+                            <a href="{{ $writeoffRequestCreateUrl }}" class="btn-danger">
                                 <x-icon name="writeoff" size="h-4 w-4" />
                                 <span>Pieteikt norakstīšanu</span>
                             </a>
                         @endif
                         @if ($requestAvailability['transfer'])
-                            <a href="{{ route('device-transfers.create', ['device_id' => $device->id]) }}" class="btn-view">
+                            <a href="{{ $transferCreateUrl }}" class="btn-view">
                                 <x-icon name="transfer" size="h-4 w-4" />
                                 <span>Nodot citam</span>
                             </a>
@@ -320,7 +325,7 @@
                                 <div class="flex flex-wrap items-center gap-2">
                                     <x-status-pill context="repair" :value="$repair->status" />
                                     @if ($canManageDevices)
-                                        <a href="{{ route('repairs.show', $repair) }}" class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-300 hover:text-slate-900">
+                                        <a href="{{ route('repairs.index', ['repair_modal' => 'edit', 'modal_repair' => $repair->id]) }}" class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-300 hover:text-slate-900">
                                             <x-icon name="repair" size="h-3.5 w-3.5" />
                                             <span>Atvērt</span>
                                         </a>

@@ -200,7 +200,7 @@
                                                 </form>
                                             </div>
                                         @elseif (! $canReview && $repairRequest->status === 'submitted')
-                                            <a href="{{ route('my-requests.edit', ['requestType' => 'repair', 'requestId' => $repairRequest->id]) }}" class="table-action-item table-action-item-amber" @click="open = false">
+                                            <a href="{{ route('repair-requests.index', ['repair_request_modal' => 'edit', 'modal_request' => $repairRequest->id]) }}" class="table-action-item table-action-item-amber" @click="open = false">
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Labot pieteikumu</span>
                                             </a>

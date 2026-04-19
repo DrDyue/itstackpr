@@ -219,7 +219,7 @@ class DashboardController extends Controller
             ],
             [
                 'label' => 'Pievienot remontu',
-                'url' => route('repairs.create'),
+                'url' => route('repairs.index', ['repair_modal' => 'create']),
                 'icon' => 'repair',
                 'class' => 'btn-edit',
                 'count' => null,
