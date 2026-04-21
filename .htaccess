@@ -1,4 +1,4 @@
-DirectoryIndex public/index.php
+DirectoryIndex index.php public/index.php
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
