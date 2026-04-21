@@ -12,6 +12,7 @@ use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -162,8 +163,11 @@ class RepairController extends Controller
             ->when($filters['mine'] && $canManageRepairs, fn (Builder $query) => $query->where('repairs.accepted_by', $user->id));
 
         $repairsQuery = (clone $baseQuery)
-            ->with('device:id,code')
-            ->select('repairs.*');
+            ->leftJoin('devices as repair_search_device', 'repair_search_device.id', '=', 'repairs.device_id')
+            ->select([
+                'repairs.id',
+                DB::raw('repair_search_device.code as device_code'),
+            ]);
 
         $this->applyIndexFilters($repairsQuery, $filters);
         $this->applySorting($repairsQuery, $sorting);
@@ -174,7 +178,7 @@ class RepairController extends Controller
         $searchCode = mb_strtolower($code);
 
         foreach ($repairs as $index => $repair) {
-            $deviceCode = mb_strtolower(trim((string) ($repair->device?->code ?? '')));
+            $deviceCode = mb_strtolower(trim((string) ($repair->device_code ?? '')));
             if ($deviceCode === $searchCode) {
                 $foundRepair = $repair;
                 $foundIndex = $index;
