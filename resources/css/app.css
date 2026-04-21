@@ -2532,6 +2532,10 @@ tbody td {
     @apply grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5;
 }
 
+.transfer-toolbar-filters-grid-compact {
+    @apply 2xl:grid-cols-6;
+}
+
 .transfer-toolbar-filters-grid-admin {
     @apply 2xl:grid-cols-6;
 }
@@ -2590,6 +2594,14 @@ tbody td {
 
 .transfer-toolbar-main .devices-search-group {
     gap: 0.625rem;
+}
+
+.device-transfers-code-search {
+    max-width: 18rem;
+}
+
+.device-transfers-code-search .crud-control {
+    min-width: 0;
 }
 
 .devices-filter-divider {
@@ -3130,7 +3142,7 @@ tbody td {
 }
 
 .status-pill-pending-action span:last-child::after {
-    content: ' • gaida';
+    content: ' • ' attr(data-pending-suffix);
     font-weight: 700;
 }
 

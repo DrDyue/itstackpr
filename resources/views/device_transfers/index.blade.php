@@ -110,7 +110,7 @@
                                 <span>Meklēšana</span>
                             </h3>
                             <div class="devices-filter-grid">
-                            <div class="devices-search-group">
+                            <div class="devices-search-group device-transfers-code-search">
                                 <label class="devices-search-label">
                                     <span>Meklēt pēc koda</span>
                                     <input
@@ -137,7 +137,7 @@
                                 <x-icon name="filter" size="h-4 w-4" />
                                 <span>Filtri</span>
                             </h3>
-                            <div class="{{ $isAdmin ? 'transfer-toolbar-filters-grid transfer-toolbar-filters-grid-admin' : 'transfer-toolbar-filters-grid' }}">
+                            <div class="{{ $isAdmin ? 'transfer-toolbar-filters-grid transfer-toolbar-filters-grid-admin' : 'transfer-toolbar-filters-grid transfer-toolbar-filters-grid-compact' }}">
                             <label class="devices-text-search">
                                 <span>Filtrēt pēc teksta</span>
                                 <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, pieteicējs, saņēmējs vai iemesls">
@@ -457,13 +457,12 @@
                                         <div class="mt-1 text-xs text-slate-500">{{ $transfer->created_at?->format('H:i') ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4">
-                                        <x-status-pill context="request" :value="$transfer->status" :label="$statusLabels[$transfer->status] ?? null" />
-                                        @if ($isIncomingPending)
-                                            <div class="mt-2 inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-sky-700 ring-1 ring-sky-200">
-                                                <x-icon name="transfer" size="h-3.5 w-3.5" />
-                                                <span>Ienākošs piedāvājums</span>
-                                            </div>
-                                        @endif
+                                        <x-status-pill
+                                            context="request"
+                                            :value="$transfer->status"
+                                            :label="$statusLabels[$transfer->status] ?? null"
+                                            :pending-suffix="$isIncomingPending ? 'ienākošs' : 'gaida'"
+                                        />
                                     </td>
                                     <td class="px-4 py-4 text-right">
                                         @if ($isAdmin && $deviceFilterUrl)
