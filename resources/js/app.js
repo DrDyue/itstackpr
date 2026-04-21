@@ -794,6 +794,8 @@ const registerAlpineData = () => {
         identifier,
         pointerSelecting: false,
         triggerDragging: false,
+        dragPreviewActive: false,
+        suppressNextClick: false,
         dragCommitted: false,
         dragStartY: 0,
         dragStartIndex: 0,
@@ -865,16 +867,37 @@ const registerAlpineData = () => {
 
             return Math.min(this.highlightedIndex, Math.max(this.filteredOptions.length - 1, 0));
         },
+        previewOptionAt(index) {
+            if (index < 0 || index >= this.filteredOptions.length) {
+                return null;
+            }
+
+            return this.filteredOptions[index] ?? null;
+        },
+        currentPreviewOption() {
+            return this.previewOptionAt(this.highlightedIndex);
+        },
+        previousPreviewOption() {
+            return this.previewOptionAt(this.highlightedIndex - 1);
+        },
+        nextPreviewOption() {
+            return this.previewOptionAt(this.highlightedIndex + 1);
+        },
         startTriggerInteraction(event) {
-            this.openPanel();
             this.triggerDragging = true;
+            this.dragPreviewActive = false;
+            this.suppressNextClick = false;
             this.dragCommitted = false;
             this.dragStartY = event?.clientY ?? 0;
             this.dragStartIndex = this.currentOptionIndex();
             this.highlightedIndex = this.dragStartIndex;
-            this.$nextTick(() => this.scrollToHighlighted());
         },
         handleTriggerClick() {
+            if (this.suppressNextClick) {
+                this.suppressNextClick = false;
+                return;
+            }
+
             if (!this.open) {
                 this.openPanel();
             }
@@ -892,10 +915,21 @@ const registerAlpineData = () => {
             const maxIndex = this.filteredOptions.length - 1;
             const nextIndex = Math.min(maxIndex, Math.max(0, this.dragStartIndex + steps));
 
+            if (Math.abs(delta) >= Math.max(6, this.dragStepPx / 3)) {
+                this.dragPreviewActive = true;
+                this.open = false;
+                this.showAllOptions = false;
+            }
+
             if (nextIndex !== this.highlightedIndex) {
                 this.highlightedIndex = nextIndex;
                 this.dragCommitted = true;
-                this.$nextTick(() => this.scrollToHighlighted());
+                const option = this.currentPreviewOption();
+                if (option) {
+                    this.selected = option.value;
+                    this.query = option.label;
+                    this.dispatchUpdate();
+                }
             }
         },
         finishTriggerInteraction() {
@@ -904,25 +938,31 @@ const registerAlpineData = () => {
             }
 
             this.triggerDragging = false;
+            this.suppressNextClick = this.dragPreviewActive;
 
             if (!this.dragCommitted) {
+                this.dragPreviewActive = false;
                 return;
             }
 
             const option = this.filteredOptions[this.highlightedIndex];
             if (!option) {
+                this.dragPreviewActive = false;
                 return;
             }
 
             this.selected = option.value;
             this.query = option.label;
             this.dispatchUpdate();
+            this.dragPreviewActive = false;
         },
         closePanelOnly() {
             this.open = false;
             this.showAllOptions = false;
             this.pointerSelecting = false;
             this.triggerDragging = false;
+            this.dragPreviewActive = false;
+            this.suppressNextClick = false;
             this.dragCommitted = false;
         },
         close() {

@@ -46,7 +46,7 @@
         options: @js($optionsPayload),
     })"
     class="searchable-select {{ filled($resolvedError) ? 'searchable-select-error' : '' }}"
-    :class="open ? 'searchable-select-open' : ''"
+    :class="[(open ? 'searchable-select-open' : ''), (dragPreviewActive ? 'searchable-select-dragging' : '')]"
     @keydown.escape.window="close()"
     @mousemove.window="handleTriggerDrag($event)"
     @mouseup.window="finishTriggerInteraction()"
@@ -55,6 +55,11 @@
     <input type="hidden" name="{{ $name }}" x-model="selected">
 
     <div class="searchable-select-control">
+        <div class="searchable-select-drag-preview searchable-select-drag-preview-top" x-cloak x-show="dragPreviewActive && previousPreviewOption()" @mousedown.prevent>
+            <span class="searchable-select-drag-preview-label">Iepriekšējais</span>
+            <span class="searchable-select-drag-preview-value" x-text="previousPreviewOption()?.label"></span>
+        </div>
+
         <input
             x-ref="input"
             id="{{ $controlId }}"
@@ -62,7 +67,7 @@
             name="{{ $queryName }}"
             x-model="query"
             class="crud-control pr-14"
-            :class="open ? 'border-sky-300 ring-2 ring-sky-100 bg-white cursor-text' : 'cursor-default'"
+            :class="[(open ? 'border-sky-300 ring-2 ring-sky-100 bg-white cursor-text' : 'cursor-default'), (dragPreviewActive ? 'searchable-select-input-drag-preview' : '')]"
             :readonly="!open"
             role="combobox"
             aria-autocomplete="list"
@@ -98,6 +103,11 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
             </svg>
         </button>
+
+        <div class="searchable-select-drag-preview searchable-select-drag-preview-bottom" x-cloak x-show="dragPreviewActive && nextPreviewOption()" @mousedown.prevent>
+            <span class="searchable-select-drag-preview-label">Nākamais</span>
+            <span class="searchable-select-drag-preview-value" x-text="nextPreviewOption()?.label"></span>
+        </div>
     </div>
 
     <div

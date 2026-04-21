@@ -2617,6 +2617,34 @@ tbody td {
     @apply relative overflow-visible transition-all duration-200 ease-out;
 }
 
+.searchable-select-dragging .searchable-select-control {
+    z-index: 150;
+}
+
+.searchable-select-input-drag-preview {
+    @apply border-sky-300 bg-white ring-2 ring-sky-100;
+}
+
+.searchable-select-drag-preview {
+    @apply pointer-events-none absolute left-0 right-0 z-[145] rounded-xl border border-slate-200 bg-white px-3.5 py-2 shadow-lg backdrop-blur-sm;
+}
+
+.searchable-select-drag-preview-top {
+    bottom: calc(100% + 0.55rem);
+}
+
+.searchable-select-drag-preview-bottom {
+    top: calc(100% + 0.55rem);
+}
+
+.searchable-select-drag-preview-label {
+    @apply block text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400;
+}
+
+.searchable-select-drag-preview-value {
+    @apply mt-1 block text-sm font-semibold leading-5 text-slate-700;
+}
+
 .searchable-select-toggle {
     @apply absolute right-2 top-1/2 z-20 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border border-slate-200/70 bg-white/90 text-slate-500 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-700 active:scale-[0.98] cursor-pointer;
 }
