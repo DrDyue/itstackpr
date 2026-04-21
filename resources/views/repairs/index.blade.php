@@ -334,7 +334,7 @@
                     </div>
 
                     <div class="toolbar-actions justify-end">
-                        <a href="{{ route('repairs.index', ['statuses_filter' => '1']) }}" class="btn-clear" data-async-link="true">
+                        <a href="{{ route('repairs.index', ['statuses_filter' => '1', 'clear' => '1']) }}" class="btn-clear" data-async-link="true" data-async-clear="true">
                             <x-icon name="clear" size="h-4 w-4" />
                             <span>Notīrīt filtrus</span>
                         </a>

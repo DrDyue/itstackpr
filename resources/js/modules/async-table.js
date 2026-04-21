@@ -81,6 +81,33 @@ const debounceAsyncTableSubmit = (form, delay = 260) => {
     asyncTableDebounceTimers.set(form, timerId);
 };
 
+const cancelPendingAsyncTableWork = (form) => {
+    if (!form) {
+        return;
+    }
+
+    if (asyncTableDebounceTimers.has(form)) {
+        window.clearTimeout(asyncTableDebounceTimers.get(form));
+        asyncTableDebounceTimers.delete(form);
+    }
+
+    if (searchableSelectSubmitTimers.has(form)) {
+        window.clearTimeout(searchableSelectSubmitTimers.get(form));
+        searchableSelectSubmitTimers.delete(form);
+    }
+
+    const rootSelector = form.dataset?.asyncRoot;
+    if (!rootSelector) {
+        return;
+    }
+
+    const controller = asyncTableControllers.get(rootSelector);
+    if (controller) {
+        controller.abort();
+        asyncTableControllers.delete(rootSelector);
+    }
+};
+
 const normalizeTableSearchValue = (value) => String(value ?? '').trim().toLocaleLowerCase();
 
 const clearTableSearchHighlights = (root) => {
@@ -604,6 +631,11 @@ export const initializeAsyncTableFilters = () => {
         }
 
         event.preventDefault();
+
+        if (asyncLink.matches('[data-async-clear="true"]')) {
+            cancelPendingAsyncTableWork(form);
+        }
+
         window.submitAsyncTableForm(form, {
             url: new URL(href, window.location.origin),
             resetPage: false,
