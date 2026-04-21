@@ -13,7 +13,7 @@
             ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ')
             : null;
         $isIncomingFilter = $filters['incoming'] ?? false;
-        $baseFilterParams = array_merge(request()->except(['page', 'clear']), ['statuses_filter' => 1]);
+        $baseFilterParams = array_merge(request()->except(['status', 'incoming', 'page', 'clear']), ['statuses_filter' => 1]);
         $resetFilterParams = ['statuses_filter' => 1];
         $clearFilterParams = array_merge($resetFilterParams, ['clear' => 1]);
         $activeTransferViewLabel = $isIncomingFilter ? 'Ienākošie piedāvājumi' : null;
@@ -233,8 +233,8 @@
                                 <div class="quick-status-filters">
                                     @php
                                         $incomingFilterUrl = $isIncomingFilter
-                                            ? route('device-transfers.index', array_merge($baseFilterParams, request()->except(['incoming', 'status', 'page', 'clear'])))
-                                            : route('device-transfers.index', array_merge($baseFilterParams, request()->except(['incoming', 'status', 'page', 'clear']), ['incoming' => 1]));
+                                            ? route('device-transfers.index', $baseFilterParams)
+                                            : route('device-transfers.index', array_merge($baseFilterParams, ['incoming' => 1]));
                                     @endphp
                                     <a
                                         href="{{ $incomingFilterUrl }}"
@@ -263,8 +263,8 @@
                                         };
                                         $isStatusActive = count($filters['statuses']) === 1 && in_array($status, $filters['statuses'], true) && ! $isIncomingFilter;
                                         $statusFilterUrl = $isStatusActive
-                                            ? route('device-transfers.index', array_merge($baseFilterParams, request()->except(['status', 'page', 'clear', 'incoming'])))
-                                            : route('device-transfers.index', array_merge($baseFilterParams, request()->except(['status', 'page', 'clear', 'incoming']), ['status' => [$status]]));
+                                            ? route('device-transfers.index', $baseFilterParams)
+                                            : route('device-transfers.index', array_merge($baseFilterParams, ['status' => [$status]]));
                                     @endphp
                                     <a
                                         href="{{ $statusFilterUrl }}"
