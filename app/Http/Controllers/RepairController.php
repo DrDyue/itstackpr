@@ -164,44 +164,46 @@ class RepairController extends Controller
 
         $searchCode = mb_strtolower($code);
 
-        $matchedRepair = (clone $baseQuery)
-            ->select('repairs.id')
-            ->whereHas('device', function (Builder $deviceQuery) use ($searchCode) {
-                $deviceQuery->whereRaw('LOWER(TRIM(code)) = ?', [$searchCode]);
-            });
-
-        $this->applyIndexFilters($matchedRepair, $filters);
-
-        $foundRepairId = $matchedRepair->value('repairs.id');
-
-        if (! $foundRepairId) {
-            return response()->json(['found' => false, 'page' => 1]);
-        }
-
-        $orderedRepairIdsQuery = (clone $baseQuery)->select('repairs.id');
-        $this->applyIndexFilters($orderedRepairIdsQuery, $filters);
-        $this->applySorting($orderedRepairIdsQuery, $sorting);
-
-        $orderedRepairIds = $orderedRepairIdsQuery->pluck('repairs.id')->values();
-        $foundIndex = $orderedRepairIds->search($foundRepairId);
-
-        if ($foundIndex === false) {
-            return response()->json([
-                'found' => true,
-                'page' => 1,
-                'repair_id' => $foundRepairId,
-                'term' => $code,
-                'highlight_id' => 'repair-'.$foundRepairId,
+        $searchQuery = (clone $baseQuery)
+            ->leftJoin('devices as repair_search_device', 'repair_search_device.id', '=', 'repairs.device_id')
+            ->select([
+                'repairs.id',
+                DB::raw('repair_search_device.code as device_code'),
             ]);
+
+        $this->applyIndexFilters($searchQuery, $filters);
+        $this->applySorting($searchQuery, $sorting);
+
+        $page = 1;
+
+        while (true) {
+            $pageResults = (clone $searchQuery)
+                ->forPage($page, self::PER_PAGE)
+                ->get();
+
+            if ($pageResults->isEmpty()) {
+                break;
+            }
+
+            foreach ($pageResults as $repair) {
+                $deviceCode = mb_strtolower(trim((string) ($repair->device_code ?? '')));
+                if ($deviceCode !== $searchCode) {
+                    continue;
+                }
+
+                return response()->json([
+                    'found' => true,
+                    'page' => $page,
+                    'repair_id' => $repair->id,
+                    'term' => $code,
+                    'highlight_id' => 'repair-'.$repair->id,
+                ]);
+            }
+
+            $page++;
         }
 
-        return response()->json([
-            'found' => true,
-            'page' => intdiv($foundIndex, self::PER_PAGE) + 1,
-            'repair_id' => $foundRepairId,
-            'term' => $code,
-            'highlight_id' => 'repair-'.$foundRepairId,
-        ]);
+        return response()->json(['found' => false, 'page' => 1]);
     }
 
 
