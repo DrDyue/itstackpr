@@ -55,13 +55,13 @@ class BuildingController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        AuditTrail::viewed($this->user(), 'Building', null, 'AtvÄ“rts Ä“ku saraksts.');
+        AuditTrail::viewed($this->user(), 'Building', null, "Atv\u{0113}rts \u{0113}ku saraksts.");
 
         if ($filters['search'] !== '' || $filters['total_floors'] !== '') {
             AuditTrail::filter($this->user(), 'Building', [
                 'teksts' => $filters['search'],
                 'stāvu skaits' => $filters['total_floors'],
-            ], 'FiltrÄ“ts Ä“ku saraksts.');
+            ], "Filtr\u{0113}ts \u{0113}ku saraksts.");
         }
 
         if (($sorting['sort'] ?? 'building_name') !== 'building_name' || ($sorting['direction'] ?? 'asc') !== 'asc' || $request->has('sort')) {
@@ -102,7 +102,7 @@ class BuildingController extends Controller
             return response()->json(['found' => false, 'page' => 1]);
         }
 
-        AuditTrail::search($this->user(), 'Building', $search, 'MeklÄ“ta Ä“ka pÄ“c nosaukuma vai adreses: '.$search);
+        AuditTrail::search($this->user(), 'Building', $search, "Mekl\u{0113}ta \u{0113}ka p\u{0113}c nosaukuma vai adreses: ".$search);
 
         $filters = [
             'total_floors' => trim((string) $request->query('total_floors', '')),
@@ -150,12 +150,12 @@ class BuildingController extends Controller
         $building = Building::create($this->validatedData($request));
         AuditTrail::created(auth()->id(), $building);
 
-        return redirect()->route('buildings.index')->with('success', 'Ä’ka veiksmÄ«gi pievienota');
+        return redirect()->route('buildings.index')->with('success', "\u{0112}ka veiksm\u{012B}gi pievienota");
     }
 
 
     /**
-     * Atjaunina Ä“kas datus.
+     * Atjaunina \u{0113}kas datus.
      */
     public function update(Request $request, Building $building)
     {
@@ -187,7 +187,7 @@ class BuildingController extends Controller
             }
 
             if ($devicesCount > 0) {
-                $parts[] = "tai piesaistÄ«tas {$devicesCount} ierÄ«ce" . ($devicesCount === 1 ? '' : 's');
+                $parts[] = "tai piesaist\u{012B}tas {$devicesCount} ier\u{012B}ce" . ($devicesCount === 1 ? '' : 's');
             }
 
             return redirect()
@@ -198,7 +198,7 @@ class BuildingController extends Controller
         AuditTrail::deleted(auth()->id(), $building);
         $building->delete();
 
-        return redirect()->route('buildings.index')->with('success', 'Ä’ka dzÄ“sta');
+        return redirect()->route('buildings.index')->with('success', "\u{0112}ka dz\u{0113}sta");
     }
 
 

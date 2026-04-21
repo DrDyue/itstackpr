@@ -464,7 +464,7 @@ const registerAlpineData = () => {
 
             if (this.item?.status_label) {
                 items.push({
-                    label: this.item.drawer_variant === 'audit' ? 'SvarĆ„Ā«gums' : 'Statuss',
+                    label: this.item.drawer_variant === 'audit' ? '\u0053\u0076\u0061\u0072\u012B\u0067\u0075\u006D\u0073' : 'Statuss',
                     value: this.item.status_label,
                     icon: this.item.hero_icon || 'information-circle',
                     tone: this.item.hero_tone || 'slate',
@@ -474,7 +474,7 @@ const registerAlpineData = () => {
 
             if (this.item?.submitted_at) {
                 items.push({
-                    label: this.item.drawer_variant === 'audit' ? 'FiksĆ„ā€ts' : 'Datums',
+                    label: this.item.drawer_variant === 'audit' ? '\u0046\u0069\u006B\u0073\u0113\u0074\u0073' : 'Datums',
                     value: this.item.submitted_at,
                     icon: 'calendar',
                     tone: 'slate',
@@ -495,7 +495,7 @@ const registerAlpineData = () => {
         infoCards() {
             return [
                 {
-                    label: this.item?.primary_label || 'GalvenĆ„Ā informĆ„Ācija',
+                    label: this.item?.primary_label || '\u0047\u0061\u006C\u0076\u0065\u006E\u0101 \u0069\u006E\u0066\u006F\u0072\u006D\u0101\u0063\u0069\u006A\u0061',
                     value: this.item?.primary_value || this.item?.device_code || '',
                     meta: this.item?.primary_meta || this.item?.device_serial || '',
                     notes: [this.item?.primary_note, this.item?.primary_note_secondary].filter(Boolean),
@@ -503,7 +503,7 @@ const registerAlpineData = () => {
                     tone: this.item?.primary_tone || 'slate',
                 },
                 {
-                    label: this.item?.secondary_label || 'PapildinformĆ„Ācija',
+                    label: this.item?.secondary_label || '\u0050\u0061\u0070\u0069\u006C\u0064\u0069\u006E\u0066\u006F\u0072\u006D\u0101\u0063\u0069\u006A\u0061',
                     value: this.item?.secondary_value || this.item?.requester_name || '',
                     meta: this.item?.secondary_meta || this.item?.requester_meta || '',
                     notes: [this.item?.secondary_note].filter(Boolean),
@@ -792,10 +792,10 @@ const registerAlpineData = () => {
         badgeText(type) {
             return {
                 repair: 'Remonts',
-                writeoff: 'NorakstĆ„Ā«Ć…ļ£¼ana',
-                transfer: 'NodoĆ…ļ£¼ana',
-                'incoming-transfer': 'JĆ„Āizskata',
-            }[type] ?? 'PieprasĆ„Ā«jums';
+                writeoff: '\u004E\u006F\u0072\u0061\u006B\u0073\u0074\u012B\u0161\u0061\u006E\u0061',
+                transfer: '\u004E\u006F\u0064\u006F\u0161\u0061\u006E\u0061',
+                'incoming-transfer': '\u004A\u0101\u0069\u007A\u0073\u006B\u0061\u0074\u0061',
+            }[type] ?? '\u0050\u0069\u0065\u0070\u0072\u0061\u0073\u012B\u006A\u0075\u006D\u0073';
         },
         actionClasses(tone) {
             return {

@@ -500,7 +500,7 @@ class AuditTrail
             'user' => 'Lietotājs',
             'repair_request' => 'Remonta pieteikums',
             'writeoff_request' => 'Norakstīšanas pieteikums',
-            'device_transfer' => 'Ierīces pārsūtīšana',
+            'device_transfer' => 'Ierīces nodošanas pieteikums',
             'audit_log' => 'Audita žurnāls',
             'notification_center' => 'Paziņojumu centrs',
             'view_mode' => 'Skata režīms',

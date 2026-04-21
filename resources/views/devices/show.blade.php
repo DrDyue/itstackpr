@@ -386,18 +386,30 @@
             <section class="surface-card p-6">
                 <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
                     <x-icon name="transfer" size="h-5 w-5" class="text-emerald-600" />
-                    <span>Pārsūtīšanas un nodošanas</span>
+                    <span>Nodošanas vēsture</span>
                 </h2>
                 <p class="mt-2 text-sm leading-6 text-slate-600">Ierīces nodošanas vēsture starp lietotājiem un saistītie izskatīšanas lēmumi.</p>
                 <div class="mt-4 space-y-3 text-sm">
                     @forelse ($visibleTransfers as $transfer)
+                        @php
+                            $isIncomingPendingTransfer = ! auth()->user()?->isAdmin()
+                                && (int) auth()->id() === (int) $transfer->transfered_to_id
+                                && $transfer->status === 'submitted';
+                        @endphp
                         <div class="surface-card-muted">
                             <div class="flex flex-wrap items-start justify-between gap-3">
                                 <div>
                                     <div class="font-medium text-slate-900">{{ $transfer->responsibleUser?->full_name ?: '-' }} -> {{ $transfer->transferTo?->full_name ?: '-' }}</div>
                                     <div class="mt-1 text-xs text-slate-500">{{ $transfer->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
                                 </div>
-                                <x-status-pill context="request" :value="$transfer->status" />
+                                <x-status-pill
+                                    context="request"
+                                    :value="$transfer->status"
+                                    :label="$isIncomingPendingTransfer ? 'Ienākošs' : null"
+                                    :pending-suffix="$isIncomingPendingTransfer ? false : null"
+                                    :pending-action="! $isIncomingPendingTransfer && $transfer->status === 'submitted'"
+                                    class="{{ $isIncomingPendingTransfer ? 'status-pill-incoming' : '' }}"
+                                />
                             </div>
                             <div class="mt-3 leading-6 text-slate-700">{{ $transfer->transfer_reason ?: 'Iemesls nav pievienots.' }}</div>
                             @if ($transfer->reviewedBy || $transfer->review_notes)

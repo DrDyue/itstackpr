@@ -196,7 +196,7 @@
                                     @endphp
                                     <button
                                         type="button"
-                                        @click="toggle(@js($status)); $nextTick(() => $el.closest('form').requestSubmit())"
+                                        @click="toggle(@js($status)); $nextTick(() => window.submitAsyncTableForm($el.closest('form'), { resetPage: true }))"
                                         class="quick-status-filter {{ $toneClass }}"
                                         :class="isSelected(@js($status)) ? 'quick-status-filter-active' : ''"
                                     >
@@ -213,7 +213,7 @@
                     </div>
 
                     <div class="toolbar-actions">
-                        <a href="{{ route('repair-requests.index', ['statuses_filter' => 1, 'clear' => 1]) }}" class="btn-clear" data-async-link="true">
+                        <a href="{{ route('repair-requests.index', ['statuses_filter' => 1, 'clear' => 1]) }}" class="btn-clear" data-async-link="true" data-async-clear="true">
                             <x-icon name="clear" size="h-4 w-4" />
                             <span>Notīrīt filtrus</span>
                         </a>
@@ -230,7 +230,7 @@
                     ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
                     ['label' => 'Statuss', 'value' => $activeStatusLabel],
                 ]"
-                :clear-url="route('repair-requests.index', ['statuses_filter' => 1, 'clear' => 1])"
+                :clear-url="route('repair-requests.index', ['statuses_filter' => 1])"
             />
 
             @if (session('error'))

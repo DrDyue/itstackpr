@@ -40,7 +40,7 @@
     $validationTitles = [
         'repair' => 'Neizdevās iesniegt remonta pieteikumu',
         'writeoff' => 'Neizdevās iesniegt norakstīšanas pieteikumu',
-        'transfer' => 'Neizdevās iesniegt pārsūtīšanas pieteikumu',
+        'transfer' => 'Neizdevās iesniegt nodošanas pieteikumu',
     ];
 
     $validationFieldLabels = match ($type) {

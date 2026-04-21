@@ -13,7 +13,7 @@
             ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ')
             : null;
         $isIncomingFilter = $filters['incoming'] ?? false;
-        $activeTransferViewLabel = $isIncomingFilter ? 'Ienākošie piedāvājumi' : null;
+        $activeTransferViewLabel = $isIncomingFilter ? 'Ienākošās nodošanas' : null;
         $detailStatusClasses = [
             'submitted' => 'request-detail-status-amber',
             'approved' => 'request-detail-status-emerald',
@@ -70,8 +70,8 @@
                             <x-icon name="transfer" size="h-7 w-7" />
                         </div>
                         <div>
-                            <h1 class="page-title">Ierīču pārsūtīšanas pieteikumi</h1>
-                            <p class="page-subtitle">{{ $isAdmin ? 'Admins redz kopējo nodošanas vēsturi un saistītās ierīces.' : 'Šeit redzami tavi nosūtītie un saņemtie ierīču nodošanas pieprasījumi.' }}</p>
+                            <h1 class="page-title">Ierīču nodošanas pieteikumi</h1>
+                            <p class="page-subtitle">{{ $isAdmin ? 'Admins redz kopējo nodošanas vēsturi un saistītās ierīces.' : 'Šeit redzami tavi nosūtītie un saņemtie ierīču nodošanas pieteikumi.' }}</p>
                         </div>
                     </div>
                 </div>
@@ -262,7 +262,7 @@
                                             :class="incoming ? 'quick-status-filter-active' : ''"
                                         >
                                             <x-icon name="transfer" size="h-4 w-4" />
-                                            <span>Ienākošie piedāvājumi</span>
+                                            <span>Ienākošās nodošanas</span>
                                         </button>
                                     </div>
                                 </div>
@@ -342,7 +342,7 @@
                             <x-icon name="exclamation-triangle" size="h-5 w-5" />
                         </span>
                         <div>
-                            <div class="text-sm font-semibold text-amber-950">Tev ir {{ $incomingPendingCount }} ienākošs pārsūtīšanas pieteikums{{ $incomingPendingCount > 1 ? 'i' : '' }}</div>
+                            <div class="text-sm font-semibold text-amber-950">Tev ir {{ $incomingPendingCount }} ienākoš{{ $incomingPendingCount > 1 ? 'i' : 's' }} nodošanas pieteikum{{ $incomingPendingCount > 1 ? 'i' : 's' }}</div>
                             <div class="mt-1 text-sm text-amber-900">Tabulā vari uzreiz apstiprināt vai noraidīt ienākošos ierīču nodošanas pieprasījumus.</div>
                         </div>
                     </div>
@@ -427,9 +427,12 @@
                                         && (int) $currentUserId === (int) $transfer->transfered_to_id
                                         && $transfer->status === 'submitted';
                                     $isPendingAction = $transfer->status === 'submitted';
+                                    $rowStateClass = $isIncomingPending
+                                        ? 'app-table-row-incoming'
+                                        : ($isPendingAction ? 'app-table-row-pending' : '');
                                     $hasActions = true;
                                 @endphp
-                                <tr class="app-table-row border-t border-slate-100 align-top {{ $isPendingAction ? 'app-table-row-pending' : '' }}" data-table-row-id="device-transfer-{{ $transfer->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
+                                <tr class="app-table-row border-t border-slate-100 align-top {{ $rowStateClass }}" data-table-row-id="device-transfer-{{ $transfer->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
                                     <td class="table-col-image px-4 py-4 text-center align-middle">
                                         @php
                                             $thumbUrl = $device?->deviceImageThumbUrl();
@@ -491,8 +494,10 @@
                                         <x-status-pill
                                             context="request"
                                             :value="$transfer->status"
-                                            :label="$statusLabels[$transfer->status] ?? null"
-                                            :pending-suffix="$isIncomingPending ? 'ienākošs' : 'gaida'"
+                                            :label="$isIncomingPending ? 'Ienākošs' : ($statusLabels[$transfer->status] ?? null)"
+                                            :pending-suffix="$isIncomingPending ? false : 'gaida'"
+                                            :pending-action="! $isIncomingPending && $transfer->status === 'submitted'"
+                                            class="{{ $isIncomingPending ? 'status-pill-incoming' : '' }}"
                                         />
                                     </td>
                                     <td class="px-4 py-4 text-right">
@@ -601,7 +606,7 @@
                                                 type="button"
                                                 class="btn-disabled"
                                                 data-app-toast-title="Darbības nav pieejamas"
-                                                data-app-toast-message="Šim pārsūtīšanas pieteikumam pašlaik nav pieejamu darbību. Tas jau ir izskatīts vai arī tava lomai nav atļauts to mainīt."
+                                                data-app-toast-message="Šim nodošanas pieteikumam pašlaik nav pieejamu darbību. Tas jau ir izskatīts vai arī tavai lomai nav atļauts to mainīt."
                                                 data-app-toast-tone="info"
                                             >
                                                 <x-icon name="information-circle" size="h-4 w-4" />

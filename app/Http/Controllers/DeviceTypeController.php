@@ -30,7 +30,7 @@ class DeviceTypeController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        AuditTrail::viewed($this->user(), 'DeviceType', null, 'AtvÄ“rts ierÄ«Ä¨u tipu saraksts.');
+        AuditTrail::viewed($this->user(), 'DeviceType', null, "Atv\u{0113}rts ier\u{012B}\u{010D}u tipu saraksts.");
 
         if (($sorting['sort'] ?? 'type_name') !== 'type_name' || ($sorting['direction'] ?? 'asc') !== 'asc' || $request->has('sort')) {
             AuditTrail::sort(
@@ -100,7 +100,7 @@ class DeviceTypeController extends Controller
         $deviceType = DeviceType::create($data);
         AuditTrail::created(auth()->id(), $deviceType);
 
-        return redirect()->route('device-types.index')->with('success', 'IerÄ«ces tips veiksmÄ«gi pievienots.');
+        return redirect()->route('device-types.index')->with('success', "Ier\u{012B}ces tips veiksm\u{012B}gi pievienots.");
     }
 
     public function update(Request $request, DeviceType $deviceType)
@@ -124,13 +124,13 @@ class DeviceTypeController extends Controller
         if ($deviceType->devices()->exists()) {
             return redirect()
                 ->route('device-types.index')
-                ->with('error', 'IerÄ«ces tipu nevar dzÄ“st, kamÄ“r tam vÄ“l ir piesaistÄ«tas ierÄ«ces.');
+                ->with('error', "Ier\u{012B}ces tipu nevar dz\u{0113}st, kam\u{0113}r tam v\u{0113}l ir piesaist\u{012B}tas ier\u{012B}ces.");
         }
 
         AuditTrail::deleted(auth()->id(), $deviceType);
         $deviceType->delete();
 
-        return redirect()->route('device-types.index')->with('success', 'IerÄ«ces tips dzÄ“sts.');
+        return redirect()->route('device-types.index')->with('success', "Ier\u{012B}ces tips dz\u{0113}sts.");
     }
 
     public function show(DeviceType $deviceType)
@@ -164,7 +164,7 @@ class DeviceTypeController extends Controller
     {
         return [
             'type_name' => ['label' => 'tipa nosaukuma'],
-            'devices_count' => ['label' => 'piesaistÄ«to ierÄ«Ä¨u skaita'],
+            'devices_count' => ['label' => "piesaist\u{012B}to ier\u{012B}\u{010D}u skaita"],
         ];
     }
 
@@ -173,7 +173,7 @@ class DeviceTypeController extends Controller
         $data = $request->validate([
             'type_name' => ['required', 'string', 'max:30'],
         ], [
-            'type_name.required' => 'Ievadi ierÄ«ces tipa nosaukumu.',
+            'type_name.required' => "Ievadi ier\u{012B}ces tipa nosaukumu.",
             'type_name.max' => 'Ierīces tipa nosaukums nedrīkst būt garāks par 30 rakstzīmēm.',
         ]);
 
@@ -181,7 +181,7 @@ class DeviceTypeController extends Controller
 
         if ($data['type_name'] === '') {
             throw ValidationException::withMessages([
-                'type_name' => ['Ievadi ierÄ«ces tipa nosaukumu.'],
+                'type_name' => ["Ievadi ier\u{012B}ces tipa nosaukumu."],
             ]);
         }
 

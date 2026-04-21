@@ -11,7 +11,7 @@
     $typeLabels = [
         'repair' => 'remonta pieteikumu',
         'writeoff' => 'norakstīšanas pieteikumu',
-        'transfer' => 'pārsūtīšanas pieteikumu',
+        'transfer' => 'nodošanas pieteikumu',
     ];
 
     $iconMap = [
@@ -23,7 +23,7 @@
     $titleMap = [
         'repair' => 'Labot remonta pieteikumu',
         'writeoff' => 'Labot norakstīšanas pieteikumu',
-        'transfer' => 'Labot pārsūtīšanas pieteikumu',
+        'transfer' => 'Labot nodošanas pieteikumu',
     ];
 
     $subtitleMap = [

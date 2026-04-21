@@ -139,7 +139,7 @@ class DeviceTransferController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        AuditTrail::viewed($user, 'DeviceTransfer', null, 'Atvērts ierīču pārsūtīšanas pieteikumu saraksts.');
+        AuditTrail::viewed($user, 'DeviceTransfer', null, 'Atvērts ierīču nodošanas pieteikumu saraksts.');
         $this->auditDeviceTransferListInteractions($request, $user, $filters, $sorting);
 
         return view('device_transfers.index', [
@@ -187,7 +187,7 @@ class DeviceTransferController extends Controller
             return response()->json(['found' => false, 'page' => 1]);
         }
 
-        AuditTrail::search($user, 'DeviceTransfer', $code, 'Meklēts ierīces pārsūtīšanas pieteikums pēc ierīces koda: '.$code);
+        AuditTrail::search($user, 'DeviceTransfer', $code, 'Meklēts ierīces nodošanas pieteikums pēc ierīces koda: '.$code);
 
         $canManageTransfers = $user->canManageRequests();
         $availableStatuses = [
@@ -247,7 +247,7 @@ class DeviceTransferController extends Controller
         abort_unless($user, 403);
 
         if (! $this->featureTableExists('device_transfers')) {
-            return redirect()->route('device-transfers.index')->with('error', 'Ierīču pārsūtīšanas pieteikumus šobrīd nevar saglabāt, jo tabula device_transfers nav pieejama.');
+            return redirect()->route('device-transfers.index')->with('error', 'Ierīču nodošanas pieteikumus šobrīd nevar saglabāt, jo tabula device_transfers nav pieejama.');
         }
 
         $validated = $this->validateInput($request, [
@@ -257,14 +257,14 @@ class DeviceTransferController extends Controller
         ], [
             'device_id.required' => 'Izvēlies ierīci, kuru vēlies nodot.',
             'transfered_to_id.required' => 'Izvēlies saņēmēju.',
-            'transfer_reason.required' => 'Apraksti pārsūtīšanas iemeslu.',
+            'transfer_reason.required' => 'Apraksti nodošanas iemeslu.',
         ]);
 
         $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
         if (! $device) {
             throw ValidationException::withMessages([
                 'device_id' => [$user->canManageRequests()
-                    ? 'Admins var pieteikt pārsūtīšanu tikai aktīvai un piešķirtai ierīcei.'
+                    ? 'Admins var pieteikt nodošanu tikai aktīvai un piešķirtai ierīcei.'
                     : 'Vari pieteikt nodošanu tikai savai piesaistītai ierīcei.'],
             ]);
         }
@@ -295,7 +295,7 @@ class DeviceTransferController extends Controller
         AuditTrail::created($user->id, $transfer);
         AuditTrail::submit($user->id, $transfer, 'Iesniegts ierīces nodošanas pieteikums: '.AuditTrail::labelFor($transfer));
 
-        return redirect()->route('device-transfers.index')->with('success', 'Ierīces pārsūtīšanas pieteikums izveidots');
+        return redirect()->route('device-transfers.index')->with('success', 'Ierīces nodošanas pieteikums izveidots');
     }
 
     /**
@@ -308,10 +308,10 @@ class DeviceTransferController extends Controller
 
         if (! $this->featureTableExists('device_transfers')) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Ierīču pārsūtīšanas pieteikumu tabula šobrīd nav pieejama.'], 503);
+                return response()->json(['message' => 'Ierīču nodošanas pieteikumu tabula šobrīd nav pieejama.'], 503);
             }
 
-            return back()->with('error', 'Ierīču pārsūtīšanas pieteikumu tabula šobrīd nav pieejama.');
+            return back()->with('error', 'Ierīču nodošanas pieteikumu tabula šobrīd nav pieejama.');
         }
 
         $canReview = (int) $deviceTransfer->transfered_to_id === (int) $reviewer->id;
@@ -336,7 +336,7 @@ class DeviceTransferController extends Controller
                 'exists:rooms,id',
             ],
         ], [
-            'status.required' => 'Izvēlies lēmumu pārsūtīšanas pieteikumam.',
+            'status.required' => 'Izvēlies lēmumu nodošanas pieteikumam.',
             'room_id.required' => 'Izvēlies telpu, uz kuru novietot ierīci.',
         ]);
 
@@ -394,13 +394,13 @@ class DeviceTransferController extends Controller
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'Ierīces pārsūtīšanas pieteikums izskatīts',
+                'message' => 'Ierīces nodošanas pieteikums izskatīts',
                 'status' => $validated['status'],
                 'request_id' => $deviceTransfer->id,
             ]);
         }
 
-        return back()->with('success', 'Ierīces pārsūtīšanas pieteikums izskatīts');
+        return back()->with('success', 'Ierīces nodošanas pieteikums izskatīts');
     }
 
     private function availableDevicesForUser(User $user): Builder
@@ -528,7 +528,7 @@ class DeviceTransferController extends Controller
     }
 
     /**
-     * Pielieto meklēšanu un filtrus pārsūtīšanas pieprasījumu vaicājumam.
+     * Pielieto meklēšanu un filtrus nodošanas pieteikumu vaicājumam.
      */
     private function applyIndexFilters(Builder $query, array $filters, array $skip = []): Builder
     {
@@ -700,7 +700,7 @@ class DeviceTransferController extends Controller
                 $user,
                 'DeviceTransfer',
                 $filterPayload,
-                'Filtrēti ierīču pārsūtīšanas pieteikumi: '.implode(' | ', collect($filterPayload)->map(function (mixed $value, string $label) {
+                'Filtrēti ierīču nodošanas pieteikumi: '.implode(' | ', collect($filterPayload)->map(function (mixed $value, string $label) {
                     if (is_array($value)) {
                         return $label.': '.implode(', ', $value);
                     }
@@ -720,7 +720,7 @@ class DeviceTransferController extends Controller
                 'DeviceTransfer',
                 $sorting['label'] ?? 'iesniegšanas datuma',
                 $sorting['direction'] ?? 'desc',
-                'Kārtoti ierīču pārsūtīšanas pieteikumi pēc '.($sorting['label'] ?? 'iesniegšanas datuma').' '.(($sorting['direction'] ?? 'desc') === 'asc' ? 'augošajā secībā' : 'dilstošajā secībā').'.'
+                'Kārtoti ierīču nodošanas pieteikumi pēc '.($sorting['label'] ?? 'iesniegšanas datuma').' '.(($sorting['direction'] ?? 'desc') === 'asc' ? 'augošajā secībā' : 'dilstošajā secībā').'.'
             );
         }
     }

@@ -337,7 +337,7 @@
                                         @endphp
                                         <div class="px-3 pb-2 pt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ienākošās nodošanas</div>
                                         @foreach ($pendingTransfers as $transfer)
-                                            <a href="{{ route('device-transfers.index', ['statuses_filter' => 1, 'status' => ['submitted']]) }}#device-transfer-{{ $transfer->id }}" class="pending-review-card group flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-3 transition hover:border-emerald-200 hover:bg-emerald-50">
+                                            <a href="{{ route('device-transfers.index', ['incoming' => 1]) }}#device-transfer-{{ $transfer->id }}" class="pending-review-card group flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-3 transition hover:border-emerald-200 hover:bg-emerald-50">
                                                 <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200">
                                                     <x-icon name="transfer" size="h-5 w-5" />
                                                 </div>
@@ -377,7 +377,7 @@
                                     </div>
                                 @else
                                     <a href="{{ route('device-transfers.index') }}" class="flex items-center justify-between text-sm font-semibold text-sky-700 transition hover:text-sky-900">
-                                        <span>Skatīt visus pārsūtīšanas pieteikumus</span>
+                                        <span>Skatīt visus nodošanas pieteikumus</span>
                                         <x-icon name="transfer" size="h-4 w-4" />
                                     </a>
                                 @endif

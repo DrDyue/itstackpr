@@ -11,6 +11,7 @@
     'context' => 'generic',
     'label' => null,
     'pendingSuffix' => null,
+    'pendingAction' => null,
 ])
 
 @php
@@ -68,7 +69,9 @@
     ];
 
     $resolvedLabel = $label ?: $meta['label'];
-    $isPendingAction = $context === 'request' && $normalizedValue === 'submitted';
+    $isPendingAction = is_bool($pendingAction)
+        ? $pendingAction
+        : ($context === 'request' && $normalizedValue === 'submitted');
     $resolvedPendingSuffix = $isPendingAction
         ? ($pendingSuffix === false ? null : ($pendingSuffix ?: 'gaida'))
         : null;

@@ -52,14 +52,14 @@ class RoomController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        AuditTrail::viewed($this->user(), 'Room', null, 'AtvÄ“rts telpu saraksts.');
+        AuditTrail::viewed($this->user(), 'Room', null, "Atv\u{0113}rts telpu saraksts.");
 
         if ($filters['building_id'] !== '' || $filters['floor'] !== '' || $filters['floor_query'] !== '' || $filters['user_id'] !== '') {
             AuditTrail::filter($this->user(), 'Room', [
-                'Ä“ka' => $filters['building_id'],
+                "\u{0113}ka" => $filters['building_id'],
                 'stāvs' => $filters['floor'] !== '' ? $filters['floor'] : $filters['floor_query'],
-                'atbildÄ«gais' => $filters['user_id'],
-            ], 'FiltrÄ“ts telpu saraksts.');
+                "atbild\u{012B}gais" => $filters['user_id'],
+            ], "Filtr\u{0113}ts telpu saraksts.");
         }
 
         return view('rooms.index', [
@@ -101,7 +101,7 @@ class RoomController extends Controller
             return response()->json(['found' => false, 'page' => 1]);
         }
 
-        AuditTrail::search($this->user(), 'Room', $search, 'MeklÄ“ta telpa pÄ“c nosaukuma vai numura: '.$search);
+        AuditTrail::search($this->user(), 'Room', $search, "Mekl\u{0113}ta telpa p\u{0113}c nosaukuma vai numura: ".$search);
 
         $filters = [
             'building_id' => trim((string) $request->query('building_id', '')),
@@ -157,7 +157,7 @@ class RoomController extends Controller
         $room = Room::create($this->validatedData($request));
         AuditTrail::created(auth()->id(), $room);
 
-        return redirect()->route('rooms.index')->with('success', 'Telpa veiksmÄ«gi pievienota');
+        return redirect()->route('rooms.index')->with('success', "Telpa veiksm\u{012B}gi pievienota");
     }
 
 
@@ -195,7 +195,7 @@ class RoomController extends Controller
         AuditTrail::deleted(auth()->id(), $room);
         $room->delete();
 
-        return redirect()->route('rooms.index')->with('success', 'Telpa dzÄ“sta');
+        return redirect()->route('rooms.index')->with('success', "Telpa dz\u{0113}sta");
     }
 
 
@@ -218,7 +218,7 @@ class RoomController extends Controller
             'department' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:200'],
         ], [
-            'building_id.required' => 'IzvÄ“lies Ä“ku, kurai telpa pieder.',
+            'building_id.required' => "Izv\u{0113}lies \u{0113}ku, kurai telpa pieder.",
             'room_number.required' => 'Norādi telpas numuru.',
             'room_number.unique' => 'Šāds telpas numurs šajā ēkā jau eksistē.',
         ]);
