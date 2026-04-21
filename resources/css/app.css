@@ -4651,12 +4651,8 @@ tbody td {
     @apply w-full min-h-[2.75rem];
 }
 
-.repairs-toolbar-date-range {
-    @apply min-w-0 xl:col-span-2;
-}
-
-.repairs-toolbar-date-range-head {
-    @apply mb-2 flex flex-wrap items-start justify-between gap-2;
+.repairs-toolbar-date-filter-bar {
+    @apply mb-3 flex flex-wrap items-start justify-between gap-3;
 }
 
 .repairs-toolbar-date-range-title {
