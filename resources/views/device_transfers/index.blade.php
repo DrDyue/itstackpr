@@ -13,17 +13,6 @@
             ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ')
             : null;
         $isIncomingFilter = $filters['incoming'] ?? false;
-        $baseFilterParams = request()->except(['status', 'incoming', 'page', 'clear']);
-        $hasBaseFilters = collect($baseFilterParams)->contains(function ($value) {
-            if (is_array($value)) {
-                return collect($value)->contains(fn ($item) => filled($item));
-            }
-
-            return filled($value);
-        });
-        $statusSelectionBaseParams = array_merge($baseFilterParams, ['statuses_filter' => 1]);
-        $resetFilterParams = [];
-        $clearFilterParams = array_merge($resetFilterParams, ['clear' => 1]);
         $activeTransferViewLabel = $isIncomingFilter ? 'Ienākošie piedāvājumi' : null;
         $detailStatusClasses = [
             'submitted' => 'request-detail-status-amber',
@@ -234,23 +223,48 @@
                     </div>
 
                         <div class="filter-toolbar-footer">
-                    <div class="quick-filter-groups">
+                    <div
+                        class="quick-filter-groups"
+                        x-data="{
+                            selected: Array.from(new Set((@js($filters['statuses']) ?? []).map((value) => String(value)))),
+                            incoming: @js($isIncomingFilter),
+                            isSelected(value) {
+                                return this.selected.includes(String(value));
+                            },
+                            toggleStatus(value) {
+                                const normalizedValue = String(value);
+
+                                this.incoming = false;
+
+                                if (this.isSelected(normalizedValue)) {
+                                    this.selected = this.selected.filter((item) => item !== normalizedValue);
+                                    return;
+                                }
+
+                                this.selected = [normalizedValue];
+                            },
+                            toggleIncoming() {
+                                this.incoming = ! this.incoming;
+
+                                if (this.incoming) {
+                                    this.selected = [];
+                                }
+                            },
+                        }"
+                    >
                         @if (! $isAdmin)
                             <div class="quick-filter-group">
                                 <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ātrie filtri</div>
                                 <div class="quick-status-filters">
-                                    @php
-                                        $incomingFilterUrl = $isIncomingFilter
-                                            ? route('device-transfers.index', $hasBaseFilters ? $baseFilterParams : $resetFilterParams)
-                                            : route('device-transfers.index', array_merge($statusSelectionBaseParams, ['incoming' => 1]));
-                                    @endphp
-                                    <a
-                                        href="{{ $incomingFilterUrl }}"
-                                        class="quick-status-filter quick-status-filter-sky {{ $isIncomingFilter ? 'quick-status-filter-active' : '' }}"
+                                    <button
+                                        type="button"
+                                        @click="toggleIncoming(); $nextTick(() => $el.closest('form').requestSubmit())"
+                                        class="quick-status-filter quick-status-filter-sky"
+                                        :class="incoming ? 'quick-status-filter-active' : ''"
                                     >
                                         <x-icon name="transfer" size="h-4 w-4" />
                                         <span>Ienākošie piedāvājumi</span>
-                                    </a>
+                                    </button>
                                 </div>
                             </div>
                         @endif
@@ -269,29 +283,29 @@
                                             'rejected' => 'x-circle',
                                             default => 'information-circle',
                                         };
-                                        $isStatusActive = count($filters['statuses']) === 1 && in_array($status, $filters['statuses'], true) && ! $isIncomingFilter;
-                                        $statusFilterUrl = $isStatusActive
-                                            ? route('device-transfers.index', $hasBaseFilters ? $baseFilterParams : $resetFilterParams)
-                                            : route('device-transfers.index', array_merge($statusSelectionBaseParams, ['status' => [$status]]));
                                     @endphp
-                                    <a
-                                        href="{{ $statusFilterUrl }}"
-                                        @class([
-                                            'quick-status-filter',
-                                            $toneClass,
-                                            'quick-status-filter-active' => $isStatusActive,
-                                        ])
+                                    <button
+                                        type="button"
+                                        @click="toggleStatus(@js($status)); $nextTick(() => $el.closest('form').requestSubmit())"
+                                        class="quick-status-filter {{ $toneClass }}"
+                                        :class="isSelected(@js($status)) && !incoming ? 'quick-status-filter-active' : ''"
                                     >
                                         <x-icon :name="$iconName" size="h-4 w-4" />
                                         <span>{{ $statusLabels[$status] ?? $status }}</span>
-                                    </a>
+                                    </button>
                                 @endforeach
+
+                                <template x-for="value in selected" :key="'device-transfer-status-' + value">
+                                    <input type="hidden" name="status[]" :value="value">
+                                </template>
+
+                                <input x-bind:disabled="!incoming" type="hidden" name="incoming" value="1">
                             </div>
                         </div>
                     </div>
 
                     <div class="toolbar-actions">
-                        <a href="{{ route('device-transfers.index', $clearFilterParams) }}" class="btn-clear" data-async-link="true" data-async-clear="true">
+                        <a href="{{ route('device-transfers.index', ['clear' => 1]) }}" class="btn-clear" data-async-link="true" data-async-clear="true">
                             <x-icon name="clear" size="h-4 w-4" />
                             <span>Notīrīt filtrus</span>
                         </a>
@@ -312,7 +326,7 @@
                     ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
                     ['label' => 'Statuss', 'value' => $activeStatusLabel],
                 ]"
-                :clear-url="route('device-transfers.index', $resetFilterParams)"
+                :clear-url="route('device-transfers.index')"
             />
 
             @if (session('error'))

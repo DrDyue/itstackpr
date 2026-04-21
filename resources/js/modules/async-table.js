@@ -202,6 +202,21 @@ const clearAsyncTableFormUi = (form, root) => {
         data.selected = [];
     });
 
+    form.querySelectorAll('.quick-filter-groups').forEach((element) => {
+        const data = getAlpineComponentData(element);
+        if (!data) {
+            return;
+        }
+
+        if (Array.isArray(data.selected)) {
+            data.selected = [];
+        }
+
+        if (typeof data.incoming === 'boolean') {
+            data.incoming = false;
+        }
+    });
+
     root?.querySelectorAll('.filter-summary, .active-filters').forEach((element) => {
         element.style.display = 'none';
     });
