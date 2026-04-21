@@ -71,29 +71,28 @@
                     <div class="device-type-modal-title-copy">
                         <div class="repair-modal-title-head">
                             <h2 class="device-type-modal-title">{{ $title }}</h2>
-
-                            @if ($isEdit)
-                                <div class="repair-modal-head-meta">
-                                    <span class="repair-modal-head-chip">
-                                        Statuss: {{ $statusLabels[$repair->status] ?? $repair->status }}
-                                    </span>
-                                    <span class="repair-modal-head-chip">
-                                        Prioritāte: {{ $priorityLabels[$repair->priority] ?? $repair->priority }}
-                                    </span>
-                                    <span class="repair-modal-head-chip">
-                                        Tips: {{ $typeLabels[$repair->repair_type] ?? $repair->repair_type }}
-                                    </span>
-                                    @if ($deviceShowUrl)
-                                        <a href="{{ $deviceShowUrl }}" class="repair-modal-head-link">
-                                            <x-icon name="device" size="h-4 w-4" />
-                                            <span>Skatīt ierīci</span>
-                                        </a>
-                                    @endif
-                                </div>
-                            @endif
+                            <p class="device-type-modal-subtitle">{{ $subtitle }}</p>
                         </div>
 
-                        <p class="device-type-modal-subtitle">{{ $subtitle }}</p>
+                        @if ($isEdit)
+                            <div class="repair-modal-head-meta">
+                                <span class="repair-modal-head-chip">
+                                    Statuss: {{ $statusLabels[$repair->status] ?? $repair->status }}
+                                </span>
+                                <span class="repair-modal-head-chip">
+                                    Prioritāte: {{ $priorityLabels[$repair->priority] ?? $repair->priority }}
+                                </span>
+                                <span class="repair-modal-head-chip">
+                                    Tips: {{ $typeLabels[$repair->repair_type] ?? $repair->repair_type }}
+                                </span>
+                                @if ($deviceShowUrl)
+                                    <a href="{{ $deviceShowUrl }}" class="repair-modal-head-link">
+                                        <x-icon name="device" size="h-4 w-4" />
+                                        <span>Skatīt ierīci</span>
+                                    </a>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 </div>
 

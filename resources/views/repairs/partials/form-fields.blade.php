@@ -49,40 +49,11 @@
     <div class="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <div>
             <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta iestatījumi</div>
-            <div class="mt-1 text-sm text-slate-500">Izvēlies remonta tipu, prioritāti un, ja nepieciešams, izmaksas.</div>
+            <div class="mt-1 text-sm text-slate-500">Sakārto prioritāti, izmaksas un remonta tipu ērtā secībā.</div>
         </div>
 
-        <div class="mt-4 grid gap-4 lg:grid-cols-3">
-            <div class="lg:col-span-1">
-                <span class="crud-label">Remonta tips</span>
-                <div class="mt-2 rounded-2xl border bg-slate-50 p-2 {{ $errors->has('repair_type') ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200' }}">
-                    <div class="relative grid grid-cols-2 rounded-xl bg-white p-1 shadow-inner">
-                        <div
-                            class="absolute inset-y-1 w-[calc(50%-0.25rem)] rounded-lg bg-slate-900 shadow-sm transition-all duration-200"
-                            :class="repairType === 'internal' ? 'left-1' : 'left-[calc(50%)]'"
-                        ></div>
-                        <label class="relative z-10 cursor-pointer">
-                            <input type="radio" name="repair_type" value="internal" class="sr-only" x-model="repairType">
-                            <span class="flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition" :class="repairType === 'internal' ? 'text-white' : 'text-slate-600'">
-                                <x-icon name="repair" size="h-4 w-4" />
-                                <span>Iekšējais</span>
-                            </span>
-                        </label>
-                        <label class="relative z-10 cursor-pointer">
-                            <input type="radio" name="repair_type" value="external" class="sr-only" x-model="repairType">
-                            <span class="flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition" :class="repairType === 'external' ? 'text-white' : 'text-slate-600'">
-                                <x-icon name="send" size="h-4 w-4" />
-                                <span>Ārējais</span>
-                            </span>
-                        </label>
-                    </div>
-                </div>
-                @if ($errors->has('repair_type'))
-                    <div class="mt-2 text-xs font-semibold text-rose-600">{{ $errors->first('repair_type') }}</div>
-                @endif
-            </div>
-
-            <div class="lg:col-span-2">
+        <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <div class="md:col-span-2">
                 <span class="crud-label">Prioritāte</span>
                 <div class="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                     @foreach ($priorities as $priority)
@@ -118,10 +89,49 @@
                 @endif
             </div>
 
-            <div class="lg:col-span-1">
+            <div>
                 <x-ui.form-field label="Izmaksas" name="cost">
-                    <input type="number" step="0.01" name="cost" value="{{ old('cost', $currentRepair?->cost) }}" class="crud-control {{ $errors->has('cost') ? 'crud-control-error' : '' }}" x-model="cost">
+                    <div class="relative">
+                        <input
+                            type="number"
+                            step="0.01"
+                            name="cost"
+                            value="{{ old('cost', $currentRepair?->cost) }}"
+                            class="crud-control pr-16 {{ $errors->has('cost') ? 'crud-control-error' : '' }}"
+                            x-model="cost"
+                        >
+                        <span class="pointer-events-none absolute inset-y-0 right-4 inline-flex items-center text-sm font-semibold text-slate-500">EUR</span>
+                    </div>
                 </x-ui.form-field>
+            </div>
+
+            <div>
+                <span class="crud-label">Remonta tips</span>
+                <div class="mt-2 rounded-2xl border bg-slate-50 p-2 {{ $errors->has('repair_type') ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200' }}">
+                    <div class="relative grid grid-cols-2 rounded-xl bg-white p-1 shadow-inner">
+                        <div
+                            class="absolute inset-y-1 w-[calc(50%-0.25rem)] rounded-lg bg-slate-900 shadow-sm transition-all duration-200"
+                            :class="repairType === 'internal' ? 'left-1' : 'left-[calc(50%)]'"
+                        ></div>
+                        <label class="relative z-10 cursor-pointer">
+                            <input type="radio" name="repair_type" value="internal" class="sr-only" x-model="repairType">
+                            <span class="flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition" :class="repairType === 'internal' ? 'text-white' : 'text-slate-600'">
+                                <x-icon name="repair" size="h-4 w-4" />
+                                <span>Iekšējais</span>
+                            </span>
+                        </label>
+                        <label class="relative z-10 cursor-pointer">
+                            <input type="radio" name="repair_type" value="external" class="sr-only" x-model="repairType">
+                            <span class="flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition" :class="repairType === 'external' ? 'text-white' : 'text-slate-600'">
+                                <x-icon name="send" size="h-4 w-4" />
+                                <span>Ārējais</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+                @if ($errors->has('repair_type'))
+                    <div class="mt-2 text-xs font-semibold text-rose-600">{{ $errors->first('repair_type') }}</div>
+                @endif
             </div>
         </div>
     </div>
