@@ -224,48 +224,24 @@
 
                         <div class="filter-toolbar-footer">
                     <div class="quick-filter-groups">
-                        <div
-                            class="quick-filter-group"
-                            x-data="{
-                                selected: Array.from(new Set((@js($filters['statuses']) ?? []).map((value) => String(value)))),
-                                incoming: @js($isIncomingFilter),
-                                isSelected(value) {
-                                    return this.selected.includes(String(value));
-                                },
-                                toggleStatus(value) {
-                                    const normalizedValue = String(value);
-
-                                    if (this.incoming) {
-                                        this.incoming = false;
-                                    }
-
-                                    if (this.isSelected(normalizedValue)) {
-                                        this.selected = this.selected.filter((item) => item !== normalizedValue);
-
-                                        return;
-                                    }
-
-                                    this.selected = [...this.selected, normalizedValue];
-                                },
-                                toggleIncoming() {
-                                    this.incoming = ! this.incoming;
-                                },
-                            }"
-                        >
-                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Statuss</div>
-                            <div class="quick-status-filters">
-                                @if (! $isAdmin)
-                                    <button
-                                        type="button"
-                                        @click="toggleIncoming(); $nextTick(() => $el.closest('form').requestSubmit())"
-                                        class="quick-status-filter quick-status-filter-sky"
-                                        :class="incoming ? 'quick-status-filter-active' : ''"
+                        @if (! $isAdmin)
+                            <div class="quick-filter-group">
+                                <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ātrie filtri</div>
+                                <div class="quick-status-filters">
+                                    <a
+                                        href="{{ route('device-transfers.index', array_merge(request()->except(['incoming', 'status', 'page', 'clear']), ['incoming' => 1, 'statuses_filter' => 1])) }}"
+                                        class="quick-status-filter quick-status-filter-sky {{ $isIncomingFilter ? 'quick-status-filter-active' : '' }}"
                                     >
                                         <x-icon name="transfer" size="h-4 w-4" />
                                         <span>Ienākošie piedāvājumi</span>
-                                    </button>
-                                @endif
+                                    </a>
+                                </div>
+                            </div>
+                        @endif
 
+                        <div class="quick-filter-group">
+                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Statuss</div>
+                            <div class="quick-status-filters">
                                 @foreach ($statuses as $status)
                                     @php
                                         $toneClass = $status === 'submitted'
@@ -277,23 +253,17 @@
                                             'rejected' => 'x-circle',
                                             default => 'information-circle',
                                         };
+                                        $isStatusActive = count($filters['statuses']) === 1 && in_array($status, $filters['statuses'], true) && ! $isIncomingFilter;
                                     @endphp
-                                    <button
-                                        type="button"
-                                        @click="toggleStatus(@js($status)); $nextTick(() => $el.closest('form').requestSubmit())"
+                                    <a
+                                        href="{{ route('device-transfers.index', array_merge(request()->except(['status', 'page', 'clear', 'incoming']), ['statuses_filter' => 1, 'status' => [$status]])) }}"
                                         class="quick-status-filter {{ $toneClass }}"
-                                        :class="isSelected(@js($status)) ? 'quick-status-filter-active' : ''"
+                                        @class(['quick-status-filter-active' => $isStatusActive])
                                     >
                                         <x-icon :name="$iconName" size="h-4 w-4" />
                                         <span>{{ $statusLabels[$status] ?? $status }}</span>
-                                    </button>
+                                    </a>
                                 @endforeach
-
-                                <template x-for="value in selected" :key="'transfer-request-status-' + value">
-                                    <input type="hidden" name="status[]" :value="value">
-                                </template>
-
-                                <input x-bind:disabled="!incoming" type="hidden" name="incoming" value="1">
                             </div>
                         </div>
                     </div>
