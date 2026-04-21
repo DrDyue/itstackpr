@@ -3129,6 +3129,11 @@ tbody td {
     animation: status-pill-pending-pulse 1.7s ease-in-out infinite;
 }
 
+.status-pill-pending-action span:last-child::after {
+    content: ' • gaida';
+    font-weight: 700;
+}
+
 @keyframes status-pill-pending-pulse {
     0%, 100% {
         box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.34);
@@ -4975,14 +4980,15 @@ tbody td {
 }
 
 .app-table-row-pending td {
-    background:
-        linear-gradient(90deg, rgba(224, 242, 254, 0.92) 0%, rgba(239, 246, 255, 0.88) 52%, rgba(248, 250, 252, 0.82) 100%) !important;
-    box-shadow: inset 3px 0 0 rgba(14, 165, 233, 0.72);
+    background-color: rgba(224, 242, 254, 0.82) !important;
 }
 
 .app-table-row-pending:hover td {
-    background:
-        linear-gradient(90deg, rgba(186, 230, 253, 0.98) 0%, rgba(224, 242, 254, 0.94) 52%, rgba(240, 249, 255, 0.9) 100%) !important;
+    background-color: rgba(186, 230, 253, 0.92) !important;
+}
+
+.app-table-row-pending td:first-child {
+    box-shadow: inset 3px 0 0 rgba(14, 165, 233, 0.72);
 }
 
 .app-table-cell-strong {

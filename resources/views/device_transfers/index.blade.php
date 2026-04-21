@@ -398,7 +398,7 @@
                                     $isPendingAction = $transfer->status === 'submitted';
                                     $hasActions = true;
                                 @endphp
-                                <tr class="border-t border-slate-100 align-top {{ $isPendingAction ? 'app-table-row-pending' : '' }}" data-table-row-id="device-transfer-{{ $transfer->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
+                                <tr class="app-table-row border-t border-slate-100 align-top {{ $isPendingAction ? 'app-table-row-pending' : '' }}" data-table-row-id="device-transfer-{{ $transfer->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
                                     <td class="table-col-image px-4 py-4 text-center align-middle">
                                         @php
                                             $thumbUrl = $device?->deviceImageThumbUrl();
@@ -475,9 +475,9 @@
                                         @elseif ($hasActions)
                                             {{-- Pārējiem - dropdown ar darbībām --}}
                                             <div class="table-action-menu inline-block" x-data="{ open: false }" @keydown.escape.window="open = false">
-                                                <button type="button" class="table-action-summary {{ $isPendingAction ? 'table-action-summary-pending' : '' }}" @click="open = ! open" :aria-expanded="open.toString()">
-                                                    @if ($isPendingAction)
-                                                        <span class="table-action-attention">{{ $isIncomingPending ? 'Jārīkojas' : 'Gaida' }}</span>
+                                                <button type="button" class="table-action-summary {{ $isIncomingPending ? 'table-action-summary-pending' : '' }}" @click="open = ! open" :aria-expanded="open.toString()">
+                                                    @if ($isIncomingPending)
+                                                        <span class="table-action-attention">Jārīkojas</span>
                                                     @endif
                                                     <span>Darbības</span>
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
