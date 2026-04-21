@@ -48,6 +48,8 @@
     class="searchable-select {{ filled($resolvedError) ? 'searchable-select-error' : '' }}"
     :class="open ? 'searchable-select-open' : ''"
     @keydown.escape.window="close()"
+    @mousemove.window="handleTriggerDrag($event)"
+    @mouseup.window="finishTriggerInteraction()"
     @searchable-select-clear.window="if (! $event.detail?.target || $event.detail.target === @js($identifier)) { clearSelection() }"
 >
     <input type="hidden" name="{{ $name }}" x-model="selected">
@@ -72,8 +74,8 @@
             placeholder="{{ $placeholder }}"
             autocomplete="off"
             @focus="openPanel()"
-            @mousedown.prevent="handleTriggerPointerDown()"
-            @click.prevent
+            @mousedown.prevent.stop="startTriggerInteraction($event)"
+            @click.prevent.stop="handleTriggerClick()"
             @input="handleInput()"
             @keydown.arrow-down.prevent="move(1)"
             @keydown.arrow-up.prevent="move(-1)"
@@ -87,7 +89,7 @@
             title="Atvērt vai aizvērt izvēlni"
             :aria-expanded="open.toString()"
             aria-controls="{{ $panelId }}"
-            @mousedown.prevent.stop="togglePanel()"
+            @mousedown.prevent.stop="handleTogglePointerDown()"
             @click.prevent.stop
             @keydown.enter.prevent="togglePanel()"
             @keydown.space.prevent="togglePanel()"

@@ -793,6 +793,11 @@ const registerAlpineData = () => {
         query: query || '',
         identifier,
         pointerSelecting: false,
+        triggerDragging: false,
+        dragCommitted: false,
+        dragStartY: 0,
+        dragStartIndex: 0,
+        dragStepPx: 20,
         showAllOptions: false,
         options: options.map((option) => ({
             value: String(option.value ?? ''),
@@ -852,13 +857,73 @@ const registerAlpineData = () => {
                 this.$refs.input?.select();
             });
         },
-        handleTriggerPointerDown() {
+        currentOptionIndex() {
+            const selectedIndex = this.filteredOptions.findIndex((option) => option.value === this.selected);
+            if (selectedIndex >= 0) {
+                return selectedIndex;
+            }
+
+            return Math.min(this.highlightedIndex, Math.max(this.filteredOptions.length - 1, 0));
+        },
+        startTriggerInteraction(event) {
             this.openPanel();
+            this.triggerDragging = true;
+            this.dragCommitted = false;
+            this.dragStartY = event?.clientY ?? 0;
+            this.dragStartIndex = this.currentOptionIndex();
+            this.highlightedIndex = this.dragStartIndex;
+            this.$nextTick(() => this.scrollToHighlighted());
+        },
+        handleTriggerClick() {
+            if (!this.open) {
+                this.openPanel();
+            }
+        },
+        handleTogglePointerDown() {
+            this.togglePanel();
+        },
+        handleTriggerDrag(event) {
+            if (!this.triggerDragging || this.filteredOptions.length === 0) {
+                return;
+            }
+
+            const delta = (event?.clientY ?? 0) - this.dragStartY;
+            const steps = delta === 0 ? 0 : Math.trunc(delta / this.dragStepPx);
+            const maxIndex = this.filteredOptions.length - 1;
+            const nextIndex = Math.min(maxIndex, Math.max(0, this.dragStartIndex + steps));
+
+            if (nextIndex !== this.highlightedIndex) {
+                this.highlightedIndex = nextIndex;
+                this.dragCommitted = true;
+                this.$nextTick(() => this.scrollToHighlighted());
+            }
+        },
+        finishTriggerInteraction() {
+            if (!this.triggerDragging) {
+                return;
+            }
+
+            this.triggerDragging = false;
+
+            if (!this.dragCommitted) {
+                return;
+            }
+
+            const option = this.filteredOptions[this.highlightedIndex];
+            if (!option) {
+                return;
+            }
+
+            this.selected = option.value;
+            this.query = option.label;
+            this.dispatchUpdate();
         },
         closePanelOnly() {
             this.open = false;
             this.showAllOptions = false;
             this.pointerSelecting = false;
+            this.triggerDragging = false;
+            this.dragCommitted = false;
         },
         close() {
             this.closePanelOnly();
