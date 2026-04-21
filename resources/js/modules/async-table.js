@@ -108,6 +108,80 @@ const cancelPendingAsyncTableWork = (form) => {
     }
 };
 
+const getAlpineComponentData = (element) => {
+    const stack = element?._x_dataStack;
+    if (!Array.isArray(stack) || stack.length === 0) {
+        return null;
+    }
+
+    return stack[0] ?? null;
+};
+
+const clearAsyncTableFormUi = (form, root) => {
+    if (!form) {
+        return;
+    }
+
+    form.querySelectorAll('input[type="text"], input[type="search"], input[type="number"], textarea').forEach((input) => {
+        if (input.matches('[data-sort-hidden], [data-async-manual="true"]')) {
+            return;
+        }
+
+        input.value = '';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    form.querySelectorAll('input[type="hidden"]').forEach((input) => {
+        if (input.matches('[data-sort-hidden]') || input.name === 'statuses_filter') {
+            return;
+        }
+
+        input.value = '';
+    });
+
+    const defaultDateField = form.querySelector('input[type="radio"][name="date_field"][value="start_date"]');
+    if (defaultDateField) {
+        defaultDateField.checked = true;
+    }
+
+    form.querySelectorAll('.searchable-select').forEach((element) => {
+        const data = getAlpineComponentData(element);
+        if (!data) {
+            return;
+        }
+
+        data.selected = '';
+        data.query = '';
+        data.highlightedIndex = 0;
+        data.closePanelOnly?.();
+    });
+
+    form.querySelectorAll('.localized-date-picker').forEach((element) => {
+        const data = getAlpineComponentData(element);
+        if (!data) {
+            return;
+        }
+
+        data.value = '';
+        data.open = false;
+    });
+
+    form.querySelectorAll('.quick-filter-group').forEach((element) => {
+        const data = getAlpineComponentData(element);
+        if (!data || !Array.isArray(data.selected)) {
+            return;
+        }
+
+        data.selected = [];
+    });
+
+    root?.querySelectorAll('.filter-summary, .active-filters').forEach((element) => {
+        element.style.display = 'none';
+    });
+
+    form.dataset.asyncClearing = 'true';
+};
+
 const normalizeTableSearchValue = (value) => String(value ?? '').trim().toLocaleLowerCase();
 
 const clearTableSearchHighlights = (root) => {
@@ -634,6 +708,7 @@ export const initializeAsyncTableFilters = () => {
 
         if (asyncLink.matches('[data-async-clear="true"]')) {
             cancelPendingAsyncTableWork(form);
+            clearAsyncTableFormUi(form, root);
         }
 
         window.submitAsyncTableForm(form, {
