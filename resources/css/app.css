@@ -3141,8 +3141,8 @@ tbody td {
     animation: status-pill-pending-pulse 1.7s ease-in-out infinite;
 }
 
-.status-pill-pending-action span:last-child::after {
-    content: ' • ' attr(data-pending-suffix);
+.status-pill-pending-copy {
+    margin-left: 0.2rem;
     font-weight: 700;
 }
 
