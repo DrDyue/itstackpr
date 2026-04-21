@@ -13,6 +13,9 @@
             ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ')
             : null;
         $isIncomingFilter = $filters['incoming'] ?? false;
+        $baseFilterParams = array_merge(request()->except(['page', 'clear']), ['statuses_filter' => 1]);
+        $resetFilterParams = ['statuses_filter' => 1];
+        $clearFilterParams = array_merge($resetFilterParams, ['clear' => 1]);
         $activeTransferViewLabel = $isIncomingFilter ? 'Ienākošie piedāvājumi' : null;
         $detailStatusClasses = [
             'submitted' => 'request-detail-status-amber',
@@ -228,8 +231,13 @@
                             <div class="quick-filter-group">
                                 <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ātrie filtri</div>
                                 <div class="quick-status-filters">
+                                    @php
+                                        $incomingFilterUrl = $isIncomingFilter
+                                            ? route('device-transfers.index', array_merge($baseFilterParams, request()->except(['incoming', 'status', 'page', 'clear'])))
+                                            : route('device-transfers.index', array_merge($baseFilterParams, request()->except(['incoming', 'status', 'page', 'clear']), ['incoming' => 1]));
+                                    @endphp
                                     <a
-                                        href="{{ route('device-transfers.index', array_merge(request()->except(['incoming', 'status', 'page', 'clear']), ['incoming' => 1, 'statuses_filter' => 1])) }}"
+                                        href="{{ $incomingFilterUrl }}"
                                         class="quick-status-filter quick-status-filter-sky {{ $isIncomingFilter ? 'quick-status-filter-active' : '' }}"
                                     >
                                         <x-icon name="transfer" size="h-4 w-4" />
@@ -254,9 +262,12 @@
                                             default => 'information-circle',
                                         };
                                         $isStatusActive = count($filters['statuses']) === 1 && in_array($status, $filters['statuses'], true) && ! $isIncomingFilter;
+                                        $statusFilterUrl = $isStatusActive
+                                            ? route('device-transfers.index', array_merge($baseFilterParams, request()->except(['status', 'page', 'clear', 'incoming'])))
+                                            : route('device-transfers.index', array_merge($baseFilterParams, request()->except(['status', 'page', 'clear', 'incoming']), ['status' => [$status]]));
                                     @endphp
                                     <a
-                                        href="{{ route('device-transfers.index', array_merge(request()->except(['status', 'page', 'clear', 'incoming']), ['statuses_filter' => 1, 'status' => [$status]])) }}"
+                                        href="{{ $statusFilterUrl }}"
                                         @class([
                                             'quick-status-filter',
                                             $toneClass,
@@ -272,7 +283,7 @@
                     </div>
 
                     <div class="toolbar-actions">
-                        <a href="{{ route('device-transfers.index', ['statuses_filter' => 1, 'clear' => 1]) }}" class="btn-clear" data-async-link="true" data-async-clear="true">
+                        <a href="{{ route('device-transfers.index', $clearFilterParams) }}" class="btn-clear" data-async-link="true" data-async-clear="true">
                             <x-icon name="clear" size="h-4 w-4" />
                             <span>Notīrīt filtrus</span>
                         </a>
@@ -293,7 +304,7 @@
                     ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
                     ['label' => 'Statuss', 'value' => $activeStatusLabel],
                 ]"
-                :clear-url="route('device-transfers.index', ['statuses_filter' => 1, 'clear' => 1])"
+                :clear-url="route('device-transfers.index', $resetFilterParams)"
             />
 
             @if (session('error'))
