@@ -240,6 +240,74 @@ const findMatchingTableRow = (root, term, mode = 'contains') => {
         .find((row) => rowMatchesSearch(row, term, mode)) || null;
 };
 
+const getCurrentAsyncPage = () => {
+    const currentUrl = new URL(window.location.href);
+    const currentPage = Number.parseInt(currentUrl.searchParams.get('page') || '1', 10);
+
+    return Number.isFinite(currentPage) && currentPage > 0 ? currentPage : 1;
+};
+
+const getMaxPaginationPageFromRoot = (root) => {
+    const values = Array.from(root?.querySelectorAll('.app-pagination-links a, .app-pagination-links span') ?? [])
+        .map((element) => Number.parseInt((element.textContent || '').trim(), 10))
+        .filter((value) => Number.isFinite(value) && value > 0);
+
+    return values.length > 0 ? Math.max(...values) : 1;
+};
+
+const searchAcrossPaginatedHtml = async (form, rootSelector, rawTerm, mode = 'contains') => {
+    const mountedRoot = document.querySelector(rootSelector);
+    const maxPage = getMaxPaginationPageFromRoot(mountedRoot);
+    const currentPage = getCurrentAsyncPage();
+
+    if (maxPage <= 1) {
+        return null;
+    }
+
+    const baseUrl = buildAsyncTableUrl(form, { resetPage: false });
+
+    for (let page = 1; page <= maxPage; page += 1) {
+        if (page === currentPage) {
+            continue;
+        }
+
+        const targetUrl = new URL(baseUrl.toString());
+        targetUrl.searchParams.set('page', String(page));
+
+        const response = await fetch(targetUrl.toString(), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+
+        if (!response.ok) {
+            continue;
+        }
+
+        const html = await response.text();
+        const parser = new DOMParser();
+        const nextDocument = parser.parseFromString(html, 'text/html');
+        const nextRoot = nextDocument.querySelector(rootSelector);
+
+        if (!nextRoot) {
+            continue;
+        }
+
+        const match = findMatchingTableRow(nextRoot, rawTerm, mode);
+        if (!match) {
+            continue;
+        }
+
+        return {
+            page,
+            html,
+            highlightId: getRowSearchId(match),
+        };
+    }
+
+    return null;
+};
+
 const findTableRowById = (root, rowId) => {
     const normalizedRowId = String(rowId || '').trim();
 
@@ -352,6 +420,27 @@ const performManualTableSearch = async (form) => {
         }
 
         const result = await response.json();
+        if (!result?.found) {
+            const paginatedMatch = await searchAcrossPaginatedHtml(form, rootSelector, rawTerm, searchMode);
+
+            if (paginatedMatch?.html) {
+                const swapped = swapAsyncTableRoot(rootSelector, paginatedMatch.html);
+
+                if (swapped) {
+                    const targetUrl = buildSearchNavigationUrl(
+                        form,
+                        paginatedMatch.page,
+                        rawTerm,
+                        searchMode,
+                        paginatedMatch.highlightId || ''
+                    );
+
+                    window.history.replaceState({}, '', `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`);
+                    await restoreHighlightedSearchFromUrl();
+                    return true;
+                }
+            }
+        }
         if (!result?.found) {
             window.dispatchAppToast({
                 title: 'Ieraksts netika atrasts',
