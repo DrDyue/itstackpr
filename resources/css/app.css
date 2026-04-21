@@ -301,6 +301,148 @@ tbody td {
     padding: 0;
 }
 
+.app-loading-indicator[hidden] {
+    display: none !important;
+}
+
+.app-loading-indicator {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+}
+
+.app-loading-bar-shell {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 0.28rem;
+    overflow: hidden;
+    background: rgba(148, 163, 184, 0.14);
+}
+
+.app-loading-bar-track {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(90deg, rgba(14, 165, 233, 0) 0%, rgba(14, 165, 233, 0.95) 20%, rgba(59, 130, 246, 0.96) 52%, rgba(16, 185, 129, 0.84) 82%, rgba(16, 185, 129, 0) 100%);
+    transform-origin: left center;
+    animation: app-loading-bar-slide 1.25s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.app-loading-bar-glow {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(125, 211, 252, 0.08), rgba(96, 165, 250, 0.2), rgba(52, 211, 153, 0.08));
+    filter: blur(8px);
+    opacity: 0.9;
+}
+
+.app-loading-pill {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+    min-height: 3rem;
+    padding: 0.7rem 0.95rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(148, 163, 184, 0.26);
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow:
+        0 18px 42px rgba(15, 23, 42, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(16px);
+    animation: app-loading-pill-enter 220ms ease;
+}
+
+.app-loading-pill-copy {
+    font-size: 0.83rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #0f172a;
+    white-space: nowrap;
+}
+
+.app-loading-orb {
+    position: relative;
+    display: inline-flex;
+    width: 1.45rem;
+    height: 1.45rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.app-loading-orb-ring,
+.app-loading-orb-core {
+    position: absolute;
+    border-radius: 9999px;
+}
+
+.app-loading-orb-ring {
+    inset: 0;
+    border: 2px solid rgba(14, 165, 233, 0.18);
+    border-top-color: rgba(14, 165, 233, 0.92);
+    border-right-color: rgba(59, 130, 246, 0.72);
+    animation: app-loading-orb-spin 0.9s linear infinite;
+}
+
+.app-loading-orb-core {
+    width: 0.55rem;
+    height: 0.55rem;
+    background: radial-gradient(circle at 35% 35%, #67e8f9 0%, #38bdf8 45%, #2563eb 100%);
+    box-shadow:
+        0 0 0 0 rgba(56, 189, 248, 0.28),
+        0 0 18px rgba(56, 189, 248, 0.38);
+    animation: app-loading-orb-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes app-loading-bar-slide {
+    0% {
+        transform: translateX(-100%) scaleX(0.2);
+    }
+
+    45% {
+        transform: translateX(-8%) scaleX(0.55);
+    }
+
+    100% {
+        transform: translateX(100%) scaleX(0.28);
+    }
+}
+
+@keyframes app-loading-orb-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes app-loading-orb-pulse {
+    0%, 100% {
+        transform: scale(0.9);
+        opacity: 0.85;
+    }
+
+    50% {
+        transform: scale(1.08);
+        opacity: 1;
+    }
+}
+
+@keyframes app-loading-pill-enter {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 10px, 0) scale(0.97);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+}
+
 /* App Shell - Main content container */
 .app-shell {
     @apply mx-auto w-full max-w-7xl;
@@ -6164,6 +6306,28 @@ html[data-theme='dark'] .app-table-row-accent-slate td {
 
 html[data-theme='dark'] .table-search-hit td {
     background-color: rgba(14, 165, 233, 0.16) !important;
+}
+
+html[data-theme='dark'] .app-loading-bar-shell {
+    background: rgba(30, 41, 59, 0.7);
+}
+
+html[data-theme='dark'] .app-loading-pill {
+    border-color: rgba(71, 85, 105, 0.7);
+    background: rgba(15, 23, 42, 0.88);
+    box-shadow:
+        0 18px 42px rgba(2, 6, 23, 0.42),
+        inset 0 1px 0 rgba(148, 163, 184, 0.08);
+}
+
+html[data-theme='dark'] .app-loading-pill-copy {
+    color: #e2e8f0;
+}
+
+html[data-theme='dark'] .app-loading-orb-ring {
+    border-color: rgba(56, 189, 248, 0.16);
+    border-top-color: rgba(56, 189, 248, 0.96);
+    border-right-color: rgba(96, 165, 250, 0.78);
 }
 
 html[data-theme='dark'] .table-search-navigator-card {

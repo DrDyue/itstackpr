@@ -39,6 +39,165 @@ const writeStorageValue = (key, value) => {
     }
 };
 
+const createAppLoadingManager = () => {
+    let activeCount = 0;
+    let lastStartedAt = 0;
+    let hideTimer = null;
+    const minVisibleMs = 220;
+    const indicator = () => document.querySelector('[data-app-loading-indicator]');
+
+    const render = () => {
+        const element = indicator();
+        if (!element) {
+            return;
+        }
+
+        const isActive = activeCount > 0;
+        element.hidden = !isActive;
+        document.documentElement.toggleAttribute('data-app-loading-active', isActive);
+        document.body?.toggleAttribute('data-app-loading-active', isActive);
+    };
+
+    const clearHideTimer = () => {
+        if (!hideTimer) {
+            return;
+        }
+
+        window.clearTimeout(hideTimer);
+        hideTimer = null;
+    };
+
+    return {
+        start() {
+            clearHideTimer();
+            activeCount += 1;
+            lastStartedAt = Date.now();
+            render();
+        },
+        end() {
+            if (activeCount <= 0) {
+                activeCount = 0;
+                render();
+                return;
+            }
+
+            activeCount -= 1;
+            if (activeCount > 0) {
+                render();
+                return;
+            }
+
+            const elapsed = Date.now() - lastStartedAt;
+            const remaining = Math.max(minVisibleMs - elapsed, 0);
+
+            clearHideTimer();
+            hideTimer = window.setTimeout(() => {
+                activeCount = 0;
+                render();
+            }, remaining);
+        },
+        track(promise) {
+            this.start();
+            return Promise.resolve(promise).finally(() => this.end());
+        },
+    };
+};
+
+const appLoading = createAppLoadingManager();
+window.appLoading = appLoading;
+
+if (document.readyState !== 'complete') {
+    appLoading.start();
+    window.addEventListener('load', () => appLoading.end(), { once: true });
+}
+
+document.addEventListener('click', (event) => {
+    const link = event.target.closest('a[href]');
+    if (!link) {
+        return;
+    }
+
+    if (link.dataset.asyncLink === 'true') {
+        return;
+    }
+
+    if (link.hasAttribute('download') || link.getAttribute('target') === '_blank') {
+        return;
+    }
+
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+        return;
+    }
+
+    const href = link.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) {
+        return;
+    }
+
+    const targetUrl = new URL(href, window.location.origin);
+    if (targetUrl.origin !== window.location.origin) {
+        return;
+    }
+
+    appLoading.start();
+});
+
+document.addEventListener('submit', (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement)) {
+        return;
+    }
+
+    if (form.matches('[data-async-table-form]')) {
+        return;
+    }
+
+    appLoading.start();
+});
+
+if (window.axios?.interceptors) {
+    window.axios.interceptors.request.use((config) => {
+        if (!config?.silentLoading) {
+            appLoading.start();
+        }
+
+        return config;
+    });
+
+    window.axios.interceptors.response.use(
+        (response) => {
+            if (!response?.config?.silentLoading) {
+                appLoading.end();
+            }
+
+            return response;
+        },
+        (error) => {
+            if (!error?.config?.silentLoading) {
+                appLoading.end();
+            }
+
+            return Promise.reject(error);
+        }
+    );
+}
+
+const nativeFetch = window.fetch.bind(window);
+window.fetch = (input, init = {}) => {
+    const requestInit = init ?? {};
+    const silentLoading = Boolean(requestInit.silentLoading);
+
+    if (!silentLoading) {
+        appLoading.start();
+    }
+
+    return nativeFetch(input, requestInit).finally(() => {
+        if (!silentLoading) {
+            appLoading.end();
+        }
+    });
+};
+
 const resolveFocusableErrorField = (fieldName) => {
     if (!fieldName) {
         return null;
@@ -466,6 +625,7 @@ const registerAlpineData = () => {
                     headers: {
                         Accept: 'application/json',
                     },
+                    silentLoading: true,
                 });
 
                 const notifications = Array.isArray(response?.data?.notifications)
@@ -742,6 +902,7 @@ const registerAlpineData = () => {
                     headers: {
                         Accept: 'application/json',
                     },
+                    silentLoading: true,
                 });
 
                 const cutoff = this.readCutoff();

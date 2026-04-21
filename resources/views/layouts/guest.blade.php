@@ -35,6 +35,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="layout-body-reset guest-bg bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.18),transparent_32%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.14),transparent_28%),linear-gradient(180deg,_#eff6ff_0%,_#f8fafc_100%)]">
+        @include('layouts.loading-indicator')
         <div class="auth-wrapper">
             <div class="auth-left">
                 <div class="auth-container auth-container-compact">
