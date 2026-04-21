@@ -235,17 +235,12 @@
                                 toggleStatus(value) {
                                     const normalizedValue = String(value);
 
-                                    if (this.incoming && normalizedValue !== 'submitted') {
+                                    if (this.incoming) {
                                         this.incoming = false;
-                                        this.selected = this.selected.filter((item) => item !== 'submitted');
                                     }
 
                                     if (this.isSelected(normalizedValue)) {
                                         this.selected = this.selected.filter((item) => item !== normalizedValue);
-
-                                        if (normalizedValue === 'submitted') {
-                                            this.incoming = false;
-                                        }
 
                                         return;
                                     }
@@ -254,10 +249,6 @@
                                 },
                                 toggleIncoming() {
                                     this.incoming = ! this.incoming;
-
-                                    if (this.incoming) {
-                                        this.selected = ['submitted'];
-                                    }
                                 },
                             }"
                         >
