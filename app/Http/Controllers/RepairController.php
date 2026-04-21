@@ -162,40 +162,45 @@ class RepairController extends Controller
         $baseQuery = $this->visibleRepairsQuery($user)
             ->when($filters['mine'] && $canManageRepairs, fn (Builder $query) => $query->where('repairs.accepted_by', $user->id));
 
-        $repairsQuery = (clone $baseQuery)
-            ->leftJoin('devices as repair_search_device', 'repair_search_device.id', '=', 'repairs.device_id')
-            ->select([
-                'repairs.id',
-                DB::raw('repair_search_device.code as device_code'),
-            ]);
-
-        $this->applyIndexFilters($repairsQuery, $filters);
-        $this->applySorting($repairsQuery, $sorting);
-
-        $repairs = $repairsQuery->get();
-        $foundRepair = null;
-        $foundIndex = null;
         $searchCode = mb_strtolower($code);
 
-        foreach ($repairs as $index => $repair) {
-            $deviceCode = mb_strtolower(trim((string) ($repair->device_code ?? '')));
-            if ($deviceCode === $searchCode) {
-                $foundRepair = $repair;
-                $foundIndex = $index;
-                break;
-            }
+        $matchedRepair = (clone $baseQuery)
+            ->select('repairs.id')
+            ->whereHas('device', function (Builder $deviceQuery) use ($searchCode) {
+                $deviceQuery->whereRaw('LOWER(TRIM(code)) = ?', [$searchCode]);
+            });
+
+        $this->applyIndexFilters($matchedRepair, $filters);
+
+        $foundRepairId = $matchedRepair->value('repairs.id');
+
+        if (! $foundRepairId) {
+            return response()->json(['found' => false, 'page' => 1]);
         }
 
-        if (! $foundRepair || $foundIndex === null) {
-            return response()->json(['found' => false, 'page' => 1]);
+        $orderedRepairIdsQuery = (clone $baseQuery)->select('repairs.id');
+        $this->applyIndexFilters($orderedRepairIdsQuery, $filters);
+        $this->applySorting($orderedRepairIdsQuery, $sorting);
+
+        $orderedRepairIds = $orderedRepairIdsQuery->pluck('repairs.id')->values();
+        $foundIndex = $orderedRepairIds->search($foundRepairId);
+
+        if ($foundIndex === false) {
+            return response()->json([
+                'found' => true,
+                'page' => 1,
+                'repair_id' => $foundRepairId,
+                'term' => $code,
+                'highlight_id' => 'repair-'.$foundRepairId,
+            ]);
         }
 
         return response()->json([
             'found' => true,
             'page' => intdiv($foundIndex, self::PER_PAGE) + 1,
-            'repair_id' => $foundRepair->id,
+            'repair_id' => $foundRepairId,
             'term' => $code,
-            'highlight_id' => 'repair-'.$foundRepair->id,
+            'highlight_id' => 'repair-'.$foundRepairId,
         ]);
     }
 
