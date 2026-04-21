@@ -799,7 +799,7 @@ const registerAlpineData = () => {
         dragCommitted: false,
         dragStartY: 0,
         dragStartIndex: 0,
-        dragStepPx: 20,
+        dragStepPx: 32,
         showAllOptions: false,
         options: options.map((option) => ({
             value: String(option.value ?? ''),
