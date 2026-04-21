@@ -379,6 +379,25 @@ const performManualTableSearch = async (form) => {
         return true;
     }
 
+    const paginatedMatch = await searchAcrossPaginatedHtml(form, rootSelector, rawTerm, searchMode);
+    if (paginatedMatch?.html) {
+        const swapped = swapAsyncTableRoot(rootSelector, paginatedMatch.html);
+
+        if (swapped) {
+            const targetUrl = buildSearchNavigationUrl(
+                form,
+                paginatedMatch.page,
+                rawTerm,
+                searchMode,
+                paginatedMatch.highlightId || ''
+            );
+
+            window.history.replaceState({}, '', `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`);
+            await restoreHighlightedSearchFromUrl();
+            return true;
+        }
+    }
+
     const searchEndpoint = form.dataset.searchEndpoint;
     if (!searchEndpoint) {
         window.dispatchAppToast({
