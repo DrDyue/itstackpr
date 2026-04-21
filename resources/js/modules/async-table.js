@@ -247,30 +247,19 @@ const getCurrentAsyncPage = () => {
     return Number.isFinite(currentPage) && currentPage > 0 ? currentPage : 1;
 };
 
-const getMaxPaginationPageFromRoot = (root) => {
-    const values = Array.from(root?.querySelectorAll('.app-pagination-links a, .app-pagination-links span') ?? [])
-        .map((element) => Number.parseInt((element.textContent || '').trim(), 10))
-        .filter((value) => Number.isFinite(value) && value > 0);
-
-    return values.length > 0 ? Math.max(...values) : 1;
-};
-
 const searchAcrossPaginatedHtml = async (form, rootSelector, rawTerm, mode = 'contains') => {
-    const mountedRoot = document.querySelector(rootSelector);
-    const maxPage = getMaxPaginationPageFromRoot(mountedRoot);
     const currentPage = getCurrentAsyncPage();
+    const baseUrl = buildAsyncTableUrl(form, { resetPage: false });
+    const pagesToTry = [];
+    const maxProbePages = 50;
 
-    if (maxPage <= 1) {
-        return null;
+    for (let page = 1; page <= maxProbePages; page += 1) {
+        if (page !== currentPage) {
+            pagesToTry.push(page);
+        }
     }
 
-    const baseUrl = buildAsyncTableUrl(form, { resetPage: false });
-
-    for (let page = 1; page <= maxPage; page += 1) {
-        if (page === currentPage) {
-            continue;
-        }
-
+    for (const page of pagesToTry) {
         const targetUrl = new URL(baseUrl.toString());
         targetUrl.searchParams.set('page', String(page));
 
@@ -291,6 +280,11 @@ const searchAcrossPaginatedHtml = async (form, rootSelector, rawTerm, mode = 'co
 
         if (!nextRoot) {
             continue;
+        }
+
+        const rowCount = nextRoot.querySelectorAll('[data-table-row-id], [data-table-code], [data-table-search-value]').length;
+        if (rowCount === 0) {
+            break;
         }
 
         const match = findMatchingTableRow(nextRoot, rawTerm, mode);
