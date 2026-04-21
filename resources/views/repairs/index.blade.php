@@ -117,7 +117,7 @@
                                         data-async-manual="true"
                                         data-async-code-search="true"
                                     >
-                                    <button type="submit" class="btn-search shrink-0" data-code-search-submit="true">
+                                    <button type="button" class="btn-search shrink-0" data-code-search-submit="true" onclick="return window.runManualTableSearchFromTrigger(this);">
                                         <x-icon name="search" size="h-4 w-4" />
                                         <span>Meklēt</span>
                                     </button>

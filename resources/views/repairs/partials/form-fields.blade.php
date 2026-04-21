@@ -4,25 +4,24 @@
 
 <div class="space-y-4">
     <div class="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-        <div>
-            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pamatinformācija</div>
-            <div class="mt-1 text-sm text-slate-500">Galvenie lauki par ierīci un remonta saturu.</div>
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pamatinformācija</div>
+                <div class="mt-1 text-sm text-slate-500">Galvenie lauki par remonta saturu.</div>
+            </div>
+
+            @if ($currentRepair)
+                <div class="repair-device-note">
+                    <x-icon name="device" size="h-4 w-4" />
+                    <span>{{ $currentRepair->device?->name ?: 'Ierīce nav atrasta' }}</span>
+                    <span class="repair-device-note-code">{{ $currentRepair->device?->code ?: 'bez koda' }}</span>
+                </div>
+                <input type="hidden" name="device_id" value="{{ old('device_id', $currentRepair->device_id) }}">
+            @endif
         </div>
 
         <div class="mt-4 grid gap-4 lg:grid-cols-3">
-            @if ($currentRepair)
-                <div class="lg:col-span-1">
-                    <x-ui.form-field label="Ierīce">
-                        <input
-                            type="text"
-                            class="crud-control bg-slate-50 text-slate-600"
-                            value="{{ $currentRepair->device?->name ?: 'Ierīce nav atrasta' }} ({{ $currentRepair->device?->code ?: 'bez koda' }})"
-                            readonly
-                        >
-                        <input type="hidden" name="device_id" value="{{ old('device_id', $currentRepair->device_id) }}">
-                    </x-ui.form-field>
-                </div>
-            @else
+            @unless ($currentRepair)
                 <div class="lg:col-span-1">
                     <x-ui.form-field label="Ierīce" name="device_id">
                         <x-searchable-select
@@ -37,9 +36,9 @@
                         />
                     </x-ui.form-field>
                 </div>
-            @endif
+            @endunless
 
-            <div class="lg:col-span-2">
+            <div class="{{ $currentRepair ? 'lg:col-span-3' : 'lg:col-span-2' }}">
                 <x-ui.form-field label="Apraksts" name="description">
                     <textarea name="description" rows="4" class="crud-control min-h-[7.5rem] {{ $errors->has('description') ? 'crud-control-error' : '' }}" x-model="description">{{ old('description', $currentRepair?->description) }}</textarea>
                 </x-ui.form-field>

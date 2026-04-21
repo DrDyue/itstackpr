@@ -78,7 +78,7 @@
                             <span>Meklēt pēc nosaukuma vai numura</span>
                             <input type="text" name="search" value="{{ $filters['search'] }}" class="devices-code-input" placeholder="Nosaukums vai numurs" data-async-manual="true" data-table-manual-search="true" data-search-mode="contains">
                         </label>
-                        <button type="submit" class="devices-code-search-btn" data-table-search-submit="true">
+                        <button type="button" class="devices-code-search-btn" data-table-search-submit="true" onclick="return window.runManualTableSearchFromTrigger(this);">
                             <x-icon name="search" size="h-4 w-4" />
                             <span>Atrast telpu</span>
                         </button>

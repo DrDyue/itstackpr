@@ -42,7 +42,7 @@ $maxWidth = [
 
     <!-- Modāļa lodziņš -->
     <div
-        class="modal-liquid-panel modal-liquid-motion relative mx-auto mb-6 overflow-visible rounded-[1.4rem] transform transition-all sm:w-full {{ $maxWidth }} sm:mx-auto bg-white shadow-xl"
+        class="modal-liquid-panel modal-liquid-motion relative mx-auto mb-6 overflow-visible rounded-[1.55rem] transform transition-all sm:w-full {{ $maxWidth }} sm:mx-auto bg-white shadow-xl"
         x-show="show"
         @click.stop
         x-transition:enter="ease-out duration-300"

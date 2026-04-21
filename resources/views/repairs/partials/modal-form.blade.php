@@ -32,7 +32,7 @@
     <form
         method="POST"
         action="{{ $action }}"
-        class="flex max-h-[calc(100vh-2.5rem)] flex-col overflow-hidden"
+        class="repair-modal-form-shell flex max-h-[calc(100vh-2.5rem)] flex-col overflow-hidden"
         x-data="repairProcess({
             repairId: {{ $repair?->id ? (int) $repair->id : 'null' }},
             repairType: @js($shouldUseOldInput ? old('repair_type', $repair?->repair_type ?? 'internal') : ($repair?->repair_type ?? 'internal')),
@@ -54,21 +54,57 @@
 
         <input type="hidden" name="modal_form" value="{{ $modalForm }}">
 
-        <div class="device-type-modal-head">
+        <div class="device-type-modal-head repair-modal-head">
             <div class="device-type-modal-head-copy">
-                <div class="device-type-modal-badge">
-                    <x-icon :name="$isEdit ? 'edit' : 'plus'" size="h-4 w-4" />
-                    <span>{{ $isEdit ? 'Rediģēšana' : 'Jauns ieraksts' }}</span>
+                <div class="repair-modal-head-top">
+                    <div class="device-type-modal-badge">
+                        <x-icon :name="$isEdit ? 'edit' : 'plus'" size="h-4 w-4" />
+                        <span>{{ $isEdit ? 'Rediģēšana' : 'Jauns ieraksts' }}</span>
+                    </div>
                 </div>
-                <div class="device-type-modal-title-row">
+
+                <div class="device-type-modal-title-row repair-modal-title-row">
                     <div class="device-type-modal-icon">
                         <x-icon name="repair" size="h-6 w-6" />
                     </div>
+
                     <div class="device-type-modal-title-copy">
-                        <h2 class="device-type-modal-title">{{ $title }}</h2>
+                        <div class="repair-modal-title-head">
+                            <h2 class="device-type-modal-title">{{ $title }}</h2>
+
+                            @if ($isEdit)
+                                <div class="repair-modal-head-meta">
+                                    <span class="repair-modal-head-chip">
+                                        Statuss: {{ $statusLabels[$repair->status] ?? $repair->status }}
+                                    </span>
+                                    <span class="repair-modal-head-chip">
+                                        Prioritāte: {{ $priorityLabels[$repair->priority] ?? $repair->priority }}
+                                    </span>
+                                    <span class="repair-modal-head-chip">
+                                        Tips: {{ $typeLabels[$repair->repair_type] ?? $repair->repair_type }}
+                                    </span>
+                                    @if ($deviceShowUrl)
+                                        <a href="{{ $deviceShowUrl }}" class="repair-modal-head-link">
+                                            <x-icon name="device" size="h-4 w-4" />
+                                            <span>Skatīt ierīci</span>
+                                        </a>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+
                         <p class="device-type-modal-subtitle">{{ $subtitle }}</p>
                     </div>
                 </div>
+
+                @if ($linkedRequestUrl)
+                    <div class="pt-1">
+                        <a href="{{ $linkedRequestUrl }}" class="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-semibold text-violet-700 hover:bg-violet-100">
+                            <x-icon name="repair-request" size="h-4 w-4" />
+                            <span>Saistītais pieprasījums</span>
+                        </a>
+                    </div>
+                @endif
             </div>
 
             <button type="button" class="device-type-modal-close" x-data @click="$dispatch('close-modal', '{{ $modalName }}')" aria-label="Aizvērt">
@@ -99,41 +135,6 @@
             @endif
 
             @if ($isEdit)
-                <div class="repair-modal-summary mb-5">
-                    <div class="repair-modal-summary-grid">
-                        <div class="repair-modal-summary-item">
-                            <span class="repair-modal-summary-label">Remonta statuss</span>
-                            <x-status-pill context="repair" :value="$repair->status" :label="$statusLabels[$repair->status] ?? null" />
-                        </div>
-
-                        <div class="repair-modal-summary-item">
-                            <span class="repair-modal-summary-label">Remonta prioritāte</span>
-                            <x-status-pill context="priority" :value="$repair->priority" :label="$priorityLabels[$repair->priority] ?? null" />
-                        </div>
-
-                        <div class="repair-modal-summary-item">
-                            <span class="repair-modal-summary-label">Remonta tips</span>
-                            <x-status-pill context="repair-type" :value="$repair->repair_type" :label="$typeLabels[$repair->repair_type] ?? null" />
-                        </div>
-
-                        @if ($deviceShowUrl)
-                            <a href="{{ $deviceShowUrl }}" class="repair-modal-summary-link">
-                                <x-icon name="device" size="h-4 w-4" />
-                                <span>Skatīt ierīci</span>
-                            </a>
-                        @endif
-                    </div>
-
-                    @if ($linkedRequestUrl)
-                        <div class="mt-3 flex flex-wrap gap-3 text-sm">
-                            <a href="{{ $linkedRequestUrl }}" class="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 font-semibold text-violet-700 hover:bg-violet-100">
-                                <x-icon name="repair-request" size="h-4 w-4" />
-                                <span>Saistītais pieprasījums</span>
-                            </a>
-                        </div>
-                    @endif
-                </div>
-
                 <div class="repair-next-step-panel mb-5" x-cloak>
                     <div class="repair-next-step-head">
                         <div>

@@ -154,7 +154,7 @@
                                         data-async-code-search="true"
                                     >
                                 </label>
-                                <button type="submit" class="devices-code-search-btn" data-code-search-submit="true">
+                                <button type="button" class="devices-code-search-btn" data-code-search-submit="true" onclick="return window.runManualTableSearchFromTrigger(this);">
                                     <x-icon name="search" size="h-4 w-4" />
                                     <span>Atrast ierīci</span>
                                 </button>

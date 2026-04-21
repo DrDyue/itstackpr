@@ -293,7 +293,11 @@ const shouldRunManualSearch = (form, submitter) => {
         return true;
     }
 
-    return document.activeElement === searchInput;
+    if (document.activeElement === searchInput) {
+        return true;
+    }
+
+    return searchInput.value.trim() !== '';
 };
 
 export const restoreHighlightedSearchFromUrl = async () => {
@@ -381,6 +385,18 @@ export const restoreHighlightedSearchFromUrl = async () => {
 };
 
 export const registerAsyncTableGlobals = () => {
+    window.runManualTableSearchFromTrigger = (trigger) => {
+        const form = findAsyncTableForm(trigger);
+
+        if (!form || !getManualSearchInput(form)) {
+            return false;
+        }
+
+        performManualTableSearch(form);
+
+        return false;
+    };
+
     window.submitAsyncTableForm = async (form, { url = null, resetPage = true, toastMessage = '' } = {}) => {
         const rootSelector = form?.dataset?.asyncRoot;
 
@@ -512,6 +528,17 @@ export const initializeAsyncTableFilters = () => {
     });
 
     document.addEventListener('click', (event) => {
+        const manualSearchTrigger = event.target.closest('[data-code-search-submit="true"], [data-table-search-submit="true"]');
+        if (manualSearchTrigger) {
+            const form = findAsyncTableForm(manualSearchTrigger);
+
+            if (form && getManualSearchInput(form)) {
+                event.preventDefault();
+                performManualTableSearch(form);
+                return;
+            }
+        }
+
         const toastTrigger = event.target.closest('[data-app-toast-message]');
         if (toastTrigger) {
             event.preventDefault();

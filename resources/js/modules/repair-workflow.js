@@ -165,37 +165,14 @@ export const registerRepairWorkflowGlobals = () => {
         advisoryRows() {
             const rows = [];
 
-            if (this.repairStatus === 'waiting' && String(this.description ?? '').trim() === '') {
-                rows.push({
-                    key: 'waiting-description',
-                    label: 'Ieteicams jau pirms procesa saglabāt īsu problēmas aprakstu.',
-                });
-            }
-
             if (this.repairStatus === 'in-progress' && this.isExternal() && this.normalizedCost() === '') {
                 rows.push({
                     key: 'external-cost',
-                    label: 'Izmaksas nav obligātas, bet ieteicams tās ievadīt, tiklīdz summa ir zināma.',
-                });
-            }
-
-            if (this.repairStatus === 'in-progress' && this.priority === 'critical' && String(this.description ?? '').trim() !== '') {
-                rows.push({
-                    key: 'critical-note',
-                    label: 'Kritiskam remontam aprakstā ieteicams fiksēt ietekmi uz darbu vai infrastruktūru.',
+                    label: 'Ja ārējā remonta summa ir zināma, pievieno izmaksas, lai vēsture būtu pilnīga.',
                 });
             }
 
             return rows;
-        },
-        nextStepLabel() {
-            if (this.repairStatus === 'in-progress') {
-                return this.isExternal()
-                    ? 'Lai pabeigtu ārējo remontu, jāaizpilda apraksts, pakalpojuma sniedzējs, vendora kontakts un rēķina numurs.'
-                    : 'Lai pabeigtu iekšējo remontu, jāaizpilda tikai apraksts.';
-            }
-
-            return 'Šim statusam papildu prasības nav nepieciešamas.';
         },
         nextStepReady() {
             const rows = this.requirementRows();
@@ -230,15 +207,7 @@ export const registerRepairWorkflowGlobals = () => {
             return 'Remonts ir atcelts. Aktīvas nākamās darbības vairs nav pieejamas.';
         },
         advisoryTitle() {
-            if (this.repairStatus === 'waiting') {
-                return 'Ieteikums pirms remonta sākšanas';
-            }
-
-            if (this.repairStatus === 'in-progress') {
-                return 'Ieteicams pārbaudīt pirms saglabāšanas';
-            }
-
-            return 'Papildu ieteikumi';
+            return 'Papildu informācija';
         },
         missingRequirementLabels(targetStatus) {
             return this.requirementRows(targetStatus)
@@ -265,7 +234,7 @@ export const registerRepairWorkflowGlobals = () => {
             }
 
             const actionLabels = {
-                waiting: 'atgriezt uz gaida',
+                waiting: 'atgriezt remontu gaidīšanā',
                 'in-progress': 'sākt remontu',
                 completed: 'pabeigt remontu',
                 cancelled: 'atcelt remontu',
