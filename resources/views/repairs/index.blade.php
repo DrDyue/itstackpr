@@ -167,41 +167,61 @@
 
                             <div
                                 class="repairs-toolbar-date-range"
-                                title="Pārslēdziet, uz kuru datuma lauku attiecas intervāla filtrs. Kreisā pozīcija piemēro filtru sākuma datumam, labā pozīcija piemēro filtru beigu datumam."
+                                x-data="{ dateField: '{{ ($filters['date_field'] ?? 'start_date') === 'end_date' ? 'end_date' : 'start_date' }}' }"
                             >
                                 <div class="repairs-toolbar-date-range-head">
-                                    <span class="crud-label mb-0">Datuma lauks</span>
-                                    <span
-                                        class="repairs-date-field-help"
-                                        aria-hidden="true"
-                                        title="Kreisā pozīcija filtrē pēc sākuma datuma, labā pozīcija filtrē pēc beigu datuma."
-                                    >
-                                        ?
-                                    </span>
-                                </div>
+                                    <div class="repairs-toolbar-date-range-title">
+                                        <span class="crud-label mb-0">Datuma filtrs</span>
+                                        <div class="repairs-date-field-help-wrap">
+                                            <button
+                                                type="button"
+                                                class="repairs-date-field-help"
+                                                aria-label="Paskaidrojums par datuma filtru"
+                                            >
+                                                <span>?</span>
+                                            </button>
 
-                                <div class="repairs-date-field-switch" role="radiogroup" aria-label="Datuma filtra lauks">
-                                    <label class="repairs-date-field-option">
-                                        <input
-                                            type="radio"
-                                            name="date_field"
-                                            value="start_date"
-                                            class="sr-only peer"
-                                            {{ ($filters['date_field'] ?? 'start_date') === 'start_date' ? 'checked' : '' }}
-                                        >
-                                        <span class="repairs-date-field-pill">Sākuma datums</span>
-                                    </label>
+                                            <div class="repairs-date-field-tooltip" role="tooltip">
+                                                <div class="repairs-date-field-tooltip-title">Datuma intervāla darbība</div>
+                                                <div class="repairs-date-field-tooltip-copy">
+                                                    Izvēlieties, kuram remonta datumam piemērot intervālu.
+                                                    Kreisā pozīcija filtrē pēc sākuma datuma, labā pozīcija pēc beigu datuma.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                    <label class="repairs-date-field-option">
-                                        <input
-                                            type="radio"
-                                            name="date_field"
-                                            value="end_date"
-                                            class="sr-only peer"
-                                            {{ ($filters['date_field'] ?? 'start_date') === 'end_date' ? 'checked' : '' }}
-                                        >
-                                        <span class="repairs-date-field-pill">Beigu datums</span>
-                                    </label>
+                                    <div class="repairs-date-field-switch" role="radiogroup" aria-label="Datuma filtra lauks">
+                                        <div
+                                            class="repairs-date-field-switch-track"
+                                            :class="dateField === 'end_date' ? 'repairs-date-field-switch-track-end' : 'repairs-date-field-switch-track-start'"
+                                            aria-hidden="true"
+                                        ></div>
+
+                                        <label class="repairs-date-field-option">
+                                            <input
+                                                type="radio"
+                                                name="date_field"
+                                                value="start_date"
+                                                class="sr-only peer"
+                                                x-model="dateField"
+                                                {{ ($filters['date_field'] ?? 'start_date') === 'start_date' ? 'checked' : '' }}
+                                            >
+                                            <span class="repairs-date-field-pill" :class="dateField === 'start_date' ? 'repairs-date-field-pill-active' : ''">Sākuma datums</span>
+                                        </label>
+
+                                        <label class="repairs-date-field-option">
+                                            <input
+                                                type="radio"
+                                                name="date_field"
+                                                value="end_date"
+                                                class="sr-only peer"
+                                                x-model="dateField"
+                                                {{ ($filters['date_field'] ?? 'start_date') === 'end_date' ? 'checked' : '' }}
+                                            >
+                                            <span class="repairs-date-field-pill" :class="dateField === 'end_date' ? 'repairs-date-field-pill-active' : ''">Beigu datums</span>
+                                        </label>
+                                    </div>
                                 </div>
 
                                 <div class="repairs-toolbar-date-fields">

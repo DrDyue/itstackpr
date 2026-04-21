@@ -4656,31 +4656,78 @@ tbody td {
 }
 
 .repairs-toolbar-date-range-head {
-    @apply mb-2 flex items-center gap-2;
+    @apply mb-2 flex flex-wrap items-start justify-between gap-2;
+}
+
+.repairs-toolbar-date-range-title {
+    @apply flex items-center gap-2;
+}
+
+.repairs-date-field-help-wrap {
+    @apply relative;
 }
 
 .repairs-date-field-help {
-    @apply inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-[11px] font-semibold text-slate-500 shadow-sm transition;
+    @apply inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-[11px] font-semibold text-slate-500 shadow-sm transition;
 }
 
 .repairs-date-field-help:hover {
     @apply border-sky-200 text-sky-700;
 }
 
+.repairs-date-field-tooltip {
+    @apply pointer-events-none absolute left-1/2 top-[calc(100%+0.65rem)] z-20 w-72 -translate-x-1/2 rounded-2xl border border-sky-100 bg-white/95 p-3 text-left opacity-0 shadow-[0_24px_46px_-28px_rgba(15,23,42,0.42)] backdrop-blur-md transition duration-200 ease-out;
+    transform-origin: top center;
+}
+
+.repairs-date-field-tooltip::before {
+    content: '';
+    @apply absolute left-1/2 top-0 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rotate-45 border-l border-t border-sky-100 bg-white;
+}
+
+.repairs-date-field-help-wrap:hover .repairs-date-field-tooltip,
+.repairs-date-field-help-wrap:focus-within .repairs-date-field-tooltip {
+    @apply pointer-events-auto opacity-100;
+    transform: translateX(-50%) translateY(0);
+}
+
+.repairs-date-field-tooltip-title {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-sky-700;
+}
+
+.repairs-date-field-tooltip-copy {
+    @apply mt-2 text-sm leading-6 text-slate-600;
+}
+
 .repairs-date-field-switch {
-    @apply mb-3 inline-flex items-center gap-1 rounded-2xl border border-slate-200 bg-slate-50/90 p-1 shadow-sm;
+    @apply relative inline-flex items-center rounded-2xl border border-slate-200 bg-slate-50/90 p-1 shadow-sm;
+}
+
+.repairs-date-field-switch-track {
+    @apply absolute bottom-1 left-1 top-1 w-[calc(50%-0.25rem)] rounded-[0.95rem] shadow-sm ring-1 ring-white/70 transition-all duration-300 ease-out;
+    background:
+        linear-gradient(135deg, rgba(14, 165, 233, 0.18), rgba(37, 99, 235, 0.14)),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.96));
+}
+
+.repairs-date-field-switch-track-start {
+    transform: translateX(0);
+}
+
+.repairs-date-field-switch-track-end {
+    transform: translateX(calc(100% - 0.15rem));
 }
 
 .repairs-date-field-option {
-    @apply block;
+    @apply relative z-[1] block;
 }
 
 .repairs-date-field-pill {
-    @apply inline-flex min-h-[2rem] items-center justify-center rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-500 transition;
+    @apply inline-flex min-h-[2rem] min-w-[8.8rem] items-center justify-center rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-500 transition duration-200;
 }
 
-.repairs-date-field-option .peer:checked + .repairs-date-field-pill {
-    @apply bg-white text-sky-700 shadow-sm ring-1 ring-sky-100;
+.repairs-date-field-pill-active {
+    @apply text-sky-800;
 }
 
 .repairs-date-field-option .peer:focus-visible + .repairs-date-field-pill {
