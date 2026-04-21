@@ -1,6 +1,9 @@
 const asyncTableControllers = new Map();
 const asyncTableDebounceTimers = new WeakMap();
 const searchableSelectSubmitTimers = new WeakMap();
+const TABLE_SEARCH_ROW_SELECTOR = '[data-table-search-value], [data-table-code]';
+let tableSearchNavigatorState = null;
+let tableSearchNavigatorElement = null;
 
 const findAsyncTableRoot = (element) => {
     if (!element) {
@@ -184,6 +187,13 @@ const clearAsyncTableFormUi = (form, root) => {
 
 const normalizeTableSearchValue = (value) => String(value ?? '').trim().toLocaleLowerCase();
 
+const getTableSearchRows = (root) => Array.from(root?.querySelectorAll(TABLE_SEARCH_ROW_SELECTOR) ?? []);
+
+const getAsyncTableFormByRootSelector = (rootSelector) => {
+    return Array.from(document.querySelectorAll('[data-async-table-form]'))
+        .find((form) => form.dataset?.asyncRoot === rootSelector) || null;
+};
+
 const clearTableSearchHighlights = (root) => {
     root?.querySelectorAll('.table-search-hit').forEach((row) => {
         row.classList.remove('table-search-hit');
@@ -220,6 +230,14 @@ const getRowSearchId = (row) => {
     return String(row?.dataset?.tableRowId || '').trim();
 };
 
+const getRowSearchLabel = (row) => {
+    const primaryCell = row?.querySelector?.('td');
+    const strongValue = row?.querySelector?.('.app-table-cell-strong, .device-table-cell-primary, .dash-table-primary');
+    const labelSource = strongValue?.textContent || primaryCell?.textContent || getRowSearchValue(row) || '';
+
+    return String(labelSource).replace(/\s+/g, ' ').trim();
+};
+
 const rowMatchesSearch = (row, term, mode = 'contains') => {
     const value = normalizeTableSearchValue(getRowSearchValue(row));
     const normalizedTerm = normalizeTableSearchValue(term);
@@ -235,9 +253,12 @@ const rowMatchesSearch = (row, term, mode = 'contains') => {
     return value.includes(normalizedTerm);
 };
 
+const findMatchingTableRows = (root, term, mode = 'contains') => {
+    return getTableSearchRows(root).filter((row) => rowMatchesSearch(row, term, mode));
+};
+
 const findMatchingTableRow = (root, term, mode = 'contains') => {
-    return Array.from(root?.querySelectorAll('[data-table-search-value], [data-table-code]') ?? [])
-        .find((row) => rowMatchesSearch(row, term, mode)) || null;
+    return findMatchingTableRows(root, term, mode)[0] || null;
 };
 
 const getCurrentAsyncPage = () => {
@@ -245,6 +266,85 @@ const getCurrentAsyncPage = () => {
     const currentPage = Number.parseInt(currentUrl.searchParams.get('page') || '1', 10);
 
     return Number.isFinite(currentPage) && currentPage > 0 ? currentPage : 1;
+};
+
+const buildAsyncTablePageUrl = (form, page) => {
+    const targetUrl = buildAsyncTableUrl(form, { resetPage: false });
+    targetUrl.searchParams.set('page', String(page));
+
+    return targetUrl;
+};
+
+const searchAcrossPaginatedMatches = async (form, rootSelector, rawTerm, mode = 'contains') => {
+    const currentPage = getCurrentAsyncPage();
+    const baseUrl = buildAsyncTableUrl(form, { resetPage: false });
+    const maxProbePages = 50;
+    const matches = [];
+    const pageHtmlByPage = new Map();
+    const currentRoot = document.querySelector(rootSelector);
+
+    findMatchingTableRows(currentRoot, rawTerm, mode).forEach((row, index) => {
+        matches.push({
+            page: currentPage,
+            rowIndex: index,
+            highlightId: getRowSearchId(row),
+            label: getRowSearchLabel(row),
+        });
+    });
+
+    for (let page = 1; page <= maxProbePages; page += 1) {
+        if (page === currentPage) {
+            continue;
+        }
+
+        const targetUrl = new URL(baseUrl.toString());
+        targetUrl.searchParams.set('page', String(page));
+
+        const response = await fetch(targetUrl.toString(), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+
+        if (!response.ok) {
+            continue;
+        }
+
+        const html = await response.text();
+        const parser = new DOMParser();
+        const nextDocument = parser.parseFromString(html, 'text/html');
+        const nextRoot = nextDocument.querySelector(rootSelector);
+
+        if (!nextRoot) {
+            continue;
+        }
+
+        const rowCount = nextRoot.querySelectorAll('[data-table-row-id], [data-table-code], [data-table-search-value]').length;
+        if (rowCount === 0) {
+            break;
+        }
+
+        const pageMatches = findMatchingTableRows(nextRoot, rawTerm, mode);
+        if (pageMatches.length === 0) {
+            continue;
+        }
+
+        pageHtmlByPage.set(page, html);
+
+        pageMatches.forEach((row, index) => {
+            matches.push({
+                page,
+                rowIndex: index,
+                highlightId: getRowSearchId(row),
+                label: getRowSearchLabel(row),
+            });
+        });
+    }
+
+    return {
+        matches,
+        pageHtmlByPage,
+    };
 };
 
 const searchAcrossPaginatedHtml = async (form, rootSelector, rawTerm, mode = 'contains') => {
@@ -336,6 +436,175 @@ const buildSearchNavigationUrl = (form, page, rawTerm, mode, highlightId = '') =
     return targetUrl;
 };
 
+const ensureTableSearchNavigatorElement = () => {
+    if (tableSearchNavigatorElement?.isConnected) {
+        return tableSearchNavigatorElement;
+    }
+
+    tableSearchNavigatorElement = document.createElement('div');
+    tableSearchNavigatorElement.className = 'table-search-navigator';
+    document.body.appendChild(tableSearchNavigatorElement);
+
+    return tableSearchNavigatorElement;
+};
+
+const renderTableSearchNavigator = () => {
+    const navigator = ensureTableSearchNavigatorElement();
+    const state = tableSearchNavigatorState;
+
+    if (!state || !Array.isArray(state.matches) || state.matches.length <= 1) {
+        navigator.setAttribute('hidden', 'hidden');
+        navigator.innerHTML = '';
+        return;
+    }
+
+    const currentMatch = state.matches[state.currentIndex] ?? null;
+    const currentLabel = currentMatch?.label || 'Atlasītais ieraksts';
+    const escapedTerm = String(state.term || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const escapedLabel = String(currentLabel).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    navigator.removeAttribute('hidden');
+    navigator.innerHTML = `
+        <div class="table-search-navigator-card">
+            <div class="table-search-navigator-header">
+                <div>
+                    <div class="table-search-navigator-title">Meklēšanas rezultāti</div>
+                    <div class="table-search-navigator-subtitle">"${escapedTerm}" atrasti ${state.matches.length} ieraksti</div>
+                </div>
+                <button type="button" class="table-search-navigator-close" data-table-search-nav-close="true" aria-label="Aizvērt meklēšanas rezultātus">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="table-search-navigator-body">
+                <div class="table-search-navigator-current">
+                    <span class="table-search-navigator-current-index">${state.currentIndex + 1} / ${state.matches.length}</span>
+                    <span class="table-search-navigator-current-label">${escapedLabel}</span>
+                </div>
+                <div class="table-search-navigator-controls">
+                    <button type="button" class="table-search-navigator-button" data-table-search-nav="prev">
+                        <span aria-hidden="true">←</span>
+                        <span>Iepriekšējais</span>
+                    </button>
+                    <button type="button" class="table-search-navigator-button table-search-navigator-button-primary" data-table-search-nav="next">
+                        <span>Nākamais</span>
+                        <span aria-hidden="true">→</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+};
+
+const clearTableSearchNavigator = ({ rootSelector = null } = {}) => {
+    if (!tableSearchNavigatorState) {
+        renderTableSearchNavigator();
+        return;
+    }
+
+    if (rootSelector && tableSearchNavigatorState.rootSelector !== rootSelector) {
+        return;
+    }
+
+    const previousRootSelector = tableSearchNavigatorState.rootSelector;
+    tableSearchNavigatorState = null;
+
+    if (previousRootSelector) {
+        clearTableSearchHighlights(document.querySelector(previousRootSelector));
+    }
+
+    renderTableSearchNavigator();
+};
+
+const setTableSearchNavigatorState = (nextState) => {
+    tableSearchNavigatorState = nextState;
+    renderTableSearchNavigator();
+};
+
+const normalizeSearchNavigatorIndex = (index, total) => {
+    if (total <= 0) {
+        return 0;
+    }
+
+    return ((index % total) + total) % total;
+};
+
+const scrollToAndHighlightTableRow = (row) => {
+    if (!row) {
+        return;
+    }
+
+    highlightTableRow(row);
+    row.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest',
+    });
+};
+
+const moveTableSearchNavigator = async (step) => {
+    if (!tableSearchNavigatorState?.matches?.length) {
+        return false;
+    }
+
+    const nextIndex = normalizeSearchNavigatorIndex(
+        tableSearchNavigatorState.currentIndex + step,
+        tableSearchNavigatorState.matches.length
+    );
+    const targetMatch = tableSearchNavigatorState.matches[nextIndex];
+
+    if (!targetMatch) {
+        return false;
+    }
+
+    const form = getAsyncTableFormByRootSelector(tableSearchNavigatorState.rootSelector);
+    const root = document.querySelector(tableSearchNavigatorState.rootSelector);
+    const currentPage = getCurrentAsyncPage();
+
+    if (Number(targetMatch.page) === currentPage) {
+        const row = findTableRowById(root, targetMatch.highlightId)
+            || findMatchingTableRows(root, tableSearchNavigatorState.term, tableSearchNavigatorState.mode)[targetMatch.rowIndex]
+            || null;
+
+        if (row) {
+            clearTableSearchHighlights(root);
+            scrollToAndHighlightTableRow(row);
+        }
+
+        tableSearchNavigatorState.currentIndex = nextIndex;
+        renderTableSearchNavigator();
+        return true;
+    }
+
+    if (!form) {
+        return false;
+    }
+
+    const swapped = await window.submitAsyncTableForm(form, {
+        url: buildAsyncTablePageUrl(form, targetMatch.page),
+        resetPage: false,
+        preserveSearchNavigator: true,
+    });
+
+    if (!swapped) {
+        return false;
+    }
+
+    const nextRoot = document.querySelector(tableSearchNavigatorState.rootSelector);
+    const row = findTableRowById(nextRoot, targetMatch.highlightId)
+        || findMatchingTableRows(nextRoot, tableSearchNavigatorState.term, tableSearchNavigatorState.mode)[targetMatch.rowIndex]
+        || null;
+
+    if (row) {
+        clearTableSearchHighlights(nextRoot);
+        scrollToAndHighlightTableRow(row);
+    }
+
+    tableSearchNavigatorState.currentIndex = nextIndex;
+    renderTableSearchNavigator();
+
+    return true;
+};
+
 const performManualTableSearch = async (form) => {
     const rootSelector = form?.dataset?.asyncRoot;
     const searchInput = getManualSearchInput(form);
@@ -354,6 +623,7 @@ const performManualTableSearch = async (form) => {
     const searchMode = getManualSearchMode(searchInput);
 
     if (!normalizedTerm) {
+        clearTableSearchNavigator({ rootSelector });
         window.dispatchAppToast({
             title: 'Meklēšana',
             message: 'Ievadi meklējamo vērtību, lai atrastu konkrēto ierakstu.',
@@ -365,37 +635,50 @@ const performManualTableSearch = async (form) => {
     }
 
     clearTableSearchHighlights(root);
+    clearTableSearchNavigator({ rootSelector });
 
-    const match = findMatchingTableRow(root, rawTerm, searchMode);
+    const paginatedResults = await searchAcrossPaginatedMatches(form, rootSelector, rawTerm, searchMode);
+    if (paginatedResults.matches.length > 0) {
+        const firstMatch = paginatedResults.matches[0];
 
-    if (match) {
-        highlightTableRow(match);
-        match.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-            inline: 'nearest',
+        setTableSearchNavigatorState({
+            term: rawTerm,
+            mode: searchMode,
+            rootSelector,
+            matches: paginatedResults.matches,
+            currentIndex: 0,
         });
 
-        return true;
-    }
+        if (Number(firstMatch.page) !== getCurrentAsyncPage()) {
+            const cachedHtml = paginatedResults.pageHtmlByPage.get(firstMatch.page);
 
-    const paginatedMatch = await searchAcrossPaginatedHtml(form, rootSelector, rawTerm, searchMode);
-    if (paginatedMatch?.html) {
-        const swapped = swapAsyncTableRoot(rootSelector, paginatedMatch.html);
+            if (cachedHtml) {
+                const swapped = swapAsyncTableRoot(rootSelector, cachedHtml);
 
-        if (swapped) {
-            const targetUrl = buildSearchNavigationUrl(
-                form,
-                paginatedMatch.page,
-                rawTerm,
-                searchMode,
-                paginatedMatch.highlightId || ''
-            );
-
-            window.history.replaceState({}, '', `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`);
-            await restoreHighlightedSearchFromUrl();
-            return true;
+                if (swapped) {
+                    const targetUrl = buildAsyncTablePageUrl(form, firstMatch.page);
+                    window.history.replaceState({}, '', `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`);
+                }
+            } else {
+                await window.submitAsyncTableForm(form, {
+                    url: buildAsyncTablePageUrl(form, firstMatch.page),
+                    resetPage: false,
+                    preserveSearchNavigator: true,
+                });
+            }
         }
+
+        const activeRoot = document.querySelector(rootSelector);
+        const activeRow = findTableRowById(activeRoot, firstMatch.highlightId)
+            || findMatchingTableRows(activeRoot, rawTerm, searchMode)[firstMatch.rowIndex]
+            || null;
+
+        if (activeRow) {
+            scrollToAndHighlightTableRow(activeRow);
+        }
+
+        renderTableSearchNavigator();
+        return true;
     }
 
     const searchEndpoint = form.dataset.searchEndpoint;
@@ -601,11 +884,15 @@ export const registerAsyncTableGlobals = () => {
         return false;
     };
 
-    window.submitAsyncTableForm = async (form, { url = null, resetPage = true, toastMessage = '' } = {}) => {
+    window.submitAsyncTableForm = async (form, { url = null, resetPage = true, toastMessage = '', preserveSearchNavigator = false } = {}) => {
         const rootSelector = form?.dataset?.asyncRoot;
 
         if (!form || !rootSelector) {
             return false;
+        }
+
+        if (!preserveSearchNavigator) {
+            clearTableSearchNavigator({ rootSelector });
         }
 
         const targetUrl = url instanceof URL ? url : buildAsyncTableUrl(form, { resetPage });
@@ -706,6 +993,7 @@ export const initializeAsyncTableFilters = () => {
         }
 
         if (target.matches('[data-async-manual="true"]')) {
+            clearTableSearchNavigator({ rootSelector: form.dataset?.asyncRoot });
             return;
         }
 
@@ -741,6 +1029,20 @@ export const initializeAsyncTableFilters = () => {
                 performManualTableSearch(form);
                 return;
             }
+        }
+
+        const navigatorAction = event.target.closest('[data-table-search-nav], [data-table-search-nav-close]');
+        if (navigatorAction) {
+            event.preventDefault();
+
+            if (navigatorAction.matches('[data-table-search-nav-close]')) {
+                clearTableSearchNavigator();
+                return;
+            }
+
+            const direction = navigatorAction.getAttribute('data-table-search-nav') === 'prev' ? -1 : 1;
+            moveTableSearchNavigator(direction);
+            return;
         }
 
         const toastTrigger = event.target.closest('[data-app-toast-message]');
