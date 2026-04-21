@@ -111,25 +111,25 @@
                                 <span>Meklēšana</span>
                             </h3>
                             <div class="devices-filter-grid">
-                            <div class="devices-search-group device-transfers-code-search">
-                                <label class="devices-search-label">
-                                    <span>Meklēt pēc koda</span>
-                                    <input
-                                        type="text"
-                                        name="code"
-                                        value="{{ $filters['code'] }}"
-                                        class="crud-control"
-                                        placeholder="Ierīces kods"
-                                        autocomplete="off"
-                                        data-async-manual="true"
-                                        data-async-code-search="true"
-                                    >
-                                </label>
-                                <button type="button" class="btn-search" data-code-search-submit="true" onclick="return window.runManualTableSearchFromTrigger(this);">
-                                    <x-icon name="search" size="h-4 w-4" />
-                                    <span>Meklēt</span>
-                                </button>
-                            </div>
+                                <div class="devices-search-group device-transfers-code-search">
+                                    <label class="devices-search-label">
+                                        <span>Meklēt pēc koda</span>
+                                        <input
+                                            type="text"
+                                            name="code"
+                                            value="{{ $filters['code'] }}"
+                                            class="crud-control"
+                                            placeholder="Ierīces kods"
+                                            autocomplete="off"
+                                            data-async-manual="true"
+                                            data-async-code-search="true"
+                                        >
+                                    </label>
+                                    <button type="button" class="btn-search" data-code-search-submit="true" onclick="return window.runManualTableSearchFromTrigger(this);">
+                                        <x-icon name="search" size="h-4 w-4" />
+                                        <span>Meklēt</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -139,92 +139,90 @@
                                 <span>Filtri</span>
                             </h3>
                             <div class="{{ $isAdmin ? 'transfer-toolbar-filters-grid transfer-toolbar-filters-grid-admin' : 'transfer-toolbar-filters-grid transfer-toolbar-filters-grid-compact' }}">
-                            <label class="devices-text-search">
-                                <span>Filtrēt pēc teksta</span>
-                                <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, pieteicējs, saņēmējs vai iemesls">
-                            </label>
-
-                            <label class="block">
-                                <span class="crud-label">Ierīce</span>
-                                <x-searchable-select
-                                    name="device_id"
-                                    query-name="device_query"
-                                    identifier="transfer-device-filter"
-                                    :options="$deviceOptions"
-                                    :selected="(string) ($filters['device_id'] ?? '')"
-                                    :query="$selectedDeviceLabel"
-                                    placeholder="Izvēlies ierīci"
-                                    empty-message="Neviena ierīce neatbilst izvēlētajiem filtriem."
-                                />
-                            </label>
-
-                            @if ($isAdmin)
                                 <label class="block">
-                                    <span class="crud-label">Pieteicējs</span>
-                                    <x-searchable-select
-                                        name="requester_id"
-                                        query-name="requester_query"
-                                        identifier="transfer-requester-filter"
-                                        :options="$requesterOptions"
-                                        :selected="(string) ($filters['requester_id'] ?? '')"
-                                        :query="$selectedRequesterLabel"
-                                        placeholder="Izvēlies pieteicēju"
-                                        empty-message="Neviens pieteicējs neatbilst meklējumam."
-                                    />
+                                    <span>Filtrēt pēc teksta</span>
+                                    <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, pieteicējs, saņēmējs vai iemesls">
                                 </label>
 
                                 <label class="block">
-                                    <span class="crud-label">Saņēmējs</span>
+                                    <span class="crud-label">Ierīce</span>
                                     <x-searchable-select
-                                        name="recipient_id"
-                                        query-name="recipient_query"
-                                        identifier="transfer-recipient-filter"
-                                        :options="$recipientOptions"
-                                        :selected="(string) ($filters['recipient_id'] ?? '')"
-                                        :query="$selectedRecipientLabel"
-                                        placeholder="Izvēlies saņēmēju"
-                                        empty-message="Neviens saņēmējs neatbilst meklējumam."
+                                        name="device_id"
+                                        query-name="device_query"
+                                        identifier="transfer-device-filter"
+                                        :options="$deviceOptions"
+                                        :selected="(string) ($filters['device_id'] ?? '')"
+                                        :query="$selectedDeviceLabel"
+                                        placeholder="Izvēlies ierīci"
+                                        empty-message="Neviena ierīce neatbilst izvēlētajiem filtriem."
                                     />
                                 </label>
-                            @else
-                                <label class="block">
-                                    <span class="crud-label">Kam nosūtīju</span>
-                                    <x-searchable-select
-                                        name="recipient_id"
-                                        query-name="recipient_query"
-                                        identifier="transfer-recipient-filter"
-                                        :options="$recipientOptions"
-                                        :selected="(string) ($filters['recipient_id'] ?? '')"
-                                        :query="$selectedRecipientLabel"
-                                        placeholder="Izvēlies saņēmēju"
-                                        empty-message="Neviens saņēmējs neatbilst meklējumam."
-                                    />
-                                </label>
+                                @if ($isAdmin)
+                                    <label class="block">
+                                        <span class="crud-label">Pieteicējs</span>
+                                        <x-searchable-select
+                                            name="requester_id"
+                                            query-name="requester_query"
+                                            identifier="transfer-requester-filter"
+                                            :options="$requesterOptions"
+                                            :selected="(string) ($filters['requester_id'] ?? '')"
+                                            :query="$selectedRequesterLabel"
+                                            placeholder="Izvēlies pieteicēju"
+                                            empty-message="Neviens pieteicējs neatbilst meklējumam."
+                                        />
+                                    </label>
 
-                                <label class="block">
-                                    <span class="crud-label">No kā saņēmu</span>
-                                    <x-searchable-select
-                                        name="requester_id"
-                                        query-name="requester_query"
-                                        identifier="transfer-requester-filter"
-                                        :options="$requesterOptions"
-                                        :selected="(string) ($filters['requester_id'] ?? '')"
-                                        :query="$selectedRequesterLabel"
-                                        placeholder="Izvēlies pieteicēju"
-                                        empty-message="Neviens pieteicējs neatbilst meklējumam."
-                                    />
-                                </label>
-                            @endif
+                                    <label class="block">
+                                        <span class="crud-label">Saņēmējs</span>
+                                        <x-searchable-select
+                                            name="recipient_id"
+                                            query-name="recipient_query"
+                                            identifier="transfer-recipient-filter"
+                                            :options="$recipientOptions"
+                                            :selected="(string) ($filters['recipient_id'] ?? '')"
+                                            :query="$selectedRecipientLabel"
+                                            placeholder="Izvēlies saņēmēju"
+                                            empty-message="Neviens saņēmējs neatbilst meklējumam."
+                                        />
+                                    </label>
+                                @else
+                                    <label class="block">
+                                        <span class="crud-label">Kam nosūtīju</span>
+                                        <x-searchable-select
+                                            name="recipient_id"
+                                            query-name="recipient_query"
+                                            identifier="transfer-recipient-filter"
+                                            :options="$recipientOptions"
+                                            :selected="(string) ($filters['recipient_id'] ?? '')"
+                                            :query="$selectedRecipientLabel"
+                                            placeholder="Izvēlies saņēmēju"
+                                            empty-message="Neviens saņēmējs neatbilst meklējumam."
+                                        />
+                                    </label>
 
-                            <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
-                            <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
-                        </div>
+                                    <label class="block">
+                                        <span class="crud-label">No kā saņēmu</span>
+                                        <x-searchable-select
+                                            name="requester_id"
+                                            query-name="requester_query"
+                                            identifier="transfer-requester-filter"
+                                            :options="$requesterOptions"
+                                            :selected="(string) ($filters['requester_id'] ?? '')"
+                                            :query="$selectedRequesterLabel"
+                                            placeholder="Izvēlies pieteicēju"
+                                            empty-message="Neviens pieteicējs neatbilst meklējumam."
+                                        />
+                                    </label>
+                                @endif
+
+                                <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
+                                <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
+                            </div>
                         </div>
                     </div>
 
-                        <div class="filter-toolbar-footer">
                     <div
-                        class="quick-filter-groups"
+                        class="filter-toolbar-footer"
                         x-data="{
                             selected: Array.from(new Set((@js($filters['statuses']) ?? []).map((value) => String(value)))),
                             incoming: @js($isIncomingFilter),
@@ -252,64 +250,64 @@
                             },
                         }"
                     >
-                        @if (! $isAdmin)
+                        <div class="quick-filter-groups">
+                            @if (! $isAdmin)
+                                <div class="quick-filter-group">
+                                    <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ātrie filtri</div>
+                                    <div class="quick-status-filters">
+                                        <button
+                                            type="button"
+                                            @click="toggleIncoming(); $nextTick(() => window.submitAsyncTableForm($el.closest('form'), { resetPage: true }))"
+                                            class="quick-status-filter quick-status-filter-sky"
+                                            :class="incoming ? 'quick-status-filter-active' : ''"
+                                        >
+                                            <x-icon name="transfer" size="h-4 w-4" />
+                                            <span>Ienākošie piedāvājumi</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            @endif
+
                             <div class="quick-filter-group">
-                                <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ātrie filtri</div>
+                                <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Statuss</div>
                                 <div class="quick-status-filters">
-                                    <button
-                                        type="button"
-                                        @click="toggleIncoming(); $nextTick(() => window.submitAsyncTableForm($el.closest('form'), { resetPage: true }))"
-                                        class="quick-status-filter quick-status-filter-sky"
-                                        :class="incoming ? 'quick-status-filter-active' : ''"
-                                    >
-                                        <x-icon name="transfer" size="h-4 w-4" />
-                                        <span>Ienākošie piedāvājumi</span>
-                                    </button>
+                                    @foreach ($statuses as $status)
+                                        @php
+                                            $toneClass = $status === 'submitted'
+                                                ? 'quick-status-filter-amber'
+                                                : ($status === 'approved' ? 'quick-status-filter-emerald' : 'quick-status-filter-rose');
+                                            $iconName = match ($status) {
+                                                'submitted' => 'clock',
+                                                'approved' => 'check-circle',
+                                                'rejected' => 'x-circle',
+                                                default => 'information-circle',
+                                            };
+                                        @endphp
+                                        <button
+                                            type="button"
+                                            @click="toggleStatus(@js($status)); $nextTick(() => window.submitAsyncTableForm($el.closest('form'), { resetPage: true }))"
+                                            class="quick-status-filter {{ $toneClass }}"
+                                            :class="isSelected(@js($status)) && !incoming ? 'quick-status-filter-active' : ''"
+                                        >
+                                            <x-icon :name="$iconName" size="h-4 w-4" />
+                                            <span>{{ $statusLabels[$status] ?? $status }}</span>
+                                        </button>
+                                    @endforeach
+
+                                    <template x-for="value in selected" :key="'device-transfer-status-' + value">
+                                        <input type="hidden" name="status[]" :value="value">
+                                    </template>
+
+                                    <input x-bind:disabled="!incoming" type="hidden" name="incoming" value="1">
                                 </div>
                             </div>
-                        @endif
-
-                        <div class="quick-filter-group">
-                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Statuss</div>
-                            <div class="quick-status-filters">
-                                @foreach ($statuses as $status)
-                                    @php
-                                        $toneClass = $status === 'submitted'
-                                            ? 'quick-status-filter-amber'
-                                            : ($status === 'approved' ? 'quick-status-filter-emerald' : 'quick-status-filter-rose');
-                                        $iconName = match ($status) {
-                                            'submitted' => 'clock',
-                                            'approved' => 'check-circle',
-                                            'rejected' => 'x-circle',
-                                            default => 'information-circle',
-                                        };
-                                    @endphp
-                                    <button
-                                        type="button"
-                                        @click="toggleStatus(@js($status)); $nextTick(() => window.submitAsyncTableForm($el.closest('form'), { resetPage: true }))"
-                                        class="quick-status-filter {{ $toneClass }}"
-                                        :class="isSelected(@js($status)) && !incoming ? 'quick-status-filter-active' : ''"
-                                    >
-                                        <x-icon :name="$iconName" size="h-4 w-4" />
-                                        <span>{{ $statusLabels[$status] ?? $status }}</span>
-                                    </button>
-                                @endforeach
-
-                                <template x-for="value in selected" :key="'device-transfer-status-' + value">
-                                    <input type="hidden" name="status[]" :value="value">
-                                </template>
-
-                                <input x-bind:disabled="!incoming" type="hidden" name="incoming" value="1">
-                            </div>
                         </div>
-                    </div>
 
-                    <div class="toolbar-actions">
-                        <a href="{{ route('device-transfers.index', ['clear' => 1]) }}" class="btn-clear" data-async-link="true" data-async-clear="true">
-                            <x-icon name="clear" size="h-4 w-4" />
-                            <span>Notīrīt filtrus</span>
-                        </a>
-                    </div>
+                        <div class="toolbar-actions">
+                            <a href="{{ route('device-transfers.index', ['clear' => 1]) }}" class="btn-clear" data-async-link="true" data-async-clear="true">
+                                <x-icon name="clear" size="h-4 w-4" />
+                                <span>Notīrīt filtrus</span>
+                            </a>
                         </div>
                     </div>
                 </div>
