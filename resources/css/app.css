@@ -4667,12 +4667,16 @@ tbody td {
     @apply flex items-center gap-2;
 }
 
+.repairs-date-filter-label {
+    @apply text-[11px] font-semibold tracking-[0.08em] text-slate-600;
+}
+
 .repairs-date-field-help-wrap {
     @apply relative;
 }
 
 .repairs-date-field-help {
-    @apply inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-[11px] font-semibold text-slate-500 shadow-sm transition;
+    @apply inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-[10px] font-semibold text-slate-500 shadow-sm transition;
 }
 
 .repairs-date-field-help:hover {
@@ -4704,11 +4708,11 @@ tbody td {
 }
 
 .repairs-date-field-switch {
-    @apply relative inline-flex items-center rounded-2xl border border-slate-200 bg-slate-50/90 p-1 shadow-sm;
+    @apply relative inline-flex items-center rounded-xl border border-slate-200 bg-slate-50/90 p-[0.18rem] shadow-sm;
 }
 
 .repairs-date-field-switch-track {
-    @apply absolute bottom-1 left-1 top-1 w-[calc(50%-0.25rem)] rounded-[0.95rem] shadow-sm ring-1 ring-white/70 transition-all duration-300 ease-out;
+    @apply absolute bottom-[0.18rem] left-[0.18rem] top-[0.18rem] w-[calc(50%-0.18rem)] rounded-[0.7rem] shadow-sm ring-1 ring-white/70 transition-all duration-300 ease-out;
     background:
         linear-gradient(135deg, rgba(14, 165, 233, 0.18), rgba(37, 99, 235, 0.14)),
         linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.96));
@@ -4727,7 +4731,7 @@ tbody td {
 }
 
 .repairs-date-field-pill {
-    @apply inline-flex min-h-[2rem] min-w-[8.8rem] items-center justify-center rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-500 transition duration-200;
+    @apply inline-flex min-h-[1.8rem] min-w-[7.6rem] items-center justify-center rounded-[0.7rem] px-2.5 py-1 text-[11px] font-semibold text-slate-500 transition duration-200;
 }
 
 .repairs-date-field-pill-active {

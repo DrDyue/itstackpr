@@ -135,7 +135,7 @@
 
                             <div class="repairs-toolbar-date-filter-bar">
                                 <div class="repairs-toolbar-date-range-title">
-                                    <span class="crud-label mb-0">Datuma filtrs</span>
+                                    <span class="repairs-date-filter-label">Datuma filtrs</span>
                                     <div class="repairs-date-field-help-wrap">
                                         <button
                                             type="button"
