@@ -258,7 +258,7 @@
                                 <div class="quick-status-filters">
                                     <button
                                         type="button"
-                                        @click="toggleIncoming(); $nextTick(() => $el.closest('form').requestSubmit())"
+                                        @click="toggleIncoming(); $nextTick(() => window.submitAsyncTableForm($el.closest('form'), { resetPage: true }))"
                                         class="quick-status-filter quick-status-filter-sky"
                                         :class="incoming ? 'quick-status-filter-active' : ''"
                                     >
@@ -286,7 +286,7 @@
                                     @endphp
                                     <button
                                         type="button"
-                                        @click="toggleStatus(@js($status)); $nextTick(() => $el.closest('form').requestSubmit())"
+                                        @click="toggleStatus(@js($status)); $nextTick(() => window.submitAsyncTableForm($el.closest('form'), { resetPage: true }))"
                                         class="quick-status-filter {{ $toneClass }}"
                                         :class="isSelected(@js($status)) && !incoming ? 'quick-status-filter-active' : ''"
                                     >
