@@ -228,7 +228,7 @@
                                 <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ātrie filtri</div>
                                 <div class="quick-status-filters">
                                     <a
-                                        href="{{ route('device-transfers.index', array_merge(request()->except(['incoming']), ['incoming' => 1])) }}"
+                                        href="{{ route('device-transfers.index', ['incoming' => 1, 'statuses_filter' => 1, 'status' => ['submitted']]) }}"
                                         class="quick-status-filter quick-status-filter-sky {{ $isIncomingFilter ? 'quick-status-filter-active' : '' }}"
                                     >
                                         <x-icon name="transfer" size="h-4 w-4" />

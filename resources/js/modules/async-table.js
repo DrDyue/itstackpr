@@ -29,15 +29,31 @@ const findAsyncTableForm = (element) => {
     return element.closest?.('[data-async-table-form]') ?? null;
 };
 
-const buildAsyncTableUrl = (form, { resetPage = true } = {}) => {
-    const action = form.getAttribute('action') || window.location.href;
-    const url = new URL(action, window.location.origin);
+const getNamedFormControls = (form, name) => {
+    return Array.from(form?.elements || []).filter((element) => element?.name === name);
+};
+
+const isManualSearchField = (element) => {
+    return element?.matches?.('[data-async-manual="true"], [data-async-code-search="true"], [data-table-manual-search="true"]') ?? false;
+};
+
+const shouldSkipSerializedField = (form, key, { resetPage = true, includeManual = false } = {}) => {
+    if (key === 'page' && resetPage) {
+        return true;
+    }
+
+    if (includeManual) {
+        return false;
+    }
+
+    return getNamedFormControls(form, key).some((element) => isManualSearchField(element));
+};
+
+const appendSerializedFormParams = (form, targetUrl, { resetPage = true, includeManual = false } = {}) => {
     const formData = new window.FormData(form);
 
-    url.search = '';
-
     for (const [key, value] of formData.entries()) {
-        if (key === 'page' && resetPage) {
+        if (shouldSkipSerializedField(form, key, { resetPage, includeManual })) {
             continue;
         }
 
@@ -45,8 +61,16 @@ const buildAsyncTableUrl = (form, { resetPage = true } = {}) => {
             continue;
         }
 
-        url.searchParams.append(key, value);
+        targetUrl.searchParams.append(key, value);
     }
+};
+
+const buildAsyncTableUrl = (form, { resetPage = true, includeManual = false } = {}) => {
+    const action = form.getAttribute('action') || window.location.href;
+    const url = new URL(action, window.location.origin);
+
+    url.search = '';
+    appendSerializedFormParams(form, url, { resetPage, includeManual });
 
     return url;
 };
@@ -414,15 +438,7 @@ const findTableRowById = (root, rowId) => {
 
 const buildSearchNavigationUrl = (form, page, rawTerm, mode, highlightId = '') => {
     const targetUrl = new URL(form.getAttribute('action') || window.location.href, window.location.origin);
-    const formData = new FormData(form);
-
-    for (const [key, value] of formData.entries()) {
-        if (value === '') {
-            continue;
-        }
-
-        targetUrl.searchParams.append(key, value);
-    }
+    appendSerializedFormParams(form, targetUrl, { resetPage: false, includeManual: false });
 
     targetUrl.searchParams.set('page', String(page));
     targetUrl.searchParams.set('highlight', rawTerm);
@@ -694,15 +710,8 @@ const performManualTableSearch = async (form) => {
 
     try {
         const endpointUrl = new URL(searchEndpoint, window.location.origin);
-        const formData = new FormData(form);
-
-        for (const [key, value] of formData.entries()) {
-            if (value === '') {
-                continue;
-            }
-
-            endpointUrl.searchParams.append(key, value);
-        }
+        appendSerializedFormParams(form, endpointUrl, { resetPage: false, includeManual: false });
+        endpointUrl.searchParams.set(searchInput.name, rawTerm);
 
         const response = await fetch(endpointUrl.toString(), {
             headers: {
@@ -804,15 +813,8 @@ export const restoreHighlightedSearchFromUrl = async () => {
         if (form?.dataset?.searchEndpoint) {
             try {
                 const endpointUrl = new URL(form.dataset.searchEndpoint, window.location.origin);
-                const formData = new FormData(form);
-
-                for (const [key, value] of formData.entries()) {
-                    if (value === '') {
-                        continue;
-                    }
-
-                    endpointUrl.searchParams.append(key, value);
-                }
+                appendSerializedFormParams(form, endpointUrl, { resetPage: false, includeManual: false });
+                endpointUrl.searchParams.set(getManualSearchInput(form)?.name || 'code', term);
 
                 const response = await fetch(endpointUrl.toString(), {
                     headers: {
