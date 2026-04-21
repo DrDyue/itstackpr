@@ -2623,26 +2623,107 @@ tbody td {
 
 .searchable-select-input-drag-preview {
     @apply border-sky-300 bg-white ring-2 ring-sky-100;
+    box-shadow:
+        0 0 0 1px rgba(14, 165, 233, 0.12),
+        0 22px 40px -28px rgba(14, 165, 233, 0.45);
 }
 
 .searchable-select-drag-preview {
-    @apply pointer-events-none absolute left-0 right-0 z-[145] rounded-xl border border-slate-200 bg-white px-3.5 py-2 shadow-lg backdrop-blur-sm;
+    @apply pointer-events-none absolute left-0 right-0 z-[145] overflow-hidden rounded-2xl border border-sky-100/80 bg-white px-4 py-3 shadow-[0_24px_45px_-30px_rgba(15,23,42,0.45)] backdrop-blur-md;
+    animation: searchable-select-drag-preview-fade 160ms ease-out;
+}
+
+.searchable-select-drag-preview::before {
+    content: '';
+    @apply pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-200/90 to-transparent;
+}
+
+.searchable-select-drag-preview::after {
+    content: '';
+    @apply pointer-events-none absolute inset-0;
+    background:
+        radial-gradient(circle at top right, rgba(56, 189, 248, 0.14), transparent 38%),
+        linear-gradient(180deg, rgba(248, 250, 252, 0.94), rgba(255, 255, 255, 0.92));
+    z-index: -1;
 }
 
 .searchable-select-drag-preview-top {
-    bottom: calc(100% + 0.55rem);
+    bottom: calc(100% + 0.4rem);
 }
 
 .searchable-select-drag-preview-bottom {
-    top: calc(100% + 0.55rem);
+    top: calc(100% + 0.4rem);
+}
+
+.searchable-select-drag-preview-head {
+    @apply flex items-center justify-between gap-3;
 }
 
 .searchable-select-drag-preview-label {
-    @apply block text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400;
+    @apply block text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400;
+}
+
+.searchable-select-drag-preview-direction {
+    @apply inline-flex h-7 w-7 items-center justify-center rounded-full border border-sky-100 bg-sky-50 text-xs font-semibold text-sky-700 shadow-sm;
 }
 
 .searchable-select-drag-preview-value {
-    @apply mt-1 block text-sm font-semibold leading-5 text-slate-700;
+    @apply mt-2 block text-sm font-semibold leading-5 text-slate-800;
+}
+
+.searchable-select-drag-preview-description {
+    @apply mt-1.5 block text-xs leading-5 text-slate-500;
+}
+
+.searchable-select-drag-preview-top,
+.searchable-select-drag-preview-bottom {
+    transform-origin: center;
+}
+
+.searchable-select-drag-preview-top {
+    box-shadow:
+        0 18px 34px -28px rgba(15, 23, 42, 0.42),
+        0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.searchable-select-drag-preview-bottom {
+    box-shadow:
+        0 22px 36px -28px rgba(15, 23, 42, 0.42),
+        0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.searchable-select-drag-preview-top::after,
+.searchable-select-drag-preview-bottom::after {
+    background:
+        radial-gradient(circle at top right, rgba(56, 189, 248, 0.14), transparent 38%),
+        linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(255, 255, 255, 0.94));
+}
+
+.searchable-select-drag-preview-top::before,
+.searchable-select-drag-preview-bottom::before {
+    opacity: 0.95;
+}
+
+.searchable-select-drag-preview-top {
+    border-bottom-left-radius: 1.1rem;
+    border-bottom-right-radius: 1.1rem;
+}
+
+.searchable-select-drag-preview-bottom {
+    border-top-left-radius: 1.1rem;
+    border-top-right-radius: 1.1rem;
+}
+
+@keyframes searchable-select-drag-preview-fade {
+    from {
+        opacity: 0;
+        transform: translateY(6px) scale(0.985);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .searchable-select-toggle {

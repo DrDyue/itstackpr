@@ -55,9 +55,22 @@
     <input type="hidden" name="{{ $name }}" x-model="selected">
 
     <div class="searchable-select-control">
-        <div class="searchable-select-drag-preview searchable-select-drag-preview-top" x-cloak x-show="dragPreviewActive && previousPreviewOption()" @mousedown.prevent>
-            <span class="searchable-select-drag-preview-label">Iepriekšējais</span>
+        <div
+            class="searchable-select-drag-preview searchable-select-drag-preview-top"
+            x-cloak
+            x-show="dragPreviewActive && previousPreviewOption()"
+            @mousedown.prevent
+        >
+            <div class="searchable-select-drag-preview-head">
+                <span class="searchable-select-drag-preview-label">Iepriekšējais</span>
+                <span class="searchable-select-drag-preview-direction">↑</span>
+            </div>
             <span class="searchable-select-drag-preview-value" x-text="previousPreviewOption()?.label"></span>
+            <span
+                class="searchable-select-drag-preview-description"
+                x-show="previousPreviewOption()?.description"
+                x-text="previousPreviewOption()?.description"
+            ></span>
         </div>
 
         <input
@@ -104,9 +117,22 @@
             </svg>
         </button>
 
-        <div class="searchable-select-drag-preview searchable-select-drag-preview-bottom" x-cloak x-show="dragPreviewActive && nextPreviewOption()" @mousedown.prevent>
-            <span class="searchable-select-drag-preview-label">Nākamais</span>
+        <div
+            class="searchable-select-drag-preview searchable-select-drag-preview-bottom"
+            x-cloak
+            x-show="dragPreviewActive && nextPreviewOption()"
+            @mousedown.prevent
+        >
+            <div class="searchable-select-drag-preview-head">
+                <span class="searchable-select-drag-preview-label">Nākamais</span>
+                <span class="searchable-select-drag-preview-direction">↓</span>
+            </div>
             <span class="searchable-select-drag-preview-value" x-text="nextPreviewOption()?.label"></span>
+            <span
+                class="searchable-select-drag-preview-description"
+                x-show="nextPreviewOption()?.description"
+                x-text="nextPreviewOption()?.description"
+            ></span>
         </div>
     </div>
 
