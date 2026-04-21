@@ -1,5 +1,6 @@
 const asyncTableControllers = new Map();
 const asyncTableDebounceTimers = new WeakMap();
+const searchableSelectSubmitTimers = new WeakMap();
 
 const findAsyncTableRoot = (element) => {
     if (!element) {
@@ -616,8 +617,19 @@ export const initializeAsyncTableFilters = () => {
             return;
         }
 
-        window.setTimeout(() => {
+        if (event.detail?.submit === false) {
+            return;
+        }
+
+        if (searchableSelectSubmitTimers.has(form)) {
+            window.clearTimeout(searchableSelectSubmitTimers.get(form));
+        }
+
+        const timerId = window.setTimeout(() => {
             window.submitAsyncTableForm(form, { resetPage: true });
-        }, 0);
+            searchableSelectSubmitTimers.delete(form);
+        }, 180);
+
+        searchableSelectSubmitTimers.set(form, timerId);
     });
 };

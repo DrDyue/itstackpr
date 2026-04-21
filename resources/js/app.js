@@ -935,7 +935,6 @@ const registerAlpineData = () => {
                 if (option) {
                     this.selected = option.value;
                     this.query = option.label;
-                    this.dispatchUpdate();
                 }
             }
         },
@@ -960,7 +959,7 @@ const registerAlpineData = () => {
 
             this.selected = option.value;
             this.query = option.label;
-            this.dispatchUpdate();
+            this.dispatchUpdate({ submit: true });
             this.dragPreviewActive = false;
         },
         closePanelOnly() {
@@ -979,7 +978,7 @@ const registerAlpineData = () => {
             this.selected = '';
             this.query = '';
             this.highlightedIndex = 0;
-            this.dispatchUpdate();
+            this.dispatchUpdate({ submit: true });
             this.closePanelOnly();
         },
         preparePanel() {
@@ -1019,7 +1018,7 @@ const registerAlpineData = () => {
         choose(option) {
             this.selected = option.value;
             this.query = option.label;
-            this.dispatchUpdate();
+            this.dispatchUpdate({ submit: true });
             this.closePanelOnly();
         },
         handleOptionDrag(index, event) {
@@ -1044,7 +1043,7 @@ const registerAlpineData = () => {
                 this.choose(option);
             }
         },
-        dispatchUpdate() {
+        dispatchUpdate({ submit = true } = {}) {
             if (!this.identifier) {
                 return;
             }
@@ -1053,6 +1052,7 @@ const registerAlpineData = () => {
                 identifier: this.identifier,
                 value: this.selected,
                 query: this.query,
+                submit,
             });
         },
         optionClasses(index, option) {
