@@ -257,8 +257,11 @@
                                     @endphp
                                     <a
                                         href="{{ route('device-transfers.index', array_merge(request()->except(['status', 'page', 'clear', 'incoming']), ['statuses_filter' => 1, 'status' => [$status]])) }}"
-                                        class="quick-status-filter {{ $toneClass }}"
-                                        @class(['quick-status-filter-active' => $isStatusActive])
+                                        @class([
+                                            'quick-status-filter',
+                                            $toneClass,
+                                            'quick-status-filter-active' => $isStatusActive,
+                                        ])
                                     >
                                         <x-icon :name="$iconName" size="h-4 w-4" />
                                         <span>{{ $statusLabels[$status] ?? $status }}</span>

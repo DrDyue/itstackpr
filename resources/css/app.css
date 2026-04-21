@@ -3047,11 +3047,11 @@ tbody td {
 }
 
 .filter-summary-items {
-    @apply mt-2 flex flex-wrap gap-1.5;
+    @apply mt-2 flex flex-wrap gap-2;
 }
 
 .filter-chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-700;
+    @apply inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-medium text-slate-700;
 }
 
 .filter-chip-label {
