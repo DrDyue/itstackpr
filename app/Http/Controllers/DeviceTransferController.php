@@ -533,6 +533,8 @@ class DeviceTransferController extends Controller
     private function applyIndexFilters(Builder $query, array $filters, array $skip = []): Builder
     {
         $skipLookup = array_flip($skip);
+        $user = $this->user();
+        $canManageTransfers = $user?->canManageRequests() ?? false;
 
         if (! isset($skipLookup['code']) && $filters['code'] !== '') {
             $query->whereHas('device', function (Builder $deviceQuery) use ($filters) {
@@ -581,6 +583,19 @@ class DeviceTransferController extends Controller
 
             if ($selectedStatuses !== [] && count($selectedStatuses) < 3) {
                 $query->whereIn('device_transfers.status', $selectedStatuses);
+
+                if (
+                    ! $canManageTransfers
+                    && ! $filters['incoming']
+                    && in_array(DeviceTransfer::STATUS_SUBMITTED, $selectedStatuses, true)
+                    && $user
+                ) {
+                    $query->where(function (Builder $visibilityQuery) use ($user) {
+                        $visibilityQuery
+                            ->where('device_transfers.status', '!=', DeviceTransfer::STATUS_SUBMITTED)
+                            ->orWhere('device_transfers.responsible_user_id', $user->id);
+                    });
+                }
             }
         }
 
