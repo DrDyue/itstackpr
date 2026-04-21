@@ -818,7 +818,11 @@ const registerAlpineData = () => {
                 }
             }
         },
-        get filteredOptions() {
+        get interactionOptions() {
+            if (this.triggerDragging || this.dragPreviewActive) {
+                return this.options;
+            }
+
             if (this.open && this.showAllOptions) {
                 return this.options;
             }
@@ -830,6 +834,9 @@ const registerAlpineData = () => {
             }
 
             return this.options.filter((option) => option.search.includes(term));
+        },
+        get filteredOptions() {
+            return this.interactionOptions;
         },
         get activeDescendantId() {
             if (!this.open || this.filteredOptions.length === 0) {
@@ -860,19 +867,19 @@ const registerAlpineData = () => {
             });
         },
         currentOptionIndex() {
-            const selectedIndex = this.filteredOptions.findIndex((option) => option.value === this.selected);
+            const selectedIndex = this.interactionOptions.findIndex((option) => option.value === this.selected);
             if (selectedIndex >= 0) {
                 return selectedIndex;
             }
 
-            return Math.min(this.highlightedIndex, Math.max(this.filteredOptions.length - 1, 0));
+            return Math.min(this.highlightedIndex, Math.max(this.interactionOptions.length - 1, 0));
         },
         previewOptionAt(index) {
-            if (index < 0 || index >= this.filteredOptions.length) {
+            if (index < 0 || index >= this.interactionOptions.length) {
                 return null;
             }
 
-            return this.filteredOptions[index] ?? null;
+            return this.interactionOptions[index] ?? null;
         },
         currentPreviewOption() {
             return this.previewOptionAt(this.highlightedIndex);
@@ -906,13 +913,13 @@ const registerAlpineData = () => {
             this.togglePanel();
         },
         handleTriggerDrag(event) {
-            if (!this.triggerDragging || this.filteredOptions.length === 0) {
+            if (!this.triggerDragging || this.interactionOptions.length === 0) {
                 return;
             }
 
             const delta = (event?.clientY ?? 0) - this.dragStartY;
             const steps = delta === 0 ? 0 : Math.trunc(delta / this.dragStepPx);
-            const maxIndex = this.filteredOptions.length - 1;
+            const maxIndex = this.interactionOptions.length - 1;
             const nextIndex = Math.min(maxIndex, Math.max(0, this.dragStartIndex + steps));
 
             if (Math.abs(delta) >= Math.max(6, this.dragStepPx / 3)) {
@@ -945,7 +952,7 @@ const registerAlpineData = () => {
                 return;
             }
 
-            const option = this.filteredOptions[this.highlightedIndex];
+            const option = this.interactionOptions[this.highlightedIndex];
             if (!option) {
                 this.dragPreviewActive = false;
                 return;
