@@ -46,6 +46,7 @@
         options: @js($optionsPayload),
     })"
     class="searchable-select {{ filled($resolvedError) ? 'searchable-select-error' : '' }}"
+    :class="open ? 'searchable-select-open' : ''"
     @keydown.escape.window="close()"
     @searchable-select-clear.window="if (! $event.detail?.target || $event.detail.target === @js($identifier)) { clearSelection() }"
 >
@@ -71,7 +72,8 @@
             placeholder="{{ $placeholder }}"
             autocomplete="off"
             @focus="openPanel()"
-            @click="handleTriggerClick()"
+            @mousedown.prevent="handleTriggerPointerDown()"
+            @click.prevent
             @input="handleInput()"
             @keydown.arrow-down.prevent="move(1)"
             @keydown.arrow-up.prevent="move(-1)"
@@ -85,7 +87,8 @@
             title="Atvērt vai aizvērt izvēlni"
             :aria-expanded="open.toString()"
             aria-controls="{{ $panelId }}"
-            @click="togglePanel()"
+            @mousedown.prevent.stop="togglePanel()"
+            @click.prevent.stop
             @keydown.enter.prevent="togglePanel()"
             @keydown.space.prevent="togglePanel()"
         >
@@ -104,7 +107,7 @@
         role="listbox"
         @click.outside="close()"
     >
-        <div x-ref="panel" class="searchable-select-list">
+        <div x-ref="panel" class="searchable-select-list" @wheel.stop>
             <template x-if="filteredOptions.length === 0">
                 <div class="searchable-select-empty" x-text="emptyMessage"></div>
             </template>
@@ -119,6 +122,9 @@
                     :aria-selected="(selected === option.value).toString()"
                     :class="optionClasses(index, option)"
                     @mouseenter="highlightedIndex = index"
+                    @mousemove="handleOptionDrag(index, $event)"
+                    @mousedown.prevent="startPointerSelection(index)"
+                    @mouseup="finishPointerSelection(index)"
                     @click="choose(option)"
                 >
                     <span class="block text-sm font-semibold leading-5" x-text="option.label"></span>

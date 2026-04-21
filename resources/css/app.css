@@ -645,6 +645,17 @@ tbody td {
     @apply rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-slate-500 ring-1 ring-slate-200;
 }
 
+.repair-cost-input {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.repair-cost-input::-webkit-outer-spin-button,
+.repair-cost-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
 .repair-next-step-panel {
     @apply rounded-[1.5rem] border border-sky-100 bg-sky-50/70 px-4 py-4;
 }
@@ -2587,7 +2598,11 @@ tbody td {
 }
 
 .searchable-select {
-    @apply relative z-0;
+    @apply relative z-20;
+}
+
+.searchable-select-open {
+    z-index: 120;
 }
 
 .searchable-select-error .crud-control {
@@ -2611,7 +2626,7 @@ tbody td {
 }
 
 .searchable-select-panel {
-    @apply absolute right-0 z-[95] mt-2.5 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_28px_55px_-35px_rgba(15,23,42,0.38)] ring-1 ring-slate-100;
+    @apply absolute right-0 z-[140] mt-2.5 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_28px_55px_-35px_rgba(15,23,42,0.38)] ring-1 ring-slate-100;
 }
 
 .searchable-select-list {

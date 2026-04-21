@@ -792,6 +792,7 @@ const registerAlpineData = () => {
         selected: String(selected ?? ''),
         query: query || '',
         identifier,
+        pointerSelecting: false,
         showAllOptions: false,
         options: options.map((option) => ({
             value: String(option.value ?? ''),
@@ -835,26 +836,29 @@ const registerAlpineData = () => {
             return `${baseIdentifier}-option-${index}`;
         },
         togglePanel() {
-            this.open = !this.open;
             if (this.open) {
-                this.showAllOptions = true;
-                this.preparePanel();
+                this.closePanelOnly();
+                return;
             }
+
+            this.openPanel();
         },
         openPanel() {
             this.open = true;
             this.showAllOptions = true;
             this.preparePanel();
             this.$nextTick(() => {
+                this.$refs.input?.focus({ preventScroll: true });
                 this.$refs.input?.select();
             });
         },
-        handleTriggerClick() {
+        handleTriggerPointerDown() {
             this.openPanel();
         },
         closePanelOnly() {
             this.open = false;
             this.showAllOptions = false;
+            this.pointerSelecting = false;
         },
         close() {
             this.closePanelOnly();
@@ -905,6 +909,28 @@ const registerAlpineData = () => {
             this.query = option.label;
             this.dispatchUpdate();
             this.closePanelOnly();
+        },
+        handleOptionDrag(index, event) {
+            if (event?.buttons === 1 || this.pointerSelecting) {
+                this.highlightedIndex = index;
+                this.$nextTick(() => this.scrollToHighlighted());
+            }
+        },
+        startPointerSelection(index) {
+            this.pointerSelecting = true;
+            this.highlightedIndex = index;
+            this.$nextTick(() => this.scrollToHighlighted());
+        },
+        finishPointerSelection(index) {
+            if (!this.pointerSelecting) {
+                return;
+            }
+
+            this.pointerSelecting = false;
+            const option = this.filteredOptions[index];
+            if (option) {
+                this.choose(option);
+            }
         },
         dispatchUpdate() {
             if (!this.identifier) {

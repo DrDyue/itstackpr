@@ -97,7 +97,7 @@
                             step="0.01"
                             name="cost"
                             value="{{ old('cost', $currentRepair?->cost) }}"
-                            class="crud-control pr-16 {{ $errors->has('cost') ? 'crud-control-error' : '' }}"
+                            class="crud-control repair-cost-input pr-16 {{ $errors->has('cost') ? 'crud-control-error' : '' }}"
                             x-model="cost"
                         >
                         <span class="pointer-events-none absolute inset-y-0 right-4 inline-flex items-center text-sm font-semibold text-slate-500">EUR</span>
