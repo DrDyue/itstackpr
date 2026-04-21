@@ -4652,7 +4652,15 @@ tbody td {
 }
 
 .repairs-toolbar-date-filter-bar {
+    @apply flex flex-wrap items-center justify-end gap-3;
+}
+
+.repairs-filter-title-row {
     @apply mb-3 flex flex-wrap items-start justify-between gap-3;
+}
+
+.repairs-filter-title {
+    @apply mb-0;
 }
 
 .repairs-toolbar-date-range-title {
