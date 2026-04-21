@@ -395,9 +395,10 @@
                                     $isIncomingPending = ! $isAdmin
                                         && (int) $currentUserId === (int) $transfer->transfered_to_id
                                         && $transfer->status === 'submitted';
+                                    $isPendingAction = $transfer->status === 'submitted';
                                     $hasActions = true;
                                 @endphp
-                                <tr class="border-t border-slate-100 align-top" data-table-row-id="device-transfer-{{ $transfer->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
+                                <tr class="border-t border-slate-100 align-top {{ $isPendingAction ? 'app-table-row-pending' : '' }}" data-table-row-id="device-transfer-{{ $transfer->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
                                     <td class="table-col-image px-4 py-4 text-center align-middle">
                                         @php
                                             $thumbUrl = $device?->deviceImageThumbUrl();
@@ -474,7 +475,10 @@
                                         @elseif ($hasActions)
                                             {{-- Pārējiem - dropdown ar darbībām --}}
                                             <div class="table-action-menu inline-block" x-data="{ open: false }" @keydown.escape.window="open = false">
-                                                <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
+                                                <button type="button" class="table-action-summary {{ $isPendingAction ? 'table-action-summary-pending' : '' }}" @click="open = ! open" :aria-expanded="open.toString()">
+                                                    @if ($isPendingAction)
+                                                        <span class="table-action-attention">{{ $isIncomingPending ? 'Jārīkojas' : 'Gaida' }}</span>
+                                                    @endif
                                                     <span>Darbības</span>
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />

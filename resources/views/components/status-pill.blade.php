@@ -67,9 +67,10 @@
     ];
 
     $resolvedLabel = $label ?: $meta['label'];
+    $isPendingAction = $context === 'request' && $normalizedValue === 'submitted';
 @endphp
 
-<span {{ $attributes->class(['status-pill', 'status-pill-' . $meta['tone']]) }}>
+<span {{ $attributes->class(['status-pill', 'status-pill-' . $meta['tone'], 'status-pill-pending-action' => $isPendingAction]) }}>
     <x-icon :name="$meta['icon']" size="h-3.5 w-3.5" />
     <span>{{ $resolvedLabel }}</span>
 </span>
