@@ -711,6 +711,7 @@ class RepairController extends Controller
             'statuses' => $selectedStatuses,
             'priorities' => $selectedPriorities,
             'repair_type' => in_array($request->query('repair_type', ''), ['internal', 'external'], true) ? $request->query('repair_type') : null,
+            'date_field' => in_array($request->query('date_field', 'start_date'), ['start_date', 'end_date'], true) ? $request->query('date_field') : 'start_date',
             'date_from' => trim((string) $request->query('date_from', '')),
             'date_to' => trim((string) $request->query('date_to', '')),
             'mine' => $request->boolean('mine'),
@@ -767,12 +768,16 @@ class RepairController extends Controller
             $query->where('repairs.repair_type', $filters['repair_type']);
         }
 
+        $dateField = in_array($filters['date_field'] ?? 'start_date', ['start_date', 'end_date'], true)
+            ? $filters['date_field']
+            : 'start_date';
+
         if ($filters['date_from'] !== '' && ! in_array('date_from', $skip, true)) {
-            $query->whereDate('repairs.created_at', '>=', $filters['date_from']);
+            $query->whereDate('repairs.'.$dateField, '>=', $filters['date_from']);
         }
 
         if ($filters['date_to'] !== '' && ! in_array('date_to', $skip, true)) {
-            $query->whereDate('repairs.created_at', '<=', $filters['date_to']);
+            $query->whereDate('repairs.'.$dateField, '<=', $filters['date_to']);
         }
 
         return $query;
@@ -883,6 +888,7 @@ class RepairController extends Controller
             'statusi' => count($filters['statuses'] ?? []) > 0 && count($filters['statuses'] ?? []) < count(self::STATUSES) ? ($filters['statuses'] ?? []) : [],
             'prioritātes' => count($filters['priorities'] ?? []) > 0 && count($filters['priorities']) < count(self::PRIORITIES) ? ($filters['priorities'] ?? []) : [],
             'remonta tips' => $filters['repair_type'] ?? '',
+            'datuma lauks' => (($filters['date_from'] ?? '') !== '' || ($filters['date_to'] ?? '') !== '') ? (($filters['date_field'] ?? 'start_date') === 'end_date' ? 'beigu datums' : 'sākuma datums') : '',
             'no datuma' => $filters['date_from'] ?? '',
             'līdz datumam' => $filters['date_to'] ?? '',
             'mani remonti' => ! empty($filters['mine']),

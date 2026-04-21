@@ -165,12 +165,54 @@
                                 />
                             </label>
 
-                            <div class="repairs-toolbar-date-field">
-                                <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
-                            </div>
+                            <div
+                                class="repairs-toolbar-date-range"
+                                title="Pārslēdziet, uz kuru datuma lauku attiecas intervāla filtrs. Kreisā pozīcija piemēro filtru sākuma datumam, labā pozīcija piemēro filtru beigu datumam."
+                            >
+                                <div class="repairs-toolbar-date-range-head">
+                                    <span class="crud-label mb-0">Datuma lauks</span>
+                                    <span
+                                        class="repairs-date-field-help"
+                                        aria-hidden="true"
+                                        title="Kreisā pozīcija filtrē pēc sākuma datuma, labā pozīcija filtrē pēc beigu datuma."
+                                    >
+                                        ?
+                                    </span>
+                                </div>
 
-                            <div class="repairs-toolbar-date-field">
-                                <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
+                                <div class="repairs-date-field-switch" role="radiogroup" aria-label="Datuma filtra lauks">
+                                    <label class="repairs-date-field-option">
+                                        <input
+                                            type="radio"
+                                            name="date_field"
+                                            value="start_date"
+                                            class="sr-only peer"
+                                            {{ ($filters['date_field'] ?? 'start_date') === 'start_date' ? 'checked' : '' }}
+                                        >
+                                        <span class="repairs-date-field-pill">Sākuma datums</span>
+                                    </label>
+
+                                    <label class="repairs-date-field-option">
+                                        <input
+                                            type="radio"
+                                            name="date_field"
+                                            value="end_date"
+                                            class="sr-only peer"
+                                            {{ ($filters['date_field'] ?? 'start_date') === 'end_date' ? 'checked' : '' }}
+                                        >
+                                        <span class="repairs-date-field-pill">Beigu datums</span>
+                                    </label>
+                                </div>
+
+                                <div class="repairs-toolbar-date-fields">
+                                    <div class="repairs-toolbar-date-field">
+                                        <x-localized-date-input name="date_from" label="No datuma" :value="$filters['date_from']" />
+                                    </div>
+
+                                    <div class="repairs-toolbar-date-field">
+                                        <x-localized-date-input name="date_to" label="Līdz datumam" :value="$filters['date_to']" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -290,6 +332,7 @@
                     ['label' => 'Teksts', 'value' => $filters['q']],
                     ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
                     ['label' => 'Pieprasītājs', 'value' => $selectedRequesterLabel],
+                    ['label' => 'Datuma lauks', 'value' => ($filters['date_from'] || $filters['date_to']) ? (($filters['date_field'] ?? 'start_date') === 'end_date' ? 'Beigu datums' : 'Sākuma datums') : null],
                     ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
                     ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
                     ['label' => 'Statuss', 'value' => $activeStatusLabel],

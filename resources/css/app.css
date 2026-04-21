@@ -4651,6 +4651,46 @@ tbody td {
     @apply w-full min-h-[2.75rem];
 }
 
+.repairs-toolbar-date-range {
+    @apply min-w-0 xl:col-span-2;
+}
+
+.repairs-toolbar-date-range-head {
+    @apply mb-2 flex items-center gap-2;
+}
+
+.repairs-date-field-help {
+    @apply inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-[11px] font-semibold text-slate-500 shadow-sm transition;
+}
+
+.repairs-date-field-help:hover {
+    @apply border-sky-200 text-sky-700;
+}
+
+.repairs-date-field-switch {
+    @apply mb-3 inline-flex items-center gap-1 rounded-2xl border border-slate-200 bg-slate-50/90 p-1 shadow-sm;
+}
+
+.repairs-date-field-option {
+    @apply block;
+}
+
+.repairs-date-field-pill {
+    @apply inline-flex min-h-[2rem] items-center justify-center rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-500 transition;
+}
+
+.repairs-date-field-option .peer:checked + .repairs-date-field-pill {
+    @apply bg-white text-sky-700 shadow-sm ring-1 ring-sky-100;
+}
+
+.repairs-date-field-option .peer:focus-visible + .repairs-date-field-pill {
+    @apply ring-2 ring-sky-200 ring-offset-1;
+}
+
+.repairs-toolbar-date-fields {
+    @apply grid grid-cols-1 gap-3 md:grid-cols-2;
+}
+
 .repairs-filter-footer {
     @apply items-start border-t border-slate-200/80 pt-4;
 }
