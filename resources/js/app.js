@@ -117,7 +117,7 @@ document.addEventListener('click', (event) => {
         return;
     }
 
-    if (link.dataset.asyncLink === 'true') {
+    if (link.dataset.asyncLink === 'true' || link.classList.contains('quick-status-filter')) {
         return;
     }
 
