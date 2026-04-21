@@ -127,7 +127,7 @@
                     </div>
 
                     <div class="devices-filter-section" x-data="{ dateField: '{{ ($filters['date_field'] ?? 'start_date') === 'end_date' ? 'end_date' : 'start_date' }}' }">
-                        <div class="devices-filter-title repairs-filter-title-row">
+                        <div class="repairs-filter-title-row">
                             <h3 class="devices-filter-title repairs-filter-title">
                                 <x-icon name="filter" size="h-4 w-4" />
                                 <span>Filtri</span>
