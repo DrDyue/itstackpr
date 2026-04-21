@@ -23,6 +23,7 @@ use Illuminate\Validation\ValidationException;
  */
 class RepairController extends Controller
 {
+    private const PER_PAGE = 10;
     private const STATUSES = ['waiting', 'in-progress', 'completed', 'cancelled'];
     private const TYPES = ['internal', 'external'];
     private const PRIORITIES = ['low', 'medium', 'high', 'critical'];
@@ -96,7 +97,7 @@ class RepairController extends Controller
         $this->applySorting($repairsQuery, $sorting);
 
         $repairs = $repairsQuery
-            ->paginate(20)
+            ->paginate(self::PER_PAGE)
             ->withQueryString();
 
         AuditTrail::viewed($user, 'Repair', null, 'Atvērts remontu saraksts.');
@@ -187,7 +188,7 @@ class RepairController extends Controller
 
         return response()->json([
             'found' => true,
-            'page' => intdiv($foundIndex, 20) + 1,
+            'page' => intdiv($foundIndex, self::PER_PAGE) + 1,
             'repair_id' => $foundRepair->id,
             'term' => $code,
             'highlight_id' => 'repair-'.$foundRepair->id,
