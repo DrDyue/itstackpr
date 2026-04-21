@@ -18,8 +18,8 @@
     $action = $isEdit ? route('repairs.update', $repair) : route('repairs.store');
     $title = $isEdit ? 'Rediģēt remontu' : 'Jauns remonts';
     $subtitle = $isEdit
-        ? 'Pārvaldi remonta ierakstu un statusa darbības vienā modālī.'
-        : 'Izveido faktisko remonta darbu bez lapas maiņas.';
+        ? 'Atjaunini remonta ierakstu un pārvaldi statusa darbības vienuviet.'
+        : 'Izveido remonta ierakstu bez lapas maiņas.';
     $submitLabel = $isEdit ? 'Saglabāt izmaiņas' : 'Saglabāt remontu';
     $submitClass = $isEdit ? 'btn-edit' : 'btn-create';
     $linkedRequestUrl = $isEdit && $repair?->request_id
@@ -64,7 +64,7 @@
                     <div class="device-type-modal-icon">
                         <x-icon name="repair" size="h-6 w-6" />
                     </div>
-                    <div>
+                    <div class="device-type-modal-title-copy">
                         <h2 class="device-type-modal-title">{{ $title }}</h2>
                         <p class="device-type-modal-subtitle">{{ $subtitle }}</p>
                     </div>
@@ -99,26 +99,80 @@
             @endif
 
             @if ($isEdit)
-                <div class="mb-5 rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4">
-                    <div class="flex flex-wrap items-center gap-2">
-                        <x-status-pill context="repair" :value="$repair->status" :label="$statusLabels[$repair->status] ?? null" />
-                        <x-status-pill context="priority" :value="$repair->priority" :label="$priorityLabels[$repair->priority] ?? null" />
-                        <x-status-pill context="repair-type" :value="$repair->repair_type" :label="$typeLabels[$repair->repair_type] ?? null" />
-                    </div>
-                    <div class="mt-3 flex flex-wrap gap-3 text-sm">
+                <div class="repair-modal-summary mb-5">
+                    <div class="repair-modal-summary-grid">
+                        <div class="repair-modal-summary-item">
+                            <span class="repair-modal-summary-label">Remonta statuss</span>
+                            <x-status-pill context="repair" :value="$repair->status" :label="$statusLabels[$repair->status] ?? null" />
+                        </div>
+
+                        <div class="repair-modal-summary-item">
+                            <span class="repair-modal-summary-label">Remonta prioritāte</span>
+                            <x-status-pill context="priority" :value="$repair->priority" :label="$priorityLabels[$repair->priority] ?? null" />
+                        </div>
+
+                        <div class="repair-modal-summary-item">
+                            <span class="repair-modal-summary-label">Remonta tips</span>
+                            <x-status-pill context="repair-type" :value="$repair->repair_type" :label="$typeLabels[$repair->repair_type] ?? null" />
+                        </div>
+
                         @if ($deviceShowUrl)
-                            <a href="{{ $deviceShowUrl }}" class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 hover:border-slate-300 hover:text-slate-900">
+                            <a href="{{ $deviceShowUrl }}" class="repair-modal-summary-link">
                                 <x-icon name="device" size="h-4 w-4" />
                                 <span>Skatīt ierīci</span>
                             </a>
                         @endif
-                        @if ($linkedRequestUrl)
+                    </div>
+
+                    @if ($linkedRequestUrl)
+                        <div class="mt-3 flex flex-wrap gap-3 text-sm">
                             <a href="{{ $linkedRequestUrl }}" class="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 font-semibold text-violet-700 hover:bg-violet-100">
                                 <x-icon name="repair-request" size="h-4 w-4" />
                                 <span>Saistītais pieprasījums</span>
                             </a>
-                        @endif
+                        </div>
+                    @endif
+                </div>
+
+                <div class="repair-next-step-panel mb-5" x-cloak>
+                    <div class="repair-next-step-head">
+                        <div>
+                            <div class="repair-next-step-title">Nākamais solis</div>
+                            <p class="repair-next-step-copy" x-text="nextStepTitle()"></p>
+                        </div>
+                        <template x-if="repairStatus === 'in-progress' && !nextStepReady()">
+                            <span class="repair-next-step-badge" x-text="`${nextStepIncompleteCount()} lauki vēl jāpapildina`"></span>
+                        </template>
                     </div>
+
+                    <template x-if="repairStatus === 'in-progress'">
+                        <div class="repair-next-step-checklist">
+                            <template x-for="item in requirementRows()" :key="item.key">
+                                <div class="repair-next-step-check" :class="item.done ? 'repair-next-step-check-done' : 'repair-next-step-check-pending'">
+                                    <span class="repair-next-step-check-icon">
+                                        <x-icon name="check-circle" size="h-4 w-4" />
+                                    </span>
+                                    <span x-text="item.label"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template x-if="advisoryRows().length > 0">
+                        <div class="repair-advisory-panel">
+                            <div class="repair-advisory-title" x-text="advisoryTitle()"></div>
+                            <div class="repair-advisory-list">
+                                <template x-for="item in advisoryRows()" :key="item.key">
+                                    <div class="repair-advisory-item">
+                                        <span class="repair-advisory-icon">
+                                            <x-icon name="information-circle" size="h-4 w-4" />
+                                        </span>
+                                        <span x-text="item.label"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
                 </div>
             @endif
 
@@ -138,7 +192,8 @@
                             <x-icon name="clock" size="h-4 w-4" />
                             <span>Atgriezt gaidīšanā</span>
                         </button>
-                        <button type="button" class="btn-create" @click="submitTransition({{ $repair->id }}, 'completed')">
+                        <button type="button" class="btn-create" @click="submitTransition({{ $repair->id }}, 'completed')" :title="completionTooltip()">
+                            <span class="sr-only" x-text="completionTooltip()"></span>
                             <x-icon name="check-circle" size="h-4 w-4" />
                             <span>Pabeigt remontu</span>
                         </button>

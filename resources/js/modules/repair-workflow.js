@@ -162,6 +162,32 @@ export const registerRepairWorkflowGlobals = () => {
 
             return rows;
         },
+        advisoryRows() {
+            const rows = [];
+
+            if (this.repairStatus === 'waiting' && String(this.description ?? '').trim() === '') {
+                rows.push({
+                    key: 'waiting-description',
+                    label: 'Ieteicams jau pirms procesa saglabāt īsu problēmas aprakstu.',
+                });
+            }
+
+            if (this.repairStatus === 'in-progress' && this.isExternal() && this.normalizedCost() === '') {
+                rows.push({
+                    key: 'external-cost',
+                    label: 'Izmaksas nav obligātas, bet ieteicams tās ievadīt, tiklīdz summa ir zināma.',
+                });
+            }
+
+            if (this.repairStatus === 'in-progress' && this.priority === 'critical' && String(this.description ?? '').trim() !== '') {
+                rows.push({
+                    key: 'critical-note',
+                    label: 'Kritiskam remontam aprakstā ieteicams fiksēt ietekmi uz darbu vai infrastruktūru.',
+                });
+            }
+
+            return rows;
+        },
         nextStepLabel() {
             if (this.repairStatus === 'in-progress') {
                 return this.isExternal()
@@ -174,6 +200,45 @@ export const registerRepairWorkflowGlobals = () => {
         nextStepReady() {
             const rows = this.requirementRows();
             return rows.length > 0 && rows.every((item) => item.done);
+        },
+        nextStepIncompleteCount() {
+            return this.requirementRows().filter((item) => !item.done).length;
+        },
+        completionTooltip() {
+            const missing = this.missingRequirementLabels('completed');
+            if (missing.length === 0) {
+                return 'Visi obligātie dati ir aizpildīti. Remontu var pabeigt.';
+            }
+
+            return `Lai pabeigtu remontu, vēl jāaizpilda: ${missing.join(', ')}.`;
+        },
+        nextStepTitle() {
+            if (this.repairStatus === 'waiting') {
+                return 'Lai sāktu remontu, pārbaudi ierīci un saglabā korektu aprakstu, tipu un prioritāti.';
+            }
+
+            if (this.repairStatus === 'in-progress') {
+                return this.isExternal()
+                    ? 'Pirms pabeigšanas aizpildi aprakstu un ārējā remonta datus.'
+                    : 'Pirms pabeigšanas pārliecinies, ka apraksts precīzi atspoguļo veikto darbu.';
+            }
+
+            if (this.repairStatus === 'completed') {
+                return 'Remonts ir pabeigts. Ja nepieciešams, to var atgriezt procesā.';
+            }
+
+            return 'Remonts ir atcelts. Aktīvas nākamās darbības vairs nav pieejamas.';
+        },
+        advisoryTitle() {
+            if (this.repairStatus === 'waiting') {
+                return 'Ieteikums pirms remonta sākšanas';
+            }
+
+            if (this.repairStatus === 'in-progress') {
+                return 'Ieteicams pārbaudīt pirms saglabāšanas';
+            }
+
+            return 'Papildu ieteikumi';
         },
         missingRequirementLabels(targetStatus) {
             return this.requirementRows(targetStatus)

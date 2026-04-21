@@ -1,11 +1,3 @@
-{{--
-    Komponents: Meklējams izvēles lauks.
-    Atbildība: aizvieto parasto HTML select ar meklējamu, stilizētu un lietotājam ērtāku izvēli.
-    Kāpēc tas ir svarīgi:
-    1. Lielos ierakstu sarakstos lietotājs var ātri atrast vajadzīgo ierīci, telpu vai personu.
-    2. Komponents tiek izmantots vairākās vietās, tāpēc vienā vietā var uzturēt vienotu UI uzvedību.
-    3. Alpine.js šeit vada atvēršanu, meklēšanu, izvēli un tastatūras navigāciju.
---}}
 @props([
     'name',
     'queryName',
@@ -15,11 +7,13 @@
     'identifier' => '',
     'placeholder' => 'Izvēlies vērtību',
     'emptyMessage' => 'Ieraksti nav atrasti.',
+    'error' => null,
 ])
 
 @php
-    $controlId = $identifier !== '' ? $identifier.'-input' : $queryName.'-input';
-    $panelId = $identifier !== '' ? $identifier.'-panel' : $queryName.'-panel';
+    $resolvedError = $error ?? ($name ? $errors->first($name) : null);
+    $controlId = $identifier !== '' ? $identifier . '-input' : $queryName . '-input';
+    $panelId = $identifier !== '' ? $identifier . '-panel' : $queryName . '-panel';
     $optionsPayload = collect($options)
         ->map(function ($option) {
             if (is_array($option)) {
@@ -51,7 +45,7 @@
         emptyMessage: @js($emptyMessage),
         options: @js($optionsPayload),
     })"
-    class="searchable-select"
+    class="searchable-select {{ filled($resolvedError) ? 'searchable-select-error' : '' }}"
     @keydown.escape.window="close()"
     @searchable-select-clear.window="if (! $event.detail?.target || $event.detail.target === @js($identifier)) { clearSelection() }"
 >
@@ -73,6 +67,7 @@
             :aria-expanded="open.toString()"
             aria-controls="{{ $panelId }}"
             :aria-activedescendant="activeDescendantId"
+            aria-invalid="{{ filled($resolvedError) ? 'true' : 'false' }}"
             placeholder="{{ $placeholder }}"
             autocomplete="off"
             @focus="openPanel()"

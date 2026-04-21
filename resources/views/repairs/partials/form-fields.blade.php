@@ -1,7 +1,3 @@
-{{--
-    Partials: Remonta formas lauki.
-    Atbildība: satur laukus, kas mainās atkarībā no remonta tipa un statusa.
---}}
 @php
     $currentRepair = $repair;
 @endphp
@@ -9,57 +5,58 @@
 <div class="space-y-4">
     <div class="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <div>
-            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pamata informācija</div>
+            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pamatinformācija</div>
             <div class="mt-1 text-sm text-slate-500">Galvenie lauki par ierīci un remonta saturu.</div>
         </div>
 
-        <div class="mt-3 grid gap-4">
+        <div class="mt-4 grid gap-4 lg:grid-cols-3">
             @if ($currentRepair)
-                <x-ui.form-field label="Ierīce">
-                    <input
-                        type="text"
-                        class="crud-control bg-slate-50 text-slate-600"
-                        value="{{ $currentRepair->device?->name ?: 'Ierīce nav atrasta' }} ({{ $currentRepair->device?->code ?: 'bez koda' }})"
-                        readonly
-                    >
-                    <input type="hidden" name="device_id" value="{{ old('device_id', $currentRepair->device_id) }}">
-                </x-ui.form-field>
+                <div class="lg:col-span-1">
+                    <x-ui.form-field label="Ierīce">
+                        <input
+                            type="text"
+                            class="crud-control bg-slate-50 text-slate-600"
+                            value="{{ $currentRepair->device?->name ?: 'Ierīce nav atrasta' }} ({{ $currentRepair->device?->code ?: 'bez koda' }})"
+                            readonly
+                        >
+                        <input type="hidden" name="device_id" value="{{ old('device_id', $currentRepair->device_id) }}">
+                    </x-ui.form-field>
+                </div>
             @else
-                <x-ui.form-field label="Ierīce" name="device_id">
-                    <x-searchable-select
-                        name="device_id"
-                        query-name="device_query"
-                        identifier="repair-device"
-                        :options="$deviceOptions"
-                        :selected="old('device_id', $preselectedDeviceId ?? '')"
-                        :query="old('device_query', '')"
-                        placeholder="Meklē pēc nosaukuma, koda vai telpas"
-                        empty-message="Neviena ierīce neatbilst meklējumam."
-                    />
-                </x-ui.form-field>
+                <div class="lg:col-span-1">
+                    <x-ui.form-field label="Ierīce" name="device_id">
+                        <x-searchable-select
+                            name="device_id"
+                            query-name="device_query"
+                            identifier="repair-device"
+                            :options="$deviceOptions"
+                            :selected="old('device_id', $preselectedDeviceId ?? '')"
+                            :query="old('device_query', '')"
+                            placeholder="Meklē pēc nosaukuma, koda vai telpas"
+                            empty-message="Neviena ierīce neatbilst meklējumam."
+                        />
+                    </x-ui.form-field>
+                </div>
             @endif
 
-            <x-ui.form-field label="Apraksts" name="description">
-                <textarea name="description" rows="4" class="crud-control" x-model="description">{{ old('description', $currentRepair?->description) }}</textarea>
-                <div class="mt-2 text-xs text-slate-500">
-                    <span x-show="repairStatus === 'waiting'">Apraksts vēl nav obligāts, lai pārietu uz procesa statusu.</span>
-                    <span x-show="repairStatus === 'in-progress'">Apraksts ir obligāts, lai remontu varētu pabeigt.</span>
-                    <span x-show="repairStatus === 'completed' || repairStatus === 'cancelled'">Apraksts paliek remonta vēsturei.</span>
-                </div>
-            </x-ui.form-field>
+            <div class="lg:col-span-2">
+                <x-ui.form-field label="Apraksts" name="description">
+                    <textarea name="description" rows="4" class="crud-control min-h-[7.5rem] {{ $errors->has('description') ? 'crud-control-error' : '' }}" x-model="description">{{ old('description', $currentRepair?->description) }}</textarea>
+                </x-ui.form-field>
+            </div>
         </div>
     </div>
 
     <div class="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <div>
             <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta iestatījumi</div>
-            <div class="mt-1 text-sm text-slate-500">Izvēlies remonta tipu un prioritāti.</div>
+            <div class="mt-1 text-sm text-slate-500">Izvēlies remonta tipu, prioritāti un, ja nepieciešams, izmaksas.</div>
         </div>
 
-        <div class="mt-3 grid gap-4">
-            <div class="md:col-span-2">
+        <div class="mt-4 grid gap-4 lg:grid-cols-3">
+            <div class="lg:col-span-1">
                 <span class="crud-label">Remonta tips</span>
-                <div class="mt-2 rounded-2xl border border-slate-200 bg-slate-50 p-2">
+                <div class="mt-2 rounded-2xl border bg-slate-50 p-2 {{ $errors->has('repair_type') ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200' }}">
                     <div class="relative grid grid-cols-2 rounded-xl bg-white p-1 shadow-inner">
                         <div
                             class="absolute inset-y-1 w-[calc(50%-0.25rem)] rounded-lg bg-slate-900 shadow-sm transition-all duration-200"
@@ -80,16 +77,17 @@
                             </span>
                         </label>
                     </div>
-                    <div class="mt-3 text-sm text-slate-500" x-text="repairType === 'internal' ? 'Iekšējais remonts tiek veikts uz vietas.' : 'Ārējais remonts nozīmē, ka pirms pabeigšanas būs jānorāda vendora dati un rēķina numurs.'"></div>
                 </div>
+                @if ($errors->has('repair_type'))
+                    <div class="mt-2 text-xs font-semibold text-rose-600">{{ $errors->first('repair_type') }}</div>
+                @endif
             </div>
 
-            <div class="block">
+            <div class="lg:col-span-2">
                 <span class="crud-label">Prioritāte</span>
                 <div class="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                     @foreach ($priorities as $priority)
                         @php
-                            $selectedPriority = old('priority', $currentRepair?->priority ?? 'medium') === $priority;
                             $priorityDotClass = match ($priority) {
                                 'low' => 'bg-emerald-500',
                                 'medium' => 'bg-sky-500',
@@ -97,8 +95,8 @@
                                 default => 'bg-rose-500',
                             };
                         @endphp
-                        <label class="cursor-pointer">
-                            <input type="radio" name="priority" value="{{ $priority }}" class="sr-only" x-model="priority" @checked($selectedPriority)>
+                        <label class="cursor-pointer" @click="priority = '{{ $priority }}'">
+                            <input type="radio" name="priority" value="{{ $priority }}" class="sr-only" x-model="priority" :checked="priority === '{{ $priority }}'">
                             <span
                                 class="flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm font-semibold transition"
                                 :class="priority === '{{ $priority }}'
@@ -116,12 +114,14 @@
                         </label>
                     @endforeach
                 </div>
+                @if ($errors->has('priority'))
+                    <div class="mt-2 text-xs font-semibold text-rose-600">{{ $errors->first('priority') }}</div>
+                @endif
             </div>
 
-            <div>
+            <div class="lg:col-span-1">
                 <x-ui.form-field label="Izmaksas" name="cost">
-                    <input type="number" step="0.01" name="cost" value="{{ old('cost', $currentRepair?->cost) }}" class="crud-control" x-model="cost">
-                    <div class="mt-2 text-xs text-slate-500">Izmaksas nav obligātas ne iekšējam, ne ārējam remontam, bet tās vari saglabāt vēsturei.</div>
+                    <input type="number" step="0.01" name="cost" value="{{ old('cost', $currentRepair?->cost) }}" class="crud-control {{ $errors->has('cost') ? 'crud-control-error' : '' }}" x-model="cost">
                 </x-ui.form-field>
             </div>
         </div>
@@ -133,16 +133,19 @@
         x-show="repairType === 'external'"
     >
         <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ārējā remonta dati</div>
-        <div class="mt-1 text-sm text-slate-500">Šie lauki kļūst obligāti tikai tad, kad ārējo remontu pabeidz.</div>
-        <div class="mt-3 grid gap-4 md:grid-cols-3">
+        <div class="mt-1 text-sm text-slate-500">Šie lauki tiek izmantoti ārējā pakalpojuma uzskaitei un vēsturei.</div>
+
+        <div class="mt-4 grid gap-4 md:grid-cols-3">
             <x-ui.form-field label="Pakalpojuma sniedzējs" name="vendor_name">
-                <input type="text" name="vendor_name" value="{{ old('vendor_name', $currentRepair?->vendor_name) }}" class="crud-control" x-model="vendorName">
+                <input type="text" name="vendor_name" value="{{ old('vendor_name', $currentRepair?->vendor_name) }}" class="crud-control {{ $errors->has('vendor_name') ? 'crud-control-error' : '' }}" x-model="vendorName">
             </x-ui.form-field>
+
             <x-ui.form-field label="Vendora kontakts" name="vendor_contact">
-                <input type="text" name="vendor_contact" value="{{ old('vendor_contact', $currentRepair?->vendor_contact) }}" class="crud-control" x-model="vendorContact">
+                <input type="text" name="vendor_contact" value="{{ old('vendor_contact', $currentRepair?->vendor_contact) }}" class="crud-control {{ $errors->has('vendor_contact') ? 'crud-control-error' : '' }}" x-model="vendorContact">
             </x-ui.form-field>
+
             <x-ui.form-field label="Rēķina numurs" name="invoice_number">
-                <input type="text" name="invoice_number" value="{{ old('invoice_number', $currentRepair?->invoice_number) }}" class="crud-control" x-model="invoiceNumber">
+                <input type="text" name="invoice_number" value="{{ old('invoice_number', $currentRepair?->invoice_number) }}" class="crud-control {{ $errors->has('invoice_number') ? 'crud-control-error' : '' }}" x-model="invoiceNumber">
             </x-ui.form-field>
         </div>
     </div>

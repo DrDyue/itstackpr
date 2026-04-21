@@ -45,11 +45,13 @@ const resolveFocusableErrorField = (fieldName) => {
     }
 
     const queryFieldFallbacks = {
+        device_id: 'device_query',
         device_type_id: 'device_type_query',
         assigned_to_id: 'assigned_to_query',
         room_id: 'room_query',
         building_id: 'building_query',
         status: 'status_query',
+        requester_id: 'requester_query',
         transfered_to_id: 'transfered_to_query',
         target_room_id: 'target_room_query',
         target_assigned_to_id: 'target_assigned_to_query',
@@ -76,7 +78,15 @@ window.focusValidationField = (fieldName) => {
         return false;
     }
 
-    field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const scrollContainer = field.closest('.overflow-y-auto');
+    if (scrollContainer) {
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const fieldRect = field.getBoundingClientRect();
+        const nextTop = scrollContainer.scrollTop + (fieldRect.top - containerRect.top) - (containerRect.height / 2) + (fieldRect.height / 2);
+        scrollContainer.scrollTo({ top: Math.max(0, nextTop), behavior: 'smooth' });
+    } else {
+        field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 
     window.setTimeout(() => {
         field.focus({ preventScroll: true });
@@ -88,9 +98,29 @@ window.focusValidationField = (fieldName) => {
     return true;
 };
 
+const focusFirstValidationError = () => {
+    const summaries = Array.from(document.querySelectorAll('.validation-summary[data-first-error-field]'));
+    const visibleSummary = summaries.find((summary) => summary.offsetParent !== null && summary.getClientRects().length > 0);
+    const targetSummary = visibleSummary ?? summaries[0];
+
+    if (!targetSummary) {
+        return;
+    }
+
+    const fieldName = targetSummary.getAttribute('data-first-error-field');
+    if (!fieldName) {
+        return;
+    }
+
+    window.setTimeout(() => {
+        window.focusValidationField(fieldName);
+    }, 140);
+};
+
 registerFeedbackGlobals();
 registerAsyncTableGlobals();
 registerRepairWorkflowGlobals();
+runOnDomReady(focusFirstValidationError);
 
 const registerAlpineData = () => {
     if (!Alpine || window.__appAlpineDataRegistered) {
