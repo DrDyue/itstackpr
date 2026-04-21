@@ -96,6 +96,7 @@
                 class="space-y-3"
                 data-async-table-form
                 data-async-root="#device-transfers-index-root"
+                data-search-endpoint="{{ route('device-transfers.find-by-code') }}"
             >
                 <input type="hidden" name="statuses_filter" value="1">
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
@@ -119,9 +120,11 @@
                                         class="crud-control"
                                         placeholder="Ierīces kods"
                                         autocomplete="off"
+                                        data-async-manual="true"
+                                        data-async-code-search="true"
                                     >
                                 </label>
-                                <button type="submit" class="btn-search">
+                                <button type="button" class="btn-search" data-code-search-submit="true" onclick="return window.runManualTableSearchFromTrigger(this);">
                                     <x-icon name="search" size="h-4 w-4" />
                                     <span>Meklēt</span>
                                 </button>
@@ -394,7 +397,7 @@
                                         && $transfer->status === 'submitted';
                                     $hasActions = true;
                                 @endphp
-                                <tr class="border-t border-slate-100 align-top">
+                                <tr class="border-t border-slate-100 align-top" data-table-row-id="device-transfer-{{ $transfer->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
                                     <td class="table-col-image px-4 py-4 text-center align-middle">
                                         @php
                                             $thumbUrl = $device?->deviceImageThumbUrl();

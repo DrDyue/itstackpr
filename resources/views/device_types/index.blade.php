@@ -1,6 +1,7 @@
 <x-app-layout>
     @php
         $sorting = $sorting ?? ['sort' => 'type_name', 'direction' => 'asc'];
+        $filters = $filters ?? ['search' => ''];
         $sortOptions = $sortOptions ?? [
             'type_name' => ['label' => 'tipa nosaukuma'],
             'devices_count' => ['label' => 'piesaistīto ierīču skaita'],
@@ -48,9 +49,53 @@
         </div>
 
         <div id="device-types-index-root" data-async-table-root>
-            <form method="GET" action="{{ route('device-types.index') }}" data-async-table-form data-async-root="#device-types-index-root">
+            <form
+                method="GET"
+                action="{{ route('device-types.index') }}"
+                class="devices-filter-surface devices-filter-surface-elevated"
+                data-async-table-form
+                data-async-root="#device-types-index-root"
+                data-search-endpoint="{{ route('device-types.find-by-name') }}"
+            >
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
+
+                <div class="devices-filter-header">
+                    <div class="devices-filter-section">
+                        <h3 class="devices-filter-title">
+                            <x-icon name="search" size="h-4 w-4" />
+                            <span>Meklēšana</span>
+                        </h3>
+                        <div class="devices-search-group">
+                            <label class="devices-search-label">
+                                <span>Meklēt pēc tipa nosaukuma</span>
+                                <input
+                                    type="text"
+                                    name="search"
+                                    value="{{ $filters['search'] }}"
+                                    class="devices-code-input"
+                                    placeholder="Ievadi ierīces tipu"
+                                    data-async-manual="true"
+                                    data-table-manual-search="true"
+                                    data-search-mode="contains"
+                                >
+                            </label>
+                            <button type="button" class="devices-code-search-btn" data-table-search-submit="true" onclick="return window.runManualTableSearchFromTrigger(this);">
+                                <x-icon name="search" size="h-4 w-4" />
+                                <span>Atrast tipu</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-toolbar-footer">
+                    <div class="toolbar-actions">
+                        <a href="{{ route('device-types.index') }}" class="btn-clear" data-async-link="true">
+                            <x-icon name="clear" size="h-4 w-4" />
+                            <span>Notīrīt filtrus</span>
+                        </a>
+                    </div>
+                </div>
             </form>
 
             @if (session('error'))

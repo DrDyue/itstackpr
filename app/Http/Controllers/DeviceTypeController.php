@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DeviceType;
 use App\Support\AuditTrail;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -16,9 +17,11 @@ class DeviceTypeController extends Controller
         $this->requireManager();
 
         $sorting = $this->normalizedSorting($request);
+        $search = trim((string) $request->query('search', $request->query('q', '')));
 
         $types = DeviceType::query()
             ->withCount('devices')
+            ->when($search !== '', fn ($query) => $query->where('type_name', 'like', "%{$search}%"))
             ->orderBy(
                 $sorting['sort'] === 'devices_count' ? 'devices_count' : 'type_name',
                 $sorting['direction']
@@ -42,10 +45,49 @@ class DeviceTypeController extends Controller
         return view('device_types.index', [
             'types' => $types,
             'sorting' => $sorting,
+            'filters' => ['search' => $search],
             'sortOptions' => $this->sortOptions(),
             'selectedModalType' => ctype_digit((string) $request->query('modal_device_type'))
                 ? DeviceType::query()->select(['id', 'type_name'])->find((int) $request->query('modal_device_type'))
                 : null,
+        ]);
+    }
+
+    public function findByName(Request $request): JsonResponse
+    {
+        $this->requireManager();
+
+        $search = trim((string) $request->query('search', $request->query('q', '')));
+        if ($search === '') {
+            return response()->json(['found' => false, 'page' => 1]);
+        }
+
+        AuditTrail::search($this->user(), 'DeviceType', $search, 'Meklēts ierīces tips pēc nosaukuma: '.$search);
+
+        $sorting = $this->normalizedSorting($request);
+        $types = DeviceType::query()
+            ->withCount('devices')
+            ->orderBy(
+                $sorting['sort'] === 'devices_count' ? 'devices_count' : 'type_name',
+                $sorting['direction']
+            )
+            ->orderBy('id')
+            ->get(['id', 'type_name']);
+
+        $needle = mb_strtolower($search);
+        $foundIndex = $types->search(function (DeviceType $type) use ($needle) {
+            return str_contains(mb_strtolower(trim((string) $type->type_name)), $needle);
+        });
+
+        if ($foundIndex === false) {
+            return response()->json(['found' => false, 'page' => 1]);
+        }
+
+        return response()->json([
+            'found' => true,
+            'page' => intdiv((int) $foundIndex, 20) + 1,
+            'term' => $search,
+            'highlight_id' => 'device-type-'.$types->values()[(int) $foundIndex]->id,
         ]);
     }
 

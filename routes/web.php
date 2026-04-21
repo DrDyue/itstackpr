@@ -66,6 +66,7 @@ Route::middleware(['auth', 'manager'])->group(function () {
     Route::delete('/rooms/{room}', [RoomController::class, 'destroy'])->name('rooms.destroy');
     Route::get('/rooms', [RoomController::class, 'index'])->name('rooms.index');
     Route::get('/rooms/find-by-name', [RoomController::class, 'findByName'])->name('rooms.find-by-name');
+    Route::get('/device-types/find-by-name', [DeviceTypeController::class, 'findByName'])->name('device-types.find-by-name');
     Route::post('/device-types', [DeviceTypeController::class, 'store'])->name('device-types.store');
     Route::match(['put', 'patch'], '/device-types/{deviceType}', [DeviceTypeController::class, 'update'])->name('device-types.update');
     Route::delete('/device-types/{deviceType}', [DeviceTypeController::class, 'destroy'])->name('device-types.destroy');

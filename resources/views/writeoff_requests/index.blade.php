@@ -91,6 +91,7 @@
                 class="devices-filter-surface"
                 data-async-table-form
                 data-async-root="#writeoff-requests-index-root"
+                data-search-endpoint="{{ route('writeoff-requests.find-by-code') }}"
             >
                 <input type="hidden" name="statuses_filter" value="1">
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
@@ -113,9 +114,11 @@
                                         class="crud-control"
                                         placeholder="Ierīces kods"
                                         autocomplete="off"
+                                        data-async-manual="true"
+                                        data-async-code-search="true"
                                     >
                                 </label>
-                                <button type="submit" class="btn-search">
+                                <button type="button" class="btn-search" data-code-search-submit="true" onclick="return window.runManualTableSearchFromTrigger(this);">
                                     <x-icon name="search" size="h-4 w-4" />
                                     <span>Meklēt</span>
                                 </button>
