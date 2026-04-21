@@ -947,6 +947,16 @@ const registerAlpineData = () => {
             this.suppressNextClick = this.dragPreviewActive;
 
             if (!this.dragCommitted) {
+                if (this.dragPreviewActive && this.interactionOptions.length === 1) {
+                    const onlyOption = this.interactionOptions[0];
+                    if (onlyOption) {
+                        this.highlightedIndex = 0;
+                        this.selected = onlyOption.value;
+                        this.query = onlyOption.label;
+                        this.dispatchUpdate({ submit: true });
+                    }
+                }
+
                 this.dragPreviewActive = false;
                 return;
             }
