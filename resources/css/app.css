@@ -22,7 +22,7 @@ html, body {
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     font-size: 16px;
     background-color: #f5f5f7;
     color: #333;
@@ -102,7 +102,7 @@ body {
     width: 100%;
     padding: 12px 14px;
     font-size: 16px;
-    border: 1.5px solid #d5d5d7;
+    border: 1.5px solid #cbd5e1;
     border-radius: 8px;
     background-color: white;
     color: #1d1d1f;
@@ -113,8 +113,8 @@ body {
 .form-input:focus,
 .form-select:focus {
     outline: none;
-    border-color: #0071e3;
-    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
+    border-color: #0ea5e9;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
 }
 
 .form-input::placeholder {
@@ -237,27 +237,27 @@ table {
 }
 
 thead {
-    background-color: #f5f5f7;
-    border-bottom: 2px solid #e5e5e7;
+    background-color: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
 }
 
 thead th {
-    padding: 12px 16px;
+    padding: 10px 16px;
     text-align: left;
-    font-weight: 600;
-    font-size: 13px;
-    color: #555;
+    font-weight: 700;
+    font-size: 11px;
+    color: #64748b;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.06em;
 }
 
 tbody tr {
-    border-bottom: 1px solid #f5f5f7;
-    transition: background-color 0.15s ease;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background-color 0.12s ease;
 }
 
 tbody tr:hover {
-    background-color: #f9f9fa;
+    background-color: #f8fafc;
 }
 
 tbody td {
@@ -512,11 +512,11 @@ tbody td {
 }
 
 .crud-btn-primary {
-    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700;
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-1;
 }
 
 .crud-btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 transition hover:border-rose-300 hover:bg-rose-100;
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 shadow-sm transition hover:border-rose-300 hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:ring-offset-1;
 }
 
 .crud-btn-neutral {
@@ -978,9 +978,7 @@ tbody td {
     position: relative;
     overflow: hidden;
     isolation: isolate;
-    background:
-        radial-gradient(circle at top left, rgba(255, 255, 255, 0.12), transparent 34%),
-        linear-gradient(135deg, #0f172a 0%, #1d4ed8 56%, #38bdf8 100%);
+    background: linear-gradient(135deg, #0369a1 0%, #0284c7 35%, #0ea5e9 70%, #38bdf8 100%);
     display: none;
     align-items: center;
     justify-content: center;
@@ -1022,6 +1020,8 @@ tbody td {
 .auth-right-content {
     position: relative;
     z-index: 1;
+    color: white;
+    width: 100%;
 }
 
 .auth-right-content h2 {
@@ -1723,11 +1723,12 @@ tbody td {
 }
 
 .dash-workspace-grid {
-    @apply grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)];
+    @apply grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)];
 }
 
 .dash-location-panel {
     @apply h-fit rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm xl:sticky xl:top-24;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 12px -2px rgba(15, 23, 42, 0.07);
 }
 
 .dash-room-tree {
@@ -1735,11 +1736,11 @@ tbody td {
 }
 
 .dash-floor-card {
-    @apply overflow-hidden rounded-[1.4rem] border border-slate-200 bg-slate-50/90;
+    @apply overflow-hidden rounded-[1.4rem] border border-slate-200 bg-white shadow-sm transition hover:border-slate-300 hover:shadow;
 }
 
 .dash-floor-summary {
-    @apply flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4;
+    @apply flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-slate-50/80;
 }
 
 .dash-floor-summary::-webkit-details-marker {
@@ -1962,7 +1963,8 @@ tbody td {
 /* REMOVED CSS: */
 
 .page-hero {
-    @apply mb-8 rounded-[2rem] border border-slate-300 bg-white p-8 shadow-sm backdrop-blur sm:p-8;
+    @apply mb-8 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm backdrop-blur sm:p-8;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 16px -4px rgba(15, 23, 42, 0.08), inset 0 -1px 0 rgba(148, 163, 184, 0.12);
 }
 
 .page-hero-grid {
@@ -1974,11 +1976,11 @@ tbody td {
 }
 
 .page-eyebrow {
-    @apply inline-flex items-center gap-1.5 rounded-full bg-sky-100/80 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-sky-800 ring-1 ring-sky-300/80;
+    @apply inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-sky-700 ring-1 ring-sky-200;
 }
 
 .page-title-icon {
-    @apply flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.5rem] ring-1 shadow-md;
+    @apply flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.35rem] ring-1 shadow-sm;
 }
 
 .page-title-icon-sky {
@@ -2006,15 +2008,15 @@ tbody td {
 }
 
 .page-title {
-    @apply text-4xl font-black tracking-tight text-slate-950;
+    @apply text-3xl font-bold tracking-tight text-slate-900;
 }
 
 .page-subtitle {
-    @apply mt-2 max-w-3xl text-base leading-7 text-slate-700;
+    @apply mt-1.5 max-w-3xl text-sm leading-relaxed text-slate-500;
 }
 
 .page-actions {
-    @apply flex flex-wrap items-center gap-2;
+    @apply flex flex-wrap items-center gap-2.5;
 }
 
 .inventory-inline-metrics {
@@ -2212,7 +2214,7 @@ tbody td {
 }
 
 .empty-state {
-    @apply relative flex flex-col items-center justify-center gap-4 overflow-hidden rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50/90 px-6 py-10 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.55)];
+    @apply relative flex flex-col items-center justify-center gap-3 overflow-hidden rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50/80 px-6 py-12 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.7)];
 }
 
 .empty-state-compact {
@@ -2220,7 +2222,7 @@ tbody td {
 }
 
 .empty-state-icon {
-    @apply inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200;
+    @apply inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 ring-1 ring-slate-200;
 }
 
 .empty-state-copy {
@@ -2228,11 +2230,11 @@ tbody td {
 }
 
 .empty-state-title {
-    @apply text-base font-semibold text-slate-800;
+    @apply text-sm font-semibold text-slate-700;
 }
 
 .empty-state-description {
-    @apply text-sm leading-6 text-slate-500;
+    @apply text-xs leading-relaxed text-slate-500;
 }
 
 .empty-state-actions {
@@ -3111,7 +3113,7 @@ tbody td {
 }
 
 .status-pill {
-    @apply inline-flex min-h-[2.125rem] items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold leading-none whitespace-nowrap ring-1;
+    @apply inline-flex min-h-[1.75rem] items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold leading-none whitespace-nowrap ring-1;
 }
 
 .status-pill-neutral {

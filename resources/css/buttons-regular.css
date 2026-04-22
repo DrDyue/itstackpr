@@ -37,7 +37,7 @@
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
-.btn-create:focus {
+.btn-create:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px white, 0 0 0 4px #10b981;
 }
@@ -65,7 +65,7 @@
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
-.btn-submit:focus {
+.btn-submit:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px white, 0 0 0 4px #38bdf8;
 }
@@ -95,8 +95,8 @@
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
-.btn-search:focus,
-.devices-code-search-btn:focus {
+.btn-search:focus-visible,
+.devices-code-search-btn:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px white, 0 0 0 4px #38bdf8;
 }
@@ -194,7 +194,7 @@
     background-color: #f8fafc;
     border-color: #94a3b8;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}}
+}
 
 .btn-danger {
     display: inline-flex;
@@ -243,7 +243,7 @@
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
-.btn-danger-solid:focus {
+.btn-danger-solid:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px white, 0 0 0 4px #f87171;
 }
@@ -271,7 +271,7 @@
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
-.btn-approve:focus {
+.btn-approve:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px white, 0 0 0 4px #10b981;
 }

@@ -9,6 +9,10 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Figtree', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Figtree', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
+      fontWeight: {
+        display: '700',
       },
       colors: {
         primary: {

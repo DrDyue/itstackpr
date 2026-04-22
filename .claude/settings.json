@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git diff *)",
+      "Bash(git -C \".claude/worktrees/agent-a6d62520\" diff HEAD~1 --name-only)",
+      "Bash(git -C \".claude/worktrees/agent-a175978f\" diff HEAD~1 --name-only)",
+      "Bash(git -C \".claude/worktrees/agent-a1c77742\" diff HEAD~1 --name-only)",
+      "Bash(git -C \"c:\\\\Users\\\\DrDyue\\\\Documents\\\\GitHub\\\\itstackpr\\\\.claude\\\\worktrees\\\\agent-a6d62520\" log --oneline -5)",
+      "Bash(git -C \"c:\\\\Users\\\\DrDyue\\\\Documents\\\\GitHub\\\\itstackpr\\\\.claude\\\\worktrees\\\\agent-a175978f\" log --oneline -5)",
+      "Bash(git -C \"c:\\\\Users\\\\DrDyue\\\\Documents\\\\GitHub\\\\itstackpr\\\\.claude\\\\worktrees\\\\agent-a1c77742\" log --oneline -5)",
+      "Bash(git -C \"c:\\\\Users\\\\DrDyue\\\\Documents\\\\GitHub\\\\itstackpr\\\\.claude\\\\worktrees\\\\agent-a6d62520\" status --short)",
+      "Bash(git -C \"c:\\\\Users\\\\DrDyue\\\\Documents\\\\GitHub\\\\itstackpr\\\\.claude\\\\worktrees\\\\agent-a175978f\" status --short)"
+    ]
+  }
+}

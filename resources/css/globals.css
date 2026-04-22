@@ -1,14 +1,14 @@
 /**
- * CSS globals - centraliz?ta stilu p?rvald?ba
+ * CSS globals - centralized style management
  * ==========================================
  *
- * Vieta, kur defin?jam visas prim?r?s kr?sas, izm?rus un stilus
- * projekta m?rog?. Main?t ?eit noz?m? main?t visur.
+ * Defines all primary colors, sizes, and styles at the project level.
+ * Changing values here propagates everywhere they are used.
  */
 
-/* ========== PRIMĀRO KRĀVU PALETA ========== */
+/* ========== PRIMARY COLOR PALETTE ========== */
 :root {
-    /* Zi brīdināšanas krāsu konstantes */
+    /* Primary and status color constants */
     --color-primary: #0ea5e9;
     --color-primary-hover: #0077ed;
     --color-primary-dark: #0284c7;
@@ -29,7 +29,7 @@
     --color-info-light: #dbeafe;
     --color-info-dark: #1e3a8a;
     
-    /* Skala krāvas */
+    /* Slate scale */
     --color-slate-50: #f8fafc;
     --color-slate-100: #f1f5f9;
     --color-slate-200: #e2e8f0;
@@ -69,7 +69,7 @@
     --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
     
     /* Typography */
-    --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     --font-size-xs: 12px;
     --font-size-sm: 14px;
     --font-size-base: 16px;

@@ -16,7 +16,7 @@
         <title>IT inventāra uzskaites sistēma</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/cssfamily=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
 
         <script>
             (() => {
@@ -92,7 +92,33 @@
 
             <div class="auth-right">
                 <div class="auth-right-content max-w-md">
-                    <h2>IT inventāra sistēma</h2>
+                    <div class="mb-8 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0H3" />
+                        </svg>
+                    </div>
+                    <h2 class="text-3xl font-bold text-white leading-snug">IT inventāra<br>pārvaldības sistēma</h2>
+                    <p class="mt-4 text-base text-white/75 leading-relaxed">Ludzas novada pašvaldības centralizēta platforma IT aprīkojuma uzskaitei un pieprasījumu apstrādei.</p>
+                    <ul class="mt-8 space-y-4">
+                        <li class="flex items-start gap-3">
+                            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            </div>
+                            <span class="text-sm text-white/85 leading-relaxed">Pilna IT inventāra uzskaite ar atrašanās vietu izsekošanu</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            </div>
+                            <span class="text-sm text-white/85 leading-relaxed">Remonta, norakstīšanas un nodošanas pieteikumu darba plūsmas</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            </div>
+                            <span class="text-sm text-white/85 leading-relaxed">Audita žurnāls un lomu pārvaldība</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
