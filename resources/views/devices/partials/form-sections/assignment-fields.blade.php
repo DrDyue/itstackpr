@@ -4,22 +4,16 @@
             <x-icon name="users" size="h-5 w-5" />
         </div>
         <div class="device-form-section-copy">
-            <div class="device-form-section-name">Statuss un piesaiste</div>
-            <div class="device-form-section-note">Norādi statusu, atbildīgo personu un telpu, kur ierīce atrodas.</div>
+            <div class="device-form-section-name">Piesaite un atrašanās vieta</div>
+            <div class="device-form-section-note">Norādi atbildīgo personu un telpu, kur ierīce atrodas. Statusu var mainīt tikai pēc ierīces izveides.</div>
         </div>
     </div>
 
-    <div class="grid gap-4 md:grid-cols-3">
+    <div class="grid gap-4 md:grid-cols-12">
         @if ($isCreating)
-            <div class="block">
-                <span class="crud-label">Statuss</span>
-                <input type="hidden" name="status" value="{{ \App\Models\Device::STATUS_ACTIVE }}">
-                <div class="crud-control flex items-center bg-slate-50 text-slate-700">
-                    <span>Aktīva</span>
-                </div>
-            </div>
+            <input type="hidden" name="status" value="{{ \App\Models\Device::STATUS_ACTIVE }}">
         @else
-            <label class="block">
+            <label class="block md:col-span-4">
                 <span class="crud-label">Statuss</span>
                 @if ($isWrittenOff)
                     <input type="hidden" name="status" value="{{ $current?->status }}">
@@ -43,7 +37,7 @@
             </label>
         @endif
 
-        <label class="block">
+        <label class="block {{ $isCreating ? 'md:col-span-6' : 'md:col-span-4' }}">
             <span class="crud-label">Atbildīgā persona *</span>
             @if ($isWrittenOff)
                 <input type="hidden" name="assigned_to_id" value="">
@@ -64,7 +58,7 @@
             @endif
         </label>
 
-        <label class="block">
+        <label class="block {{ $isCreating ? 'md:col-span-6' : 'md:col-span-4' }}">
             <span class="crud-label">Telpa *</span>
             @if ($isWrittenOff)
                 <input type="hidden" name="room_id" value="">

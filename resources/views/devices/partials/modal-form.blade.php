@@ -12,7 +12,7 @@
     $title = $isEdit ? 'Rediģēt ierīci' : 'Jauna ierīce';
     $subtitle = $isEdit
         ? 'Atjauno inventāra ierakstu, piesaisti un papildu informāciju vienuviet.'
-        : 'Pievieno jaunu ierīci ar skaidri sakārtotu informāciju par modeli, atrašanās vietu un atbildīgo personu.';
+        : 'Pievieno jaunu ierīci ar skaidri sakārtotiem pamatdatiem, piesaisti un iegādes informāciju.';
     $submitLabel = $isEdit ? 'Saglabāt izmaiņas' : 'Izveidot ierīci';
     $submitClass = $isEdit ? 'btn-edit' : 'btn-create';
     $badgeLabel = $isEdit ? 'Rediģēšana' : 'Jauns ieraksts';
@@ -55,7 +55,7 @@
                     <div class="device-type-modal-icon">
                         <x-icon name="device" size="h-6 w-6" />
                     </div>
-                    <div>
+                    <div class="device-type-modal-title-copy">
                         <h2 class="device-type-modal-title">{{ $title }}</h2>
                         <p class="device-type-modal-subtitle">{{ $subtitle }}</p>
                     </div>
@@ -83,7 +83,11 @@
             ])
         </div>
 
-        <div class="device-type-modal-actions justify-end">
+        <div class="device-type-modal-actions">
+            <div class="device-type-modal-actions-copy">
+                <div class="device-type-modal-actions-title">{{ $isEdit ? 'Saglabāt izmaiņas ierīcei' : 'Pārbaudi datus pirms izveides' }}</div>
+                <div class="device-type-modal-actions-text">{{ $isEdit ? 'Atjauninātā informācija būs redzama uzreiz pēc saglabāšanas.' : 'Atbildīgā persona un telpa tiks piesaistīta jaunajai ierīcei uzreiz pēc izveides.' }}</div>
+            </div>
             <div class="device-type-modal-actions-buttons">
                 <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', '{{ $modalName }}')">
                     <x-icon name="clear" size="h-4 w-4" />

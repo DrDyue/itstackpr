@@ -561,6 +561,50 @@ tbody td {
     @apply mt-1 text-sm leading-5 text-slate-500;
 }
 
+.device-money-field {
+    @apply relative;
+}
+
+.device-money-input {
+    @apply pr-16;
+}
+
+.device-money-suffix {
+    @apply pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-500;
+}
+
+.device-notes-input {
+    @apply min-h-[14rem] resize-y;
+}
+
+.device-image-field {
+    @apply min-w-0;
+}
+
+.device-image-upload-card {
+    @apply rounded-[1.3rem] border border-slate-200 bg-slate-50/85 p-4 shadow-sm;
+}
+
+.device-image-upload-copy {
+    @apply mt-2 text-xs leading-5 text-slate-500;
+}
+
+.device-image-remove-toggle {
+    @apply mt-3 inline-flex items-center gap-3 text-sm text-slate-700;
+}
+
+.device-image-preview-card {
+    @apply mt-4 overflow-hidden rounded-[1.25rem] border border-slate-200 bg-white p-3;
+}
+
+.device-image-preview-frame {
+    @apply h-40 w-full rounded-[1rem] bg-slate-50 object-contain;
+}
+
+.device-image-preview-empty {
+    @apply mt-4 flex min-h-[10rem] flex-col items-center justify-center gap-3 rounded-[1.25rem] border border-dashed border-slate-300 bg-white/70 px-4 py-5 text-center text-sm text-slate-500;
+}
+
 .device-upload-preview {
     @apply mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50;
 }
@@ -725,7 +769,7 @@ tbody td {
 }
 
 .device-type-modal-head-copy {
-    @apply space-y-4 pr-14;
+    @apply space-y-4 pr-16 sm:pr-20;
 }
 
 .repair-modal-form-shell {
@@ -6993,6 +7037,24 @@ html[data-theme='dark'] .device-type-modal-card-title {
 
 html[data-theme='dark'] .device-type-modal-actions {
     background-color: rgba(15, 23, 42, 0.82) !important;
+}
+
+html[data-theme='dark'] .device-image-upload-card,
+html[data-theme='dark'] .device-image-preview-card,
+html[data-theme='dark'] .device-image-preview-empty {
+    background-color: #0f172a !important;
+    border-color: rgba(51, 65, 85, 0.95) !important;
+    color: #cbd5e1 !important;
+}
+
+html[data-theme='dark'] .device-image-preview-frame {
+    background-color: #111827 !important;
+}
+
+html[data-theme='dark'] .device-image-upload-copy,
+html[data-theme='dark'] .device-image-remove-toggle,
+html[data-theme='dark'] .device-money-suffix {
+    color: #94a3b8 !important;
 }
 
 html[data-theme='dark'] .quick-status-filter-rose {
