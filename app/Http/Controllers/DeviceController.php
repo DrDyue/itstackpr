@@ -701,6 +701,7 @@ SQL;
             ),
             'roomUpdateAvailability' => $roomUpdateAvailability,
             'repairStatusLabel' => $this->visibleRepairStatusLabel($device),
+            'repairStatusDescription' => $this->repairStatusDescription($device),
         ]);
     }
 
@@ -1258,6 +1259,21 @@ SQL;
         }
 
         return 'Ierīce šobrīd ir remonta.';
+    }
+
+    private function repairStatusDescription(Device $device): ?string
+    {
+        if ($device->status !== Device::STATUS_REPAIR) {
+            return null;
+        }
+
+        return match ($device->activeRepair?->status ?? $device->latestRepair?->status) {
+            'waiting' => 'Gaida nozīmē, ka remonta ieraksts jau ir izveidots, bet pats remontdarbs vēl nav uzsākts.',
+            'in-progress' => 'Procesā nozīmē, ka ierīce šobrīd tiek remontēta un darbs vēl nav pabeigts.',
+            'completed' => 'Pabeigts nozīmē, ka remonta darbs ir noslēgts un ieraksts saglabāts vēsturē.',
+            'cancelled' => 'Atcelts nozīmē, ka remonta process tika pārtraukts un netika pabeigts.',
+            default => 'Šis ir ierīces remonta statuss, kas parāda, kurā posmā atrodas remonta darbs.',
+        };
     }
 
     private function requestAvailabilityForDevice(

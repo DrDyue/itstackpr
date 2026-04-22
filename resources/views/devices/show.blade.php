@@ -203,18 +203,7 @@
             </section>
         @else
             <section class="surface-card p-6">
-                <div class="grid gap-6 xl:grid-cols-[auto_minmax(0,1fr)]">
-                    <div class="shrink-0">
-                        @if ($deviceImageUrl)
-                            <img src="{{ $deviceImageUrl }}" alt="{{ $device->name }}" class="h-44 w-44 rounded-[1.75rem] border border-slate-200 object-cover">
-                        @else
-                            <div class="flex h-44 w-44 items-center justify-center rounded-[1.75rem] border border-dashed border-slate-300 bg-slate-50 text-slate-400">
-                                <x-icon name="device" size="h-10 w-10" />
-                            </div>
-                        @endif
-                    </div>
-
-                    <div class="min-w-0 space-y-6">
+                <div class="min-w-0 space-y-6">
                         <div class="flex flex-wrap items-center gap-2">
                             <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
                             @if ($repairStatusLabel)
@@ -229,8 +218,19 @@
                             </span>
                         </div>
 
+                        @if ($repairStatusLabel)
+                            <div class="device-user-status-explainer">
+                                <div class="device-user-status-explainer-head">
+                                    <span class="device-user-status-explainer-label">Remonta statuss</span>
+                                    <span class="device-user-status-explainer-value">{{ $repairStatusLabel }}</span>
+                                </div>
+                                <div class="device-user-status-explainer-copy">{{ $repairStatusDescription }}</div>
+                            </div>
+                        @endif
+
                         <div class="device-user-overview-grid">
-                            <article class="device-user-glance-card device-user-glance-card-primary">
+                            <article class="device-user-glance-card device-user-glance-card-device">
+                                <div class="device-user-device-top">
                                 <div class="device-user-glance-head">
                                     <div class="device-user-glance-icon">
                                         <x-icon name="device" size="h-5 w-5" />
@@ -238,6 +238,17 @@
                                     <div>
                                         <div class="device-user-glance-eyebrow">Ierīce</div>
                                         <h2 class="device-user-glance-title">{{ $device->name }}</h2>
+                                    </div>
+                                </div>
+
+                                <div class="device-user-device-media">
+                                    @if ($deviceImageUrl)
+                                        <img src="{{ $deviceImageUrl }}" alt="{{ $device->name }}" class="device-user-device-image">
+                                    @else
+                                        <div class="device-user-device-placeholder">
+                                            <x-icon name="device" size="h-8 w-8" />
+                                        </div>
+                                        @endif
                                     </div>
                                 </div>
 
@@ -434,7 +445,6 @@
                             </div>
                         @endif
                     </div>
-                </div>
                         @endif
             </section>
         @endif
