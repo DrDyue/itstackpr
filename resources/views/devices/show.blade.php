@@ -6,11 +6,7 @@
 <x-app-layout>
     @php
         $deviceMeta = collect([$device->manufacturer, $device->model])->filter(fn ($v) => filled($v))->implode(' · ');
-        $activeRepair = $device->activeRepair;
         $usesUserDeviceView = ! $canManageDevices;
-        $activeRepairUrl = $activeRepair
-            ? route('repairs.index', ['repair_modal' => 'edit', 'modal_repair' => $activeRepair->id])
-            : null;
         $repairCreateUrl = route('repairs.index', ['repair_modal' => 'create', 'device_id' => $device->id]);
         $repairRequestCreateUrl = route('repair-requests.index', ['repair_request_modal' => 'create', 'device_id' => $device->id]);
         $writeoffRequestCreateUrl = route('writeoff-requests.index', ['writeoff_request_modal' => 'create', 'device_id' => $device->id]);
@@ -68,13 +64,9 @@
                     <a href="{{ route('devices.index', ['device_modal' => 'edit', 'modal_device' => $device->id]) }}" class="btn-edit">
                         <x-icon name="edit" size="h-4 w-4" /><span>Rediģēt</span>
                     </a>
-                    @if ($activeRepairUrl)
-                        <a href="{{ $activeRepairUrl }}" class="btn-view">
-                            <x-icon name="repair" size="h-4 w-4" /><span>Atvērt remontu</span>
-                        </a>
-                    @elseif ($device->status !== \App\Models\Device::STATUS_WRITEOFF)
+                    @if ($device->status !== \App\Models\Device::STATUS_WRITEOFF)
                         <a href="{{ $repairCreateUrl }}" class="btn-view">
-                            <x-icon name="repair" size="h-4 w-4" /><span>Jauns remonts</span>
+                            <x-icon name="repair" size="h-4 w-4" /><span>Atdot uz remontu</span>
                         </a>
                     @endif
                 @else

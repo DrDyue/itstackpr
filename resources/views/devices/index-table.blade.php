@@ -341,13 +341,6 @@
                                                 <span>Skatīt ierīci</span>
                                             </a>
 
-                                            @if ($repairModalUrl)
-                                                <a href="{{ $repairModalUrl }}" class="table-action-item table-action-item-sky" @click="open = false; panel = null">
-                                                    <x-icon name="repair" size="h-4 w-4" />
-                                                    <span>Atvērt remontu</span>
-                                                </a>
-                                            @endif
-
                                             <button type="button" class="table-action-item table-action-item-amber" @click="open = false; panel = null; $dispatch('open-modal', 'device-edit-modal-{{ $device->id }}')">
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Rediģēt</span>
@@ -376,7 +369,7 @@
 
                                                 <a href="{{ $repairCreateUrl }}" class="table-action-item table-action-item-amber" @click="open = false; panel = null">
                                                     <x-icon name="repair" size="h-4 w-4" />
-                                                    <span>Atvērt remonta formu</span>
+                                                    <span>Atdot uz remontu</span>
                                                 </a>
                                             @endif
 

@@ -310,7 +310,7 @@ tbody td {
     position: relative;
     display: flex;
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-end;
 }
 
 .app-loading-bar-shell {
@@ -343,11 +343,12 @@ tbody td {
 .app-loading-pill {
     display: inline-flex;
     align-items: center;
-    align-self: stretch;
+    align-self: flex-end;
     justify-content: center;
     gap: 0.8rem;
     min-height: 3rem;
-    width: 100%;
+    width: auto;
+    max-width: 100%;
     padding: 0.7rem 0.95rem;
     border-radius: 9999px;
     border: 1px solid rgba(148, 163, 184, 0.26);
