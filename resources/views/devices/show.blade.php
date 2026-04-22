@@ -64,10 +64,17 @@
                     <a href="{{ route('devices.index', ['device_modal' => 'edit', 'modal_device' => $device->id]) }}" class="btn-edit">
                         <x-icon name="edit" size="h-4 w-4" /><span>Rediģēt</span>
                     </a>
-                    @if ($device->status !== \App\Models\Device::STATUS_WRITEOFF)
+                    @if ($requestAvailability['can_create_any'])
                         <a href="{{ $repairCreateUrl }}" class="btn-view">
                             <x-icon name="repair" size="h-4 w-4" /><span>Atdot uz remontu</span>
                         </a>
+                    @elseif ($device->status !== \App\Models\Device::STATUS_WRITEOFF)
+                        <button type="button" class="btn-disabled"
+                            data-app-toast-title="Remonts nav pieejams"
+                            data-app-toast-message="{{ $requestAvailability['reason'] ?? 'Ierīcei ir aktīvs pieteikums vai tā atrodas remontā.' }}"
+                            data-app-toast-tone="info">
+                            <x-icon name="repair" size="h-4 w-4" /><span>Atdot uz remontu</span>
+                        </button>
                     @endif
                 @else
                     @if ($requestAvailability['repair'])

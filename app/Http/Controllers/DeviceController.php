@@ -1029,6 +1029,16 @@ SQL;
             $data = array_merge($data, $this->writeoffWarehousePayload());
         }
 
+        if (
+            $device
+            && ($data['status'] ?? $device->status) !== $device->status
+            && ($blockedReason = $this->deviceStatusEditBlockedReason($device))
+        ) {
+            throw ValidationException::withMessages([
+                'status' => [$blockedReason],
+            ]);
+        }
+
         if ($device && $device->status === Device::STATUS_WRITEOFF) {
             $data['status'] = Device::STATUS_WRITEOFF;
             $data = array_merge($data, $this->writeoffWarehousePayload());
@@ -1517,6 +1527,10 @@ SQL;
             return ['level' => 'error', 'message' => 'Nav izvēlēts korekts statuss.'];
         }
 
+        if ($blockedReason = $this->deviceStatusEditBlockedReason($device)) {
+            return ['level' => 'error', 'message' => $blockedReason];
+        }
+
         if ($status === Device::STATUS_REPAIR && $device->status !== Device::STATUS_ACTIVE) {
             return ['level' => 'error', 'message' => 'Remonta ierakstu var izveidot tikai aktīvai ierīcei.'];
         }
@@ -1672,6 +1686,29 @@ SQL;
             $repairStatusLabel = $this->visibleRepairStatusLabel($device);
 
             return 'Remonta ierīcei nevar mainīt telpu vai atbildīgo personu'.($repairStatusLabel ? ' ar statusu "'.$repairStatusLabel.'".' : '.');
+        }
+
+        return null;
+    }
+
+    private function deviceStatusEditBlockedReason(Device $device): ?string
+    {
+        if ($device->status === Device::STATUS_REPAIR || $device->activeRepair()->exists()) {
+            $repairStatusLabel = $this->visibleRepairStatusLabel($device);
+
+            return 'IerÄ«ces statusu nevar mainÄ«t, kamÄ“r tai notiek remonts'.($repairStatusLabel ? ' ar statusu "'.$repairStatusLabel.'".' : '.');
+        }
+
+        if ($device->repairRequests()->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
+            return 'IerÄ«ces statusu nevar mainÄ«t, kamÄ“r tai ir aktÄ«vs remonta pieprasÄ«jums.';
+        }
+
+        if ($device->writeoffRequests()->where('status', WriteoffRequest::STATUS_SUBMITTED)->exists()) {
+            return 'IerÄ«ces statusu nevar mainÄ«t, kamÄ“r tai ir aktÄ«vs norakstÄ«Åanas pieprasÄ«jums.';
+        }
+
+        if ($device->transfers()->where('status', DeviceTransfer::STATUS_SUBMITTED)->exists()) {
+            return 'IerÄ«ces statusu nevar mainÄ«t, kamÄ“r tai ir aktÄ«vs nodoÅanas pieprasÄ«jums.';
         }
 
         return null;

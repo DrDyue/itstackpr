@@ -5,6 +5,25 @@
     $current = $device;
     $isCreating = ! $current;
     $isWrittenOff = ($current?->status ?? null) === \App\Models\Device::STATUS_WRITEOFF;
+    $hasPendingRepairRequest = (bool) (($current?->has_pending_repair_request ?? false) || $current?->pendingRepairRequest);
+    $hasPendingWriteoffRequest = (bool) (($current?->has_pending_writeoff_request ?? false) || $current?->pendingWriteoffRequest);
+    $hasPendingTransferRequest = (bool) (($current?->has_pending_transfer_request ?? false) || $current?->pendingTransferRequest);
+    $isStatusLocked = ! $isCreating && (
+        $isWrittenOff
+        || ($current?->status ?? null) === \App\Models\Device::STATUS_REPAIR
+        || $current?->activeRepair
+        || $hasPendingRepairRequest
+        || $hasPendingWriteoffRequest
+        || $hasPendingTransferRequest
+    );
+    $statusLockMessage = match (true) {
+        $isWrittenOff => 'NorakstÄ«tai ierÄ«cei statusu vairs nevar mainÄ«t.',
+        (($current?->status ?? null) === \App\Models\Device::STATUS_REPAIR || (bool) $current?->activeRepair) => 'Statusu nevar mainÄ«t, kamÄ“r ierÄ«ce atrodas remontÄ.',
+        $hasPendingRepairRequest => 'Statusu nevar mainÄ«t, kamÄ“r ierÄ«cei ir aktÄ«vs remonta pieprasÄ«jums.',
+        $hasPendingWriteoffRequest => 'Statusu nevar mainÄ«t, kamÄ“r ierÄ«cei ir aktÄ«vs norakstÄ«Åanas pieprasÄ«jums.',
+        $hasPendingTransferRequest => 'Statusu nevar mainÄ«t, kamÄ“r ierÄ«cei ir aktÄ«vs nodoÅanas pieprasÄ«jums.',
+        default => null,
+    };
     $deviceImageUrl = $current?->deviceImageUrl();
     $selectedTypeId = (string) $fieldValue('device_type_id', $current?->device_type_id ?? '');
     $selectedTypeLabel = $fieldValue(
@@ -79,6 +98,12 @@
     @if ($isWrittenOff)
         <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
             Norakstītai ierīcei var labot tikai informācijas laukus. Statuss, piesaiste un telpa netiek mainīti.
+        </div>
+    @endif
+
+    @if ($statusLockMessage && ! $isWrittenOff)
+        <div class="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm leading-6 text-sky-900">
+            {{ $statusLockMessage }}
         </div>
     @endif
 

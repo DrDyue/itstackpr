@@ -357,20 +357,42 @@
                                                     <span>Mainīt atbildīgo</span>
                                                 </button>
 
-                                                <form method="POST" action="{{ route('devices.quick-update', $device) }}" data-app-confirm-title="Norakstīt ierīci?" data-app-confirm-message="Vai tiešām norakstīt šo ierīci? Pēc norakstīšanas tā vairs nebūs piešķirta lietotājam vai telpai." data-app-confirm-accept="Jā, norakstīt" data-app-confirm-cancel="Nē" data-app-confirm-tone="danger">
-                                                    @csrf
-                                                    <input type="hidden" name="action" value="status">
-                                                    <input type="hidden" name="target_status" value="writeoff">
-                                                    <button type="submit" class="table-action-item table-action-item-rose">
+                                                @if ($requestAvailability['can_create_any'])
+                                                    <form method="POST" action="{{ route('devices.quick-update', $device) }}" data-app-confirm-title="Norakstīt ierīci?" data-app-confirm-message="Vai tiešām norakstīt šo ierīci? Pēc norakstīšanas tā vairs nebūs piešķirta lietotājam vai telpai." data-app-confirm-accept="Jā, norakstīt" data-app-confirm-cancel="Nē" data-app-confirm-tone="danger">
+                                                        @csrf
+                                                        <input type="hidden" name="action" value="status">
+                                                        <input type="hidden" name="target_status" value="writeoff">
+                                                        <button type="submit" class="table-action-item table-action-item-rose">
+                                                            <x-icon name="writeoff" size="h-4 w-4" />
+                                                            <span>Norakstīt</span>
+                                                        </button>
+                                                    </form>
+
+                                                    <a href="{{ $repairCreateUrl }}" class="table-action-item table-action-item-amber" @click="open = false; panel = null">
+                                                        <x-icon name="repair" size="h-4 w-4" />
+                                                        <span>Atdot uz remontu</span>
+                                                    </a>
+                                                @else
+                                                    <button type="button"
+                                                        class="table-action-item table-action-item-rose opacity-50 cursor-not-allowed"
+                                                        data-app-toast-title="Norakstīšana nav pieejama"
+                                                        data-app-toast-message="{{ $requestAvailability['reason'] ?? 'Ierīcei ir aktīvs pieteikums.' }}"
+                                                        data-app-toast-tone="info"
+                                                        @click="open = false; panel = null">
                                                         <x-icon name="writeoff" size="h-4 w-4" />
                                                         <span>Norakstīt</span>
                                                     </button>
-                                                </form>
 
-                                                <a href="{{ $repairCreateUrl }}" class="table-action-item table-action-item-amber" @click="open = false; panel = null">
-                                                    <x-icon name="repair" size="h-4 w-4" />
-                                                    <span>Atdot uz remontu</span>
-                                                </a>
+                                                    <button type="button"
+                                                        class="table-action-item table-action-item-amber opacity-50 cursor-not-allowed"
+                                                        data-app-toast-title="Remonts nav pieejams"
+                                                        data-app-toast-message="{{ $requestAvailability['reason'] ?? 'Ierīcei ir aktīvs pieteikums.' }}"
+                                                        data-app-toast-tone="info"
+                                                        @click="open = false; panel = null">
+                                                        <x-icon name="repair" size="h-4 w-4" />
+                                                        <span>Atdot uz remontu</span>
+                                                    </button>
+                                                @endif
                                             @endif
 
                                             <div class="table-action-inline-panel" x-cloak x-show="panel === 'room'" x-transition>

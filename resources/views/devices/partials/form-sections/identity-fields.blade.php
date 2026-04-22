@@ -14,7 +14,7 @@
         @if (!$isCreating)
             <label class="block md:col-span-4">
                 <span class="crud-label">Statuss *</span>
-                @if ($isWrittenOff)
+                @if ($isStatusLocked)
                     <input type="hidden" name="status" value="{{ $current?->status }}">
                     <div class="crud-control flex items-center bg-slate-50 text-slate-700">
                         <span>{{ $statusLabels[$current?->status] ?? 'Norakstīta' }}</span>
