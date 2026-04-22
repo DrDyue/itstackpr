@@ -100,6 +100,9 @@ const createAppLoadingManager = () => {
             this.start();
             return Promise.resolve(promise).finally(() => this.end());
         },
+        sync() {
+            render();
+        },
     };
 };
 
@@ -110,6 +113,10 @@ if (document.readyState !== 'complete') {
     appLoading.start();
     window.addEventListener('load', () => appLoading.end(), { once: true });
 }
+
+runOnDomReady(() => {
+    appLoading.sync();
+});
 
 document.addEventListener('click', (event) => {
     const link = event.target.closest('a[href]');

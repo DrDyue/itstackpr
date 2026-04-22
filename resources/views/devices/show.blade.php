@@ -26,7 +26,7 @@
         $metaLine = collect([$device->type?->type_name, $deviceMeta])->filter()->implode(' · ');
     @endphp
 
-    <section class="app-shell">
+    <section class="app-shell app-shell-wide">
 
         {{-- ═══ KOMPAKTS HEADER ═══ --}}
         <div class="mb-5 flex flex-wrap items-center gap-3">
@@ -108,10 +108,10 @@
         @endif
 
         {{-- ═══ GALVENĀ INFORMĀCIJA ═══ --}}
-        <div class="grid gap-4 xl:grid-cols-3">
+        <div class="grid gap-4 xl:grid-cols-12">
 
             {{-- Identitāte --}}
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm xl:col-span-4">
                 <h3 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
                     <x-icon name="device" size="h-3.5 w-3.5" />
                     <span>Identitāte</span>
@@ -145,7 +145,7 @@
             </div>
 
             {{-- Atrašanās vieta --}}
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm xl:col-span-4">
                 <h3 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
                     <x-icon name="room" size="h-3.5 w-3.5" />
                     <span>Atrašanās vieta</span>
@@ -198,7 +198,7 @@
             </div>
 
             {{-- Labā kolonna --}}
-            <div class="space-y-4">
+            <div class="space-y-4 xl:col-span-4">
                 @if ($canManageDevices)
                     {{-- Iegāde un garantija --}}
                     <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -339,10 +339,10 @@
         @endif
 
         {{-- ═══ VĒSTURE ═══ --}}
-        <div class="mt-5 grid gap-4 xl:grid-cols-2">
+        <div class="mt-5 grid gap-4 xl:grid-cols-12">
 
             {{-- Remonta pieteikumi --}}
-            <section class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <section class="rounded-2xl border border-slate-200 bg-white shadow-sm xl:col-span-6">
                 <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-3.5">
                     <x-icon name="repair-request" size="h-4 w-4" class="shrink-0 text-sky-500" />
                     <h2 class="text-sm font-semibold text-slate-900">Remonta pieteikumi</h2>
@@ -376,7 +376,7 @@
             </section>
 
             {{-- Remonta ieraksti --}}
-            <section class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <section class="rounded-2xl border border-slate-200 bg-white shadow-sm xl:col-span-6">
                 <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-3.5">
                     <x-icon name="repair" size="h-4 w-4" class="shrink-0 text-amber-500" />
                     <h2 class="text-sm font-semibold text-slate-900">Remonta ieraksti</h2>
@@ -434,7 +434,7 @@
             </section>
 
             {{-- Norakstīšanas pieteikumi --}}
-            <section class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <section class="rounded-2xl border border-slate-200 bg-white shadow-sm xl:col-span-6">
                 <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-3.5">
                     <x-icon name="writeoff" size="h-4 w-4" class="shrink-0 text-rose-500" />
                     <h2 class="text-sm font-semibold text-slate-900">Norakstīšanas pieteikumi</h2>
@@ -468,7 +468,7 @@
             </section>
 
             {{-- Nodošanas vēsture --}}
-            <section class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <section class="rounded-2xl border border-slate-200 bg-white shadow-sm xl:col-span-6">
                 <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-3.5">
                     <x-icon name="transfer" size="h-4 w-4" class="shrink-0 text-emerald-500" />
                     <h2 class="text-sm font-semibold text-slate-900">Nodošanas vēsture</h2>
