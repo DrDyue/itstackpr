@@ -7220,17 +7220,31 @@ html[data-theme='dark'] .user-profile-card-label {
 }
 
 .device-user-action-row {
-    @apply grid grid-cols-3 items-center justify-end gap-2 whitespace-nowrap;
+    display: grid;
+    grid-template-columns: repeat(3, max-content);
+    justify-content: end;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
 }
 
 .device-user-action-row > .table-action-button,
 .device-user-action-row > .btn-disabled {
-    @apply min-h-[2.5rem] w-full shrink-0 justify-center px-3;
+    @apply min-h-[2.5rem] shrink-0 justify-center px-3.5;
+    width: auto;
+    font-size: 0.8125rem;
+    line-height: 1;
 }
 
 .device-user-action-row > .table-action-button > span,
 .device-user-action-row > .btn-disabled > span {
     @apply whitespace-nowrap;
+}
+
+.device-user-action-row > .btn-disabled {
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 0.875rem;
 }
 
 .device-user-overview-grid {
