@@ -29,6 +29,7 @@
         ];
         $requestReviewNavigationItems = $canManageRequests ? collect($requestNavigationItems)->take(2)->values()->all() : $requestNavigationItems;
         $requestHistoryNavigationItems = $canManageRequests ? collect($requestNavigationItems)->slice(2)->values()->all() : [];
+        $secondaryNavigationItems = [];
         $lessImportantNavigationItems = [];
         $repairsNavigationItem = null;
         $usersNavigationItem = null;
@@ -38,9 +39,12 @@
         if ($canManageRequests) {
             $repairsNavigationItem = ['route' => 'repairs.index', 'pattern' => 'repairs*', 'label' => 'Remonti', 'icon' => 'repair'];
 
-            $lessImportantNavigationItems = [
+            $secondaryNavigationItems = [
                 ['route' => 'rooms.index', 'pattern' => 'rooms*', 'label' => 'Telpas', 'icon' => 'room'],
                 ['route' => 'buildings.index', 'pattern' => 'buildings*', 'label' => 'Ēkas', 'icon' => 'building'],
+            ];
+
+            $lessImportantNavigationItems = [
                 ['route' => 'device-types.index', 'pattern' => 'device-types*', 'label' => 'Ierīču tipi', 'icon' => 'tag'],
             ];
         }
@@ -79,6 +83,13 @@
                             <span>{{ $repairsNavigationItem['label'] }}</span>
                         </x-nav-link>
                     @endif
+
+                    @foreach ($secondaryNavigationItems as $item)
+                        <x-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
+                            <x-icon :name="$item['icon']" size="h-4 w-4" />
+                            <span>{{ $item['label'] }}</span>
+                        </x-nav-link>
+                    @endforeach
 
                     <x-dropdown align="left" width="w-72">
                         <x-slot name="trigger">
@@ -503,6 +514,15 @@
                     </span>
                 </x-responsive-nav-link>
             @endif
+
+            @foreach ($secondaryNavigationItems as $item)
+                <x-responsive-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
+                    <span class="inline-flex items-center gap-2.5">
+                        <x-icon :name="$item['icon']" size="h-5 w-5" />
+                        <span>{{ $item['label'] }}</span>
+                    </span>
+                </x-responsive-nav-link>
+            @endforeach
 
             <div class="rounded-2xl border border-slate-200 bg-slate-50 p-2">
                 <div class="px-3 pb-2 pt-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pieteikumi</div>
