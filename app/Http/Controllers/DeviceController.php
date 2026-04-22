@@ -667,6 +667,7 @@ SQL;
             'originLabel' => $latestTransferToCurrentUser
                 ? 'Ierīce tev nodota no '.($latestTransferToCurrentUser->responsibleUser?->full_name ?: 'cita lietotāja').'.'
                 : 'Ierīci tev piešķīra administrators.',
+            'latestTransferToCurrentUser' => $latestTransferToCurrentUser,
             'roomOptions' => $roomOptions,
             'visibleWriteoffRequests' => $device->writeoffRequests->sortByDesc('created_at')->values(),
             'visibleTransfers' => $device->transfers->sortByDesc('created_at')->values(),
