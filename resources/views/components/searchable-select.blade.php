@@ -21,6 +21,7 @@
                     'value' => (string) ($option['value'] ?? ''),
                     'label' => (string) ($option['label'] ?? ''),
                     'description' => (string) ($option['description'] ?? ''),
+                    'group' => (string) ($option['group'] ?? ''),
                     'search' => (string) ($option['search'] ?? (($option['label'] ?? '') . ' ' . ($option['description'] ?? ''))),
                 ];
             }
@@ -29,6 +30,7 @@
                 'value' => (string) data_get($option, 'value', data_get($option, 'id', '')),
                 'label' => (string) data_get($option, 'label', data_get($option, 'name', data_get($option, 'type_name', ''))),
                 'description' => (string) data_get($option, 'description', ''),
+                'group' => (string) data_get($option, 'group', ''),
                 'search' => (string) data_get($option, 'search', ''),
             ];
         })
@@ -151,28 +153,36 @@
             </template>
 
             <template x-for="(option, index) in filteredOptions" :key="option.value + '-' + index">
-                <button
-                    type="button"
-                    class="searchable-select-option"
-                    :data-index="index"
-                    :id="optionId(index)"
-                    role="option"
-                    :aria-selected="(selected === option.value).toString()"
-                    :class="optionClasses(index, option)"
-                    @mouseenter="highlightedIndex = index"
-                    @mousemove="handleOptionDrag(index, $event)"
-                    @mousedown.prevent="startPointerSelection(index)"
-                    @mouseup="finishPointerSelection(index)"
-                    @click="choose(option)"
-                >
-                    <span class="block text-sm font-semibold leading-5" x-text="option.label"></span>
-                    <span
-                        class="mt-1 block text-xs leading-5"
-                        :class="highlightedIndex === index ? 'text-white/75' : 'text-slate-500'"
-                        x-show="option.description"
-                        x-text="option.description"
-                    ></span>
-                </button>
+                <div>
+                    <div
+                        x-show="shouldShowGroupHeader(index)"
+                        class="searchable-select-group"
+                        x-text="option.group"
+                    ></div>
+
+                    <button
+                        type="button"
+                        class="searchable-select-option"
+                        :data-index="index"
+                        :id="optionId(index)"
+                        role="option"
+                        :aria-selected="(selected === option.value).toString()"
+                        :class="optionClasses(index, option)"
+                        @mouseenter="highlightedIndex = index"
+                        @mousemove="handleOptionDrag(index, $event)"
+                        @mousedown.prevent="startPointerSelection(index)"
+                        @mouseup="finishPointerSelection(index)"
+                        @click="choose(option)"
+                    >
+                        <span class="block text-sm font-semibold leading-5" x-text="option.label"></span>
+                        <span
+                            class="mt-1 block text-xs leading-5"
+                            :class="highlightedIndex === index ? 'text-white/75' : 'text-slate-500'"
+                            x-show="option.description"
+                            x-text="option.description"
+                        ></span>
+                    </button>
+                </div>
             </template>
         </div>
     </div>

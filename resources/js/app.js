@@ -966,6 +966,7 @@ const registerAlpineData = () => {
             value: String(option.value ?? ''),
             label: option.label ?? '',
             description: option.description ?? '',
+            group: option.group ?? '',
             search: (option.search ?? `${option.label ?? ''} ${option.description ?? ''}`).toLowerCase(),
         })),
         placeholder,
@@ -1009,6 +1010,18 @@ const registerAlpineData = () => {
         optionId(index) {
             const baseIdentifier = this.identifier || 'searchable-select';
             return `${baseIdentifier}-option-${index}`;
+        },
+        shouldShowGroupHeader(index) {
+            const option = this.filteredOptions[index];
+            if (!option?.group) {
+                return false;
+            }
+
+            if (index === 0) {
+                return true;
+            }
+
+            return this.filteredOptions[index - 1]?.group !== option.group;
         },
         togglePanel() {
             if (this.open) {

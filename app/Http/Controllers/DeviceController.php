@@ -334,24 +334,7 @@ class DeviceController extends Controller
             'statusLabels' => $this->statusLabels(),
             'canManageDevices' => $canManageDevices,
             'quickRoomOptions' => $canManageDevices ? $this->quickRoomOptions() : collect(),
-            'userRoomOptions' => $accessibleRooms
-                ->map(fn (Room $room) => [
-                    'value' => (string) $room->id,
-                    'label' => $room->room_number.($room->room_name ? ' - '.$room->room_name : ''),
-                    'description' => collect([
-                        $room->building?->building_name,
-                        $room->floor_number !== null ? $room->floor_number.'. stāvs' : null,
-                        $room->department,
-                    ])->filter()->implode(' | '),
-                    'search' => implode(' ', array_filter([
-                        $room->room_number,
-                        $room->room_name,
-                        $room->building?->building_name,
-                        $room->department,
-                        $room->floor_number,
-                    ])),
-                ])
-                ->values(),
+            'userRoomOptions' => $this->roomSelectOptions($accessibleRooms),
             'quickAssigneeOptions' => $canManageDevices ? $this->quickAssigneeOptions() : collect(),
             'sortOptions' => $this->deviceSortOptions($canManageDevices),
             'deviceModalQuery' => (string) $request->query('device_modal', ''),
@@ -679,6 +662,15 @@ SQL;
             ])
             ->values();
 
+        $roomOptions = $this->roomSelectOptions(
+            Room::query()
+                ->with('building')
+                ->orderBy('building_id')
+                ->orderBy('floor_number')
+                ->orderBy('room_number')
+                ->get()
+        );
+
         $pendingRepairRequest = $device->repairRequests->firstWhere('status', 'submitted');
         $pendingWriteoffRequest = $device->writeoffRequests->firstWhere('status', 'submitted');
         $pendingTransferRequest = $device->transfers->firstWhere('status', 'submitted');
@@ -748,10 +740,6 @@ SQL;
             return $this->redirectAfterQuickAction($device, 'error', 'Ierīce jau atrodas šajā telpā.');
         }
 
-        if ((int) $device->room_id === (int) ($room?->id ?? 0) && (int) $device->building_id === (int) ($room?->building_id ?? 0)) {
-            return redirect()->route('devices.show', $device)->with('error', 'Ierīce jau atrodas šajā telpā.');
-        }
-
         $before = $device->only(['room_id', 'building_id']);
         $this->saveDevicePayload($device, $payload);
         AuditTrail::updatedFromState(auth()->id(), $device, $before, [
@@ -760,8 +748,6 @@ SQL;
         ]);
 
         return $this->redirectAfterQuickAction($device, 'success', 'Ierīces atrašanās vieta atjaunināta.');
-
-        return redirect()->route('devices.show', $device)->with('success', 'Ierīces atrašanās vieta atjaunināta.');
     }
 
     public function update(Request $request, Device $device)
@@ -903,6 +889,7 @@ SQL;
                     $query->where('assigned_to_id', $user->id);
                 }
             })
+            ->orderBy('building_id')
             ->orderBy('floor_number')
             ->orderBy('room_number')
             ->get();
@@ -1622,6 +1609,31 @@ SQL;
         }
 
         return null;
+    }
+
+    private function roomSelectOptions(Collection $rooms): Collection
+    {
+        return $rooms
+            ->map(fn (Room $room) => [
+                'value' => (string) $room->id,
+                'label' => $room->room_number.($room->room_name ? ' - '.$room->room_name : ''),
+                'group' => collect([
+                    $room->building?->building_name,
+                    $room->floor_number !== null ? $room->floor_number.'. stāvs' : null,
+                ])->filter()->implode(' | '),
+                'description' => collect([
+                    $room->department,
+                    $room->building?->building_name,
+                ])->filter()->implode(' | '),
+                'search' => implode(' ', array_filter([
+                    $room->room_number,
+                    $room->room_name,
+                    $room->department,
+                    $room->building?->building_name,
+                    $room->floor_number,
+                ])),
+            ])
+            ->values();
     }
 
     private function quickRoomOptions(): Collection
