@@ -155,13 +155,9 @@ class DeviceController extends Controller
             return response()->json(['found' => false, 'page' => 1]);
         }
 
-        // Calculate which page the device is on (20 items per page)
-        $perPage = 20;
-        $page = intdiv($foundIndex, $perPage) + 1;
-
         return response()->json([
             'found' => true,
-            'page' => $page,
+            'page' => 1,
             'device_id' => $foundDevice->id,
             'device_code' => $foundDevice->code,
             'term' => $code,
@@ -272,11 +268,9 @@ class DeviceController extends Controller
 
         $this->applyDeviceIndexSorting($devicesQuery, $sorting);
 
-        $devices = $devicesQuery
-            ->paginate(20)
-            ->withQueryString();
+        $devices = $devicesQuery->get();
 
-        $deviceStates = $devices->getCollection()
+        $deviceStates = $devices
             ->mapWithKeys(function (Device $device) use ($user) {
                 $pendingRepairRequest = $device->pendingRepairRequest;
                 $pendingWriteoffRequest = $device->pendingWriteoffRequest;
@@ -342,6 +336,16 @@ class DeviceController extends Controller
             'deviceModalQuery' => (string) $request->query('device_modal', ''),
             'deviceModalDeviceId' => ctype_digit((string) $request->query('modal_device'))
                 ? (int) $request->query('modal_device')
+                : null,
+            'selectedModalDevice' => ctype_digit((string) $request->query('modal_device'))
+                ? Device::query()
+                    ->with([
+                        'activeRepair',
+                        'pendingRepairRequest',
+                        'pendingWriteoffRequest',
+                        'pendingTransferRequest',
+                    ])
+                    ->find((int) $request->query('modal_device'))
                 : null,
         ], $canManageDevices ? $this->formData() : []);
     }

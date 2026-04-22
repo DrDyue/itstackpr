@@ -111,6 +111,7 @@
                 data-async-table-form
                 data-async-root="#devices-index-root"
                 data-search-endpoint="{{ route('devices.find-by-code') }}"
+                data-manual-search-pagination="false"
                 @searchable-select-updated.window="if ($event.detail.identifier === 'device-floor-filter') { $dispatch('searchable-select-clear', { target: 'device-room-filter' }) }"
             >
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
@@ -310,6 +311,14 @@
                 'modalName' => 'device-create-modal',
                 'device' => null,
             ])
+
+            @if (($selectedModalDevice ?? null)?->id)
+                @include('devices.partials.modal-form', [
+                    'mode' => 'edit',
+                    'modalName' => 'device-edit-modal-' . $selectedModalDevice->id,
+                    'device' => $selectedModalDevice,
+                ])
+            @endif
         @endif
 
         @if (old('modal_form') === 'device_create')

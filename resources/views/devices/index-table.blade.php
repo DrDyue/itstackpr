@@ -20,6 +20,14 @@
 
 @php
     $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
+    $oldUserRoomModalForm = str_starts_with((string) old('modal_form'), 'device_user_room_')
+        ? (string) old('modal_form')
+        : null;
+    $oldUserRoomDeviceId = $oldUserRoomModalForm ? (int) str_replace('device_user_room_', '', $oldUserRoomModalForm) : null;
+    $oldUserRoomDevice = $oldUserRoomDeviceId ? $devices->firstWhere('id', $oldUserRoomDeviceId) : null;
+    $oldUserRoomLabel = $oldUserRoomDevice?->room
+        ? ($oldUserRoomDevice->room->room_number . ($oldUserRoomDevice->room->room_name ? ' - ' . $oldUserRoomDevice->room->room_name : ''))
+        : 'Nav norādīta';
     $columns = $canManageDevices
         ? [
             'code' => 'Kods',
@@ -39,7 +47,57 @@
         ];
 @endphp
 
-<div id="devices-table-root">
+<div
+    id="devices-table-root"
+    x-data='{
+        userRoomModal: {
+            deviceId: @js($oldUserRoomDeviceId),
+            deviceLabel: @js($oldUserRoomDevice ? (($oldUserRoomDevice->code ?: "Bez koda") . " | " . $oldUserRoomDevice->name) : ""),
+            currentRoomLabel: @js($oldUserRoomLabel),
+            selectedRoomId: @js($oldUserRoomModalForm ? old("room_id", (string) ($oldUserRoomDevice?->room_id ?? "")) : ""),
+            action: @js($oldUserRoomDeviceId ? route("devices.user-room.update", $oldUserRoomDeviceId) : ""),
+        },
+        adminRoomModal: {
+            deviceLabel: "",
+            selectedRoomId: "",
+            action: "",
+        },
+        adminAssigneeModal: {
+            deviceLabel: "",
+            selectedAssigneeId: "",
+            action: "",
+        },
+        openUserRoomModal(detail) {
+            this.userRoomModal = {
+                deviceId: detail.deviceId || null,
+                deviceLabel: detail.deviceLabel || "",
+                currentRoomLabel: detail.currentRoomLabel || "Nav norādīta",
+                selectedRoomId: detail.selectedRoomId || "",
+                action: detail.action || "",
+            };
+            $dispatch("open-modal", "device-user-room-modal");
+        },
+        openAdminRoomModal(detail) {
+            this.adminRoomModal = {
+                deviceLabel: detail.deviceLabel || "",
+                selectedRoomId: detail.selectedRoomId || "",
+                action: detail.action || "",
+            };
+            $dispatch("open-modal", "device-admin-room-modal");
+        },
+        openAdminAssigneeModal(detail) {
+            this.adminAssigneeModal = {
+                deviceLabel: detail.deviceLabel || "",
+                selectedAssigneeId: detail.selectedAssigneeId || "",
+                action: detail.action || "",
+            };
+            $dispatch("open-modal", "device-admin-assignee-modal");
+        },
+    }'
+    @open-device-user-room.window="openUserRoomModal($event.detail || {})"
+    @open-device-admin-room.window="openAdminRoomModal($event.detail || {})"
+    @open-device-admin-assignee.window="openAdminAssigneeModal($event.detail || {})"
+>
     <div class="repair-table-shell mt-5 rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
         <div class="repair-table-scroll">
             <table class="repair-table-content w-full min-w-full text-sm">
@@ -97,12 +155,14 @@
                             $repairPreview = $deviceState['repairPreview'] ?? null;
                             $repairRecord = $device->activeRepair ?? $device->latestRepair;
                             $repairModalUrl = $repairRecord ? route('repairs.index', ['repair_modal' => 'edit', 'modal_repair' => $repairRecord->id]) : null;
+                            $deviceEditUrl = route('devices.index', array_merge(request()->except(['page', 'device_modal', 'modal_device']), [
+                                'device_modal' => 'edit',
+                                'modal_device' => $device->id,
+                            ]));
                             $repairCreateUrl = route('repairs.index', ['repair_modal' => 'create', 'device_id' => $device->id]);
                             $repairRequestCreateUrl = route('repair-requests.index', ['repair_request_modal' => 'create', 'device_id' => $device->id]);
                             $writeoffRequestCreateUrl = route('writeoff-requests.index', ['writeoff_request_modal' => 'create', 'device_id' => $device->id]);
                             $transferCreateUrl = route('device-transfers.index', ['device_transfer_modal' => 'create', 'device_id' => $device->id]);
-                            $roomModalName = 'device-user-room-modal-' . $device->id;
-                            $roomModalFormKey = 'device_user_room_' . $device->id;
                             $roomLabel = trim(collect([
                                 $device->room?->room_name,
                                 $device->room?->room_number,
@@ -111,17 +171,20 @@
                                 ? $roomLabel
                                 : ($device->room?->room_number ? 'Telpa ' . $device->room->room_number : 'Atrašanās vieta nav norādīta');
                             $locationSecondary = $device->building?->building_name ?: $device->room?->department;
-                            $quickRoomLabel = $device->room
-                                ? ($device->room->room_number . ($device->room->room_name ? ' - ' . $device->room->room_name : ''))
-                                : null;
-                            $quickAssigneeLabel = $device->assignedTo?->full_name;
                             $nameMeta = collect([$device->manufacturer, $device->model])->filter()->implode(' | ');
                         @endphp
 
                         <tr class="repair-table-row border-t border-slate-100 align-top" data-table-row-id="device-{{ $device->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) $device->code)) }}">
                             <td class="px-3 py-4">
                                 @if ($thumbUrl)
-                                    <img src="{{ $thumbUrl }}" alt="{{ $device->name }}" class="device-table-thumb">
+                                    <img
+                                        src="{{ $thumbUrl }}"
+                                        alt="{{ $device->name }}"
+                                        class="device-table-thumb"
+                                        loading="lazy"
+                                        decoding="async"
+                                        fetchpriority="low"
+                                    >
                                 @else
                                     <div class="device-table-thumb device-table-thumb-placeholder">
                                         <x-icon name="device" size="h-4 w-4" />
@@ -271,7 +334,7 @@
                                         </a>
 
                                         @if ($roomUpdateAvailability['allowed'])
-                                            <button type="button" class="table-action-button table-action-button-slate" x-data @click="$dispatch('open-modal', '{{ $roomModalName }}')">
+                                            <button type="button" class="table-action-button table-action-button-slate" x-data @click='$dispatch("open-device-user-room", { deviceId: {{ $device->id }}, deviceLabel: @js(($device->code ?: "Bez koda") . " | " . $device->name), currentRoomLabel: @js(($device->room ? ($device->room->room_number . ($device->room->room_name ? " - " . $device->room->room_name : "")) : "Nav norādīta")), selectedRoomId: @js((string) ($device->room_id ?? "")), action: @js(route("devices.user-room.update", $device)) })'>
                                                 <x-icon name="room" size="h-4 w-4" />
                                                 <span>Mainīt telpu</span>
                                             </button>
@@ -323,7 +386,7 @@
                                         @endif
                                     </div>
                                 @else
-                                    <div class="table-action-menu" x-data="{ open: false, panel: null }" @keydown.escape.window="open = false; panel = null">
+                                    <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">
                                         <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
                                             <span>Darbības</span>
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -331,28 +394,28 @@
                                             </svg>
                                         </button>
 
-                                        <div class="table-action-list" :class="panel ? 'table-action-list-wide' : ''" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false; panel = null">
+                                        <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
                                             <div class="table-action-header">
                                                 <div class="table-action-header-title">Darbības</div>
                                             </div>
 
-                                            <a href="{{ route('devices.show', $device) }}" class="table-action-item table-action-item-primary" @click="open = false; panel = null">
+                                            <a href="{{ route('devices.show', $device) }}" class="table-action-item table-action-item-primary" @click="open = false">
                                                 <x-icon name="view" size="h-4 w-4" />
                                                 <span>Skatīt ierīci</span>
                                             </a>
 
-                                            <button type="button" class="table-action-item table-action-item-amber" @click="open = false; panel = null; $dispatch('open-modal', 'device-edit-modal-{{ $device->id }}')">
+                                            <a href="{{ $deviceEditUrl }}" class="table-action-item table-action-item-amber" data-async-link="true" @click="open = false">
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Rediģēt</span>
-                                            </button>
+                                            </a>
 
                                             @if ($device->status === 'active')
-                                                <button type="button" class="table-action-item table-action-item-sky" @click="panel = panel === 'room' ? null : 'room'">
+                                                <button type="button" class="table-action-item table-action-item-sky" @click='open = false; $dispatch("open-device-admin-room", { deviceLabel: @js(($device->code ?: "Bez koda") . " | " . $device->name), selectedRoomId: @js((string) ($device->room_id ?? "")), action: @js(route("devices.quick-update", $device)) })'>
                                                     <x-icon name="room" size="h-4 w-4" />
                                                     <span>Mainīt telpu</span>
                                                 </button>
 
-                                                <button type="button" class="table-action-item table-action-item-violet" @click="panel = panel === 'assignee' ? null : 'assignee'">
+                                                <button type="button" class="table-action-item table-action-item-violet" @click='open = false; $dispatch("open-device-admin-assignee", { deviceLabel: @js(($device->code ?: "Bez koda") . " | " . $device->name), selectedAssigneeId: @js((string) ($device->assigned_to_id ?? "")), action: @js(route("devices.quick-update", $device)) })'>
                                                     <x-icon name="user" size="h-4 w-4" />
                                                     <span>Mainīt atbildīgo</span>
                                                 </button>
@@ -368,7 +431,7 @@
                                                         </button>
                                                     </form>
 
-                                                    <a href="{{ $repairCreateUrl }}" class="table-action-item table-action-item-amber" @click="open = false; panel = null">
+                                                    <a href="{{ $repairCreateUrl }}" class="table-action-item table-action-item-amber" @click="open = false">
                                                         <x-icon name="repair" size="h-4 w-4" />
                                                         <span>Atdot uz remontu</span>
                                                     </a>
@@ -378,7 +441,7 @@
                                                         data-app-toast-title="Norakstīšana nav pieejama"
                                                         data-app-toast-message="{{ $requestAvailability['reason'] ?? 'Ierīcei ir aktīvs pieteikums.' }}"
                                                         data-app-toast-tone="info"
-                                                        @click="open = false; panel = null">
+                                                        @click="open = false">
                                                         <x-icon name="writeoff" size="h-4 w-4" />
                                                         <span>Norakstīt</span>
                                                     </button>
@@ -388,84 +451,12 @@
                                                         data-app-toast-title="Remonts nav pieejams"
                                                         data-app-toast-message="{{ $requestAvailability['reason'] ?? 'Ierīcei ir aktīvs pieteikums.' }}"
                                                         data-app-toast-tone="info"
-                                                        @click="open = false; panel = null">
+                                                        @click="open = false">
                                                         <x-icon name="repair" size="h-4 w-4" />
                                                         <span>Atdot uz remontu</span>
                                                     </button>
                                                 @endif
                                             @endif
-
-                                            <div class="table-action-inline-panel" x-cloak x-show="panel === 'room'" x-transition>
-                                                <div class="table-action-inline-head">
-                                                    <div>
-                                                        <div class="table-action-inline-title">Mainīt telpu</div>
-                                                        <div class="table-action-inline-copy">Ierīce tiks uzreiz pārvietota uz citu telpu.</div>
-                                                    </div>
-                                                    <button type="button" class="table-action-inline-close" @click="panel = null">
-                                                        <x-icon name="x-mark" size="h-4 w-4" />
-                                                    </button>
-                                                </div>
-<form method="POST" action="{{ route('devices.quick-update', $device) }}" class="space-y-3">
-                                                    @csrf
-                                                    <input type="hidden" name="action" value="room">
-                                                    <div class="table-action-inline-field">
-                                                        <label class="table-action-inline-label" for="device-quick-room-{{ $device->id }}-button">Jaunā telpa</label>
-                                                        <x-searchable-select
-                                                            name="target_room_id"
-                                                            query-name="target_room_query"
-                                                            identifier="device-quick-room-{{ $device->id }}"
-                                                            :options="$quickRoomSelectOptions"
-                                                            :selected="(string) ($device->room_id ?? '')"
-                                                            :query="$quickRoomLabel"
-                                                            placeholder="Izvēlies telpu"
-                                                            empty-message="Neviena telpa neatbilst meklējumam."
-                                                        />
-                                                    </div>
-                                                    <div class="table-action-inline-actions">
-                                                        <button type="button" class="btn-clear" @click="panel = null">Atcelt</button>
-                                                        <button type="submit" class="btn-search">
-                                                            <x-icon name="save" size="h-4 w-4" />
-                                                            <span>Saglabāt</span>
-                                                        </button>
-                                                    </div>
-                                                </form>
-                                            </div>
-
-                                            <div class="table-action-inline-panel" x-cloak x-show="panel === 'assignee'" x-transition>
-                                                <div class="table-action-inline-head">
-                                                    <div>
-                                                        <div class="table-action-inline-title">Mainīt atbildīgo</div>
-                                                        <div class="table-action-inline-copy">Izvēlies citu personu, kurai piešķirt ierīci.</div>
-                                                    </div>
-                                                    <button type="button" class="table-action-inline-close" @click="panel = null">
-                                                        <x-icon name="x-mark" size="h-4 w-4" />
-                                                    </button>
-                                                </div>
-<form method="POST" action="{{ route('devices.quick-update', $device) }}" class="space-y-3">
-                                                    @csrf
-                                                    <input type="hidden" name="action" value="assignee">
-                                                    <div class="table-action-inline-field">
-                                                        <label class="table-action-inline-label" for="device-quick-assignee-{{ $device->id }}-button">Jaunais atbildīgais</label>
-                                                        <x-searchable-select
-                                                            name="target_assigned_to_id"
-                                                            query-name="target_assigned_to_query"
-                                                            identifier="device-quick-assignee-{{ $device->id }}"
-                                                            :options="$quickAssigneeSelectOptions"
-                                                            :selected="(string) ($device->assigned_to_id ?? '')"
-                                                            :query="$quickAssigneeLabel"
-                                                            placeholder="Izvēlies atbildīgo personu"
-                                                            empty-message="Neviena persona neatbilst meklējumam."
-                                                        />
-                                                    </div>
-                                                    <div class="table-action-inline-actions">
-                                                        <button type="button" class="btn-clear" @click="panel = null">Atcelt</button>
-                                                        <button type="submit" class="btn-search">
-                                                            <x-icon name="save" size="h-4 w-4" />
-                                                            <span>Saglabāt</span>
-                                                        </button>
-                                                    </div>
-                                                </form>
-                                            </div>
                                         </div>
                                     </div>
                                 @endif
@@ -488,88 +479,137 @@
         </div>
     </div>
 
-    @if ($devices->hasPages())
-        <div class="mt-5">{{ $devices->links() }}</div>
-    @endif
 </div>
 
 @if (! $canManageDevices)
-    @foreach ($devices as $device)
-        @php
-            $roomModalName = 'device-user-room-modal-' . $device->id;
-            $roomModalFormKey = 'device_user_room_' . $device->id;
-            $roomQuery = $device->room
-                ? ($device->room->room_number . ($device->room->room_name ? ' - ' . $device->room->room_name : ''))
-                : '';
-        @endphp
-        <x-modal :name="$roomModalName" maxWidth="2xl">
-            <div class="device-user-room-modal-shell">
-                <div class="device-user-room-modal-head">
+    <x-modal name="device-user-room-modal" maxWidth="2xl">
+        <div class="device-user-room-modal-shell">
+            <div class="device-user-room-modal-head">
+                <div>
+                    <div class="device-user-room-modal-badge">Telpas maiņa</div>
+                    <h2 class="device-user-room-modal-title" x-text="userRoomModal.deviceLabel || 'Ierīce'"></h2>
+                    <p class="device-user-room-modal-copy">Izvēlies jauno telpu šai ierīcei. Ēka tiks pielāgota automātiski pēc izvēlētās telpas.</p>
+                </div>
+                <button type="button" class="device-type-modal-close" x-data @click="$dispatch('close-modal', 'device-user-room-modal')" aria-label="Aizvērt">
+                    <x-icon name="x-mark" size="h-5 w-5" />
+                </button>
+            </div>
+            <form method="POST" :action="userRoomModal.action || '#'" class="device-user-room-modal-form">
+                @csrf
+                <input type="hidden" name="modal_form" :value="userRoomModal.deviceId ? `device_user_room_${userRoomModal.deviceId}` : 'device_user_room'">
+                <div class="device-user-room-modal-device">
                     <div>
-                        <div class="device-user-room-modal-badge">Telpas maiņa</div>
-                        <h2 class="device-user-room-modal-title">{{ $device->name }}</h2>
-                        <p class="device-user-room-modal-copy">Izvēlies jauno telpu šai ierīcei. Ēka tiks pielāgota automātiski pēc izvēlētās telpas.</p>
+                        <div class="device-user-room-modal-label">Ierīce</div>
+                        <div class="device-user-room-modal-value" x-text="userRoomModal.deviceLabel || 'Nav izvēlēta ierīce'"></div>
                     </div>
-                    <button type="button" class="device-type-modal-close" x-data @click="$dispatch('close-modal', '{{ $roomModalName }}')" aria-label="Aizvērt">
-                        <x-icon name="x-mark" size="h-5 w-5" />
+                    <div>
+                        <div class="device-user-room-modal-label">Pašreizējā telpa</div>
+                        <div class="device-user-room-modal-value" x-text="userRoomModal.currentRoomLabel || 'Nav norādīta'"></div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="device-user-room-modal-label" for="device-user-room-shared-input">Jaunā telpa</label>
+                    <select id="device-user-room-shared-input" name="room_id" class="crud-control" x-model="userRoomModal.selectedRoomId">
+                        <option value="">Izvēlies telpu</option>
+                        @foreach ($userRoomOptions as $roomOption)
+                            <option
+                                value="{{ $roomOption['value'] }}"
+                                @selected($oldUserRoomModalForm && old('room_id', (string) ($oldUserRoomDevice?->room_id ?? '')) === (string) $roomOption['value'])
+                            >
+                                {{ $roomOption['label'] }}@if (! empty($roomOption['description'])) | {{ $roomOption['description'] }}@endif
+                            </option>
+                        @endforeach
+                    </select>
+                    @if ($oldUserRoomModalForm && $errors->has('room_id'))
+                        <div class="text-sm text-rose-600">{{ $errors->first('room_id') }}</div>
+                    @endif
+                </div>
+                <div class="device-user-room-modal-actions">
+                    <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'device-user-room-modal')">Atcelt</button>
+                    <button type="submit" class="btn-search">
+                        <x-icon name="save" size="h-4 w-4" />
+                        <span>Saglabāt</span>
                     </button>
                 </div>
-                <form method="POST" action="{{ route('devices.user-room.update', $device) }}" class="device-user-room-modal-form">
-                    @csrf
-                    <input type="hidden" name="modal_form" value="{{ $roomModalFormKey }}">
-                    <div class="device-user-room-modal-device">
-                        <div>
-                            <div class="device-user-room-modal-label">Ierīce</div>
-                            <div class="device-user-room-modal-value">{{ $device->code ?: 'Bez koda' }} | {{ $device->name }}</div>
-                        </div>
-                        <div>
-                            <div class="device-user-room-modal-label">Pašreizējā telpa</div>
-                            <div class="device-user-room-modal-value">{{ $roomQuery !== '' ? $roomQuery : 'Nav norādīta' }}</div>
-                        </div>
-                    </div>
-                    <div class="space-y-2">
-                        <label class="device-user-room-modal-label" for="device-user-room-{{ $device->id }}-input">Jaunā telpa</label>
-                        <x-searchable-select
-                            name="room_id"
-                            queryName="room_query"
-                            :options="$userRoomOptions"
-                            :selected="old('modal_form') === $roomModalFormKey ? old('room_id', (string) $device->room_id) : (string) $device->room_id"
-                            :query="old('modal_form') === $roomModalFormKey ? old('room_query', $roomQuery) : $roomQuery"
-                            identifier="device-user-room-{{ $device->id }}"
-                            :prioritize-selected="true"
-                            selected-group-label="Pašreizējā telpa"
-                            placeholder="Izvēlies telpu"
-                            emptyMessage="Neviena telpa neatbilst meklējumam."
-                            :error="old('modal_form') === $roomModalFormKey ? $errors->first('room_id') : null"
-                        />
-                        @if (old('modal_form') === $roomModalFormKey && $errors->has('room_id'))
-                            <div class="text-sm text-rose-600">{{ $errors->first('room_id') }}</div>
-                        @endif
-                    </div>
-                    <div class="device-user-room-modal-actions">
-                        <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', '{{ $roomModalName }}')">Atcelt</button>
-                        <button type="submit" class="btn-search">
-                            <x-icon name="save" size="h-4 w-4" />
-                            <span>Saglabāt</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </x-modal>
-    @endforeach
+            </form>
+        </div>
+    </x-modal>
 
-    @if (str_starts_with((string) old('modal_form'), 'device_user_room_'))
-        @php($userRoomModalTarget = str_replace('device_user_room_', '', (string) old('modal_form')))
-        <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-user-room-modal-{{ $userRoomModalTarget }}' })));</script>
+    @if ($oldUserRoomModalForm)
+        <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-user-room-modal' })));</script>
     @endif
-@endif
+@else
+    <x-modal name="device-admin-room-modal" maxWidth="2xl">
+        <div class="device-user-room-modal-shell">
+            <div class="device-user-room-modal-head">
+                <div>
+                    <div class="device-user-room-modal-badge">Telpas maiņa</div>
+                    <h2 class="device-user-room-modal-title" x-text="adminRoomModal.deviceLabel || 'Ierīce'"></h2>
+                    <p class="device-user-room-modal-copy">Izvēlies telpu, uz kuru uzreiz pārvietot ierīci.</p>
+                </div>
+                <button type="button" class="device-type-modal-close" x-data @click="$dispatch('close-modal', 'device-admin-room-modal')" aria-label="Aizvērt">
+                    <x-icon name="x-mark" size="h-5 w-5" />
+                </button>
+            </div>
+            <form method="POST" :action="adminRoomModal.action || '#'" class="device-user-room-modal-form">
+                @csrf
+                <input type="hidden" name="action" value="room">
+                <div class="space-y-2">
+                    <label class="device-user-room-modal-label" for="device-admin-room-shared-input">Jaunā telpa</label>
+                    <select id="device-admin-room-shared-input" name="target_room_id" class="crud-control" x-model="adminRoomModal.selectedRoomId">
+                        <option value="">Izvēlies telpu</option>
+                        @foreach ($quickRoomSelectOptions as $roomOption)
+                            <option value="{{ $roomOption['value'] }}">
+                                {{ $roomOption['label'] }}@if (! empty($roomOption['description'])) | {{ $roomOption['description'] }}@endif
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="device-user-room-modal-actions">
+                    <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'device-admin-room-modal')">Atcelt</button>
+                    <button type="submit" class="btn-search">
+                        <x-icon name="save" size="h-4 w-4" />
+                        <span>Saglabāt</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </x-modal>
 
-@if ($canManageDevices)
-    @foreach ($devices as $device)
-        @include('devices.partials.modal-form', [
-            'mode' => 'edit',
-            'modalName' => 'device-edit-modal-' . $device->id,
-            'device' => $device,
-        ])
-    @endforeach
+    <x-modal name="device-admin-assignee-modal" maxWidth="2xl">
+        <div class="device-user-room-modal-shell">
+            <div class="device-user-room-modal-head">
+                <div>
+                    <div class="device-user-room-modal-badge">Atbildīgā maiņa</div>
+                    <h2 class="device-user-room-modal-title" x-text="adminAssigneeModal.deviceLabel || 'Ierīce'"></h2>
+                    <p class="device-user-room-modal-copy">Izvēlies personu, kurai piešķirt ierīci.</p>
+                </div>
+                <button type="button" class="device-type-modal-close" x-data @click="$dispatch('close-modal', 'device-admin-assignee-modal')" aria-label="Aizvērt">
+                    <x-icon name="x-mark" size="h-5 w-5" />
+                </button>
+            </div>
+            <form method="POST" :action="adminAssigneeModal.action || '#'" class="device-user-room-modal-form">
+                @csrf
+                <input type="hidden" name="action" value="assignee">
+                <div class="space-y-2">
+                    <label class="device-user-room-modal-label" for="device-admin-assignee-shared-input">Jaunais atbildīgais</label>
+                    <select id="device-admin-assignee-shared-input" name="target_assigned_to_id" class="crud-control" x-model="adminAssigneeModal.selectedAssigneeId">
+                        <option value="">Izvēlies atbildīgo personu</option>
+                        @foreach ($quickAssigneeSelectOptions as $assigneeOption)
+                            <option value="{{ $assigneeOption['value'] }}">
+                                {{ $assigneeOption['label'] }}@if (! empty($assigneeOption['description'])) | {{ $assigneeOption['description'] }}@endif
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="device-user-room-modal-actions">
+                    <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'device-admin-assignee-modal')">Atcelt</button>
+                    <button type="submit" class="btn-search">
+                        <x-icon name="save" size="h-4 w-4" />
+                        <span>Saglabāt</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </x-modal>
 @endif
