@@ -7193,6 +7193,20 @@ html[data-theme='dark'] .user-profile-card-label {
     color: #94a3b8;
 }
 
+.device-user-action-row {
+    @apply flex flex-nowrap items-center justify-end gap-2 whitespace-nowrap;
+}
+
+.device-user-action-row > .table-action-button,
+.device-user-action-row > .btn-disabled {
+    @apply w-auto min-h-[2.5rem] shrink-0 justify-center px-3;
+}
+
+.device-user-action-row > .table-action-button > span,
+.device-user-action-row > .btn-disabled > span {
+    @apply whitespace-nowrap;
+}
+
 html[data-theme='dark'] .user-profile-link-card {
     color: #e2e8f0;
 }

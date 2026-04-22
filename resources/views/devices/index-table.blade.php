@@ -265,7 +265,7 @@
                 </td>
                 <td class="px-4 py-4">
                     @if (! $canManageDevices)
-                        <div class="flex flex-wrap items-center justify-end gap-2">
+                        <div class="device-user-action-row">
                             <a href="{{ route('devices.show', $device) }}" class="table-action-button table-action-button-sky">
                                 <x-icon name="view" size="h-4 w-4" />
                                 <span>Skatīt</span>
