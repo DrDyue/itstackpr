@@ -942,6 +942,14 @@ tbody td {
     isolation: isolate;
 }
 
+.modal-liquid-backdrop {
+    background: rgba(15, 23, 42, 0.42);
+}
+
+.modal-liquid-shell {
+    position: relative;
+}
+
 .modal-liquid-motion {
     transform-origin: top center;
 }
@@ -952,6 +960,15 @@ tbody td {
     inset: 0;
     pointer-events: none;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.26), transparent 42%);
+}
+
+@media (max-width: 639px) {
+    .modal-liquid-panel {
+        border-radius: 1.25rem;
+        box-shadow:
+            0 24px 48px -30px rgba(15, 23, 42, 0.62),
+            inset 0 1px 0 rgba(255, 255, 255, 0.62);
+    }
 }
 
 .device-type-actions {
@@ -4482,7 +4499,10 @@ tbody td {
 }
 
 .table-action-inline-panel {
-    @apply fixed left-1/2 top-1/2 z-30 w-[32rem] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-200/70;
+    @apply fixed left-1/2 top-1/2 z-30 w-[min(32rem,calc(100vw-1.5rem))] -translate-x-1/2 -translate-y-1/2 rounded-[1.4rem] border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-200/70;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96)),
+        radial-gradient(circle at top right, rgba(14, 165, 233, 0.08), transparent 48%);
     overflow: visible;
 }
 
@@ -4502,23 +4522,46 @@ tbody td {
 }
 
 .table-action-inline-head {
-    @apply flex items-start justify-between gap-3 border-b border-slate-200 bg-slate-50 rounded-t-2xl px-4 py-4;
+    @apply flex items-start justify-between gap-3 border-b border-slate-200/90 rounded-t-[1.4rem] px-5 py-4;
+    background:
+        linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.92)),
+        radial-gradient(circle at top right, rgba(14, 165, 233, 0.06), transparent 48%);
 }
 
 .table-action-inline-title {
-    @apply text-sm font-semibold text-slate-900;
+    @apply text-sm font-semibold tracking-tight text-slate-900;
 }
 
 .table-action-inline-copy {
-    @apply mt-1 text-xs leading-5 text-slate-500;
+    @apply mt-1.5 max-w-[22rem] text-xs leading-5 text-slate-500;
 }
 
 .table-action-inline-close {
     @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-700;
 }
 
+.table-action-inline-field {
+    @apply mx-4 mt-4 rounded-[1.15rem] border border-slate-200 bg-slate-50/85 p-3.5 shadow-sm;
+}
+
+.table-action-inline-label {
+    @apply mb-2 block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500;
+}
+
+.table-action-inline-field .searchable-select {
+    @apply w-full;
+}
+
+.table-action-inline-field .searchable-select-trigger {
+    @apply min-h-[3rem] rounded-xl border-slate-200 bg-white shadow-sm;
+}
+
+.table-action-inline-field .searchable-select-panel {
+    @apply rounded-[1rem] border-slate-200 bg-white shadow-xl;
+}
+
 .table-action-inline-actions {
-    @apply flex items-stretch justify-end gap-2 border-t border-slate-200 bg-slate-50/80 px-4 py-3;
+    @apply flex items-stretch justify-end gap-2 border-t border-slate-200/90 bg-slate-50/70 px-4 py-3.5;
 }
 
 .table-action-inline-actions > * {
@@ -4539,6 +4582,32 @@ tbody td {
 
 .table-action-inline-panel > .table-action-inline-actions:last-child {
     @apply mt-3;
+}
+
+@media (max-width: 639px) {
+    .table-action-inline-panel {
+        @apply w-[calc(100vw-1rem)] rounded-[1.2rem];
+    }
+
+    .table-action-inline-head {
+        @apply rounded-t-[1.2rem] px-4 py-3.5;
+    }
+
+    .table-action-inline-copy {
+        @apply max-w-none;
+    }
+
+    .table-action-inline-field {
+        @apply mx-3 mt-3 p-3;
+    }
+
+    .table-action-inline-actions {
+        @apply flex-col px-3 py-3;
+    }
+
+    .table-action-inline-actions > * {
+        @apply flex-none;
+    }
 }
 
 .table-action-menu .btn-disabled {
@@ -7051,14 +7120,50 @@ html[data-theme='dark'] textarea::placeholder {
 
 /* REMOVED CSS: */
 
+.app-confirm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 220ms ease;
+}
+
 .app-confirm-overlay.is-visible {
     pointer-events: auto;
     opacity: 1;
 }
 
-.app-confirm-overlay .app-confirm-dialog {
+.app-confirm-backdrop {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at top, rgba(14, 165, 233, 0.18), rgba(15, 23, 42, 0.66)),
+        rgba(15, 23, 42, 0.44);
+    backdrop-filter: blur(3px);
+}
+
+.app-confirm-dialog {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 30rem);
+    overflow: hidden;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 1.5rem;
+    background:
+        linear-gradient(140deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.9)),
+        radial-gradient(circle at top right, rgba(14, 165, 233, 0.12), transparent 46%);
+    padding: 1.5rem;
+    box-shadow:
+        0 28px 70px -40px rgba(15, 23, 42, 0.72),
+        inset 0 1px 0 rgba(255, 255, 255, 0.72);
     transform: translateY(18px) scale(0.96);
     transition: transform 220ms ease, opacity 220ms ease, box-shadow 220ms ease;
+    backdrop-filter: blur(20px) saturate(145%);
+    -webkit-backdrop-filter: blur(20px) saturate(145%);
 }
 
 .app-confirm-overlay.is-visible .app-confirm-dialog {
@@ -7111,15 +7216,77 @@ html[data-theme='dark'] textarea::placeholder {
 
 /* REMOVED CSS: */
 
-/* REMOVED CSS: */
+.app-confirm-icon {
+    display: inline-flex;
+    height: 3.25rem;
+    width: 3.25rem;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    border-radius: 1rem;
+    background: rgba(148, 163, 184, 0.12);
+    color: #334155;
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.2);
+}
 
-/* REMOVED CSS: */
+.app-confirm-icon-danger {
+    background: rgba(244, 63, 94, 0.12);
+    color: #e11d48;
+    box-shadow: inset 0 0 0 1px rgba(251, 113, 133, 0.18);
+}
 
-/* REMOVED CSS: */
+.app-confirm-icon-warning {
+    background: rgba(245, 158, 11, 0.12);
+    color: #d97706;
+    box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.2);
+}
 
-/* REMOVED CSS: */
+.app-confirm-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.4;
+    color: #0f172a;
+}
 
-/* REMOVED CSS: */
+.app-confirm-message {
+    margin-top: 0.55rem;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: #475569;
+}
+
+.app-confirm-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.4rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(226, 232, 240, 0.95);
+}
+
+@media (max-width: 639px) {
+    .app-confirm-overlay {
+        padding: 0.8rem;
+    }
+
+    .app-confirm-dialog {
+        width: 100%;
+        border-radius: 1.25rem;
+        padding: 1.15rem;
+    }
+
+    .app-confirm-actions {
+        flex-direction: column-reverse;
+    }
+
+    .app-confirm-actions .btn-clear,
+    .app-confirm-actions .btn-danger-solid,
+    .app-confirm-actions .btn-approve {
+        width: 100%;
+        justify-content: center;
+    }
+}
 
 html[data-theme='dark'] .app-confirm-dialog {
     border-color: rgba(51, 65, 85, 0.95);

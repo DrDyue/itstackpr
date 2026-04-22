@@ -1,4 +1,4 @@
-{{-- Universāls modāļa komponents --}}
+{{-- Universals modala komponents --}}
 @props([
     'name',
     'show' => false,
@@ -35,33 +35,33 @@ $maxWidth = [
     @keydown.escape.window="show = false"
     x-show="show"
     x-cloak
-    class="fixed inset-0 z-[70] overflow-y-auto px-4 py-6 sm:px-0"
+    class="fixed inset-0 z-[70] overflow-y-auto"
 >
-    <!-- Fons -->
     <div
         @click="show = false"
-        class="fixed inset-0 bg-gray-500 opacity-75 transition-opacity"
+        class="modal-liquid-backdrop fixed inset-0 transition-opacity"
         x-show="show"
         x-transition:enter="ease-out duration-300"
         x-transition:leave="ease-in duration-200"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
     >
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(14,165,233,0.18),rgba(15,23,42,0.7))] backdrop-blur-[2px]"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(14,165,233,0.18),rgba(15,23,42,0.7))] backdrop-blur-[3px]"></div>
     </div>
 
-    <!-- Modāļa lodziņš -->
-    <div
-        class="modal-liquid-panel modal-liquid-motion relative mx-auto mb-6 overflow-visible rounded-[1.55rem] transform transition-all sm:w-full {{ $maxWidth }} sm:mx-auto bg-white shadow-xl"
-        x-show="show"
-        @click.stop
-        x-transition:enter="ease-out duration-300"
-        x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-        x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-        x-transition:leave="ease-in duration-200"
-        x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-        x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-    >
-        {{ $slot }}
+    <div class="modal-liquid-shell flex min-h-full items-center justify-center px-4 py-6 sm:px-6">
+        <div
+            class="modal-liquid-panel modal-liquid-motion relative my-auto w-full overflow-visible rounded-[1.55rem] transform transition-all {{ $maxWidth }} bg-white shadow-xl"
+            x-show="show"
+            @click.stop
+            x-transition:enter="ease-out duration-300"
+            x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+            x-transition:leave="ease-in duration-200"
+            x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+            x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+        >
+            {{ $slot }}
+        </div>
     </div>
 </div>

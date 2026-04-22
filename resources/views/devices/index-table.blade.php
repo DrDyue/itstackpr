@@ -383,19 +383,22 @@
                                                         <x-icon name="x-mark" size="h-4 w-4" />
                                                     </button>
                                                 </div>
-                                                <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="space-y-3">
+<form method="POST" action="{{ route('devices.quick-update', $device) }}" class="space-y-3">
                                                     @csrf
                                                     <input type="hidden" name="action" value="room">
-                                                    <x-searchable-select
-                                                        name="target_room_id"
-                                                        query-name="target_room_query"
-                                                        identifier="device-quick-room-{{ $device->id }}"
-                                                        :options="$quickRoomSelectOptions"
-                                                        :selected="(string) ($device->room_id ?? '')"
-                                                        :query="$quickRoomLabel"
-                                                        placeholder="Izvēlies telpu"
-                                                        empty-message="Neviena telpa neatbilst meklējumam."
-                                                    />
+                                                    <div class="table-action-inline-field">
+                                                        <label class="table-action-inline-label" for="device-quick-room-{{ $device->id }}-button">Jaunā telpa</label>
+                                                        <x-searchable-select
+                                                            name="target_room_id"
+                                                            query-name="target_room_query"
+                                                            identifier="device-quick-room-{{ $device->id }}"
+                                                            :options="$quickRoomSelectOptions"
+                                                            :selected="(string) ($device->room_id ?? '')"
+                                                            :query="$quickRoomLabel"
+                                                            placeholder="Izvēlies telpu"
+                                                            empty-message="Neviena telpa neatbilst meklējumam."
+                                                        />
+                                                    </div>
                                                     <div class="table-action-inline-actions">
                                                         <button type="button" class="btn-clear" @click="panel = null">Atcelt</button>
                                                         <button type="submit" class="btn-search">
@@ -416,19 +419,22 @@
                                                         <x-icon name="x-mark" size="h-4 w-4" />
                                                     </button>
                                                 </div>
-                                                <form method="POST" action="{{ route('devices.quick-update', $device) }}" class="space-y-3">
+<form method="POST" action="{{ route('devices.quick-update', $device) }}" class="space-y-3">
                                                     @csrf
                                                     <input type="hidden" name="action" value="assignee">
-                                                    <x-searchable-select
-                                                        name="target_assigned_to_id"
-                                                        query-name="target_assigned_to_query"
-                                                        identifier="device-quick-assignee-{{ $device->id }}"
-                                                        :options="$quickAssigneeSelectOptions"
-                                                        :selected="(string) ($device->assigned_to_id ?? '')"
-                                                        :query="$quickAssigneeLabel"
-                                                        placeholder="Izvēlies atbildīgo personu"
-                                                        empty-message="Neviena persona neatbilst meklējumam."
-                                                    />
+                                                    <div class="table-action-inline-field">
+                                                        <label class="table-action-inline-label" for="device-quick-assignee-{{ $device->id }}-button">Jaunais atbildīgais</label>
+                                                        <x-searchable-select
+                                                            name="target_assigned_to_id"
+                                                            query-name="target_assigned_to_query"
+                                                            identifier="device-quick-assignee-{{ $device->id }}"
+                                                            :options="$quickAssigneeSelectOptions"
+                                                            :selected="(string) ($device->assigned_to_id ?? '')"
+                                                            :query="$quickAssigneeLabel"
+                                                            placeholder="Izvēlies atbildīgo personu"
+                                                            empty-message="Neviena persona neatbilst meklējumam."
+                                                        />
+                                                    </div>
                                                     <div class="table-action-inline-actions">
                                                         <button type="button" class="btn-clear" @click="panel = null">Atcelt</button>
                                                         <button type="submit" class="btn-search">
