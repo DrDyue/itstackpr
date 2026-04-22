@@ -610,16 +610,20 @@ const registerAlpineData = () => {
         onVisibilityChange: null,
         lastSessionId: null,
         lastViewMode: null,
+        fingerprint: null,
+        idleStreak: 0,
         init() {
             // Ć„Ā¢enerĆ„ā€ sesijas ID, lai noteiktu lapas pĆ„ĀrlĆ„Ādi vai navigĆ„Āciju
             this.lastSessionId = this.generateSessionId();
             this.lastViewMode = this.getViewMode();
             this.seenIds = this.readSeenIds();
             this.fetchNotifications(true);
-            this.startPolling();
+            this.schedulePoll();
             this.onVisibilityChange = () => {
                 if (document.visibilityState === 'visible') {
+                    this.idleStreak = 0;
                     this.fetchNotifications(false);
+                    this.schedulePoll();
                 }
             };
             document.addEventListener('visibilitychange', this.onVisibilityChange);
@@ -668,20 +672,27 @@ const registerAlpineData = () => {
                 // IgnorĆ„ā€ glabĆ„Ātuves kĆ„Ā¼Ć…Ā«das
             }
         },
-        startPolling() {
+        computePollDelay() {
+            const base = this.pollSeconds;
+            if (this.idleStreak >= 10) return Math.min(base * 4, 60);
+            if (this.idleStreak >= 5) return Math.min(base * 2, 30);
+            return base;
+        },
+        schedulePoll() {
             this.stopPolling();
-            this.timerId = window.setInterval(() => {
+            this.timerId = window.setTimeout(async () => {
                 if (document.visibilityState !== 'hidden') {
-                    this.fetchNotifications(false);
+                    await this.fetchNotifications(false);
                 }
-            }, this.pollSeconds * 1000);
+                this.schedulePoll();
+            }, this.computePollDelay() * 1000);
         },
         stopPolling() {
             if (!this.timerId) {
                 return;
             }
 
-            window.clearInterval(this.timerId);
+            window.clearTimeout(this.timerId);
             this.timerId = null;
         },
         async fetchNotifications(isInitial = false) {
@@ -693,9 +704,18 @@ const registerAlpineData = () => {
                 const response = await window.axios.get(this.endpoint, {
                     headers: {
                         Accept: 'application/json',
+                        'X-Notification-Fingerprint': this.fingerprint ?? '',
                     },
                     silentLoading: true,
                 });
+
+                if (response?.data?.unchanged === true) {
+                    this.idleStreak++;
+                    return;
+                }
+
+                this.fingerprint = response?.data?.fingerprint ?? null;
+                this.idleStreak = 0;
 
                 const notifications = Array.isArray(response?.data?.notifications)
                     ? response.data.notifications
@@ -919,32 +939,41 @@ const registerAlpineData = () => {
         storageKey,
         pollSeconds: Math.max(Number(pollSeconds) || 15, 5),
         pollTimer: null,
+        fingerprint: null,
+        idleStreak: 0,
         markingAllRead: false,
         readFeedbackVisible: false,
         feedbackTimer: null,
         init() {
             this.refreshUnreadCount();
-            this.startPolling();
+            this.schedulePoll();
         },
         destroy() {
             if (this.pollTimer) {
-                window.clearInterval(this.pollTimer);
+                window.clearTimeout(this.pollTimer);
             }
 
             if (this.feedbackTimer) {
                 window.clearTimeout(this.feedbackTimer);
             }
         },
-        startPolling() {
+        computePollDelay() {
+            const base = this.pollSeconds;
+            if (this.idleStreak >= 10) return Math.min(base * 4, 60);
+            if (this.idleStreak >= 5) return Math.min(base * 2, 30);
+            return base;
+        },
+        schedulePoll() {
             if (!this.endpoint) {
                 return;
             }
-
-            this.pollTimer = window.setInterval(() => {
+            if (this.pollTimer) window.clearTimeout(this.pollTimer);
+            this.pollTimer = window.setTimeout(async () => {
                 if (document.visibilityState === 'visible') {
-                    this.refreshUnreadCount();
+                    await this.refreshUnreadCount();
                 }
-            }, this.pollSeconds * 1000);
+                this.schedulePoll();
+            }, this.computePollDelay() * 1000);
         },
         readCutoff() {
             try {
@@ -980,9 +1009,18 @@ const registerAlpineData = () => {
                 const response = await window.axios.get(this.endpoint, {
                     headers: {
                         Accept: 'application/json',
+                        'X-Notification-Fingerprint': this.fingerprint ?? '',
                     },
                     silentLoading: true,
                 });
+
+                if (response?.data?.unchanged === true) {
+                    this.idleStreak++;
+                    return;
+                }
+
+                this.fingerprint = response?.data?.fingerprint ?? null;
+                this.idleStreak = 0;
 
                 const cutoff = this.readCutoff();
                 const notifications = Array.isArray(response?.data?.notifications)

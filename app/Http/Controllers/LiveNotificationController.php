@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 /**
@@ -61,16 +62,79 @@ class LiveNotificationController extends Controller
 
     /**
      * Atgriež pašreizējam lietotājam aktuālos paziņojumus JSON formā.
+     *
+     * Ja klients sūta X-Notification-Fingerprint galveni ar aktuālo nospiedumu,
+     * tiek izpildīti tikai lēti COUNT vaicājumi. Pilnie JOIN vaicājumi tiek izlaisti.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $user = $this->user();
         abort_unless($user, 403);
 
+        $fingerprint = $this->fingerprintFor($user);
+
+        if ($request->header('X-Notification-Fingerprint') === $fingerprint) {
+            return response()->json(['unchanged' => true]);
+        }
+
         return response()->json([
             'notifications' => $this->notificationsFor($user)->values(),
+            'fingerprint' => $fingerprint,
             'generated_at' => now()->toIso8601String(),
         ]);
+    }
+
+    /**
+     * Aprēķina lētu nospiedumu no gaidošo pieprasījumu skaita un jaunākā ID.
+     * Izmanto tikai COUNT + MAX vaicājumus — bez eager loading.
+     */
+    private function fingerprintFor(User $user): string
+    {
+        $parts = [];
+
+        if ($user->canManageRequests()) {
+            if ($this->featureTableExists('repair_requests')) {
+                $row = RepairRequest::query()
+                    ->where('status', RepairRequest::STATUS_SUBMITTED)
+                    ->where('responsible_user_id', '!=', $user->id)
+                    ->selectRaw('COUNT(*) as cnt, COALESCE(MAX(id), 0) as max_id')
+                    ->toBase()
+                    ->first();
+                $parts[] = 'r'.($row->cnt ?? 0).':'.($row->max_id ?? 0);
+            }
+
+            if ($this->featureTableExists('writeoff_requests')) {
+                $row = WriteoffRequest::query()
+                    ->where('status', WriteoffRequest::STATUS_SUBMITTED)
+                    ->where('responsible_user_id', '!=', $user->id)
+                    ->selectRaw('COUNT(*) as cnt, COALESCE(MAX(id), 0) as max_id')
+                    ->toBase()
+                    ->first();
+                $parts[] = 'w'.($row->cnt ?? 0).':'.($row->max_id ?? 0);
+            }
+
+            if ($this->featureTableExists('device_transfers')) {
+                $row = DeviceTransfer::query()
+                    ->where('status', DeviceTransfer::STATUS_SUBMITTED)
+                    ->where('responsible_user_id', '!=', $user->id)
+                    ->selectRaw('COUNT(*) as cnt, COALESCE(MAX(id), 0) as max_id')
+                    ->toBase()
+                    ->first();
+                $parts[] = 't'.($row->cnt ?? 0).':'.($row->max_id ?? 0);
+            }
+        } else {
+            if ($this->featureTableExists('device_transfers')) {
+                $row = DeviceTransfer::query()
+                    ->where('transfered_to_id', $user->id)
+                    ->where('status', DeviceTransfer::STATUS_SUBMITTED)
+                    ->selectRaw('COUNT(*) as cnt, COALESCE(MAX(id), 0) as max_id')
+                    ->toBase()
+                    ->first();
+                $parts[] = 'i'.($row->cnt ?? 0).':'.($row->max_id ?? 0);
+            }
+        }
+
+        return md5(implode('|', $parts));
     }
 
     /**

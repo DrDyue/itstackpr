@@ -84,13 +84,6 @@
                         </x-nav-link>
                     @endif
 
-                    @foreach ($secondaryNavigationItems as $item)
-                        <x-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
-                            <x-icon :name="$item['icon']" size="h-4 w-4" />
-                            <span>{{ $item['label'] }}</span>
-                        </x-nav-link>
-                    @endforeach
-
                     <x-dropdown align="left" width="w-72">
                         <x-slot name="trigger">
                             <button class="{{ $requestGroupActive
@@ -141,6 +134,13 @@
                             <span>{{ $usersNavigationItem['label'] }}</span>
                         </x-nav-link>
                     @endif
+
+                    @foreach ($secondaryNavigationItems as $item)
+                        <x-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
+                            <x-icon :name="$item['icon']" size="h-4 w-4" />
+                            <span>{{ $item['label'] }}</span>
+                        </x-nav-link>
+                    @endforeach
 
                     @if ($lessImportantNavigationItems !== [])
                         <x-dropdown align="left" width="w-72">
@@ -515,15 +515,6 @@
                 </x-responsive-nav-link>
             @endif
 
-            @foreach ($secondaryNavigationItems as $item)
-                <x-responsive-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
-                    <span class="inline-flex items-center gap-2.5">
-                        <x-icon :name="$item['icon']" size="h-5 w-5" />
-                        <span>{{ $item['label'] }}</span>
-                    </span>
-                </x-responsive-nav-link>
-            @endforeach
-
             <div class="rounded-2xl border border-slate-200 bg-slate-50 p-2">
                 <div class="px-3 pb-2 pt-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pieteikumi</div>
                 <div class="space-y-1">
@@ -565,6 +556,15 @@
                     </span>
                 </x-responsive-nav-link>
             @endif
+
+            @foreach ($secondaryNavigationItems as $item)
+                <x-responsive-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
+                    <span class="inline-flex items-center gap-2.5">
+                        <x-icon :name="$item['icon']" size="h-5 w-5" />
+                        <span>{{ $item['label'] }}</span>
+                    </span>
+                </x-responsive-nav-link>
+            @endforeach
 
             @if ($lessImportantNavigationItems !== [])
                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-2">
