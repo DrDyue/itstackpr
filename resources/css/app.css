@@ -585,6 +585,18 @@ tbody td {
     @apply flex-1 truncate text-base font-semibold text-slate-900;
 }
 
+.form-field-group {
+    @apply rounded-xl border border-slate-200 bg-white p-4 shadow-sm;
+}
+
+.form-field-group + .form-field-group {
+    @apply mt-3;
+}
+
+.form-field-group-label {
+    @apply mb-3 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400;
+}
+
 .device-money-field {
     @apply relative;
 }
@@ -6158,6 +6170,15 @@ html[data-theme='dark'] .form-group-sep-label {
 
 html[data-theme='dark'] .form-group-sep-line {
     border-color: rgba(51, 65, 85, 0.7) !important;
+}
+
+html[data-theme='dark'] .form-field-group {
+    background-color: #0f172a !important;
+    border-color: rgba(51, 65, 85, 0.8) !important;
+}
+
+html[data-theme='dark'] .form-field-group-label {
+    color: #475569 !important;
 }
 
 html[data-theme='dark'] .device-form-head-icon {
