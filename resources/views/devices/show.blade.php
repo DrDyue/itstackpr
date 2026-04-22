@@ -2,14 +2,10 @@
     Lapa: Vienas ierīces detalizētais skats.
     Atbildība: parāda pilnu informāciju par konkrētu ierīci, tās statusu, atrašanās vietu un saistītajām darbībām.
     Datu avots: DeviceController@show.
-    Galvenās daļas:
-    1. Hero zona ar ierīces nosaukumu un pogām.
-    2. Pamata informācijas kartītes ar attēlu, identitāti un piesaisti.
-    3. Saistītā vēsture un papildu darbības atkarībā no lietotāja tiesībām.
 --}}
 <x-app-layout>
     @php
-        $deviceMeta = collect([$device->manufacturer, $device->model])->filter(fn ($value) => filled($value))->implode(' | ');
+        $deviceMeta = collect([$device->manufacturer, $device->model])->filter(fn ($v) => filled($v))->implode(' · ');
         $activeRepair = $device->activeRepair;
         $usesUserDeviceView = ! $canManageDevices;
         $activeRepairUrl = $activeRepair
@@ -19,436 +15,278 @@
         $repairRequestCreateUrl = route('repair-requests.index', ['repair_request_modal' => 'create', 'device_id' => $device->id]);
         $writeoffRequestCreateUrl = route('writeoff-requests.index', ['writeoff_request_modal' => 'create', 'device_id' => $device->id]);
         $transferCreateUrl = route('device-transfers.index', ['device_transfer_modal' => 'create', 'device_id' => $device->id]);
-        $repairTypeLabels = [
-            'internal' => 'Iekšējais',
-            'external' => 'Ārējais',
-        ];
-        $repairPriorityLabels = [
-            'low' => 'Zema',
-            'medium' => 'Vidēja',
-            'high' => 'Augsta',
-            'critical' => 'Kritiska',
-        ];
+        $repairTypeLabels = ['internal' => 'Iekšējais', 'external' => 'Ārējais'];
+        $repairPriorityLabels = ['low' => 'Zema', 'medium' => 'Vidēja', 'high' => 'Augsta', 'critical' => 'Kritiska'];
         $hasTransferOrigin = (bool) ($latestTransferToCurrentUser ?? null);
-        $heroSubtitleParts = collect([
-            $device->code ?: 'Bez koda',
-            $device->model ?: null,
-        ])->filter()->values();
-        $heroFacts = [
-            ['label' => 'Kods', 'value' => $device->code ?: 'Bez koda'],
-            ['label' => 'Tips', 'value' => $device->type?->type_name ?: 'Bez tipa'],
-            ['label' => 'Telpa', 'value' => $device->room?->room_number ?: 'Nav norādīta'],
-            ['label' => 'Statuss', 'value' => $statusLabels[$device->status] ?? $device->status],
-        ];
         $deviceRoomLabel = $device->room
-            ? ($device->room->room_number . ($device->room->room_name ? ' | ' . $device->room->room_name : ''))
+            ? ($device->room->room_number . ($device->room->room_name ? ' – ' . $device->room->room_name : ''))
             : 'Nav norādīta';
         $deviceBuildingLabel = $device->building?->building_name ?: 'Nav norādīta';
         $deviceUserLabel = $device->assignedTo?->full_name ?: 'Nav piešķirts';
+        $metaLine = collect([$device->type?->type_name, $deviceMeta])->filter()->implode(' · ');
     @endphp
 
-    <section class="app-shell app-shell-wide">
-        <div class="page-hero">
-            <div class="page-hero-grid">
-                <div class="max-w-3xl">
-                    <div class="page-eyebrow">
-                        <x-icon name="device" size="h-4 w-4" />
-                        <span>{{ $canManageDevices ? 'Ierīces kartīte' : 'Mana ierīce' }}</span>
+    <section class="app-shell">
+
+        {{-- ═══ KOMPAKTS HEADER ═══ --}}
+        <div class="mb-5 flex flex-wrap items-center gap-3">
+            {{-- Attēls --}}
+            <div class="shrink-0">
+                @if ($deviceImageUrl)
+                    <img src="{{ $deviceImageUrl }}" alt="{{ $device->name }}"
+                        class="h-14 w-14 rounded-xl border border-slate-200 object-cover shadow-sm">
+                @else
+                    <div class="flex h-14 w-14 items-center justify-center rounded-xl border border-slate-200 bg-slate-100 text-slate-400">
+                        <x-icon name="device" size="h-7 w-7" />
                     </div>
-                    <div class="page-title-group mt-4">
-                        <div class="page-title-icon page-title-icon-sky">
-                            <x-icon name="device" size="h-7 w-7" />
-                        </div>
-                        <div>
-                            <h1 class="page-title">{{ $device->name }}</h1>
-                            <p class="page-subtitle">{{ $heroSubtitleParts->implode(' | ') }}</p>
-                            <div class="mt-4 flex flex-wrap items-center gap-2">
-                                @foreach ($heroFacts as $fact)
-                                    <span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700">
-                                        <span class="uppercase tracking-[0.14em] text-slate-400">{{ $fact['label'] }}</span>
-                                        <span>{{ $fact['value'] }}</span>
-                                    </span>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="page-actions">
-                    @if ($canManageDevices)
-                        <a href="{{ route('devices.index', ['device_modal' => 'edit', 'modal_device' => $device->id]) }}" class="btn-edit">
-                            <x-icon name="edit" size="h-4 w-4" />
-                            <span>Rediģēt</span>
-                        </a>
-                        @if ($activeRepairUrl)
-                            <a href="{{ $activeRepairUrl }}" class="btn-view">
-                                <x-icon name="repair" size="h-4 w-4" />
-                                <span>Atvērt remontu</span>
-                            </a>
-                        @elseif ($device->status !== \App\Models\Device::STATUS_WRITEOFF)
-                            <a href="{{ $repairCreateUrl }}" class="btn-view">
-                                <x-icon name="repair" size="h-4 w-4" />
-                                <span>Jauns remonts</span>
-                            </a>
-                        @endif
-                    @else
-                        @if ($requestAvailability['repair'])
-                            <a href="{{ $repairRequestCreateUrl }}" class="btn-edit">
-                                <x-icon name="repair" size="h-4 w-4" />
-                                <span>Remonts</span>
-                            </a>
-                        @endif
-                        @if ($requestAvailability['writeoff'])
-                            <a href="{{ $writeoffRequestCreateUrl }}" class="btn-danger">
-                                <x-icon name="writeoff" size="h-4 w-4" />
-                                <span>Norakstīt</span>
-                            </a>
-                        @endif
-                        @if ($requestAvailability['transfer'])
-                            <a href="{{ $transferCreateUrl }}" class="btn-view">
-                                <x-icon name="transfer" size="h-4 w-4" />
-                                <span>Nodot</span>
-                            </a>
-                        @endif
+                @endif
+            </div>
+
+            {{-- Virsraksts + kods + statuss --}}
+            <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h1 class="text-xl font-bold text-slate-900">{{ $device->name }}</h1>
+                    @if ($device->code)
+                        <span class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 font-mono text-xs font-semibold text-slate-600 ring-1 ring-slate-200">{{ $device->code }}</span>
                     @endif
-                    <a href="{{ route('devices.index') }}" class="btn-back">
-                        <x-icon name="back" size="h-4 w-4" />
-                        <span>Atpakaļ</span>
-                    </a>
+                    <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
+                    @if ($repairStatusLabel)
+                        <span class="device-repair-state-chip">
+                            <x-icon name="repair" size="h-3.5 w-3.5" />
+                            <span>{{ $repairStatusLabel }}</span>
+                        </span>
+                    @endif
                 </div>
+                @if ($metaLine)
+                    <p class="mt-0.5 text-sm text-slate-500">{{ $metaLine }}</p>
+                @endif
+            </div>
+
+            {{-- Darbības --}}
+            <div class="flex flex-wrap items-center gap-2">
+                @if ($canManageDevices)
+                    <a href="{{ route('devices.index', ['device_modal' => 'edit', 'modal_device' => $device->id]) }}" class="btn-edit">
+                        <x-icon name="edit" size="h-4 w-4" /><span>Rediģēt</span>
+                    </a>
+                    @if ($activeRepairUrl)
+                        <a href="{{ $activeRepairUrl }}" class="btn-view">
+                            <x-icon name="repair" size="h-4 w-4" /><span>Atvērt remontu</span>
+                        </a>
+                    @elseif ($device->status !== \App\Models\Device::STATUS_WRITEOFF)
+                        <a href="{{ $repairCreateUrl }}" class="btn-view">
+                            <x-icon name="repair" size="h-4 w-4" /><span>Jauns remonts</span>
+                        </a>
+                    @endif
+                @else
+                    @if ($requestAvailability['repair'])
+                        <a href="{{ $repairRequestCreateUrl }}" class="btn-edit">
+                            <x-icon name="repair" size="h-4 w-4" /><span>Remonts</span>
+                        </a>
+                    @endif
+                    @if ($requestAvailability['writeoff'])
+                        <a href="{{ $writeoffRequestCreateUrl }}" class="btn-danger">
+                            <x-icon name="writeoff" size="h-4 w-4" /><span>Norakstīt</span>
+                        </a>
+                    @endif
+                    @if ($requestAvailability['transfer'])
+                        <a href="{{ $transferCreateUrl }}" class="btn-view">
+                            <x-icon name="transfer" size="h-4 w-4" /><span>Nodot</span>
+                        </a>
+                    @endif
+                @endif
+                <a href="{{ route('devices.index') }}" class="btn-back">
+                    <x-icon name="back" size="h-4 w-4" /><span>Atpakaļ</span>
+                </a>
             </div>
         </div>
 
+        {{-- Brīdinājums --}}
         @if (session('warning'))
-            <div class="mb-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-6 text-amber-900">
+            <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                 {{ session('warning') }}
             </div>
         @endif
 
-        @if ($canManageDevices)
-            <section class="surface-card p-6">
-                <div class="grid gap-6 xl:grid-cols-[auto_minmax(0,1.2fr)_minmax(0,0.8fr)]">
-                    <div class="shrink-0">
-                        @if ($deviceImageUrl)
-                            <img src="{{ $deviceImageUrl }}" alt="{{ $device->name }}" class="h-44 w-44 rounded-[1.75rem] border border-slate-200 object-cover">
+        {{-- ═══ GALVENĀ INFORMĀCIJA ═══ --}}
+        <div class="grid gap-4 xl:grid-cols-3">
+
+            {{-- Identitāte --}}
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+                    <x-icon name="device" size="h-3.5 w-3.5" />
+                    <span>Identitāte</span>
+                </h3>
+                <dl class="mt-3 divide-y divide-slate-100">
+                    <div class="flex items-start gap-3 py-2">
+                        <dt class="w-24 shrink-0 text-xs font-semibold text-slate-500">Kods</dt>
+                        <dd class="min-w-0 font-mono text-sm font-semibold text-slate-900">{{ $device->code ?: '—' }}</dd>
+                    </div>
+                    <div class="flex items-start gap-3 py-2">
+                        <dt class="w-24 shrink-0 text-xs font-semibold text-slate-500">Nosaukums</dt>
+                        <dd class="min-w-0 text-sm text-slate-900">{{ $device->name }}</dd>
+                    </div>
+                    <div class="flex items-start gap-3 py-2">
+                        <dt class="w-24 shrink-0 text-xs font-semibold text-slate-500">Tips</dt>
+                        <dd class="min-w-0 text-sm text-slate-900">{{ $device->type?->type_name ?: '—' }}</dd>
+                    </div>
+                    <div class="flex items-start gap-3 py-2">
+                        <dt class="w-24 shrink-0 text-xs font-semibold text-slate-500">Ražotājs</dt>
+                        <dd class="min-w-0 text-sm text-slate-900">{{ $device->manufacturer ?: '—' }}</dd>
+                    </div>
+                    <div class="flex items-start gap-3 py-2">
+                        <dt class="w-24 shrink-0 text-xs font-semibold text-slate-500">Modelis</dt>
+                        <dd class="min-w-0 text-sm text-slate-900">{{ $device->model ?: '—' }}</dd>
+                    </div>
+                    <div class="flex items-start gap-3 py-2">
+                        <dt class="w-24 shrink-0 text-xs font-semibold text-slate-500">Sērija</dt>
+                        <dd class="min-w-0 font-mono text-sm text-slate-900">{{ $device->serial_number ?: '—' }}</dd>
+                    </div>
+                </dl>
+            </div>
+
+            {{-- Atrašanās vieta --}}
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+                    <x-icon name="room" size="h-3.5 w-3.5" />
+                    <span>Atrašanās vieta</span>
+                </h3>
+                <dl class="mt-3 divide-y divide-slate-100">
+                    <div class="flex items-start gap-3 py-2">
+                        <dt class="w-24 shrink-0 text-xs font-semibold text-slate-500">Ēka</dt>
+                        <dd class="min-w-0 text-sm text-slate-900">{{ $deviceBuildingLabel }}</dd>
+                    </div>
+                    <div class="flex items-start gap-3 py-2">
+                        <dt class="w-24 shrink-0 text-xs font-semibold text-slate-500">Telpa</dt>
+                        <dd class="min-w-0 text-sm text-slate-900">{{ $deviceRoomLabel }}</dd>
+                    </div>
+                    @if ($device->room?->department)
+                        <div class="flex items-start gap-3 py-2">
+                            <dt class="w-24 shrink-0 text-xs font-semibold text-slate-500">Nodaļa</dt>
+                            <dd class="min-w-0 text-sm text-slate-900">{{ $device->room->department }}</dd>
+                        </div>
+                    @endif
+                    <div class="flex items-start gap-3 py-2">
+                        <dt class="w-24 shrink-0 text-xs font-semibold text-slate-500">Piešķirts</dt>
+                        <dd class="min-w-0 text-sm text-slate-900">{{ $deviceUserLabel }}</dd>
+                    </div>
+                    @if ($device->assignedTo?->job_title)
+                        <div class="flex items-start gap-3 py-2">
+                            <dt class="w-24 shrink-0 text-xs font-semibold text-slate-500">Amats</dt>
+                            <dd class="min-w-0 text-sm text-slate-500">{{ $device->assignedTo->job_title }}</dd>
+                        </div>
+                    @endif
+                    @if ($canManageDevices)
+                        <div class="flex items-start gap-3 py-2">
+                            <dt class="w-24 shrink-0 text-xs font-semibold text-slate-500">Izveidoja</dt>
+                            <dd class="min-w-0 text-sm text-slate-500">{{ $device->createdBy?->full_name ?: 'Sistēma' }}</dd>
+                        </div>
+                    @endif
+                </dl>
+
+                {{-- Lietotāja telpas maiņa --}}
+                @if ($usesUserDeviceView)
+                    <div class="mt-4 border-t border-slate-100 pt-4">
+                        @if ($roomUpdateAvailability['allowed'])
+                            <button type="button" class="btn-search w-full justify-center" x-data @click="$dispatch('open-modal', 'device-show-room-modal')">
+                                <x-icon name="room" size="h-4 w-4" /><span>Mainīt telpu</span>
+                            </button>
                         @else
-                            <div class="flex h-44 w-44 items-center justify-center rounded-[1.75rem] border border-dashed border-slate-300 bg-slate-50 text-slate-400">
-                                <x-icon name="device" size="h-10 w-10" />
-                            </div>
+                            <p class="text-xs text-slate-500">{{ $roomUpdateAvailability['reason'] }}</p>
                         @endif
-                    </div>
-
-                    <div class="min-w-0 space-y-4">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
-                            @if ($repairStatusLabel)
-                                <span class="device-repair-state-chip">
-                                    <x-icon name="repair" size="h-3.5 w-3.5" />
-                                    <span>{{ $repairStatusLabel }}</span>
-                                </span>
-                            @endif
-                            <span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
-                                <x-icon name="type" size="h-3.5 w-3.5" />
-                                <span>{{ $device->type?->type_name ?: 'Bez tipa' }}</span>
-                            </span>
-                        </div>
-
-                        <div class="grid gap-4 lg:grid-cols-2">
-                            <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
-                                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Identitāte</div>
-                                <div class="mt-3 space-y-2 text-sm text-slate-700">
-                                    <div><strong class="text-slate-900">Kods:</strong> {{ $device->code ?: '-' }}</div>
-                                    <div><strong class="text-slate-900">Nosaukums:</strong> {{ $device->name }}</div>
-                                    <div><strong class="text-slate-900">Ražotājs un modelis:</strong> {{ $deviceMeta !== '' ? $deviceMeta : '-' }}</div>
-                                    <div><strong class="text-slate-900">Sērijas numurs:</strong> {{ $device->serial_number ?: '-' }}</div>
-                                </div>
-                            </div>
-                            <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
-                                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Piesaiste</div>
-                                <div class="mt-3 space-y-2 text-sm text-slate-700">
-                                    <div><strong class="text-slate-900">Lietotājs:</strong> {{ $device->assignedTo?->full_name ?: 'Nav piešķirts' }}</div>
-                                    <div><strong class="text-slate-900">Ēka:</strong> {{ $device->building?->building_name ?: 'Nav norādīta' }}</div>
-                                    <div><strong class="text-slate-900">Telpa:</strong> {{ $device->room?->room_number ?: 'Nav norādīta' }}@if ($device->room?->room_name) | {{ $device->room->room_name }} @endif</div>
-                                    <div><strong class="text-slate-900">Izveidoja:</strong> {{ $device->createdBy?->full_name ?: 'Sistēma' }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div class="rounded-[1.5rem] border border-slate-200 bg-white p-5">
-                            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Datumi un finanses</div>
-                            <div class="mt-3 space-y-2 text-sm text-slate-700">
-                                <div><strong class="text-slate-900">Iegādes datums:</strong> {{ $device->purchase_date?->format('d.m.Y') ?: '-' }}</div>
-                                <div><strong class="text-slate-900">Iegādes cena:</strong> {{ $device->purchase_price !== null ? number_format((float) $device->purchase_price, 2, '.', ' ') . ' EUR' : '-' }}</div>
-                                <div><strong class="text-slate-900">Garantija līdz:</strong> {{ $device->warranty_until?->format('d.m.Y') ?: '-' }}</div>
-                                <div><strong class="text-slate-900">Izveidots:</strong> {{ $device->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
-                            </div>
-                        </div>
-
-                        @if ($requestAvailability['reason'])
-                            <div class="rounded-[1.5rem] border border-amber-200 bg-amber-50 p-5">
-                                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">Svarīgs ierobežojums</div>
-                                <div class="mt-3 text-sm leading-6 text-amber-900">{{ $requestAvailability['reason'] }}</div>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-                @if ($device->notes)
-                    <div class="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
-                        <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Piezīmes</div>
-                        <div class="mt-3 text-sm leading-6 text-slate-700">{{ $device->notes }}</div>
                     </div>
                 @endif
-            </section>
-        @else
-            <section class="surface-card p-6">
-                <div class="min-w-0 space-y-6">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
-                            @if ($repairStatusLabel)
-                                <span class="device-repair-state-chip">
-                                    <x-icon name="repair" size="h-3.5 w-3.5" />
-                                    <span>{{ $repairStatusLabel }}</span>
-                                </span>
-                            @endif
-                            <span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
-                                <x-icon name="type" size="h-3.5 w-3.5" />
-                                <span>{{ $device->type?->type_name ?: 'Bez tipa' }}</span>
-                            </span>
-                        </div>
+            </div>
 
-                        @if ($repairStatusLabel)
-                            <div class="device-user-status-explainer">
-                                <div class="device-user-status-explainer-head">
-                                    <span class="device-user-status-explainer-label">Remonta statuss</span>
-                                    <span class="device-user-status-explainer-value">{{ $repairStatusLabel }}</span>
-                                </div>
-                                <div class="device-user-status-explainer-copy">{{ $repairStatusDescription }}</div>
+            {{-- Labā kolonna --}}
+            <div class="space-y-4">
+                @if ($canManageDevices)
+                    {{-- Iegāde un garantija --}}
+                    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <h3 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+                            <x-icon name="tag" size="h-3.5 w-3.5" />
+                            <span>Iegāde un garantija</span>
+                        </h3>
+                        <dl class="mt-3 divide-y divide-slate-100">
+                            <div class="flex items-start gap-3 py-2">
+                                <dt class="w-28 shrink-0 text-xs font-semibold text-slate-500">Iegādes datums</dt>
+                                <dd class="min-w-0 text-sm text-slate-900">{{ $device->purchase_date?->format('d.m.Y') ?: '—' }}</dd>
                             </div>
-                        @endif
-
-                        <div class="device-user-overview-grid">
-                            <article class="device-user-glance-card device-user-glance-card-device">
-                                <div class="device-user-device-top">
-                                <div class="device-user-glance-head">
-                                    <div class="device-user-glance-icon">
-                                        <x-icon name="device" size="h-5 w-5" />
-                                    </div>
-                                    <div>
-                                        <div class="device-user-glance-eyebrow">Ierīce</div>
-                                        <h2 class="device-user-glance-title">{{ $device->name }}</h2>
-                                    </div>
-                                </div>
-
-                                <div class="device-user-device-media">
-                                    @if ($deviceImageUrl)
-                                        <img src="{{ $deviceImageUrl }}" alt="{{ $device->name }}" class="device-user-device-image">
-                                    @else
-                                        <div class="device-user-device-placeholder">
-                                            <x-icon name="device" size="h-8 w-8" />
-                                        </div>
-                                        @endif
-                                    </div>
-                                </div>
-
-                                <div class="device-user-glance-meta">
-                                    <div class="device-user-glance-chip">
-                                        <span class="device-user-glance-chip-label">Kods</span>
-                                        <span>{{ $device->code ?: 'Bez koda' }}</span>
-                                    </div>
-                                    <div class="device-user-glance-chip">
-                                        <span class="device-user-glance-chip-label">Tips</span>
-                                        <span>{{ $device->type?->type_name ?: 'Bez tipa' }}</span>
-                                    </div>
-                                </div>
-
-                                <div class="device-user-glance-list">
-                                    <div class="device-user-glance-row">
-                                        <span class="device-user-glance-label">Ražotājs un modelis</span>
-                                        <span class="device-user-glance-value">{{ $deviceMeta !== '' ? $deviceMeta : 'Nav norādīts' }}</span>
-                                    </div>
-                                    <div class="device-user-glance-row">
-                                        <span class="device-user-glance-label">Sērijas numurs</span>
-                                        <span class="device-user-glance-value">{{ $device->serial_number ?: 'Nav norādīts' }}</span>
-                                    </div>
-                                    <div class="device-user-glance-row">
-                                        <span class="device-user-glance-label">Lietotājs</span>
-                                        <span class="device-user-glance-value">{{ $deviceUserLabel }}</span>
-                                    </div>
-                                </div>
-                            </article>
-
-                            <article class="device-user-glance-card">
-                                <div class="device-user-glance-head">
-                                    <div class="device-user-glance-icon device-user-glance-icon-sky">
-                                        <x-icon name="room" size="h-5 w-5" />
-                                    </div>
-                                    <div>
-                                        <div class="device-user-glance-eyebrow">Atrašanās vieta</div>
-                                        <h2 class="device-user-glance-title">{{ $deviceRoomLabel }}</h2>
-                                    </div>
-                                </div>
-
-                                <div class="device-user-glance-list">
-                                    <div class="device-user-glance-row">
-                                        <span class="device-user-glance-label">Ēka</span>
-                                        <span class="device-user-glance-value">{{ $deviceBuildingLabel }}</span>
-                                    </div>
-                                    <div class="device-user-glance-row">
-                                        <span class="device-user-glance-label">Telpa</span>
-                                        <span class="device-user-glance-value">{{ $deviceRoomLabel }}</span>
-                                    </div>
-                                    @if ($device->room?->department)
-                                        <div class="device-user-glance-row">
-                                            <span class="device-user-glance-label">Nodaļa</span>
-                                            <span class="device-user-glance-value">{{ $device->room->department }}</span>
-                                        </div>
-                                    @endif
-                                </div>
-                            </article>
-
-                            <article class="device-user-glance-card device-user-glance-card-accent">
-                                <div class="device-user-glance-head">
-                                    <div class="device-user-glance-icon device-user-glance-icon-emerald">
-                                        <x-icon name="edit" size="h-5 w-5" />
-                                    </div>
-                                    <div>
-                                        <div class="device-user-glance-eyebrow">Darbības</div>
-                                        <h2 class="device-user-glance-title">Ātrā pārvaldība</h2>
-                                    </div>
-                                </div>
-
-                                <div class="device-user-action-panel-copy">
-                                    <p>Šeit vari ātri nomainīt telpu, ja ierīcei nav aktīva remonta vai gaidošu pieteikumu.</p>
-                                </div>
-
-                                @if ($roomUpdateAvailability['allowed'])
-                                    <button type="button" class="btn-search w-full justify-center" x-data @click="$dispatch('open-modal', 'device-show-room-modal')">
-                                        <x-icon name="room" size="h-4 w-4" />
-                                        <span>Mainīt telpu</span>
-                                    </button>
-                                @else
-                                    <div class="device-user-glance-alert">
-                                        {{ $roomUpdateAvailability['reason'] }}
-                                    </div>
-                                @endif
-
-                                @if ($requestAvailability['reason'])
-                                    <div class="device-user-glance-note">
-                                        <span class="device-user-glance-note-label">Pieteikumi šobrīd bloķēti</span>
-                                        <span>{{ $requestAvailability['reason'] }}</span>
-                                    </div>
-                                @endif
-                            </article>
-                        </div>
-
-                        @if ($hasTransferOrigin)
-                            <article class="device-user-origin-card">
-                                <div class="device-user-glance-head">
-                                    <div class="device-user-glance-icon device-user-glance-icon-amber">
-                                        <x-icon name="transfer" size="h-5 w-5" />
-                                    </div>
-                                    <div>
-                                        <div class="device-user-glance-eyebrow">Izcelsme</div>
-                                        <h2 class="device-user-glance-title">Kā ierīce nonāca pie tevis</h2>
-                                    </div>
-                                </div>
-                                <div class="device-user-origin-copy">{{ $originLabel }}</div>
-                            </article>
-                        @endif
-
-                        @if ($device->notes)
-                            <article class="device-user-glance-card device-user-glance-card-muted">
-                                <div class="device-user-glance-head">
-                                    <div class="device-user-glance-icon device-user-glance-icon-slate">
-                                        <x-icon name="audit" size="h-5 w-5" />
-                                    </div>
-                                    <div>
-                                        <div class="device-user-glance-eyebrow">Piezīmes</div>
-                                        <h2 class="device-user-glance-title">Papildinformācija</h2>
-                                    </div>
-                                </div>
-                                <div class="device-user-origin-copy">{{ $device->notes }}</div>
-                            </article>
-                        @endif
-
-                        @if (false)
-
-                        <div class="grid gap-4 xl:grid-cols-3">
-                            <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
-                                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ierīce</div>
-                                <div class="mt-3 space-y-2 text-sm text-slate-700">
-                                    <div><strong class="text-slate-900">Kods:</strong> {{ $device->code ?: '-' }}</div>
-                                    <div><strong class="text-slate-900">Nosaukums:</strong> {{ $device->name }}</div>
-                                    <div><strong class="text-slate-900">Ražotājs/modelis:</strong> {{ $deviceMeta !== '' ? $deviceMeta : '-' }}</div>
-                                    <div><strong class="text-slate-900">Sērijas numurs:</strong> {{ $device->serial_number ?: '-' }}</div>
-                                </div>
+                            <div class="flex items-start gap-3 py-2">
+                                <dt class="w-28 shrink-0 text-xs font-semibold text-slate-500">Iegādes cena</dt>
+                                <dd class="min-w-0 text-sm font-semibold text-slate-900">
+                                    {{ $device->purchase_price !== null ? number_format((float) $device->purchase_price, 2, '.', ' ') . ' EUR' : '—' }}
+                                </dd>
                             </div>
-
-                            <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
-                                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Atrašanās vieta</div>
-                                <div class="mt-3 space-y-2 text-sm text-slate-700">
-                                    <div><strong class="text-slate-900">Ēka:</strong> {{ $device->building?->building_name ?: 'Nav norādīta' }}</div>
-                                    <div><strong class="text-slate-900">Telpa:</strong> {{ $device->room?->room_number ?: 'Nav norādīta' }}@if ($device->room?->room_name) | {{ $device->room->room_name }} @endif</div>
-                                    <div><strong class="text-slate-900">Lietotājs:</strong> {{ $device->assignedTo?->full_name ?: 'Nav piešķirts' }}</div>
-                                </div>
+                            <div class="flex items-start gap-3 py-2">
+                                <dt class="w-28 shrink-0 text-xs font-semibold text-slate-500">Garantija līdz</dt>
+                                <dd class="min-w-0 text-sm text-slate-900
+                                    {{ $device->warranty_until && $device->warranty_until->isPast() ? 'text-rose-600' : '' }}">
+                                    {{ $device->warranty_until?->format('d.m.Y') ?: '—' }}
+                                </dd>
                             </div>
-
-                            <div class="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
-                                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Darbības</div>
-                                @if ($requestAvailability['reason'])
-                                    <div class="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm leading-6 text-amber-900">
-                                        {{ $requestAvailability['reason'] }}
-                                    </div>
-                                @endif
-
-                                @if ($roomUpdateAvailability['allowed'])
-                                    <form method="POST" action="{{ route('devices.user-room.update', $device) }}" class="mt-4 space-y-4">
-                                        @csrf
-                                        <x-searchable-select
-                                            name="room_id"
-                                            queryName="room_query"
-                                            :options="$roomOptions"
-                                            :selected="old('room_id', (string) $device->room_id)"
-                                            :query="''"
-                                            identifier="device-user-room"
-                                            placeholder="Izvēlies telpu"
-                                        />
-                                        @error('room_id')
-                                            <div class="text-sm text-rose-600">{{ $message }}</div>
-                                        @enderror
-                                        <button type="submit" class="btn-create w-full justify-center">
-                                            <x-icon name="check" size="h-4 w-4" />
-                                            <span>Atjaunot telpu</span>
-                                        </button>
-                                    </form>
-                                @else
-                                    <div class="mt-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">
-                                        {{ $roomUpdateAvailability['reason'] }}
-                                    </div>
-                                @endif
+                            <div class="flex items-start gap-3 py-2">
+                                <dt class="w-28 shrink-0 text-xs font-semibold text-slate-500">Izveidots</dt>
+                                <dd class="min-w-0 text-sm text-slate-500">{{ $device->created_at?->format('d.m.Y H:i') ?: '—' }}</dd>
                             </div>
-                        </div>
-
-                        @if ($hasTransferOrigin)
-                            <div class="rounded-[1.5rem] border border-slate-200 bg-white p-5">
-                                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Kā ierīce nonāca pie tevis</div>
-                                <div class="mt-3 text-sm leading-6 text-slate-700">{{ $originLabel }}</div>
-                            </div>
-                        @endif
-
-                        @if ($device->notes)
-                            <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
-                                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Piezīmes</div>
-                                <div class="mt-3 text-sm leading-6 text-slate-700">{{ $device->notes }}</div>
-                            </div>
-                        @endif
+                        </dl>
                     </div>
-                        @endif
-            </section>
-        @endif
 
+                    {{-- Lielāks attēls (admin) --}}
+                    @if ($deviceImageUrl)
+                        <div class="overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
+                            <img src="{{ $deviceImageUrl }}" alt="{{ $device->name }}"
+                                class="w-full object-cover" style="max-height: 220px;">
+                        </div>
+                    @endif
+                @else
+                    {{-- Lietotāja pieteikumu ierobežojums --}}
+                    @if ($requestAvailability['reason'])
+                        <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+                            <h3 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-amber-600">
+                                <x-icon name="exclamation-triangle" size="h-3.5 w-3.5" />
+                                <span>Ierobežojums</span>
+                            </h3>
+                            <p class="mt-2 text-sm leading-relaxed text-amber-900">{{ $requestAvailability['reason'] }}</p>
+                        </div>
+                    @endif
+
+                    {{-- Izcelsme (nodošana) --}}
+                    @if ($hasTransferOrigin)
+                        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+                            <h3 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-emerald-600">
+                                <x-icon name="transfer" size="h-3.5 w-3.5" />
+                                <span>Izcelsme</span>
+                            </h3>
+                            <p class="mt-2 text-sm leading-relaxed text-emerald-900">{{ $originLabel }}</p>
+                        </div>
+                    @endif
+                @endif
+
+                {{-- Piezīmes --}}
+                @if ($device->notes)
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                        <h3 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+                            <x-icon name="audit" size="h-3.5 w-3.5" />
+                            <span>Piezīmes</span>
+                        </h3>
+                        <p class="mt-2 text-sm leading-relaxed text-slate-700">{{ $device->notes }}</p>
+                    </div>
+                @endif
+
+                {{-- Admin: pieteikumu ierobežojums --}}
+                @if ($canManageDevices && $requestAvailability['reason'])
+                    <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+                        <h3 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-amber-600">
+                            <x-icon name="exclamation-triangle" size="h-3.5 w-3.5" />
+                            <span>Ierobežojums</span>
+                        </h3>
+                        <p class="mt-2 text-sm leading-relaxed text-amber-900">{{ $requestAvailability['reason'] }}</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        {{-- Telpas maiņas modāls (lietotājs) --}}
         @if ($usesUserDeviceView && $roomUpdateAvailability['allowed'])
             <x-modal name="device-show-room-modal" maxWidth="2xl">
                 <div class="device-user-room-modal-shell">
@@ -462,11 +300,9 @@
                             <x-icon name="x-mark" size="h-5 w-5" />
                         </button>
                     </div>
-
                     <form method="POST" action="{{ route('devices.user-room.update', $device) }}" class="device-user-room-modal-form">
                         @csrf
                         <input type="hidden" name="modal_form" value="device_show_room">
-
                         <div class="device-user-room-modal-device">
                             <div>
                                 <div class="device-user-room-modal-label">Pašreizējā telpa</div>
@@ -477,162 +313,158 @@
                                 <div class="device-user-room-modal-value">{{ $deviceBuildingLabel }}</div>
                             </div>
                         </div>
-
                         <div class="space-y-2">
                             <label class="device-user-room-modal-label" for="device-show-room-input">Jaunā telpa</label>
-                            <x-searchable-select
-                                name="room_id"
-                                queryName="room_query"
-                                :options="$roomOptions"
+                            <x-searchable-select name="room_id" queryName="room_query" :options="$roomOptions"
                                 :selected="old('modal_form') === 'device_show_room' ? old('room_id', (string) $device->room_id) : (string) $device->room_id"
                                 :query="old('modal_form') === 'device_show_room' ? old('room_query', $deviceRoomLabel) : $deviceRoomLabel"
-                                identifier="device-show-room"
-                                :prioritize-selected="true"
-                                selected-group-label="Pašreizējā telpa"
-                                placeholder="Izvēlies telpu"
+                                identifier="device-show-room" :prioritize-selected="true"
+                                selected-group-label="Pašreizējā telpa" placeholder="Izvēlies telpu"
                                 emptyMessage="Neviena telpa neatbilst meklējumam."
-                                :error="old('modal_form') === 'device_show_room' ? $errors->first('room_id') : null"
-                            />
+                                :error="old('modal_form') === 'device_show_room' ? $errors->first('room_id') : null" />
                             @if (old('modal_form') === 'device_show_room' && $errors->has('room_id'))
                                 <div class="text-sm text-rose-600">{{ $errors->first('room_id') }}</div>
                             @endif
                         </div>
-
                         <div class="device-user-room-modal-actions">
                             <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'device-show-room-modal')">Atcelt</button>
-                            <button type="submit" class="btn-search">
-                                <x-icon name="save" size="h-4 w-4" />
-                                <span>Saglabāt</span>
-                            </button>
+                            <button type="submit" class="btn-search"><x-icon name="save" size="h-4 w-4" /><span>Saglabāt</span></button>
                         </div>
                     </form>
                 </div>
             </x-modal>
-
             @if (old('modal_form') === 'device_show_room')
                 <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-show-room-modal' })));</script>
             @endif
         @endif
 
-        <div class="mt-6 grid gap-6 xl:grid-cols-2">
-            <section class="surface-card p-6">
-                <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
-                    <x-icon name="repair-request" size="h-5 w-5" class="text-sky-600" />
-                    <span>Remonta pieteikumi</span>
-                </h2>
-                <p class="mt-2 text-sm leading-6 text-slate-600">Visi ar ierīci saistītie remonta pieteikumi.</p>
-                <div class="mt-4 space-y-3 text-sm">
+        {{-- ═══ VĒSTURE ═══ --}}
+        <div class="mt-5 grid gap-4 xl:grid-cols-2">
+
+            {{-- Remonta pieteikumi --}}
+            <section class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-3.5">
+                    <x-icon name="repair-request" size="h-4 w-4" class="shrink-0 text-sky-500" />
+                    <h2 class="text-sm font-semibold text-slate-900">Remonta pieteikumi</h2>
+                    @if ($visibleRepairRequests->count() > 0)
+                        <span class="ml-auto inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">{{ $visibleRepairRequests->count() }}</span>
+                    @endif
+                </div>
+                <div class="divide-y divide-slate-100 px-5">
                     @forelse ($visibleRepairRequests as $request)
-                        <div class="surface-card-muted">
-                            <div class="flex flex-wrap items-start justify-between gap-3">
-                                <div>
-                                    <div class="font-medium text-slate-900">{{ $request->responsibleUser?->full_name ?: 'Nav norādīts' }}</div>
-                                    <div class="mt-1 text-xs text-slate-500">{{ $request->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
+                        <div class="py-3">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <div class="flex flex-wrap items-center gap-1.5">
+                                        <span class="text-sm font-semibold text-slate-900">{{ $request->responsibleUser?->full_name ?: 'Nav norādīts' }}</span>
+                                        <span class="text-xs text-slate-400">{{ $request->created_at?->format('d.m.Y H:i') ?: '' }}</span>
+                                    </div>
+                                    @if ($request->description)
+                                        <p class="mt-0.5 text-xs text-slate-500 line-clamp-1">{{ $request->description }}</p>
+                                    @endif
+                                    @if ($request->reviewedBy)
+                                        <p class="mt-0.5 text-xs text-slate-400">Izskatīja: {{ $request->reviewedBy->full_name }}@if ($request->review_notes) · {{ $request->review_notes }}@endif</p>
+                                    @endif
                                 </div>
                                 <x-status-pill context="request" :value="$request->status" />
                             </div>
-                            <div class="mt-2 text-sm text-slate-700">{{ $request->description ?: 'Apraksts nav pievienots.' }}</div>
-                            @if ($request->reviewedBy || $request->review_notes)
-                                <div class="mt-2 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-600">
-                                    @if ($request->reviewedBy)
-                                        <div><span class="font-semibold text-slate-900">Izskatīja:</span> {{ $request->reviewedBy->full_name }}</div>
-                                    @endif
-                                    @if ($request->review_notes)
-                                        <div class="mt-1"><span class="font-semibold text-slate-900">Piezīmes:</span> {{ $request->review_notes }}</div>
-                                    @endif
-                                </div>
-                            @endif
                         </div>
                     @empty
-                        <p class="text-slate-500">Remonta pieteikumu vēl nav.</p>
+                        <p class="py-5 text-center text-sm text-slate-400">Nav remonta pieteikumu.</p>
                     @endforelse
                 </div>
             </section>
 
-            <section class="surface-card p-6">
-                <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
-                    <x-icon name="repair" size="h-5 w-5" class="text-amber-600" />
-                    <span>Remonta ieraksti</span>
-                </h2>
-                <p class="mt-2 text-sm leading-6 text-slate-600">{{ $canManageDevices ? 'Esošie un iepriekšējie remonta darbi.' : 'Redzami tikai tev saistītie remonta ieraksti.' }}</p>
-                <div class="mt-4 space-y-3 text-sm">
+            {{-- Remonta ieraksti --}}
+            <section class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-3.5">
+                    <x-icon name="repair" size="h-4 w-4" class="shrink-0 text-amber-500" />
+                    <h2 class="text-sm font-semibold text-slate-900">Remonta ieraksti</h2>
+                    @if ($visibleRepairs->count() > 0)
+                        <span class="ml-auto inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">{{ $visibleRepairs->count() }}</span>
+                    @endif
+                </div>
+                <div class="divide-y divide-slate-100 px-5">
                     @forelse ($visibleRepairs as $repair)
-                        <div class="surface-card-muted">
-                            <div class="flex flex-wrap items-start justify-between gap-3">
-                                <div>
-                                    <div class="font-medium text-slate-900">Remonts #{{ $repair->id }}</div>
-                                    <div class="mt-1 text-xs text-slate-500">{{ $repair->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
+                        <div class="py-3">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <div class="flex flex-wrap items-center gap-1.5">
+                                        <span class="text-sm font-semibold text-slate-900">Remonts #{{ $repair->id }}</span>
+                                        <span class="text-xs text-slate-400">{{ $repair->created_at?->format('d.m.Y') ?: '' }}</span>
+                                        <span class="text-xs text-slate-400">{{ $repairTypeLabels[$repair->repair_type] ?? '' }}</span>
+                                    </div>
+                                    @if ($canManageDevices)
+                                        <p class="mt-0.5 text-xs text-slate-500">
+                                            {{ $repair->executor?->full_name ?: 'Nav izpildītāja' }}
+                                            @if ($repair->start_date) · {{ $repair->start_date->format('d.m.Y') }}@if ($repair->end_date) – {{ $repair->end_date->format('d.m.Y') }}@endif@endif
+                                        </p>
+                                    @endif
+                                    @if ($repair->description)
+                                        <p class="mt-0.5 text-xs text-slate-500 line-clamp-1">{{ $repair->description }}</p>
+                                    @endif
                                 </div>
-                                <div class="flex flex-wrap items-center gap-2">
+                                <div class="flex shrink-0 items-center gap-1.5">
                                     <x-status-pill context="repair" :value="$repair->status" />
                                     @if ($canManageDevices)
-                                        <a href="{{ route('repairs.index', ['repair_modal' => 'edit', 'modal_repair' => $repair->id]) }}" class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-300 hover:text-slate-900">
-                                            <x-icon name="repair" size="h-3.5 w-3.5" />
-                                            <span>Atvērt</span>
+                                        <a href="{{ route('repairs.index', ['repair_modal' => 'edit', 'modal_repair' => $repair->id]) }}"
+                                            class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:text-slate-900">
+                                            <x-icon name="repair" size="h-3.5 w-3.5" /><span>Atvērt</span>
                                         </a>
                                     @endif
                                 </div>
                             </div>
-                            <div class="mt-2 grid gap-x-4 gap-y-1 text-xs text-slate-600 md:grid-cols-2">
-                                <div><span class="font-semibold text-slate-900">Tips:</span> {{ $repairTypeLabels[$repair->repair_type] ?? ($repair->repair_type ?: '-') }}</div>
-                                <div><span class="font-semibold text-slate-900">Prioritāte:</span> {{ $repairPriorityLabels[$repair->priority] ?? ($repair->priority ?: '-') }}</div>
-                                @if ($canManageDevices)
-                                    <div><span class="font-semibold text-slate-900">Pieņēma:</span> {{ $repair->approval_actor_name ?: '-' }}</div>
-                                    <div><span class="font-semibold text-slate-900">Izpildītājs:</span> {{ $repair->executor?->full_name ?: '-' }}</div>
-                                    <div><span class="font-semibold text-slate-900">Sākums:</span> {{ $repair->start_date?->format('d.m.Y') ?: '-' }}</div>
-                                    <div><span class="font-semibold text-slate-900">Beigas:</span> {{ $repair->end_date?->format('d.m.Y') ?: '-' }}</div>
-                                    <div class="md:col-span-2"><span class="font-semibold text-slate-900">Saistītais pieteicējs:</span> {{ $repair->request?->responsibleUser?->full_name ?: '-' }}</div>
-                                @endif
-                            </div>
-                            <div class="mt-2 text-sm text-slate-700">{{ $repair->description ?: 'Apraksts nav pievienots.' }}</div>
                         </div>
                     @empty
-                        <p class="text-slate-500">Remonta ierakstu vēl nav.</p>
+                        <p class="py-5 text-center text-sm text-slate-400">Nav remonta ierakstu.</p>
                     @endforelse
                 </div>
             </section>
 
-            <section class="surface-card p-6">
-                <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
-                    <x-icon name="writeoff" size="h-5 w-5" class="text-rose-600" />
-                    <span>Norakstīšanas pieteikumi</span>
-                </h2>
-                <p class="mt-2 text-sm leading-6 text-slate-600">Visi ar ierīci saistītie norakstīšanas pieteikumi.</p>
-                <div class="mt-4 space-y-3 text-sm">
+            {{-- Norakstīšanas pieteikumi --}}
+            <section class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-3.5">
+                    <x-icon name="writeoff" size="h-4 w-4" class="shrink-0 text-rose-500" />
+                    <h2 class="text-sm font-semibold text-slate-900">Norakstīšanas pieteikumi</h2>
+                    @if ($visibleWriteoffRequests->count() > 0)
+                        <span class="ml-auto inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">{{ $visibleWriteoffRequests->count() }}</span>
+                    @endif
+                </div>
+                <div class="divide-y divide-slate-100 px-5">
                     @forelse ($visibleWriteoffRequests as $request)
-                        <div class="surface-card-muted">
-                            <div class="flex flex-wrap items-start justify-between gap-3">
-                                <div>
-                                    <div class="font-medium text-slate-900">{{ $request->responsibleUser?->full_name ?: 'Nav norādīts' }}</div>
-                                    <div class="mt-1 text-xs text-slate-500">{{ $request->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
+                        <div class="py-3">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <div class="flex flex-wrap items-center gap-1.5">
+                                        <span class="text-sm font-semibold text-slate-900">{{ $request->responsibleUser?->full_name ?: 'Nav norādīts' }}</span>
+                                        <span class="text-xs text-slate-400">{{ $request->created_at?->format('d.m.Y H:i') ?: '' }}</span>
+                                    </div>
+                                    @if ($request->reason)
+                                        <p class="mt-0.5 text-xs text-slate-500 line-clamp-1">{{ $request->reason }}</p>
+                                    @endif
+                                    @if ($request->reviewedBy)
+                                        <p class="mt-0.5 text-xs text-slate-400">Izskatīja: {{ $request->reviewedBy->full_name }}@if ($request->review_notes) · {{ $request->review_notes }}@endif</p>
+                                    @endif
                                 </div>
                                 <x-status-pill context="request" :value="$request->status" />
                             </div>
-                            <div class="mt-2 text-sm text-slate-700">{{ $request->reason ?: 'Iemesls nav pievienots.' }}</div>
-                            @if ($request->reviewedBy || $request->review_notes)
-                                <div class="mt-2 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-600">
-                                    @if ($request->reviewedBy)
-                                        <div><span class="font-semibold text-slate-900">Izskatīja:</span> {{ $request->reviewedBy->full_name }}</div>
-                                    @endif
-                                    @if ($request->review_notes)
-                                        <div class="mt-1"><span class="font-semibold text-slate-900">Piezīmes:</span> {{ $request->review_notes }}</div>
-                                    @endif
-                                </div>
-                            @endif
                         </div>
                     @empty
-                        <p class="text-slate-500">Norakstīšanas pieteikumu vēl nav.</p>
+                        <p class="py-5 text-center text-sm text-slate-400">Nav norakstīšanas pieteikumu.</p>
                     @endforelse
                 </div>
             </section>
 
-            <section class="surface-card p-6">
-                <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
-                    <x-icon name="transfer" size="h-5 w-5" class="text-emerald-600" />
-                    <span>Nodošanas vēsture</span>
-                </h2>
-                <p class="mt-2 text-sm leading-6 text-slate-600">Nodošanas ieraksti un lēmumi.</p>
-                <div class="mt-4 space-y-3 text-sm">
+            {{-- Nodošanas vēsture --}}
+            <section class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-3.5">
+                    <x-icon name="transfer" size="h-4 w-4" class="shrink-0 text-emerald-500" />
+                    <h2 class="text-sm font-semibold text-slate-900">Nodošanas vēsture</h2>
+                    @if ($visibleTransfers->count() > 0)
+                        <span class="ml-auto inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">{{ $visibleTransfers->count() }}</span>
+                    @endif
+                </div>
+                <div class="divide-y divide-slate-100 px-5">
                     @forelse ($visibleTransfers as $transfer)
                         @php
                             $isIncomingPendingTransfer = $usesUserDeviceView
@@ -640,20 +472,26 @@
                                 && $transfer->status === 'submitted';
                             $isOriginTransfer = $hasTransferOrigin
                                 && (int) ($latestTransferToCurrentUser?->id ?? 0) === (int) $transfer->id;
-                            $transferStatusLabel = $isIncomingPendingTransfer
-                                ? 'Ienākošs'
-                                : null;
+                            $transferStatusLabel = $isIncomingPendingTransfer ? 'Ienākošs' : null;
                         @endphp
-                        <div class="surface-card-muted">
-                            <div class="flex flex-wrap items-start justify-between gap-3">
-                                <div>
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <div class="font-medium text-slate-900">{{ $transfer->responsibleUser?->full_name ?: '-' }} -> {{ $transfer->transferTo?->full_name ?: '-' }}</div>
+                        <div class="py-3">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <div class="flex flex-wrap items-center gap-1.5">
+                                        <span class="text-sm font-semibold text-slate-900">{{ $transfer->responsibleUser?->full_name ?: '—' }}</span>
+                                        <span class="text-xs text-slate-400">→</span>
+                                        <span class="text-sm text-slate-700">{{ $transfer->transferTo?->full_name ?: '—' }}</span>
+                                        <span class="text-xs text-slate-400">{{ $transfer->created_at?->format('d.m.Y') ?: '' }}</span>
                                         @if ($isOriginTransfer)
-                                            <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">Nonāca pie tevis</span>
+                                            <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">Nonāca pie tevis</span>
                                         @endif
                                     </div>
-                                    <div class="mt-1 text-xs text-slate-500">{{ $transfer->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
+                                    @if ($transfer->transfer_reason)
+                                        <p class="mt-0.5 text-xs text-slate-500 line-clamp-1">{{ $transfer->transfer_reason }}</p>
+                                    @endif
+                                    @if ($transfer->reviewedBy)
+                                        <p class="mt-0.5 text-xs text-slate-400">Izskatīja: {{ $transfer->reviewedBy->full_name }}</p>
+                                    @endif
                                 </div>
                                 <x-status-pill
                                     context="request"
@@ -664,23 +502,13 @@
                                     class="{{ $isIncomingPendingTransfer ? 'status-pill-incoming' : '' }}"
                                 />
                             </div>
-                            <div class="mt-2 text-sm text-slate-700">{{ $transfer->transfer_reason ?: 'Iemesls nav pievienots.' }}</div>
-                            @if ($transfer->reviewedBy || $transfer->review_notes)
-                                <div class="mt-2 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-600">
-                                    @if ($transfer->reviewedBy)
-                                        <div><span class="font-semibold text-slate-900">Izskatīja:</span> {{ $transfer->reviewedBy->full_name }}</div>
-                                    @endif
-                                    @if ($transfer->review_notes)
-                                        <div class="mt-1"><span class="font-semibold text-slate-900">Piezīmes:</span> {{ $transfer->review_notes }}</div>
-                                    @endif
-                                </div>
-                            @endif
                         </div>
                     @empty
-                        <p class="text-slate-500">Pārsūtīšanas ierakstu vēl nav.</p>
+                        <p class="py-5 text-center text-sm text-slate-400">Nav nodošanas ierakstu.</p>
                     @endforelse
                 </div>
             </section>
+
         </div>
     </section>
 </x-app-layout>
