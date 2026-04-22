@@ -224,8 +224,8 @@
                             <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ierīces statuss</div>
                             <div class="quick-status-filters">
                                 @foreach ($statusFilterLinks as $statusFilter)
-                                    @php($toneClass = 'quick-status-filter-' . $statusFilter['tone'])
                                     @php
+                                        $toneClass = 'quick-status-filter-' . $statusFilter['tone'];
                                         $statusCount = match ($statusFilter['value']) {
                                             'active' => $deviceSummary['active'] ?? 0,
                                             'repair' => $deviceSummary['repair'] ?? 0,
