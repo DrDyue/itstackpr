@@ -39,6 +39,25 @@ const writeStorageValue = (key, value) => {
     }
 };
 
+const getNotificationPriority = (notification) => {
+    const accent = String(notification?.accent || '').toLowerCase();
+    const type = String(notification?.type || '').toLowerCase();
+
+    if (accent === 'rose' || type.includes('error')) {
+        return 400;
+    }
+
+    if (accent === 'amber') {
+        return 300;
+    }
+
+    if (accent === 'emerald') {
+        return 200;
+    }
+
+    return 100;
+};
+
 const createAppLoadingManager = () => {
     let activeCount = 0;
     let lastStartedAt = 0;
@@ -720,9 +739,19 @@ const registerAlpineData = () => {
                         ...notification,
                         visible: false,
                         busy: false,
+                        priority: getNotificationPriority(notification),
                     };
 
-                    this.items = [toast, ...this.items].slice(0, 4);
+                    this.items = [...this.items, toast]
+                        .sort((left, right) => {
+                            const priorityDiff = Number(right.priority || 0) - Number(left.priority || 0);
+                            if (priorityDiff !== 0) {
+                                return priorityDiff;
+                            }
+
+                            return Number(right.created_unix || 0) - Number(left.created_unix || 0);
+                        })
+                        .slice(0, 4);
                     this.remember(notification.id);
                     window.requestAnimationFrame(() => {
                         const createdToast = this.items.find((item) => item.id === notification.id);

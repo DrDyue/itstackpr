@@ -35,19 +35,21 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="layout-body-reset app-bg bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),transparent_32%),radial-gradient(circle_at_top_right,_rgba(16,185,129,0.12),transparent_28%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] text-slate-900">
-        @include('layouts.loading-indicator')
         @include('layouts.navigation')
 
         <main class="px-4 py-6 sm:px-6 lg:px-8 pb-10">
             {{ $slot }}
         </main>
 
+        <div data-app-toast-root class="app-toast-stack pointer-events-none fixed bottom-4 right-4 z-[70] flex w-[min(30rem,calc(100vw-1.5rem))] flex-col items-stretch gap-3 sm:bottom-6 sm:right-6">
+        @include('layouts.loading-indicator')
+
         @php
             $flashMessage = session('success') ?? session('error') ?? session('status');
             $flashTone = session('success') ? 'success' : (session('error') ? 'error' : (session('status') ? 'info' : null));
         @endphp
         @if ($flashMessage)
-            <div x-data="{ open: true }" x-init="setTimeout(() => open = false, 3800)" class="pointer-events-none fixed bottom-4 right-4 z-[70] flex w-[min(26rem,calc(100vw-1.5rem))] flex-col sm:bottom-6 sm:right-6">
+            <div x-data="{ open: true }" x-init="setTimeout(() => open = false, 3800)" class="pointer-events-none flex flex-col">
                 <div
                     x-cloak
                     x-show="open"
@@ -95,7 +97,7 @@
                     pollSeconds: 10,
                     pageKind: @js($liveNotificationPageKind),
                 })"
-                class="pointer-events-none fixed bottom-4 right-4 z-[60] flex w-[min(30rem,calc(100vw-1.5rem))] flex-col gap-3 sm:bottom-6 sm:right-6"
+                class="pointer-events-none flex flex-col gap-3"
             >
                 <template x-for="notification in items" :key="notification.id">
                     <div
@@ -199,5 +201,6 @@
                 </template>
             </div>
         @endauth
+        </div>
     </body>
 </html>

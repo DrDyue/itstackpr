@@ -23,10 +23,56 @@ const ensureAppToastRoot = () => {
 
     root = document.createElement('div');
     root.dataset.appToastRoot = 'true';
-    root.className = 'pointer-events-none fixed bottom-4 right-4 z-[68] flex w-[min(26rem,calc(100vw-1.5rem))] flex-col gap-3 sm:bottom-6 sm:right-6';
+    root.className = 'app-toast-stack pointer-events-none fixed bottom-4 right-4 z-[70] flex w-[min(30rem,calc(100vw-1.5rem))] flex-col items-stretch gap-3 sm:bottom-6 sm:right-6';
     document.body.appendChild(root);
 
     return root;
+};
+
+const getToastPriority = ({ tone = 'info', title = '', message = '', priority = null } = {}) => {
+    if (Number.isFinite(Number(priority))) {
+        return Number(priority);
+    }
+
+    const normalizedTone = String(tone || '').toLowerCase();
+    const titleText = String(title || '').toLowerCase();
+    const messageText = String(message || '').toLowerCase();
+    const combinedText = `${titleText} ${messageText}`;
+
+    if (normalizedTone === 'error' || normalizedTone === 'danger') {
+        return 400;
+    }
+
+    if (
+        combinedText.includes('dzēšana nav pieejama')
+        || combinedText.includes('nevar izdzēst')
+        || combinedText.includes('nav pieejama')
+    ) {
+        return 350;
+    }
+
+    if (normalizedTone === 'warning') {
+        return 300;
+    }
+
+    if (normalizedTone === 'success') {
+        return 200;
+    }
+
+    return 100;
+};
+
+const insertToastByPriority = (root, toast) => {
+    const targetPriority = Number(toast.dataset.toastPriority || 0);
+    const siblings = Array.from(root.children);
+    const referenceNode = siblings.find((sibling) => Number(sibling.dataset.toastPriority || 0) < targetPriority);
+
+    if (referenceNode) {
+        root.insertBefore(toast, referenceNode);
+        return;
+    }
+
+    root.appendChild(toast);
 };
 
 const dismissAppToast = (toast) => {
@@ -81,14 +127,17 @@ const ensureAppConfirmRoot = () => {
 };
 
 export const registerFeedbackGlobals = () => {
-    window.dispatchAppToast = ({ message = '', tone = 'info', title = '' } = {}) => {
+    window.dispatchAppToast = ({ message = '', tone = 'info', title = '', priority = null } = {}) => {
         if (!message) {
             return;
         }
 
         const root = ensureAppToastRoot();
         const toast = document.createElement('div');
-        const normalizedTone = tone === 'success' ? 'success' : 'info';
+        const normalizedTone = ['success', 'error'].includes(String(tone || '').toLowerCase())
+            ? String(tone).toLowerCase()
+            : 'info';
+        const toastPriority = getToastPriority({ tone, title, message, priority });
         const toastKey = `${normalizedTone}::${title || ''}::${message}`;
         const existingToast = root.querySelector(`[data-toast-key="${CSS.escape(toastKey)}"]`);
 
@@ -98,14 +147,16 @@ export const registerFeedbackGlobals = () => {
             }
 
             existingToast.dataset.dismissTimer = String(window.setTimeout(() => dismissAppToast(existingToast), 3800));
+            existingToast.dataset.toastPriority = String(toastPriority);
             existingToast.style.opacity = '1';
             existingToast.style.transform = 'translateY(0) scale(1)';
-            root.prepend(existingToast);
+            insertToastByPriority(root, existingToast);
             return;
         }
 
         toast.className = `flash-toast flash-toast-${normalizedTone} pointer-events-auto`;
         toast.dataset.toastKey = toastKey;
+        toast.dataset.toastPriority = String(toastPriority);
         toast.style.opacity = '0';
         toast.style.transform = 'translateY(16px) scale(0.96)';
         toast.style.transition = 'opacity 260ms ease, transform 260ms ease';
@@ -123,7 +174,7 @@ export const registerFeedbackGlobals = () => {
         `;
 
         toast.querySelector('.flash-toast-close')?.addEventListener('click', () => dismissAppToast(toast));
-        root.prepend(toast);
+        insertToastByPriority(root, toast);
 
         window.requestAnimationFrame(() => {
             toast.style.opacity = '1';

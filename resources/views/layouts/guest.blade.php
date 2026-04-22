@@ -35,7 +35,6 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="layout-body-reset guest-bg bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.18),transparent_32%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.14),transparent_28%),linear-gradient(180deg,_#eff6ff_0%,_#f8fafc_100%)]">
-        @include('layouts.loading-indicator')
         <div class="auth-wrapper">
             <div class="auth-left">
                 <div class="auth-container auth-container-compact">
@@ -103,12 +102,15 @@
             </div>
         </div>
 
+        <div data-app-toast-root class="app-toast-stack pointer-events-none fixed bottom-4 right-4 z-[70] flex w-[min(30rem,calc(100vw-1.5rem))] flex-col items-stretch gap-3 sm:bottom-6 sm:right-6">
+        @include('layouts.loading-indicator')
+
         @php
             $flashMessage = session('success') ?? session('error') ?? session('status');
             $flashTone = session('success') ? 'success' : (session('error') ? 'error' : (session('status') ? 'info' : null));
         @endphp
         @if ($flashMessage)
-            <div x-data="{ open: true }" x-init="setTimeout(() => open = false, 3800)" class="pointer-events-none fixed bottom-4 right-4 z-[70] flex w-[min(26rem,calc(100vw-1.5rem))] flex-col sm:bottom-6 sm:right-6">
+            <div x-data="{ open: true }" x-init="setTimeout(() => open = false, 3800)" class="pointer-events-none flex flex-col">
                 <div
                     x-cloak
                     x-show="open"
@@ -139,5 +141,6 @@
                 </div>
             </div>
         @endif
+        </div>
     </body>
 </html>
