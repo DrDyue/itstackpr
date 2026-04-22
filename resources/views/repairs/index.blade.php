@@ -68,6 +68,7 @@
                 data-async-table-form
                 data-async-root="#repairs-index-root"
                 data-search-endpoint="{{ route('repairs.find-by-code') }}"
+                data-manual-search-pagination="false"
             >
                 <input type="hidden" name="statuses_filter" value="1">
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
@@ -439,11 +440,22 @@
                                         ])
                                         : null;
                                     $deviceShowUrl = $device ? route('devices.show', $device) : null;
+                                    $editRepairUrl = route('repairs.index', array_merge(request()->except(['page', 'repair_modal', 'modal_repair']), [
+                                        'repair_modal' => 'edit',
+                                        'modal_repair' => $repair->id,
+                                    ]));
                                 @endphp
                                 <tr class="repair-table-row border-t border-slate-100 align-top" data-table-row-id="repair-{{ $repair->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
                                     <td class="px-4 py-4">
                                         @if ($thumbUrl)
-                                            <img src="{{ $thumbUrl }}" alt="{{ $device?->name ?: 'Ierīce' }}" class="device-table-thumb">
+                                            <img
+                                                src="{{ $thumbUrl }}"
+                                                alt="{{ $device?->name ?: 'Ierīce' }}"
+                                                class="device-table-thumb"
+                                                loading="lazy"
+                                                decoding="async"
+                                                fetchpriority="low"
+                                            >
                                         @else
                                             <div class="device-table-thumb device-table-thumb-placeholder">
                                                 <x-icon name="device" size="h-4 w-4" />
@@ -511,10 +523,10 @@
                                                 @endif
 
                                                 @if ($canManageRepairs)
-                                                    <button type="button" class="table-action-item table-action-item-amber" @click="open = false; panel = null; $dispatch('open-modal', 'repair-edit-modal-{{ $repair->id }}')">
+                                                    <a href="{{ $editRepairUrl }}" class="table-action-item table-action-item-amber" data-async-link="true" @click="open = false; panel = null">
                                                         <x-icon name="edit" size="h-4 w-4" />
                                                         <span>Atvērt remontu</span>
-                                                    </button>
+                                                    </a>
 
                                                     @if ($deviceShowUrl)
                                                         <a href="{{ $deviceShowUrl }}" class="table-action-item table-action-item-sky" @click="open = false; panel = null">
@@ -556,10 +568,6 @@
                 </div>
             </div>
 
-            @if ($repairs->hasPages())
-                <div class="mt-5">{{ $repairs->links() }}</div>
-            @endif
-
             @if ($canManageRepairs)
                 @include('repairs.partials.modal-form', [
                     'mode' => 'create',
@@ -574,21 +582,7 @@
                     'featureMessage' => $featureMessage ?? null,
                 ])
 
-                @foreach ($repairs as $repair)
-                    @include('repairs.partials.modal-form', [
-                        'mode' => 'edit',
-                        'modalName' => 'repair-edit-modal-' . $repair->id,
-                        'repair' => $repair,
-                        'deviceOptions' => $deviceOptions,
-                        'priorities' => $priorities,
-                        'statusLabels' => $statusLabels,
-                        'priorityLabels' => $priorityLabels,
-                        'typeLabels' => $typeLabels,
-                        'featureMessage' => $featureMessage ?? null,
-                    ])
-                @endforeach
-
-                @if (($selectedModalRepair?->id ?? null) && ! $repairs->getCollection()->contains('id', $selectedModalRepair->id))
+                @if (($selectedModalRepair ?? null)?->id)
                     @include('repairs.partials.modal-form', [
                         'mode' => 'edit',
                         'modalName' => 'repair-edit-modal-' . $selectedModalRepair->id,

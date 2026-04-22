@@ -12,6 +12,7 @@ use App\Support\AuditTrail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -24,7 +25,6 @@ use Illuminate\Validation\ValidationException;
  */
 class RepairController extends Controller
 {
-    private const PER_PAGE = 10;
     private const STATUSES = ['waiting', 'in-progress', 'completed', 'cancelled'];
     private const TYPES = ['internal', 'external'];
     private const PRIORITIES = ['low', 'medium', 'high', 'critical'];
@@ -44,7 +44,7 @@ class RepairController extends Controller
 
         if (! $this->featureTableExists('repairs')) {
             return view('repairs.index', [
-                'repairs' => $this->emptyPaginator(),
+                'repairs' => collect(),
                 'repairSummary' => [
                     'total' => 0,
                     'waiting' => 0,
@@ -82,15 +82,11 @@ class RepairController extends Controller
             ->when($filters['mine'] && $canManageRepairs, fn (Builder $query) => $query->where('repairs.accepted_by', $user->id));
 
         $deviceOptions = $this->repairDeviceOptions(
-            (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['device_id']))
-                ->with(['device.type', 'device.room', 'device.building'])
-                ->get()
+            clone $this->applyIndexFilters(clone $baseQuery, $filters, ['device_id'])
         );
 
         $requesterOptions = $this->repairRequesterOptions(
-            (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['requester_id']))
-                ->with(['request.responsibleUser', 'reporter'])
-                ->get()
+            clone $this->applyIndexFilters(clone $baseQuery, $filters, ['requester_id'])
         );
 
         $repairsQuery = (clone $baseQuery)
@@ -109,33 +105,19 @@ class RepairController extends Controller
         $this->applyIndexFilters($repairsQuery, $filters);
         $this->applySorting($repairsQuery, $sorting);
 
-        $repairs = $repairsQuery
-            ->paginate(self::PER_PAGE)
-            ->withQueryString();
+        $repairs = $repairsQuery->get();
+        $repairSummary = $this->repairSummary($baseQuery);
+        $prioritySummary = $this->prioritySummary($baseQuery);
+        $typeSummary = $this->typeSummary($baseQuery);
 
         AuditTrail::viewed($user, 'Repair', null, 'Atvērts remontu saraksts.');
         $this->auditRepairListInteractions($request, $user, $filters, $sorting);
 
         return view('repairs.index', [
             'repairs' => $repairs,
-            'repairSummary' => [
-                'total' => (clone $baseQuery)->count(),
-                'waiting' => (clone $baseQuery)->where('repairs.status', 'waiting')->count(),
-                'in_progress' => (clone $baseQuery)->where('repairs.status', 'in-progress')->count(),
-                'completed' => (clone $baseQuery)->where('repairs.status', 'completed')->count(),
-                'cancelled' => (clone $baseQuery)->where('repairs.status', 'cancelled')->count(),
-            ],
-            'prioritySummary' => [
-                'low' => (clone $baseQuery)->where('repairs.priority', 'low')->count(),
-                'medium' => (clone $baseQuery)->where('repairs.priority', 'medium')->count(),
-                'high' => (clone $baseQuery)->where('repairs.priority', 'high')->count(),
-                'critical' => (clone $baseQuery)->where('repairs.priority', 'critical')->count(),
-            ],
-            'typeSummary' => [
-                'internal' => (clone $baseQuery)->where('repairs.repair_type', 'internal')->count(),
-                'external' => (clone $baseQuery)->where('repairs.repair_type', 'external')->count(),
-                'total' => (clone $baseQuery)->count(),
-            ],
+            'repairSummary' => $repairSummary,
+            'prioritySummary' => $prioritySummary,
+            'typeSummary' => $typeSummary,
             'filters' => $filters,
             'statuses' => ['waiting', 'in-progress', 'completed', 'cancelled'],
             'priorities' => self::PRIORITIES,
@@ -186,45 +168,28 @@ class RepairController extends Controller
         $baseQuery = $this->visibleRepairsQuery($user)
             ->when($filters['mine'] && $canManageRepairs, fn (Builder $query) => $query->where('repairs.accepted_by', $user->id));
 
-        $searchCode = mb_strtolower($code);
-
         $searchQuery = (clone $baseQuery)
             ->leftJoin('devices as repair_search_device', 'repair_search_device.id', '=', 'repairs.device_id')
             ->select([
                 'repairs.id',
-                DB::raw('repair_search_device.code as device_code'),
+                'repair_search_device.code as device_code',
             ]);
 
         $this->applyIndexFilters($searchQuery, $filters);
         $this->applySorting($searchQuery, $sorting);
 
-        $page = 1;
+        $repair = $searchQuery->first(function ($repair) use ($code) {
+            return mb_strtolower(trim((string) ($repair->device_code ?? ''))) === mb_strtolower($code);
+        });
 
-        while (true) {
-            $pageResults = (clone $searchQuery)
-                ->forPage($page, self::PER_PAGE)
-                ->get();
-
-            if ($pageResults->isEmpty()) {
-                break;
-            }
-
-            foreach ($pageResults as $repair) {
-                $deviceCode = mb_strtolower(trim((string) ($repair->device_code ?? '')));
-                if ($deviceCode !== $searchCode) {
-                    continue;
-                }
-
-                return response()->json([
-                    'found' => true,
-                    'page' => $page,
-                    'repair_id' => $repair->id,
-                    'term' => $code,
-                    'highlight_id' => 'repair-'.$repair->id,
-                ]);
-            }
-
-            $page++;
+        if ($repair) {
+            return response()->json([
+                'found' => true,
+                'page' => 1,
+                'repair_id' => $repair->id,
+                'term' => $code,
+                'highlight_id' => 'repair-'.$repair->id,
+            ]);
         }
 
         return response()->json(['found' => false, 'page' => 1]);
@@ -960,12 +925,84 @@ class RepairController extends Controller
         }
     }
 
-    private function repairDeviceOptions($repairs)
+    private function repairSummary(Builder $baseQuery): array
     {
-        return collect($repairs)
-            ->pluck('device')
+        $rows = (clone $baseQuery)
+            ->selectRaw('repairs.status, COUNT(*) as aggregate')
+            ->groupBy('repairs.status')
+            ->pluck('aggregate', 'repairs.status');
+
+        return [
+            'total' => (int) $rows->sum(),
+            'waiting' => (int) ($rows['waiting'] ?? 0),
+            'in_progress' => (int) ($rows['in-progress'] ?? 0),
+            'completed' => (int) ($rows['completed'] ?? 0),
+            'cancelled' => (int) ($rows['cancelled'] ?? 0),
+        ];
+    }
+
+    private function prioritySummary(Builder $baseQuery): array
+    {
+        $rows = (clone $baseQuery)
+            ->selectRaw('repairs.priority, COUNT(*) as aggregate')
+            ->groupBy('repairs.priority')
+            ->pluck('aggregate', 'repairs.priority');
+
+        return [
+            'low' => (int) ($rows['low'] ?? 0),
+            'medium' => (int) ($rows['medium'] ?? 0),
+            'high' => (int) ($rows['high'] ?? 0),
+            'critical' => (int) ($rows['critical'] ?? 0),
+        ];
+    }
+
+    private function typeSummary(Builder $baseQuery): array
+    {
+        $rows = (clone $baseQuery)
+            ->selectRaw('repairs.repair_type, COUNT(*) as aggregate')
+            ->groupBy('repairs.repair_type')
+            ->pluck('aggregate', 'repairs.repair_type');
+
+        return [
+            'internal' => (int) ($rows['internal'] ?? 0),
+            'external' => (int) ($rows['external'] ?? 0),
+            'total' => (int) $rows->sum(),
+        ];
+    }
+
+    private function repairDeviceOptions(Builder $repairsQuery): Collection
+    {
+        $deviceIds = (clone $repairsQuery)
+            ->whereNotNull('repairs.device_id')
+            ->distinct()
+            ->pluck('repairs.device_id')
             ->filter()
-            ->unique('id')
+            ->values();
+
+        if ($deviceIds->isEmpty()) {
+            return collect();
+        }
+
+        return Device::query()
+            ->select([
+                'id',
+                'code',
+                'serial_number',
+                'name',
+                'manufacturer',
+                'model',
+                'device_type_id',
+                'building_id',
+                'room_id',
+            ])
+            ->with([
+                'type:id,type_name',
+                'room:id,room_number,room_name',
+                'building:id,building_name',
+            ])
+            ->whereIn('id', $deviceIds)
+            ->orderBy('name')
+            ->get()
             ->map(function (Device $device) {
                 $description = collect([
                     $device->type?->type_name,
@@ -994,14 +1031,29 @@ class RepairController extends Controller
             ->values();
     }
 
-    private function repairRequesterOptions($repairs)
+    private function repairRequesterOptions(Builder $repairsQuery): Collection
     {
-        return collect($repairs)
-            ->map(fn (Repair $repair) => $repair->request?->responsibleUser ?: $repair->reporter)
-            ->filter()
-            ->unique('id')
-            ->sortBy('full_name')
-            ->values()
+        $requesterIds = collect([
+            (clone $repairsQuery)
+                ->leftJoin('repair_requests as repair_requesters', 'repair_requesters.id', '=', 'repairs.request_id')
+                ->whereNotNull('repair_requesters.responsible_user_id')
+                ->distinct()
+                ->pluck('repair_requesters.responsible_user_id'),
+            (clone $repairsQuery)
+                ->whereNotNull('repairs.issue_reported_by')
+                ->distinct()
+                ->pluck('repairs.issue_reported_by'),
+        ])->flatten()->filter()->unique()->values();
+
+        if ($requesterIds->isEmpty()) {
+            return collect();
+        }
+
+        return User::query()
+            ->select(['id', 'full_name', 'job_title', 'email'])
+            ->whereIn('id', $requesterIds)
+            ->orderBy('full_name')
+            ->get()
             ->map(fn (User $user) => [
                 'value' => (string) $user->id,
                 'label' => $user->full_name,

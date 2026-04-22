@@ -307,6 +307,12 @@ const getCurrentAsyncPage = () => {
     return Number.isFinite(currentPage) && currentPage > 0 ? currentPage : 1;
 };
 
+const supportsPaginatedManualSearch = (form) => {
+    const setting = String(form?.dataset?.manualSearchPagination || '').trim().toLowerCase();
+
+    return setting !== 'false';
+};
+
 const buildAsyncTablePageUrl = (form, page) => {
     const targetUrl = buildAsyncTableUrl(form, { resetPage: false });
     targetUrl.searchParams.set('page', String(page));
@@ -455,7 +461,12 @@ const buildSearchNavigationUrl = (form, page, rawTerm, mode, highlightId = '') =
     const targetUrl = new URL(form.getAttribute('action') || window.location.href, window.location.origin);
     appendSerializedFormParams(form, targetUrl, { resetPage: false, includeManual: false });
 
-    targetUrl.searchParams.set('page', String(page));
+    if (supportsPaginatedManualSearch(form)) {
+        targetUrl.searchParams.set('page', String(page));
+    } else {
+        targetUrl.searchParams.delete('page');
+    }
+
     targetUrl.searchParams.set('highlight', rawTerm);
     targetUrl.searchParams.set('highlight_mode', mode);
     if (highlightId) {
@@ -668,7 +679,17 @@ const performManualTableSearch = async (form) => {
     clearTableSearchHighlights(root);
     clearTableSearchNavigator({ rootSelector });
 
-    const paginatedResults = await searchAcrossPaginatedMatches(form, rootSelector, rawTerm, searchMode);
+    const paginatedResults = supportsPaginatedManualSearch(form)
+        ? await searchAcrossPaginatedMatches(form, rootSelector, rawTerm, searchMode)
+        : {
+            matches: findMatchingTableRows(root, rawTerm, searchMode).map((row, index) => ({
+                page: getCurrentAsyncPage(),
+                rowIndex: index,
+                highlightId: getRowSearchId(row),
+                label: getRowSearchLabel(row),
+            })),
+            pageHtmlByPage: new Map(),
+        };
     if (paginatedResults.matches.length > 0) {
         const firstMatch = paginatedResults.matches[0];
 
@@ -740,7 +761,7 @@ const performManualTableSearch = async (form) => {
         }
 
         const result = await response.json();
-        if (!result?.found) {
+        if (!result?.found && supportsPaginatedManualSearch(form)) {
             const paginatedMatch = await searchAcrossPaginatedHtml(form, rootSelector, rawTerm, searchMode);
 
             if (paginatedMatch?.html) {
@@ -764,7 +785,9 @@ const performManualTableSearch = async (form) => {
         if (!result?.found) {
             window.dispatchAppToast({
                 title: 'Ieraksts netika atrasts',
-                message: `Ieraksts "${rawTerm}" netika atrasts nevienā lapā.`,
+                message: supportsPaginatedManualSearch(form)
+                    ? `Ieraksts "${rawTerm}" netika atrasts nevienā lapā.`
+                    : `Ieraksts "${rawTerm}" netika atrasts pašreizējā remonta sarakstā.`,
                 tone: 'info',
             });
 

@@ -219,6 +219,7 @@ class RuntimeSchemaBootstrapper
         $this->addColumnIfMissing('repairs', 'created_at', fn (Blueprint $table) => $table->timestamp('created_at')->nullable());
         $this->addColumnIfMissing('repairs', 'updated_at', fn (Blueprint $table) => $table->timestamp('updated_at')->nullable());
         $this->ensureRepairsDateColumnsAllowNull();
+        $this->ensureRepairsIndexes();
     }
 
     /**
@@ -250,6 +251,7 @@ class RuntimeSchemaBootstrapper
         $this->addColumnIfMissing('repair_requests', 'review_notes', fn (Blueprint $table) => $table->text('review_notes')->nullable());
         $this->addColumnIfMissing('repair_requests', 'created_at', fn (Blueprint $table) => $table->timestamp('created_at')->nullable());
         $this->addColumnIfMissing('repair_requests', 'updated_at', fn (Blueprint $table) => $table->timestamp('updated_at')->nullable());
+        $this->ensureRepairRequestIndexes();
     }
 
     /**
@@ -279,6 +281,7 @@ class RuntimeSchemaBootstrapper
         $this->addColumnIfMissing('writeoff_requests', 'review_notes', fn (Blueprint $table) => $table->text('review_notes')->nullable());
         $this->addColumnIfMissing('writeoff_requests', 'created_at', fn (Blueprint $table) => $table->timestamp('created_at')->nullable());
         $this->addColumnIfMissing('writeoff_requests', 'updated_at', fn (Blueprint $table) => $table->timestamp('updated_at')->nullable());
+        $this->ensureWriteoffRequestIndexes();
     }
 
     /**
@@ -310,6 +313,7 @@ class RuntimeSchemaBootstrapper
         $this->addColumnIfMissing('device_transfers', 'review_notes', fn (Blueprint $table) => $table->text('review_notes')->nullable());
         $this->addColumnIfMissing('device_transfers', 'created_at', fn (Blueprint $table) => $table->timestamp('created_at')->nullable());
         $this->addColumnIfMissing('device_transfers', 'updated_at', fn (Blueprint $table) => $table->timestamp('updated_at')->nullable());
+        $this->ensureDeviceTransferIndexes();
     }
 
     private function ensureAuditLogTable(): void
@@ -800,6 +804,35 @@ class RuntimeSchemaBootstrapper
         }
     }
 
+    private function ensureRepairsIndexes(): void
+    {
+        $this->addIndexIfMissing('repairs', 'repairs_device_status_idx', fn (Blueprint $table) => $table->index(['device_id', 'status'], 'repairs_device_status_idx'));
+        $this->addIndexIfMissing('repairs', 'repairs_status_idx', fn (Blueprint $table) => $table->index('status', 'repairs_status_idx'));
+        $this->addIndexIfMissing('repairs', 'repairs_priority_idx', fn (Blueprint $table) => $table->index('priority', 'repairs_priority_idx'));
+        $this->addIndexIfMissing('repairs', 'repairs_repair_type_idx', fn (Blueprint $table) => $table->index('repair_type', 'repairs_repair_type_idx'));
+        $this->addIndexIfMissing('repairs', 'repairs_accepted_by_status_idx', fn (Blueprint $table) => $table->index(['accepted_by', 'status'], 'repairs_accepted_by_status_idx'));
+        $this->addIndexIfMissing('repairs', 'repairs_issue_reported_by_idx', fn (Blueprint $table) => $table->index('issue_reported_by', 'repairs_issue_reported_by_idx'));
+        $this->addIndexIfMissing('repairs', 'repairs_request_id_idx', fn (Blueprint $table) => $table->index('request_id', 'repairs_request_id_idx'));
+        $this->addIndexIfMissing('repairs', 'repairs_start_date_idx', fn (Blueprint $table) => $table->index('start_date', 'repairs_start_date_idx'));
+        $this->addIndexIfMissing('repairs', 'repairs_end_date_idx', fn (Blueprint $table) => $table->index('end_date', 'repairs_end_date_idx'));
+    }
+
+    private function ensureRepairRequestIndexes(): void
+    {
+        $this->addIndexIfMissing('repair_requests', 'repair_requests_device_status_idx', fn (Blueprint $table) => $table->index(['device_id', 'status'], 'repair_requests_device_status_idx'));
+        $this->addIndexIfMissing('repair_requests', 'repair_requests_responsible_user_idx', fn (Blueprint $table) => $table->index('responsible_user_id', 'repair_requests_responsible_user_idx'));
+    }
+
+    private function ensureWriteoffRequestIndexes(): void
+    {
+        $this->addIndexIfMissing('writeoff_requests', 'writeoff_requests_device_status_idx', fn (Blueprint $table) => $table->index(['device_id', 'status'], 'writeoff_requests_device_status_idx'));
+    }
+
+    private function ensureDeviceTransferIndexes(): void
+    {
+        $this->addIndexIfMissing('device_transfers', 'device_transfers_device_status_idx', fn (Blueprint $table) => $table->index(['device_id', 'status'], 'device_transfers_device_status_idx'));
+    }
+
     private function addColumnIfMissing(string $tableName, string $column, callable $definition): void
     {
         if (! Schema::hasTable($tableName) || Schema::hasColumn($tableName, $column)) {
@@ -809,6 +842,34 @@ class RuntimeSchemaBootstrapper
         Schema::table($tableName, function (Blueprint $table) use ($definition) {
             $definition($table);
         });
+    }
+
+    private function addIndexIfMissing(string $tableName, string $indexName, callable $definition): void
+    {
+        if (! Schema::hasTable($tableName) || $this->hasIndex($tableName, $indexName)) {
+            return;
+        }
+
+        Schema::table($tableName, function (Blueprint $table) use ($definition) {
+            $definition($table);
+        });
+    }
+
+    private function hasIndex(string $tableName, string $indexName): bool
+    {
+        return match (DB::getDriverName()) {
+            'mysql' => (int) (DB::selectOne(
+                'SELECT COUNT(*) AS aggregate FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ?',
+                [$tableName, $indexName]
+            )->aggregate ?? 0) > 0,
+            'pgsql' => (int) (DB::selectOne(
+                'SELECT COUNT(*) AS aggregate FROM pg_indexes WHERE schemaname = current_schema() AND tablename = ? AND indexname = ?',
+                [$tableName, $indexName]
+            )->aggregate ?? 0) > 0,
+            'sqlite' => collect(DB::select("PRAGMA index_list('{$tableName}')"))
+                ->contains(fn (object $index) => ($index->name ?? null) === $indexName),
+            default => false,
+        };
     }
 
     private function dropColumnIfPresent(string $tableName, string $column): void
