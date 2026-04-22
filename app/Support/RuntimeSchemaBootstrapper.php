@@ -338,6 +338,7 @@ class RuntimeSchemaBootstrapper
         $this->addColumnIfMissing('audit_log', 'entity_id', fn (Blueprint $table) => $table->unsignedBigInteger('entity_id')->nullable());
         $this->addColumnIfMissing('audit_log', 'description', fn (Blueprint $table) => $table->text('description')->nullable());
         $this->addColumnIfMissing('audit_log', 'severity', fn (Blueprint $table) => $table->string('severity', 30)->default('info'));
+        $this->ensureAuditLogIndexes();
     }
 
     private function normalizeLegacyData(): void
@@ -831,6 +832,16 @@ class RuntimeSchemaBootstrapper
     private function ensureDeviceTransferIndexes(): void
     {
         $this->addIndexIfMissing('device_transfers', 'device_transfers_device_status_idx', fn (Blueprint $table) => $table->index(['device_id', 'status'], 'device_transfers_device_status_idx'));
+    }
+
+    private function ensureAuditLogIndexes(): void
+    {
+        $this->addIndexIfMissing('audit_log', 'audit_log_timestamp_id_idx', fn (Blueprint $table) => $table->index(['timestamp', 'id'], 'audit_log_timestamp_id_idx'));
+        $this->addIndexIfMissing('audit_log', 'audit_log_action_idx', fn (Blueprint $table) => $table->index('action', 'audit_log_action_idx'));
+        $this->addIndexIfMissing('audit_log', 'audit_log_entity_type_idx', fn (Blueprint $table) => $table->index('entity_type', 'audit_log_entity_type_idx'));
+        $this->addIndexIfMissing('audit_log', 'audit_log_user_id_idx', fn (Blueprint $table) => $table->index('user_id', 'audit_log_user_id_idx'));
+        $this->addIndexIfMissing('audit_log', 'audit_log_severity_idx', fn (Blueprint $table) => $table->index('severity', 'audit_log_severity_idx'));
+        $this->addIndexIfMissing('audit_log', 'audit_log_entity_lookup_idx', fn (Blueprint $table) => $table->index(['entity_type', 'entity_id'], 'audit_log_entity_lookup_idx'));
     }
 
     private function addColumnIfMissing(string $tableName, string $column, callable $definition): void

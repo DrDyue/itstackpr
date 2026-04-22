@@ -47,7 +47,7 @@ class DeviceTransferController extends Controller
 
         if (! $this->featureTableExists('device_transfers')) {
             return view('device_transfers.index', [
-                'transfers' => $this->emptyPaginator(),
+                'transfers' => collect(),
                 'transferSummary' => [
                     'total' => 0,
                     'submitted' => 0,
@@ -135,9 +135,7 @@ class DeviceTransferController extends Controller
         $this->applyIndexFilters($transfersQuery, $filters);
         $this->applySorting($transfersQuery, $sorting);
 
-        $transfers = $transfersQuery
-            ->paginate(20)
-            ->withQueryString();
+        $transfers = $transfersQuery->get();
 
         AuditTrail::viewed($user, 'DeviceTransfer', null, 'Atvērts ierīču nodošanas pieteikumu saraksts.');
         $this->auditDeviceTransferListInteractions($request, $user, $filters, $sorting);
@@ -235,7 +233,7 @@ class DeviceTransferController extends Controller
 
         return response()->json([
             'found' => true,
-            'page' => intdiv($foundIndex, 20) + 1,
+            'page' => 1,
             'term' => $code,
             'highlight_id' => 'device-transfer-'.$transfers->values()[$foundIndex]->id,
         ]);

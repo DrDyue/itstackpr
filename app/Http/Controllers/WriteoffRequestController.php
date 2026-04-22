@@ -79,7 +79,7 @@ class WriteoffRequestController extends Controller
 
         if (! $this->featureTableExists('writeoff_requests')) {
             return [
-                'requests' => $this->emptyPaginator(),
+                'requests' => collect(),
                 'requestSummary' => [
                     'total' => 0,
                     'submitted' => 0,
@@ -127,9 +127,7 @@ class WriteoffRequestController extends Controller
         $this->applyIndexFilters($requestsQuery, $filters);
         $this->applySorting($requestsQuery, $sorting);
 
-        $requests = $requestsQuery
-            ->paginate(20)
-            ->withQueryString();
+        $requests = $requestsQuery->get();
 
         return [
             'requests' => $requests,
@@ -212,7 +210,7 @@ class WriteoffRequestController extends Controller
 
         return response()->json([
             'found' => true,
-            'page' => intdiv($foundIndex, 20) + 1,
+            'page' => 1,
             'term' => $code,
             'highlight_id' => 'writeoff-request-'.$requests->values()[$foundIndex]->id,
         ]);

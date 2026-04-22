@@ -45,7 +45,7 @@ class AuditLogController extends Controller
 
         if (! $this->featureTableExists('audit_log')) {
             return view('audit_log.index', [
-                'logs' => $this->emptyPaginator(50),
+                'logs' => collect(),
                 'filters' => $filters,
                 'summary' => [
                     'total' => 0,
@@ -63,14 +63,15 @@ class AuditLogController extends Controller
             ]);
         }
 
-        $logQuery = AuditLog::query()
-            ->with('user:id,full_name,email')
+        $baseLogQuery = AuditLog::query()
             ->when($filters['action'] !== '', fn ($query) => $query->where('action', $filters['action']))
             ->when($filters['severities'] !== [], fn ($query) => $query->whereIn('severity', $filters['severities']))
             ->when($filters['entity_type'] !== '', fn ($query) => $query->where('entity_type', $filters['entity_type']))
             ->when($filters['user_id'] !== '', fn ($query) => $query->where('user_id', $filters['user_id']))
             ->when($filters['date_from'] !== '', fn ($query) => $query->where('timestamp', '>=', CarbonImmutable::parse($filters['date_from'])->startOfDay()))
             ->when($filters['date_to'] !== '', fn ($query) => $query->where('timestamp', '<=', CarbonImmutable::parse($filters['date_to'])->endOfDay()));
+
+        $logQuery = (clone $baseLogQuery)->with('user:id,full_name,email');
 
         $sortField = $filters['sort'];
         $sortDirection = $filters['direction'] === 'asc' ? 'asc' : 'desc';
@@ -111,7 +112,7 @@ class AuditLogController extends Controller
                 $logQuery->orderBy('timestamp', 'desc')->orderBy('id', 'desc');
         }
 
-        $logs = (clone $logQuery)->paginate(50)->withQueryString();
+        $logs = (clone $logQuery)->get(['id', 'timestamp', 'user_id', 'action', 'entity_type', 'entity_id', 'description', 'severity']);
 
         $summaryRow = AuditLog::query()
             ->selectRaw('COUNT(*) as total')
@@ -258,7 +259,7 @@ class AuditLogController extends Controller
 
         return response()->json([
             'found' => true,
-            'page' => intdiv((int) $foundIndex, 50) + 1,
+            'page' => 1,
             'term' => $search,
             'highlight_id' => 'audit-log-'.$logs->values()[(int) $foundIndex]->id,
         ]);

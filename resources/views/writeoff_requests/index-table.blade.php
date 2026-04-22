@@ -70,6 +70,10 @@
                         $device = $writeoffRequest->device;
                         $isPendingAction = $writeoffRequest->status === 'submitted';
                         $thumbUrl = $device?->deviceImageThumbUrl();
+                        $editRequestUrl = route('writeoff-requests.index', array_merge(request()->except(['page', 'writeoff_request_modal', 'modal_request']), [
+                            'writeoff_request_modal' => 'edit',
+                            'modal_request' => $writeoffRequest->id,
+                        ]));
                         $deviceFilterUrl = $device
                             ? route('devices.index', array_filter([
                                 'code' => $device->code,
@@ -86,7 +90,14 @@
                     <tr class="app-table-row border-t border-slate-100 align-top {{ $isPendingAction ? 'app-table-row-pending' : '' }}" data-table-row-id="writeoff-request-{{ $writeoffRequest->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
                         <td class="table-col-image px-4 py-4 text-center align-middle">
                             @if ($thumbUrl)
-                                <img src="{{ $thumbUrl }}" alt="{{ $device?->name ?: 'Ierīce' }}" class="request-device-thumb mx-auto">
+                                <img
+                                    src="{{ $thumbUrl }}"
+                                    alt="{{ $device?->name ?: 'Ierīce' }}"
+                                    class="request-device-thumb mx-auto"
+                                    loading="lazy"
+                                    decoding="async"
+                                    fetchpriority="low"
+                                >
                             @else
                                 <div class="request-device-thumb request-device-thumb-placeholder mx-auto">
                                     <x-icon name="device" size="h-4 w-4" />
@@ -199,11 +210,7 @@
                                                 </form>
                                             </div>
                                         @elseif (! $canReview && $writeoffRequest->status === 'submitted')
-                                            <a
-                                                href="{{ route('writeoff-requests.index', ['writeoff_request_modal' => 'edit', 'modal_request' => $writeoffRequest->id]) }}"
-                                                class="table-action-item table-action-item-amber"
-                                                @click="open = false"
-                                            >
+                                            <a href="{{ $editRequestUrl }}" class="table-action-item table-action-item-amber" data-async-link="true" @click="open = false">
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Labot pieteikumu</span>
                                             </a>
@@ -244,7 +251,3 @@
                 @endforelse
             </tbody>
         </x-ui.table-shell>
-
-@if ($requests->hasPages())
-    <div class="mt-5">{{ $requests->links() }}</div>
-@endif

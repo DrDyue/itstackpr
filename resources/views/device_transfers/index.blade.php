@@ -69,6 +69,7 @@
                 data-async-table-form
                 data-async-root="#device-transfers-index-root"
                 data-search-endpoint="{{ route('device-transfers.find-by-code') }}"
+                data-manual-search-pagination="false"
             >
                 <input type="hidden" name="statuses_filter" value="1">
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
@@ -394,6 +395,10 @@
                             @forelse ($transfers as $transfer)
                                 @php
                                     $device = $transfer->device;
+                                    $editTransferUrl = route('device-transfers.index', array_merge(request()->except(['page', 'device_transfer_modal', 'modal_request']), [
+                                        'device_transfer_modal' => 'edit',
+                                        'modal_request' => $transfer->id,
+                                    ]));
                                     $deviceFilterUrl = $device
                                         ? route('devices.index', array_filter([
                                             'code' => $device->code,
@@ -425,7 +430,14 @@
                                             $thumbUrl = $device?->deviceImageThumbUrl();
                                         @endphp
                                         @if ($thumbUrl)
-                                            <img src="{{ $thumbUrl }}" alt="{{ $device?->name ?: 'Ierīce' }}" class="request-device-thumb mx-auto">
+                                            <img
+                                                src="{{ $thumbUrl }}"
+                                                alt="{{ $device?->name ?: 'Ierīce' }}"
+                                                class="request-device-thumb mx-auto"
+                                                loading="lazy"
+                                                decoding="async"
+                                                fetchpriority="low"
+                                            >
                                         @else
                                             <div class="request-device-thumb request-device-thumb-placeholder mx-auto">
                                                 <x-icon name="device" size="h-4 w-4" />
@@ -523,8 +535,9 @@
 
                                                     @if ($isOwnerCanEdit)
                                                         <a
-                                                            href="{{ route('device-transfers.index', ['device_transfer_modal' => 'edit', 'modal_request' => $transfer->id]) }}"
+                                                            href="{{ $editTransferUrl }}"
                                                             class="table-action-item table-action-item-amber"
+                                                            data-async-link="true"
                                                             @click="open = false"
                                                         >
                                                             <x-icon name="edit" size="h-4 w-4" />
@@ -619,9 +632,6 @@
                 </div>
             </div>
 
-            @if ($transfers->hasPages())
-                <div class="mt-5">{{ $transfers->links() }}</div>
-            @endif
         </div>
     </section>
 
@@ -636,23 +646,7 @@
     />
 
     @unless ($isAdmin)
-        @foreach ($transfers as $transfer)
-            @if (
-                $transfer->status === \App\Models\DeviceTransfer::STATUS_SUBMITTED
-                && (int) $transfer->responsible_user_id === (int) $currentUserId
-            )
-                <x-request-edit-modal
-                    type="transfer"
-                    :modal-name="'transfer-request-edit-' . $transfer->id"
-                    :request-model="$transfer"
-                    field-name="transfer_reason"
-                    field-label="Nodošanas iemesls"
-                    :action="route('my-requests.update', ['requestType' => 'transfer', 'requestId' => $transfer->id])"
-                />
-            @endif
-        @endforeach
-
-        @if (($selectedEditableRequest?->id ?? null) && ! $transfers->getCollection()->contains('id', $selectedEditableRequest->id))
+        @if (($selectedEditableRequest?->id ?? null))
             <x-request-edit-modal
                 type="transfer"
                 :modal-name="'transfer-request-edit-' . $selectedEditableRequest->id"

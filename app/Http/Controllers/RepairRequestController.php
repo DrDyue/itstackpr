@@ -78,7 +78,7 @@ class RepairRequestController extends Controller
 
         if (! $this->featureTableExists('repair_requests')) {
             return [
-                'requests' => $this->emptyPaginator(),
+                'requests' => collect(),
                 'requestSummary' => [
                     'total' => 0,
                     'submitted' => 0,
@@ -130,9 +130,7 @@ class RepairRequestController extends Controller
         $this->applyIndexFilters($requestsQuery, $filters);
         $this->applySorting($requestsQuery, $sorting);
 
-        $requests = $requestsQuery
-            ->paginate(20)
-            ->withQueryString();
+        $requests = $requestsQuery->get();
 
         return [
             'requests' => $requests,
@@ -215,7 +213,7 @@ class RepairRequestController extends Controller
 
         return response()->json([
             'found' => true,
-            'page' => intdiv($foundIndex, 20) + 1,
+            'page' => 1,
             'term' => $code,
             'highlight_id' => 'repair-request-'.$requests->values()[$foundIndex]->id,
         ]);

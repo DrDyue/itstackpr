@@ -61,6 +61,7 @@
                 data-async-table-form
                 data-async-root="#audit-log-index-root"
                 data-search-endpoint="{{ route('audit-log.find-entry') }}"
+                data-manual-search-pagination="false"
             >
                 <input type="hidden" name="sort" value="{{ $filters['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $filters['direction'] }}" data-sort-hidden="direction">
@@ -392,8 +393,6 @@
                     </table>
                 </div>
             </div>
-
-            {{ $logs->links() }}
         </div>
     </section>
 </x-app-layout>

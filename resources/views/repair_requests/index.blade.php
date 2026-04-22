@@ -70,6 +70,7 @@
                 data-async-table-form
                 data-async-root="#repair-requests-index-root"
                 data-search-endpoint="{{ route('repair-requests.find-by-code') }}"
+                data-manual-search-pagination="false"
             >
                 <input type="hidden" name="statuses_filter" value="1">
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
@@ -252,20 +253,7 @@
     />
 
     @unless ($canReview)
-        @foreach ($requests as $repairRequest)
-            @if ($repairRequest->status === \App\Models\RepairRequest::STATUS_SUBMITTED)
-                <x-request-edit-modal
-                    type="repair"
-                    :modal-name="'repair-request-edit-' . $repairRequest->id"
-                    :request-model="$repairRequest"
-                    field-name="description"
-                    field-label="Apraksts"
-                    :action="route('my-requests.update', ['requestType' => 'repair', 'requestId' => $repairRequest->id])"
-                />
-            @endif
-        @endforeach
-
-        @if (($selectedEditableRequest?->id ?? null) && ! $requests->getCollection()->contains('id', $selectedEditableRequest->id))
+        @if (($selectedEditableRequest?->id ?? null))
             <x-request-edit-modal
                 type="repair"
                 :modal-name="'repair-request-edit-' . $selectedEditableRequest->id"

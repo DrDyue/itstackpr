@@ -70,6 +70,7 @@
                 data-async-table-form
                 data-async-root="#writeoff-requests-index-root"
                 data-search-endpoint="{{ route('writeoff-requests.find-by-code') }}"
+                data-manual-search-pagination="false"
             >
                 <input type="hidden" name="statuses_filter" value="1">
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
@@ -247,20 +248,7 @@
     />
 
     @unless ($canReview)
-        @foreach ($requests as $writeoffRequest)
-            @if ($writeoffRequest->status === \App\Models\WriteoffRequest::STATUS_SUBMITTED)
-                <x-request-edit-modal
-                    type="writeoff"
-                    :modal-name="'writeoff-request-edit-' . $writeoffRequest->id"
-                    :request-model="$writeoffRequest"
-                    field-name="reason"
-                    field-label="Iemesls"
-                    :action="route('my-requests.update', ['requestType' => 'writeoff', 'requestId' => $writeoffRequest->id])"
-                />
-            @endif
-        @endforeach
-
-        @if (($selectedEditableRequest?->id ?? null) && ! $requests->getCollection()->contains('id', $selectedEditableRequest->id))
+        @if (($selectedEditableRequest?->id ?? null))
             <x-request-edit-modal
                 type="writeoff"
                 :modal-name="'writeoff-request-edit-' . $selectedEditableRequest->id"
