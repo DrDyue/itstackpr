@@ -43,7 +43,7 @@
             <table class="repair-table-content w-full min-w-full text-sm">
                 <thead class="repair-table-head bg-slate-50 text-left text-slate-500">
                     <tr>
-                        <th class="px-4 py-3">Attēls</th>
+                        <th class="table-col-image px-3 py-3">Attēls</th>
                         @foreach ($columns as $column => $label)
                             @php
                                 $isCurrentSort = $sorting['sort'] === $column;
@@ -116,7 +116,7 @@
                         @endphp
 
                         <tr class="repair-table-row border-t border-slate-100 align-top" data-table-row-id="device-{{ $device->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) $device->code)) }}">
-                            <td class="px-4 py-4">
+                            <td class="px-3 py-4">
                                 @if ($thumbUrl)
                                     <img src="{{ $thumbUrl }}" alt="{{ $device->name }}" class="device-table-thumb">
                                 @else
