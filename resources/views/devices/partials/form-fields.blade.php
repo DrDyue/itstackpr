@@ -17,11 +17,11 @@
         || $hasPendingTransferRequest
     );
     $statusLockMessage = match (true) {
-        $isWrittenOff => 'NorakstÄ«tai ierÄ«cei statusu vairs nevar mainÄ«t.',
-        (($current?->status ?? null) === \App\Models\Device::STATUS_REPAIR || (bool) $current?->activeRepair) => 'Statusu nevar mainÄ«t, kamÄ“r ierÄ«ce atrodas remontÄ.',
-        $hasPendingRepairRequest => 'Statusu nevar mainÄ«t, kamÄ“r ierÄ«cei ir aktÄ«vs remonta pieprasÄ«jums.',
-        $hasPendingWriteoffRequest => 'Statusu nevar mainÄ«t, kamÄ“r ierÄ«cei ir aktÄ«vs norakstÄ«Åanas pieprasÄ«jums.',
-        $hasPendingTransferRequest => 'Statusu nevar mainÄ«t, kamÄ“r ierÄ«cei ir aktÄ«vs nodoÅanas pieprasÄ«jums.',
+        $isWrittenOff => null,
+        (($current?->status ?? null) === \App\Models\Device::STATUS_REPAIR || (bool) $current?->activeRepair) => 'Statusu, atbildīgo personu un telpu nevar mainīt, kamēr ierīce atrodas remontā.',
+        $hasPendingRepairRequest => 'Statusu, atbildīgo personu un telpu nevar mainīt, kamēr ierīcei ir aktīvs remonta pieprasījums.',
+        $hasPendingWriteoffRequest => 'Statusu, atbildīgo personu un telpu nevar mainīt, kamēr ierīcei ir aktīvs norakstīšanas pieprasījums.',
+        $hasPendingTransferRequest => 'Statusu, atbildīgo personu un telpu nevar mainīt, kamēr ierīcei ir aktīvs nodošanas pieprasījums.',
         default => null,
     };
     $deviceImageUrl = $current?->deviceImageUrl();

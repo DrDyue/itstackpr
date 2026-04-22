@@ -8,10 +8,10 @@
         <div class="grid gap-3 md:grid-cols-2">
             <label class="block">
                 <span class="crud-label">Atbildīgā persona *</span>
-                @if ($isWrittenOff)
-                    <input type="hidden" name="assigned_to_id" value="">
+                @if ($isStatusLocked)
+                    <input type="hidden" name="assigned_to_id" value="{{ $isWrittenOff ? '' : $current?->assigned_to_id }}">
                     <div class="crud-control flex items-center bg-slate-50 text-slate-700">
-                        <span>Nav piešķirts</span>
+                        <span>{{ $isWrittenOff ? 'Nav piešķirts' : ($selectedAssignedToLabel ?: 'Nav piešķirts') }}</span>
                     </div>
                 @else
                     <x-searchable-select
@@ -29,10 +29,10 @@
 
             <label class="block">
                 <span class="crud-label">Telpa *</span>
-                @if ($isWrittenOff)
-                    <input type="hidden" name="room_id" value="">
+                @if ($isStatusLocked)
+                    <input type="hidden" name="room_id" value="{{ $isWrittenOff ? '' : $current?->room_id }}">
                     <div class="crud-control flex items-center bg-slate-50 text-slate-700">
-                        <span>Nav piešķirta telpai</span>
+                        <span>{{ $isWrittenOff ? 'Nav piešķirta telpai' : ($selectedRoomLabel ?: 'Nav piešķirta telpai') }}</span>
                     </div>
                 @else
                     <x-searchable-select
@@ -49,6 +49,6 @@
             </label>
         </div>
 
-        <input type="hidden" name="building_id" value="{{ $isWrittenOff ? '' : $selectedBuildingId }}">
+        <input type="hidden" name="building_id" value="{{ $isStatusLocked ? ($isWrittenOff ? '' : $current?->building_id) : $selectedBuildingId }}">
     </div>
 </div>
