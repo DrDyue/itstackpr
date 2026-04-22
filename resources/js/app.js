@@ -948,11 +948,13 @@ const registerAlpineData = () => {
         },
     }));
 
-    Alpine.data('searchableSelect', ({ selected = '', query = '', options = [], placeholder = '', emptyMessage = '', identifier = '' } = {}) => ({
+    Alpine.data('searchableSelect', ({ selected = '', query = '', options = [], placeholder = '', emptyMessage = '', identifier = '', prioritizeSelected = false, selectedGroupLabel = 'Atlasītā vērtība' } = {}) => ({
         open: false,
         selected: String(selected ?? ''),
         query: query || '',
         identifier,
+        prioritizeSelected: Boolean(prioritizeSelected),
+        selectedGroupLabel,
         pointerSelecting: false,
         triggerDragging: false,
         dragPreviewActive: false,
@@ -981,21 +983,23 @@ const registerAlpineData = () => {
             }
         },
         get interactionOptions() {
+            const baseOptions = this.prioritizedOptions(this.options);
+
             if (this.triggerDragging || this.dragPreviewActive) {
-                return this.options;
+                return baseOptions;
             }
 
             if (this.open && this.showAllOptions) {
-                return this.options;
+                return baseOptions;
             }
 
             const term = this.query.trim().toLowerCase();
 
             if (term === '') {
-                return this.options;
+                return baseOptions;
             }
 
-            return this.options.filter((option) => option.search.includes(term));
+            return this.prioritizedOptions(baseOptions.filter((option) => option.search.includes(term)));
         },
         get filteredOptions() {
             return this.interactionOptions;
@@ -1010,6 +1014,33 @@ const registerAlpineData = () => {
         optionId(index) {
             const baseIdentifier = this.identifier || 'searchable-select';
             return `${baseIdentifier}-option-${index}`;
+        },
+        prioritizedOptions(options) {
+            if (!this.prioritizeSelected || !this.selected) {
+                return options;
+            }
+
+            const selectedIndex = options.findIndex((option) => option.value === this.selected);
+            if (selectedIndex <= 0) {
+                if (selectedIndex === 0 && options[0]) {
+                    return options.map((option, index) => index === 0
+                        ? { ...option, group: this.selectedGroupLabel }
+                        : option);
+                }
+
+                return options;
+            }
+
+            const selectedOption = {
+                ...options[selectedIndex],
+                group: this.selectedGroupLabel,
+            };
+
+            return [
+                selectedOption,
+                ...options.slice(0, selectedIndex),
+                ...options.slice(selectedIndex + 1),
+            ];
         },
         shouldShowGroupHeader(index) {
             const option = this.filteredOptions[index];

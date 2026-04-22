@@ -471,6 +471,8 @@
                                 :selected="old('modal_form') === 'device_show_room' ? old('room_id', (string) $device->room_id) : (string) $device->room_id"
                                 :query="old('modal_form') === 'device_show_room' ? old('room_query', $deviceRoomLabel) : $deviceRoomLabel"
                                 identifier="device-show-room"
+                                :prioritize-selected="true"
+                                selected-group-label="Pašreizējā telpa"
                                 placeholder="Izvēlies telpu"
                                 emptyMessage="Neviena telpa neatbilst meklējumam."
                                 :error="old('modal_form') === 'device_show_room' ? $errors->first('room_id') : null"

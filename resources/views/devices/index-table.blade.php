@@ -619,6 +619,8 @@
                             :selected="old('modal_form') === $roomModalFormKey ? old('room_id', (string) $device->room_id) : (string) $device->room_id"
                             :query="old('modal_form') === $roomModalFormKey ? old('room_query', $roomQuery) : $roomQuery"
                             identifier="device-user-room-{{ $device->id }}"
+                            :prioritize-selected="true"
+                            selected-group-label="Pašreizējā telpa"
                             placeholder="Izvēlies telpu"
                             emptyMessage="Neviena telpa neatbilst meklējumam."
                             :error="old('modal_form') === $roomModalFormKey ? $errors->first('room_id') : null"

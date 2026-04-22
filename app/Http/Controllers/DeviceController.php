@@ -23,6 +23,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -584,7 +585,8 @@ SQL;
     {
         $user = $this->requireManager();
 
-        $device = Device::create(array_merge(
+        $device = new Device();
+        $this->saveDevicePayload($device, array_merge(
             $this->validatedData($request),
             ['created_by' => $user->id]
         ));
@@ -756,7 +758,7 @@ SQL;
 
         $before = $device->only($this->trackedFields());
 
-        $device->update($this->validatedData($request, $device));
+        $this->saveDevicePayload($device, $this->validatedData($request, $device));
         $this->syncUploads($request, $device);
         $this->removeDeviceImage($request, $device);
 
@@ -1739,13 +1741,30 @@ SQL;
         try {
             $device->forceFill($payload)->save();
         } catch (QueryException $exception) {
-            if (! $this->isLegacyStatusEnumMismatch($exception)) {
+            if (! $this->isRecoverableLegacyDeviceSchemaMismatch($exception)) {
                 throw $exception;
             }
 
-            app(RuntimeSchemaBootstrapper::class)->ensure();
-            $device->refresh();
+            $this->repairLegacyDeviceSchemaMismatch($exception);
+            if ($device->exists) {
+                $device->refresh();
+            }
             $device->forceFill($payload)->save();
+        }
+    }
+
+    private function isRecoverableLegacyDeviceSchemaMismatch(QueryException $exception): bool
+    {
+        return $this->isLegacyStatusEnumMismatch($exception)
+            || $this->isLegacyNullableDeviceDateMismatch($exception);
+    }
+
+    private function repairLegacyDeviceSchemaMismatch(QueryException $exception): void
+    {
+        app(RuntimeSchemaBootstrapper::class)->ensure();
+
+        if ($this->isLegacyNullableDeviceDateMismatch($exception)) {
+            $this->ensureLegacyDeviceDateColumnsAllowNull();
         }
     }
 
@@ -1755,5 +1774,28 @@ SQL;
 
         return str_contains($message, 'data truncated for column')
             && str_contains($message, "'status'");
+    }
+
+    private function isLegacyNullableDeviceDateMismatch(QueryException $exception): bool
+    {
+        $message = strtolower($exception->getMessage());
+
+        return str_contains($message, "column 'purchase_date' cannot be null")
+            || str_contains($message, "column 'warranty_until' cannot be null");
+    }
+
+    private function ensureLegacyDeviceDateColumnsAllowNull(): void
+    {
+        if (DB::getDriverName() !== 'mysql' || ! Schema::hasTable('devices')) {
+            return;
+        }
+
+        if (Schema::hasColumn('devices', 'purchase_date')) {
+            DB::statement('ALTER TABLE devices MODIFY purchase_date DATE NULL');
+        }
+
+        if (Schema::hasColumn('devices', 'warranty_until')) {
+            DB::statement('ALTER TABLE devices MODIFY warranty_until DATE NULL');
+        }
     }
 }
