@@ -321,14 +321,14 @@
         @endif
 
         @if (old('modal_form') === 'device_create')
-            <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-create-modal' })));</script>
+            <script>window.addEventListener('DOMContentLoaded', () => window.openModalWithLoading ? window.openModalWithLoading('device-create-modal') : window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-create-modal' })));</script>
         @elseif (str_starts_with((string) old('modal_form'), 'device_edit_'))
             @php($deviceModalTarget = str_replace('device_edit_', '', (string) old('modal_form')))
-            <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-edit-modal-{{ $deviceModalTarget }}' })));</script>
+            <script>window.addEventListener('DOMContentLoaded', () => window.openModalWithLoading ? window.openModalWithLoading('device-edit-modal-{{ $deviceModalTarget }}') : window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-edit-modal-{{ $deviceModalTarget }}' })));</script>
         @elseif ($deviceModalQuery === 'create')
-            <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-create-modal' })));</script>
+            <script>window.addEventListener('DOMContentLoaded', () => window.openModalWithLoading ? window.openModalWithLoading('device-create-modal') : window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-create-modal' })));</script>
         @elseif ($deviceModalQuery === 'edit' && $deviceModalDeviceId)
-            <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-edit-modal-{{ $deviceModalDeviceId }}' })));</script>
+            <script>window.addEventListener('DOMContentLoaded', () => window.openModalWithLoading ? window.openModalWithLoading('device-edit-modal-{{ $deviceModalDeviceId }}') : window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-edit-modal-{{ $deviceModalDeviceId }}' })));</script>
         @endif
     </section>
 </x-app-layout>

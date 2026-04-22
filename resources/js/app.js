@@ -108,6 +108,21 @@ const createAppLoadingManager = () => {
 
 const appLoading = createAppLoadingManager();
 window.appLoading = appLoading;
+window.openModalWithLoading = (modalName, { holdMs = 320 } = {}) => {
+    if (!modalName) {
+        return;
+    }
+
+    appLoading.start();
+
+    window.requestAnimationFrame(() => {
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: modalName }));
+
+        window.setTimeout(() => {
+            appLoading.end();
+        }, holdMs);
+    });
+};
 
 if (document.readyState !== 'complete') {
     appLoading.start();
