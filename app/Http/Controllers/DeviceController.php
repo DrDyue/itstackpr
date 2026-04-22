@@ -22,6 +22,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
@@ -1766,6 +1767,14 @@ SQL;
         if ($this->isLegacyNullableDeviceDateMismatch($exception)) {
             $this->ensureLegacyDeviceDateColumnsAllowNull();
         }
+
+        $warningMessage = 'Sistēma automātiski pielāgoja novecojušu datubāzes shēmu, lai šo ierīces saglabāšanu varētu pabeigt korekti.';
+        Log::warning('Legacy devices schema mismatch repaired automatically.', [
+            'user_id' => $this->user()?->id,
+            'driver' => DB::getDriverName(),
+            'error' => $exception->getMessage(),
+        ]);
+        session()->flash('warning', $warningMessage);
     }
 
     private function isLegacyStatusEnumMismatch(QueryException $exception): bool

@@ -296,6 +296,10 @@
             @endif
 
         {{-- Galvenā ierīču tabula ar statusu preview un admina ātrajām darbībām. --}}
+        @if (session('warning'))
+            <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{{ session('warning') }}</div>
+        @endif
+
         @include('devices.index-table', [
             'devices' => $devices,
             'deviceStates' => $deviceStates,

@@ -118,6 +118,12 @@
             </div>
         </div>
 
+        @if (session('warning'))
+            <div class="mb-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-6 text-amber-900">
+                {{ session('warning') }}
+            </div>
+        @endif
+
         @if ($canManageDevices)
             <section class="surface-card p-6">
                 <div class="grid gap-6 xl:grid-cols-[auto_minmax(0,1.2fr)_minmax(0,0.8fr)]">
