@@ -423,13 +423,17 @@
                                     $deviceMeta = collect([$device?->manufacturer, $device?->model])->filter()->implode(' | ');
                                     $reason = trim((string) $transfer->transfer_reason);
                                     $shortReason = \Illuminate\Support\Str::limit(preg_replace('/\s+/u', ' ', $reason), 70);
-                                    $isIncomingPending = ! $isAdmin
+                                    $usesUserTransferState = ! $isAdmin;
+                                    $isIncomingPending = $usesUserTransferState
                                         && (int) $currentUserId === (int) $transfer->transfered_to_id
                                         && $transfer->status === 'submitted';
-                                    $isPendingAction = $transfer->status === 'submitted';
+                                    $isPendingAction = $usesUserTransferState && $transfer->status === 'submitted';
                                     $rowStateClass = $isIncomingPending
                                         ? 'app-table-row-incoming'
                                         : ($isPendingAction ? 'app-table-row-pending' : '');
+                                    $statusLabel = $isIncomingPending
+                                        ? 'Ienākošs'
+                                        : ($statusLabels[$transfer->status] ?? null);
                                     $hasActions = true;
                                 @endphp
                                 <tr class="app-table-row border-t border-slate-100 align-top {{ $rowStateClass }}" data-table-row-id="device-transfer-{{ $transfer->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
@@ -494,9 +498,9 @@
                                         <x-status-pill
                                             context="request"
                                             :value="$transfer->status"
-                                            :label="$isIncomingPending ? 'Ienākošs' : ($statusLabels[$transfer->status] ?? null)"
-                                            :pending-suffix="$isIncomingPending ? false : 'gaida'"
-                                            :pending-action="! $isIncomingPending && $transfer->status === 'submitted'"
+                                            :label="$statusLabel"
+                                            :pending-suffix="$usesUserTransferState && ! $isIncomingPending ? 'gaida' : false"
+                                            :pending-action="$usesUserTransferState && ! $isIncomingPending && $transfer->status === 'submitted'"
                                             class="{{ $isIncomingPending ? 'status-pill-incoming' : '' }}"
                                         />
                                     </td>
@@ -529,7 +533,7 @@
                                                     @endif
 
                                                     @php
-                                                        $isOwnerCanEdit = ! auth()->user()?->isAdmin()
+                                                        $isOwnerCanEdit = $usesUserTransferState
                                                             && (int) $currentUserId === (int) $transfer->responsible_user_id
                                                             && $transfer->status === 'submitted';
                                                     @endphp

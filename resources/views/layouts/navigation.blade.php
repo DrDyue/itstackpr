@@ -25,7 +25,7 @@
         $requestNavigationItems = [
             ['route' => 'repair-requests.index', 'pattern' => 'repair-requests*', 'label' => 'Remonta pieteikumi', 'icon' => 'repair-request'],
             ['route' => 'writeoff-requests.index', 'pattern' => 'writeoff-requests*', 'label' => 'Norakstīšanas pieteikumi', 'icon' => 'writeoff'],
-            ['route' => 'device-transfers.index', 'pattern' => 'device-transfers*', 'label' => 'Nodošanas pieteikumi', 'icon' => 'transfer', 'pending_review_count' => $incomingTransferReviewCount],
+            ['route' => 'device-transfers.index', 'pattern' => 'device-transfers*', 'label' => 'Nodošanas pieteikumi', 'icon' => 'transfer'],
         ];
         $requestReviewNavigationItems = $canManageRequests ? collect($requestNavigationItems)->take(2)->values()->all() : $requestNavigationItems;
         $requestHistoryNavigationItems = $canManageRequests ? collect($requestNavigationItems)->slice(2)->values()->all() : [];
@@ -104,10 +104,10 @@
                                 <x-dropdown-link :href="route($item['route'])">
                                     <x-icon :name="$item['icon']" size="h-4 w-4" />
                                     <span>{{ $item['label'] }}</span>
-                                    @if (($item['pending_review_count'] ?? 0) > 0)
-                                        <span title="Jāizskata: {{ $item['pending_review_count'] }}" class="ml-auto inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
+                                    @if (! $canManageRequests && $item['route'] === 'device-transfers.index' && $incomingTransferReviewCount > 0)
+                                        <span title="Jāizskata: {{ $incomingTransferReviewCount }}" class="ml-auto inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
                                             <x-icon name="exclamation-triangle" size="h-3 w-3" />
-                                            <span>{{ $item['pending_review_count'] }}</span>
+                                            <span>{{ $incomingTransferReviewCount }}</span>
                                         </span>
                                     @endif
                                 </x-dropdown-link>
@@ -514,10 +514,10 @@
                                     <x-icon :name="$item['icon']" size="h-5 w-5" />
                                     <span>{{ $item['label'] }}</span>
                                 </span>
-                                @if (($item['pending_review_count'] ?? 0) > 0)
-                                    <span title="Jāizskata: {{ $item['pending_review_count'] }}" class="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
+                                @if (! $canManageRequests && $item['route'] === 'device-transfers.index' && $incomingTransferReviewCount > 0)
+                                    <span title="Jāizskata: {{ $incomingTransferReviewCount }}" class="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
                                         <x-icon name="exclamation-triangle" size="h-3 w-3" />
-                                        <span>{{ $item['pending_review_count'] }}</span>
+                                        <span>{{ $incomingTransferReviewCount }}</span>
                                     </span>
                                 @endif
                             </span>

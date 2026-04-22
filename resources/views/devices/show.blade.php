@@ -11,6 +11,7 @@
     @php
         $deviceMeta = collect([$device->manufacturer, $device->model])->filter(fn ($value) => filled($value))->implode(' | ');
         $activeRepair = $device->activeRepair;
+        $usesUserDeviceView = ! $canManageDevices;
         $activeRepairUrl = $activeRepair
             ? route('repairs.index', ['repair_modal' => 'edit', 'modal_repair' => $activeRepair->id])
             : null;
@@ -392,9 +393,12 @@
                 <div class="mt-4 space-y-3 text-sm">
                     @forelse ($visibleTransfers as $transfer)
                         @php
-                            $isIncomingPendingTransfer = ! auth()->user()?->isAdmin()
+                            $isIncomingPendingTransfer = $usesUserDeviceView
                                 && (int) auth()->id() === (int) $transfer->transfered_to_id
                                 && $transfer->status === 'submitted';
+                            $transferStatusLabel = $isIncomingPendingTransfer
+                                ? 'Ienākošs'
+                                : null;
                         @endphp
                         <div class="surface-card-muted">
                             <div class="flex flex-wrap items-start justify-between gap-3">
@@ -405,9 +409,9 @@
                                 <x-status-pill
                                     context="request"
                                     :value="$transfer->status"
-                                    :label="$isIncomingPendingTransfer ? 'Ienākošs' : null"
-                                    :pending-suffix="$isIncomingPendingTransfer ? false : null"
-                                    :pending-action="! $isIncomingPendingTransfer && $transfer->status === 'submitted'"
+                                    :label="$transferStatusLabel"
+                                    :pending-suffix="$usesUserDeviceView && ! $isIncomingPendingTransfer ? null : false"
+                                    :pending-action="$usesUserDeviceView && ! $isIncomingPendingTransfer && $transfer->status === 'submitted'"
                                     class="{{ $isIncomingPendingTransfer ? 'status-pill-incoming' : '' }}"
                                 />
                             </div>

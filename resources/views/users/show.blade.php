@@ -265,7 +265,7 @@
                         @endforelse
 
                         @forelse ($incomingTransfers as $transfer)
-                            <div class="user-profile-request-item user-profile-request-item-incoming">
+                            <div class="user-profile-request-item">
                                 <div class="user-profile-request-title">
                                     <x-icon name="transfer" size="h-4 w-4" />
                                     <span>{{ $transfer->device?->name ?: 'Ierīce nav atrasta' }}</span>

@@ -199,10 +199,14 @@ class DeviceTransferController extends Controller
         $sorting = $this->normalizedSorting($request);
 
         $baseQuery = DeviceTransfer::query()
-            ->when(! $canManageTransfers, function (Builder $query) use ($user) {
-                $query->where(function (Builder $builder) use ($user) {
-                    $builder->where('responsible_user_id', $user->id)
-                        ->orWhere('transfered_to_id', $user->id);
+            ->when(! $canManageTransfers, function (Builder $query) use ($user, $filters) {
+                $query->where(function (Builder $builder) use ($user, $filters) {
+                    if ($filters['incoming']) {
+                        $builder->where('transfered_to_id', $user->id);
+                    } else {
+                        $builder->where('responsible_user_id', $user->id)
+                            ->orWhere('transfered_to_id', $user->id);
+                    }
                 });
             });
 
