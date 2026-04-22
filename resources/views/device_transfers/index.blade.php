@@ -34,35 +34,6 @@
                             <x-icon name="transfer" size="h-4 w-4" />
                             <span>Nodošana</span>
                         </div>
-                        <div class="inventory-inline-metrics">
-                            <span class="inventory-inline-chip inventory-inline-chip-slate">
-                                <x-icon name="transfer" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Kopā</span>
-                                <span class="inventory-inline-value">{{ $transferSummary['total'] }}</span>
-                            </span>
-                            <span class="inventory-inline-chip inventory-inline-chip-amber">
-                                <x-icon name="clock" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Iesniegti</span>
-                                <span class="inventory-inline-value">{{ $transferSummary['submitted'] }}</span>
-                            </span>
-                            <span class="inventory-inline-chip inventory-inline-chip-emerald">
-                                <x-icon name="check-circle" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Apstiprināti</span>
-                                <span class="inventory-inline-value">{{ $transferSummary['approved'] }}</span>
-                            </span>
-                            <span class="inventory-inline-chip inventory-inline-chip-rose">
-                                <x-icon name="x-circle" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Noraidīti</span>
-                                <span class="inventory-inline-value">{{ $transferSummary['rejected'] }}</span>
-                            </span>
-                            @if (($incomingPendingCount ?? 0) > 0)
-                                <span class="inventory-inline-chip inventory-inline-chip-amber">
-                                    <x-icon name="exclamation-triangle" size="h-3.5 w-3.5" />
-                                    <span class="inventory-inline-label">Jāizskata</span>
-                                    <span class="inventory-inline-value">{{ $incomingPendingCount }}</span>
-                                </span>
-                            @endif
-                        </div>
                     </div>
 
                     <div class="page-title-group mt-4">
@@ -263,6 +234,7 @@
                                         >
                                             <x-icon name="transfer" size="h-4 w-4" />
                                             <span>Ienākošās nodošanas</span>
+                                            <span class="quick-filter-count">{{ $incomingPendingCount }}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -271,6 +243,16 @@
                             <div class="quick-filter-group">
                                 <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Statuss</div>
                                 <div class="quick-status-filters">
+                                    <button
+                                        type="button"
+                                        @click="incoming = false; selected = []; $nextTick(() => window.submitAsyncTableForm($el.closest('form'), { resetPage: true }))"
+                                        class="quick-status-filter quick-status-filter-slate"
+                                        :class="selected.length === 0 && !incoming ? 'quick-status-filter-active' : ''"
+                                    >
+                                        <x-icon name="filter" size="h-4 w-4" />
+                                        <span>Visi</span>
+                                        <span class="quick-filter-count">{{ $transferSummary['total'] }}</span>
+                                    </button>
                                     @foreach ($statuses as $status)
                                         @php
                                             $toneClass = $status === 'submitted'
@@ -291,6 +273,7 @@
                                         >
                                             <x-icon :name="$iconName" size="h-4 w-4" />
                                             <span>{{ $statusLabels[$status] ?? $status }}</span>
+                                            <span class="quick-filter-count">{{ $transferSummary[$status] ?? 0 }}</span>
                                         </button>
                                     @endforeach
 

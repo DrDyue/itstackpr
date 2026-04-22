@@ -46,20 +46,6 @@
                     </div>
                 </div>
 
-                <div class="inventory-inline-metrics">
-                    <div class="inventory-inline-chip inventory-inline-chip-slate">
-                        <span class="inventory-inline-label">Kopā</span>
-                        <span class="inventory-inline-value">{{ $summary['total'] }}</span>
-                    </div>
-                    <div class="inventory-inline-chip inventory-inline-chip-amber">
-                        <span class="inventory-inline-label">Šodien</span>
-                        <span class="inventory-inline-value">{{ $summary['today'] }}</span>
-                    </div>
-                    <div class="inventory-inline-chip inventory-inline-chip-rose">
-                        <span class="inventory-inline-label">Kritiski</span>
-                        <span class="inventory-inline-value">{{ $summary['critical'] }}</span>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -169,6 +155,16 @@
                             <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($selectedSeverities), minimum: 0 })">
                                 <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Svarīgums</div>
                                 <div class="quick-status-filters">
+                                    <button
+                                        type="button"
+                                        @click="selected = []; $nextTick(() => $el.closest('form').requestSubmit())"
+                                        class="quick-status-filter quick-status-filter-slate"
+                                        :class="selected.length === 0 ? 'quick-status-filter-active' : ''"
+                                    >
+                                        <x-icon name="filter" size="h-4 w-4" />
+                                        <span>Visi</span>
+                                        <span class="quick-filter-count">{{ $summary['total'] }}</span>
+                                    </button>
                                     @foreach ($severityFilterLinks as $severityFilter)
                                         @php
                                             $toneClass = 'quick-status-filter-' . $severityFilter['tone'];
@@ -181,6 +177,7 @@
                                         >
                                             <x-icon :name="$severityFilter['icon']" size="h-4 w-4" />
                                             <span>{{ $severityFilter['label'] }}</span>
+                                            <span class="quick-filter-count">{{ $summary[$severityFilter['value']] ?? 0 }}</span>
                                         </button>
                                     @endforeach
 

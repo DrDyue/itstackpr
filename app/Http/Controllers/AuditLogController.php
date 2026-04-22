@@ -50,6 +50,9 @@ class AuditLogController extends Controller
                 'summary' => [
                     'total' => 0,
                     'today' => 0,
+                    'info' => 0,
+                    'warning' => 0,
+                    'error' => 0,
                     'critical' => 0,
                 ],
                 'actionOptions' => collect(),
@@ -113,12 +116,18 @@ class AuditLogController extends Controller
         $summaryRow = AuditLog::query()
             ->selectRaw('COUNT(*) as total')
             ->selectRaw('SUM(CASE WHEN timestamp >= ? THEN 1 ELSE 0 END) as today', [now()->startOfDay()])
+            ->selectRaw('SUM(CASE WHEN severity = ? THEN 1 ELSE 0 END) as info', ['info'])
+            ->selectRaw('SUM(CASE WHEN severity = ? THEN 1 ELSE 0 END) as warning', ['warning'])
+            ->selectRaw('SUM(CASE WHEN severity = ? THEN 1 ELSE 0 END) as error', ['error'])
             ->selectRaw('SUM(CASE WHEN severity = ? THEN 1 ELSE 0 END) as critical', ['critical'])
             ->first();
 
         $summary = [
             'total' => (int) ($summaryRow->total ?? 0),
             'today' => (int) ($summaryRow->today ?? 0),
+            'info' => (int) ($summaryRow->info ?? 0),
+            'warning' => (int) ($summaryRow->warning ?? 0),
+            'error' => (int) ($summaryRow->error ?? 0),
             'critical' => (int) ($summaryRow->critical ?? 0),
         ];
 

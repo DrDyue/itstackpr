@@ -37,23 +37,6 @@
                             <x-icon name="users" size="h-4 w-4" />
                             <span>Lietotāji</span>
                         </div>
-                        <div class="inventory-inline-metrics">
-                            <span class="inventory-inline-chip inventory-inline-chip-slate">
-                                <x-icon name="users" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Kopā</span>
-                                <span class="inventory-inline-value">{{ $userSummary['total'] }}</span>
-                            </span>
-                            <span class="inventory-inline-chip inventory-inline-chip-violet">
-                                <x-icon name="users" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Admini</span>
-                                <span class="inventory-inline-value">{{ $userSummary['admin'] }}</span>
-                            </span>
-                            <span class="inventory-inline-chip inventory-inline-chip-sky">
-                                <x-icon name="profile" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Darbinieki</span>
-                                <span class="inventory-inline-value">{{ $userSummary['user'] }}</span>
-                            </span>
-                        </div>
                     </div>
 
                     <div class="page-title-group mt-4">
@@ -169,14 +152,17 @@
                                 <button type="button" class="quick-status-filter quick-status-filter-emerald" :class="value === '1' ? 'quick-status-filter-active' : ''" @click="value = '1'; $nextTick(() => $el.closest('form').requestSubmit())">
                                     <x-icon name="check-circle" size="h-4 w-4" />
                                     <span>Aktīvi</span>
+                                    <span class="quick-filter-count">{{ $userSummary['active'] }}</span>
                                 </button>
                                 <button type="button" class="quick-status-filter quick-status-filter-slate" :class="value === '' ? 'quick-status-filter-active' : ''" @click="value = ''; $nextTick(() => $el.closest('form').requestSubmit())">
                                     <x-icon name="filter" size="h-4 w-4" />
                                     <span>Visi</span>
+                                    <span class="quick-filter-count">{{ $userSummary['total'] }}</span>
                                 </button>
                                 <button type="button" class="quick-status-filter quick-status-filter-rose" :class="value === '0' ? 'quick-status-filter-active' : ''" @click="value = '0'; $nextTick(() => $el.closest('form').requestSubmit())">
                                     <x-icon name="x-circle" size="h-4 w-4" />
                                     <span>Neaktīvi</span>
+                                    <span class="quick-filter-count">{{ $userSummary['inactive'] }}</span>
                                 </button>
                             </div>
                         </div>
@@ -205,6 +191,7 @@
                                     >
                                         <x-icon :name="$roleFilter['icon']" size="h-4 w-4" />
                                         <span>{{ $roleFilter['label'] }}</span>
+                                        <span class="quick-filter-count">{{ $userSummary[$roleFilter['value']] ?? 0 }}</span>
                                     </a>
                                 @endforeach
                             </div>

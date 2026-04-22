@@ -2999,6 +2999,10 @@ tbody td {
     @apply inline-flex min-h-[2.4rem] cursor-pointer select-none items-center gap-2 rounded-[1rem] border px-3.5 py-2 text-xs font-semibold leading-none transition-all duration-200 hover:shadow-md;
 }
 
+.quick-filter-count {
+    @apply inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-bold text-slate-900 ring-1 ring-black/5;
+}
+
 .quick-status-filter:hover {
     @apply -translate-y-0.5 shadow-md;
 }
@@ -6813,6 +6817,12 @@ html[data-theme='dark'] .quick-status-filter-slate {
 html[data-theme='dark'] .quick-status-filter-slate:hover {
     background-color: #1e293b !important;
     color: #f8fafc !important;
+}
+
+html[data-theme='dark'] .quick-filter-count {
+    background-color: rgba(15, 23, 42, 0.82) !important;
+    color: #f8fafc !important;
+    border-color: rgba(71, 85, 105, 0.82) !important;
 }
 
 html[data-theme='dark'] .quick-status-filter-emerald {

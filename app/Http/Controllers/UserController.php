@@ -95,6 +95,8 @@ class UserController extends Controller
                 'total' => (clone $userSummaryQuery)->count(),
                 'admin' => (clone $userSummaryQuery)->where('role', User::ROLE_ADMIN)->count(),
                 'user' => (clone $userSummaryQuery)->where('role', User::ROLE_USER)->count(),
+                'active' => (clone $userSummaryQuery)->where('is_active', true)->count(),
+                'inactive' => (clone $userSummaryQuery)->where('is_active', false)->count(),
             ],
             'filters' => $filters,
             'sorting' => $sorting,
