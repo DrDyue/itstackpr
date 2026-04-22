@@ -40,6 +40,10 @@ class DeviceController extends Controller
 
     private const SORTABLE_COLUMNS = ['code', 'name', 'location', 'created_at', 'assigned_to', 'status'];
 
+    private const USER_VISIBLE_STATUSES = [Device::STATUS_ACTIVE, Device::STATUS_REPAIR];
+
+    private const USER_SORTABLE_COLUMNS = ['code', 'name', 'location', 'status'];
+
     /**
      * Parāda ierīču sarakstu ar lomām atkarīgu filtrēšanu un statusu palīgdatiem.
      */
@@ -101,8 +105,8 @@ class DeviceController extends Controller
         AuditTrail::search($user, 'Device', $code, 'Meklēta ierīce pēc koda: '.$code);
 
         $canManageDevices = $user->canManageRequests();
-        $filters = $this->normalizedIndexFilters($request);
-        $sorting = $this->normalizedDeviceSorting($request);
+        $filters = $this->normalizedIndexFilters($request, $canManageDevices);
+        $sorting = $this->normalizedDeviceSorting($request, $canManageDevices);
         $accessibleRooms = $this->accessibleRooms($user);
         $types = DeviceType::query()
             ->select(['id', 'type_name'])
@@ -172,8 +176,8 @@ class DeviceController extends Controller
     private function devicesIndexViewData(Request $request, User $user): array
     {
         $canManageDevices = $user->canManageRequests();
-        $filters = $this->normalizedIndexFilters($request);
-        $sorting = $this->normalizedDeviceSorting($request);
+        $filters = $this->normalizedIndexFilters($request, $canManageDevices);
+        $sorting = $this->normalizedDeviceSorting($request, $canManageDevices);
 
         $summaryQuery = $this->visibleDevicesQuery($user);
         $accessibleRooms = $this->accessibleRooms($user);
@@ -317,12 +321,12 @@ class DeviceController extends Controller
             'selectedType' => $selectedType,
             'selectedAssignedUser' => $selectedAssignedUser,
             'assignableUsers' => $assignableUsers,
-            'statuses' => self::STATUSES,
+            'statuses' => $this->availableStatuses($canManageDevices),
             'statusLabels' => $this->statusLabels(),
             'canManageDevices' => $canManageDevices,
             'quickRoomOptions' => $canManageDevices ? $this->quickRoomOptions() : collect(),
             'quickAssigneeOptions' => $canManageDevices ? $this->quickAssigneeOptions() : collect(),
-            'sortOptions' => $this->deviceSortOptions(),
+            'sortOptions' => $this->deviceSortOptions($canManageDevices),
             'deviceModalQuery' => (string) $request->query('device_modal', ''),
             'deviceModalDeviceId' => ctype_digit((string) $request->query('modal_device'))
                 ? (int) $request->query('modal_device')
@@ -333,11 +337,12 @@ class DeviceController extends Controller
     /**
      * Normalizē visus ierīču saraksta filtrus vienotā formā.
      */
-    private function normalizedIndexFilters(Request $request): array
+    private function normalizedIndexFilters(Request $request, bool $canManageDevices): array
     {
+        $availableStatuses = $this->availableStatuses($canManageDevices);
         $statuses = collect($request->query('status', []))
             ->map(fn (mixed $status) => trim((string) $status))
-            ->filter(fn (string $status) => in_array($status, self::STATUSES, true))
+            ->filter(fn (string $status) => in_array($status, $availableStatuses, true))
             ->unique()
             ->values()
             ->all();
@@ -354,30 +359,36 @@ class DeviceController extends Controller
             'type' => trim((string) $request->query('type', '')),
             'type_query' => trim((string) $request->query('type_query', '')),
             'statuses' => $statuses,
-            'has_status_filter' => count($statuses) > 0 && count($statuses) < count(self::STATUSES),
+            'has_status_filter' => count($statuses) > 0 && count($statuses) < count($availableStatuses),
         ];
     }
 
     /**
      * Sagatavo drošu kārtošanas konfigurāciju no query string.
      */
-    private function normalizedDeviceSorting(Request $request): array
+    private function normalizedDeviceSorting(Request $request, bool $canManageDevices): array
     {
+        $sortOptions = $this->deviceSortOptions($canManageDevices);
+        $sortableColumns = array_keys($sortOptions);
         $sort = trim((string) $request->query('sort', 'created_at'));
         $direction = trim((string) $request->query('direction', 'desc'));
 
-        if (! in_array($sort, self::SORTABLE_COLUMNS, true)) {
-            $sort = 'created_at';
+        if (! in_array($sort, $sortableColumns, true)) {
+            $sort = $canManageDevices ? 'created_at' : 'name';
         }
 
         if (! in_array($direction, ['asc', 'desc'], true)) {
             $direction = 'desc';
         }
 
+        if (! $canManageDevices && $sort !== 'status') {
+            $direction = 'asc';
+        }
+
         return [
             'sort' => $sort,
             'direction' => $direction,
-            'label' => $this->deviceSortOptions()[$sort]['label'] ?? 'Izveidots',
+            'label' => $sortOptions[$sort]['label'] ?? ($canManageDevices ? 'Izveidots' : 'Nosaukums'),
             'direction_label' => $direction === 'asc' ? 'augošajā secībā' : 'dilstošajā secībā',
         ];
     }
@@ -496,9 +507,9 @@ SQL;
     /**
      * Apraksta, kādi lauki lietotājam ir kārtojami un kā saucas paziņojumos.
      */
-    private function deviceSortOptions(): array
+    private function deviceSortOptions(bool $canManageDevices = true): array
     {
-        return [
+        $options = [
             'code' => ['label' => 'koda'],
             'name' => ['label' => 'nosaukuma'],
             'location' => ['label' => 'atrašanās vietas'],
@@ -506,6 +517,17 @@ SQL;
             'assigned_to' => ['label' => 'piešķirtās personas'],
             'status' => ['label' => 'statusa'],
         ];
+
+        if ($canManageDevices) {
+            return $options;
+        }
+
+        return array_intersect_key($options, array_flip(self::USER_SORTABLE_COLUMNS));
+    }
+
+    private function availableStatuses(bool $canManageDevices): array
+    {
+        return $canManageDevices ? self::STATUSES : self::USER_VISIBLE_STATUSES;
     }
 
     private function auditDeviceListInteractions(Request $request, User $user, array $filters, array $sorting): void

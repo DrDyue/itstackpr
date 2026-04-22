@@ -70,19 +70,19 @@
                         @if ($requestAvailability['repair'])
                             <a href="{{ $repairRequestCreateUrl }}" class="btn-edit">
                                 <x-icon name="repair" size="h-4 w-4" />
-                                <span>Pieteikt remontu</span>
+                                <span>Remonts</span>
                             </a>
                         @endif
                         @if ($requestAvailability['writeoff'])
                             <a href="{{ $writeoffRequestCreateUrl }}" class="btn-danger">
                                 <x-icon name="writeoff" size="h-4 w-4" />
-                                <span>Pieteikt norakstīšanu</span>
+                                <span>Norakstīt</span>
                             </a>
                         @endif
                         @if ($requestAvailability['transfer'])
                             <a href="{{ $transferCreateUrl }}" class="btn-view">
                                 <x-icon name="transfer" size="h-4 w-4" />
-                                <span>Nodot citam</span>
+                                <span>Nodot</span>
                             </a>
                         @endif
                     @endif
@@ -139,7 +139,9 @@
                                     <div><strong class="text-slate-900">Lietotājs:</strong> {{ $device->assignedTo?->full_name ?: 'Nav piešķirts' }}</div>
                                     <div><strong class="text-slate-900">Ēka:</strong> {{ $device->building?->building_name ?: 'Nav norādīta' }}</div>
                                     <div><strong class="text-slate-900">Telpa:</strong> {{ $device->room?->room_number ?: 'Nav norādīta' }}@if ($device->room?->room_name) | {{ $device->room->room_name }} @endif</div>
-                                    <div><strong class="text-slate-900">Izveidoja:</strong> {{ $device->createdBy?->full_name ?: 'Sistēma' }}</div>
+                                    @if ($canManageDevices)
+                                        <div><strong class="text-slate-900">Izveidoja:</strong> {{ $device->createdBy?->full_name ?: 'Sistēma' }}</div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -153,7 +155,9 @@
                             <div><strong class="text-slate-900">Iegādes datums:</strong> {{ $device->purchase_date?->format('d.m.Y') ?: '-' }}</div>
                             <div><strong class="text-slate-900">Iegādes cena:</strong> {{ $device->purchase_price !== null ? number_format((float) $device->purchase_price, 2, '.', ' ') . ' EUR' : '-' }}</div>
                             <div><strong class="text-slate-900">Garantija līdz:</strong> {{ $device->warranty_until?->format('d.m.Y') ?: '-' }}</div>
-                            <div><strong class="text-slate-900">Izveidots:</strong> {{ $device->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
+                            @if ($canManageDevices)
+                                <div><strong class="text-slate-900">Izveidots:</strong> {{ $device->created_at?->format('d.m.Y H:i') ?: '-' }}</div>
+                            @endif
                         </div>
                     </div>
 
@@ -189,12 +193,9 @@
                             <div class="max-w-2xl">
                                 <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
                                     <x-icon name="room" size="h-5 w-5" class="text-emerald-600" />
-                                    <span>Atrašanās vieta un darbība</span>
+                                    <span>Atrašanās vieta</span>
                                 </h2>
-                                <p class="mt-2 text-sm leading-6 text-slate-600">
-                                    Šeit ir tikai tā informācija, kas papildina augšējo ierīces kartīti: kur ierīce atrodas šobrīd,
-                                    kā ta nonaca pie tevis un ko vari izdarīt tālāk.
-                                </p>
+                                <p class="mt-2 text-sm leading-6 text-slate-600">Pašreizējā atrašanās vieta, izcelsme un pieejamās darbības.</p>
                             </div>
                         </div>
 
@@ -229,11 +230,9 @@
                                     <div class="max-w-xl">
                                         <h3 class="inline-flex items-center gap-2 text-base font-semibold text-slate-900">
                                             <x-icon name="room" size="h-4.5 w-4.5" class="text-emerald-600" />
-                                            <span>Mainīt ierīces telpu</span>
+                                            <span>Mainīt telpu</span>
                                         </h3>
-                                        <p class="mt-2 text-sm leading-6 text-slate-600">
-                                            Ja ierīce reāli atrodas citā telpā, atjauno to šeit bez iešanas uz citu lapu.
-                                        </p>
+                                        <p class="mt-2 text-sm leading-6 text-slate-600">Atjauno telpu, ja ierīce atrodas citur.</p>
                                     </div>
                                 </div>
 
@@ -280,7 +279,7 @@
                     <x-icon name="repair-request" size="h-5 w-5" class="text-sky-600" />
                     <span>Remonta pieteikumi</span>
                 </h2>
-                <p class="mt-2 text-sm leading-6 text-slate-600">Visi ierīces remonta pieteikumi ar iesniedzēju, statusu un izskatīšanas piezīmēm.</p>
+                <p class="mt-2 text-sm leading-6 text-slate-600">Visi ar ierīci saistītie remonta pieteikumi.</p>
                 <div class="mt-4 space-y-3 text-sm">
                     @forelse ($visibleRepairRequests as $request)
                         <div class="surface-card-muted">
@@ -314,7 +313,7 @@
                     <x-icon name="repair" size="h-5 w-5" class="text-amber-600" />
                     <span>Remonta ieraksti</span>
                 </h2>
-                <p class="mt-2 text-sm leading-6 text-slate-600">Vecie un esošie remonta darbi, kas ierīcei jau ir veikti vai šobrīd turpinās.</p>
+                <p class="mt-2 text-sm leading-6 text-slate-600">Esošie un iepriekšējie remonta darbi.</p>
                 <div class="mt-4 space-y-3 text-sm">
                     @forelse ($visibleRepairs as $repair)
                         <div class="surface-card-muted">
@@ -355,7 +354,7 @@
                     <x-icon name="writeoff" size="h-5 w-5" class="text-rose-600" />
                     <span>Norakstīšanas pieteikumi</span>
                 </h2>
-                <p class="mt-2 text-sm leading-6 text-slate-600">Visi ierīces norakstīšanas pieprasījumi ar iemesliem un admina lēmumiem.</p>
+                <p class="mt-2 text-sm leading-6 text-slate-600">Visi ar ierīci saistītie norakstīšanas pieteikumi.</p>
                 <div class="mt-4 space-y-3 text-sm">
                     @forelse ($visibleWriteoffRequests as $request)
                         <div class="surface-card-muted">
@@ -389,7 +388,7 @@
                     <x-icon name="transfer" size="h-5 w-5" class="text-emerald-600" />
                     <span>Nodošanas vēsture</span>
                 </h2>
-                <p class="mt-2 text-sm leading-6 text-slate-600">Ierīces nodošanas vēsture starp lietotājiem un saistītie izskatīšanas lēmumi.</p>
+                <p class="mt-2 text-sm leading-6 text-slate-600">Nodošanas ieraksti un lēmumi.</p>
                 <div class="mt-4 space-y-3 text-sm">
                     @forelse ($visibleTransfers as $transfer)
                         @php

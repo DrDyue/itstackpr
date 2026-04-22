@@ -20,11 +20,16 @@
         $quickRoomSelectOptions = collect($quickRoomOptions ?? [])->values();
         $quickAssigneeSelectOptions = collect($quickAssigneeOptions ?? [])->values();
         $selectedStatuses = $filters['statuses'];
-        $statusFilterLinks = [
-            ['label' => 'Aktīvas', 'value' => 'active', 'icon' => 'check-circle', 'tone' => 'emerald'],
-            ['label' => 'Remonta', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'sky'],
-            ['label' => 'Norakstītas', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
-        ];
+        $statusFilterLinks = $canManageDevices
+            ? [
+                ['label' => 'Aktīvas', 'value' => 'active', 'icon' => 'check-circle', 'tone' => 'emerald'],
+                ['label' => 'Remontā', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'sky'],
+                ['label' => 'Norakstītas', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
+            ]
+            : [
+                ['label' => 'Aktīvas', 'value' => 'active', 'icon' => 'check-circle', 'tone' => 'emerald'],
+                ['label' => 'Remontā', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'sky'],
+            ];
         $roomSelectOptions = $roomOptions->map(fn ($room) => [
             'value' => (string) $room->id,
             'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
@@ -90,11 +95,13 @@
                                 <span class="inventory-inline-label">Remonta</span>
                                 <span class="inventory-inline-value">{{ $deviceSummary['repair'] }}</span>
                             </span>
-                            <span class="inventory-inline-chip inventory-inline-chip-rose">
-                                <x-icon name="writeoff" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Norakstītas</span>
-                                <span class="inventory-inline-value">{{ $deviceSummary['writeoff'] }}</span>
-                            </span>
+                            @if ($canManageDevices)
+                                <span class="inventory-inline-chip inventory-inline-chip-rose">
+                                    <x-icon name="writeoff" size="h-3.5 w-3.5" />
+                                    <span class="inventory-inline-label">Norakstītas</span>
+                                    <span class="inventory-inline-value">{{ $deviceSummary['writeoff'] }}</span>
+                                </span>
+                            @endif
                         </div>
                     </div>
 
