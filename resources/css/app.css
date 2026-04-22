@@ -4905,19 +4905,23 @@ tbody td {
 }
 
 .table-col-image {
-    width: 3.5rem;
+    width: 4rem;
 }
 
 .table-col-code {
-    width: 9.5rem;
+    width: 8.5rem;
+}
+
+.table-col-serial {
+    width: 11rem;
 }
 
 .table-col-name {
-    width: 21rem;
+    width: 18rem;
 }
 
 .table-col-location {
-    width: 16rem;
+    width: 13rem;
 }
 
 .table-col-person {
@@ -5528,7 +5532,7 @@ tbody td {
 }
 
 .device-table-thumb {
-    @apply mx-auto h-8 w-8 rounded-lg object-cover ring-1 ring-slate-200;
+    @apply mx-auto h-9 w-9 rounded-lg object-cover ring-1 ring-slate-200;
 }
 
 .device-table-thumb-placeholder {
@@ -7216,12 +7220,12 @@ html[data-theme='dark'] .user-profile-card-label {
 }
 
 .device-user-action-row {
-    @apply flex flex-nowrap items-center justify-end gap-2 whitespace-nowrap;
+    @apply grid grid-cols-3 items-center justify-end gap-2 whitespace-nowrap;
 }
 
 .device-user-action-row > .table-action-button,
 .device-user-action-row > .btn-disabled {
-    @apply w-auto min-h-[2.5rem] shrink-0 justify-center px-3;
+    @apply min-h-[2.5rem] w-full shrink-0 justify-center px-3;
 }
 
 .device-user-action-row > .table-action-button > span,

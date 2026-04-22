@@ -40,11 +40,11 @@ class DeviceController extends Controller
 
     private const STATUSES = [Device::STATUS_ACTIVE, Device::STATUS_REPAIR, Device::STATUS_WRITEOFF];
 
-    private const SORTABLE_COLUMNS = ['code', 'name', 'location', 'created_at', 'assigned_to', 'status'];
+    private const SORTABLE_COLUMNS = ['code', 'serial_number', 'name', 'location', 'created_at', 'assigned_to', 'status'];
 
     private const USER_VISIBLE_STATUSES = [Device::STATUS_ACTIVE, Device::STATUS_REPAIR];
 
-    private const USER_SORTABLE_COLUMNS = ['code', 'name', 'location', 'status'];
+    private const USER_SORTABLE_COLUMNS = ['code', 'serial_number', 'name', 'location', 'status'];
 
     /**
      * Parāda ierīču sarakstu ar lomām atkarīgu filtrēšanu un statusu palīgdatiem.
@@ -474,6 +474,9 @@ class DeviceController extends Controller
             'code' => $query
                 ->orderByRaw('LOWER(COALESCE(devices.code, \'\')) ' . $direction)
                 ->orderBy('devices.id'),
+            'serial_number' => $query
+                ->orderByRaw('LOWER(COALESCE(devices.serial_number, \'\')) ' . $direction)
+                ->orderBy('devices.id'),
             'name' => $query
                 ->orderByRaw('LOWER(COALESCE(devices.name, \'\')) ' . $direction)
                 ->orderBy('devices.id'),
@@ -523,6 +526,7 @@ SQL;
     {
         $options = [
             'code' => ['label' => 'koda'],
+            'serial_number' => ['label' => 'sērijas numura'],
             'name' => ['label' => 'nosaukuma'],
             'location' => ['label' => 'atrašanās vietas'],
             'created_at' => ['label' => 'izveides datuma'],

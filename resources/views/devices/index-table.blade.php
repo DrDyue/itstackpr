@@ -23,6 +23,7 @@
     $columns = $canManageDevices
         ? [
             'code' => 'Kods',
+            'serial_number' => 'Sērijas numurs',
             'name' => 'Nosaukums',
             'assigned_to' => 'Piešķirta',
             'location' => 'Atrašanās vieta',
@@ -31,6 +32,7 @@
         ]
         : [
             'code' => 'Kods',
+            'serial_number' => 'Sērijas numurs',
             'name' => 'Nosaukums',
             'location' => 'Atrašanās vieta',
             'status' => 'Statuss',
@@ -49,6 +51,7 @@
                                 $isCurrentSort = $sorting['sort'] === $column;
                                 $headerWidthClass = match ($column) {
                                     'code' => 'table-col-code',
+                                    'serial_number' => 'table-col-serial',
                                     'name' => 'table-col-name',
                                     'assigned_to' => 'table-col-person',
                                     'location' => 'table-col-location',
@@ -128,7 +131,10 @@
 
                             <td class="px-4 py-4">
                                 <div class="font-semibold text-slate-900">{{ $device->code ?: '-' }}</div>
-                                <div class="mt-1 text-xs text-slate-500">Sērija: {{ $device->serial_number ?: '-' }}</div>
+                            </td>
+
+                            <td class="px-4 py-4">
+                                <div class="font-mono text-sm font-semibold text-slate-900">{{ $device->serial_number ?: '-' }}</div>
                             </td>
 
                             <td class="px-4 py-4">
@@ -258,7 +264,7 @@
 
                             <td class="px-4 py-4">
                                 @if (! $canManageDevices)
-                                    <div class="flex flex-wrap justify-end gap-2">
+                                    <div class="device-user-action-row">
                                         <a href="{{ route('devices.show', $device) }}" class="table-action-button table-action-button-sky">
                                             <x-icon name="view" size="h-4 w-4" />
                                             <span>Skatīt</span>
@@ -446,7 +452,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ $canManageDevices ? 8 : 6 }}" class="px-4 py-6">
+                            <td colspan="{{ $canManageDevices ? 9 : 7 }}" class="px-4 py-6">
                                 <x-empty-state
                                     compact
                                     icon="devices"
