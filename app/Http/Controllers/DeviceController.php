@@ -913,7 +913,7 @@ SQL;
     private function formData(): array
     {
         $warehouseRoom = $this->ensureWarehouseRoom();
-        $user = $this->user();
+        $defaultResponsibleUserId = $this->defaultResponsibleUserId();
 
         return [
             'types' => DeviceType::query()->select(['id', 'type_name'])->orderBy('type_name')->get(),
@@ -922,7 +922,7 @@ SQL;
             'users' => User::query()->active()->select(['id', 'full_name', 'job_title', 'email'])->orderBy('full_name')->get(),
             'statuses' => self::STATUSES,
             'statusLabels' => $this->statusLabels(),
-            'defaultAssignedToId' => $user?->id,
+            'defaultAssignedToId' => $defaultResponsibleUserId,
             'defaultRoomId' => $warehouseRoom->id,
             'defaultBuildingId' => $warehouseRoom->building_id,
         ];
@@ -936,24 +936,27 @@ SQL;
             ]);
         }
 
-        if (! $device && ! $request->filled('assigned_to_id')) {
-            $request->merge([
-                'assigned_to_id' => $this->user()?->id,
-            ]);
-        }
-
-        if (! $device && ! $request->filled('room_id')) {
-            $warehouseRoom = $this->ensureWarehouseRoom();
-
-            $request->merge([
-                'room_id' => $warehouseRoom->id,
-                'building_id' => $warehouseRoom->building_id,
-            ]);
-        }
-
-        $requiresAssignmentAndRoom = Device::normalizeStatus(
+        $normalizedStatus = Device::normalizeStatus(
             (string) $request->input('status', $device?->status ?? Device::STATUS_ACTIVE)
-        ) !== Device::STATUS_WRITEOFF;
+        );
+        $requiresAssignmentAndRoom = $normalizedStatus !== Device::STATUS_WRITEOFF;
+
+        if ($requiresAssignmentAndRoom) {
+            if (! $request->filled('assigned_to_id')) {
+                $request->merge([
+                    'assigned_to_id' => $this->fallbackResponsibleUserId($device),
+                ]);
+            }
+
+            if (! $request->filled('room_id')) {
+                $warehouseRoom = $this->ensureWarehouseRoom();
+
+                $request->merge([
+                    'room_id' => $warehouseRoom->id,
+                    'building_id' => $warehouseRoom->building_id,
+                ]);
+            }
+        }
 
         $data = $this->validateInput(
             $request,
@@ -1036,6 +1039,46 @@ SQL;
         $data['device_image_url'] = $device?->device_image_url;
 
         return $data;
+    }
+
+    private function defaultResponsibleUserId(): ?int
+    {
+        $userId = $this->user()?->id;
+
+        if (! $userId) {
+            return null;
+        }
+
+        return User::query()
+            ->active()
+            ->whereKey($userId)
+            ->exists()
+            ? (int) $userId
+            : null;
+    }
+
+    private function fallbackResponsibleUserId(?Device $device = null): ?int
+    {
+        foreach ([
+            $device?->assigned_to_id,
+            $this->defaultResponsibleUserId(),
+            $device?->created_by,
+        ] as $candidateId) {
+            if (! $candidateId) {
+                continue;
+            }
+
+            $activeUser = User::query()
+                ->active()
+                ->select('id')
+                ->find($candidateId);
+
+            if ($activeUser) {
+                return (int) $activeUser->id;
+            }
+        }
+
+        return null;
     }
 
     private function ensureWarehouseRoom(): Room

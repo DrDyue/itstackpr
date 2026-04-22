@@ -386,6 +386,16 @@
                 </div>
                 <div class="divide-y divide-slate-100 px-5">
                     @forelse ($visibleRepairs as $repair)
+                        @php
+                            $repairExecutorLabel = $repair->executor?->full_name ?: 'Nav izpildītāja';
+                            $repairDatesLabel = null;
+                            if ($repair->start_date) {
+                                $repairDatesLabel = $repair->start_date->format('d.m.Y');
+                                if ($repair->end_date) {
+                                    $repairDatesLabel .= ' – ' . $repair->end_date->format('d.m.Y');
+                                }
+                            }
+                        @endphp
                         <div class="py-3">
                             <div class="flex items-start justify-between gap-3">
                                 <div class="min-w-0">
@@ -396,8 +406,10 @@
                                     </div>
                                     @if ($canManageDevices)
                                         <p class="mt-0.5 text-xs text-slate-500">
-                                            {{ $repair->executor?->full_name ?: 'Nav izpildītāja' }}
-                                            @if ($repair->start_date) · {{ $repair->start_date->format('d.m.Y') }}@if ($repair->end_date) – {{ $repair->end_date->format('d.m.Y') }}@endif@endif
+                                            {{ $repairExecutorLabel }}
+                                            @if ($repairDatesLabel)
+                                                · {{ $repairDatesLabel }}
+                                            @endif
                                         </p>
                                     @endif
                                     @if ($repair->description)

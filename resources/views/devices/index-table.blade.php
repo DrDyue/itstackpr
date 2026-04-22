@@ -134,7 +134,7 @@
                             </td>
 
                             <td class="px-4 py-4">
-                                <div class="font-mono text-sm font-semibold text-slate-900">{{ $device->serial_number ?: '-' }}</div>
+                                <div class="text-sm font-semibold text-slate-900">{{ $device->serial_number ?: '-' }}</div>
                             </td>
 
                             <td class="px-4 py-4">
