@@ -75,10 +75,10 @@
     $selectedStatusLabel = $fieldValue('status_query', $statusLabels[$selectedStatus] ?? 'Aktīva');
 @endphp
 
-<div class="space-y-5">
+<div class="space-y-6">
     @if ($isWrittenOff)
-        <div class="rounded-[1.75rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-6 text-amber-900">
-            Norakstītai ierīcei var labot tikai informācijas laukus. Statuss, piesaiste lietotājam un telpa vairs netiek mainīti.
+        <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+            Norakstītai ierīcei var labot tikai informācijas laukus. Statuss, piesaiste un telpa netiek mainīti.
         </div>
     @endif
 

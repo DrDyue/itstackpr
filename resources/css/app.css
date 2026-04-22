@@ -561,6 +561,30 @@ tbody td {
     @apply mt-1 text-sm leading-5 text-slate-500;
 }
 
+.form-group-sep {
+    @apply mb-4 flex items-center gap-2.5;
+}
+
+.form-group-sep-label {
+    @apply shrink-0 text-[10.5px] font-bold uppercase tracking-[0.15em] text-slate-400;
+}
+
+.form-group-sep-line {
+    @apply flex-1 border-t border-slate-100;
+}
+
+.device-form-head-compact {
+    @apply flex items-center gap-3 pr-14;
+}
+
+.device-form-head-icon {
+    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700;
+}
+
+.device-form-head-title {
+    @apply flex-1 truncate text-base font-semibold text-slate-900;
+}
+
 .device-money-field {
     @apply relative;
 }
@@ -574,7 +598,7 @@ tbody td {
 }
 
 .device-notes-input {
-    @apply min-h-[14rem] resize-y;
+    @apply min-h-[7rem] resize-y;
 }
 
 .device-image-field {
@@ -756,7 +780,7 @@ tbody td {
 }
 
 .device-type-modal-head {
-    @apply relative overflow-hidden border-b border-slate-200 px-6 py-6 sm:px-7;
+    @apply relative overflow-hidden border-b border-slate-200 px-6 py-4 sm:px-7;
     background:
         radial-gradient(circle at top right, rgba(14, 165, 233, 0.14), transparent 38%),
         radial-gradient(circle at left center, rgba(56, 189, 248, 0.12), transparent 32%),
@@ -917,11 +941,11 @@ tbody td {
 }
 
 .device-type-modal-close {
-    @apply absolute right-5 top-5 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white/80 text-slate-500 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white hover:text-slate-700;
+    @apply absolute right-4 top-3.5 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/70 bg-white/80 text-slate-500 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white hover:text-slate-700;
 }
 
 .device-type-modal-body {
-    @apply bg-slate-50/60 px-6 py-6 sm:px-7;
+    @apply bg-slate-50/60 px-6 py-5 sm:px-7;
 }
 
 .device-type-modal-card {
@@ -6126,6 +6150,23 @@ html[data-theme='dark'] .page-subtitle {
 
 html[data-theme='dark'] .crud-label {
     color: #cbd5e1 !important;
+}
+
+html[data-theme='dark'] .form-group-sep-label {
+    color: #475569 !important;
+}
+
+html[data-theme='dark'] .form-group-sep-line {
+    border-color: rgba(51, 65, 85, 0.7) !important;
+}
+
+html[data-theme='dark'] .device-form-head-icon {
+    background-color: rgba(12, 74, 110, 0.4) !important;
+    color: #38bdf8 !important;
+}
+
+html[data-theme='dark'] .device-form-head-title {
+    color: #f1f5f9 !important;
 }
 
 html[data-theme='dark'] .crud-control {

@@ -1,12 +1,7 @@
-<section class="device-form-card">
-    <div class="device-form-section-header">
-        <div class="device-form-section-icon bg-violet-50 text-violet-700 ring-violet-200">
-            <x-icon name="calendar" size="h-5 w-5" />
-        </div>
-        <div class="device-form-section-copy">
-            <div class="device-form-section-name">Iegāde, piezīmes un attēls</div>
-            <div class="device-form-section-note">Sakārto iegādes informāciju loģiskā secībā un pievieno attēlu, ja tas palīdz ierīci ātrāk atpazīt.</div>
-        </div>
+<div>
+    <div class="form-group-sep">
+        <span class="form-group-sep-label">Finanses</span>
+        <div class="form-group-sep-line"></div>
     </div>
 
     <div class="grid gap-4 md:grid-cols-12">
@@ -33,10 +28,19 @@
                 <span class="device-money-suffix">€</span>
             </div>
         </label>
+    </div>
+</div>
 
+<div>
+    <div class="form-group-sep">
+        <span class="form-group-sep-label">Piezīmes un attēls</span>
+        <div class="form-group-sep-line"></div>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-12">
         <label class="block md:col-span-7">
             <span class="crud-label">Piezīmes</span>
-            <textarea name="notes" rows="8" class="crud-control device-notes-input">{{ $fieldValue('notes', $current?->notes) }}</textarea>
+            <textarea name="notes" rows="4" class="crud-control device-notes-input">{{ $fieldValue('notes', $current?->notes) }}</textarea>
         </label>
 
         <div class="device-image-field md:col-span-5">
@@ -65,4 +69,4 @@
             </div>
         </div>
     </div>
-</section>
+</div>

@@ -1,43 +1,11 @@
-<section class="device-form-card">
-    <div class="device-form-section-header">
-        <div class="device-form-section-icon bg-emerald-50 text-emerald-700 ring-emerald-200">
-            <x-icon name="users" size="h-5 w-5" />
-        </div>
-        <div class="device-form-section-copy">
-            <div class="device-form-section-name">Piesaite un atrašanās vieta</div>
-            <div class="device-form-section-note">Norādi atbildīgo personu un telpu, kur ierīce atrodas. Statusu var mainīt tikai pēc ierīces izveides.</div>
-        </div>
+<div>
+    <div class="form-group-sep">
+        <span class="form-group-sep-label">Piesaiste un atrašanās vieta</span>
+        <div class="form-group-sep-line"></div>
     </div>
 
     <div class="grid gap-4 md:grid-cols-12">
-        @if ($isCreating)
-            <input type="hidden" name="status" value="{{ \App\Models\Device::STATUS_ACTIVE }}">
-        @else
-            <label class="block md:col-span-4">
-                <span class="crud-label">Statuss</span>
-                @if ($isWrittenOff)
-                    <input type="hidden" name="status" value="{{ $current?->status }}">
-                @endif
-                @if ($isWrittenOff)
-                    <div class="crud-control flex items-center bg-slate-50 text-slate-700">
-                        <span>{{ $statusLabels[$current?->status] ?? 'Norakstīta' }}</span>
-                    </div>
-                @else
-                    <x-searchable-select
-                        name="status"
-                        query-name="status_query"
-                        identifier="device-status-form-select-{{ $formKey }}"
-                        :options="$statusOptions"
-                        :selected="(string) $selectedStatus"
-                        :query="$selectedStatusLabel"
-                        placeholder="Izvēlies statusu"
-                        empty-message="Neviens statuss neatbilst meklējumam."
-                    />
-                @endif
-            </label>
-        @endif
-
-        <label class="block {{ $isCreating ? 'md:col-span-6' : 'md:col-span-4' }}">
+        <label class="block md:col-span-6">
             <span class="crud-label">Atbildīgā persona *</span>
             @if ($isWrittenOff)
                 <input type="hidden" name="assigned_to_id" value="">
@@ -58,7 +26,7 @@
             @endif
         </label>
 
-        <label class="block {{ $isCreating ? 'md:col-span-6' : 'md:col-span-4' }}">
+        <label class="block md:col-span-6">
             <span class="crud-label">Telpa *</span>
             @if ($isWrittenOff)
                 <input type="hidden" name="room_id" value="">
@@ -81,4 +49,4 @@
 
         <input type="hidden" name="building_id" value="{{ $isWrittenOff ? '' : $selectedBuildingId }}">
     </div>
-</section>
+</div>

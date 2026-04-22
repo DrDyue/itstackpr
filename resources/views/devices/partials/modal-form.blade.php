@@ -45,20 +45,14 @@
         <input type="hidden" name="modal_form" value="{{ $modalForm }}">
 
         <div class="device-type-modal-head">
-            <div class="device-type-modal-head-copy">
-                <div class="device-type-modal-badge">
-                    <x-icon :name="$iconName" size="h-4 w-4" />
-                    <span>{{ $badgeLabel }}</span>
+            <div class="device-form-head-compact">
+                <div class="device-form-head-icon">
+                    <x-icon name="device" size="h-4 w-4" />
                 </div>
-
-                <div class="device-type-modal-title-row">
-                    <div class="device-type-modal-icon">
-                        <x-icon name="device" size="h-6 w-6" />
-                    </div>
-                    <div class="device-type-modal-title-copy">
-                        <h2 class="device-type-modal-title">{{ $title }}</h2>
-                        <p class="device-type-modal-subtitle">{{ $subtitle }}</p>
-                    </div>
+                <h2 class="device-form-head-title">{{ $title }}</h2>
+                <div class="device-type-modal-badge shrink-0">
+                    <x-icon :name="$iconName" size="h-3.5 w-3.5" />
+                    <span>{{ $badgeLabel }}</span>
                 </div>
             </div>
 
@@ -85,8 +79,8 @@
 
         <div class="device-type-modal-actions">
             <div class="device-type-modal-actions-copy">
-                <div class="device-type-modal-actions-title">{{ $isEdit ? 'Saglabāt izmaiņas ierīcei' : 'Pārbaudi datus pirms izveides' }}</div>
-                <div class="device-type-modal-actions-text">{{ $isEdit ? 'Atjauninātā informācija būs redzama uzreiz pēc saglabāšanas.' : 'Atbildīgā persona un telpa tiks piesaistīta jaunajai ierīcei uzreiz pēc izveides.' }}</div>
+                <div class="device-type-modal-actions-title">{{ $isEdit ? 'Saglabāt izmaiņas' : 'Izveidot ierīci' }}</div>
+                <div class="device-type-modal-actions-text">{{ $isEdit ? 'Visi lauki tiks atjaunināti uzreiz pēc saglabāšanas.' : 'Ierīce tiks pievienota inventāram ar ievadītajiem datiem.' }}</div>
             </div>
             <div class="device-type-modal-actions-buttons">
                 <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', '{{ $modalName }}')">
