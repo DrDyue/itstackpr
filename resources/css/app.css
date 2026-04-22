@@ -4867,6 +4867,14 @@ tbody td {
     animation: table-search-highlight 2.2s ease;
 }
 
+.table-search-match td {
+    @apply bg-sky-50/60;
+}
+
+.table-search-active td {
+    @apply bg-sky-100;
+}
+
 .table-search-navigator {
     position: fixed;
     left: 1.25rem;
@@ -6711,6 +6719,14 @@ html[data-theme='dark'] .table-action-attention {
 
 html[data-theme='dark'] .table-search-hit td {
     background-color: rgba(14, 165, 233, 0.16) !important;
+}
+
+html[data-theme='dark'] .table-search-match td {
+    background-color: rgba(14, 165, 233, 0.07) !important;
+}
+
+html[data-theme='dark'] .table-search-active td {
+    background-color: rgba(14, 165, 233, 0.22) !important;
 }
 
 html[data-theme='dark'] .app-loading-bar-shell {

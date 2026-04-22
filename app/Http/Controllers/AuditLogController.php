@@ -45,7 +45,7 @@ class AuditLogController extends Controller
 
         if (! $this->featureTableExists('audit_log')) {
             return view('audit_log.index', [
-                'logs' => collect(),
+                'logs' => $this->emptyPaginator(20),
                 'filters' => $filters,
                 'summary' => [
                     'total' => 0,
@@ -112,7 +112,7 @@ class AuditLogController extends Controller
                 $logQuery->orderBy('timestamp', 'desc')->orderBy('id', 'desc');
         }
 
-        $logs = (clone $logQuery)->get(['id', 'timestamp', 'user_id', 'action', 'entity_type', 'entity_id', 'description', 'severity']);
+        $logs = (clone $logQuery)->paginate(20)->withQueryString();
 
         $summaryRow = AuditLog::query()
             ->selectRaw('COUNT(*) as total')
@@ -259,7 +259,7 @@ class AuditLogController extends Controller
 
         return response()->json([
             'found' => true,
-            'page' => 1,
+            'page' => intdiv((int) $foundIndex, 20) + 1,
             'term' => $search,
             'highlight_id' => 'audit-log-'.$logs->values()[(int) $foundIndex]->id,
         ]);

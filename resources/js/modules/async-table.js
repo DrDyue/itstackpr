@@ -234,8 +234,34 @@ const getAsyncTableFormByRootSelector = (rootSelector) => {
 };
 
 const clearTableSearchHighlights = (root) => {
-    root?.querySelectorAll('.table-search-hit').forEach((row) => {
-        row.classList.remove('table-search-hit');
+    root?.querySelectorAll('.table-search-hit, .table-search-match, .table-search-active').forEach((row) => {
+        row.classList.remove('table-search-hit', 'table-search-match', 'table-search-active');
+    });
+};
+
+const applyNavigatorHighlights = (root) => {
+    if (!root || !tableSearchNavigatorState?.matches?.length) {
+        return;
+    }
+
+    clearTableSearchHighlights(root);
+
+    const { matches, currentIndex, term, mode } = tableSearchNavigatorState;
+    const currentPage = getCurrentAsyncPage();
+
+    matches.forEach((match, index) => {
+        if (Number(match.page) !== currentPage) {
+            return;
+        }
+
+        const row =
+            findTableRowById(root, match.highlightId) ||
+            findMatchingTableRows(root, term, mode)[match.rowIndex] ||
+            null;
+
+        if (row) {
+            row.classList.add(index === currentIndex ? 'table-search-active' : 'table-search-match');
+        }
     });
 };
 
@@ -607,12 +633,13 @@ const moveTableSearchNavigator = async (step) => {
             || findMatchingTableRows(root, tableSearchNavigatorState.term, tableSearchNavigatorState.mode)[targetMatch.rowIndex]
             || null;
 
+        tableSearchNavigatorState.currentIndex = nextIndex;
+        applyNavigatorHighlights(root);
+
         if (row) {
-            clearTableSearchHighlights(root);
-            scrollToAndHighlightTableRow(row);
+            row.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
         }
 
-        tableSearchNavigatorState.currentIndex = nextIndex;
         renderTableSearchNavigator();
         return true;
     }
@@ -636,12 +663,13 @@ const moveTableSearchNavigator = async (step) => {
         || findMatchingTableRows(nextRoot, tableSearchNavigatorState.term, tableSearchNavigatorState.mode)[targetMatch.rowIndex]
         || null;
 
+    tableSearchNavigatorState.currentIndex = nextIndex;
+    applyNavigatorHighlights(nextRoot);
+
     if (row) {
-        clearTableSearchHighlights(nextRoot);
-        scrollToAndHighlightTableRow(row);
+        row.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
     }
 
-    tableSearchNavigatorState.currentIndex = nextIndex;
     renderTableSearchNavigator();
 
     return true;
@@ -725,7 +753,12 @@ const performManualTableSearch = async (form) => {
             || findMatchingTableRows(activeRoot, rawTerm, searchMode)[firstMatch.rowIndex]
             || null;
 
-        if (activeRow) {
+        if (paginatedResults.matches.length > 1) {
+            applyNavigatorHighlights(activeRoot);
+            if (activeRow) {
+                activeRow.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+            }
+        } else if (activeRow) {
             scrollToAndHighlightTableRow(activeRow);
         }
 
