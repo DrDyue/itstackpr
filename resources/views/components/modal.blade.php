@@ -20,6 +20,16 @@ $maxWidth = [
 
 <div
     x-data="{ show: @js($show) }"
+    x-init="$watch('show', value => {
+        if (value) {
+            window.requestAnimationFrame(() => {
+                window.dispatchEvent(new CustomEvent('modal-opened', { detail: '{{ $name }}' }));
+            });
+            return;
+        }
+
+        window.dispatchEvent(new CustomEvent('modal-closed', { detail: '{{ $name }}' }));
+    })"
     @open-modal.window="if ($event.detail === '{{ $name }}') { show = true; }"
     @close-modal.window="if ($event.detail === '{{ $name }}') { show = false; }"
     @keydown.escape.window="show = false"

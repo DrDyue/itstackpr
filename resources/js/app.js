@@ -108,20 +108,48 @@ const createAppLoadingManager = () => {
 
 const appLoading = createAppLoadingManager();
 window.appLoading = appLoading;
-window.openModalWithLoading = (modalName, { holdMs = 320 } = {}) => {
+window.openModalWithLoading = (modalName, { fallbackMs = 1400 } = {}) => {
     if (!modalName) {
         return;
     }
 
     appLoading.start();
 
+    let settled = false;
+    let fallbackTimer = null;
+
+    const finish = () => {
+        if (settled) {
+            return;
+        }
+
+        settled = true;
+        if (fallbackTimer) {
+            window.clearTimeout(fallbackTimer);
+        }
+        window.removeEventListener('modal-opened', handleOpened);
+        appLoading.end();
+    };
+
+    const handleOpened = (event) => {
+        if (event.detail !== modalName) {
+            return;
+        }
+
+        window.requestAnimationFrame(() => {
+            finish();
+        });
+    };
+
+    window.addEventListener('modal-opened', handleOpened);
+
     window.requestAnimationFrame(() => {
         window.dispatchEvent(new CustomEvent('open-modal', { detail: modalName }));
-
-        window.setTimeout(() => {
-            appLoading.end();
-        }, holdMs);
     });
+
+    fallbackTimer = window.setTimeout(() => {
+        finish();
+    }, fallbackMs);
 };
 
 if (document.readyState !== 'complete') {
