@@ -36,28 +36,6 @@
                             <x-icon name="repair" size="h-4 w-4" />
                             <span>Serviss</span>
                         </div>
-                        <div class="inventory-inline-metrics">
-                            <span class="inventory-inline-chip inventory-inline-chip-slate">
-                                <x-icon name="repair" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Kopā</span>
-                                <span class="inventory-inline-value">{{ $repairSummary['total'] }}</span>
-                            </span>
-                            <span class="inventory-inline-chip inventory-inline-chip-amber">
-                                <x-icon name="clock" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Gaida</span>
-                                <span class="inventory-inline-value">{{ $repairSummary['waiting'] }}</span>
-                            </span>
-                            <span class="inventory-inline-chip inventory-inline-chip-sky">
-                                <x-icon name="stats" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Procesā</span>
-                                <span class="inventory-inline-value">{{ $repairSummary['in_progress'] }}</span>
-                            </span>
-                            <span class="inventory-inline-chip inventory-inline-chip-emerald">
-                                <x-icon name="check-circle" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Pabeigti</span>
-                                <span class="inventory-inline-value">{{ $repairSummary['completed'] }}</span>
-                            </span>
-                        </div>
                     </div>
 
                     <div class="page-title-group mt-4">
@@ -246,6 +224,7 @@
                                 >
                                     <x-icon name="repair" size="h-4 w-4" />
                                     <span>Iekšējais</span>
+                                    <span class="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-white/80 px-1.5 py-0.5 text-[10px] font-bold text-current ring-1 ring-black/5">{{ $typeSummary['internal'] ?? 0 }}</span>
                                 </a>
                                 <a
                                     href="{{ route('repairs.index', array_merge(request()->except(['repair_type', 'page']), ['repair_type' => 'external', 'statuses_filter' => '1'])) }}"
@@ -254,6 +233,7 @@
                                 >
                                     <x-icon name="send" size="h-4 w-4" />
                                     <span>Ārējais</span>
+                                    <span class="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-white/80 px-1.5 py-0.5 text-[10px] font-bold text-current ring-1 ring-black/5">{{ $typeSummary['external'] ?? 0 }}</span>
                                 </a>
                                 <a
                                     href="{{ route('repairs.index', array_merge(request()->except(['repair_type', 'page']), ['statuses_filter' => '1'])) }}"
@@ -262,6 +242,7 @@
                                 >
                                     <x-icon name="view" size="h-4 w-4" />
                                     <span>Visi</span>
+                                    <span class="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-white/80 px-1.5 py-0.5 text-[10px] font-bold text-current ring-1 ring-black/5">{{ $typeSummary['total'] ?? 0 }}</span>
                                 </a>
                             </div>
                         </div>
@@ -278,6 +259,13 @@
                                                 'cancelled' => 'quick-status-filter-rose',
                                                 default => 'quick-status-filter-emerald',
                                             };
+                                            $statusCount = match ($status) {
+                                                'waiting' => $repairSummary['waiting'] ?? 0,
+                                                'in-progress' => $repairSummary['in_progress'] ?? 0,
+                                                'completed' => $repairSummary['completed'] ?? 0,
+                                                'cancelled' => $repairSummary['cancelled'] ?? 0,
+                                                default => 0,
+                                            };
                                         @endphp
                                         <button
                                             type="button"
@@ -287,6 +275,7 @@
                                         >
                                             <x-icon :name="match($status) { 'waiting' => 'clock', 'in-progress' => 'stats', 'completed' => 'check-circle', default => 'x-circle' }" size="h-4 w-4" />
                                             <span>{{ $statusLabels[$status] ?? $status }}</span>
+                                            <span class="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-white/80 px-1.5 py-0.5 text-[10px] font-bold text-current ring-1 ring-black/5">{{ $statusCount }}</span>
                                         </button>
                                     @endforeach
 
@@ -314,6 +303,7 @@
                                             'high' => 'flag',
                                             default => 'bolt',
                                         };
+                                        $priorityCount = $prioritySummary[$priority] ?? 0;
                                     @endphp
                                     <button
                                         type="button"
@@ -323,6 +313,7 @@
                                     >
                                         <x-icon :name="$priorityIcon" size="h-4 w-4" />
                                         <span>{{ $priorityLabels[$priority] ?? $priority }}</span>
+                                        <span class="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-white/80 px-1.5 py-0.5 text-[10px] font-bold text-current ring-1 ring-black/5">{{ $priorityCount }}</span>
                                     </button>
                                 @endforeach
 
