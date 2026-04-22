@@ -1,11 +1,7 @@
 {{--
     Lapa: Ierīču saraksts.
-    Atbildība: rāda visas lietotājam pieejamās ierīces; adminam tas ir pilnais inventārs, lietotājam - tikai viņa ierīces.
+    Atbildība: rāda adminam pilnu inventāru un lietotājam tikai viņa ierīces vienotā tabulas skatā.
     Datu avots: DeviceController@index.
-    Galvenās daļas:
-    1. Kopsavilkuma hero ar skaitītājiem.
-    2. Filtru rīkjosla meklēšanai, telpām, tipiem un statusiem.
-    3. Galvenā tabula ar statusiem, preview un ātrajām darbībām.
 --}}
 <x-app-layout>
     @php
@@ -65,56 +61,70 @@
             'description' => 'Filtrs pēc stāva',
             'search' => $floor . ' ' . $floor . '. stāvs',
         ])->values();
-        $toolbarGridClass = 'devices-filter-grid';
-        $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
     @endphp
 
     <section class="app-shell app-shell-wide">
-        <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
-            <div class="flex flex-wrap items-center gap-2">
-                <div class="flex items-center gap-2">
-                    <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-100 text-sky-700">
-                        <x-icon name="device" size="h-5 w-5" />
+        <div class="page-hero">
+            <div class="page-hero-grid">
+                <div class="max-w-5xl">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="page-eyebrow">
+                            <x-icon name="device" size="h-4 w-4" />
+                            <span>Inventārs</span>
+                        </div>
+                        <div class="inventory-inline-metrics">
+                            <span class="inventory-inline-chip inventory-inline-chip-slate">
+                                <x-icon name="device" size="h-3.5 w-3.5" />
+                                <span class="inventory-inline-label">Kopā</span>
+                                <span class="inventory-inline-value">{{ $deviceSummary['total'] }}</span>
+                            </span>
+                            <span class="inventory-inline-chip inventory-inline-chip-emerald">
+                                <x-icon name="check-circle" size="h-3.5 w-3.5" />
+                                <span class="inventory-inline-label">Aktīvas</span>
+                                <span class="inventory-inline-value">{{ $deviceSummary['active'] }}</span>
+                            </span>
+                            <span class="inventory-inline-chip inventory-inline-chip-sky">
+                                <x-icon name="repair" size="h-3.5 w-3.5" />
+                                <span class="inventory-inline-label">Remontā</span>
+                                <span class="inventory-inline-value">{{ $deviceSummary['repair'] }}</span>
+                            </span>
+                            @if ($canManageDevices)
+                                <span class="inventory-inline-chip inventory-inline-chip-rose">
+                                    <x-icon name="writeoff" size="h-3.5 w-3.5" />
+                                    <span class="inventory-inline-label">Norakstītas</span>
+                                    <span class="inventory-inline-value">{{ $deviceSummary['writeoff'] }}</span>
+                                </span>
+                            @endif
+                        </div>
                     </div>
-                    <h1 class="text-lg font-bold text-slate-900">Ierīces</h1>
+
+                    <div class="page-title-group mt-4">
+                        <div class="page-title-icon page-title-icon-sky">
+                            <x-icon name="device" size="h-7 w-7" />
+                        </div>
+                        <div>
+                            <h1 class="page-title">Ierīces</h1>
+                            <p class="page-subtitle">{{ $canManageDevices ? 'Pilns inventāra saraksts ar statusiem, atrašanās vietu un pārvaldības darbībām.' : 'Šeit redzamas tikai ar tevi saistītās ierīces un pieejamās darbības.' }}</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex flex-wrap items-center gap-1.5">
-                    <span class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 shadow-sm">
-                        <x-icon name="device" size="h-3.5 w-3.5" />
-                        <span>{{ $deviceSummary['total'] }}</span>
-                    </span>
-                    <span class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                        <x-icon name="check-circle" size="h-3.5 w-3.5" />
-                        <span>{{ $deviceSummary['active'] }} aktīvas</span>
-                    </span>
-                    @if ($deviceSummary['repair'] > 0)
-                        <span class="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
-                            <x-icon name="repair" size="h-3.5 w-3.5" />
-                            <span>{{ $deviceSummary['repair'] }} remontā</span>
-                        </span>
-                    @endif
-                    @if ($canManageDevices && $deviceSummary['writeoff'] > 0)
-                        <span class="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700">
-                            <x-icon name="writeoff" size="h-3.5 w-3.5" />
-                            <span>{{ $deviceSummary['writeoff'] }} norakstītas</span>
-                        </span>
-                    @endif
-                </div>
+
+                @if ($canManageDevices)
+                    <div class="page-actions">
+                        <button type="button" class="btn-create" x-data @click="$dispatch('open-modal', 'device-create-modal')">
+                            <x-icon name="plus" size="h-4 w-4" />
+                            <span>Jauna ierīce</span>
+                        </button>
+                    </div>
+                @endif
             </div>
-            @if ($canManageDevices)
-                <button type="button" class="btn-create" x-data @click="$dispatch('open-modal', 'device-create-modal')">
-                    <x-icon name="plus" size="h-4 w-4" />
-                    <span>Jauna ierīce</span>
-                </button>
-            @endif
         </div>
 
-        <div id="devices-index-root" data-async-table-root class="devices-index-page">
-            {{-- Filtru un meklēšanas josla --}}
+        <div id="devices-index-root" data-async-table-root>
             <form
                 method="GET"
                 action="{{ route('devices.index') }}"
-                class="devices-filter-surface devices-filter-surface-elevated"
+                class="surface-toolbar surface-toolbar-elevated repairs-toolbar-surface"
                 data-async-table-form
                 data-async-root="#devices-index-root"
                 data-search-endpoint="{{ route('devices.find-by-code') }}"
@@ -123,49 +133,47 @@
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
 
-                <div class="devices-filter-header">
+                <div class="toolbar-panels toolbar-panels-wide">
                     <div class="devices-filter-section">
                         <h3 class="devices-filter-title">
                             <x-icon name="search" size="h-4 w-4" />
                             <span>Meklēšana</span>
                         </h3>
-                        <div class="{{ $toolbarGridClass }}">
-                            <div class="devices-search-group">
-                                <label class="devices-search-label">
-                                    <span>Meklēt pēc koda</span>
+                        <div class="devices-filter-grid">
+                            <label class="block repairs-toolbar-code-field">
+                                <span class="crud-label">Meklēt pēc koda</span>
+                                <div class="flex items-center gap-2">
                                     <input
                                         type="text"
                                         name="code"
                                         value="{{ $filters['code'] }}"
-                                        class="devices-code-input"
-                                        placeholder="Ievadi ierīces kodu"
+                                        class="crud-control"
+                                        placeholder="Ievadi precīzu ierīces kodu"
                                         autocomplete="off"
                                         data-async-manual="true"
                                         data-async-code-search="true"
                                     >
-                                </label>
-                                <button type="button" class="devices-code-search-btn" data-code-search-submit="true" onclick="return window.runManualTableSearchFromTrigger(this);">
-                                    <x-icon name="search" size="h-4 w-4" />
-                                    <span>Atrast ierīci</span>
-                                </button>
-                            </div>
+                                    <button type="button" class="btn-search shrink-0" data-code-search-submit="true" onclick="return window.runManualTableSearchFromTrigger(this);">
+                                        <x-icon name="search" size="h-4 w-4" />
+                                        <span>Meklēt</span>
+                                    </button>
+                                </div>
+                            </label>
                         </div>
                     </div>
-                </div>
 
-                <div class="devices-filter-divider"></div>
-
-                <div class="devices-filter-header">
                     <div class="devices-filter-section">
-                        <h3 class="devices-filter-title">
+                        <h3 class="devices-filter-title repairs-filter-title">
                             <x-icon name="filter" size="h-4 w-4" />
                             <span>Filtri</span>
                         </h3>
-                        <div class="devices-filters-grid">
-                            <label class="block">
+
+                        <div class="repairs-toolbar-filters-grid">
+                            <label class="block repairs-toolbar-text-field">
                                 <span class="crud-label">Filtrēt pēc teksta</span>
                                 <input type="text" name="q" value="{{ $filters['q'] }}" class="crud-control" placeholder="Nosaukums, modelis, ražotājs, sērija...">
                             </label>
+
                             @if ($canManageDevices)
                                 <label class="block">
                                     <span class="crud-label">Piešķirta</span>
@@ -181,6 +189,7 @@
                                     />
                                 </label>
                             @endif
+
                             <label class="block">
                                 <span class="crud-label">Stāvs</span>
                                 <x-searchable-select
@@ -194,6 +203,7 @@
                                     empty-message="Neviens stāvs neatbilst meklējumam."
                                 />
                             </label>
+
                             <label class="block">
                                 <span class="crud-label">Telpa</span>
                                 <x-searchable-select
@@ -207,6 +217,7 @@
                                     empty-message="Neviena telpa neatbilst meklējumam."
                                 />
                             </label>
+
                             <label class="block">
                                 <span class="crud-label">Tips</span>
                                 <x-searchable-select
@@ -224,15 +235,13 @@
                     </div>
                 </div>
 
-                <div class="filter-toolbar-footer">
+                <div class="filter-toolbar-footer repairs-filter-footer">
                     <div class="quick-filter-groups">
                         <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($selectedStatuses), minimum: 0 })">
                             <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ierīces statuss</div>
                             <div class="quick-status-filters">
                                 @foreach ($statusFilterLinks as $statusFilter)
-                                    @php
-                                        $toneClass = 'quick-status-filter-' . $statusFilter['tone'];
-                                    @endphp
+                                    @php($toneClass = 'quick-status-filter-' . $statusFilter['tone'])
                                     <button
                                         type="button"
                                         @click="toggle(@js($statusFilter['value'])); $nextTick(() => $el.closest('form').requestSubmit())"
@@ -275,34 +284,32 @@
             </div>
 
             @if (session('error'))
-                <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
+                <div class="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
             @endif
 
-        {{-- Galvenā ierīču tabula ar statusu preview un admina ātrajām darbībām. --}}
-        @if (session('warning'))
-            <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{{ session('warning') }}</div>
-        @endif
+            @if (session('warning'))
+                <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{{ session('warning') }}</div>
+            @endif
 
-        @include('devices.index-table', [
-            'devices' => $devices,
-            'deviceStates' => $deviceStates,
-            'sorting' => $sorting,
-            'sortOptions' => $sortOptions,
-            'statusLabels' => $statusLabels,
-            'canManageDevices' => $canManageDevices,
-            'quickRoomSelectOptions' => $quickRoomSelectOptions,
-            'userRoomOptions' => $userRoomOptions ?? collect(),
-            'quickAssigneeOptions' => $quickAssigneeSelectOptions,
-            'types' => $types ?? collect(),
-            'buildings' => $buildings ?? collect(),
-            'rooms' => $rooms ?? collect(),
-            'users' => $users ?? collect(),
-            'statuses' => $statuses ?? [],
-            'defaultAssignedToId' => $defaultAssignedToId ?? null,
-            'defaultRoomId' => $defaultRoomId ?? null,
-            'defaultBuildingId' => $defaultBuildingId ?? null,
-        ])
-
+            @include('devices.index-table', [
+                'devices' => $devices,
+                'deviceStates' => $deviceStates,
+                'sorting' => $sorting,
+                'sortOptions' => $sortOptions,
+                'statusLabels' => $statusLabels,
+                'canManageDevices' => $canManageDevices,
+                'quickRoomSelectOptions' => $quickRoomSelectOptions,
+                'userRoomOptions' => $userRoomOptions ?? collect(),
+                'quickAssigneeOptions' => $quickAssigneeSelectOptions,
+                'types' => $types ?? collect(),
+                'buildings' => $buildings ?? collect(),
+                'rooms' => $rooms ?? collect(),
+                'users' => $users ?? collect(),
+                'statuses' => $statuses ?? [],
+                'defaultAssignedToId' => $defaultAssignedToId ?? null,
+                'defaultRoomId' => $defaultRoomId ?? null,
+                'defaultBuildingId' => $defaultBuildingId ?? null,
+            ])
         </div>
 
         @if ($canManageDevices)
