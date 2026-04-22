@@ -70,60 +70,43 @@
     @endphp
 
     <section class="app-shell app-shell-wide">
-        <div class="page-hero">
-            <div class="page-hero-grid">
-                <div class="max-w-4xl">
-                    <div class="flex flex-wrap items-center gap-2">
-                        <div class="page-eyebrow">
-                            <x-icon name="device" size="h-4 w-4" />
-                            <span>Inventārs</span>
-                        </div>
-
-                        <div class="inventory-inline-metrics">
-                            <span class="inventory-inline-chip inventory-inline-chip-slate">
-                                <x-icon name="device" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Kopa</span>
-                                <span class="inventory-inline-value">{{ $deviceSummary['total'] }}</span>
-                            </span>
-                            <span class="inventory-inline-chip inventory-inline-chip-emerald">
-                                <x-icon name="check-circle" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Aktīvas</span>
-                                <span class="inventory-inline-value">{{ $deviceSummary['active'] }}</span>
-                            </span>
-                            <span class="inventory-inline-chip inventory-inline-chip-amber">
-                                <x-icon name="repair" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Remonta</span>
-                                <span class="inventory-inline-value">{{ $deviceSummary['repair'] }}</span>
-                            </span>
-                            @if ($canManageDevices)
-                                <span class="inventory-inline-chip inventory-inline-chip-rose">
-                                    <x-icon name="writeoff" size="h-3.5 w-3.5" />
-                                    <span class="inventory-inline-label">Norakstītas</span>
-                                    <span class="inventory-inline-value">{{ $deviceSummary['writeoff'] }}</span>
-                                </span>
-                            @endif
-                        </div>
+        <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2">
+                <div class="flex items-center gap-2">
+                    <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-100 text-sky-700">
+                        <x-icon name="device" size="h-5 w-5" />
                     </div>
-
-                    <div class="page-title-group mt-4">
-                        <div class="page-title-icon page-title-icon-sky">
-                            <x-icon name="device" size="h-7 w-7" />
-                        </div>
-                        <div>
-                            <h1 class="page-title">Ierīces</h1>
-                            <p class="page-subtitle">{{ $canManageDevices ? 'Pilns ierīču saraksts un pārvaldība.' : 'Tavas piesaistītās ierīces.' }}</p>
-                        </div>
-                    </div>
+                    <h1 class="text-lg font-bold text-slate-900">Ierīces</h1>
                 </div>
-                @if ($canManageDevices)
-                    <div class="page-actions">
-                        <button type="button" class="btn-create" x-data @click="$dispatch('open-modal', 'device-create-modal')">
-                            <x-icon name="plus" size="h-4 w-4" />
-                            <span>Jauna ierīce</span>
-                        </button>
-                    </div>
-                @endif
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 shadow-sm">
+                        <x-icon name="device" size="h-3.5 w-3.5" />
+                        <span>{{ $deviceSummary['total'] }}</span>
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                        <x-icon name="check-circle" size="h-3.5 w-3.5" />
+                        <span>{{ $deviceSummary['active'] }} aktīvas</span>
+                    </span>
+                    @if ($deviceSummary['repair'] > 0)
+                        <span class="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                            <x-icon name="repair" size="h-3.5 w-3.5" />
+                            <span>{{ $deviceSummary['repair'] }} remontā</span>
+                        </span>
+                    @endif
+                    @if ($canManageDevices && $deviceSummary['writeoff'] > 0)
+                        <span class="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700">
+                            <x-icon name="writeoff" size="h-3.5 w-3.5" />
+                            <span>{{ $deviceSummary['writeoff'] }} norakstītas</span>
+                        </span>
+                    @endif
+                </div>
             </div>
+            @if ($canManageDevices)
+                <button type="button" class="btn-create" x-data @click="$dispatch('open-modal', 'device-create-modal')">
+                    <x-icon name="plus" size="h-4 w-4" />
+                    <span>Jauna ierīce</span>
+                </button>
+            @endif
         </div>
 
         <div id="devices-index-root" data-async-table-root class="devices-index-page">

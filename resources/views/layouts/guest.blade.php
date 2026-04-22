@@ -99,26 +99,6 @@
                     </div>
                     <h2 class="text-3xl font-bold text-white leading-snug">IT inventāra<br>pārvaldības sistēma</h2>
                     <p class="mt-4 text-base text-white/75 leading-relaxed">Ludzas novada pašvaldības centralizēta platforma IT aprīkojuma uzskaitei un pieprasījumu apstrādei.</p>
-                    <ul class="mt-8 space-y-4">
-                        <li class="flex items-start gap-3">
-                            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                            </div>
-                            <span class="text-sm text-white/85 leading-relaxed">Pilna IT inventāra uzskaite ar atrašanās vietu izsekošanu</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                            </div>
-                            <span class="text-sm text-white/85 leading-relaxed">Remonta, norakstīšanas un nodošanas pieteikumu darba plūsmas</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                            </div>
-                            <span class="text-sm text-white/85 leading-relaxed">Audita žurnāls un lomu pārvaldība</span>
-                        </li>
-                    </ul>
                 </div>
             </div>
         </div>
