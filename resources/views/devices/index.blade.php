@@ -78,23 +78,6 @@
                                 <span class="inventory-inline-label">Kopā</span>
                                 <span class="inventory-inline-value">{{ $deviceSummary['total'] }}</span>
                             </span>
-                            <span class="inventory-inline-chip inventory-inline-chip-emerald">
-                                <x-icon name="check-circle" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Aktīvas</span>
-                                <span class="inventory-inline-value">{{ $deviceSummary['active'] }}</span>
-                            </span>
-                            <span class="inventory-inline-chip inventory-inline-chip-sky">
-                                <x-icon name="repair" size="h-3.5 w-3.5" />
-                                <span class="inventory-inline-label">Remontā</span>
-                                <span class="inventory-inline-value">{{ $deviceSummary['repair'] }}</span>
-                            </span>
-                            @if ($canManageDevices)
-                                <span class="inventory-inline-chip inventory-inline-chip-rose">
-                                    <x-icon name="writeoff" size="h-3.5 w-3.5" />
-                                    <span class="inventory-inline-label">Norakstītas</span>
-                                    <span class="inventory-inline-value">{{ $deviceSummary['writeoff'] }}</span>
-                                </span>
-                            @endif
                         </div>
                     </div>
 
@@ -242,6 +225,14 @@
                             <div class="quick-status-filters">
                                 @foreach ($statusFilterLinks as $statusFilter)
                                     @php($toneClass = 'quick-status-filter-' . $statusFilter['tone'])
+                                    @php
+                                        $statusCount = match ($statusFilter['value']) {
+                                            'active' => $deviceSummary['active'] ?? 0,
+                                            'repair' => $deviceSummary['repair'] ?? 0,
+                                            'writeoff' => $deviceSummary['writeoff'] ?? 0,
+                                            default => 0,
+                                        };
+                                    @endphp
                                     <button
                                         type="button"
                                         @click="toggle(@js($statusFilter['value'])); $nextTick(() => $el.closest('form').requestSubmit())"
@@ -250,6 +241,7 @@
                                     >
                                         <x-icon :name="$statusFilter['icon']" size="h-4 w-4" />
                                         <span>{{ $statusFilter['label'] }}</span>
+                                        <span class="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-white/80 px-1.5 py-0.5 text-[10px] font-bold text-current ring-1 ring-black/5">{{ $statusCount }}</span>
                                     </button>
                                 @endforeach
 
