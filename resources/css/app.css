@@ -7193,6 +7193,14 @@ html[data-theme='dark'] .user-profile-card-label {
     color: #94a3b8;
 }
 
+.table-action-button-slate {
+    @apply border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900;
+}
+
+.table-action-button-slate > svg {
+    @apply text-slate-500;
+}
+
 .device-user-action-row {
     @apply flex flex-nowrap items-center justify-end gap-2 whitespace-nowrap;
 }
@@ -7205,6 +7213,174 @@ html[data-theme='dark'] .user-profile-card-label {
 .device-user-action-row > .table-action-button > span,
 .device-user-action-row > .btn-disabled > span {
     @apply whitespace-nowrap;
+}
+
+.device-user-overview-grid {
+    @apply grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.95fr)_minmax(0,0.9fr)];
+}
+
+.device-user-glance-card {
+    @apply rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-sm;
+}
+
+.device-user-glance-card-primary {
+    @apply bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white shadow-[0_20px_45px_-28px_rgba(15,23,42,0.75)];
+}
+
+.device-user-glance-card-accent {
+    @apply bg-gradient-to-br from-emerald-50 via-white to-sky-50;
+}
+
+.device-user-glance-card-muted {
+    @apply bg-slate-50;
+}
+
+.device-user-glance-head {
+    @apply flex items-start gap-3;
+}
+
+.device-user-glance-icon {
+    @apply flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-700;
+}
+
+.device-user-glance-icon-sky {
+    @apply bg-sky-100 text-sky-700;
+}
+
+.device-user-glance-icon-emerald {
+    @apply bg-emerald-100 text-emerald-700;
+}
+
+.device-user-glance-icon-amber {
+    @apply bg-amber-100 text-amber-700;
+}
+
+.device-user-glance-icon-slate {
+    @apply bg-slate-200 text-slate-700;
+}
+
+.device-user-glance-eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400;
+}
+
+.device-user-glance-card-primary .device-user-glance-eyebrow {
+    @apply text-slate-300;
+}
+
+.device-user-glance-title {
+    @apply mt-1 text-lg font-semibold text-slate-900;
+}
+
+.device-user-glance-card-primary .device-user-glance-title {
+    @apply text-white;
+}
+
+.device-user-glance-meta {
+    @apply mt-5 flex flex-wrap gap-2;
+}
+
+.device-user-glance-chip {
+    @apply inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-700;
+}
+
+.device-user-glance-chip-label {
+    @apply uppercase tracking-[0.18em] text-slate-400;
+}
+
+.device-user-glance-card-primary .device-user-glance-chip {
+    @apply border-white/15 bg-white/10 text-white backdrop-blur;
+}
+
+.device-user-glance-card-primary .device-user-glance-chip-label {
+    @apply text-slate-300;
+}
+
+.device-user-glance-list {
+    @apply mt-5 space-y-3;
+}
+
+.device-user-glance-row {
+    @apply flex items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3;
+}
+
+.device-user-glance-card-primary .device-user-glance-row {
+    @apply border-white/10 bg-white/5;
+}
+
+.device-user-glance-label {
+    @apply text-xs font-semibold uppercase tracking-[0.16em] text-slate-400;
+}
+
+.device-user-glance-value {
+    @apply text-right text-sm font-semibold text-slate-800;
+}
+
+.device-user-glance-card-primary .device-user-glance-value {
+    @apply text-white;
+}
+
+.device-user-action-panel-copy {
+    @apply mt-5 rounded-2xl border border-emerald-100 bg-white/80 px-4 py-4 text-sm leading-6 text-slate-600;
+}
+
+.device-user-glance-alert {
+    @apply mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-900;
+}
+
+.device-user-glance-note {
+    @apply mt-4 flex flex-col gap-1 rounded-2xl border border-slate-200 bg-white/80 px-4 py-4 text-sm leading-6 text-slate-700;
+}
+
+.device-user-glance-note-label {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-slate-500;
+}
+
+.device-user-origin-card {
+    @apply rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-sm;
+}
+
+.device-user-origin-copy {
+    @apply mt-4 text-sm leading-7 text-slate-700;
+}
+
+.device-user-room-modal-shell {
+    @apply flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[1.65rem] bg-white;
+}
+
+.device-user-room-modal-head {
+    @apply flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5;
+}
+
+.device-user-room-modal-badge {
+    @apply inline-flex items-center rounded-full bg-sky-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-700;
+}
+
+.device-user-room-modal-title {
+    @apply mt-3 text-xl font-semibold text-slate-900;
+}
+
+.device-user-room-modal-copy {
+    @apply mt-2 max-w-xl text-sm leading-6 text-slate-600;
+}
+
+.device-user-room-modal-form {
+    @apply space-y-5 px-6 py-5;
+}
+
+.device-user-room-modal-device {
+    @apply grid gap-4 rounded-[1.4rem] border border-slate-200 bg-slate-50 p-4 md:grid-cols-2;
+}
+
+.device-user-room-modal-label {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-slate-500;
+}
+
+.device-user-room-modal-value {
+    @apply mt-2 text-sm font-semibold text-slate-900;
+}
+
+.device-user-room-modal-actions {
+    @apply flex flex-wrap items-center justify-end gap-3 pt-2;
 }
 
 html[data-theme='dark'] .user-profile-link-card {
@@ -7238,4 +7414,70 @@ html[data-theme='dark'] .user-profile-request-head a {
 
 html[data-theme='dark'] .user-profile-request-head a:hover {
     color: #bae6fd;
+}
+
+html[data-theme='dark'] .table-action-button-slate {
+    border-color: rgba(71, 85, 105, 0.75);
+    background: rgba(15, 23, 42, 0.88);
+    color: #e2e8f0;
+}
+
+html[data-theme='dark'] .table-action-button-slate > svg {
+    color: #94a3b8;
+}
+
+html[data-theme='dark'] .table-action-button-slate:hover {
+    background: rgba(30, 41, 59, 0.98);
+    color: #f8fafc;
+}
+
+html[data-theme='dark'] .device-user-glance-card,
+html[data-theme='dark'] .device-user-origin-card,
+html[data-theme='dark'] .device-user-room-modal-shell {
+    border-color: rgba(71, 85, 105, 0.45);
+    background: rgba(15, 23, 42, 0.88);
+}
+
+html[data-theme='dark'] .device-user-glance-card-primary {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.96));
+}
+
+html[data-theme='dark'] .device-user-glance-title,
+html[data-theme='dark'] .device-user-room-modal-title,
+html[data-theme='dark'] .device-user-room-modal-value {
+    color: #f8fafc;
+}
+
+html[data-theme='dark'] .device-user-glance-row,
+html[data-theme='dark'] .device-user-room-modal-device,
+html[data-theme='dark'] .device-user-glance-note,
+html[data-theme='dark'] .device-user-action-panel-copy {
+    border-color: rgba(71, 85, 105, 0.45);
+    background: rgba(15, 23, 42, 0.72);
+}
+
+html[data-theme='dark'] .device-user-glance-value,
+html[data-theme='dark'] .device-user-origin-copy,
+html[data-theme='dark'] .device-user-room-modal-copy,
+html[data-theme='dark'] .device-user-glance-note,
+html[data-theme='dark'] .device-user-action-panel-copy {
+    color: #cbd5e1;
+}
+
+html[data-theme='dark'] .device-user-glance-label,
+html[data-theme='dark'] .device-user-glance-chip-label,
+html[data-theme='dark'] .device-user-room-modal-label,
+html[data-theme='dark'] .device-user-glance-eyebrow,
+html[data-theme='dark'] .device-user-glance-note-label {
+    color: #94a3b8;
+}
+
+html[data-theme='dark'] .device-user-room-modal-head {
+    border-color: rgba(71, 85, 105, 0.45);
+}
+
+html[data-theme='dark'] .device-user-glance-alert {
+    border-color: rgba(245, 158, 11, 0.35);
+    background: rgba(120, 53, 15, 0.35);
+    color: #fde68a;
 }

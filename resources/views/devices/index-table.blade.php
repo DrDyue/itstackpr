@@ -6,6 +6,7 @@
     'statusLabels',
     'canManageDevices',
     'quickRoomSelectOptions',
+    'userRoomOptions' => collect(),
     'quickAssigneeSelectOptions',
     'types' => collect(),
     'buildings' => collect(),
@@ -100,6 +101,10 @@
                     'can_create_any' => false,
                     'reason' => null,
                 ];
+                $roomUpdateAvailability = $deviceState['roomUpdateAvailability'] ?? [
+                    'allowed' => false,
+                    'reason' => 'Telpas maiņa šobrīd nav pieejama.',
+                ];
                 $pendingRequestBadge = $deviceState['pendingRequestBadge'] ?? null;
                 $repairStatusLabel = $deviceState['repairStatusLabel'] ?? null;
                 $repairPreview = $deviceState['repairPreview'] ?? null;
@@ -111,6 +116,8 @@
                 $repairRequestCreateUrl = route('repair-requests.index', ['repair_request_modal' => 'create', 'device_id' => $device->id]);
                 $writeoffRequestCreateUrl = route('writeoff-requests.index', ['writeoff_request_modal' => 'create', 'device_id' => $device->id]);
                 $transferCreateUrl = route('device-transfers.index', ['device_transfer_modal' => 'create', 'device_id' => $device->id]);
+                $roomModalName = 'device-user-room-modal-' . $device->id;
+                $roomModalFormKey = 'device_user_room_' . $device->id;
             @endphp
             <tr class="device-table-row border-t border-slate-100 align-top" data-table-row-id="device-{{ $device->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) $device->code)) }}">
                 <td class="table-col-image px-3 py-4 text-center align-middle tabular-nums">
@@ -271,6 +278,90 @@
                                 <span>Skatīt</span>
                             </a>
 
+                            @if ($roomUpdateAvailability['allowed'])
+                                <button
+                                    type="button"
+                                    class="table-action-button table-action-button-slate"
+                                    x-data
+                                    @click="$dispatch('open-modal', '{{ $roomModalName }}')"
+                                >
+                                    <x-icon name="room" size="h-4 w-4" />
+                                    <span>Mainīt telpu</span>
+                                </button>
+                            @else
+                                <button
+                                    type="button"
+                                    class="btn-disabled"
+                                    data-app-toast-title="Telpas maiņa nav pieejama"
+                                    data-app-toast-message="{{ $roomUpdateAvailability['reason'] ?? 'Telpas maiņa šobrīd nav pieejama.' }}"
+                                    data-app-toast-tone="info"
+                                >
+                                    <x-icon name="room" size="h-4 w-4" />
+                                    <span>Mainīt telpu</span>
+                                </button>
+                            @endif
+
+                            @if ($requestAvailability['can_create_any'])
+                                <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">
+                                    <button type="button" class="table-action-button table-action-button-emerald" @click="open = ! open" :aria-expanded="open.toString()">
+                                        <x-icon name="repair-request" size="h-4 w-4" />
+                                        <span>Pieteikumi</span>
+                                        <svg class="h-4 w-4 text-current/80" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                        </svg>
+                                    </button>
+
+                                    <div
+                                        class="table-action-list"
+                                        x-cloak
+                                        x-show="open"
+                                        x-transition:enter="transition ease-out duration-200"
+                                        x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                                        x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                                        x-transition:leave="transition ease-in duration-150"
+                                        x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                                        x-transition:leave-end="opacity-0 -translate-y-1 scale-95"
+                                        @click.outside="open = false"
+                                    >
+                                        <div class="table-action-section">
+                                            <div class="table-action-section-title">Pieteikumi</div>
+                                            <div class="table-action-stack">
+                                                @if ($requestAvailability['repair'])
+                                                    <a href="{{ $repairRequestCreateUrl }}" class="table-action-item table-action-item-sky" @click="open = false">
+                                                        <x-icon name="repair" size="h-4 w-4" />
+                                                        <span>Remonts</span>
+                                                    </a>
+                                                @endif
+                                                @if ($requestAvailability['writeoff'])
+                                                    <a href="{{ $writeoffRequestCreateUrl }}" class="table-action-item table-action-item-rose" @click="open = false">
+                                                        <x-icon name="writeoff" size="h-4 w-4" />
+                                                        <span>Norakstīšana</span>
+                                                    </a>
+                                                @endif
+                                                @if ($requestAvailability['transfer'])
+                                                    <a href="{{ $transferCreateUrl }}" class="table-action-item table-action-item-emerald" @click="open = false">
+                                                        <x-icon name="transfer" size="h-4 w-4" />
+                                                        <span>Nodot</span>
+                                                    </a>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
+                                <button
+                                    type="button"
+                                    class="btn-disabled"
+                                    data-app-toast-title="{{ $pendingRequestBadge['label'] ?? 'Pieteikumi nav pieejami' }}"
+                                    data-app-toast-message="{{ $requestAvailability['reason'] ?? 'Pieteikumus šobrīd nevar izveidot.' }}"
+                                    data-app-toast-tone="info"
+                                >
+                                    <x-icon :name="$pendingRequestBadge['icon'] ?? 'repair-request'" size="h-4 w-4" />
+                                    <span>Pieteikumi</span>
+                                </button>
+                            @endif
+
+                            @if (false)
                             @if ($requestAvailability['can_create_any'])
                                 <a href="{{ $repairRequestCreateUrl }}" class="table-action-button table-action-button-sky">
                                     <x-icon name="repair" size="h-4 w-4" />
@@ -300,6 +391,7 @@
                                     <x-icon :name="$pendingRequestBadge['icon'] ?? 'clock'" size="h-4 w-4" />
                                     <span>Nav pieejams</span>
                                 </button>
+                            @endif
                             @endif
                         </div>
                     @else
@@ -479,6 +571,79 @@
 
 @if ($devices->hasPages())
     <div class="mt-5">{{ $devices->links() }}</div>
+@endif
+
+@if (! $canManageDevices)
+    @foreach ($devices as $device)
+        @php
+            $roomModalName = 'device-user-room-modal-' . $device->id;
+            $roomModalFormKey = 'device_user_room_' . $device->id;
+            $roomQuery = $device->room
+                ? ($device->room->room_number . ($device->room->room_name ? ' - ' . $device->room->room_name : ''))
+                : '';
+        @endphp
+        <x-modal :name="$roomModalName" maxWidth="2xl">
+            <div class="device-user-room-modal-shell">
+                <div class="device-user-room-modal-head">
+                    <div>
+                        <div class="device-user-room-modal-badge">Telpas maiņa</div>
+                        <h2 class="device-user-room-modal-title">{{ $device->name }}</h2>
+                        <p class="device-user-room-modal-copy">Izvēlies jauno telpu šai ierīcei. Ēka tiks pielāgota automātiski pēc izvēlētās telpas.</p>
+                    </div>
+                    <button type="button" class="device-type-modal-close" x-data @click="$dispatch('close-modal', '{{ $roomModalName }}')" aria-label="Aizvērt">
+                        <x-icon name="x-mark" size="h-5 w-5" />
+                    </button>
+                </div>
+
+                <form method="POST" action="{{ route('devices.user-room.update', $device) }}" class="device-user-room-modal-form">
+                    @csrf
+                    <input type="hidden" name="modal_form" value="{{ $roomModalFormKey }}">
+
+                    <div class="device-user-room-modal-device">
+                        <div>
+                            <div class="device-user-room-modal-label">Ierīce</div>
+                            <div class="device-user-room-modal-value">{{ $device->code ?: 'Bez koda' }} | {{ $device->name }}</div>
+                        </div>
+                        <div>
+                            <div class="device-user-room-modal-label">Pašreizējā telpa</div>
+                            <div class="device-user-room-modal-value">{{ $roomQuery !== '' ? $roomQuery : 'Nav norādīta' }}</div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="device-user-room-modal-label" for="device-user-room-{{ $device->id }}-input">Jaunā telpa</label>
+                        <x-searchable-select
+                            name="room_id"
+                            queryName="room_query"
+                            :options="$userRoomOptions"
+                            :selected="old('modal_form') === $roomModalFormKey ? old('room_id', (string) $device->room_id) : (string) $device->room_id"
+                            :query="old('modal_form') === $roomModalFormKey ? old('room_query', $roomQuery) : $roomQuery"
+                            identifier="device-user-room-{{ $device->id }}"
+                            placeholder="Izvēlies telpu"
+                            emptyMessage="Neviena telpa neatbilst meklējumam."
+                            :error="old('modal_form') === $roomModalFormKey ? $errors->first('room_id') : null"
+                        />
+                        @if (old('modal_form') === $roomModalFormKey && $errors->has('room_id'))
+                            <div class="text-sm text-rose-600">{{ $errors->first('room_id') }}</div>
+                        @endif
+                    </div>
+
+                    <div class="device-user-room-modal-actions">
+                        <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', '{{ $roomModalName }}')">Atcelt</button>
+                        <button type="submit" class="btn-search">
+                            <x-icon name="save" size="h-4 w-4" />
+                            <span>Saglabāt</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </x-modal>
+    @endforeach
+
+    @if (str_starts_with((string) old('modal_form'), 'device_user_room_'))
+        @php($userRoomModalTarget = str_replace('device_user_room_', '', (string) old('modal_form')))
+        <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-user-room-modal-{{ $userRoomModalTarget }}' })));</script>
+    @endif
 @endif
 
 @if ($canManageDevices)

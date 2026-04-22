@@ -40,6 +40,11 @@
             ['label' => 'Telpa', 'value' => $device->room?->room_number ?: 'Nav norādīta'],
             ['label' => 'Statuss', 'value' => $statusLabels[$device->status] ?? $device->status],
         ];
+        $deviceRoomLabel = $device->room
+            ? ($device->room->room_number . ($device->room->room_name ? ' | ' . $device->room->room_name : ''))
+            : 'Nav norādīta';
+        $deviceBuildingLabel = $device->building?->building_name ?: 'Nav norādīta';
+        $deviceUserLabel = $device->assignedTo?->full_name ?: 'Nav piešķirts';
     @endphp
 
     <section class="app-shell app-shell-wide">
@@ -218,6 +223,141 @@
                             </span>
                         </div>
 
+                        <div class="device-user-overview-grid">
+                            <article class="device-user-glance-card device-user-glance-card-primary">
+                                <div class="device-user-glance-head">
+                                    <div class="device-user-glance-icon">
+                                        <x-icon name="device" size="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <div class="device-user-glance-eyebrow">Ierīce</div>
+                                        <h2 class="device-user-glance-title">{{ $device->name }}</h2>
+                                    </div>
+                                </div>
+
+                                <div class="device-user-glance-meta">
+                                    <div class="device-user-glance-chip">
+                                        <span class="device-user-glance-chip-label">Kods</span>
+                                        <span>{{ $device->code ?: 'Bez koda' }}</span>
+                                    </div>
+                                    <div class="device-user-glance-chip">
+                                        <span class="device-user-glance-chip-label">Tips</span>
+                                        <span>{{ $device->type?->type_name ?: 'Bez tipa' }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="device-user-glance-list">
+                                    <div class="device-user-glance-row">
+                                        <span class="device-user-glance-label">Ražotājs un modelis</span>
+                                        <span class="device-user-glance-value">{{ $deviceMeta !== '' ? $deviceMeta : 'Nav norādīts' }}</span>
+                                    </div>
+                                    <div class="device-user-glance-row">
+                                        <span class="device-user-glance-label">Sērijas numurs</span>
+                                        <span class="device-user-glance-value">{{ $device->serial_number ?: 'Nav norādīts' }}</span>
+                                    </div>
+                                    <div class="device-user-glance-row">
+                                        <span class="device-user-glance-label">Lietotājs</span>
+                                        <span class="device-user-glance-value">{{ $deviceUserLabel }}</span>
+                                    </div>
+                                </div>
+                            </article>
+
+                            <article class="device-user-glance-card">
+                                <div class="device-user-glance-head">
+                                    <div class="device-user-glance-icon device-user-glance-icon-sky">
+                                        <x-icon name="room" size="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <div class="device-user-glance-eyebrow">Atrašanās vieta</div>
+                                        <h2 class="device-user-glance-title">{{ $deviceRoomLabel }}</h2>
+                                    </div>
+                                </div>
+
+                                <div class="device-user-glance-list">
+                                    <div class="device-user-glance-row">
+                                        <span class="device-user-glance-label">Ēka</span>
+                                        <span class="device-user-glance-value">{{ $deviceBuildingLabel }}</span>
+                                    </div>
+                                    <div class="device-user-glance-row">
+                                        <span class="device-user-glance-label">Telpa</span>
+                                        <span class="device-user-glance-value">{{ $deviceRoomLabel }}</span>
+                                    </div>
+                                    @if ($device->room?->department)
+                                        <div class="device-user-glance-row">
+                                            <span class="device-user-glance-label">Nodaļa</span>
+                                            <span class="device-user-glance-value">{{ $device->room->department }}</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </article>
+
+                            <article class="device-user-glance-card device-user-glance-card-accent">
+                                <div class="device-user-glance-head">
+                                    <div class="device-user-glance-icon device-user-glance-icon-emerald">
+                                        <x-icon name="edit" size="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <div class="device-user-glance-eyebrow">Darbības</div>
+                                        <h2 class="device-user-glance-title">Ātrā pārvaldība</h2>
+                                    </div>
+                                </div>
+
+                                <div class="device-user-action-panel-copy">
+                                    <p>Šeit vari ātri nomainīt telpu, ja ierīcei nav aktīva remonta vai gaidošu pieteikumu.</p>
+                                </div>
+
+                                @if ($roomUpdateAvailability['allowed'])
+                                    <button type="button" class="btn-search w-full justify-center" x-data @click="$dispatch('open-modal', 'device-show-room-modal')">
+                                        <x-icon name="room" size="h-4 w-4" />
+                                        <span>Mainīt telpu</span>
+                                    </button>
+                                @else
+                                    <div class="device-user-glance-alert">
+                                        {{ $roomUpdateAvailability['reason'] }}
+                                    </div>
+                                @endif
+
+                                @if ($requestAvailability['reason'])
+                                    <div class="device-user-glance-note">
+                                        <span class="device-user-glance-note-label">Pieteikumi šobrīd bloķēti</span>
+                                        <span>{{ $requestAvailability['reason'] }}</span>
+                                    </div>
+                                @endif
+                            </article>
+                        </div>
+
+                        @if ($hasTransferOrigin)
+                            <article class="device-user-origin-card">
+                                <div class="device-user-glance-head">
+                                    <div class="device-user-glance-icon device-user-glance-icon-amber">
+                                        <x-icon name="transfer" size="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <div class="device-user-glance-eyebrow">Izcelsme</div>
+                                        <h2 class="device-user-glance-title">Kā ierīce nonāca pie tevis</h2>
+                                    </div>
+                                </div>
+                                <div class="device-user-origin-copy">{{ $originLabel }}</div>
+                            </article>
+                        @endif
+
+                        @if ($device->notes)
+                            <article class="device-user-glance-card device-user-glance-card-muted">
+                                <div class="device-user-glance-head">
+                                    <div class="device-user-glance-icon device-user-glance-icon-slate">
+                                        <x-icon name="audit" size="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <div class="device-user-glance-eyebrow">Piezīmes</div>
+                                        <h2 class="device-user-glance-title">Papildinformācija</h2>
+                                    </div>
+                                </div>
+                                <div class="device-user-origin-copy">{{ $device->notes }}</div>
+                            </article>
+                        @endif
+
+                        @if (false)
+
                         <div class="grid gap-4 xl:grid-cols-3">
                             <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
                                 <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ierīce</div>
@@ -289,7 +429,71 @@
                         @endif
                     </div>
                 </div>
+                        @endif
             </section>
+        @endif
+
+        @if ($usesUserDeviceView && $roomUpdateAvailability['allowed'])
+            <x-modal name="device-show-room-modal" maxWidth="2xl">
+                <div class="device-user-room-modal-shell">
+                    <div class="device-user-room-modal-head">
+                        <div>
+                            <div class="device-user-room-modal-badge">Telpas maiņa</div>
+                            <h2 class="device-user-room-modal-title">{{ $device->name }}</h2>
+                            <p class="device-user-room-modal-copy">Izvēlies telpu, uz kuru pārvietot ierīci. Ēka tiks atjaunota automātiski.</p>
+                        </div>
+                        <button type="button" class="device-type-modal-close" x-data @click="$dispatch('close-modal', 'device-show-room-modal')" aria-label="Aizvērt">
+                            <x-icon name="x-mark" size="h-5 w-5" />
+                        </button>
+                    </div>
+
+                    <form method="POST" action="{{ route('devices.user-room.update', $device) }}" class="device-user-room-modal-form">
+                        @csrf
+                        <input type="hidden" name="modal_form" value="device_show_room">
+
+                        <div class="device-user-room-modal-device">
+                            <div>
+                                <div class="device-user-room-modal-label">Pašreizējā telpa</div>
+                                <div class="device-user-room-modal-value">{{ $deviceRoomLabel }}</div>
+                            </div>
+                            <div>
+                                <div class="device-user-room-modal-label">Ēka</div>
+                                <div class="device-user-room-modal-value">{{ $deviceBuildingLabel }}</div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="device-user-room-modal-label" for="device-show-room-input">Jaunā telpa</label>
+                            <x-searchable-select
+                                name="room_id"
+                                queryName="room_query"
+                                :options="$roomOptions"
+                                :selected="old('modal_form') === 'device_show_room' ? old('room_id', (string) $device->room_id) : (string) $device->room_id"
+                                :query="old('modal_form') === 'device_show_room' ? old('room_query', $deviceRoomLabel) : $deviceRoomLabel"
+                                identifier="device-show-room"
+                                placeholder="Izvēlies telpu"
+                                emptyMessage="Neviena telpa neatbilst meklējumam."
+                                :error="old('modal_form') === 'device_show_room' ? $errors->first('room_id') : null"
+                            />
+                            @if (old('modal_form') === 'device_show_room' && $errors->has('room_id'))
+                                <div class="text-sm text-rose-600">{{ $errors->first('room_id') }}</div>
+                            @endif
+                        </div>
+
+                        <div class="device-user-room-modal-actions">
+                            <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'device-show-room-modal')">Atcelt</button>
+                            <button type="submit" class="btn-search">
+                                <x-icon name="save" size="h-4 w-4" />
+                                <span>Saglabāt</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </x-modal>
+
+            @if (old('modal_form') === 'device_show_room')
+                <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-show-room-modal' })));</script>
+            @endif
         @endif
 
         <div class="mt-6 grid gap-6 xl:grid-cols-2">

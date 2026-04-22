@@ -304,6 +304,7 @@
             'statusLabels' => $statusLabels,
             'canManageDevices' => $canManageDevices,
             'quickRoomSelectOptions' => $quickRoomSelectOptions,
+            'userRoomOptions' => $userRoomOptions ?? collect(),
             'quickAssigneeOptions' => $quickAssigneeSelectOptions,
             'types' => $types ?? collect(),
             'buildings' => $buildings ?? collect(),

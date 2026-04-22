@@ -276,6 +276,9 @@ class DeviceController extends Controller
 
         $deviceStates = $devices->getCollection()
             ->mapWithKeys(function (Device $device) use ($user) {
+                $pendingRepairRequest = $device->pendingRepairRequest;
+                $pendingWriteoffRequest = $device->pendingWriteoffRequest;
+                $pendingTransferRequest = $device->pendingTransferRequest;
                 $requestAvailability = $this->requestAvailabilityForDevice(
                     $device,
                     (bool) ($device->has_pending_repair_request ?? false),
@@ -286,15 +289,21 @@ class DeviceController extends Controller
                 return [
                     $device->id => [
                         'requestAvailability' => $requestAvailability,
+                        'roomUpdateAvailability' => $this->userRoomUpdateAvailability(
+                            $device,
+                            $pendingRepairRequest,
+                            $pendingWriteoffRequest,
+                            $pendingTransferRequest,
+                        ),
                         'pendingRequestBadge' => $this->pendingRequestBadge(
                             $device,
                             $user->canManageRequests(),
                             (bool) ($device->has_pending_repair_request ?? false),
                             (bool) ($device->has_pending_writeoff_request ?? false),
                             (bool) ($device->has_pending_transfer_request ?? false),
-                            $device->pendingRepairRequest,
-                            $device->pendingWriteoffRequest,
-                            $device->pendingTransferRequest,
+                            $pendingRepairRequest,
+                            $pendingWriteoffRequest,
+                            $pendingTransferRequest,
                         ),
                         'repairStatusLabel' => $this->visibleRepairStatusLabel($device),
                         'repairPreview' => $this->repairPreview($device),
@@ -325,6 +334,24 @@ class DeviceController extends Controller
             'statusLabels' => $this->statusLabels(),
             'canManageDevices' => $canManageDevices,
             'quickRoomOptions' => $canManageDevices ? $this->quickRoomOptions() : collect(),
+            'userRoomOptions' => $accessibleRooms
+                ->map(fn (Room $room) => [
+                    'value' => (string) $room->id,
+                    'label' => $room->room_number.($room->room_name ? ' - '.$room->room_name : ''),
+                    'description' => collect([
+                        $room->building?->building_name,
+                        $room->floor_number !== null ? $room->floor_number.'. stāvs' : null,
+                        $room->department,
+                    ])->filter()->implode(' | '),
+                    'search' => implode(' ', array_filter([
+                        $room->room_number,
+                        $room->room_name,
+                        $room->building?->building_name,
+                        $room->department,
+                        $room->floor_number,
+                    ])),
+                ])
+                ->values(),
             'quickAssigneeOptions' => $canManageDevices ? $this->quickAssigneeOptions() : collect(),
             'sortOptions' => $this->deviceSortOptions($canManageDevices),
             'deviceModalQuery' => (string) $request->query('device_modal', ''),
@@ -700,7 +727,7 @@ SQL;
         $roomUpdateAvailability = $this->userRoomUpdateAvailability($device, $pendingRepairRequest, $pendingWriteoffRequest, $pendingTransferRequest);
 
         if (! $roomUpdateAvailability['allowed']) {
-            return redirect()->route('devices.show', $device)->with('error', $roomUpdateAvailability['reason']);
+            return $this->redirectAfterQuickAction($device, 'error', $roomUpdateAvailability['reason']);
         }
 
         $validated = $this->validateInput($request, [
@@ -718,6 +745,10 @@ SQL;
         ];
 
         if ((int) $device->room_id === (int) ($room?->id ?? 0) && (int) $device->building_id === (int) ($room?->building_id ?? 0)) {
+            return $this->redirectAfterQuickAction($device, 'error', 'Ierīce jau atrodas šajā telpā.');
+        }
+
+        if ((int) $device->room_id === (int) ($room?->id ?? 0) && (int) $device->building_id === (int) ($room?->building_id ?? 0)) {
             return redirect()->route('devices.show', $device)->with('error', 'Ierīce jau atrodas šajā telpā.');
         }
 
@@ -727,6 +758,8 @@ SQL;
             'room_id' => $device->room_id,
             'building_id' => $device->building_id,
         ]);
+
+        return $this->redirectAfterQuickAction($device, 'success', 'Ierīces atrašanās vieta atjaunināta.');
 
         return redirect()->route('devices.show', $device)->with('success', 'Ierīces atrašanās vieta atjaunināta.');
     }
