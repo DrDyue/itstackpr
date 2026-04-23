@@ -258,14 +258,11 @@ class DashboardController extends Controller
      */
     public function visibleRepairStatusLabel(Device $device): ?string
     {
-        if ($device->status !== Device::STATUS_REPAIR) {
+        if (! $device->activeRepair) {
             return null;
         }
 
-        $label = $this->repairStatusLabel($device->activeRepair?->status)
-            ?? $this->repairStatusLabel($device->latestRepair?->status);
-
-        return $label ?: 'Gaida';
+        return $this->repairStatusLabel($device->activeRepair->status) ?: 'Gaida';
     }
 
     /**
@@ -273,15 +270,11 @@ class DashboardController extends Controller
      */
     public function repairPreview(Device $device): ?array
     {
-        if ($device->status !== Device::STATUS_REPAIR) {
+        if (! $device->activeRepair) {
             return null;
         }
 
-        $repair = $device->activeRepair ?? $device->latestRepair;
-
-        if (! $repair) {
-            return null;
-        }
+        $repair = $device->activeRepair;
 
         return [
             'title' => 'Remonta ieraksts',
@@ -300,7 +293,7 @@ class DashboardController extends Controller
      */
     public function pendingRequestBadge(Device $device): ?array
     {
-        if ((bool) ($device->has_pending_repair_request ?? false)) {
+        if ($device->pendingRepairRequest) {
             return [
                 'icon' => 'repair-request',
                 'label' => 'Apskatīt',
@@ -311,7 +304,7 @@ class DashboardController extends Controller
             ];
         }
 
-        if ((bool) ($device->has_pending_writeoff_request ?? false)) {
+        if ($device->pendingWriteoffRequest) {
             return [
                 'icon' => 'writeoff',
                 'label' => 'Apskatīt',
@@ -322,7 +315,7 @@ class DashboardController extends Controller
             ];
         }
 
-        if ((bool) ($device->has_pending_transfer_request ?? false)) {
+        if ($device->pendingTransferRequest) {
             return [
                 'icon' => 'transfer',
                 'label' => 'Apskatīt',
@@ -343,6 +336,15 @@ class DashboardController extends Controller
             'statuses_filter' => 1,
             'status' => ['submitted'],
         ];
+
+        if ($requestId) {
+            $params['highlight_id'] = match ($type) {
+                'repair' => 'repair-request-'.$requestId,
+                'writeoff' => 'writeoff-request-'.$requestId,
+                'transfer' => 'device-transfer-'.$requestId,
+                default => null,
+            };
+        }
 
         $baseUrl = match ($type) {
             'repair' => Route::has('repair-requests.index') ? route('repair-requests.index', $params) : null,

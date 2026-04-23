@@ -275,11 +275,14 @@ class DeviceController extends Controller
                 $pendingRepairRequest = $device->pendingRepairRequest;
                 $pendingWriteoffRequest = $device->pendingWriteoffRequest;
                 $pendingTransferRequest = $device->pendingTransferRequest;
+                $hasPendingRepairRequest = (bool) $pendingRepairRequest;
+                $hasPendingWriteoffRequest = (bool) $pendingWriteoffRequest;
+                $hasPendingTransferRequest = (bool) $pendingTransferRequest;
                 $requestAvailability = $this->requestAvailabilityForDevice(
                     $device,
-                    (bool) ($device->has_pending_repair_request ?? false),
-                    (bool) ($device->has_pending_writeoff_request ?? false),
-                    (bool) ($device->has_pending_transfer_request ?? false),
+                    $hasPendingRepairRequest,
+                    $hasPendingWriteoffRequest,
+                    $hasPendingTransferRequest,
                 );
 
                 return [
@@ -294,9 +297,9 @@ class DeviceController extends Controller
                         'pendingRequestBadge' => $this->pendingRequestBadge(
                             $device,
                             $user->canManageRequests(),
-                            (bool) ($device->has_pending_repair_request ?? false),
-                            (bool) ($device->has_pending_writeoff_request ?? false),
-                            (bool) ($device->has_pending_transfer_request ?? false),
+                            $hasPendingRepairRequest,
+                            $hasPendingWriteoffRequest,
+                            $hasPendingTransferRequest,
                             $pendingRepairRequest,
                             $pendingWriteoffRequest,
                             $pendingTransferRequest,
@@ -1277,27 +1280,20 @@ SQL;
 
     private function visibleRepairStatusLabel(Device $device): ?string
     {
-        if ($device->status !== Device::STATUS_REPAIR) {
+        if (! $device->activeRepair) {
             return null;
         }
 
-        $label = $this->repairStatusLabel($device->activeRepair?->status)
-            ?? $this->repairStatusLabel($device->latestRepair?->status);
-
-        return $label ?: 'Gaida';
+        return $this->repairStatusLabel($device->activeRepair->status) ?: 'Gaida';
     }
 
     private function repairPreview(Device $device): ?array
     {
-        if ($device->status !== Device::STATUS_REPAIR) {
+        if (! $device->activeRepair) {
             return null;
         }
 
-        $repair = $device->activeRepair ?? $device->latestRepair;
-
-        if (! $repair) {
-            return null;
-        }
+        $repair = $device->activeRepair;
 
         return [
             'title' => 'Remonta ieraksts',
@@ -1324,11 +1320,11 @@ SQL;
 
     private function repairStatusDescription(Device $device): ?string
     {
-        if ($device->status !== Device::STATUS_REPAIR) {
+        if (! $device->activeRepair) {
             return null;
         }
 
-        return match ($device->activeRepair?->status ?? $device->latestRepair?->status) {
+        return match ($device->activeRepair->status) {
             'waiting' => 'Gaida nozīmē, ka remonta ieraksts jau ir izveidots, bet pats remontdarbs vēl nav uzsākts.',
             'in-progress' => 'Procesā nozīmē, ka ierīce šobrīd tiek remontēta un darbs vēl nav pabeigts.',
             'completed' => 'Pabeigts nozīmē, ka remonta darbs ir noslēgts un ieraksts saglabāts vēsturē.',
@@ -1353,7 +1349,7 @@ SQL;
             ];
         }
 
-        if ($device->status === Device::STATUS_REPAIR) {
+        if ($device->activeRepair) {
             return [
                 'repair' => false,
                 'writeoff' => false,
@@ -1458,6 +1454,15 @@ SQL;
             'statuses_filter' => 1,
             'status' => ['submitted'],
         ];
+
+        if ($requestId) {
+            $params['highlight_id'] = match ($type) {
+                'repair' => 'repair-request-'.$requestId,
+                'writeoff' => 'writeoff-request-'.$requestId,
+                'transfer' => 'device-transfer-'.$requestId,
+                default => null,
+            };
+        }
 
         $baseUrl = match ($type) {
             'repair' => Route::has('repair-requests.index') ? route('repair-requests.index', $params) : null,

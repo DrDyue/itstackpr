@@ -153,8 +153,22 @@
                             $pendingRequestBadge = $deviceState['pendingRequestBadge'] ?? null;
                             $repairStatusLabel = $deviceState['repairStatusLabel'] ?? null;
                             $repairPreview = $deviceState['repairPreview'] ?? null;
-                            $repairRecord = $device->activeRepair ?? $device->latestRepair;
-                            $repairModalUrl = $repairRecord ? route('repairs.index', ['repair_modal' => 'edit', 'modal_repair' => $repairRecord->id]) : null;
+                            $repairRecord = $device->activeRepair;
+                            $hasActiveRepair = (bool) $repairRecord;
+                            $displayDeviceStatus = $device->status === \App\Models\Device::STATUS_REPAIR && ! $hasActiveRepair
+                                ? \App\Models\Device::STATUS_ACTIVE
+                                : $device->status;
+                            $repairModalUrl = $repairRecord
+                                ? ($canManageDevices
+                                    ? route('repairs.index', [
+                                        'repair_modal' => 'edit',
+                                        'modal_repair' => $repairRecord->id,
+                                        'highlight_id' => 'repair-' . $repairRecord->id,
+                                    ])
+                                    : route('repairs.index', [
+                                        'highlight_id' => 'repair-' . $repairRecord->id,
+                                    ]))
+                                : null;
                             $deviceEditUrl = route('devices.index', array_merge(request()->except(['page', 'device_modal', 'modal_device']), [
                                 'device_modal' => 'edit',
                                 'modal_device' => $device->id,
@@ -221,9 +235,9 @@
                             </td>
 
                             <td class="px-4 py-4">
-                                @if ($device->status === \App\Models\Device::STATUS_REPAIR && $repairStatusLabel)
+                                @if ($hasActiveRepair && $repairStatusLabel)
                                     <div class="relative inline-flex" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
-                                        @if ($canManageDevices && $repairModalUrl)
+                                        @if ($repairModalUrl)
                                             <a href="{{ $repairModalUrl }}" class="device-status-split-chip device-status-split-chip-repair" @focusin="open = true" @focusout="open = false">
                                                 <span class="device-status-split-main">
                                                     <x-icon name="repair" size="h-3.5 w-3.5" />
@@ -315,7 +329,7 @@
                                         @endif
                                     </div>
                                 @else
-                                    <x-status-pill context="device" :value="$device->status" />
+                                    <x-status-pill context="device" :value="$displayDeviceStatus" />
                                 @endif
                             </td>
 
