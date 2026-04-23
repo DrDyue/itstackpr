@@ -16,6 +16,7 @@
         $quickRoomSelectOptions = collect($quickRoomOptions ?? [])->values();
         $quickAssigneeSelectOptions = collect($quickAssigneeOptions ?? [])->values();
         $selectedStatuses = $filters['statuses'];
+        $activeRequestsSelected = (bool) ($filters['active_requests'] ?? false);
         $statusFilterLinks = $canManageDevices
             ? [
                 ['label' => 'Aktīvas', 'value' => 'active', 'icon' => 'check-circle', 'tone' => 'emerald'],
@@ -251,6 +252,24 @@
                                 </template>
                             </div>
                         </div>
+
+                        <div class="quick-filter-group" x-data="{ active: @js($activeRequestsSelected) }">
+                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Pieteikumi</div>
+                            <div class="quick-status-filters">
+                                <button
+                                    type="button"
+                                    @click="active = ! active; $nextTick(() => $el.closest('form').requestSubmit())"
+                                    class="quick-status-filter quick-status-filter-amber"
+                                    :class="active ? 'quick-status-filter-active' : ''"
+                                >
+                                    <x-icon name="repair-request" size="h-4 w-4" />
+                                    <span>Aktīvie pieteikumi</span>
+                                    <span class="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-white/80 px-1.5 py-0.5 text-[10px] font-bold text-current ring-1 ring-black/5">{{ $deviceSummary['active_requests'] ?? 0 }}</span>
+                                </button>
+
+                                <input type="hidden" name="active_requests" value="1" @disabled(! $activeRequestsSelected) :disabled="!active">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="toolbar-actions">
@@ -271,6 +290,7 @@
                         ['label' => 'Telpa', 'value' => $selectedRoomLabel],
                         ['label' => 'Tips', 'value' => $selectedTypeLabel],
                         ['label' => 'Statuss', 'value' => $filters['has_status_filter'] ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ') : null],
+                        ['label' => 'Pieteikumi', 'value' => $activeRequestsSelected ? 'Aktīvie pieteikumi' : null],
                     ]"
                     :clear-url="route('devices.index')"
                 />

@@ -321,6 +321,7 @@ class DeviceController extends Controller
                 'active' => (clone $summaryQuery)->where('status', Device::STATUS_ACTIVE)->count(),
                 'repair' => (clone $summaryQuery)->where('status', Device::STATUS_REPAIR)->count(),
                 'writeoff' => (clone $summaryQuery)->where('status', Device::STATUS_WRITEOFF)->count(),
+                'active_requests' => $this->activeDeviceRequestFilterQuery(clone $summaryQuery)->count(),
             ],
             'floorOptions' => $floorOptions,
             'roomOptions' => $roomOptions,
@@ -379,6 +380,7 @@ class DeviceController extends Controller
             'type_query' => trim((string) $request->query('type_query', '')),
             'statuses' => $statuses,
             'has_status_filter' => count($statuses) > 0 && count($statuses) < count($availableStatuses),
+            'active_requests' => $request->boolean('active_requests'),
         ];
     }
 
@@ -467,7 +469,20 @@ class DeviceController extends Controller
             ->when(
                 $filters['has_status_filter'],
                 fn (Builder $deviceQuery) => $deviceQuery->whereIn('devices.status', $filters['statuses'])
+            )
+            ->when(
+                $filters['active_requests'],
+                fn (Builder $deviceQuery) => $this->activeDeviceRequestFilterQuery($deviceQuery)
             );
+    }
+
+    private function activeDeviceRequestFilterQuery(Builder $query): Builder
+    {
+        return $query->where(function (Builder $requestQuery) {
+            $requestQuery
+                ->whereHas('repairRequests', fn (Builder $repairRequestQuery) => $repairRequestQuery->where('status', RepairRequest::STATUS_SUBMITTED))
+                ->orWhereHas('writeoffRequests', fn (Builder $writeoffRequestQuery) => $writeoffRequestQuery->where('status', WriteoffRequest::STATUS_SUBMITTED));
+        });
     }
 
     /**
@@ -562,6 +577,7 @@ SQL;
             'telpa' => $filters['room_query'] ?? '',
             'ierīces tips' => $filters['type_query'] ?? '',
             'statusi' => $filters['has_status_filter'] ? ($filters['statuses'] ?? []) : [],
+            'aktīvie pieteikumi' => ($filters['active_requests'] ?? false) ? 'jā' : '',
         ], fn (mixed $value) => $value !== null && $value !== '' && $value !== []);
 
         if ($filterPayload !== []) {
