@@ -300,6 +300,32 @@ const getManualSearchInput = (form) => {
     return form?.querySelector('[data-async-code-search="true"], [data-table-manual-search="true"]');
 };
 
+const readManualSearchState = (form) => {
+    const input = getManualSearchInput(form);
+
+    if (!input) {
+        return null;
+    }
+
+    return {
+        name: input.name,
+        value: input.value,
+    };
+};
+
+const restoreManualSearchState = (rootSelector, state) => {
+    if (!state?.name) {
+        return;
+    }
+
+    const nextForm = document.querySelector(`${rootSelector} [data-async-table-form]`);
+    const nextInput = nextForm?.querySelector(`[name="${window.CSS?.escape ? window.CSS.escape(state.name) : state.name}"]`);
+
+    if (nextInput && isManualSearchField(nextInput)) {
+        nextInput.value = state.value || '';
+    }
+};
+
 const getManualSearchMode = (input) => {
     if (!input) {
         return 'contains';
@@ -673,6 +699,10 @@ const moveTableSearchNavigator = async (step) => {
         url: buildAsyncTablePageUrl(form, targetMatch.page),
         resetPage: false,
         preserveSearchNavigator: true,
+        manualSearchState: {
+            name: getManualSearchInput(form)?.name || 'code',
+            value: tableSearchNavigatorState.term,
+        },
     });
 
     if (!swapped) {
@@ -712,6 +742,10 @@ const performManualTableSearch = async (form) => {
     const rawTerm = searchInput.value.trim();
     const normalizedTerm = normalizeTableSearchValue(rawTerm);
     const searchMode = getManualSearchMode(searchInput);
+    const manualSearchState = {
+        name: searchInput.name,
+        value: rawTerm,
+    };
 
     if (!normalizedTerm) {
         clearTableSearchNavigator({ rootSelector });
@@ -765,6 +799,7 @@ const performManualTableSearch = async (form) => {
                     url: buildAsyncTablePageUrl(form, firstMatch.page),
                     resetPage: false,
                     preserveSearchNavigator: true,
+                    manualSearchState,
                 });
             }
         }
@@ -852,6 +887,7 @@ const performManualTableSearch = async (form) => {
         const swapped = await window.submitAsyncTableForm(form, {
             url: targetUrl,
             resetPage: false,
+            manualSearchState,
         });
 
         if (swapped) {
@@ -982,7 +1018,7 @@ export const registerAsyncTableGlobals = () => {
         return false;
     };
 
-    window.submitAsyncTableForm = async (form, { url = null, resetPage = true, toastMessage = '', preserveSearchNavigator = false } = {}) => {
+    window.submitAsyncTableForm = async (form, { url = null, resetPage = true, toastMessage = '', preserveSearchNavigator = false, manualSearchState = null } = {}) => {
         const rootSelector = form?.dataset?.asyncRoot;
 
         if (!form || !rootSelector) {
@@ -993,6 +1029,7 @@ export const registerAsyncTableGlobals = () => {
             clearTableSearchNavigator({ rootSelector });
         }
 
+        const preservedManualSearchState = manualSearchState ?? readManualSearchState(form);
         const targetUrl = url instanceof URL ? url : buildAsyncTableUrl(form, { resetPage });
         if (targetUrl.searchParams.has('clear')) {
             targetUrl.searchParams.set('_t', Date.now().toString());
@@ -1028,6 +1065,8 @@ export const registerAsyncTableGlobals = () => {
                 window.location.assign(targetUrl.toString());
                 return false;
             }
+
+            restoreManualSearchState(rootSelector, preservedManualSearchState);
 
             window.history.replaceState({}, '', `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`);
 
@@ -1120,6 +1159,10 @@ export const initializeAsyncTableFilters = () => {
     document.addEventListener('click', (event) => {
         const manualSearchTrigger = event.target.closest('[data-code-search-submit="true"], [data-table-search-submit="true"]');
         if (manualSearchTrigger) {
+            if (event.defaultPrevented) {
+                return;
+            }
+
             const form = findAsyncTableForm(manualSearchTrigger);
 
             if (form && getManualSearchInput(form)) {
