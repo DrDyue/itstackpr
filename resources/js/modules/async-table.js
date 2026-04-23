@@ -233,9 +233,13 @@ const getAsyncTableFormByRootSelector = (rootSelector) => {
         .find((form) => form.dataset?.asyncRoot === rootSelector) || null;
 };
 
+const TABLE_SEARCH_HIT_DURATION = 2400;
+const TABLE_SEARCH_LINGER_DURATION = 10000;
+
 const clearTableSearchHighlights = (root) => {
-    root?.querySelectorAll('.table-search-hit, .table-search-match, .table-search-active').forEach((row) => {
-        row.classList.remove('table-search-hit', 'table-search-match', 'table-search-active');
+    root?.querySelectorAll('.table-search-hit, .table-search-linger, .table-search-match, .table-search-active').forEach((row) => {
+        row.classList.remove('table-search-hit', 'table-search-linger', 'table-search-match', 'table-search-active');
+        delete row.dataset.tableSearchHighlightToken;
     });
 };
 
@@ -266,13 +270,30 @@ const applyNavigatorHighlights = (root) => {
 };
 
 const highlightTableRow = (row) => {
-    row.classList.remove('table-search-hit');
+    const highlightToken = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    row.dataset.tableSearchHighlightToken = highlightToken;
+    row.classList.remove('table-search-hit', 'table-search-linger');
     void row.offsetWidth;
     row.classList.add('table-search-hit');
 
     window.setTimeout(() => {
+        if (row.dataset.tableSearchHighlightToken !== highlightToken) {
+            return;
+        }
+
         row.classList.remove('table-search-hit');
-    }, 2400);
+        row.classList.add('table-search-linger');
+    }, TABLE_SEARCH_HIT_DURATION);
+
+    window.setTimeout(() => {
+        if (row.dataset.tableSearchHighlightToken !== highlightToken) {
+            return;
+        }
+
+        row.classList.remove('table-search-linger');
+        delete row.dataset.tableSearchHighlightToken;
+    }, TABLE_SEARCH_HIT_DURATION + TABLE_SEARCH_LINGER_DURATION);
 };
 
 const getManualSearchInput = (form) => {
