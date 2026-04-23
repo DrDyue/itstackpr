@@ -158,17 +158,9 @@
                             $displayDeviceStatus = $device->status === \App\Models\Device::STATUS_REPAIR && ! $hasActiveRepair
                                 ? \App\Models\Device::STATUS_ACTIVE
                                 : $device->status;
-                            $repairModalUrl = $repairRecord
-                                ? ($canManageDevices
-                                    ? route('repairs.index', [
-                                        'repair_modal' => 'edit',
-                                        'modal_repair' => $repairRecord->id,
-                                        'highlight_id' => 'repair-' . $repairRecord->id,
-                                    ])
-                                    : route('repairs.index', [
-                                        'highlight_id' => 'repair-' . $repairRecord->id,
-                                    ]))
-                                : null;
+                            $repairModalUrl = $repairRecord ? route('repairs.index', [
+                                'highlight_id' => 'repair-' . $repairRecord->id,
+                            ]) : null;
                             $deviceEditUrl = route('devices.index', array_merge(request()->except(['page', 'device_modal', 'modal_device']), [
                                 'device_modal' => 'edit',
                                 'modal_device' => $device->id,

@@ -51,8 +51,6 @@
                             : $device->status;
                         $repairModalUrl = $repairRecord
                             ? route('repairs.index', [
-                                'repair_modal' => 'edit',
-                                'modal_repair' => $repairRecord->id,
                                 'highlight_id' => 'repair-' . $repairRecord->id,
                             ])
                             : null;
