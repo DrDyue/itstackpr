@@ -424,7 +424,7 @@
                                         : ($statusLabels[$transfer->status] ?? null);
                                     $hasActions = true;
                                 @endphp
-                                <tr class="app-table-row border-t border-slate-100 align-top {{ $rowStateClass }}" data-table-row-id="device-transfer-{{ $transfer->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
+                                <tr id="device-transfer-{{ $transfer->id }}" class="request-notification-target app-table-row border-t border-slate-100 align-top {{ $rowStateClass }}" data-table-row-id="device-transfer-{{ $transfer->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
                                     <td class="table-col-image px-4 py-4 text-center align-middle">
                                         @php
                                             $thumbUrl = $device?->deviceImageThumbUrl();

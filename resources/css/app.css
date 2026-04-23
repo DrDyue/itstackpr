@@ -2582,6 +2582,7 @@ tbody td {
 
 .request-notification-target:target {
     @apply shadow-[0_22px_60px_-38px_rgba(14,165,233,0.5)] ring-2 ring-sky-300;
+    scroll-margin-top: 7rem;
 }
 
 .surface-toolbar + .filter-summary,
@@ -4412,6 +4413,22 @@ tbody td {
 
 .table-action-grid-actions {
     @apply grid grid-cols-2 gap-1.5;
+}
+
+#repair-requests-table-root tbody td {
+    @apply border-y border-slate-100 bg-white;
+}
+
+#repair-requests-table-root tbody td:first-child {
+    @apply border-l border-slate-100 rounded-l-2xl;
+}
+
+#repair-requests-table-root tbody td:last-child {
+    @apply border-r border-slate-100 rounded-r-2xl;
+}
+
+#repair-requests-table-root tbody tr:hover td {
+    @apply border-slate-200;
 }
 
 .table-action-item-wide {

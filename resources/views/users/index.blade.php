@@ -276,7 +276,7 @@
                                 @php
                                     $assignedDevicesUrl = route('devices.index', ['assigned_to_id' => $managedUser->id, 'assigned_to_query' => $managedUser->full_name]);
                                 @endphp
-                                <tr class="app-table-row border-t border-slate-100 align-top {{ $managedUser->password_reset_requested_at ? 'app-table-row-password-request' : ($managedUser->role === 'admin' ? 'app-table-row-accent-violet' : 'app-table-row-accent-sky') }}" data-table-row-id="user-{{ $managedUser->id }}" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim((string) $managedUser->full_name)) }}">
+                                <tr id="user-{{ $managedUser->id }}" class="request-notification-target app-table-row border-t border-slate-100 align-top {{ $managedUser->password_reset_requested_at ? 'app-table-row-password-request' : ($managedUser->role === 'admin' ? 'app-table-row-accent-violet' : 'app-table-row-accent-sky') }}" data-table-row-id="user-{{ $managedUser->id }}" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim((string) $managedUser->full_name)) }}">
                                     <td class="px-4 py-4">
                                         <div class="app-table-cell-strong">{{ $managedUser->full_name }}</div>
                                         @if ($managedUser->password_reset_requested_at)

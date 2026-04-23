@@ -8,7 +8,7 @@
     id="repair-requests-table-root"
     shell-class="app-table-shell"
     scroll-class="app-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm"
-    table-class="app-table-content app-table-content-wide min-w-full text-sm"
+    table-class="app-table-content app-table-content-wide min-w-full border-separate border-spacing-y-2 text-sm"
 >
             <thead class="app-table-head bg-slate-50 text-left text-slate-500">
                 <tr>
@@ -87,7 +87,7 @@
                         $description = trim((string) $repairRequest->description);
                         $shortDescription = \Illuminate\Support\Str::limit(preg_replace('/\s+/u', ' ', $description), 70);
                     @endphp
-                    <tr class="app-table-row border-t border-slate-100 align-top {{ $isPendingAction ? 'app-table-row-pending' : '' }}" data-table-row-id="repair-request-{{ $repairRequest->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
+                    <tr id="repair-request-{{ $repairRequest->id }}" class="request-notification-target app-table-row align-top {{ $isPendingAction ? 'app-table-row-pending' : '' }}" data-table-row-id="repair-request-{{ $repairRequest->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
                         <td class="table-col-image px-4 py-4 text-center align-middle">
                             @if ($thumbUrl)
                                 <img

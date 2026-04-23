@@ -409,22 +409,7 @@
                             </div>
 
                             <div class="rounded-b-3xl border-t border-slate-100 bg-slate-50/50 px-5 py-3">
-                                @if ($canManageRequests)
-                                    <div class="flex flex-col gap-2">
-                                        <a href="{{ route('repair-requests.index', ['statuses_filter' => 1, 'status' => ['submitted']]) }}" class="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm font-semibold text-amber-800 transition hover:bg-amber-100">
-                                            <span>Remonta pieprasījumi</span>
-                                            <x-icon name="repair-request" size="h-4 w-4" />
-                                        </a>
-                                        <a href="{{ route('writeoff-requests.index', ['statuses_filter' => 1, 'status' => ['submitted']]) }}" class="flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm font-semibold text-rose-800 transition hover:bg-rose-100">
-                                            <span>Norakstīšanas pieprasījumi</span>
-                                            <x-icon name="writeoff" size="h-4 w-4" />
-                                        </a>
-                                        <a href="{{ route('users.index', ['password_reset' => 1]) }}" class="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm font-semibold text-amber-800 transition hover:bg-amber-100">
-                                            <span>Paroles maiņas pieprasījumi</span>
-                                            <x-icon name="key" size="h-4 w-4" />
-                                        </a>
-                                    </div>
-                                @else
+                                @if (! $canManageRequests)
                                     <a href="{{ route('device-transfers.index') }}" class="flex items-center justify-between text-sm font-semibold text-sky-700 transition hover:text-sky-900">
                                         <span>Skatīt visus nodošanas pieteikumus</span>
                                         <x-icon name="transfer" size="h-4 w-4" />
@@ -438,7 +423,7 @@
                                         x-show="unreadCount > 0"
                                         x-transition.opacity
                                         :disabled="markingAllRead"
-                                        class="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-500 via-indigo-500 to-slate-900 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:from-sky-600 hover:via-indigo-600 hover:to-slate-950 disabled:cursor-wait disabled:opacity-70"
+                                        class="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800 disabled:cursor-wait disabled:opacity-70"
                                     >
                                         <x-icon name="check-circle" size="h-4 w-4" />
                                         Atzīmēt kā lasītu
