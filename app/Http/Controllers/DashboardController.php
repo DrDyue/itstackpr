@@ -337,6 +337,8 @@ class DashboardController extends Controller
         ];
 
         if ($requestId) {
+            $params['highlight'] = $device->code ?: $device->name;
+            $params['highlight_mode'] = $device->code ? 'exact' : 'contains';
             $params['highlight_id'] = match ($type) {
                 'repair' => 'repair-request-'.$requestId,
                 'writeoff' => 'writeoff-request-'.$requestId,

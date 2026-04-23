@@ -4863,12 +4863,12 @@ tbody td {
 }
 
 .table-search-hit td {
-    @apply bg-sky-50;
+    background-color: rgba(253, 230, 138, 0.88) !important;
     animation: table-search-highlight 2.2s ease;
 }
 
 .table-search-linger td {
-    background-color: rgba(186, 230, 253, 0.42);
+    background-color: rgba(254, 243, 199, 0.74) !important;
     transition: background-color 0.25s ease;
 }
 
@@ -6723,11 +6723,11 @@ html[data-theme='dark'] .table-action-attention {
 }
 
 html[data-theme='dark'] .table-search-hit td {
-    background-color: rgba(14, 165, 233, 0.16) !important;
+    background-color: rgba(245, 158, 11, 0.25) !important;
 }
 
 html[data-theme='dark'] .table-search-linger td {
-    background-color: rgba(14, 165, 233, 0.11) !important;
+    background-color: rgba(245, 158, 11, 0.16) !important;
 }
 
 html[data-theme='dark'] .table-search-match td {

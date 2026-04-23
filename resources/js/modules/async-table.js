@@ -893,6 +893,12 @@ export const restoreHighlightedSearchFromUrl = async () => {
     const term = currentUrl.searchParams.get('highlight');
     const mode = currentUrl.searchParams.get('highlight_mode') || 'contains';
     const highlightId = currentUrl.searchParams.get('highlight_id');
+    const form = document.querySelector('[data-async-table-form][data-search-endpoint]');
+    const manualSearchInput = form ? getManualSearchInput(form) : null;
+
+    if (term && manualSearchInput) {
+        manualSearchInput.value = term;
+    }
 
     if (!term && !highlightId) {
         return;
@@ -900,13 +906,11 @@ export const restoreHighlightedSearchFromUrl = async () => {
 
     let match = findTableRowById(document, highlightId) || findMatchingTableRow(document, term, mode);
     if (!match) {
-        const form = term ? document.querySelector('[data-async-table-form][data-search-endpoint]') : null;
-
         if (form?.dataset?.searchEndpoint) {
             try {
                 const endpointUrl = new URL(form.dataset.searchEndpoint, window.location.origin);
                 appendSerializedFormParams(form, endpointUrl, { resetPage: false, includeManual: false });
-                endpointUrl.searchParams.set(getManualSearchInput(form)?.name || 'code', term);
+                endpointUrl.searchParams.set(manualSearchInput?.name || 'code', term);
 
                 const response = await fetch(endpointUrl.toString(), {
                     headers: {
