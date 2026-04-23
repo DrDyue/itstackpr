@@ -848,6 +848,26 @@ tbody td {
     @apply flex items-start gap-4;
 }
 
+.user-modal-head {
+    @apply px-5 py-4 sm:px-6;
+}
+
+.user-modal-head .device-type-modal-head-copy {
+    @apply space-y-3 pr-12 sm:pr-14;
+}
+
+.user-modal-title-row {
+    @apply gap-3;
+}
+
+.user-modal-title-row .device-type-modal-title {
+    @apply text-xl leading-tight sm:text-2xl;
+}
+
+.user-modal-title-row .device-type-modal-subtitle {
+    @apply mt-1 max-w-2xl text-sm leading-5;
+}
+
 .device-type-modal-title-copy {
     @apply min-w-0 flex-1;
 }
@@ -2833,7 +2853,7 @@ tbody td {
 }
 
 .role-toggle-compact {
-    @apply max-w-[calc(50%-0.5rem)];
+    @apply w-full max-w-none flex-wrap;
 }
 
 .devices-filter-divider-vertical {

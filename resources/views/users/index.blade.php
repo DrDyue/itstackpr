@@ -296,9 +296,10 @@
                                         <x-status-pill context="user-active" :value="$managedUser->is_active" />
                                     </td>
                                     <td class="px-4 py-4 text-slate-600">
-                                        <div class="font-semibold text-slate-900">{{ $managedUser->last_login?->format('d.m.Y H:i') ?: 'Nav pieslēdzies' }}</div>
+                                        @php($effectiveLastLogin = $managedUser->effective_last_login ?? $managedUser->last_login)
+                                        <div class="font-semibold text-slate-900">{{ $effectiveLastLogin?->format('d.m.Y H:i') ?: 'Nav pieslēdzies' }}</div>
                                         <div class="mt-1 text-xs text-slate-500">
-                                            {{ $managedUser->last_login ? $managedUser->last_login->diffForHumans() : 'Pirmā pieslēgšanās vēl nav notikusi' }}
+                                            {{ $effectiveLastLogin ? $effectiveLastLogin->diffForHumans() : 'Pirmā pieslēgšanās vēl nav notikusi' }}
                                         </div>
                                     </td>
                                     <td class="px-4 py-4">

@@ -9,8 +9,10 @@ use App\Models\RepairRequest;
 use App\Models\User;
 use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
@@ -48,6 +50,7 @@ class UserController extends Controller
 
         $usersQuery = User::query()
             ->select(['id', 'full_name', 'email', 'phone', 'job_title', 'role', 'is_active', 'last_login', 'password_reset_requested_at'])
+            ->selectSub($this->latestLoginAuditSubquery(), 'latest_login_audit_at')
             ->when($legacyName !== '', fn ($query) => $query->where('full_name', 'like', '%' . $legacyName . '%'))
             ->when($legacyEmail !== '', fn ($query) => $query->where('email', 'like', '%' . $legacyEmail . '%'))
             ->when($filters['search'] !== '', fn ($query) => $query->where('full_name', 'like', '%' . $filters['search'] . '%'))
@@ -65,6 +68,7 @@ class UserController extends Controller
         $users = $usersQuery
             ->paginate(15)
             ->withQueryString();
+        $users->getCollection()->each(fn (User $user) => $this->attachEffectiveLastLogin($user));
 
         $userSummaryQuery = User::query();
 
@@ -108,7 +112,13 @@ class UserController extends Controller
             'roles' => self::ROLES,
             'roleLabels' => $this->roleLabels(),
             'selectedModalUser' => ctype_digit((string) $request->query('modal_user'))
-                ? User::query()->select(['id', 'full_name', 'email', 'phone', 'job_title', 'role', 'is_active', 'last_login', 'password_reset_requested_at'])->find((int) $request->query('modal_user'))
+                ? tap(
+                    User::query()
+                        ->select(['id', 'full_name', 'email', 'phone', 'job_title', 'role', 'is_active', 'last_login', 'password_reset_requested_at'])
+                        ->selectSub($this->latestLoginAuditSubquery(), 'latest_login_audit_at')
+                        ->find((int) $request->query('modal_user')),
+                    fn (?User $modalUser) => $modalUser ? $this->attachEffectiveLastLogin($modalUser) : null
+                )
                 : null,
         ]);
     }
@@ -177,6 +187,7 @@ class UserController extends Controller
 
         $managedUser = User::query()
             ->select(['id', 'full_name', 'email', 'phone', 'job_title', 'role', 'is_active', 'last_login', 'created_at'])
+            ->selectSub($this->latestLoginAuditSubquery(), 'latest_login_audit_at')
             ->withCount([
                 'assignedDevices',
                 'repairRequests as active_repair_requests_count' => fn ($query) => $query->where('status', RepairRequest::STATUS_SUBMITTED),
@@ -186,6 +197,7 @@ class UserController extends Controller
                 'auditLogs as audit_logs_total_count',
             ])
             ->findOrFail($user->id);
+        $this->attachEffectiveLastLogin($managedUser);
 
         $assignedDevices = Device::query()
             ->select(['id', 'code', 'name', 'device_type_id', 'room_id', 'building_id'])
@@ -396,8 +408,25 @@ class UserController extends Controller
     {
         return [
             User::ROLE_ADMIN => 'Admins',
+            User::ROLE_IT_WORKER => 'IT darbinieks',
             User::ROLE_USER => 'Darbinieks',
         ];
+    }
+
+    private function latestLoginAuditSubquery(): Builder
+    {
+        return AuditLog::query()
+            ->select('timestamp')
+            ->whereColumn('audit_log.user_id', 'users.id')
+            ->where('action', AuditTrail::ACTION_LOGIN)
+            ->latest('timestamp')
+            ->limit(1);
+    }
+
+    private function attachEffectiveLastLogin(User $user): void
+    {
+        $fallback = $user->getAttribute('latest_login_audit_at');
+        $user->setAttribute('effective_last_login', $user->last_login ?: ($fallback ? Carbon::parse($fallback) : null));
     }
 
     private function normalizedSorting(Request $request): array

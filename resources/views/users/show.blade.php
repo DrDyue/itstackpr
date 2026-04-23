@@ -1,6 +1,7 @@
 {{-- Lietotāja detalizētais profils administratoram. --}}
 <x-app-layout>
     @php
+        $effectiveLastLogin = $managedUser->effective_last_login ?? $managedUser->last_login;
         $assignedDevicesUrl = route('devices.index', ['assigned_to_id' => $managedUser->id, 'assigned_to_query' => $managedUser->full_name]);
         $auditUrl = route('audit-log.index', ['user_id' => $managedUser->id, 'user_query' => $managedUser->full_name]);
         $repairRequestsUrl = route('repair-requests.index', ['requester_id' => $managedUser->id, 'requester_query' => $managedUser->full_name, 'statuses_filter' => 1]);
@@ -91,8 +92,8 @@
                     </div>
                     <div class="user-profile-card">
                         <div class="user-profile-card-label">Pēdējā pieslēgšanās</div>
-                        <div class="user-profile-card-value">{{ $managedUser->last_login?->format('d.m.Y H:i') ?: 'Nav pieslēdzies' }}</div>
-                        <div class="user-profile-card-meta">{{ $managedUser->last_login ? $managedUser->last_login->diffForHumans() : 'Pirmā pieslēgšanās vēl nav notikusi' }}</div>
+                        <div class="user-profile-card-value">{{ $effectiveLastLogin?->format('d.m.Y H:i') ?: 'Nav pieslēdzies' }}</div>
+                        <div class="user-profile-card-meta">{{ $effectiveLastLogin ? $effectiveLastLogin->diffForHumans() : 'Pirmā pieslēgšanās vēl nav notikusi' }}</div>
                     </div>
                     <div class="user-profile-card">
                         <div class="user-profile-card-label">Izveidots</div>

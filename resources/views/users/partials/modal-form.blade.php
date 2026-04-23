@@ -31,13 +31,13 @@
 
         <input type="hidden" name="modal_form" value="{{ $modalForm }}">
 
-        <div class="device-type-modal-head">
+        <div class="device-type-modal-head user-modal-head">
             <div class="device-type-modal-head-copy">
                 <div class="device-type-modal-badge">
                     <x-icon :name="$isEdit ? 'edit' : 'plus'" size="h-4 w-4" />
                     <span>{{ $badgeLabel }}</span>
                 </div>
-                <div class="device-type-modal-title-row">
+                <div class="device-type-modal-title-row user-modal-title-row">
                     <div class="device-type-modal-icon">
                         <x-icon name="user" size="h-6 w-6" />
                     </div>
@@ -128,14 +128,12 @@
                             <div class="mt-2" x-data="{ role: @js($currentRole) }">
                                 <input type="hidden" name="role" :value="role">
                                 <div class="role-toggle role-toggle-compact">
-                                    <button type="button" class="role-toggle-btn" :class="role === 'admin' ? 'role-toggle-active' : ''" @click="role = 'admin'">
-                                        <x-icon name="users" size="h-4 w-4" />
-                                        <span>{{ $roleLabels['admin'] ?? 'Admins' }}</span>
-                                    </button>
-                                    <button type="button" class="role-toggle-btn" :class="role === 'user' ? 'role-toggle-active' : ''" @click="role = 'user'">
-                                        <x-icon name="profile" size="h-4 w-4" />
-                                        <span>{{ $roleLabels['user'] ?? 'Darbinieks' }}</span>
-                                    </button>
+                                    @foreach ($roles as $roleValue)
+                                        <button type="button" class="role-toggle-btn" :class="role === @js($roleValue) ? 'role-toggle-active' : ''" @click="role = @js($roleValue)">
+                                            <x-icon :name="$roleValue === 'admin' ? 'users' : ($roleValue === 'it_worker' ? 'repair' : 'profile')" size="h-4 w-4" />
+                                            <span>{{ $roleLabels[$roleValue] ?? $roleValue }}</span>
+                                        </button>
+                                    @endforeach
                                 </div>
                             </div>
                         </div>

@@ -18,6 +18,9 @@
                 ->where('status', \App\Models\DeviceTransfer::STATUS_SUBMITTED)
                 ->count()
             : 0;
+        $passwordResetRequestCount = $canManageRequests
+            ? \App\Models\User::query()->whereNotNull('password_reset_requested_at')->count()
+            : 0;
         $primaryNavigationItems = array_values(array_filter([
             $canManageRequests ? ['route' => 'dashboard', 'pattern' => 'dashboard', 'label' => 'Darbvirsma', 'icon' => 'dashboard'] : null,
             ['route' => 'devices.index', 'pattern' => 'devices*', 'label' => 'Ierīces', 'icon' => 'device'],
@@ -132,6 +135,12 @@
                         <x-nav-link :href="route($usersNavigationItem['route'])" :active="request()->routeIs($usersNavigationItem['pattern'])">
                             <x-icon :name="$usersNavigationItem['icon']" size="h-4 w-4" />
                             <span>{{ $usersNavigationItem['label'] }}</span>
+                            @if ($passwordResetRequestCount > 0)
+                                <span title="Paroles maiņas pieprasījumi: {{ $passwordResetRequestCount }}" class="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
+                                    <x-icon name="key" size="h-3 w-3" />
+                                    <span>{{ $passwordResetRequestCount }}</span>
+                                </span>
+                            @endif
                         </x-nav-link>
                     @endif
 
@@ -204,7 +213,8 @@
                         $showNotificationPreviewCards = ! request()->routeIs('profile.edit');
                         $pendingNotificationsCount = $canManageRequests
                             ? (\App\Models\RepairRequest::query()->where('status', \App\Models\RepairRequest::STATUS_SUBMITTED)->count()
-                                + \App\Models\WriteoffRequest::query()->where('status', \App\Models\WriteoffRequest::STATUS_SUBMITTED)->count())
+                                + \App\Models\WriteoffRequest::query()->where('status', \App\Models\WriteoffRequest::STATUS_SUBMITTED)->count()
+                                + $passwordResetRequestCount)
                             : $incomingTransferReviewCount;
                     @endphp
                     <div
@@ -279,7 +289,31 @@
                                             ->latest('id')
                                             ->limit(5)
                                             ->get();
+                                        $pendingPasswordResets = \App\Models\User::query()
+                                            ->whereNotNull('password_reset_requested_at')
+                                            ->latest('password_reset_requested_at')
+                                            ->limit(5)
+                                            ->get(['id', 'full_name', 'email', 'phone', 'job_title', 'password_reset_requested_at']);
                                     @endphp
+
+                                    @if ($showNotificationPreviewCards && $pendingPasswordResets->count() > 0)
+                                        <div class="px-3 pb-2 pt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Paroles maiņas pieprasījumi</div>
+                                        @foreach ($pendingPasswordResets as $requestUser)
+                                            <a href="{{ route('users.index', ['password_reset' => 1, 'highlight' => $requestUser->full_name, 'highlight_mode' => 'contains', 'highlight_id' => 'user-'.$requestUser->id]) }}" class="pending-review-card group flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-3 transition hover:border-amber-200 hover:bg-amber-50">
+                                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 ring-1 ring-amber-200">
+                                                    <x-icon name="key" size="h-5 w-5" />
+                                                </div>
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="flex items-center justify-between gap-2">
+                                                        <p class="truncate text-sm font-semibold text-slate-900">{{ $requestUser->full_name ?: 'Lietotājs' }}</p>
+                                                        <span class="shrink-0 text-[10px] text-slate-400">{{ $requestUser->password_reset_requested_at?->diffForHumans(short: true) }}</span>
+                                                    </div>
+                                                    <p class="truncate text-xs text-slate-600">{{ $requestUser->email ?: 'E-pasts nav norādīts' }}</p>
+                                                    <p class="truncate text-xs text-slate-500">Administratoram jāiestata jauna parole.</p>
+                                                </div>
+                                            </a>
+                                        @endforeach
+                                    @endif
 
                                     @if ($showNotificationPreviewCards && $pendingRepairs->count() > 0)
                                         <div class="px-3 pb-2 pt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta pieprasījumi</div>
@@ -319,14 +353,14 @@
                                         @endforeach
                                     @endif
 
-                                    @if (! $showNotificationPreviewCards && ($pendingRepairs->count() > 0 || $pendingWriteoffs->count() > 0))
+                                    @if (! $showNotificationPreviewCards && ($pendingRepairs->count() > 0 || $pendingWriteoffs->count() > 0 || $pendingPasswordResets->count() > 0))
                                         <div class="px-3 py-6 text-center">
                                             <p class="text-sm font-semibold text-slate-900">Aktīvie pieprasījumi ir pieejami pārskata lapās</p>
                                             <p class="mt-1 text-xs text-slate-500">Šajā formā atstātas tikai ātrās pārejas uz pieteikumu sadaļām.</p>
                                         </div>
                                     @endif
 
-                                    @if ($pendingRepairs->count() === 0 && $pendingWriteoffs->count() === 0)
+                                    @if ($pendingRepairs->count() === 0 && $pendingWriteoffs->count() === 0 && $pendingPasswordResets->count() === 0)
                                         <div class="flex flex-col items-center justify-center gap-2 py-8 text-center">
                                             <div class="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                                                 <x-icon name="check-circle" size="h-7 w-7" />
@@ -384,6 +418,10 @@
                                         <a href="{{ route('writeoff-requests.index', ['statuses_filter' => 1, 'status' => ['submitted']]) }}" class="flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm font-semibold text-rose-800 transition hover:bg-rose-100">
                                             <span>Norakstīšanas pieprasījumi</span>
                                             <x-icon name="writeoff" size="h-4 w-4" />
+                                        </a>
+                                        <a href="{{ route('users.index', ['password_reset' => 1]) }}" class="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm font-semibold text-amber-800 transition hover:bg-amber-100">
+                                            <span>Paroles maiņas pieprasījumi</span>
+                                            <x-icon name="key" size="h-4 w-4" />
                                         </a>
                                     </div>
                                 @else
