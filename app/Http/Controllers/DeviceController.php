@@ -1470,7 +1470,6 @@ SQL;
     private function requestIndexUrl(Device $device, bool $canManageRequests, string $type, ?int $requestId = null): ?string
     {
         $params = [
-            'code' => $device->code ?: $device->name,
             'statuses_filter' => 1,
             'status' => ['submitted'],
         ];
