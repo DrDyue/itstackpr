@@ -151,6 +151,11 @@
                             $requestAvailability = $deviceState['requestAvailability'] ?? ['repair' => false, 'writeoff' => false, 'transfer' => false, 'can_create_any' => false, 'reason' => null];
                             $roomUpdateAvailability = $deviceState['roomUpdateAvailability'] ?? ['allowed' => false, 'reason' => 'Telpas maiņa šobrīd nav pieejama.'];
                             $pendingRequestBadge = $deviceState['pendingRequestBadge'] ?? null;
+                            $activeRequestUrl = $pendingRequestBadge['url'] ?? null;
+                            $hasActiveRequest = ! empty($activeRequestUrl);
+                            $activeRequestMessage = $hasActiveRequest
+                                ? 'Šai ierīcei ir aktīvs pieteikums. Vispirms jāatrisina pieteikums, un tikai pēc tam var rediģēt ierīci vai mainīt telpu/atbildīgo.'
+                                : null;
                             $repairStatusLabel = $deviceState['repairStatusLabel'] ?? null;
                             $repairPreview = $deviceState['repairPreview'] ?? null;
                             $repairRecord = $device->activeRepair;
@@ -410,18 +415,25 @@
                                                 <span>Skatīt ierīci</span>
                                             </a>
 
-                                            <a href="{{ $deviceEditUrl }}" class="table-action-item table-action-item-amber" data-async-link="true" @click="open = false">
+                                            @if ($activeRequestUrl)
+                                                <a href="{{ $activeRequestUrl }}" class="table-action-item table-action-item-amber" @click="open = false">
+                                                    <x-icon :name="$pendingRequestBadge['icon'] ?? 'repair-request'" size="h-4 w-4" />
+                                                    <span>Pāriet uz pieteikumu</span>
+                                                </a>
+                                            @endif
+
+                                            <a href="{{ $hasActiveRequest ? '#' : $deviceEditUrl }}" class="table-action-item table-action-item-amber {{ $hasActiveRequest ? 'opacity-50 cursor-not-allowed' : '' }}" @if (! $hasActiveRequest) data-async-link="true" @else data-app-toast-title="Rediģēšana nav pieejama" data-app-toast-message="{{ $activeRequestMessage }}" data-app-toast-tone="info" @endif @click="open = false">
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Rediģēt</span>
                                             </a>
 
                                             @if ($device->status === 'active')
-                                                <button type="button" class="table-action-item table-action-item-sky" @click='open = false; $dispatch("open-device-admin-room", { deviceLabel: @js(($device->code ?: "Bez koda") . " | " . $device->name), selectedRoomId: @js((string) ($device->room_id ?? "")), action: @js(route("devices.quick-update", $device)) })'>
+                                                <button type="button" class="table-action-item table-action-item-sky {{ $hasActiveRequest ? 'opacity-50 cursor-not-allowed' : '' }}" @if ($hasActiveRequest) data-app-toast-title="Telpas maiņa nav pieejama" data-app-toast-message="{{ $activeRequestMessage }}" data-app-toast-tone="info" @click="open = false" @else @click='open = false; $dispatch("open-device-admin-room", { deviceLabel: @js(($device->code ?: "Bez koda") . " | " . $device->name), selectedRoomId: @js((string) ($device->room_id ?? "")), action: @js(route("devices.quick-update", $device)) })' @endif>
                                                     <x-icon name="room" size="h-4 w-4" />
                                                     <span>Mainīt telpu</span>
                                                 </button>
 
-                                                <button type="button" class="table-action-item table-action-item-violet" @click='open = false; $dispatch("open-device-admin-assignee", { deviceLabel: @js(($device->code ?: "Bez koda") . " | " . $device->name), selectedAssigneeId: @js((string) ($device->assigned_to_id ?? "")), action: @js(route("devices.quick-update", $device)) })'>
+                                                <button type="button" class="table-action-item table-action-item-violet {{ $hasActiveRequest ? 'opacity-50 cursor-not-allowed' : '' }}" @if ($hasActiveRequest) data-app-toast-title="Atbildīgā maiņa nav pieejama" data-app-toast-message="{{ $activeRequestMessage }}" data-app-toast-tone="info" @click="open = false" @else @click='open = false; $dispatch("open-device-admin-assignee", { deviceLabel: @js(($device->code ?: "Bez koda") . " | " . $device->name), selectedAssigneeId: @js((string) ($device->assigned_to_id ?? "")), action: @js(route("devices.quick-update", $device)) })' @endif>
                                                     <x-icon name="user" size="h-4 w-4" />
                                                     <span>Mainīt atbildīgo</span>
                                                 </button>

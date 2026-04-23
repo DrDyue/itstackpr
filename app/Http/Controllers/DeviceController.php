@@ -785,6 +785,10 @@ SQL;
     {
         $this->requireManager();
 
+        if ($blockedReason = $this->activeRequestEditBlockedReason($device)) {
+            return redirect()->route('devices.index')->with('error', $blockedReason);
+        }
+
         $before = $device->only($this->trackedFields());
 
         $this->saveDevicePayload($device, $this->validatedData($request, $device));
@@ -1703,6 +1707,10 @@ SQL;
 
     private function quickRelationEditBlockedReason(Device $device): ?string
     {
+        if ($blockedReason = $this->activeRequestEditBlockedReason($device)) {
+            return $blockedReason;
+        }
+
         if ($device->status === Device::STATUS_WRITEOFF) {
             return 'Norakstītai ierīcei vairs nevar mainīt telpu vai atbildīgo personu.';
         }
@@ -1711,6 +1719,23 @@ SQL;
             $repairStatusLabel = $this->visibleRepairStatusLabel($device);
 
             return 'Remonta ierīcei nevar mainīt telpu vai atbildīgo personu'.($repairStatusLabel ? ' ar statusu "'.$repairStatusLabel.'".' : '.');
+        }
+
+        return null;
+    }
+
+    private function activeRequestEditBlockedReason(Device $device): ?string
+    {
+        if ($device->repairRequests()->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
+            return 'Šai ierīcei ir aktīvs remonta pieteikums. Vispirms jāatrisina pieteikums.';
+        }
+
+        if ($device->writeoffRequests()->where('status', WriteoffRequest::STATUS_SUBMITTED)->exists()) {
+            return 'Šai ierīcei ir aktīvs norakstīšanas pieteikums. Vispirms jāatrisina pieteikums.';
+        }
+
+        if ($device->transfers()->where('status', DeviceTransfer::STATUS_SUBMITTED)->exists()) {
+            return 'Šai ierīcei ir aktīvs nodošanas pieteikums. Vispirms jāatrisina pieteikums.';
         }
 
         return null;
