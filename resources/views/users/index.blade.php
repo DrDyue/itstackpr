@@ -349,31 +349,28 @@
                                                 <div class="table-action-divider"></div>
 
                                                 <div class="table-action-section">
-                                                    <form
-                                                        method="POST"
-                                                        action="{{ route('users.destroy', $managedUser) }}"
+                                                    <x-post-action-button
+                                                        :action="route('users.destroy', $managedUser)"
+                                                        method="DELETE"
+                                                        button-class="table-action-item table-action-item-rose"
+                                                        :button-type="auth()->id() === $managedUser->id ? 'button' : 'submit'"
+                                                        :button-attributes="auth()->id() === $managedUser->id
+                                                            ? [
+                                                                'data-app-toast-title' => 'Dzēšana nav pieejama',
+                                                                'data-app-toast-message' => 'Paša lietotāja kontu no šīs tabulas dzēst nevar. Izmanto citu administratora kontu, ja šo profilu tiešām vajag noņemt.',
+                                                                'data-app-toast-tone' => 'info',
+                                                                'disabled' => true,
+                                                            ]
+                                                            : []"
                                                         data-app-confirm-title="Dzēst lietotāju?"
                                                         data-app-confirm-message="Vai tiešām dzēst šo lietotāju?"
                                                         data-app-confirm-accept="Jā, dzēst"
                                                         data-app-confirm-cancel="Nē"
                                                         data-app-confirm-tone="danger"
                                                     >
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button
-                                                            type="{{ auth()->id() === $managedUser->id ? 'button' : 'submit' }}"
-                                                            class="table-action-item table-action-item-rose"
-                                                            @if (auth()->id() === $managedUser->id)
-                                                                data-app-toast-title="Dzēšana nav pieejama"
-                                                                data-app-toast-message="Paša lietotāja kontu no šīs tabulas dzēst nevar. Izmanto citu administratora kontu, ja šo profilu tiešām vajag noņemt."
-                                                                data-app-toast-tone="info"
-                                                                disabled
-                                                            @endif
-                                                        >
-                                                            <x-icon name="trash" size="h-4 w-4" />
-                                                            <span>Dzēst</span>
-                                                        </button>
-                                                    </form>
+                                                        <x-icon name="trash" size="h-4 w-4" />
+                                                        <span>Dzēst</span>
+                                                    </x-post-action-button>
                                                 </div>
                                             </div>
                                         </div>

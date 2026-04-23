@@ -212,19 +212,19 @@
                                         <span>Rediģēt</span>
                                     </button>
                                     @if ($canDelete)
-                                        <form
-                                            method="POST"
-                                            action="{{ route('rooms.destroy', $room) }}"
+                                        <x-post-action-button
+                                            :action="route('rooms.destroy', $room)"
+                                            method="DELETE"
+                                            button-class="btn-danger"
                                             data-app-confirm-title="Dzēst telpu?"
                                             data-app-confirm-message="Vai tiešām dzēst šo telpu?"
                                             data-app-confirm-accept="Jā, dzēst"
                                             data-app-confirm-cancel="Nē"
                                             data-app-confirm-tone="danger"
                                         >
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn-danger"><x-icon name="trash" size="h-4 w-4" /><span>Dzēst</span></button>
-                                        </form>
+                                            <x-icon name="trash" size="h-4 w-4" />
+                                            <span>Dzēst</span>
+                                        </x-post-action-button>
                                     @else
                                         <button
                                             type="button"

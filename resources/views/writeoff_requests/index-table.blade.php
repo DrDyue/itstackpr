@@ -175,39 +175,37 @@
 
                                         @if ($canReview && $writeoffRequest->status === 'submitted')
                                             <div class="table-action-grid-actions">
-                                                <form
-                                                    method="POST"
-                                                    action="{{ route('writeoff-requests.review', $writeoffRequest) }}"
+                                                <x-post-action-button
+                                                    :action="route('writeoff-requests.review', $writeoffRequest)"
+                                                    button-class="table-action-item table-action-item-rose"
                                                     data-app-confirm-title="Noraidīt pieteikumu?"
                                                     data-app-confirm-message="Vai tiešām noraidīt šo norakstīšanas pieteikumu?"
                                                     data-app-confirm-accept="Jā, noraidīt"
                                                     data-app-confirm-cancel="Nē"
                                                     data-app-confirm-tone="danger"
                                                 >
-                                                    @csrf
-                                                    <input type="hidden" name="status" value="rejected">
-                                                    <button type="submit" class="table-action-item table-action-item-rose">
-                                                        <x-icon name="x-circle" size="h-4 w-4" />
-                                                        <span>Noraidīt</span>
-                                                    </button>
-                                                </form>
+                                                    <x-slot:fields>
+                                                        <input type="hidden" name="status" value="rejected">
+                                                    </x-slot:fields>
+                                                    <x-icon name="x-circle" size="h-4 w-4" />
+                                                    <span>Noraidīt</span>
+                                                </x-post-action-button>
 
-                                                <form
-                                                    method="POST"
-                                                    action="{{ route('writeoff-requests.review', $writeoffRequest) }}"
+                                                <x-post-action-button
+                                                    :action="route('writeoff-requests.review', $writeoffRequest)"
+                                                    button-class="table-action-item table-action-item-emerald"
                                                     data-app-confirm-title="Apstiprināt pieteikumu?"
                                                     data-app-confirm-message="Vai tiešām apstiprināt šo norakstīšanas pieteikumu?"
                                                     data-app-confirm-accept="Jā, apstiprināt"
                                                     data-app-confirm-cancel="Nē"
                                                     data-app-confirm-tone="warning"
                                                 >
-                                                    @csrf
-                                                    <input type="hidden" name="status" value="approved">
-                                                    <button type="submit" class="table-action-item table-action-item-emerald">
-                                                        <x-icon name="check-circle" size="h-4 w-4" />
-                                                        <span>Apstiprināt</span>
-                                                    </button>
-                                                </form>
+                                                    <x-slot:fields>
+                                                        <input type="hidden" name="status" value="approved">
+                                                    </x-slot:fields>
+                                                    <x-icon name="check-circle" size="h-4 w-4" />
+                                                    <span>Apstiprināt</span>
+                                                </x-post-action-button>
                                             </div>
                                         @elseif (! $canReview && $writeoffRequest->status === 'submitted')
                                             <a href="{{ $editRequestUrl }}" class="table-action-item table-action-item-amber" data-async-link="true" @click="open = false">
@@ -215,22 +213,20 @@
                                                 <span>Labot pieteikumu</span>
                                             </a>
 
-                                            <form
-                                                method="POST"
-                                                action="{{ route('my-requests.destroy', ['requestType' => 'writeoff', 'requestId' => $writeoffRequest->id]) }}"
+                                            <x-post-action-button
+                                                :action="route('my-requests.destroy', ['requestType' => 'writeoff', 'requestId' => $writeoffRequest->id])"
+                                                method="DELETE"
+                                                button-class="table-action-item table-action-item-rose"
+                                                :button-attributes="['@click' => 'open = false']"
                                                 data-app-confirm-title="Atcelt pieteikumu?"
                                                 data-app-confirm-message="Vai tiešām atcelt šo norakstīšanas pieteikumu?"
                                                 data-app-confirm-accept="Jā, atcelt"
                                                 data-app-confirm-cancel="Nē"
                                                 data-app-confirm-tone="danger"
                                             >
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="table-action-item table-action-item-rose" @click="open = false">
-                                                    <x-icon name="x-mark" size="h-4 w-4" />
-                                                    <span>Atcelt pieteikumu</span>
-                                                </button>
-                                            </form>
+                                                <x-icon name="x-mark" size="h-4 w-4" />
+                                                <span>Atcelt pieteikumu</span>
+                                            </x-post-action-button>
                                         @endif
                                     </div>
                                 </div>

@@ -195,22 +195,19 @@
                                             </button>
 
                                             @if ($canDelete)
-                                                <form
-                                                    method="POST"
-                                                    action="{{ route('buildings.destroy', $building) }}"
+                                                <x-post-action-button
+                                                    :action="route('buildings.destroy', $building)"
+                                                    method="DELETE"
+                                                    button-class="btn-danger"
                                                     data-app-confirm-title="Dzēst ēku?"
                                                     data-app-confirm-message="Vai tiešām dzēst šo ēku?"
                                                     data-app-confirm-accept="Jā, dzēst"
                                                     data-app-confirm-cancel="Nē"
                                                     data-app-confirm-tone="danger"
                                                 >
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn-danger">
-                                                        <x-icon name="trash" size="h-4 w-4" />
-                                                        <span>Dzēst</span>
-                                                    </button>
-                                                </form>
+                                                    <x-icon name="trash" size="h-4 w-4" />
+                                                    <span>Dzēst</span>
+                                                </x-post-action-button>
                                             @else
                                                 <button
                                                     type="button"

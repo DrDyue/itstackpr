@@ -177,14 +177,17 @@
                                             </button>
 
                                             @if ($canDelete)
-                                                <form method="POST" action="{{ route('device-types.destroy', $type) }}" onsubmit="return confirm('Dzēst ierīces tipu &quot;{{ e($type->type_name) }}&quot;?')" class="inline">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn-danger" aria-label="Dzēst {{ $type->type_name }}">
-                                                        <x-icon name="trash" size="h-4 w-4" />
-                                                        <span>Dzēst</span>
-                                                    </button>
-                                                </form>
+                                                <x-post-action-button
+                                                    :action="route('device-types.destroy', $type)"
+                                                    method="DELETE"
+                                                    form-class="inline"
+                                                    button-class="btn-danger"
+                                                    :button-attributes="['aria-label' => 'Dzēst ' . $type->type_name]"
+                                                    onsubmit="return confirm('Dzēst ierīces tipu &quot;{{ e($type->type_name) }}&quot;?')"
+                                                >
+                                                    <x-icon name="trash" size="h-4 w-4" />
+                                                    <span>Dzēst</span>
+                                                </x-post-action-button>
                                             @else
                                                 <button
                                                     type="button"

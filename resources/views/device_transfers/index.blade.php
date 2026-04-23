@@ -544,59 +544,55 @@
                                                             <span>Rediģēt pieteikumu</span>
                                                         </a>
 
-                                                        <form
-                                                            method="POST"
-                                                            action="{{ route('my-requests.destroy', ['requestType' => 'transfer', 'requestId' => $transfer->id]) }}"
+                                                        <x-post-action-button
+                                                            :action="route('my-requests.destroy', ['requestType' => 'transfer', 'requestId' => $transfer->id])"
+                                                            method="DELETE"
+                                                            button-class="table-action-item table-action-item-rose"
+                                                            :button-attributes="['@click' => 'open = false']"
                                                             data-app-confirm-title="Atcelt nodošanu?"
                                                             data-app-confirm-message="Vai tiešām atcelt šo nodošanas pieteikumu?"
                                                             data-app-confirm-accept="Jā, atcelt"
                                                             data-app-confirm-cancel="Nē"
                                                             data-app-confirm-tone="danger"
                                                         >
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="table-action-item table-action-item-rose" @click="open = false">
-                                                                <x-icon name="x-mark" size="h-4 w-4" />
-                                                                <span>Atcelt pieteikumu</span>
-                                                            </button>
-                                                        </form>
+                                                            <x-icon name="x-mark" size="h-4 w-4" />
+                                                            <span>Atcelt pieteikumu</span>
+                                                        </x-post-action-button>
                                                     @endif
 
                                                     @if ($isIncomingPending)
                                                         <div class="table-action-grid-actions">
-                                                            <form
-                                                                method="POST"
-                                                                action="{{ route('device-transfers.review', $transfer) }}"
+                                                            <x-post-action-button
+                                                                :action="route('device-transfers.review', $transfer)"
+                                                                button-class="table-action-item table-action-item-rose"
                                                                 data-app-confirm-title="Noraidīt nodošanu?"
                                                                 data-app-confirm-message="Vai tiešām noraidīt šo ierīces nodošanas pieteikumu?"
                                                                 data-app-confirm-accept="Jā, noraidīt"
                                                                 data-app-confirm-cancel="Nē"
                                                                 data-app-confirm-tone="danger"
                                                             >
-                                                                @csrf
-                                                                <input type="hidden" name="status" value="rejected">
-                                                                <button type="submit" class="table-action-item table-action-item-rose">
-                                                                    <x-icon name="x-circle" size="h-4 w-4" />
-                                                                    <span>Noraidīt</span>
-                                                                </button>
-                                                            </form>
+                                                                <x-slot:fields>
+                                                                    <input type="hidden" name="status" value="rejected">
+                                                                </x-slot:fields>
+                                                                <x-icon name="x-circle" size="h-4 w-4" />
+                                                                <span>Noraidīt</span>
+                                                            </x-post-action-button>
 
-                                                            <form
-                                                                method="POST"
-                                                                action="{{ route('device-transfers.review', $transfer) }}"
+                                                            <x-post-action-button
+                                                                :action="route('device-transfers.review', $transfer)"
+                                                                button-class="table-action-item table-action-item-emerald"
                                                                 data-app-confirm-title="Apstiprināt nodošanu?"
                                                                 data-app-confirm-message="Vai tiešām apstiprināt šo ierīces nodošanas pieteikumu?"
                                                                 data-app-confirm-accept="Jā, apstiprināt"
                                                                 data-app-confirm-cancel="Nē"
                                                                 data-app-confirm-tone="warning"
                                                             >
-                                                                @csrf
-                                                                <input type="hidden" name="status" value="approved">
-                                                                <button type="submit" class="table-action-item table-action-item-emerald">
-                                                                    <x-icon name="check-circle" size="h-4 w-4" />
-                                                                    <span>Apstiprināt</span>
-                                                                </button>
-                                                            </form>
+                                                                <x-slot:fields>
+                                                                    <input type="hidden" name="status" value="approved">
+                                                                </x-slot:fields>
+                                                                <x-icon name="check-circle" size="h-4 w-4" />
+                                                                <span>Apstiprināt</span>
+                                                            </x-post-action-button>
                                                         </div>
                                                     @endif
                                                 </div>

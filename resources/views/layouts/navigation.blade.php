@@ -470,13 +470,13 @@
                             <x-icon name="profile" size="h-4 w-4" />
                             <span>Profils</span>
                         </x-dropdown-link>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="flex w-full items-center gap-2.5 rounded-xl px-4 py-2.5 text-start text-sm font-medium text-rose-600 transition duration-150 ease-in-out hover:bg-rose-50 focus:bg-rose-50 focus:outline-none">
-                                <x-icon name="logout" size="h-4 w-4" />
-                                <span>Izrakstīties</span>
-                            </button>
-                        </form>
+                        <x-post-action-button
+                            :action="route('logout')"
+                            button-class="flex w-full items-center gap-2.5 rounded-xl px-4 py-2.5 text-start text-sm font-medium text-rose-600 transition duration-150 ease-in-out hover:bg-rose-50 focus:bg-rose-50 focus:outline-none"
+                        >
+                            <x-icon name="logout" size="h-4 w-4" />
+                            <span>Izrakstīties</span>
+                        </x-post-action-button>
                     </x-slot>
                 </x-dropdown>
                 </div>
@@ -632,15 +632,15 @@
                         <span>Profils</span>
                     </span>
                 </x-responsive-nav-link>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <x-responsive-nav-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">
-                        <span class="inline-flex items-center gap-2.5">
-                            <x-icon name="logout" size="h-5 w-5" />
-                            <span>Izrakstīties</span>
-                        </span>
-                    </x-responsive-nav-link>
-                </form>
+                <x-post-action-button
+                    :action="route('logout')"
+                    button-class="block w-full whitespace-nowrap rounded-2xl px-4 py-3 text-start text-base font-medium text-rose-600 transition duration-150 ease-in-out hover:bg-rose-50 hover:shadow-sm hover:text-rose-700"
+                >
+                    <span class="inline-flex items-center gap-2.5">
+                        <x-icon name="logout" size="h-5 w-5" />
+                        <span>Izrakstīties</span>
+                    </span>
+                </x-post-action-button>
             </div>
         </div>
     </div>
