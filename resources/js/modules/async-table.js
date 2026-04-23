@@ -742,7 +742,6 @@ const performManualTableSearch = async (form) => {
     const rawTerm = searchInput.value.trim();
     const normalizedTerm = normalizeTableSearchValue(rawTerm);
     const searchMode = getManualSearchMode(searchInput);
-    const shouldUseEndpointSearch = searchInput.matches('[data-async-code-search="true"]') && Boolean(form.dataset.searchEndpoint);
     const manualSearchState = {
         name: searchInput.name,
         value: rawTerm,
@@ -763,19 +762,17 @@ const performManualTableSearch = async (form) => {
     clearTableSearchHighlights(root);
     clearTableSearchNavigator({ rootSelector });
 
-    const paginatedResults = shouldUseEndpointSearch
-        ? { matches: [], pageHtmlByPage: new Map() }
-        : (supportsPaginatedManualSearch(form)
-            ? await searchAcrossPaginatedMatches(form, rootSelector, rawTerm, searchMode)
-            : {
-                matches: findMatchingTableRows(root, rawTerm, searchMode).map((row, index) => ({
-                    page: getCurrentAsyncPage(),
-                    rowIndex: index,
-                    highlightId: getRowSearchId(row),
-                    label: getRowSearchLabel(row),
-                })),
-                pageHtmlByPage: new Map(),
-            });
+    const paginatedResults = supportsPaginatedManualSearch(form)
+        ? await searchAcrossPaginatedMatches(form, rootSelector, rawTerm, searchMode)
+        : {
+            matches: findMatchingTableRows(root, rawTerm, searchMode).map((row, index) => ({
+                page: getCurrentAsyncPage(),
+                rowIndex: index,
+                highlightId: getRowSearchId(row),
+                label: getRowSearchLabel(row),
+            })),
+            pageHtmlByPage: new Map(),
+        };
     if (paginatedResults.matches.length > 0) {
         const firstMatch = paginatedResults.matches[0];
 

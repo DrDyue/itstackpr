@@ -192,11 +192,11 @@ class RepairRequestController extends Controller
             ->with('device:id,code')
             ->select('repair_requests.*');
 
-        $this->applyIndexFilters($requestsQuery, $filters);
+        $this->applyIndexFilters($requestsQuery, $filters, ['request_id']);
         $this->applySorting($requestsQuery, $sorting);
 
         $requests = $requestsQuery->get();
-        $needle = mb_strtolower($code);
+        $needle = mb_strtolower(trim($code));
         $foundIndex = null;
 
         foreach ($requests as $index => $repairRequest) {
@@ -487,8 +487,10 @@ class RepairRequestController extends Controller
         $skipLookup = array_flip($skip);
 
         if (! isset($skipLookup['code']) && $filters['code'] !== '') {
-            $query->whereHas('device', function (Builder $deviceQuery) use ($filters) {
-                $deviceQuery->where('code', $filters['code']);
+            $code = mb_strtolower(trim($filters['code']));
+
+            $query->whereHas('device', function (Builder $deviceQuery) use ($code) {
+                $deviceQuery->whereRaw('LOWER(TRIM(code)) = ?', [$code]);
             });
         }
 

@@ -4863,21 +4863,21 @@ tbody td {
 }
 
 .table-search-hit td {
-    background-color: rgba(253, 230, 138, 0.88) !important;
+    background-color: rgba(96, 165, 250, 0.78) !important;
     animation: table-search-highlight 2.2s ease;
 }
 
 .table-search-linger td {
-    background-color: rgba(254, 243, 199, 0.74) !important;
+    background-color: rgba(191, 219, 254, 0.74) !important;
     transition: background-color 0.25s ease;
 }
 
 .table-search-match td {
-    background-color: rgba(254, 243, 199, 0.58) !important;
+    background-color: rgba(219, 234, 254, 0.72) !important;
 }
 
 .table-search-active td {
-    background-color: rgba(252, 211, 77, 0.72) !important;
+    background-color: rgba(147, 197, 253, 0.88) !important;
 }
 
 .table-search-navigator {
@@ -5036,15 +5036,15 @@ tbody td {
 
 @keyframes table-search-highlight {
     0% {
-        background-color: rgba(254, 243, 199, 0.42);
+        background-color: rgba(219, 234, 254, 0.56);
     }
 
     18% {
-        background-color: rgba(251, 191, 36, 0.88);
+        background-color: rgba(96, 165, 250, 0.78);
     }
 
     100% {
-        background-color: rgba(254, 243, 199, 0.74);
+        background-color: rgba(191, 219, 254, 0.74);
     }
 }
 
@@ -6723,19 +6723,19 @@ html[data-theme='dark'] .table-action-attention {
 }
 
 html[data-theme='dark'] .table-search-hit td {
-    background-color: rgba(245, 158, 11, 0.25) !important;
+    background-color: rgba(59, 130, 246, 0.34) !important;
 }
 
 html[data-theme='dark'] .table-search-linger td {
-    background-color: rgba(245, 158, 11, 0.16) !important;
+    background-color: rgba(59, 130, 246, 0.22) !important;
 }
 
 html[data-theme='dark'] .table-search-match td {
-    background-color: rgba(245, 158, 11, 0.11) !important;
+    background-color: rgba(59, 130, 246, 0.16) !important;
 }
 
 html[data-theme='dark'] .table-search-active td {
-    background-color: rgba(245, 158, 11, 0.26) !important;
+    background-color: rgba(37, 99, 235, 0.36) !important;
 }
 
 html[data-theme='dark'] .app-loading-bar-shell {

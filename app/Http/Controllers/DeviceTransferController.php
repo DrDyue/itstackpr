@@ -539,8 +539,10 @@ class DeviceTransferController extends Controller
         $canManageTransfers = $user?->canManageRequests() ?? false;
 
         if (! isset($skipLookup['code']) && $filters['code'] !== '') {
-            $query->whereHas('device', function (Builder $deviceQuery) use ($filters) {
-                $deviceQuery->where('code', $filters['code']);
+            $code = mb_strtolower(trim($filters['code']));
+
+            $query->whereHas('device', function (Builder $deviceQuery) use ($code) {
+                $deviceQuery->whereRaw('LOWER(TRIM(code)) = ?', [$code]);
             });
         }
 
