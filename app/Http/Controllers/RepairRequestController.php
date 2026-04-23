@@ -497,7 +497,9 @@ class RepairRequestController extends Controller
 
             $query->whereHas('device', function (Builder $deviceQuery) use ($term) {
                 $deviceQuery->where(function (Builder $q) use ($term) {
-                    $q->where('name', 'like', "%{$term}%")
+                    $q->where('code', 'like', "%{$term}%")
+                      ->orWhere('serial_number', 'like', "%{$term}%")
+                      ->orWhere('name', 'like', "%{$term}%")
                       ->orWhere('manufacturer', 'like', "%{$term}%")
                       ->orWhere('model', 'like', "%{$term}%");
                 });

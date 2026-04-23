@@ -332,7 +332,7 @@ class DashboardController extends Controller
     private function requestIndexUrl(Device $device, string $type, ?int $requestId = null): ?string
     {
         $params = [
-            'q' => $device->code ?: $device->name,
+            'code' => $device->code ?: $device->name,
             'statuses_filter' => 1,
             'status' => ['submitted'],
         ];
