@@ -1,10 +1,10 @@
 {{--
     Layout: Viesu sadaļas karkass.
-    Atbildība: apkalpo autorizācijas, paroles atjaunošanas un citas lapas, kur lietotājs vēl nav ielogojies.
+    Atbildība: apkalpo autorizācijas un paroles maiņas pieprasījuma lapas.
     Kāpēc tas ir svarīgi:
     1. Uztur vieglāku vizuālo izkārtojumu bez iekšējās navigācijas.
     2. Vienā vietā definē visu auth lapu kopējo stilu un fonu.
-    3. Nodrošina vienotu ievades pieredzi login, reģistrācijas un paroles atjaunošanas skatam.
+    3. Nodrošina vienotu ievades pieredzi login, reģistrācijas un paroles pieprasījuma skatam.
 --}}
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -49,7 +49,7 @@
                             @elseif (request()->routeIs('register'))
                                     Izveidojiet darbinieka kontu
                             @else
-                                Atiestatiet savu paroli
+                                Pieprasiet paroles maiņu
                             @endif
                         </p>
                     </div>
@@ -61,8 +61,6 @@
                                     Pierakstīšanās
                                 @elseif (request()->routeIs('register'))
                                     Reģistrācija
-                                @elseif (request()->routeIs('password.reset'))
-                                    Atiestatīt paroli
                                 @else
                                     Aizmirsta parole
                                 @endif

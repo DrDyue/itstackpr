@@ -1,15 +1,11 @@
 {{--
     Lapa: Aizmirsta parole.
-    Atbildība: ļauj lietotājam pieprasīt paroles atjaunošanas saiti uz e-pastu.
+    Atbildība: ļauj lietotājam pieprasīt paroles maiņu pie sistēmas administratora.
     Datu avots: PasswordResetLinkController@create, iesniegšana uz PasswordResetLinkController@store.
-    Galvenās daļas:
-    1. Instrukcijas lietotājam.
-    2. E-pasta ievades forma.
-    3. Paziņojums par veiksmīgu saites nosūtīšanu.
 --}}
 <x-guest-layout>
     <div class="auth-intro-text">
-        Aizmirsi paroli? Bez problēmām. Vienkārši ievadi savu e-pasta adresi un mēs nosūtīsim paroles atiestatīšanas saiti.
+        Ievadiet savu sistēmā reģistrēto e-pasta adresi. Paroles maiņas pieprasījums tiks nodots sistēmas administratoram izskatīšanai.
     </div>
 
     <form method="POST" action="{{ route('password.email') }}">
@@ -17,7 +13,6 @@
 
         <x-validation-summary />
 
-        <!-- E-pasta adrese -->
         <div class="form-group">
             <x-input-label for="email">E-pasta adrese</x-input-label>
             <x-text-input id="email" type="email" name="email" :value="old('email')" required autofocus />
@@ -26,10 +21,9 @@
 
         <div class="form-actions-end">
             <button type="submit" class="btn-primary btn-auto-inline">
-                Sūtīt paroles atiestatīšanas saiti
+                Nosūtīt pieprasījumu
             </button>
         </div>
     </form>
 </x-guest-layout>
-
 

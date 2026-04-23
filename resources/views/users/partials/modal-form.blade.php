@@ -72,6 +72,18 @@
             @endif
 
             <div class="space-y-5">
+                @if ($isEdit && $user->password_reset_requested_at)
+                    <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                        <div class="flex items-start gap-2">
+                            <x-icon name="key" size="h-4 w-4" class="mt-0.5 shrink-0" />
+                            <div>
+                                <div class="font-semibold">Lietotājs ir pieprasījis paroles maiņu.</div>
+                                <div class="mt-1 text-amber-800">Ievadiet jaunu paroli un saglabājiet izmaiņas. Pēc saglabāšanas pieprasījums tiks atzīmēts kā apstrādāts.</div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <section class="device-form-card">
                     <div class="device-form-section-header">
                         <div class="device-form-section-icon bg-sky-50 text-sky-700 ring-sky-200">

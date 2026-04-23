@@ -46,10 +46,16 @@ class RuntimeSchemaBootstrapper
             $this->ensureWriteoffRequestsTable();
             $this->ensureDeviceTransfersTable();
             $this->ensureAuditLogTable();
+            $this->ensureUsersTable();
             $this->normalizeLegacyData();
         } catch (Throwable $e) {
             Log::error('Runtime schema bootstrap failed: ' . $e->getMessage());
         }
+    }
+
+    private function ensureUsersTable(): void
+    {
+        $this->addColumnIfMissing('users', 'password_reset_requested_at', fn (Blueprint $table) => $table->timestamp('password_reset_requested_at')->nullable());
     }
 
     /**

@@ -39,6 +39,7 @@ class User extends Authenticatable
         'is_active',
         'remember_token',
         'last_login',
+        'password_reset_requested_at',
     ];
 
     protected $hidden = [
@@ -51,6 +52,7 @@ class User extends Authenticatable
         return [
             'is_active' => 'boolean',
             'last_login' => 'datetime',
+            'password_reset_requested_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
             'password' => 'hashed',

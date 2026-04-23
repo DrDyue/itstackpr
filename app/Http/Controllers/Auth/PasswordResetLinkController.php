@@ -3,18 +3,19 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Support\AuditTrail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
 
 /**
- * Paroles atjaunošanas saites pieprasīšanas plūsma.
+ * Iekšējais paroles maiņas pieprasījums administratoriem.
  */
 class PasswordResetLinkController extends Controller
 {
     /**
-     * Parāda paroles atjaunošanas saites pieprasīšanas skatu.
+     * Parāda paroles maiņas pieprasījuma skatu.
      */
     public function create(): View
     {
@@ -22,7 +23,7 @@ class PasswordResetLinkController extends Controller
     }
 
     /**
-     * Apstrādā ienākošu paroles atjaunošanas saites pieprasījumu.
+     * Reģistrē paroles maiņas pieprasījumu administratoru apstrādei.
      *
      * @throws \Illuminate\Validation\ValidationException
      */
@@ -32,15 +33,27 @@ class PasswordResetLinkController extends Controller
             'email' => ['required', 'email'],
         ]);
 
-        // Nosūtām paroles atjaunošanas saiti lietotājam un atgriežam
-        // atbilstošu paziņojumu par rezultātu.
-        $status = Password::sendResetLink(
-            $request->only('email')
-        );
+        $email = mb_strtolower(trim((string) $request->input('email')));
+        $user = User::query()
+            ->whereRaw('LOWER(email) = ?', [$email])
+            ->first();
 
-        return $status == Password::RESET_LINK_SENT
-                    ? back()->with('status', __($status))
-                    : back()->withInput($request->only('email'))
-                        ->withErrors(['email' => __($status)]);
+        if ($user) {
+            $user->forceFill([
+                'password_reset_requested_at' => now(),
+            ])->save();
+
+            AuditTrail::write(
+                null,
+                AuditTrail::ACTION_SUBMIT,
+                'User',
+                (string) $user->id,
+                'Lietotājs pieprasīja paroles maiņu administratora apstrādei.'
+            );
+        }
+
+        return back()
+            ->withInput($request->only('email'))
+            ->with('status', 'Paroles maiņas pieprasījums ir saņemts. Sistēmas administrators to izskatīs un sazināsies ar jums.');
     }
 }

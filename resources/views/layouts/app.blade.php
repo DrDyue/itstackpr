@@ -142,11 +142,11 @@
                                     <div class="notification-toast-body">
                                         <div class="notification-toast-meta">
                                             <div class="notification-toast-meta-item notification-toast-meta-item-wide">
-                                                <div class="notification-toast-section-label">Ierīce</div>
+                                                <div class="notification-toast-section-label" x-text="notification.details.primary_label || 'Ierīce'"></div>
                                                 <div class="notification-toast-meta-value" x-text="notification.details.device_name"></div>
                                             </div>
                                             <div class="notification-toast-meta-item">
-                                                <div class="notification-toast-section-label">Pieteicējs</div>
+                                                <div class="notification-toast-section-label" x-text="notification.details.submitter_label || 'Pieteicējs'"></div>
                                                 <div class="notification-toast-meta-value" x-text="notification.details.submitted_by"></div>
                                             </div>
                                             <div class="notification-toast-meta-item">
@@ -154,15 +154,15 @@
                                                 <div class="notification-toast-meta-value" x-text="notification.details.submitted_at || '-'"></div>
                                             </div>
                                             <div class="notification-toast-meta-item">
-                                                <div class="notification-toast-section-label">Kods</div>
+                                                <div class="notification-toast-section-label" x-text="notification.details.code_label || 'Kods'"></div>
                                                 <div class="notification-toast-meta-value" x-text="notification.details.device_code || '-'"></div>
                                             </div>
                                             <div class="notification-toast-meta-item">
-                                                <div class="notification-toast-section-label">Sērija</div>
+                                                <div class="notification-toast-section-label" x-text="notification.details.serial_label || 'Sērija'"></div>
                                                 <div class="notification-toast-meta-value" x-text="notification.details.serial_number || '-'"></div>
                                             </div>
                                             <div class="notification-toast-meta-item notification-toast-meta-item-wide">
-                                                <div class="notification-toast-section-label">Vieta</div>
+                                                <div class="notification-toast-section-label" x-text="notification.details.location_label || 'Vieta'"></div>
                                                 <div class="notification-toast-meta-value" x-text="notification.details.device_location"></div>
                                             </div>
                                             <div class="notification-toast-meta-item notification-toast-meta-item-wide" x-show="notification.details.recipient">

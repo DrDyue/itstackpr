@@ -38,6 +38,7 @@ class UserController extends Controller
             'last_login' => trim((string) $request->query('last_login', '')),
             'job_title_query' => trim((string) $request->query('job_title_query', '')),
             'email_query' => trim((string) $request->query('email_query', '')),
+            'password_reset' => (string) $request->query('password_reset', ''),
         ];
         $filters['has_role_filter'] = count($filters['roles']) > 0 && count($filters['roles']) < count(self::ROLES);
         $sorting = $this->normalizedSorting($request);
@@ -46,7 +47,7 @@ class UserController extends Controller
         $legacyEmail = trim((string) $request->query('email', ''));
 
         $usersQuery = User::query()
-            ->select(['id', 'full_name', 'email', 'phone', 'job_title', 'role', 'is_active', 'last_login'])
+            ->select(['id', 'full_name', 'email', 'phone', 'job_title', 'role', 'is_active', 'last_login', 'password_reset_requested_at'])
             ->when($legacyName !== '', fn ($query) => $query->where('full_name', 'like', '%' . $legacyName . '%'))
             ->when($legacyEmail !== '', fn ($query) => $query->where('email', 'like', '%' . $legacyEmail . '%'))
             ->when($filters['search'] !== '', fn ($query) => $query->where('full_name', 'like', '%' . $filters['search'] . '%'))
@@ -56,7 +57,8 @@ class UserController extends Controller
             ->when($filters['is_active'] !== '', fn ($query) => $query->where('is_active', $filters['is_active'] === '1'))
             ->when($filters['last_login'] === 'today', fn ($query) => $query->whereDate('last_login', today()))
             ->when($filters['last_login'] === 'recent', fn ($query) => $query->where('last_login', '>=', now()->subDays(7)))
-            ->when($filters['last_login'] === 'never', fn ($query) => $query->whereNull('last_login'));
+            ->when($filters['last_login'] === 'never', fn ($query) => $query->whereNull('last_login'))
+            ->when($filters['password_reset'] === '1', fn ($query) => $query->whereNotNull('password_reset_requested_at'));
 
         $this->applySorting($usersQuery, $sorting);
 
@@ -68,7 +70,7 @@ class UserController extends Controller
 
         AuditTrail::viewed($this->user(), 'User', null, 'Atvērts lietotāju saraksts.');
 
-        if ($filters['search'] !== '' || $filters['has_role_filter'] || $filters['is_active'] !== '' || $filters['last_login'] !== '' || $filters['job_title_query'] !== '' || $filters['email_query'] !== '') {
+        if ($filters['search'] !== '' || $filters['has_role_filter'] || $filters['is_active'] !== '' || $filters['last_login'] !== '' || $filters['job_title_query'] !== '' || $filters['email_query'] !== '' || $filters['password_reset'] !== '') {
             AuditTrail::filter($this->user(), 'User', [
                 'vārds' => $filters['search'],
                 'amats' => $filters['job_title_query'],
@@ -76,6 +78,7 @@ class UserController extends Controller
                 'lomas' => $filters['has_role_filter'] ? ($filters['roles'] ?? []) : [],
                 'statuss' => $filters['is_active'],
                 'pēdējā pieslēgšanās' => $filters['last_login'],
+                'paroles maiņas pieprasījums' => $filters['password_reset'],
             ], 'Filtrēts lietotāju saraksts.');
         }
 
@@ -97,6 +100,7 @@ class UserController extends Controller
                 'user' => (clone $userSummaryQuery)->where('role', User::ROLE_USER)->count(),
                 'active' => (clone $userSummaryQuery)->where('is_active', true)->count(),
                 'inactive' => (clone $userSummaryQuery)->where('is_active', false)->count(),
+                'password_reset' => (clone $userSummaryQuery)->whereNotNull('password_reset_requested_at')->count(),
             ],
             'filters' => $filters,
             'sorting' => $sorting,
@@ -104,7 +108,7 @@ class UserController extends Controller
             'roles' => self::ROLES,
             'roleLabels' => $this->roleLabels(),
             'selectedModalUser' => ctype_digit((string) $request->query('modal_user'))
-                ? User::query()->select(['id', 'full_name', 'email', 'phone', 'job_title', 'role', 'is_active', 'last_login'])->find((int) $request->query('modal_user'))
+                ? User::query()->select(['id', 'full_name', 'email', 'phone', 'job_title', 'role', 'is_active', 'last_login', 'password_reset_requested_at'])->find((int) $request->query('modal_user'))
                 : null,
         ]);
     }
@@ -132,6 +136,7 @@ class UserController extends Controller
                 ->all(),
             'is_active' => (string) $request->query('is_active', ''),
             'last_login' => trim((string) $request->query('last_login', '')),
+            'password_reset' => (string) $request->query('password_reset', ''),
         ];
         $filters['has_role_filter'] = count($filters['roles']) > 0 && count($filters['roles']) < count(self::ROLES);
         $sorting = $this->normalizedSorting($request);
@@ -141,7 +146,8 @@ class UserController extends Controller
             ->when($filters['is_active'] !== '', fn ($query) => $query->where('is_active', $filters['is_active'] === '1'))
             ->when($filters['last_login'] === 'today', fn ($query) => $query->whereDate('last_login', today()))
             ->when($filters['last_login'] === 'recent', fn ($query) => $query->where('last_login', '>=', now()->subDays(7)))
-            ->when($filters['last_login'] === 'never', fn ($query) => $query->whereNull('last_login'));
+            ->when($filters['last_login'] === 'never', fn ($query) => $query->whereNull('last_login'))
+            ->when($filters['password_reset'] === '1', fn ($query) => $query->whereNotNull('password_reset_requested_at'));
 
         $this->applySorting($usersQuery, $sorting);
 
@@ -305,6 +311,7 @@ class UserController extends Controller
             unset($validated['password']);
         } else {
             $validated['password'] = Hash::make($validated['password']);
+            $validated['password_reset_requested_at'] = null;
         }
 
         $user->update($validated);

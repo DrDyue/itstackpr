@@ -878,6 +878,7 @@ const registerAlpineData = () => {
                 emerald: 'border-emerald-200 bg-emerald-50/95 text-emerald-950',
                 rose: 'border-rose-200 bg-rose-50/95 text-rose-950',
                 sky: 'border-sky-200 bg-sky-50/95 text-sky-950',
+                violet: 'border-violet-200 bg-violet-50/95 text-violet-950',
             }[accent] ?? 'border-slate-200 bg-white text-slate-900';
         },
         badgeClasses(accent) {
@@ -886,6 +887,7 @@ const registerAlpineData = () => {
                 emerald: 'bg-emerald-600 text-white',
                 rose: 'bg-rose-600 text-white',
                 sky: 'bg-sky-600 text-white',
+                violet: 'bg-violet-600 text-white',
             }[accent] ?? 'bg-slate-700 text-white';
         },
         badgeText(type) {
@@ -894,6 +896,7 @@ const registerAlpineData = () => {
                 writeoff: '\u004E\u006F\u0072\u0061\u006B\u0073\u0074\u012B\u0161\u0061\u006E\u0061',
                 transfer: '\u004E\u006F\u0064\u006F\u0161\u0061\u006E\u0061',
                 'incoming-transfer': '\u004A\u0101\u0069\u007A\u0073\u006B\u0061\u0074\u0061',
+                'password-reset': 'Parole',
             }[type] ?? '\u0050\u0069\u0065\u0070\u0072\u0061\u0073\u012B\u006A\u0075\u006D\u0073';
         },
         actionClasses(tone) {

@@ -168,6 +168,18 @@
                         </div>
 
                         <div class="quick-filter-group">
+                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Drošība</div>
+                            <div class="quick-status-filters" x-data="{ value: @js($filters['password_reset']) }">
+                                <input type="hidden" name="password_reset" :value="value">
+                                <button type="button" class="quick-status-filter quick-status-filter-amber" :class="value === '1' ? 'quick-status-filter-active' : ''" @click="value = value === '1' ? '' : '1'; $nextTick(() => $el.closest('form').requestSubmit())">
+                                    <x-icon name="key" size="h-4 w-4" />
+                                    <span>Paroles pieprasījumi</span>
+                                    <span class="quick-filter-count">{{ $userSummary['password_reset'] }}</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="quick-filter-group">
                             <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Loma</div>
                             <div class="quick-status-filters">
                                 @foreach ($roleFilterLinks as $roleFilter)
@@ -216,6 +228,7 @@
                     ['label' => 'Loma', 'value' => $filters['has_role_filter'] ? collect($filters['roles'])->map(fn ($role) => $roleLabels[$role] ?? $role)->implode(', ') : null],
                     ['label' => 'Statuss', 'value' => $filters['is_active'] === '1' ? 'Aktīvs' : ($filters['is_active'] === '0' ? 'Neaktīvs' : null)],
                     ['label' => 'Pēdējā pieslēgšanās', 'value' => $filters['last_login'] === 'today' ? 'Šodien' : ($filters['last_login'] === 'recent' ? 'Pēdējās 7 dienas' : ($filters['last_login'] === 'never' ? 'Nav pieslēdzies' : null))],
+                    ['label' => 'Paroles pieprasījums', 'value' => $filters['password_reset'] === '1' ? 'Gaida administratoru' : null],
                 ]"
                 :clear-url="route('users.index')"
             />
@@ -263,9 +276,15 @@
                                 @php
                                     $assignedDevicesUrl = route('devices.index', ['assigned_to_id' => $managedUser->id, 'assigned_to_query' => $managedUser->full_name]);
                                 @endphp
-                                <tr class="app-table-row border-t border-slate-100 align-top {{ $managedUser->role === 'admin' ? 'app-table-row-accent-violet' : 'app-table-row-accent-sky' }}" data-table-row-id="user-{{ $managedUser->id }}" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim((string) $managedUser->full_name)) }}">
+                                <tr class="app-table-row border-t border-slate-100 align-top {{ $managedUser->password_reset_requested_at ? 'app-table-row-password-request' : ($managedUser->role === 'admin' ? 'app-table-row-accent-violet' : 'app-table-row-accent-sky') }}" data-table-row-id="user-{{ $managedUser->id }}" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim((string) $managedUser->full_name)) }}">
                                     <td class="px-4 py-4">
                                         <div class="app-table-cell-strong">{{ $managedUser->full_name }}</div>
+                                        @if ($managedUser->password_reset_requested_at)
+                                            <div class="mt-2 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">
+                                                <x-icon name="key" size="h-3.5 w-3.5" />
+                                                <span>Pieprasīta paroles maiņa</span>
+                                            </div>
+                                        @endif
                                     </td>
                                     <td class="px-4 py-4 text-slate-600">{{ $managedUser->email }}</td>
                                     <td class="px-4 py-4 text-slate-600">{{ $managedUser->phone ?: '-' }}</td>
@@ -312,6 +331,13 @@
                                                         <x-icon name="edit" size="h-4 w-4" />
                                                         <span>Rediģēt</span>
                                                     </button>
+
+                                                    @if ($managedUser->password_reset_requested_at)
+                                                        <button type="button" class="table-action-item table-action-item-violet" @click="open = false; $dispatch('open-modal', 'user-edit-modal-{{ $managedUser->id }}')">
+                                                            <x-icon name="key" size="h-4 w-4" />
+                                                            <span>Mainīt paroli</span>
+                                                        </button>
+                                                    @endif
 
                                                     <a href="{{ $assignedDevicesUrl }}" class="table-action-item" @click="open = false">
                                                         <x-icon name="device" size="h-4 w-4" />

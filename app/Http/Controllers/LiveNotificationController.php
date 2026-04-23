@@ -93,6 +93,16 @@ class LiveNotificationController extends Controller
         $parts = [];
 
         if ($user->canManageRequests()) {
+            $row = User::query()
+                ->whereNotNull('password_reset_requested_at')
+                ->selectRaw('COUNT(*) as cnt, COALESCE(MAX(id), 0) as max_id')
+                ->toBase()
+                ->first();
+            $latestPasswordRequest = User::query()
+                ->whereNotNull('password_reset_requested_at')
+                ->max('password_reset_requested_at');
+            $parts[] = 'p'.($row->cnt ?? 0).':'.($row->max_id ?? 0).':'.($latestPasswordRequest ?? '-');
+
             if ($this->featureTableExists('repair_requests')) {
                 $row = RepairRequest::query()
                     ->where('status', RepairRequest::STATUS_SUBMITTED)
@@ -154,6 +164,44 @@ class LiveNotificationController extends Controller
      */
     private function managerNotifications(User $user): Collection
     {
+        $passwordNotifications = User::query()
+            ->whereNotNull('password_reset_requested_at')
+            ->latest('password_reset_requested_at')
+            ->limit(8)
+            ->get(['id', 'full_name', 'email', 'phone', 'job_title', 'password_reset_requested_at'])
+            ->map(fn (User $requestUser) => $this->formatNotification(
+                id: 'password-reset-request:'.$requestUser->id.':'.$requestUser->password_reset_requested_at?->timestamp,
+                type: 'password-reset',
+                accent: 'violet',
+                title: 'Paroles maiņas pieprasījums',
+                message: ($requestUser->full_name ?: 'Lietotājs').' lūdz administratora palīdzību paroles maiņai.',
+                details: [
+                    'primary_label' => 'Lietotājs',
+                    'submitter_label' => 'Pieprasītājs',
+                    'code_label' => 'E-pasts',
+                    'serial_label' => 'Tālrunis',
+                    'location_label' => 'Amats',
+                    'device_name' => $requestUser->full_name ?: '-',
+                    'device_code' => $requestUser->email ?: '-',
+                    'serial_number' => $requestUser->phone ?: '-',
+                    'device_location' => $requestUser->job_title ?: 'Amats nav norādīts.',
+                    'submitted_by' => $requestUser->full_name ?: '-',
+                    'reason_label' => 'Pieprasījums',
+                    'reason_value' => 'Jāatjauno lietotāja parole administratora pusē.',
+                    'wait_label' => $this->waitLabel($requestUser->password_reset_requested_at),
+                    'submitted_at' => $requestUser->password_reset_requested_at?->format('d.m.Y H:i') ?: '-',
+                    'cta_label' => 'Atvērt lietotāja ierakstu',
+                ],
+                url: route('users.index', [
+                    'password_reset' => 1,
+                    'highlight' => $requestUser->full_name,
+                    'highlight_mode' => 'contains',
+                    'highlight_id' => 'user-'.$requestUser->id,
+                ]),
+                createdAt: $requestUser->password_reset_requested_at,
+                actions: [],
+            ));
+
         $repairNotifications = $this->featureTableExists('repair_requests')
             ? RepairRequest::query()
                 ->with(['device.type', 'device.room', 'device.building', 'responsibleUser'])
@@ -263,7 +311,8 @@ class LiveNotificationController extends Controller
                 ))
             : collect();
 
-        return $repairNotifications
+        return $passwordNotifications
+            ->concat($repairNotifications)
             ->concat($writeoffNotifications)
             ->concat($transferNotifications)
             ->sortByDesc('created_unix')
