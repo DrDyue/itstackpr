@@ -4873,11 +4873,11 @@ tbody td {
 }
 
 .table-search-match td {
-    @apply bg-sky-50/60;
+    background-color: rgba(254, 243, 199, 0.58) !important;
 }
 
 .table-search-active td {
-    @apply bg-sky-100;
+    background-color: rgba(252, 211, 77, 0.72) !important;
 }
 
 .table-search-navigator {
@@ -5036,15 +5036,15 @@ tbody td {
 
 @keyframes table-search-highlight {
     0% {
-        background-color: rgba(125, 211, 252, 0.08);
+        background-color: rgba(254, 243, 199, 0.42);
     }
 
     18% {
-        background-color: rgba(125, 211, 252, 0.36);
+        background-color: rgba(251, 191, 36, 0.88);
     }
 
     100% {
-        background-color: transparent;
+        background-color: rgba(254, 243, 199, 0.74);
     }
 }
 
@@ -6731,11 +6731,11 @@ html[data-theme='dark'] .table-search-linger td {
 }
 
 html[data-theme='dark'] .table-search-match td {
-    background-color: rgba(14, 165, 233, 0.07) !important;
+    background-color: rgba(245, 158, 11, 0.11) !important;
 }
 
 html[data-theme='dark'] .table-search-active td {
-    background-color: rgba(14, 165, 233, 0.22) !important;
+    background-color: rgba(245, 158, 11, 0.26) !important;
 }
 
 html[data-theme='dark'] .app-loading-bar-shell {
