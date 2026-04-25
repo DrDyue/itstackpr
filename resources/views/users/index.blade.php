@@ -1,6 +1,6 @@
 {{--
-    Lapa: Lietotāju saraksts.
-    Atbildība: rāda sistēmas lietotājus, viņu lomas, statusus un pēdējo pieslēgšanos.
+    Lapa: LietotĆ„Āju saraksts.
+    AtbildĆ„Ā«ba: rĆ„Āda sistĆ„ā€mas lietotĆ„Ājus, viĆ…ā€ u lomas, statusus un pĆ„ā€dĆ„ā€jo pieslĆ„ā€gĆ…ļ£¼anos.
     Datu avots: UserController@index.
 --}}
 <x-app-layout>
@@ -11,20 +11,20 @@
         ];
         $selectedRoles = $filters['has_role_filter'] ? $filters['roles'] : [];
         $lastLoginOptions = [
-            ['value' => 'today', 'label' => 'Šodien', 'description' => 'Pieslēdzās šodien', 'search' => 'Šodien pēdējā pieslēgšanās'],
-            ['value' => 'recent', 'label' => 'Pēdējās 7 dienas', 'description' => 'Aktīvi pēdējā nedēļā', 'search' => 'Pēdējās 7 dienas nesen'],
-            ['value' => 'never', 'label' => 'Nav pieslēdzies', 'description' => 'Lietotājs vēl nav pieslēdzies', 'search' => 'Nav pieslēdzies nekad'],
+            ['value' => 'today', 'label' => 'Ć…Ā odien', 'description' => 'PieslĆ„ā€dzĆ„Ās Ć…ļ£¼odien', 'search' => 'Ć…Ā odien pĆ„ā€dĆ„ā€jĆ„Ā pieslĆ„ā€gĆ…ļ£¼anĆ„Ās'],
+            ['value' => 'recent', 'label' => 'PĆ„ā€dĆ„ā€jĆ„Ās 7 dienas', 'description' => 'AktĆ„Ā«vi pĆ„ā€dĆ„ā€jĆ„Ā nedĆ„ā€Ć„Ā¼Ć„Ā', 'search' => 'PĆ„ā€dĆ„ā€jĆ„Ās 7 dienas nesen'],
+            ['value' => 'never', 'label' => 'Nav pieslĆ„ā€dzies', 'description' => 'LietotĆ„Ājs vĆ„ā€l nav pieslĆ„ā€dzies', 'search' => 'Nav pieslĆ„ā€dzies nekad'],
         ];
         $selectedLastLoginLabel = collect($lastLoginOptions)->firstWhere('value', $filters['last_login'])['label'] ?? null;
-        $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
+        $sortDirectionLabels = ['asc' => 'augoĆ…ļ£¼ajĆ„Ā secĆ„Ā«bĆ„Ā', 'desc' => 'dilstoĆ…ļ£¼ajĆ„Ā secĆ„Ā«bĆ„Ā'];
         $sortableHeaders = [
-            'full_name' => ['label' => 'Vārds un uzvārds', 'class' => 'table-col-person'],
+            'full_name' => ['label' => 'VĆ„Ārds un uzvĆ„Ārds', 'class' => 'table-col-person'],
             'email' => ['label' => 'E-pasts', 'class' => 'table-col-email'],
-            'phone' => ['label' => 'Tālrunis', 'class' => 'table-col-phone'],
+            'phone' => ['label' => 'TĆ„Ālrunis', 'class' => 'table-col-phone'],
             'role' => ['label' => 'Loma', 'class' => 'table-col-role'],
             'job_title' => ['label' => 'Amats', 'class' => 'table-col-person'],
             'is_active' => ['label' => 'Statuss', 'class' => 'table-col-status'],
-            'last_login' => ['label' => 'Pēdējā pieslēgšanās', 'class' => 'table-col-date'],
+            'last_login' => ['label' => 'PĆ„ā€dĆ„ā€jĆ„Ā pieslĆ„ā€gĆ…ļ£¼anĆ„Ās', 'class' => 'table-col-date'],
         ];
         $currentUserId = (int) auth()->id();
     @endphp
@@ -36,7 +36,7 @@
                     <div class="flex flex-wrap items-center gap-2">
                         <div class="page-eyebrow">
                             <x-icon name="users" size="h-4 w-4" />
-                            <span>Lietotāji</span>
+                            <span>LietotĆ„Āji</span>
                         </div>
                     </div>
 
@@ -45,15 +45,15 @@
                             <x-icon name="users" size="h-7 w-7" />
                         </div>
                         <div>
-                            <h1 class="page-title">Lietotāji</h1>
-                            <p class="page-subtitle">Pārvaldi sistēmas lietotājus, lomas un piekļuves statusus.</p>
+                            <h1 class="page-title">LietotĆ„Āji</h1>
+                            <p class="page-subtitle">PĆ„Ārvaldi sistĆ„ā€mas lietotĆ„Ājus, lomas un piekĆ„Ā¼uves statusus.</p>
                         </div>
                     </div>
                 </div>
 
                 <button type="button" class="btn-create" x-data @click="$dispatch('open-modal', 'user-create-modal')">
                     <x-icon name="plus" size="h-4 w-4" />
-                    <span>Jauns lietotājs</span>
+                    <span>Jauns lietotĆ„Ājs</span>
                 </button>
             </div>
         </div>
@@ -74,17 +74,17 @@
                     <div class="devices-filter-section">
                         <h3 class="devices-filter-title">
                             <x-icon name="search" size="h-4 w-4" />
-                            <span>Meklēšana</span>
+                            <span>MeklĆ„ā€Ć…ļ£¼ana</span>
                         </h3>
                         <div class="devices-search-group">
                             <label class="devices-search-label">
-                                <span>Meklēt pēc vārda un uzvārda</span>
+                                <span>MeklĆ„ā€t pĆ„ā€c vĆ„Ārda un uzvĆ„Ārda</span>
                                 <input
                                     type="text"
                                     name="search"
                                     value="{{ $filters['search'] }}"
                                     class="devices-code-input"
-                                    placeholder="Ievadi vārdu un uzvārdu"
+                                    placeholder="Ievadi vĆ„Ārdu un uzvĆ„Ārdu"
                                     data-async-manual="true"
                                     data-table-manual-search="true"
                                     data-search-mode="contains"
@@ -92,7 +92,7 @@
                             </label>
                             <button type="button" class="devices-code-search-btn" data-table-search-submit="true" onclick="return window.runManualTableSearchFromTrigger(this);">
                                 <x-icon name="search" size="h-4 w-4" />
-                                <span>Atrast lietotāju</span>
+                                <span>Atrast lietotĆ„Āju</span>
                             </button>
                         </div>
                     </div>
@@ -106,7 +106,7 @@
                         </h3>
                         <div class="users-filters-grid">
                             <label class="block">
-                                <span class="crud-label">Pēdējā pieslēgšanās</span>
+                                <span class="crud-label">PĆ„ā€dĆ„ā€jĆ„Ā pieslĆ„ā€gĆ…ļ£¼anĆ„Ās</span>
                                 <x-searchable-select
                                     name="last_login"
                                     query-name="last_login_query"
@@ -114,8 +114,8 @@
                                     :options="$lastLoginOptions"
                                     :selected="$filters['last_login']"
                                     :query="$selectedLastLoginLabel"
-                                    placeholder="Izvēlies periodu"
-                                    empty-message="Neviens periods neatbilst meklējumam."
+                                    placeholder="IzvĆ„ā€lies periodu"
+                                    empty-message="Neviens periods neatbilst meklĆ„ā€jumam."
                                 />
                             </label>
 
@@ -126,7 +126,7 @@
                                     name="job_title_query"
                                     value="{{ $filters['job_title_query'] ?? '' }}"
                                     class="crud-control"
-                                    placeholder="Filtrēt pēc amata"
+                                    placeholder="FiltrĆ„ā€t pĆ„ā€c amata"
                                 >
                             </label>
 
@@ -137,7 +137,7 @@
                                     name="email_query"
                                     value="{{ $filters['email_query'] ?? '' }}"
                                     class="crud-control"
-                                    placeholder="Filtrēt pēc e-pasta"
+                                    placeholder="FiltrĆ„ā€t pĆ„ā€c e-pasta"
                                 >
                             </label>
                         </div>
@@ -147,29 +147,29 @@
                 <div class="filter-toolbar-footer">
                     <div class="quick-filter-groups">
                         <div class="quick-filter-group">
-                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Lietotāja statuss</div>
+                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">LietotĆ„Āja statuss</div>
                             <div class="quick-status-filters" x-data="{ value: @js($filters['is_active']) }">
                                 <input type="hidden" name="is_active" :value="value">
                                 <button type="button" class="quick-status-filter quick-status-filter-emerald" :class="value === '1' ? 'quick-status-filter-active' : ''" @click="value = value === '1' ? '' : '1'; $nextTick(() => $el.closest('form').requestSubmit())">
                                     <x-icon name="check-circle" size="h-4 w-4" />
-                                    <span>Aktīvi</span>
+                                    <span>AktĆ„Ā«vi</span>
                                     <span class="quick-filter-count">{{ $userSummary['active'] }}</span>
                                 </button>
                                 <button type="button" class="quick-status-filter quick-status-filter-rose" :class="value === '0' ? 'quick-status-filter-active' : ''" @click="value = value === '0' ? '' : '0'; $nextTick(() => $el.closest('form').requestSubmit())">
                                     <x-icon name="x-circle" size="h-4 w-4" />
-                                    <span>Neaktīvi</span>
+                                    <span>NeaktĆ„Ā«vi</span>
                                     <span class="quick-filter-count">{{ $userSummary['inactive'] }}</span>
                                 </button>
                             </div>
                         </div>
 
                         <div class="quick-filter-group">
-                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Drošība</div>
+                            <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">DroĆ…ļ£¼Ć„Ā«ba</div>
                             <div class="quick-status-filters" x-data="{ value: @js($filters['password_reset']) }">
                                 <input type="hidden" name="password_reset" :value="value">
                                 <button type="button" class="quick-status-filter quick-status-filter-amber" :class="value === '1' ? 'quick-status-filter-active' : ''" @click="value = value === '1' ? '' : '1'; $nextTick(() => $el.closest('form').requestSubmit())">
                                     <x-icon name="key" size="h-4 w-4" />
-                                    <span>Paroles pieprasījumi</span>
+                                    <span>Paroles pieprasĆ„Ā«jumi</span>
                                     <span class="quick-filter-count">{{ $userSummary['password_reset'] }}</span>
                                 </button>
                             </div>
@@ -209,7 +209,7 @@
                     <div class="toolbar-actions">
                         <a href="{{ route('users.index') }}" class="btn-clear" data-async-link="true">
                             <x-icon name="clear" size="h-4 w-4" />
-                            <span>Notīrīt filtrus</span>
+                            <span>NotĆ„Ā«rĆ„Ā«t filtrus</span>
                         </a>
                     </div>
                 </div>
@@ -218,13 +218,13 @@
             <div class="mt-4">
             <x-active-filters
                 :items="[
-                    ['label' => 'Vārds', 'value' => $filters['search']],
+                    ['label' => 'VĆ„Ārds', 'value' => $filters['search']],
                     ['label' => 'Amats', 'value' => $filters['job_title_query']],
                     ['label' => 'E-pasts', 'value' => $filters['email_query']],
                     ['label' => 'Loma', 'value' => $filters['has_role_filter'] ? collect($filters['roles'])->map(fn ($role) => $roleLabels[$role] ?? $role)->implode(', ') : null],
-                    ['label' => 'Statuss', 'value' => $filters['is_active'] === '1' ? 'Aktīvs' : ($filters['is_active'] === '0' ? 'Neaktīvs' : null)],
-                    ['label' => 'Pēdējā pieslēgšanās', 'value' => $filters['last_login'] === 'today' ? 'Šodien' : ($filters['last_login'] === 'recent' ? 'Pēdējās 7 dienas' : ($filters['last_login'] === 'never' ? 'Nav pieslēdzies' : null))],
-                    ['label' => 'Paroles pieprasījums', 'value' => $filters['password_reset'] === '1' ? 'Gaida administratoru' : null],
+                    ['label' => 'Statuss', 'value' => $filters['is_active'] === '1' ? 'AktĆ„Ā«vs' : ($filters['is_active'] === '0' ? 'NeaktĆ„Ā«vs' : null)],
+                    ['label' => 'PĆ„ā€dĆ„ā€jĆ„Ā pieslĆ„ā€gĆ…ļ£¼anĆ„Ās', 'value' => $filters['last_login'] === 'today' ? 'Ć…Ā odien' : ($filters['last_login'] === 'recent' ? 'PĆ„ā€dĆ„ā€jĆ„Ās 7 dienas' : ($filters['last_login'] === 'never' ? 'Nav pieslĆ„ā€dzies' : null))],
+                    ['label' => 'Paroles pieprasĆ„Ā«jums', 'value' => $filters['password_reset'] === '1' ? 'Gaida administratoru' : null],
                 ]"
                 :clear-url="route('users.index')"
             />
@@ -244,7 +244,7 @@
                                     @php
                                         $isCurrentSort = $sorting['sort'] === $column;
                                         $nextDirection = $isCurrentSort && $sorting['direction'] === 'asc' ? 'desc' : 'asc';
-                                        $sortMessage = 'Kārtots pēc ' . ($sortOptions[$column]['label'] ?? mb_strtolower($header['label'])) . ' ' . ($sortDirectionLabels[$nextDirection] ?? '');
+                                        $sortMessage = 'KĆ„Ārtots pĆ„ā€c ' . ($sortOptions[$column]['label'] ?? mb_strtolower($header['label'])) . ' ' . ($sortDirectionLabels[$nextDirection] ?? '');
                                     @endphp
                                     <th class="{{ $header['class'] }} px-4 py-3">
                                         <button
@@ -265,8 +265,8 @@
                                         </button>
                                     </th>
                                 @endforeach
-                                <th class="table-col-status px-4 py-3">Piesaistītās ierīces</th>
-                                <th class="table-col-actions px-4 py-3">Darbības</th>
+                                <th class="table-col-status px-4 py-3">PiesaistĆ„Ā«tĆ„Ās ierĆ„Ā«ces</th>
+                                <th class="table-col-actions px-4 py-3">DarbĆ„Ā«bas</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -285,13 +285,13 @@
                                         @if ($isCurrentUser)
                                             <div class="mt-2 inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-800">
                                                 <x-icon name="profile" size="h-3.5 w-3.5" />
-                                                <span>Jūsu ieraksts</span>
+                                                <span>JĆ…Ā«su ieraksts</span>
                                             </div>
                                         @endif
                                         @if ($managedUser->password_reset_requested_at)
                                             <div class="mt-2 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">
                                                 <x-icon name="key" size="h-3.5 w-3.5" />
-                                                <span>Pieprasīta paroles maiņa</span>
+                                                <span>PieprasĆ„Ā«ta paroles maiĆ…ā€ a</span>
                                             </div>
                                         @endif
                                     </td>
@@ -306,9 +306,9 @@
                                     </td>
                                     <td class="px-4 py-4 text-slate-600">
                                         @php($effectiveLastLogin = $managedUser->effective_last_login ?? $managedUser->last_login)
-                                        <div class="font-semibold text-slate-900">{{ $effectiveLastLogin?->format('d.m.Y H:i') ?: 'Nav pieslēdzies' }}</div>
+                                        <div class="font-semibold text-slate-900">{{ $effectiveLastLogin?->format('d.m.Y H:i') ?: 'Nav pieslĆ„ā€dzies' }}</div>
                                         <div class="mt-1 text-xs text-slate-500">
-                                            {{ $effectiveLastLogin ? $effectiveLastLogin->diffForHumans() : 'Pirmā pieslēgšanās vēl nav notikusi' }}
+                                            {{ $effectiveLastLogin ? $effectiveLastLogin->diffForHumans() : 'PirmĆ„Ā pieslĆ„ā€gĆ…ļ£¼anĆ„Ās vĆ„ā€l nav notikusi' }}
                                         </div>
                                     </td>
                                     <td class="px-4 py-4">
@@ -317,31 +317,53 @@
                                                 href="{{ $assignedDevicesUrl }}"
                                                 class="inline-flex items-center justify-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 transition hover:bg-sky-100"
                                             >
-                                                {{ $managedUser->assigned_devices_count }} ierīces
+                                                {{ $managedUser->assigned_devices_count }} ierĆ„Ā«ces
                                             </a>
                                         @else
                                             <span class="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500">
-                                                0 ierīces
+                                                0 ierĆ„Ā«ces
                                             </span>
                                         @endif
                                     </td>
                                     <td class="px-4 py-4">
-                                        <div class="table-action-menu" :class="{ 'table-action-menu-open': open }" x-data="{ open: false }" @keydown.escape.window="open = false">
-                                            <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
-                                                <span>Darbības</span>
+                                        <div
+                                            class="table-action-menu"
+                                            x-data="createFloatingDropdown({ zIndex: 400 })"
+                                            @keydown.escape.window="closePanel()"
+                                            @resize.window="if (open) updatePosition()"
+                                            @scroll.window="if (open) updatePosition()"
+                                        >
+                                            <button
+                                                type="button"
+                                                class="table-action-summary"
+                                                x-ref="trigger"
+                                                @click="togglePanel()"
+                                                :aria-expanded="open.toString()"
+                                            >
+                                                <span>DarbĆ„Ā«bas</span>
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                                 </svg>
                                             </button>
 
-                                            <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
+                                            <template x-teleport="body">
+                                                <div
+                                                    class="table-action-list users-table-action-list"
+                                                    data-floating-menu="manual"
+                                                    x-ref="panel"
+                                                    x-cloak
+                                                    x-show="open"
+                                                    x-transition.origin.top.right
+                                                    x-bind:style="panelStyle"
+                                                    @click.outside="closePanel()"
+                                                >
                                                 <div class="table-action-header">
-                                                    <div class="table-action-header-title">Darbības</div>
+                                                    <div class="table-action-header-title">DarbĆ„Ā«bas</div>
                                                 </div>
 
                                                 <div class="table-action-section">
-                                                    <div class="table-action-section-title">Pārskats</div>
-                                                    <a href="{{ route('users.show', $managedUser) }}" class="table-action-item table-action-item-primary" @click="open = false">
+                                                    <div class="table-action-section-title">PĆ„Ārskats</div>
+                                                    <a href="{{ route('users.show', $managedUser) }}" class="table-action-item table-action-item-primary" @click="closePanel()">
                                                         <x-icon name="view" size="h-4 w-4" />
                                                         <span>Profils</span>
                                                     </a>
@@ -350,22 +372,22 @@
                                                 <div class="table-action-divider"></div>
 
                                                 <div class="table-action-section">
-                                                    <div class="table-action-section-title">Pārvaldība</div>
-                                                    <a href="{{ $editUrl }}" class="table-action-item table-action-item-amber" @click="open = false" @if (! $isCurrentUser) data-async-link="true" @endif>
+                                                    <div class="table-action-section-title">PĆ„ĀrvaldĆ„Ā«ba</div>
+                                                    <a href="{{ $editUrl }}" class="table-action-item table-action-item-amber" @click="closePanel()" @if (! $isCurrentUser) data-async-link="true" @endif>
                                                         <x-icon name="edit" size="h-4 w-4" />
-                                                        <span>{{ $isCurrentUser ? 'Rediģēt profilu' : 'Rediģēt' }}</span>
+                                                        <span>{{ $isCurrentUser ? 'RediĆ„Ā£Ć„ā€t profilu' : 'RediĆ„Ā£Ć„ā€t' }}</span>
                                                     </a>
 
                                                     @if ($managedUser->password_reset_requested_at)
-                                                        <a href="{{ $editUrl }}" class="table-action-item table-action-item-violet" @click="open = false" @if (! $isCurrentUser) data-async-link="true" @endif>
+                                                        <a href="{{ $editUrl }}" class="table-action-item table-action-item-violet" @click="closePanel()" @if (! $isCurrentUser) data-async-link="true" @endif>
                                                             <x-icon name="key" size="h-4 w-4" />
-                                                            <span>Mainīt paroli</span>
+                                                            <span>MainĆ„Ā«t paroli</span>
                                                         </a>
                                                     @endif
 
-                                                    <a href="{{ $assignedDevicesUrl }}" class="table-action-item" @click="open = false">
+                                                    <a href="{{ $assignedDevicesUrl }}" class="table-action-item" @click="closePanel()">
                                                         <x-icon name="device" size="h-4 w-4" />
-                                                        <span>Piesaistītās ierīces</span>
+                                                        <span>PiesaistĆ„Ā«tĆ„Ās ierĆ„Ā«ces</span>
                                                     </a>
                                                 </div>
 
@@ -376,13 +398,13 @@
                                                         <button
                                                             type="button"
                                                             class="table-action-item table-action-item-rose opacity-50 cursor-not-allowed"
-                                                            data-app-toast-title="Dzēšana nav pieejama"
-                                                            data-app-toast-message="{{ $isCurrentUser ? 'Paša lietotāja kontu no šīs tabulas dzēst nevar. Izmanto citu administratora kontu, ja šo profilu tiešām vajag noņemt.' : 'Lietotājam ir piesaistītas ierīces. Vispirms pārvieto vai atsaisti tās.' }}"
+                                                            data-app-toast-title="DzĆ„ā€Ć…ļ£¼ana nav pieejama"
+                                                            data-app-toast-message="{{ $isCurrentUser ? 'PaĆ…ļ£¼a lietotĆ„Āja kontu no Ć…ļ£¼Ć„Ā«s tabulas dzĆ„ā€st nevar. Izmanto citu administratora kontu, ja Ć…ļ£¼o profilu tieĆ…ļ£¼Ć„Ām vajag noĆ…ā€ emt.' : 'LietotĆ„Ājam ir piesaistĆ„Ā«tas ierĆ„Ā«ces. Vispirms pĆ„Ārvieto vai atsaisti tĆ„Ās.' }}"
                                                             data-app-toast-tone="info"
-                                                            @click="open = false"
+                                                            @click="closePanel()" onclick="event.preventDefault(); window.dispatchAppToast({ title: this.dataset.appToastTitle, message: this.dataset.appToastMessage, tone: this.dataset.appToastTone })"
                                                         >
                                                             <x-icon name="trash" size="h-4 w-4" />
-                                                            <span>Dzēst</span>
+                                                            <span>DzĆ„ā€st</span>
                                                         </button>
                                                     @else
                                                         <x-post-action-button
@@ -390,18 +412,19 @@
                                                             method="DELETE"
                                                             form-class="table-action-form"
                                                             button-class="table-action-item table-action-item-rose"
-                                                            data-app-confirm-title="Dzēst lietotāju?"
-                                                            data-app-confirm-message="Vai tiešām dzēst šo lietotāju?"
-                                                            data-app-confirm-accept="Jā, dzēst"
-                                                            data-app-confirm-cancel="Nē"
+                                                            data-app-confirm-title="DzĆ„ā€st lietotĆ„Āju?"
+                                                            data-app-confirm-message="Vai tieĆ…ļ£¼Ć„Ām dzĆ„ā€st Ć…ļ£¼o lietotĆ„Āju?"
+                                                            data-app-confirm-accept="JĆ„Ā, dzĆ„ā€st"
+                                                            data-app-confirm-cancel="NĆ„ā€"
                                                             data-app-confirm-tone="danger"
                                                         >
                                                             <x-icon name="trash" size="h-4 w-4" />
-                                                            <span>Dzēst</span>
+                                                            <span>DzĆ„ā€st</span>
                                                         </x-post-action-button>
                                                     @endif
                                                 </div>
-                                            </div>
+                                                </div>
+                                            </template>
                                         </div>
                                     </td>
                                 </tr>
@@ -411,8 +434,8 @@
                                         <x-empty-state
                                             compact
                                             icon="users"
-                                            title="Lietotāji vēl nav pievienoti"
-                                            description="Kad sistēmā būs izveidoti lietotāji, tie parādīsies šajā tabulā."
+                                            title="LietotĆ„Āji vĆ„ā€l nav pievienoti"
+                                            description="Kad sistĆ„ā€mĆ„Ā bĆ…Ā«s izveidoti lietotĆ„Āji, tie parĆ„ĀdĆ„Ā«sies Ć…ļ£¼ajĆ„Ā tabulĆ„Ā."
                                         />
                                     </td>
                                 </tr>

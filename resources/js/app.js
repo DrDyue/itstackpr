@@ -39,6 +39,53 @@ const writeStorageValue = (key, value) => {
     }
 };
 
+window.createFloatingDropdown = ({ preferDown = false, gap = 10, viewportPadding = 12, zIndex = 400 } = {}) => ({
+    open: false,
+    panelStyle: '',
+    openPanel() {
+        this.open = true;
+        this.$nextTick(() => this.updatePosition());
+    },
+    closePanel() {
+        this.open = false;
+    },
+    togglePanel() {
+        if (this.open) {
+            this.closePanel();
+            return;
+        }
+
+        this.openPanel();
+    },
+    updatePosition() {
+        const trigger = this.$refs.trigger;
+        const panel = this.$refs.panel;
+
+        if (!(trigger instanceof HTMLElement) || !(panel instanceof HTMLElement)) {
+            return;
+        }
+
+        const triggerRect = trigger.getBoundingClientRect();
+        const panelWidth = panel.offsetWidth || 320;
+        const panelHeight = panel.offsetHeight || 0;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const availableBelow = viewportHeight - triggerRect.bottom - viewportPadding;
+        const availableAbove = triggerRect.top - viewportPadding;
+        const shouldOpenUpward = !preferDown && panelHeight > availableBelow && availableAbove > availableBelow;
+
+        const left = Math.max(
+            viewportPadding,
+            Math.min(triggerRect.right - panelWidth, viewportWidth - panelWidth - viewportPadding),
+        );
+        const top = shouldOpenUpward
+            ? Math.max(viewportPadding, triggerRect.top - panelHeight - gap)
+            : Math.max(viewportPadding, triggerRect.bottom + gap);
+
+        this.panelStyle = `position: fixed; left: ${Math.round(left)}px; top: ${Math.round(top)}px; z-index: ${zIndex};`;
+    },
+});
+
 const initializeFloatingTableActionMenus = () => {
     let frameId = null;
 
@@ -74,7 +121,9 @@ const initializeFloatingTableActionMenus = () => {
     };
 
     const resetPanelPosition = (panel) => {
-        panel.dataset.floatingMenu = 'false';
+        if (panel.dataset.floatingMenu !== 'manual') {
+            panel.dataset.floatingMenu = 'false';
+        }
         panel.style.position = '';
         panel.style.top = '';
         panel.style.left = '';
@@ -85,6 +134,10 @@ const initializeFloatingTableActionMenus = () => {
     };
 
     const positionPanel = (panel) => {
+        if (panel.dataset.floatingMenu === 'manual') {
+            return;
+        }
+
         const menu = panel.closest('.table-action-menu');
         const trigger = findTrigger(menu);
 
