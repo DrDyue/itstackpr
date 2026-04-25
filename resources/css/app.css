@@ -4938,13 +4938,6 @@ tbody td {
     max-width: min(22rem, calc(100vw - 1.5rem));
 }
 
-.users-table-scroll .table-action-list-users {
-    top: calc(100% + 0.5rem);
-    bottom: auto;
-    left: auto;
-    right: 0;
-}
-
 .app-table-content-wide {
     min-width: 100rem;
 }

@@ -334,7 +334,7 @@
                                                 </svg>
                                             </button>
 
-                                            <div class="table-action-list table-action-list-users" data-floating-menu="off" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
+                                            <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
                                                 <div class="table-action-header">
                                                     <div class="table-action-header-title">Darbības</div>
                                                 </div>
@@ -372,34 +372,34 @@
                                                 <div class="table-action-divider"></div>
 
                                                 <div class="table-action-section">
-                                                    <x-post-action-button
-                                                        :action="route('users.destroy', $managedUser)"
-                                                        method="DELETE"
-                                                        form-class="table-action-form"
-                                                        button-class="table-action-item table-action-item-rose"
-                                                        :button-type="$isCurrentUser || $hasAssignedDevices ? 'button' : 'submit'"
-                                                        :button-attributes="$isCurrentUser
-                                                            ? [
-                                                                'data-app-toast-title' => 'Dzēšana nav pieejama',
-                                                                'data-app-toast-message' => 'Paša lietotāja kontu no šīs tabulas dzēst nevar. Izmanto citu administratora kontu, ja šo profilu tiešām vajag noņemt.',
-                                                                'data-app-toast-tone' => 'info',
-                                                            ]
-                                                            : ($hasAssignedDevices
-                                                                ? [
-                                                                    'data-app-toast-title' => 'Dzēšana nav pieejama',
-                                                                    'data-app-toast-message' => 'Lietotājam ir piesaistītas ierīces. Vispirms pārvieto vai atsaisti tās.',
-                                                                    'data-app-toast-tone' => 'info',
-                                                                ]
-                                                                : [])"
-                                                        data-app-confirm-title="Dzēst lietotāju?"
-                                                        data-app-confirm-message="Vai tiešām dzēst šo lietotāju?"
-                                                        data-app-confirm-accept="Jā, dzēst"
-                                                        data-app-confirm-cancel="Nē"
-                                                        data-app-confirm-tone="danger"
-                                                    >
-                                                        <x-icon name="trash" size="h-4 w-4" />
-                                                        <span>Dzēst</span>
-                                                    </x-post-action-button>
+                                                    @if ($isCurrentUser || $hasAssignedDevices)
+                                                        <button
+                                                            type="button"
+                                                            class="table-action-item table-action-item-rose opacity-50 cursor-not-allowed"
+                                                            data-app-toast-title="Dzēšana nav pieejama"
+                                                            data-app-toast-message="{{ $isCurrentUser ? 'Paša lietotāja kontu no šīs tabulas dzēst nevar. Izmanto citu administratora kontu, ja šo profilu tiešām vajag noņemt.' : 'Lietotājam ir piesaistītas ierīces. Vispirms pārvieto vai atsaisti tās.' }}"
+                                                            data-app-toast-tone="info"
+                                                            @click="open = false"
+                                                        >
+                                                            <x-icon name="trash" size="h-4 w-4" />
+                                                            <span>Dzēst</span>
+                                                        </button>
+                                                    @else
+                                                        <x-post-action-button
+                                                            :action="route('users.destroy', $managedUser)"
+                                                            method="DELETE"
+                                                            form-class="table-action-form"
+                                                            button-class="table-action-item table-action-item-rose"
+                                                            data-app-confirm-title="Dzēst lietotāju?"
+                                                            data-app-confirm-message="Vai tiešām dzēst šo lietotāju?"
+                                                            data-app-confirm-accept="Jā, dzēst"
+                                                            data-app-confirm-cancel="Nē"
+                                                            data-app-confirm-tone="danger"
+                                                        >
+                                                            <x-icon name="trash" size="h-4 w-4" />
+                                                            <span>Dzēst</span>
+                                                        </x-post-action-button>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
