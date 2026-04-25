@@ -6,6 +6,7 @@ use App\Models\Device;
 use App\Models\RepairRequest;
 use App\Models\Room;
 use App\Models\WriteoffRequest;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -46,13 +47,17 @@ class DashboardController extends Controller
         abort_unless($user->canManageRequests(), 403);
 
         $filters = $this->dashboardFilters($request);
-        $viewData = $this->dashboardDevicesData($filters);
+        $sorting = $this->dashboardSorting($request);
+        $viewData = $this->dashboardDevicesData($filters, null, $sorting);
 
         return view('dashboard.devices-table', [
             'dashboardDevices' => $viewData['dashboardDevices'],
             'dashboardDeviceCount' => $viewData['dashboardDeviceCount'],
             'dashboardDeviceStates' => $viewData['dashboardDeviceStates'],
             'filters' => $filters,
+            'sorting' => $sorting,
+            'sortOptions' => $this->dashboardSortOptions(),
+            'sortDirectionLabels' => $this->sortDirectionLabels(),
         ]);
     }
 
@@ -63,6 +68,7 @@ class DashboardController extends Controller
     {
         $isManager = $user->canManageRequests();
         $hasRooms = $this->featureTableExists('rooms');
+        $sorting = $this->dashboardSorting($request);
         $repairRequestQuery = Schema::hasTable('repair_requests') ? RepairRequest::query() : null;
         $writeoffRequestQuery = Schema::hasTable('writeoff_requests') ? WriteoffRequest::query() : null;
 
@@ -77,7 +83,7 @@ class DashboardController extends Controller
             ? (clone $writeoffRequestQuery)->where('status', WriteoffRequest::STATUS_SUBMITTED)->count()
             : 0;
 
-        return array_merge($this->dashboardDevicesData($filters, $locationRooms), [
+        return array_merge($this->dashboardDevicesData($filters, $locationRooms, $sorting), [
             'locationTree' => $locationTree,
             'quickActions' => $this->quickActions(
                 $pendingRepairRequestCount,
@@ -97,12 +103,16 @@ class DashboardController extends Controller
         abort_unless($user->canManageRequests(), 403);
 
         $filters = $this->dashboardFilters($request);
+        $sorting = $this->dashboardSorting($request);
         $viewData = $this->dashboardViewData($request, $user, $filters);
 
         return view('dashboard', array_merge($viewData, [
             'user' => $user,
             'isManager' => true,
             'filters' => $filters,
+            'sorting' => $sorting,
+            'sortOptions' => $this->dashboardSortOptions(),
+            'sortDirectionLabels' => $this->sortDirectionLabels(),
         ]));
     }
 
@@ -111,6 +121,31 @@ class DashboardController extends Controller
         return [
             'floor' => trim((string) $request->query('floor', '')),
             'room_id' => trim((string) $request->query('room_id', '')),
+        ];
+    }
+
+    private function dashboardSorting(Request $request): array
+    {
+        $sortOptions = $this->dashboardSortOptions();
+        $sort = trim((string) $request->query('sort', 'created_at'));
+        $direction = trim((string) $request->query('direction', 'desc'));
+
+        if (! array_key_exists($sort, $sortOptions)) {
+            $sort = 'created_at';
+        }
+
+        if (! in_array($direction, ['asc', 'desc'], true)) {
+            $direction = $sort === 'created_at' ? 'desc' : 'asc';
+        }
+
+        if ($sort === 'created_at' && ! $request->has('direction')) {
+            $direction = 'desc';
+        }
+
+        return [
+            'sort' => $sort,
+            'direction' => $direction,
+            'label' => $sortOptions[$sort]['label'] ?? 'izveides datuma',
         ];
     }
 
@@ -157,7 +192,7 @@ class DashboardController extends Controller
             ->values();
     }
 
-    private function dashboardDevicesData(array $filters, ?Collection $locationRooms = null): array
+    private function dashboardDevicesData(array $filters, ?Collection $locationRooms = null, ?array $sorting = null): array
     {
         if (! $this->featureTableExists('devices')) {
             return [
@@ -167,8 +202,18 @@ class DashboardController extends Controller
             ];
         }
 
-        $deviceQuery = Device::query();
+        $sorting ??= [
+            'sort' => 'created_at',
+            'direction' => 'desc',
+            'label' => 'izveides datuma',
+        ];
+
+        $deviceQuery = Device::query()
+            ->leftJoin('rooms as sort_rooms', 'sort_rooms.id', '=', 'devices.room_id')
+            ->leftJoin('buildings as sort_buildings', 'sort_buildings.id', '=', 'devices.building_id')
+            ->leftJoin('users as sort_users', 'sort_users.id', '=', 'devices.assigned_to_id');
         $this->applyDashboardDeviceFilters($deviceQuery, $filters, $locationRooms);
+        $this->applyDashboardDeviceSorting($deviceQuery, $sorting);
 
         $dashboardDevices = $deviceQuery
             ->select([
@@ -251,6 +296,67 @@ class DashboardController extends Controller
         }
 
         $deviceQuery->whereHas('room', fn ($roomQuery) => $roomQuery->where('floor_number', (int) $filters['floor']));
+    }
+
+    private function applyDashboardDeviceSorting(Builder $query, array $sorting): void
+    {
+        $direction = ($sorting['direction'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+
+        match ($sorting['sort'] ?? 'created_at') {
+            'code' => $query
+                ->orderByRaw('LOWER(COALESCE(devices.code, "")) ' . $direction)
+                ->orderBy('devices.id', $direction),
+            'name' => $query
+                ->orderByRaw('LOWER(COALESCE(devices.name, "")) ' . $direction)
+                ->orderBy('devices.id', $direction),
+            'location' => $query
+                ->orderByRaw('LOWER(COALESCE(sort_buildings.building_name, "")) ' . $direction)
+                ->orderBy('sort_rooms.floor_number', $direction)
+                ->orderByRaw('LOWER(COALESCE(sort_rooms.room_number, "")) ' . $direction)
+                ->orderByRaw('LOWER(COALESCE(sort_rooms.room_name, "")) ' . $direction)
+                ->orderBy('devices.id', $direction),
+            'assigned_to' => $query
+                ->orderByRaw('LOWER(COALESCE(sort_users.full_name, "")) ' . $direction)
+                ->orderBy('devices.id', $direction),
+            'status' => $query
+                ->orderByRaw($this->dashboardDeviceStatusSortExpression() . ' ' . $direction)
+                ->orderBy('devices.id', $direction),
+            default => $query
+                ->orderBy('devices.created_at', $direction)
+                ->orderBy('devices.id', $direction),
+        };
+    }
+
+    private function dashboardDeviceStatusSortExpression(): string
+    {
+        return <<<'SQL'
+CASE
+    WHEN devices.status = 'active' THEN 1
+    WHEN devices.status = 'repair' THEN 2
+    WHEN devices.status = 'writeoff' THEN 3
+    ELSE 4
+END
+SQL;
+    }
+
+    private function dashboardSortOptions(): array
+    {
+        return [
+            'created_at' => ['label' => 'izveides datuma'],
+            'code' => ['label' => 'koda'],
+            'name' => ['label' => 'ierīces nosaukuma'],
+            'location' => ['label' => 'atrašanās vietas'],
+            'assigned_to' => ['label' => 'piešķirtā lietotāja'],
+            'status' => ['label' => 'statusa'],
+        ];
+    }
+
+    private function sortDirectionLabels(): array
+    {
+        return [
+            'asc' => 'augošajā secībā',
+            'desc' => 'dilstošajā secībā',
+        ];
     }
 
     /**

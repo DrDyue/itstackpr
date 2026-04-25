@@ -2,7 +2,7 @@
     Partial skats: Dashboard ierīču tabula.
     Izmantots async filtrēšanai bez lapas atjaunošanas.
 --}}
-@props(['dashboardDevices', 'dashboardDeviceCount', 'dashboardDeviceStates', 'filters'])
+@props(['dashboardDevices', 'dashboardDeviceCount', 'dashboardDeviceStates', 'filters', 'sorting', 'sortOptions', 'sortDirectionLabels'])
 
 <div class="device-table-shell mt-5" id="dashboard-devices-table">
     <div class="mb-3 flex flex-wrap items-center justify-between gap-2 px-1">
@@ -19,11 +19,37 @@
             <thead class="dash-table-head">
                 <tr>
                     <th class="table-col-image text-center">Attēls</th>
-                    <th>Kods</th>
-                    <th>Ierīce</th>
-                    <th>Atrašanās vieta</th>
-                    <th>Piešķirta</th>
-                    <th>Statuss</th>
+                    @foreach ([
+                        'code' => 'Kods',
+                        'name' => 'Ierīce',
+                        'location' => 'Atrašanās vieta',
+                        'assigned_to' => 'Piešķirta',
+                        'status' => 'Statuss',
+                    ] as $column => $label)
+                        @php
+                            $isCurrentSort = $sorting['sort'] === $column;
+                            $nextDirection = $isCurrentSort && $sorting['direction'] === 'asc' ? 'desc' : 'asc';
+                            $sortMessage = 'Dashboard tabula kārtota pēc ' . ($sortOptions[$column]['label'] ?? mb_strtolower($label)) . ' ' . ($sortDirectionLabels[$nextDirection] ?? '');
+                        @endphp
+                        <th>
+                            <button
+                                type="button"
+                                class="device-sort-trigger {{ $isCurrentSort ? 'device-sort-trigger-active' : '' }}"
+                                data-sort-trigger="true"
+                                data-sort-field="{{ $column }}"
+                                data-sort-direction="{{ $nextDirection }}"
+                                data-sort-toast="{{ $sortMessage }}"
+                            >
+                                <span>{{ $label }}</span>
+                                <span class="device-sort-icon" aria-hidden="true">
+                                    <svg class="h-[1.05em] w-[1.05em]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 9 3.75-3.75L15.75 9" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 15-3.75 3.75L8.25 15" />
+                                    </svg>
+                                </span>
+                            </button>
+                        </th>
+                    @endforeach
                     <th>Darbības</th>
                 </tr>
             </thead>

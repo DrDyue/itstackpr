@@ -139,6 +139,9 @@
 
             <div class="dash-main-stack">
                 <section class="surface-card">
+                    <input type="hidden" name="sort" :value="currentFilters.sort" data-dashboard-sort-hidden="field">
+                    <input type="hidden" name="direction" :value="currentFilters.direction" data-dashboard-sort-hidden="direction">
+
                     <div class="flex flex-wrap items-start justify-between gap-4">
                         <div>
                             <h2 class="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
@@ -169,6 +172,9 @@
                         'dashboardDeviceCount' => $dashboardDeviceCount,
                         'dashboardDeviceStates' => $dashboardDeviceStates,
                         'filters' => $filters,
+                        'sorting' => $sorting,
+                        'sortOptions' => $sortOptions,
+                        'sortDirectionLabels' => $sortDirectionLabels,
                     ])
                 </section>
             </div>
@@ -181,6 +187,8 @@
             currentFilters: {
                 floor: @js($filters['floor']),
                 room_id: @js($filters['room_id']),
+                sort: @js($sorting['sort']),
+                direction: @js($sorting['direction']),
             },
             async fetchDevices(params = {}) {
                 this.isLoading = true;
@@ -210,18 +218,22 @@
                 }
             },
             filterByFloor(floorId) {
-                this.currentFilters = { floor: floorId, room_id: '' };
+                this.currentFilters = { ...this.currentFilters, floor: floorId, room_id: '' };
                 this.updateActiveState(floorId, null);
                 this.fetchDevices();
             },
             filterByRoom(roomId, floorId) {
-                this.currentFilters = { floor: floorId, room_id: roomId };
+                this.currentFilters = { ...this.currentFilters, floor: floorId, room_id: roomId };
                 this.updateActiveState(floorId, roomId);
                 this.fetchDevices();
             },
             clearFilters() {
-                this.currentFilters = { floor: '', room_id: '' };
+                this.currentFilters = { ...this.currentFilters, floor: '', room_id: '' };
                 this.updateActiveState(null, null);
+                this.fetchDevices();
+            },
+            sortBy(field, direction) {
+                this.currentFilters = { ...this.currentFilters, sort: field, direction };
                 this.fetchDevices();
             },
             updateActiveState(floorId, roomId) {
@@ -241,5 +253,19 @@
                 }
             }
         };
+        window.dashboardFilter = dashboardFilter;
+
+        document.addEventListener('click', (event) => {
+            const sortTrigger = event.target.closest('#dashboard-devices-table [data-sort-trigger="true"]');
+            if (!sortTrigger || !window.dashboardFilter) {
+                return;
+            }
+
+            event.preventDefault();
+            window.dashboardFilter.sortBy(
+                sortTrigger.dataset.sortField || 'created_at',
+                sortTrigger.dataset.sortDirection || 'desc'
+            );
+        });
     </script>
 </x-app-layout>
