@@ -4926,7 +4926,7 @@ tbody td {
 }
 
 .users-table-scroll .table-action-menu-open {
-    z-index: 9998;
+    z-index: 220;
 }
 
 .users-table-scroll .table-action-summary {
@@ -5215,13 +5215,13 @@ tbody td {
 .app-table-scroll .table-action-menu-open,
 .device-table-scroll .table-action-menu-open,
 .users-table-scroll .table-action-menu-open {
-    z-index: 9998;
+    z-index: 220;
 }
 
 .app-table-scroll .table-action-list,
 .device-table-scroll .table-action-list,
 .users-table-scroll .table-action-list {
-    z-index: 9999;
+    z-index: 120;
 }
 
 .table-scroll-overlay-frame {
@@ -5234,7 +5234,7 @@ tbody td {
 }
 
 .table-scroll-overlay-frame .table-action-list {
-    z-index: 9999;
+    z-index: 120;
 }
 
 .table-scroll-viewport {

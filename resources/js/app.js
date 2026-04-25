@@ -82,8 +82,6 @@ const initializeFloatingTableActionMenus = () => {
         panel.style.bottom = '';
         panel.style.marginTop = '';
         panel.style.zIndex = '';
-        panel.style.maxHeight = '';
-        panel.style.overflowY = '';
     };
 
     const positionPanel = (panel) => {
@@ -101,26 +99,24 @@ const initializeFloatingTableActionMenus = () => {
         panel.style.right = 'auto';
         panel.style.bottom = 'auto';
         panel.style.marginTop = '0';
-        panel.style.zIndex = '9999';
+        panel.style.zIndex = '260';
 
         const triggerRect = trigger.getBoundingClientRect();
         const panelRect = panel.getBoundingClientRect();
-        const availableBelow = Math.max(window.innerHeight - triggerRect.bottom - viewportPadding - panelGap, 0);
-        let top = triggerRect.bottom + panelGap;
+        const availableBelow = window.innerHeight - triggerRect.bottom - viewportPadding;
+        const availableAbove = triggerRect.top - viewportPadding;
+        const openUpward = panelRect.height > availableBelow && availableAbove > availableBelow;
+
+        let top = openUpward
+            ? triggerRect.top - panelRect.height - panelGap
+            : triggerRect.bottom + panelGap;
         let left = triggerRect.right - panelRect.width;
 
-        top = Math.max(viewportPadding, top);
+        top = Math.max(viewportPadding, Math.min(top, window.innerHeight - panelRect.height - viewportPadding));
         left = Math.max(viewportPadding, Math.min(left, window.innerWidth - panelRect.width - viewportPadding));
 
         panel.style.top = `${Math.round(top)}px`;
         panel.style.left = `${Math.round(left)}px`;
-        if (panelRect.height > availableBelow && availableBelow > 0) {
-            panel.style.maxHeight = `${Math.round(availableBelow)}px`;
-            panel.style.overflowY = 'auto';
-        } else {
-            panel.style.maxHeight = '';
-            panel.style.overflowY = '';
-        }
         panel.dataset.floatingMenu = 'true';
     };
 
