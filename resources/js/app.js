@@ -478,6 +478,65 @@ const registerAlpineData = () => {
         },
     }));
 
+    Alpine.data('managedModalForm', ({
+        modalName = '',
+        focusRef = 'firstField',
+        closeTitle = 'Aizvērt logu?',
+        closeMessage = 'Tev ir nesaglabātas izmaiņas. Vai tiešām aizvērt logu?',
+    } = {}) => ({
+        modalName,
+        focusRef,
+        closeTitle,
+        closeMessage,
+        submitting: false,
+        dirty: false,
+        markDirty() {
+            if (!this.submitting) {
+                this.dirty = true;
+            }
+        },
+        handleSubmit() {
+            this.submitting = true;
+            this.dirty = false;
+        },
+        handleOpened(event) {
+            if (event.detail !== this.modalName) {
+                return;
+            }
+
+            this.submitting = false;
+
+            this.$nextTick(() => {
+                const target = this.$refs[this.focusRef];
+                if (target && typeof target.focus === 'function') {
+                    target.focus();
+                }
+            });
+        },
+        async confirmClose(event) {
+            if (event.detail !== this.modalName || !this.dirty || this.submitting) {
+                return;
+            }
+
+            event.preventDefault();
+
+            const accepted = await window.openAppConfirm({
+                title: this.closeTitle,
+                message: this.closeMessage,
+                confirmLabel: 'Jā, aizvērt',
+                cancelLabel: 'Palikt',
+                tone: 'warning',
+            });
+
+            if (!accepted) {
+                return;
+            }
+
+            this.dirty = false;
+            window.dispatchEvent(new CustomEvent('close-modal', { detail: this.modalName }));
+        },
+    }));
+
     Alpine.data('requestDetailsDrawer', () => ({
         open: false,
         item: null,

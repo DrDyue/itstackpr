@@ -19,7 +19,21 @@ $maxWidth = [
 @endphp
 
 <div
-    x-data="{ show: @js($show) }"
+    x-data="{
+        show: @js($show),
+        requestClose() {
+            const closeEvent = new CustomEvent('modal-before-close', {
+                detail: '{{ $name }}',
+                cancelable: true,
+            });
+
+            if (!window.dispatchEvent(closeEvent)) {
+                return;
+            }
+
+            this.show = false;
+        },
+    }"
     x-init="$watch('show', value => {
         if (value) {
             window.requestAnimationFrame(() => {
@@ -31,14 +45,14 @@ $maxWidth = [
         window.dispatchEvent(new CustomEvent('modal-closed', { detail: '{{ $name }}' }));
     })"
     @open-modal.window="if ($event.detail === '{{ $name }}') { show = true; }"
-    @close-modal.window="if ($event.detail === '{{ $name }}') { show = false; }"
-    @keydown.escape.window="show = false"
+    @close-modal.window="if ($event.detail === '{{ $name }}') { requestClose(); }"
+    @keydown.escape.window="if (show) { requestClose(); }"
     x-show="show"
     x-cloak
     class="fixed inset-0 z-[70] overflow-y-auto"
 >
     <div
-        @click="show = false"
+        @click="requestClose()"
         class="modal-liquid-backdrop fixed inset-0 transition-opacity"
         x-show="show"
         x-transition:enter="ease-out duration-300"

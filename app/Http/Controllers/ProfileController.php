@@ -89,7 +89,7 @@ class ProfileController extends Controller
             $user,
             $before,
             $after,
-            description: 'Profila iestatījumi atjaunināti: ' . AuditTrail::labelFor($user)
+            description: $this->profileSettingsAuditDescription($user, $before, $after)
         );
 
         return Redirect::back()
@@ -124,6 +124,23 @@ class ProfileController extends Controller
     private function isMissingUserSettingsColumn(QueryException $exception): bool
     {
         return str_contains(strtolower($exception->getMessage()), "unknown column 'user_settings'");
+    }
+
+    private function profileSettingsAuditDescription(User $user, array $before, array $after): string
+    {
+        $beforeValue = (bool) ($before[User::SETTING_HIDE_WRITEOFF_DEVICES] ?? false);
+        $afterValue = (bool) ($after[User::SETTING_HIDE_WRITEOFF_DEVICES] ?? false);
+
+        if ($beforeValue === $afterValue) {
+            return 'Administrēšanas skata iestatījums netika mainīts: "Paslēpt norakstītās ierīces" palika '.($afterValue ? 'ieslēgts' : 'izslēgts').': ' . AuditTrail::labelFor($user);
+        }
+
+        return 'Administrēšanas skata iestatījums "Paslēpt norakstītās ierīces" mainīts: '
+            . ($beforeValue ? 'ieslēgts' : 'izslēgts')
+            . ' -> '
+            . ($afterValue ? 'ieslēgts' : 'izslēgts')
+            . ': '
+            . AuditTrail::labelFor($user);
     }
 
     public function destroy(Request $request): RedirectResponse

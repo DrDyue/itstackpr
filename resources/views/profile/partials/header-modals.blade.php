@@ -6,7 +6,16 @@
 
 @if ($user)
     <x-modal name="profile-modal" maxWidth="4xl">
-        <div class="device-user-room-modal-shell">
+        <div
+            x-data="managedModalForm({
+                modalName: 'profile-modal',
+                closeTitle: 'Aizvērt profilu?',
+                closeMessage: 'Tev ir nesaglabātas profila izmaiņas. Vai tiešām aizvērt profila logu?',
+            })"
+            @modal-opened.window="handleOpened($event)"
+            @modal-before-close.window="confirmClose($event)"
+            class="device-user-room-modal-shell"
+        >
             <div class="device-user-room-modal-head">
                 <div>
                     <div class="device-user-room-modal-badge">Profils</div>
@@ -42,14 +51,14 @@
                     </div>
                 </div>
 
-                <form method="post" action="{{ route('profile.update') }}" class="space-y-6">
+                <form method="post" action="{{ route('profile.update') }}" class="space-y-6" @input="markDirty()" @change="markDirty()" @submit="handleSubmit()">
                     @csrf
                     @method('patch')
 
                     <div class="grid gap-5 md:grid-cols-2">
                         <div class="md:col-span-2">
                             <x-input-label for="profile_modal_full_name" value="Vārds un uzvārds" />
-                            <x-text-input id="profile_modal_full_name" name="full_name" type="text" class="mt-2 block w-full" :value="old('full_name', $user->full_name)" required autofocus autocomplete="name" />
+                            <x-text-input id="profile_modal_full_name" name="full_name" type="text" class="mt-2 block w-full" :value="old('full_name', $user->full_name)" required autofocus autocomplete="name" x-ref="firstField" />
                             <x-input-error class="mt-2" :messages="$errors->get('full_name')" />
                         </div>
 
@@ -77,9 +86,9 @@
                             <x-icon name="key" size="h-4 w-4" />
                             <span>Mainīt paroli</span>
                         </button>
-                        <button type="submit" class="btn-search">
+                        <button type="submit" class="btn-search" :disabled="submitting" :class="submitting ? 'opacity-70 cursor-wait' : ''">
                             <x-icon name="save" size="h-4 w-4" />
-                            <span>Saglabāt</span>
+                            <span x-text="submitting ? 'Saglabā...' : 'Saglabāt'"></span>
                         </button>
                     </div>
                 </form>
@@ -88,7 +97,16 @@
     </x-modal>
 
     <x-modal name="profile-password-modal" maxWidth="2xl">
-        <div class="device-user-room-modal-shell">
+        <div
+            x-data="managedModalForm({
+                modalName: 'profile-password-modal',
+                closeTitle: 'Aizvērt paroles maiņu?',
+                closeMessage: 'Tev ir nesaglabātas paroles maiņas izmaiņas. Vai tiešām aizvērt šo logu?',
+            })"
+            @modal-opened.window="handleOpened($event)"
+            @modal-before-close.window="confirmClose($event)"
+            class="device-user-room-modal-shell"
+        >
             <div class="device-user-room-modal-head">
                 <div>
                     <div class="device-user-room-modal-badge">Drošība</div>
@@ -100,13 +118,13 @@
                 </button>
             </div>
 
-            <form method="post" action="{{ route('password.update') }}" class="device-user-room-modal-form space-y-5">
+            <form method="post" action="{{ route('password.update') }}" class="device-user-room-modal-form space-y-5" @input="markDirty()" @change="markDirty()" @submit="handleSubmit()">
                 @csrf
                 @method('put')
 
                 <div>
                     <x-input-label for="profile_password_current_password" value="Pašreizējā parole" />
-                    <x-text-input id="profile_password_current_password" name="current_password" type="password" class="mt-2 block w-full" autocomplete="current-password" />
+                    <x-text-input id="profile_password_current_password" name="current_password" type="password" class="mt-2 block w-full" autocomplete="current-password" x-ref="firstField" />
                     <x-input-error :messages="$errors->updatePassword->get('current_password')" class="mt-2" />
                 </div>
 
@@ -124,9 +142,9 @@
 
                 <div class="device-user-room-modal-actions">
                     <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'profile-password-modal')">Atcelt</button>
-                    <button type="submit" class="btn-search">
+                    <button type="submit" class="btn-search" :disabled="submitting" :class="submitting ? 'opacity-70 cursor-wait' : ''">
                         <x-icon name="save" size="h-4 w-4" />
-                        <span>Saglabāt paroli</span>
+                        <span x-text="submitting ? 'Saglabā...' : 'Saglabāt paroli'"></span>
                     </button>
                 </div>
             </form>
@@ -135,7 +153,16 @@
 
     @if ($isAdmin)
         <x-modal name="profile-settings-modal" maxWidth="2xl">
-            <div class="device-user-room-modal-shell">
+            <div
+                x-data="managedModalForm({
+                    modalName: 'profile-settings-modal',
+                    closeTitle: 'Aizvērt iestatījumus?',
+                    closeMessage: 'Tev ir nesaglabātas iestatījumu izmaiņas. Vai tiešām aizvērt šo logu?',
+                })"
+                @modal-opened.window="handleOpened($event)"
+                @modal-before-close.window="confirmClose($event)"
+                class="device-user-room-modal-shell"
+            >
                 <div class="device-user-room-modal-head">
                     <div>
                         <div class="device-user-room-modal-badge">Iestatījumi</div>
@@ -147,7 +174,7 @@
                     </button>
                 </div>
 
-                <form method="post" action="{{ route('profile.settings.update') }}" class="device-user-room-modal-form space-y-5">
+                <form method="post" action="{{ route('profile.settings.update') }}" class="device-user-room-modal-form space-y-5" @input="markDirty()" @change="markDirty()" @submit="handleSubmit()">
                     @csrf
                     @method('patch')
 
@@ -163,7 +190,7 @@
                             </div>
 
                             <span class="relative mt-1 inline-flex shrink-0 items-center">
-                                <input id="profile_hide_written_off_devices" type="checkbox" name="hide_written_off_devices" value="1" class="peer sr-only" @checked((bool) $hideWrittenOffDevices)>
+                                <input id="profile_hide_written_off_devices" type="checkbox" name="hide_written_off_devices" value="1" class="peer sr-only" @checked((bool) $hideWrittenOffDevices) x-ref="firstField">
                                 <span class="h-7 w-12 rounded-full bg-slate-300 transition peer-checked:bg-sky-500"></span>
                                 <span class="pointer-events-none absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow-sm transition peer-checked:translate-x-5"></span>
                             </span>
@@ -179,9 +206,9 @@
 
                     <div class="device-user-room-modal-actions">
                         <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'profile-settings-modal')">Atcelt</button>
-                        <button type="submit" class="btn-search">
+                        <button type="submit" class="btn-search" :disabled="submitting" :class="submitting ? 'opacity-70 cursor-wait' : ''">
                             <x-icon name="save" size="h-4 w-4" />
-                            <span>Saglabāt iestatījumus</span>
+                            <span x-text="submitting ? 'Saglabā...' : 'Saglabāt iestatījumus'"></span>
                         </button>
                     </div>
                 </form>
