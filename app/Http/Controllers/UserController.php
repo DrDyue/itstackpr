@@ -24,6 +24,12 @@ class UserController extends Controller
     private const ROLES = [User::ROLE_ADMIN, User::ROLE_USER];
     private const SORTABLE_COLUMNS = ['full_name', 'email', 'phone', 'role', 'job_title', 'is_active', 'last_login'];
 
+    /**
+     * Parāda lietotāju sarakstu ar filtrēšanu, kārtošanu un kopsavilkumu.
+     *
+     * Pieejams tikai administratoram. Filtri ietver vārdu, amatu, e-pastu,
+     * lomu, aktivitātes statusu un pēdējās pieslēgšanās laiku.
+     */
     public function index(Request $request)
     {
         $this->requireAdmin();
@@ -180,6 +186,12 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * Parāda izvērstu lietotāja profila karti ar statistiku un aktivitātes vēsturi.
+     *
+     * Ielādē piesaistītās ierīces, aktīvos pieteikumus, nodošanas un audita žurnāla
+     * pēdējos ierakstus. Pieejams tikai administratoram.
+     */
     public function show(User $user)
     {
         $this->requireAdmin();
@@ -299,6 +311,12 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * Saglabā jaunu lietotāja kontu.
+     *
+     * Paroli iepriekš šifrē ar bcrypt pirms ierakstīšanas datubāzē.
+     * Izveides notikums tiek reģistrēts audita žurnālā.
+     */
     public function store(Request $request)
     {
         $this->requireAdmin();
@@ -312,6 +330,12 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Lietotājs veiksmīgi izveidots');
     }
 
+    /**
+     * Atjaunina esošā lietotāja datus.
+     *
+     * Ja tiek norādīta jauna parole, tā tiek šifrēta un paroles maiņas pieprasījuma
+     * lauks tiek notīrīts. Izmaiņas tiek salīdzinātas un reģistrētas audita žurnālā.
+     */
     public function update(Request $request, User $user)
     {
         $this->requireAdmin();
@@ -339,6 +363,13 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Lietotājs veiksmīgi atjaunināts');
     }
 
+    /**
+     * Dzēš lietotāja kontu, ja tam nav piesaistītu ierakstu sistēmā.
+     *
+     * Pirms dzēšanas pārbauda visas saistītās relācijas — ierīces, telpas,
+     * pieteikumus, remonts u.c. Ja kaut kas ir piesaistīts, dzēšana tiek
+     * noraidīta ar detalizētu kļūdas paziņojumu. Administrators nevar dzēst pats sevi.
+     */
     public function destroy(User $user)
     {
         $this->requireAdmin();
@@ -380,6 +411,12 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Lietotājs dzēsts');
     }
 
+    /**
+     * Validē un normalizē lietotāja ievaddatus pirms saglabāšanas.
+     *
+     * Parole ir obligāta tikai jaunam lietotājam. E-pasta unikalitāte tiek pārbaudīta,
+     * izslēdzot pašreizējo lietotāju (ja rediģē). Tālrunis un amats ir izvēles lauki.
+     */
     private function validatedData(Request $request, ?User $user = null): array
     {
         $validated = $this->validateInput($request, [
@@ -404,6 +441,9 @@ class UserController extends Controller
         return $validated;
     }
 
+    /**
+     * Atgriež lomu cilvēkam saprotamos nosaukumus Blade skatiem.
+     */
     private function roleLabels(): array
     {
         return [
@@ -413,6 +453,13 @@ class UserController extends Controller
         ];
     }
 
+    /**
+     * Apakšvaicājums, kas atlasa lietotāja pēdējo pieslēgšanās laiku no audita žurnāla.
+     *
+     * Izmanto kā "select sub" papildus kolonnas pievienošanai lietotāju vaicājumam,
+     * lai varētu kārtot un rādīt faktisko pieslēgšanās datumu, pat ja `last_login`
+     * kolonna ir tukša (piemēram, vecāki konti pirms audita ieviešanas).
+     */
     private function latestLoginAuditSubquery(): Builder
     {
         return AuditLog::query()
@@ -423,12 +470,25 @@ class UserController extends Controller
             ->limit(1);
     }
 
+    /**
+     * Pievieno lietotāja modelim `effective_last_login` atribūtu.
+     *
+     * Izmanto `last_login` lauku kā primāro avotu, bet ja tas ir tukšs,
+     * mēģina atrast pieslēgšanās laiku no audita žurnāla apakšvaicājuma.
+     * Tas nodrošina, ka pieslēgšanās laiks ir redzams vienmēr, ja tas ir pieejams.
+     */
     private function attachEffectiveLastLogin(User $user): void
     {
         $fallback = $user->getAttribute('latest_login_audit_at');
         $user->setAttribute('effective_last_login', $user->last_login ?: ($fallback ? Carbon::parse($fallback) : null));
     }
 
+    /**
+     * Normalizē kārtošanas parametrus no URL vaicājuma.
+     *
+     * Noklusētais kārtojums ir pēc vārda un uzvārda augošā secībā.
+     * Pārbauda, vai pieprasītā kolonna atrodas atļauto kolonnu sarakstā.
+     */
     private function normalizedSorting(Request $request): array
     {
         $sort = trim((string) $request->query('sort', 'full_name'));
@@ -449,6 +509,12 @@ class UserController extends Controller
         ];
     }
 
+    /**
+     * Pielieto kārtošanu lietotāju vaicājumam.
+     *
+     * Lielākā daļa kolonnu tiek kārtota bez reģistrjutības (LOWER/COALESCE).
+     * Pēdējās pieslēgšanās kārtojums novieto NULL vērtības saraksta beigās.
+     */
     private function applySorting($query, array $sorting): void
     {
         switch ($sorting['sort']) {

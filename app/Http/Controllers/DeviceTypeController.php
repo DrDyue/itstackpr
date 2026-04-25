@@ -8,10 +8,23 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Ierīču tipu pārvaldības CRUD kontrolieris.
+ *
+ * Nodrošina pilnu tipu sarakstu ar meklēšanu un kārtošanu,
+ * kā arī tipu pievienošanu, rediģēšanu un dzēšanu.
+ * Ierīces tipa dzēšana tiek bloķēta, ja tipam vēl ir piesaistītas ierīces.
+ */
 class DeviceTypeController extends Controller
 {
     private const SORTABLE_COLUMNS = ['type_name', 'devices_count'];
 
+    /**
+     * Parāda ierīču tipu sarakstu ar meklēšanu un kārtošanu.
+     *
+     * Administratoram rādāmi visi tipi. Katram tipam tiek uzskaitīts
+     * piesaistīto ierīču skaits, kas palīdz novērtēt tā izmantojamību.
+     */
     public function index(Request $request)
     {
         $this->requireManager();
@@ -53,6 +66,12 @@ class DeviceTypeController extends Controller
         ]);
     }
 
+    /**
+     * Atrod ierīces tipu pēc nosaukuma aktīvajā filtrētajā sarakstā.
+     *
+     * Izmantota JavaScript meklēšanas lodziņā, lai iezīmētu atbilstošo
+     * rindu tabulā. Atgriež lapu un ieraksta ID priekš ritināšanas.
+     */
     public function findByName(Request $request): JsonResponse
     {
         $this->requireManager();
@@ -91,6 +110,11 @@ class DeviceTypeController extends Controller
         ]);
     }
 
+    /**
+     * Saglabā jaunu ierīces tipu datubāzē.
+     *
+     * Validē nosaukumu, pārbauda unikalitāti un reģistrē izveides notikumu auditā.
+     */
     public function store(Request $request)
     {
         $this->requireManager();
@@ -103,6 +127,12 @@ class DeviceTypeController extends Controller
         return redirect()->route('device-types.index')->with('success', "Ier\u{012B}ces tips veiksm\u{012B}gi pievienots.");
     }
 
+    /**
+     * Atjaunina esošā ierīces tipa nosaukumu.
+     *
+     * Pirms saglabāšanas salīdzina "pirms" un "pēc" stāvokļus un
+     * pieraksta izmaiņas audita žurnālā.
+     */
     public function update(Request $request, DeviceType $deviceType)
     {
         $this->requireManager();
@@ -117,6 +147,12 @@ class DeviceTypeController extends Controller
         return redirect()->route('device-types.index')->with('success', 'Ierīces tips atjaunināts.');
     }
 
+    /**
+     * Dzēš ierīces tipu, ja tam nav piesaistītu ierīču.
+     *
+     * Ja tipam vēl ir ierīces, dzēšana tiek noraidīta ar informatīvu kļūdas paziņojumu,
+     * lai netiktu sabojāta datu integritāte.
+     */
     public function destroy(DeviceType $deviceType)
     {
         $this->requireManager();
@@ -133,6 +169,12 @@ class DeviceTypeController extends Controller
         return redirect()->route('device-types.index')->with('success', "Ier\u{012B}ces tips dz\u{0113}sts.");
     }
 
+    /**
+     * Tipa detalizētais skats — pašlaik novirza uz sarakstu.
+     *
+     * Šī metode ir saglabāta saderībai ar Laravel resursu maršrutiem.
+     * Ja nākotnē tiks veidota atsevišķa tipa lapas, tā tiks implementēta šeit.
+     */
     public function show(DeviceType $deviceType)
     {
         $this->requireManager();
@@ -140,6 +182,12 @@ class DeviceTypeController extends Controller
         return redirect()->route('device-types.index');
     }
 
+    /**
+     * Normalizē kārtošanas parametrus no URL vaicājuma.
+     *
+     * Pārbauda, vai pieprasītā kolonna ir atļauto kārtojamo kolonnu sarakstā.
+     * Noklusēts kārtojums ir pēc tipa nosaukuma augošā secībā.
+     */
     private function normalizedSorting(Request $request): array
     {
         $sort = trim((string) $request->query('sort', 'type_name'));
@@ -160,6 +208,9 @@ class DeviceTypeController extends Controller
         ];
     }
 
+    /**
+     * Atgriež kārtojamo lauku nosaukumu karti Blade skatam un audita paziņojumiem.
+     */
     private function sortOptions(): array
     {
         return [
@@ -168,6 +219,12 @@ class DeviceTypeController extends Controller
         ];
     }
 
+    /**
+     * Validē un normalizē ierīces tipa nosaukumu pirms saglabāšanas.
+     *
+     * Pārbauda obligāto aizpildījumu, garuma ierobežojumu un unikalitāti
+     * (reģistrjutīgi). Metode pieņem esošu tipu, lai izslēgtu to no unikalitātes pārbaudes.
+     */
     private function validateTypeName(Request $request, ?DeviceType $deviceType = null): array
     {
         $data = $request->validate([

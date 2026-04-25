@@ -202,6 +202,13 @@ class BuildingController extends Controller
     }
 
 
+    /**
+     * Validē un normalizē ēkas ievaddatus pirms saglabāšanas.
+     *
+     * Pārbauda nosaukuma obligāto aizpildījumu, unikalitāti sistēmā
+     * (izņemot rediģējamo ēku) un citu lauku robežvērtības. Ja piezīmes nav
+     * norādītas, tiek lietota noklusētā tukšā virkne.
+     */
     private function validatedData(Request $request, ?Building $building = null): array
     {
         $data = $this->validateInput($request, [
@@ -226,6 +233,13 @@ class BuildingController extends Controller
         return $data;
     }
 
+    /**
+     * Normalizē kārtošanas parametrus no URL vaicājuma.
+     *
+     * Pārbauda, vai pieprasītā kolonna atrodas atļauto kolonnu sarakstā.
+     * Ja norādītā kolonna vai virziens nav derīgs, lietotāja vietā tiek
+     * izmantota noklusētā kārtošana pēc ēkas nosaukuma augošajā secībā.
+     */
     private function resolveSorting(Request $request): array
     {
         $sort = trim((string) $request->query('sort', 'building_name'));
@@ -245,6 +259,9 @@ class BuildingController extends Controller
         ];
     }
 
+    /**
+     * Atgriež kārtojamo lauku nosaukumu karti Blade skatam un audita paziņojumiem.
+     */
     private function sortOptions(): array
     {
         return [
@@ -255,6 +272,13 @@ class BuildingController extends Controller
         ];
     }
 
+    /**
+     * Pielieto kārtošanu ēku vaicājumam.
+     *
+     * Izmanto drošo kolonnu karti (SORTABLE_COLUMNS), lai izvairītos no
+     * SQL injekcijas riskiem. Ja primārā kolonna nav ēkas nosaukums,
+     * kā sekundārā kārtošanas atslēga tiek pievienots nosaukums.
+     */
     private function applySorting(Builder $query, array $sorting): void
     {
         $column = self::SORTABLE_COLUMNS[$sorting['sort']] ?? self::SORTABLE_COLUMNS['building_name'];

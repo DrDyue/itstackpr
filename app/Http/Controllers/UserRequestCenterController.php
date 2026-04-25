@@ -35,7 +35,11 @@ class UserRequestCenterController extends Controller
     }
 
     /**
-     * Saglab? piepras?jumu caur veco vienoto ieeju, ja t? v?l tiek izmantota.
+     * Saglabā jaunu pieprasījumu — remonta, norakstīšanas vai nodošanas.
+     *
+     * Validē pieprasījuma tipu un ierīci, pārbauda, vai ierīce jau nav aizņemta
+     * ar citu aktīvu pieteikumu, un izveido attiecīgo ierakstu datubāzē.
+     * Katrs veids tiek reģistrēts audita žurnālā un piesaistīts aktīvās sesijas lietotājam.
      */
     public function store(Request $request)
     {
@@ -108,7 +112,10 @@ class UserRequestCenterController extends Controller
     }
 
     /**
-     * At?auj labot tikai apraksto?o lauku iesniegtam piepras?jumam.
+     * Atļauj labot tikai aprakstošo lauku iesniegtam pieprasījumam.
+     *
+     * Lietotājs var labot tikai sava pieprasījuma tekstu (aprakstu vai iemeslu),
+     * kamēr tas vēl nav izskatīts. Izmaiņas tiek reģistrētas audita žurnālā.
      */
     public function update(Request $request, string $requestType, int $requestId)
     {
@@ -148,6 +155,12 @@ class UserRequestCenterController extends Controller
         return redirect()->route($config['index_route'])->with('success', $config['deleted_message']);
     }
 
+    /**
+     * Pārbauda, vai aktīvais lietotājs ir parastais lietotājs (nevis administrators/vadītājs).
+     *
+     * Ja lietotājs nav autentificēts vai ir administrators, tiek atgriezta kļūda 403.
+     * Metode nodrošina, ka tikai parasti lietotāji var veikt darbības šajā kontrolierī.
+     */
     private function requireRegularUser(): User
     {
         $user = $this->user();
@@ -157,6 +170,12 @@ class UserRequestCenterController extends Controller
         return $user;
     }
 
+    /**
+     * Atgriež vaicājumu ar aktīvajām ierīcēm, kas piešķirtas konkrētajam lietotājam.
+     *
+     * Iekļauj tikai aktīvā statusā esošās ierīces ar ielādētām attiecībām,
+     * kas nepieciešamas pieprasījumu veidošanas formu aizpildīšanai.
+     */
     private function availableDevicesForUser(User $user)
     {
         return Device::query()
@@ -166,6 +185,14 @@ class UserRequestCenterController extends Controller
             ->orderBy('name');
     }
 
+    /**
+     * Pārbauda, vai ierīce var pieņemt jaunu pieprasījumu, un meta izņēmumu, ja nevar.
+     *
+     * Bloķē pieprasījuma izveidi, ja ierīce jau ir remontā, vai tai ir
+     * kāds cits aktīvs (iesniegts) pieteikums — neatkarīgi no tipa.
+     * Katrai pieprasījuma tipa un bloķēšanas stāvokļa kombinācijai tiek
+     * atgriezts informatīvs kļūdas ziņojums.
+     */
     private function ensureDeviceCanAcceptRequest(Device $device, string $requestType): void
     {
         if ($device->status === Device::STATUS_REPAIR) {
@@ -252,6 +279,12 @@ class UserRequestCenterController extends Controller
 
 
 
+    /**
+     * Atrod rediģējamo pieprasījumu un pārliecinās, ka tas pieder aktīvajam lietotājam.
+     *
+     * Atgriež divdaļīgu masīvu — modeli un konfigurāciju. Ja pieprasījums
+     * nepieder lietotājam vai nav iesniegtā statusā, tiek atgriezta kļūda 403.
+     */
     private function editableRequestForUser(User $user, string $requestType, int $requestId): array
     {
         $config = $this->editableRequestConfig($requestType);
@@ -266,6 +299,12 @@ class UserRequestCenterController extends Controller
         return [$editableRequest, $config];
     }
 
+    /**
+     * Atgriež pieprasījuma tipa konfigurāciju rediģēšanas un atcelšanas darbībām.
+     *
+     * Katram tipam (repair, writeoff, transfer) definē: modeli, lauku, ziņojumus,
+     * audita tekstu, ikonu un atbilstošo maršrutu. Neatpazīts tips rada 404 kļūdu.
+     */
     private function editableRequestConfig(string $requestType): array
     {
         return match ($requestType) {

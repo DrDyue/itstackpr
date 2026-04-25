@@ -23,6 +23,12 @@ class ProfileController extends Controller
     ) {
     }
 
+    /**
+     * Profila rediģēšanas skats — novirza uz galveno lapu pēc lomas.
+     *
+     * Administrators tiek novirzīts uz darba virsmu, bet parastais lietotājs
+     * uz ierīču sarakstu. Profila modālis tiek atvērts JavaScript pusē.
+     */
     public function edit(Request $request): RedirectResponse
     {
         $user = $request->user();
@@ -31,6 +37,12 @@ class ProfileController extends Controller
         return redirect()->route($user->canManageRequests() ? 'dashboard' : 'devices.index');
     }
 
+    /**
+     * Saglabā lietotāja profila pamatdatus (vārds, e-pasts, tālrunis, amats).
+     *
+     * Izmaiņas tiek salīdzinātas ar iepriekšējo stāvokli un reģistrētas audita žurnālā.
+     * Pēc veiksmīgas saglabāšanas nosūta sesijā signālu profila modāļa aizvēršanai.
+     */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $user = $request->user();
@@ -61,6 +73,12 @@ class ProfileController extends Controller
             ->with('close_profile_modals', true);
     }
 
+    /**
+     * Saglabā administratora skata preferenču iestatījumus (piemēram, norakstīto ierīču slēpšana).
+     *
+     * Pieejams tikai administratoriem. Iestatījumi glabājas `user_settings` JSON kolonnā.
+     * Izmaiņas tiek reģistrētas audita žurnālā ar skaidru aprakstu.
+     */
     public function updateSettings(Request $request): RedirectResponse
     {
         $user = $request->user();
@@ -97,6 +115,12 @@ class ProfileController extends Controller
             ->with('close_profile_modals', true);
     }
 
+    /**
+     * Saglabā profila iestatījumus, automātiski apstrādājot trūkstošās kolonnas.
+     *
+     * Ja `user_settings` kolonna vēl nav datubāzē (legacy shēma), tiek izsaukts
+     * RuntimeSchemaBootstrapper, lai to izveidotu, un saglabāšana tiek atkārtota.
+     */
     private function persistProfileSettings(User $user, array $settings): void
     {
         try {
@@ -121,11 +145,20 @@ class ProfileController extends Controller
         }
     }
 
+    /**
+     * Pārbauda, vai datubāzes kļūda ir par trūkstošo `user_settings` kolonnu.
+     */
     private function isMissingUserSettingsColumn(QueryException $exception): bool
     {
         return str_contains(strtolower($exception->getMessage()), "unknown column 'user_settings'");
     }
 
+    /**
+     * Sagatavo cilvēkam saprotamu audita ieraksta aprakstu par iestatījumu maiņu.
+     *
+     * Ja vērtība nav mainījusies, apraksts to norāda. Ja mainījusies — parāda
+     * pirms/pēc pāreju (ieslēgts/izslēgts).
+     */
     private function profileSettingsAuditDescription(User $user, array $before, array $after): string
     {
         $beforeValue = (bool) ($before[User::SETTING_HIDE_WRITEOFF_DEVICES] ?? false);
@@ -143,6 +176,12 @@ class ProfileController extends Controller
             . AuditTrail::labelFor($user);
     }
 
+    /**
+     * Dzēš lietotāja kontu pēc paroles apstiprināšanas.
+     *
+     * Pirms dzēšanas reģistrē audita žurnālā brīdinājuma līmeņa notikumu.
+     * Sesija tiek pilnīgi atiestatīta, lai novērstu jebkādu sesijas noplūdi.
+     */
     public function destroy(Request $request): RedirectResponse
     {
         $request->validateWithBag('userDeletion', [

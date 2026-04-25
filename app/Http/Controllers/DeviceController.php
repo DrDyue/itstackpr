@@ -477,6 +477,12 @@ class DeviceController extends Controller
             );
     }
 
+    /**
+     * Pielieto filtrēšanas nosacījumu ierīcēm ar aktīviem (iesniegtiem) pieprasījumiem.
+     *
+     * Atlasa ierīces, kurām ir vismaz viens gaidošs remonta vai norakstīšanas pieteikums.
+     * Izmantota gan kopsavilkuma skaitļu aprēķinā, gan filtra aktivizēšanas gadījumā.
+     */
     private function activeDeviceRequestFilterQuery(Builder $query): Builder
     {
         return $query->where(function (Builder $requestQuery) {
@@ -564,6 +570,13 @@ SQL;
         return array_intersect_key($options, array_flip(self::USER_SORTABLE_COLUMNS));
     }
 
+    /**
+     * Atgriež ierīces statusu sarakstu, ko drīkst redzēt konkrētais lietotājs.
+     *
+     * Parasts lietotājs redz tikai aktīvās un remontā esošās ierīces.
+     * Administrators redz visus statusus, izņemot gadījumu, ja ir aktivizēts
+     * preferenču iestatījums par norakstīto ierīču slēpšanu.
+     */
     private function availableStatuses(User $user): array
     {
         if (! $user->canManageRequests()) {
@@ -575,6 +588,12 @@ SQL;
             : self::STATUSES;
     }
 
+    /**
+     * Reģistrē filtrēšanas un kārtošanas darbības ierīču sarakstā audita žurnālā.
+     *
+     * Tiek reģistrēts tikai tad, ja filtra vai kārtošanas vērtības atšķiras
+     * no noklusētajām, lai neaizpildītu žurnālu ar nevajadzīgiem ierakstiem.
+     */
     private function auditDeviceListInteractions(Request $request, User $user, array $filters, array $sorting): void
     {
         $filterPayload = array_filter([
@@ -788,6 +807,13 @@ SQL;
         return $this->redirectAfterQuickAction($device, 'success', 'Ierīces atrašanās vieta atjaunināta.');
     }
 
+    /**
+     * Atjaunina esošās ierīces datus, ievērojot aktīvo pieprasījumu bloķēšanu.
+     *
+     * Pirms saglabāšanas pārbauda, vai ierīcei nav aktīvu pieteikumu, kas
+     * aizliedz rediģēšanu. Saglabā attēla izmaiņas un reģistrē visas
+     * lauku izmaiņas audita žurnālā, salīdzinot "pirms" un "pēc" stāvokļus.
+     */
     public function update(Request $request, Device $device)
     {
         $this->requireManager();
@@ -870,6 +896,13 @@ SQL;
             ->with('error', 'Šo adresi nevar atvērt ar GET pieprasījumu. Izmanto darbību pogas no ierīces saraksta.');
     }
 
+    /**
+     * Veic masveida darbību ar vairākām ierīcēm vienlaikus (statuss vai telpa).
+     *
+     * Apstrādā katru ierīci atsevišķi, uzskaita veiksmīgi apstrādātās un
+     * apkopo kļūdu ziņojumus par neizdevušajām. Rezultāts tiek attēlots
+     * kā vienots paziņojums par apstrādāto ierīču skaitu.
+     */
     public function bulkUpdate(Request $request)
     {
         $this->requireManager();
@@ -909,6 +942,13 @@ SQL;
         return redirect()->route('devices.index')->with($processed > 0 ? 'success' : 'error', $flash);
     }
 
+    /**
+     * Atgriež bāzes vaicājumu ar ierīcēm, kuras drīkst redzēt konkrētais lietotājs.
+     *
+     * Parasts lietotājs redz tikai savas ierīces (izņemot norakstītās).
+     * Administrators redz visas ierīces, bet var izvēlēties slēpt norakstītās
+     * atbilstoši saviem preferenču iestatījumiem.
+     */
     private function visibleDevicesQuery(User $user): Builder
     {
         return Device::query()
@@ -924,6 +964,13 @@ SQL;
             );
     }
 
+    /**
+     * Atgriež telpu kolekciju, kurās atrodas lietotājam redzamās ierīces.
+     *
+     * Izmantota filtra izvēlnē — parādīt tikai tās telpas, kurās ir
+     * šim lietotājam pieejamas ierīces. Administrators redz visas telpas
+     * (izņemot norakstīto slēpšanas gadījumu).
+     */
     private function accessibleRooms(User $user): Collection
     {
         return Room::query()
@@ -944,6 +991,12 @@ SQL;
             ->get();
     }
 
+    /**
+     * Pārbauda, vai aktīvais lietotājs drīkst apskatīt konkrēto ierīci.
+     *
+     * Izmanto modeļa metodi `canViewDevice`, lai noteiktu piekļuves tiesības.
+     * Ja lietotājs nav autentificēts vai nav tiesīgs, tiek atgriezta kļūda 403.
+     */
     private function authorizeView(Device $device): void
     {
         $user = $this->user();
@@ -951,6 +1004,12 @@ SQL;
         abort_unless($user->canViewDevice($device), 403);
     }
 
+    /**
+     * Sagatavo visus palīgdatus ierīces izveides un rediģēšanas formai.
+     *
+     * Iekļauj tipu, ēku, telpu un lietotāju sarakstus, kā arī noklusētās
+     * vērtības jaunas ierīces veidlapai — noklusēto telpu un atbildīgo personu.
+     */
     private function formData(): array
     {
         $warehouseRoom = $this->ensureWarehouseRoom();
@@ -969,6 +1028,14 @@ SQL;
         ];
     }
 
+    /**
+     * Validē un normalizē ierīces ievaddatus pirms saglabāšanas.
+     *
+     * Pārbauda obligātos laukus, koda unikalitāti, garantijas datuma loģiku.
+     * Ja ierīcei statuss ir "norakstīta", tiek automātiski pievienots noliktavas
+     * telpas un atbildīgās personas nulle. Statusu maiņu var bloķēt aktīvs
+     * remonta vai pieprasījuma ieraksts.
+     */
     private function validatedData(Request $request, ?Device $device = null): array
     {
         if (! $device) {
@@ -1092,6 +1159,12 @@ SQL;
         return $data;
     }
 
+    /**
+     * Atgriež pašreizējā administratora ID, ja tas ir aktīvs lietotājs.
+     *
+     * Izmantota kā noklusētā atbildīgā persona jaunu ierīču veidlapā.
+     * Ja administrators nav aktīvs sistēmā, atgriež null.
+     */
     private function defaultResponsibleUserId(): ?int
     {
         $userId = $this->user()?->id;
@@ -1108,6 +1181,13 @@ SQL;
             : null;
     }
 
+    /**
+     * Atgriež pirmo derīgo atbildīgās personas ID, pārbaudot vairākus kandidātus pēc kārtas.
+     *
+     * Prioritātes secība: ierīces pašreizējais atbildīgais → pašreizējais administrators →
+     * ierīces izveidotājs. Tiek atgriezts pirmais kandidāts, kas pastāv aktīvo
+     * lietotāju sarakstā. Ja neviens neatbilst, atgriež null.
+     */
     private function fallbackResponsibleUserId(?Device $device = null): ?int
     {
         foreach ([
@@ -1132,6 +1212,13 @@ SQL;
         return null;
     }
 
+    /**
+     * Atrod vai izveido sistēmas noliktavas telpu.
+     *
+     * Meklē telpu, kuras nosaukumā vai numurā ir vārds "noliktav".
+     * Ja tāda nav, izveido jaunu telpu piemērotā ēkā ar automātiski
+     * ģenerētu numuru un standarta noliktavas nosaukumu no WarehouseConfig.
+     */
     private function ensureWarehouseRoom(): Room
     {
         $warehouseRoom = Room::query()
@@ -1160,6 +1247,12 @@ SQL;
         ])->load('building');
     }
 
+    /**
+     * Atgriež ierīces lauku vērtības, ko piemērot norakstīšanas gadījumā.
+     *
+     * Norakstīta ierīce tiek automātiski pārvietota uz noliktavas telpu
+     * un atbrīvota no atbildīgās personas (assigned_to_id kļūst null).
+     */
     private function writeoffWarehousePayload(): array
     {
         $warehouseRoom = $this->ensureWarehouseRoom();
@@ -1171,6 +1264,13 @@ SQL;
         ];
     }
 
+    /**
+     * Atrod vispiemērotāko ēku noliktavas telpas izveidei.
+     *
+     * Priekšroka tiek dota ēkām ar "ludz" nosaukumā. Ja tādas nav,
+     * tiek izmantota pirmā ēka alfabētiskā secībā. Ja sistēmā vēl nav
+     * nevienas ēkas, tā tiek automātiski izveidota ar noklusēto nosaukumu.
+     */
     private function preferredWarehouseBuilding(): Building
     {
         $preferredBuilding = Building::query()
@@ -1196,6 +1296,12 @@ SQL;
         ]);
     }
 
+    /**
+     * Ģenerē nākamo pieejamo noliktavas telpas numuru norādītajā ēkā.
+     *
+     * Pārbauda esošos telpu numurus un atrod pirmo neaizņemto numuru
+     * pēc kārtas, izmantojot noliktavas prefiksu un trīsciparu formatējumu.
+     */
     private function nextWarehouseRoomNumber(int $buildingId): string
     {
         $existingNumbers = Room::query()
@@ -1215,6 +1321,12 @@ SQL;
         return $candidate;
     }
 
+    /**
+     * Pārbauda, vai teksta virkne norāda uz noliktavas telpu.
+     *
+     * Meklē vārda sakni "noliktav" (reģistrjutīgi) telpas nosaukumā,
+     * numurā vai piezīmēs, lai identificētu esošo noliktavas telpu.
+     */
     private function isWarehouseLabel(?string $value): bool
     {
         if (! filled($value)) {
@@ -1224,6 +1336,12 @@ SQL;
         return str_contains(mb_strtolower(trim($value)), 'noliktav');
     }
 
+    /**
+     * Pārbauda, vai ēkas nosaukums atbilst noliktavas vēlamajai atrašanās vietai.
+     *
+     * Meklē vārdu "ludz" ēkas nosaukumā (reģistrjutīgi), jo sistēma ir
+     * paredzēta lietošanai Ludzā. Tiek izmantota, izvēloties piemērotāko ēku.
+     */
     private function matchesPreferredBuildingName(?string $value): bool
     {
         if (! filled($value)) {
@@ -1233,6 +1351,12 @@ SQL;
         return str_contains(mb_strtolower(trim($value)), 'ludz');
     }
 
+    /**
+     * Atgriež to ierīces lauku sarakstu, kuru izmaiņas tiek reģistrētas auditā.
+     *
+     * Tiek izmantots pirms un pēc atjaunināšanas, lai salīdzinātu stāvokļus
+     * un ierakstītu tikai faktiskās izmaiņas audita žurnālā.
+     */
     private function trackedFields(): array
     {
         return [
@@ -1254,6 +1378,12 @@ SQL;
         ];
     }
 
+    /**
+     * Apstrādā ierīces attēla augšupielādi, ja tāda ir pievienota pieprasījumam.
+     *
+     * Izmanto DeviceAssetManager, lai saglabātu attēlu un, ja nepieciešams,
+     * aizstātu iepriekšējo. Ja attēls nav pievienots, metode neko nedara.
+     */
     private function syncUploads(Request $request, Device $device): void
     {
         $assetManager = app(DeviceAssetManager::class);
@@ -1271,6 +1401,12 @@ SQL;
         }
     }
 
+    /**
+     * Dzēš ierīces attēlu, ja pieprasījumā ir atzīmēts attēla noņemšanas karogs.
+     *
+     * Ja pieprasījumā vienlaikus ir pievienots jauns attēls, noņemšana netiek
+     * veikta. Attēls tiek dzēsts gan no failu sistēmas, gan no modeļa lauka.
+     */
     private function removeDeviceImage(Request $request, Device $device): void
     {
         if ($request->hasFile('device_image')) {
@@ -1287,6 +1423,12 @@ SQL;
         $device->forceFill(['device_image_url' => null])->save();
     }
 
+    /**
+     * Dzēš visus ar ierīci saistītos failu aktīvus pirms ierīces dzēšanas.
+     *
+     * Tiek dzēsts gan pilnā izmēra attēls, gan miniatūra (thumbnail).
+     * Jāizsauc pirms `$device->delete()`, lai nepaliktu bāreņfaili.
+     */
     private function deleteDeviceAssets(Device $device): void
     {
         $assetManager = app(DeviceAssetManager::class);
@@ -1294,6 +1436,9 @@ SQL;
         $assetManager->delete($assetManager->thumbnailPath($device->device_image_url));
     }
 
+    /**
+     * Atgriež cilvēkam saprotamu ierīces statusa nosaukumu latviešu valodā.
+     */
     private function statusLabel(string $status): string
     {
         return match ($status) {
@@ -1303,6 +1448,9 @@ SQL;
         };
     }
 
+    /**
+     * Atgriež visu ierīces statusu cilvēkam saprotamo nosaukumu karti (statuss → nosaukums).
+     */
     private function statusLabels(): array
     {
         return collect(self::STATUSES)
@@ -1312,6 +1460,12 @@ SQL;
 
 
 
+    /**
+     * Atgriež aktīvā remonta statusa etiķeti, ja ierīcei notiek remonts.
+     *
+     * Ja ierīcei nav aktīva remonta, atgriež null. Ja remonta statuss nav
+     * atpazīts, atgriež virkni "Gaida" kā noklusēto vērtību.
+     */
     private function visibleRepairStatusLabel(Device $device): ?string
     {
         if (! $device->activeRepair) {
@@ -1321,6 +1475,12 @@ SQL;
         return $this->repairStatusLabel($device->activeRepair->status) ?: 'Gaida';
     }
 
+    /**
+     * Sagatavo aktīvā remonta kopsavilkuma datus rādīšanai ierīces kartītē.
+     *
+     * Atgriež masīvu ar remonta veidu, statusu, apstiprinātāju un aprakstu.
+     * Ja ierīcei nav aktīva remonta, atgriež null.
+     */
     private function repairPreview(Device $device): ?array
     {
         if (! $device->activeRepair) {
@@ -1341,6 +1501,11 @@ SQL;
         ];
     }
 
+    /**
+     * Atgriež tekstu, kas skaidro, kāpēc ierīce nevar pieņemt jaunu pieprasījumu.
+     *
+     * Iekļauj aktīvā remonta statusa nosaukumu, ja tāds ir noteikts.
+     */
     private function repairReasonText(Device $device): string
     {
         $repairStatusLabel = $this->repairStatusLabel($device->activeRepair?->status);
@@ -1352,6 +1517,12 @@ SQL;
         return 'Ierīce šobrīd ir remonta.';
     }
 
+    /**
+     * Atgriež lietotājam saprotamu remonta statusa paskaidrojumu.
+     *
+     * Katram remonta statusa vērtībai atbilst atsevišķs teksts, kas skaidro,
+     * ko šis statuss nozīmē praksē. Ja ierīcei nav aktīva remonta, atgriež null.
+     */
     private function repairStatusDescription(Device $device): ?string
     {
         if (! $device->activeRepair) {
@@ -1367,6 +1538,13 @@ SQL;
         };
     }
 
+    /**
+     * Nosaka, kādus pieprasījumu veidus var izveidot konkrētajai ierīcei.
+     *
+     * Atgriež masīvu ar pieejamības karodziņiem katram pieprasījuma veidam
+     * un iemeslu, ja kāds no tiem nav pieejams. Ierīce bloķē visus pieprasījumus,
+     * ja tai ir aktīvs remonts, norakstīts statuss vai gaidošs pieteikums.
+     */
     private function requestAvailabilityForDevice(
         Device $device,
         bool $hasPendingRepairRequest,
@@ -1432,6 +1610,13 @@ SQL;
         ];
     }
 
+    /**
+     * Sagatavo vizuālā statusa žetona (badge) datus gaidošajam pieprasījumam.
+     *
+     * Atgriež masīvu ar ikonu, etiķeti, krāsas klasi un saiti uz pieprasījumu sarakstu.
+     * Prioritāte: remonta pieprasījums → norakstīšanas pieprasījums → nodošanas pieprasījums.
+     * Ja nav gaidošu pieprasījumu, atgriež null.
+     */
     private function pendingRequestBadge(
         Device $device,
         bool $canManageRequests,
@@ -1481,6 +1666,12 @@ SQL;
         return null;
     }
 
+    /**
+     * Izveido saiti uz pieprasījumu sarakstu ar filtriem un, ja iespējams, ar enkuru uz konkrētu ierakstu.
+     *
+     * Ja pieprasījuma ID ir zināms, tiek pievienots ierīces kods kā meklēšanas termins
+     * un enkurs (#repair-request-X), lai pārlūks ritinātu pie konkrētā ieraksta.
+     */
     private function requestIndexUrl(Device $device, bool $canManageRequests, string $type, ?int $requestId = null): ?string
     {
         $params = [
@@ -1520,6 +1711,13 @@ SQL;
         return $anchor !== '' ? $baseUrl.'#'.$anchor.$requestId : $baseUrl;
     }
 
+    /**
+     * Sagatavo gaidošā pieprasījuma priekšskatījuma datus uznirstošajam logam.
+     *
+     * Atgriež strukturētu masīvu ar iesniedzēja vārdu, iesniegšanas laiku
+     * un pieprasījuma saturu (apraksts vai iemesls). Ja pieprasījums nav nodots,
+     * atgriež null. Nodošanas pieprasījumam papildu tiek iekļauts saņēmēja vārds.
+     */
     private function pendingRequestPreview(string $type, mixed $request): ?array
     {
         if (! $request) {
@@ -1555,6 +1753,13 @@ SQL;
         };
     }
 
+    /**
+     * Izpilda ierīces ātrās darbības atbilstoši norādītajam darbības tipam.
+     *
+     * Darbības tipi: `status` — maina statusu, `room` — pārvietot telpu,
+     * `assignee` — mainīt atbildīgo personu. Atgriež rezultāta masīvu
+     * ar `level` (success/error) un `message` laukiem.
+     */
     private function performDeviceAction(Device $device, array $data): array
     {
         return match ($data['action']) {
@@ -1565,6 +1770,13 @@ SQL;
         };
     }
 
+    /**
+     * Maina ierīces statusu, veicot visas nepieciešamās pārbaudes.
+     *
+     * Remonta statusa gadījumā tiek automātiski izveidots jauns remonta ieraksts
+     * datubāzes transakcijā. Norakstīšanas gadījumā ierīce tiek pārvietota uz
+     * noliktavas telpu. Visas izmaiņas tiek reģistrētas audita žurnālā.
+     */
     private function changeDeviceStatus(Device $device, string $status): array
     {
         if (! in_array($status, self::STATUSES, true)) {
@@ -1651,6 +1863,12 @@ SQL;
         return ['level' => 'success', 'message' => 'Statuss atjaunināts.'];
     }
 
+    /**
+     * Pārvieto ierīci uz citu telpu, validējot visus bloķēšanas nosacījumus.
+     *
+     * Pārbauda, vai ierīcei nav aktīvu pieprasījumu vai remonta, un vai telpa
+     * nav tā pati. Saglabā izmaiņas un reģistrē tās audita žurnālā.
+     */
     private function moveDevice(Device $device, mixed $roomId): array
     {
         if ($blockedReason = $this->quickRelationEditBlockedReason($device)) {
@@ -1685,6 +1903,12 @@ SQL;
         return ['level' => 'success', 'message' => 'Ierīce pārvietota uz citu telpu.'];
     }
 
+    /**
+     * Maina ierīces atbildīgo personu, validējot bloķēšanas nosacījumus.
+     *
+     * Pārbauda, vai jaunais atbildīgais pastāv aktīvo lietotāju sarakstā
+     * un vai ierīce vēl nav piešķirta tam pašam lietotājam.
+     */
     private function reassignDevice(Device $device, mixed $assignedToId): array
     {
         if ($blockedReason = $this->quickRelationEditBlockedReason($device)) {
@@ -1720,6 +1944,13 @@ SQL;
         return ['level' => 'success', 'message' => 'Atbildīgā persona atjaunināta.'];
     }
 
+    /**
+     * Pārbauda, vai ierīces telpas vai atbildīgās personas maiņa ir bloķēta.
+     *
+     * Apvieno aktīvo pieprasījumu pārbaudi ar statusa pārbaudi — remontā esošai
+     * vai norakstītai ierīcei šādas izmaiņas nav atļautas. Atgriež iemesla
+     * tekstu vai null, ja maiņa ir atļauta.
+     */
     private function quickRelationEditBlockedReason(Device $device): ?string
     {
         if ($blockedReason = $this->activeRequestEditBlockedReason($device)) {
@@ -1739,6 +1970,13 @@ SQL;
         return null;
     }
 
+    /**
+     * Pārbauda, vai ierīcei ir aktīvs pieprasījums, kas bloķē rediģēšanu.
+     *
+     * Pārbauda, vai pastāv iesniegts remonta, norakstīšanas vai nodošanas
+     * pieprasījums. Ja pastāv, atgriež skaidrojošu kļūdas tekstu,
+     * pretējā gadījumā atgriež null.
+     */
     private function activeRequestEditBlockedReason(Device $device): ?string
     {
         if ($device->repairRequests()->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
@@ -1756,6 +1994,13 @@ SQL;
         return null;
     }
 
+    /**
+     * Pārbauda, vai ierīces statusa maiņa ir bloķēta.
+     *
+     * Statusu nevar mainīt, ja ierīcei notiek aktīvs remonts vai tai ir
+     * gaidošs remonta, norakstīšanas vai nodošanas pieprasījums.
+     * Atgriež bloķēšanas iemeslu vai null, ja maiņa ir atļauta.
+     */
     private function deviceStatusEditBlockedReason(Device $device): ?string
     {
         if ($device->status === Device::STATUS_REPAIR || $device->activeRepair()->exists()) {
@@ -1779,6 +2024,12 @@ SQL;
         return null;
     }
 
+    /**
+     * Formatē telpu kolekciju kā opciju masīvu lietojamai izvēlnei.
+     *
+     * Katrai telpai tiek sagatavots `value`, `label`, `group`, `description`
+     * un `search` lauks, kas ļauj JavaScript pusē filtrēt un meklēt opcijās.
+     */
     private function roomSelectOptions(Collection $rooms): Collection
     {
         return $rooms
@@ -1804,6 +2055,12 @@ SQL;
             ->values();
     }
 
+    /**
+     * Atgriež visu telpu sarakstu formatētu ātrajai izvēlnei ierīču tabulā.
+     *
+     * Atšķirībā no `roomSelectOptions`, šī metode ielādē telpas no datubāzes
+     * tieši, nefiltrējot pēc lietotāja, jo to izmanto tikai administratori.
+     */
     private function quickRoomOptions(): Collection
     {
         return Room::query()
@@ -1830,6 +2087,12 @@ SQL;
             ->values();
     }
 
+    /**
+     * Atgriež aktīvo lietotāju sarakstu formatētu ātrajai ierīces piešķiršanas izvēlnei.
+     *
+     * Katram lietotājam tiek sagatavots `value`, `label`, `description` un `search`
+     * lauks, kas ietver vārdu, amatu un e-pastu meklēšanas vajadzībām.
+     */
     private function quickAssigneeOptions(): Collection
     {
         return User::query()
@@ -1852,6 +2115,12 @@ SQL;
             ->values();
     }
 
+    /**
+     * Pārbauda, vai parastais lietotājs drīkst atjaunināt savas ierīces atrašanās vietu.
+     *
+     * Telpu maiņa nav atļauta, ja ierīce ir remontā vai tai ir gaidošs pieteikums.
+     * Atgriež masīvu ar `allowed` (bool) un `reason` (string|null) laukiem.
+     */
     private function userRoomUpdateAvailability(Device $device, mixed $pendingRepairRequest, mixed $pendingWriteoffRequest, mixed $pendingTransferRequest): array
     {
         if ($device->status === Device::STATUS_REPAIR) {
@@ -1890,6 +2159,12 @@ SQL;
         ];
     }
 
+    /**
+     * Novirza lietotāju pēc ātrās darbības uz iepriekšējo lapu vai ierīces skatu.
+     *
+     * Ja iepriekšējā lapa nav ātrās atjaunināšanas ceļš, tiek atgriezts uz to.
+     * Citādi — uz ierīces detalizēto karti. Piešķir sesijas ziņojumu ar darbības rezultātu.
+     */
     private function redirectAfterQuickAction(Device $device, string $level, string $message): RedirectResponse
     {
         $previousUrl = url()->previous();
@@ -1902,6 +2177,13 @@ SQL;
         return redirect()->route('devices.show', $device)->with($level, $message);
     }
 
+    /**
+     * Saglabā ierīces datus, automātiski apstrādājot novecojušas shēmas kļūdas.
+     *
+     * Ja datubāze atgriež kļūdu par neatbilstošu kolonnu (piemēram, vecā ENUM vērtība
+     * vai NOT NULL datuma lauks), tiek izsaukts RuntimeSchemaBootstrapper un
+     * saglabāšana tiek atkārtota. Citas kļūdas tiek tūlīt pārraidītas tālāk.
+     */
     private function saveDevicePayload(Device $device, array $payload): void
     {
         try {
@@ -1919,12 +2201,25 @@ SQL;
         }
     }
 
+    /**
+     * Pārbauda, vai datubāzes kļūda ir atgūstama vecās shēmas neatbilstība.
+     *
+     * Atgriež true, ja kļūda ir vai nu ENUM vērtības neatbilstība, vai datuma
+     * kolonnas NOT NULL ierobežojuma pārkāpums, kurus var automātiski novērst.
+     */
     private function isRecoverableLegacyDeviceSchemaMismatch(QueryException $exception): bool
     {
         return $this->isLegacyStatusEnumMismatch($exception)
             || $this->isLegacyNullableDeviceDateMismatch($exception);
     }
 
+    /**
+     * Automātiski novērš novecojušas shēmas kļūdu, palaižot RuntimeSchemaBootstrapper.
+     *
+     * Ja kļūda saistīta ar NOT NULL datuma kolonnu, tiek papildu izpildīts
+     * ALTER TABLE, lai kolonnas pieņemtu null vērtības. Katra labojuma fakts
+     * tiek ierakstīts sistēmas žurnālā un sesijā rāda brīdinājumu.
+     */
     private function repairLegacyDeviceSchemaMismatch(QueryException $exception): void
     {
         app(RuntimeSchemaBootstrapper::class)->ensure();
@@ -1942,6 +2237,12 @@ SQL;
         session()->flash('warning', $warningMessage);
     }
 
+    /**
+     * Pārbauda, vai kļūda rodas no vecā ENUM vērtības neatbilstības statusu kolonnā.
+     *
+     * Vecās datubāzes shēmās statusa kolonna var būt ENUM, kas neatbalsta
+     * jaunās vērtības. Šī metode identificē šo konkrēto kļūdu pēc ziņojuma satura.
+     */
     private function isLegacyStatusEnumMismatch(QueryException $exception): bool
     {
         $message = strtolower($exception->getMessage());
@@ -1950,6 +2251,12 @@ SQL;
             && str_contains($message, "'status'");
     }
 
+    /**
+     * Pārbauda, vai kļūda rodas no vecās shēmas datuma kolonnas NOT NULL ierobežojuma.
+     *
+     * Vecās shēmās `purchase_date` un `warranty_until` var būt NOT NULL kolonnas,
+     * kas rada kļūdu, mēģinot saglabāt null vērtību.
+     */
     private function isLegacyNullableDeviceDateMismatch(QueryException $exception): bool
     {
         $message = strtolower($exception->getMessage());
@@ -1958,6 +2265,12 @@ SQL;
             || str_contains($message, "column 'warranty_until' cannot be null");
     }
 
+    /**
+     * Veic ALTER TABLE, lai `purchase_date` un `warranty_until` kolonnas atļautu NULL.
+     *
+     * Darbība tiek izpildīta tikai MySQL datubāzēs un tikai tad, ja kolonnas pastāv.
+     * Šis ir vienreizējs labojums instalācijām ar novecojušu migrāciju stāvokli.
+     */
     private function ensureLegacyDeviceDateColumnsAllowNull(): void
     {
         if (DB::getDriverName() !== 'mysql' || ! Schema::hasTable('devices')) {
