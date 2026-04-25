@@ -32,12 +32,7 @@
                 ->where('responsible_user_id', '!=', $user->id)
                 ->count()
             : 0;
-        $pendingTransferRequestCount = $canManageRequests && $user
-            ? \App\Models\DeviceTransfer::query()
-                ->where('status', \App\Models\DeviceTransfer::STATUS_SUBMITTED)
-                ->where('responsible_user_id', '!=', $user->id)
-                ->count()
-            : 0;
+        $pendingTransferRequestCount = 0;
         $requestGroupCount = $canManageRequests
             ? $pendingRepairRequestCount + $pendingWriteoffRequestCount + $pendingTransferRequestCount
             : $incomingTransferReviewCount;

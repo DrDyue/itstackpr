@@ -330,8 +330,6 @@
                                             class="table-action-menu"
                                             x-data="createFloatingDropdown({ zIndex: 400 })"
                                             @keydown.escape.window="closePanel()"
-                                            @resize.window="if (open) updatePosition()"
-                                            @scroll.window="if (open) updatePosition()"
                                         >
                                             <button
                                                 type="button"

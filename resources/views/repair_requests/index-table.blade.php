@@ -157,17 +157,18 @@
                                 </a>
                             @else
                                 {{-- Pārējiem statusiem - dropdown ar darbībām --}}
-                                <div class="table-action-menu inline-block" x-data="{ open: false }" @keydown.escape.window="open = false">
-                                    <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
+                                <div class="table-action-menu inline-block" x-data="createFloatingDropdown({ zIndex: 400 })" @keydown.escape.window="closePanel()">
+                                    <button type="button" class="table-action-summary" x-ref="trigger" @click="togglePanel()" :aria-expanded="open.toString()">
                                         <span>Darbības</span>
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                         </svg>
                                     </button>
 
-                                    <div class="table-action-list table-action-list-dropdown" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
+                                    <template x-teleport="body">
+                                    <div class="table-action-list table-action-list-dropdown" data-floating-menu="manual" x-ref="panel" x-cloak x-show="open" x-transition.origin.top.right x-bind:style="panelStyle" @click.outside="closePanel()">
                                         @if ($deviceFilterUrl)
-                                            <a href="{{ $deviceFilterUrl }}" class="table-action-item table-action-item-sky table-action-item-wide text-sky-700" @click="open = false">
+                                            <a href="{{ $deviceFilterUrl }}" class="table-action-item table-action-item-sky table-action-item-wide text-sky-700" @click="closePanel()">
                                                 <x-icon name="view" size="h-4 w-4" />
                                                 <span>Skatīt saistīto ierīci</span>
                                             </a>
@@ -210,7 +211,7 @@
                                                 </x-post-action-button>
                                             </div>
                                         @elseif (! $canReview && $repairRequest->status === 'submitted')
-                                            <a href="{{ $editRequestUrl }}" class="table-action-item table-action-item-amber" data-async-link="true" @click="open = false">
+                                            <a href="{{ $editRequestUrl }}" class="table-action-item table-action-item-amber" data-async-link="true" @click="closePanel()">
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Labot pieteikumu</span>
                                             </a>
@@ -219,7 +220,7 @@
                                                 :action="route('my-requests.destroy', ['requestType' => 'repair', 'requestId' => $repairRequest->id])"
                                                 method="DELETE"
                                                 button-class="table-action-item table-action-item-rose"
-                                                :button-attributes="['@click' => 'open = false']"
+                                                :button-attributes="['@click' => 'closePanel()']"
                                                 data-app-confirm-title="Atcelt pieteikumu?"
                                                 data-app-confirm-message="Vai tiešām atcelt šo remonta pieteikumu?"
                                                 data-app-confirm-accept="Jā, atcelt"
@@ -231,6 +232,7 @@
                                             </x-post-action-button>
                                         @endif
                                     </div>
+                                    </template>
                                 </div>
                             @endif
                         </td>

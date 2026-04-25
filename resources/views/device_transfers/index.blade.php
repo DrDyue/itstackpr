@@ -6,7 +6,7 @@
 <x-app-layout>
     @php
         $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
-        $liveTransferPendingCount = $isAdmin ? ($transferSummary['submitted'] ?? 0) : ($incomingPendingCount ?? 0);
+        $liveTransferPendingCount = $isAdmin ? 0 : ($incomingPendingCount ?? 0);
         $selectedDeviceLabel = collect($deviceOptions)->firstWhere('value', (string) ($filters['device_id'] ?? ''))['label'] ?? ($filters['device_query'] ?: null);
         $selectedRequesterLabel = collect($requesterOptions)->firstWhere('value', (string) ($filters['requester_id'] ?? ''))['label'] ?? ($filters['requester_query'] ?: null);
         $selectedRecipientLabel = collect($recipientOptions)->firstWhere('value', (string) ($filters['recipient_id'] ?? ''))['label'] ?? ($filters['recipient_query'] ?: null);
@@ -30,7 +30,7 @@
         x-data="{
             livePendingCount: {{ $liveTransferPendingCount }},
             syncCounts(counts = {}) {
-                this.livePendingCount = {{ $isAdmin ? 'Number(counts?.device_transfers || 0)' : 'Number(counts?.incoming_transfers || 0)' }};
+                this.livePendingCount = {{ $isAdmin ? '0' : 'Number(counts?.incoming_transfers || 0)' }};
             },
         }"
         @nav-counts-updated.window="syncCounts($event.detail)"
@@ -50,7 +50,7 @@
                             class="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm"
                         >
                             <x-icon name="clock" size="h-3.5 w-3.5" />
-                            <span>{{ $isAdmin ? 'Gaida izskatīšanu' : 'Jāizskata' }}</span>
+                            <span>{{ $isAdmin ? 'Pārskatam' : 'Jāizskata' }}</span>
                             <span x-text="livePendingCount">{{ $liveTransferPendingCount }}</span>
                         </span>
                     </div>
@@ -518,8 +518,8 @@
                                             </a>
                                         @elseif ($hasActions)
                                             {{-- Pārējiem - dropdown ar darbībām --}}
-                                            <div class="table-action-menu inline-block" x-data="{ open: false }" @keydown.escape.window="open = false">
-                                                <button type="button" class="table-action-summary {{ $isIncomingPending ? 'table-action-summary-pending' : '' }}" @click="open = ! open" :aria-expanded="open.toString()">
+                                            <div class="table-action-menu inline-block" x-data="createFloatingDropdown({ zIndex: 400 })" @keydown.escape.window="closePanel()">
+                                                <button type="button" class="table-action-summary {{ $isIncomingPending ? 'table-action-summary-pending' : '' }}" x-ref="trigger" @click="togglePanel()" :aria-expanded="open.toString()">
                                                     @if ($isIncomingPending)
                                                         <span class="table-action-attention">Jārīkojas</span>
                                                     @endif
@@ -529,9 +529,10 @@
                                                     </svg>
                                                 </button>
 
-                                                <div class="table-action-list table-action-list-dropdown" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
+                                                <template x-teleport="body">
+                                                <div class="table-action-list table-action-list-dropdown" data-floating-menu="manual" x-ref="panel" x-cloak x-show="open" x-transition.origin.top.right x-bind:style="panelStyle" @click.outside="closePanel()">
                                                     @if ($deviceFilterUrl && ! $isIncomingPending)
-                                                        <a href="{{ $deviceFilterUrl }}" class="table-action-item table-action-item-sky table-action-item-wide text-sky-700" @click="open = false">
+                                                        <a href="{{ $deviceFilterUrl }}" class="table-action-item table-action-item-sky table-action-item-wide text-sky-700" @click="closePanel()">
                                                             <x-icon name="view" size="h-4 w-4" />
                                                             <span>Skatīt saistīto ierīci</span>
                                                         </a>
@@ -548,7 +549,7 @@
                                                             href="{{ $editTransferUrl }}"
                                                             class="table-action-item table-action-item-amber"
                                                             data-async-link="true"
-                                                            @click="open = false"
+                                                            @click="closePanel()"
                                                         >
                                                             <x-icon name="edit" size="h-4 w-4" />
                                                             <span>Rediģēt pieteikumu</span>
@@ -558,7 +559,7 @@
                                                             :action="route('my-requests.destroy', ['requestType' => 'transfer', 'requestId' => $transfer->id])"
                                                             method="DELETE"
                                                             button-class="table-action-item table-action-item-rose"
-                                                            :button-attributes="['@click' => 'open = false']"
+                                                            :button-attributes="['@click' => 'closePanel()']"
                                                             data-app-confirm-title="Atcelt nodošanu?"
                                                             data-app-confirm-message="Vai tiešām atcelt šo nodošanas pieteikumu?"
                                                             data-app-confirm-accept="Jā, atcelt"
@@ -606,6 +607,7 @@
                                                         </div>
                                                     @endif
                                                 </div>
+                                                </template>
                                             </div>
                                         @else
                                             <button

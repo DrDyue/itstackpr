@@ -191,12 +191,7 @@ class LiveNotificationController extends Controller
                     ->count()
                 : 0;
 
-            $deviceTransfers = $this->featureTableExists('device_transfers')
-                ? DeviceTransfer::query()
-                    ->where('status', DeviceTransfer::STATUS_SUBMITTED)
-                    ->where('responsible_user_id', '!=', $user->id)
-                    ->count()
-                : 0;
+            $deviceTransfers = 0;
 
             return [
                 'requests_total' => $repairRequests + $writeoffRequests + $deviceTransfers,

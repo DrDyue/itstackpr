@@ -500,34 +500,35 @@
                                         <div class="font-semibold text-slate-900">{{ $repair->end_date?->format('d.m.Y') ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-4">
-                                        <div class="table-action-menu" x-data="{ open: false, panel: null }" @keydown.escape.window="open = false; panel = null">
-                                            <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
+                                        <div class="table-action-menu" x-data="createFloatingDropdown({ zIndex: 400 })" @keydown.escape.window="closePanel()">
+                                            <button type="button" class="table-action-summary" x-ref="trigger" @click="togglePanel()" :aria-expanded="open.toString()">
                                                 <span>Darbības</span>
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                                 </svg>
                                             </button>
 
-                                            <div class="table-action-list" :class="panel ? 'table-action-list-wide' : ''" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false; panel = null">
+                                            <template x-teleport="body">
+                                            <div class="table-action-list {{ $linkedRequestUrl ? 'table-action-list-wide' : '' }}" data-floating-menu="manual" x-ref="panel" x-cloak x-show="open" x-transition.origin.top.right x-bind:style="panelStyle" @click.outside="closePanel()">
                                                 <div class="table-action-header">
                                                     <div class="table-action-header-title">Darbības</div>
                                                 </div>
 
                                                 @if ($linkedRequestUrl)
-                                                    <a href="{{ $linkedRequestUrl }}" class="table-action-item table-action-item-violet" @click="open = false; panel = null">
+                                                    <a href="{{ $linkedRequestUrl }}" class="table-action-item table-action-item-violet" @click="closePanel()">
                                                         <x-icon name="repair-request" size="h-4 w-4" />
                                                         <span>Skatīt saistīto pieprasījumu</span>
                                                     </a>
                                                 @endif
 
                                                 @if ($canManageRepairs)
-                                                    <a href="{{ $editRepairUrl }}" class="table-action-item table-action-item-amber" data-async-link="true" @click="open = false; panel = null">
+                                                    <a href="{{ $editRepairUrl }}" class="table-action-item table-action-item-amber" data-async-link="true" @click="closePanel()">
                                                         <x-icon name="edit" size="h-4 w-4" />
                                                         <span>Atvērt remontu</span>
                                                     </a>
 
                                                     @if ($deviceShowUrl)
-                                                        <a href="{{ $deviceShowUrl }}" class="table-action-item table-action-item-sky" @click="open = false; panel = null">
+                                                        <a href="{{ $deviceShowUrl }}" class="table-action-item table-action-item-sky" @click="closePanel()">
                                                             <x-icon name="device" size="h-4 w-4" />
                                                             <span>Skatīt ierīci</span>
                                                         </a>
@@ -546,6 +547,7 @@
                                                     </button>
                                                 @endif
                                             </div>
+                                            </template>
                                         </div>
                                     </td>
                                 </tr>

@@ -361,30 +361,31 @@
                                         @endif
 
                                         @if ($requestAvailability['can_create_any'])
-                                            <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">
-                                                <button type="button" class="table-action-button table-action-button-emerald" @click="open = ! open" :aria-expanded="open.toString()">
+                                            <div class="table-action-menu" x-data="createFloatingDropdown({ zIndex: 400 })" @keydown.escape.window="closePanel()">
+                                                <button type="button" class="table-action-button table-action-button-emerald" x-ref="trigger" @click="togglePanel()" :aria-expanded="open.toString()">
                                                     <x-icon name="repair-request" size="h-4 w-4" />
                                                     <span>Pieteikumi</span>
                                                 </button>
 
-                                                <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
+                                                <template x-teleport="body">
+                                                <div class="table-action-list" data-floating-menu="manual" x-ref="panel" x-cloak x-show="open" x-transition.origin.top.right x-bind:style="panelStyle" @click.outside="closePanel()">
                                                     <div class="table-action-section">
                                                         <div class="table-action-section-title">Pieteikumi</div>
                                                         <div class="table-action-stack">
                                                             @if ($requestAvailability['repair'])
-                                                                <a href="{{ $repairRequestCreateUrl }}" class="table-action-item table-action-item-sky" @click="open = false">
+                                                                <a href="{{ $repairRequestCreateUrl }}" class="table-action-item table-action-item-sky" @click="closePanel()">
                                                                     <x-icon name="repair" size="h-4 w-4" />
                                                                     <span>Remonts</span>
                                                                 </a>
                                                             @endif
                                                             @if ($requestAvailability['writeoff'])
-                                                                <a href="{{ $writeoffRequestCreateUrl }}" class="table-action-item table-action-item-rose" @click="open = false">
+                                                                <a href="{{ $writeoffRequestCreateUrl }}" class="table-action-item table-action-item-rose" @click="closePanel()">
                                                                     <x-icon name="writeoff" size="h-4 w-4" />
                                                                     <span>Norakstīšana</span>
                                                                 </a>
                                                             @endif
                                                             @if ($requestAvailability['transfer'])
-                                                                <a href="{{ $transferCreateUrl }}" class="table-action-item table-action-item-emerald" @click="open = false">
+                                                                <a href="{{ $transferCreateUrl }}" class="table-action-item table-action-item-emerald" @click="closePanel()">
                                                                     <x-icon name="transfer" size="h-4 w-4" />
                                                                     <span>Nodot</span>
                                                                 </a>
@@ -392,6 +393,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
+                                                </template>
                                             </div>
                                         @else
                                             <button type="button" class="btn-disabled" data-app-toast-title="{{ $pendingRequestBadge['label'] ?? 'Pieteikumi nav pieejami' }}" data-app-toast-message="{{ $requestAvailability['reason'] ?? 'Pieteikumus šobrīd nevar izveidot.' }}" data-app-toast-tone="info">
@@ -401,43 +403,44 @@
                                         @endif
                                     </div>
                                 @else
-                                    <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">
-                                        <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
+                                    <div class="table-action-menu" x-data="createFloatingDropdown({ zIndex: 400 })" @keydown.escape.window="closePanel()">
+                                        <button type="button" class="table-action-summary" x-ref="trigger" @click="togglePanel()" :aria-expanded="open.toString()">
                                             <span>Darbības</span>
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                             </svg>
                                         </button>
 
-                                        <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
+                                        <template x-teleport="body">
+                                        <div class="table-action-list" data-floating-menu="manual" x-ref="panel" x-cloak x-show="open" x-transition.origin.top.right x-bind:style="panelStyle" @click.outside="closePanel()">
                                             <div class="table-action-header">
                                                 <div class="table-action-header-title">Darbības</div>
                                             </div>
 
-                                            <a href="{{ route('devices.show', $device) }}" class="table-action-item table-action-item-primary" @click="open = false">
+                                            <a href="{{ route('devices.show', $device) }}" class="table-action-item table-action-item-primary" @click="closePanel()">
                                                 <x-icon name="view" size="h-4 w-4" />
                                                 <span>Skatīt ierīci</span>
                                             </a>
 
                                             @if ($activeRequestUrl)
-                                                <a href="{{ $activeRequestUrl }}" class="table-action-item table-action-item-amber" @click="open = false">
+                                                <a href="{{ $activeRequestUrl }}" class="table-action-item table-action-item-amber" @click="closePanel()">
                                                     <x-icon :name="$pendingRequestBadge['icon'] ?? 'repair-request'" size="h-4 w-4" />
                                                     <span>Pāriet uz pieteikumu</span>
                                                 </a>
                                             @endif
 
-                                            <a href="{{ $hasActiveRequest ? '#' : $deviceEditUrl }}" class="table-action-item table-action-item-amber {{ $hasActiveRequest ? 'opacity-50 cursor-not-allowed' : '' }}" @if (! $hasActiveRequest) data-async-link="true" @else data-app-toast-title="Rediģēšana nav pieejama" data-app-toast-message="{{ $activeRequestMessage }}" data-app-toast-tone="info" @endif @click="open = false">
+                                            <a href="{{ $hasActiveRequest ? '#' : $deviceEditUrl }}" class="table-action-item table-action-item-amber {{ $hasActiveRequest ? 'opacity-50 cursor-not-allowed' : '' }}" @if (! $hasActiveRequest) data-async-link="true" @else data-app-toast-title="Rediģēšana nav pieejama" data-app-toast-message="{{ $activeRequestMessage }}" data-app-toast-tone="info" @endif @click="closePanel()">
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Rediģēt</span>
                                             </a>
 
                                             @if ($device->status === 'active')
-                                                <button type="button" class="table-action-item table-action-item-sky {{ $hasActiveRequest ? 'opacity-50 cursor-not-allowed' : '' }}" @if ($hasActiveRequest) data-app-toast-title="Telpas maiņa nav pieejama" data-app-toast-message="{{ $activeRequestMessage }}" data-app-toast-tone="info" @click="open = false" @else @click='open = false; $dispatch("open-device-admin-room", { deviceLabel: @js(($device->code ?: "Bez koda") . " | " . $device->name), selectedRoomId: @js((string) ($device->room_id ?? "")), action: @js(route("devices.quick-update", $device)) })' @endif>
+                                                <button type="button" class="table-action-item table-action-item-sky {{ $hasActiveRequest ? 'opacity-50 cursor-not-allowed' : '' }}" @if ($hasActiveRequest) data-app-toast-title="Telpas maiņa nav pieejama" data-app-toast-message="{{ $activeRequestMessage }}" data-app-toast-tone="info" @click="closePanel()" @else @click='closePanel(); $dispatch("open-device-admin-room", { deviceLabel: @js(($device->code ?: "Bez koda") . " | " . $device->name), selectedRoomId: @js((string) ($device->room_id ?? "")), action: @js(route("devices.quick-update", $device)) })' @endif>
                                                     <x-icon name="room" size="h-4 w-4" />
                                                     <span>Mainīt telpu</span>
                                                 </button>
 
-                                                <button type="button" class="table-action-item table-action-item-violet {{ $hasActiveRequest ? 'opacity-50 cursor-not-allowed' : '' }}" @if ($hasActiveRequest) data-app-toast-title="Atbildīgā maiņa nav pieejama" data-app-toast-message="{{ $activeRequestMessage }}" data-app-toast-tone="info" @click="open = false" @else @click='open = false; $dispatch("open-device-admin-assignee", { deviceLabel: @js(($device->code ?: "Bez koda") . " | " . $device->name), selectedAssigneeId: @js((string) ($device->assigned_to_id ?? "")), action: @js(route("devices.quick-update", $device)) })' @endif>
+                                                <button type="button" class="table-action-item table-action-item-violet {{ $hasActiveRequest ? 'opacity-50 cursor-not-allowed' : '' }}" @if ($hasActiveRequest) data-app-toast-title="Atbildīgā maiņa nav pieejama" data-app-toast-message="{{ $activeRequestMessage }}" data-app-toast-tone="info" @click="closePanel()" @else @click='closePanel(); $dispatch("open-device-admin-assignee", { deviceLabel: @js(($device->code ?: "Bez koda") . " | " . $device->name), selectedAssigneeId: @js((string) ($device->assigned_to_id ?? "")), action: @js(route("devices.quick-update", $device)) })' @endif>
                                                     <x-icon name="user" size="h-4 w-4" />
                                                     <span>Mainīt atbildīgo</span>
                                                 </button>
@@ -453,7 +456,7 @@
                                                         </button>
                                                     </form>
 
-                                                    <a href="{{ $repairCreateUrl }}" class="table-action-item table-action-item-amber" @click="open = false">
+                                                    <a href="{{ $repairCreateUrl }}" class="table-action-item table-action-item-amber" @click="closePanel()">
                                                         <x-icon name="repair" size="h-4 w-4" />
                                                         <span>Atdot uz remontu</span>
                                                     </a>
@@ -463,7 +466,7 @@
                                                         data-app-toast-title="Norakstīšana nav pieejama"
                                                         data-app-toast-message="{{ $requestAvailability['reason'] ?? 'Ierīcei ir aktīvs pieteikums.' }}"
                                                         data-app-toast-tone="info"
-                                                        @click="open = false">
+                                                        @click="closePanel()">
                                                         <x-icon name="writeoff" size="h-4 w-4" />
                                                         <span>Norakstīt</span>
                                                     </button>
@@ -473,13 +476,14 @@
                                                         data-app-toast-title="Remonts nav pieejams"
                                                         data-app-toast-message="{{ $requestAvailability['reason'] ?? 'Ierīcei ir aktīvs pieteikums.' }}"
                                                         data-app-toast-tone="info"
-                                                        @click="open = false">
+                                                        @click="closePanel()">
                                                         <x-icon name="repair" size="h-4 w-4" />
                                                         <span>Atdot uz remontu</span>
                                                     </button>
                                                 @endif
                                             @endif
                                         </div>
+                                        </template>
                                     </div>
                                 @endif
                             </td>
