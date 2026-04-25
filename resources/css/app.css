@@ -4925,6 +4925,10 @@ tbody td {
     @apply inline-flex w-full justify-end;
 }
 
+.users-table-scroll .table-action-menu-open {
+    z-index: 220;
+}
+
 .users-table-scroll .table-action-summary {
     @apply min-w-[7.5rem];
 }
@@ -4932,6 +4936,13 @@ tbody td {
 .users-table-scroll .table-action-list {
     min-width: 20rem;
     max-width: min(22rem, calc(100vw - 1.5rem));
+}
+
+.users-table-scroll .table-action-list-users {
+    top: calc(100% + 0.5rem);
+    bottom: auto;
+    left: auto;
+    right: 0;
 }
 
 .app-table-content-wide {

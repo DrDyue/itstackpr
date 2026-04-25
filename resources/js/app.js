@@ -74,7 +74,9 @@ const initializeFloatingTableActionMenus = () => {
     };
 
     const resetPanelPosition = (panel) => {
-        panel.dataset.floatingMenu = 'false';
+        if (panel.dataset.floatingMenu !== 'off') {
+            panel.dataset.floatingMenu = 'false';
+        }
         panel.style.position = '';
         panel.style.top = '';
         panel.style.left = '';
@@ -85,6 +87,11 @@ const initializeFloatingTableActionMenus = () => {
     };
 
     const positionPanel = (panel) => {
+        if (panel.dataset.floatingMenu === 'off') {
+            resetPanelPosition(panel);
+            return;
+        }
+
         const menu = panel.closest('.table-action-menu');
         const trigger = findTrigger(menu);
 

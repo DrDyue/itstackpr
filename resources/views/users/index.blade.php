@@ -326,7 +326,7 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-4">
-                                        <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">
+                                        <div class="table-action-menu" :class="{ 'table-action-menu-open': open }" x-data="{ open: false }" @keydown.escape.window="open = false">
                                             <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
                                                 <span>Darbības</span>
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -334,7 +334,7 @@
                                                 </svg>
                                             </button>
 
-                                            <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
+                                            <div class="table-action-list table-action-list-users" data-floating-menu="off" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
                                                 <div class="table-action-header">
                                                     <div class="table-action-header-title">Darbības</div>
                                                 </div>
@@ -383,14 +383,12 @@
                                                                 'data-app-toast-title' => 'Dzēšana nav pieejama',
                                                                 'data-app-toast-message' => 'Paša lietotāja kontu no šīs tabulas dzēst nevar. Izmanto citu administratora kontu, ja šo profilu tiešām vajag noņemt.',
                                                                 'data-app-toast-tone' => 'info',
-                                                                'disabled' => true,
                                                             ]
                                                             : ($hasAssignedDevices
                                                                 ? [
                                                                     'data-app-toast-title' => 'Dzēšana nav pieejama',
                                                                     'data-app-toast-message' => 'Lietotājam ir piesaistītas ierīces. Vispirms pārvieto vai atsaisti tās.',
                                                                     'data-app-toast-tone' => 'info',
-                                                                    'disabled' => true,
                                                                 ]
                                                                 : [])"
                                                         data-app-confirm-title="Dzēst lietotāju?"
