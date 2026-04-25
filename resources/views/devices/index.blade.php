@@ -16,12 +16,13 @@
         $quickRoomSelectOptions = collect($quickRoomOptions ?? [])->values();
         $quickAssigneeSelectOptions = collect($quickAssigneeOptions ?? [])->values();
         $selectedStatuses = $filters['statuses'];
+        $filterStatuses = $filterStatuses ?? $statuses ?? [];
         $activeRequestsSelected = (bool) ($filters['active_requests'] ?? false);
         $statusFilterLinks = collect([
             ['label' => 'Aktīvas', 'value' => 'active', 'icon' => 'check-circle', 'tone' => 'emerald'],
             ['label' => 'Remontā', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'sky'],
             ['label' => 'Norakstītas', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
-        ])->filter(fn (array $statusFilter) => in_array($statusFilter['value'], $statuses, true))->values()->all();
+        ])->filter(fn (array $statusFilter) => in_array($statusFilter['value'], $filterStatuses, true))->values()->all();
         $roomSelectOptions = $roomOptions->map(fn ($room) => [
             'value' => (string) $room->id,
             'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),

@@ -6,6 +6,7 @@
 <x-app-layout>
     @php
         $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
+        $livePendingWriteoffCount = $canReview ? ($requestSummary['submitted'] ?? 0) : 0;
         $selectedDeviceLabel = collect($deviceOptions)->firstWhere('value', (string) ($filters['device_id'] ?? ''))['label'] ?? ($filters['device_query'] ?: null);
         $selectedRequesterLabel = collect($requesterOptions)->firstWhere('value', (string) ($filters['requester_id'] ?? ''))['label'] ?? ($filters['requester_query'] ?: null);
         $activeStatusLabel = count($filters['statuses']) > 0 && count($filters['statuses']) < count($statuses)
@@ -24,7 +25,20 @@
         );
     @endphp
 
-    <section class="app-shell app-shell-wide">
+    <section
+        x-data="{
+            livePendingCount: {{ $livePendingWriteoffCount }},
+            syncCounts(counts = {}) {
+                if (! {{ $canReview ? 'true' : 'false' }}) {
+                    return;
+                }
+
+                this.livePendingCount = Number(counts?.writeoff_requests || 0);
+            },
+        }"
+        @nav-counts-updated.window="syncCounts($event.detail)"
+        class="app-shell app-shell-wide"
+    >
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-4xl">
@@ -33,6 +47,17 @@
                             <x-icon name="writeoff" size="h-4 w-4" />
                             <span>Norakstīšana</span>
                         </div>
+                        @if ($canReview)
+                            <span
+                                x-cloak
+                                x-show="livePendingCount > 0"
+                                class="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm"
+                            >
+                                <x-icon name="clock" size="h-3.5 w-3.5" />
+                                <span>Gaida izskatīšanu</span>
+                                <span x-text="livePendingCount">{{ $livePendingWriteoffCount }}</span>
+                            </span>
+                        @endif
                     </div>
 
                     <div class="page-title-group mt-4">
@@ -176,7 +201,7 @@
                                     >
                                         <x-icon :name="$iconName" size="h-4 w-4" />
                                         <span>{{ $statusLabels[$status] ?? $status }}</span>
-                                        <span class="quick-filter-count">{{ $requestSummary[$status] ?? 0 }}</span>
+                                        <span class="quick-filter-count" @if($canReview && $status === 'submitted') x-text="livePendingCount" @endif>{{ $requestSummary[$status] ?? 0 }}</span>
                                     </button>
                                 @endforeach
 

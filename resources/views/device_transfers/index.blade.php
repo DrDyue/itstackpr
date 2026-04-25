@@ -6,6 +6,7 @@
 <x-app-layout>
     @php
         $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
+        $liveTransferPendingCount = $isAdmin ? ($transferSummary['submitted'] ?? 0) : ($incomingPendingCount ?? 0);
         $selectedDeviceLabel = collect($deviceOptions)->firstWhere('value', (string) ($filters['device_id'] ?? ''))['label'] ?? ($filters['device_query'] ?: null);
         $selectedRequesterLabel = collect($requesterOptions)->firstWhere('value', (string) ($filters['requester_id'] ?? ''))['label'] ?? ($filters['requester_query'] ?: null);
         $selectedRecipientLabel = collect($recipientOptions)->firstWhere('value', (string) ($filters['recipient_id'] ?? ''))['label'] ?? ($filters['recipient_query'] ?: null);
@@ -25,7 +26,16 @@
             || request()->query('device_transfer_modal') === 'create';
     @endphp
 
-    <section class="app-shell app-shell-wide">
+    <section
+        x-data="{
+            livePendingCount: {{ $liveTransferPendingCount }},
+            syncCounts(counts = {}) {
+                this.livePendingCount = {{ $isAdmin ? 'Number(counts?.device_transfers || 0)' : 'Number(counts?.incoming_transfers || 0)' }};
+            },
+        }"
+        @nav-counts-updated.window="syncCounts($event.detail)"
+        class="app-shell app-shell-wide"
+    >
         <div class="page-hero">
             <div class="page-hero-grid">
                 <div class="max-w-4xl">
@@ -34,6 +44,15 @@
                             <x-icon name="transfer" size="h-4 w-4" />
                             <span>Nodošana</span>
                         </div>
+                        <span
+                            x-cloak
+                            x-show="livePendingCount > 0"
+                            class="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm"
+                        >
+                            <x-icon name="clock" size="h-3.5 w-3.5" />
+                            <span>{{ $isAdmin ? 'Gaida izskatīšanu' : 'Jāizskata' }}</span>
+                            <span x-text="livePendingCount">{{ $liveTransferPendingCount }}</span>
+                        </span>
                     </div>
 
                     <div class="page-title-group mt-4">
@@ -235,7 +254,7 @@
                                         >
                                             <x-icon name="transfer" size="h-4 w-4" />
                                             <span>Ienākošās nodošanas</span>
-                                            <span class="quick-filter-count">{{ $incomingPendingCount }}</span>
+                                            <span class="quick-filter-count" x-text="livePendingCount">{{ $incomingPendingCount }}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -264,7 +283,7 @@
                                         >
                                             <x-icon :name="$iconName" size="h-4 w-4" />
                                             <span>{{ $statusLabels[$status] ?? $status }}</span>
-                                            <span class="quick-filter-count">{{ $transferSummary[$status] ?? 0 }}</span>
+                                            <span class="quick-filter-count" @if($status === 'submitted') x-text="livePendingCount" @endif>{{ $transferSummary[$status] ?? 0 }}</span>
                                         </button>
                                     @endforeach
 
@@ -309,14 +328,14 @@
                 <x-empty-state compact icon="information-circle" title="Funkcija īslaicīgi nav pieejama" :description="$featureMessage" />
             @endif
 
-            @if (($incomingPendingCount ?? 0) > 0 && ! $isAdmin)
+            @if (! $isAdmin)
                 <div class="mt-4 rounded-[1.5rem] border border-amber-200 bg-amber-50/90 px-5 py-4 shadow-sm">
-                    <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex flex-wrap items-center gap-3" x-cloak x-show="livePendingCount > 0">
                         <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-sm">
                             <x-icon name="exclamation-triangle" size="h-5 w-5" />
                         </span>
                         <div>
-                            <div class="text-sm font-semibold text-amber-950">Tev ir {{ $incomingPendingCount }} ienākoš{{ $incomingPendingCount > 1 ? 'i' : 's' }} nodošanas pieteikum{{ $incomingPendingCount > 1 ? 'i' : 's' }}</div>
+                            <div class="text-sm font-semibold text-amber-950" x-text="`Tev ir ${livePendingCount} ienākoš${livePendingCount === 1 ? 's' : 'i'} nodošanas pieteikum${livePendingCount === 1 ? 's' : 'i'}`">Tev ir {{ $incomingPendingCount }} ienākoši nodošanas pieteikumi</div>
                             <div class="mt-1 text-sm text-amber-900">Tabulā vari uzreiz apstiprināt vai noraidīt ienākošos ierīču nodošanas pieprasījumus.</div>
                         </div>
                     </div>

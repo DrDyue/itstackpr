@@ -79,6 +79,7 @@ class LiveNotificationController extends Controller
 
         return response()->json([
             'notifications' => $this->notificationsFor($user)->values(),
+            'counts' => $this->countsFor($user),
             'fingerprint' => $fingerprint,
             'generated_at' => now()->toIso8601String(),
         ]);
@@ -157,6 +158,64 @@ class LiveNotificationController extends Controller
         }
 
         return $this->incomingTransferNotifications($user);
+    }
+
+    /**
+     * Atgriež navigācijas badge skaitītājus reāllaika atjaunošanai.
+     */
+    private function countsFor(User $user): array
+    {
+        if ($user->canManageRequests()) {
+            $passwordResetRequests = User::query()
+                ->whereNotNull('password_reset_requested_at')
+                ->count();
+
+            $repairRequests = $this->featureTableExists('repair_requests')
+                ? RepairRequest::query()
+                    ->where('status', RepairRequest::STATUS_SUBMITTED)
+                    ->where('responsible_user_id', '!=', $user->id)
+                    ->count()
+                : 0;
+
+            $writeoffRequests = $this->featureTableExists('writeoff_requests')
+                ? WriteoffRequest::query()
+                    ->where('status', WriteoffRequest::STATUS_SUBMITTED)
+                    ->where('responsible_user_id', '!=', $user->id)
+                    ->count()
+                : 0;
+
+            $deviceTransfers = $this->featureTableExists('device_transfers')
+                ? DeviceTransfer::query()
+                    ->where('status', DeviceTransfer::STATUS_SUBMITTED)
+                    ->where('responsible_user_id', '!=', $user->id)
+                    ->count()
+                : 0;
+
+            return [
+                'requests_total' => $repairRequests + $writeoffRequests + $deviceTransfers,
+                'repair_requests' => $repairRequests,
+                'writeoff_requests' => $writeoffRequests,
+                'device_transfers' => $deviceTransfers,
+                'password_reset_requests' => $passwordResetRequests,
+                'incoming_transfers' => 0,
+            ];
+        }
+
+        $incomingTransfers = $this->featureTableExists('device_transfers')
+            ? DeviceTransfer::query()
+                ->where('transfered_to_id', $user->id)
+                ->where('status', DeviceTransfer::STATUS_SUBMITTED)
+                ->count()
+            : 0;
+
+        return [
+            'requests_total' => $incomingTransfers,
+            'repair_requests' => 0,
+            'writeoff_requests' => 0,
+            'device_transfers' => 0,
+            'password_reset_requests' => 0,
+            'incoming_transfers' => $incomingTransfers,
+        ];
     }
 
     /**

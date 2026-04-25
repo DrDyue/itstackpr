@@ -6,8 +6,7 @@
     2. Lietotājam šeit paliek tikai tās sadaļas, kuras viņš drīkst izmantot.
     3. Navigācijā tiek rādīti arī gaidošo pieteikumu indikatori un ātrās saites.
 --}}
-<nav x-data="{ open: false }" class="app-main-nav sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur">
-    @php
+@php
         $user = auth()->user();
         $isAdmin = $user?->isAdmin() ?? false;
         $canManageRequests = $user?->canManageRequests() ?? false;
@@ -21,6 +20,35 @@
         $passwordResetRequestCount = $canManageRequests
             ? \App\Models\User::query()->whereNotNull('password_reset_requested_at')->count()
             : 0;
+        $pendingRepairRequestCount = $canManageRequests && $user
+            ? \App\Models\RepairRequest::query()
+                ->where('status', \App\Models\RepairRequest::STATUS_SUBMITTED)
+                ->where('responsible_user_id', '!=', $user->id)
+                ->count()
+            : 0;
+        $pendingWriteoffRequestCount = $canManageRequests && $user
+            ? \App\Models\WriteoffRequest::query()
+                ->where('status', \App\Models\WriteoffRequest::STATUS_SUBMITTED)
+                ->where('responsible_user_id', '!=', $user->id)
+                ->count()
+            : 0;
+        $pendingTransferRequestCount = $canManageRequests && $user
+            ? \App\Models\DeviceTransfer::query()
+                ->where('status', \App\Models\DeviceTransfer::STATUS_SUBMITTED)
+                ->where('responsible_user_id', '!=', $user->id)
+                ->count()
+            : 0;
+        $requestGroupCount = $canManageRequests
+            ? $pendingRepairRequestCount + $pendingWriteoffRequestCount + $pendingTransferRequestCount
+            : $incomingTransferReviewCount;
+        $initialNavCounts = [
+            'requests_total' => $requestGroupCount,
+            'repair_requests' => $pendingRepairRequestCount,
+            'writeoff_requests' => $pendingWriteoffRequestCount,
+            'device_transfers' => $pendingTransferRequestCount,
+            'password_reset_requests' => $passwordResetRequestCount,
+            'incoming_transfers' => $incomingTransferReviewCount,
+        ];
         $primaryNavigationItems = array_values(array_filter([
             $canManageRequests ? ['route' => 'dashboard', 'pattern' => 'dashboard', 'label' => 'Darbvirsma', 'icon' => 'dashboard'] : null,
             ['route' => 'devices.index', 'pattern' => 'devices*', 'label' => 'Ierīces', 'icon' => 'device'],
@@ -63,7 +91,33 @@
                 fn (array $item) => request()->routeIs($item['pattern'])
             );
         }
-    @endphp
+@endphp
+<nav
+    x-data="{
+        open: false,
+        requestCounts: {
+            requests_total: 0,
+            repair_requests: 0,
+            writeoff_requests: 0,
+            device_transfers: 0,
+            password_reset_requests: 0,
+            incoming_transfers: 0,
+        },
+        syncCounts(counts = {}) {
+            this.requestCounts = {
+                requests_total: Number(counts?.requests_total || 0),
+                repair_requests: Number(counts?.repair_requests || 0),
+                writeoff_requests: Number(counts?.writeoff_requests || 0),
+                device_transfers: Number(counts?.device_transfers || 0),
+                password_reset_requests: Number(counts?.password_reset_requests || 0),
+                incoming_transfers: Number(counts?.incoming_transfers || 0),
+            };
+        },
+    }"
+    x-init='syncCounts(@json($initialNavCounts))'
+    @nav-counts-updated.window="syncCounts($event.detail)"
+    class="app-main-nav sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur"
+>
 
     <div class="mx-auto max-w-[120rem] px-4 sm:px-6 lg:px-8">
         <div class="flex min-h-20 items-center justify-between gap-4 py-3">
@@ -94,12 +148,15 @@
                                 : 'inline-flex items-center gap-2.5 whitespace-nowrap rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-600 transition duration-200 hover:bg-slate-100 hover:text-slate-900' }}">
                                 <x-icon name="repair-request" size="h-4 w-4" />
                                 <span>Pieteikumi</span>
-                                @if ($incomingTransferReviewCount > 0)
-                                    <span title="Jāizskata: {{ $incomingTransferReviewCount }}" class="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
-                                        <x-icon name="exclamation-triangle" size="h-3 w-3" />
-                                        <span>{{ $incomingTransferReviewCount }}</span>
-                                    </span>
-                                @endif
+                                <span
+                                    x-cloak
+                                    x-show="requestCounts.requests_total > 0"
+                                    title="Jāizskata"
+                                    class="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm"
+                                >
+                                    <x-icon name="exclamation-triangle" size="h-3 w-3" />
+                                    <span x-text="requestCounts.requests_total">{{ $requestGroupCount }}</span>
+                                </span>
                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                 </svg>
@@ -108,13 +165,27 @@
 
                     <x-slot name="content">
                             @foreach ($requestReviewNavigationItems as $item)
+                                @php
+                                    $itemCountKey = match ($item['route']) {
+                                        'repair-requests.index' => 'repair_requests',
+                                        'writeoff-requests.index' => 'writeoff_requests',
+                                        'device-transfers.index' => $canManageRequests ? 'device_transfers' : 'incoming_transfers',
+                                        default => null,
+                                    };
+                                    $itemCount = match ($item['route']) {
+                                        'repair-requests.index' => $pendingRepairRequestCount,
+                                        'writeoff-requests.index' => $pendingWriteoffRequestCount,
+                                        'device-transfers.index' => $canManageRequests ? $pendingTransferRequestCount : $incomingTransferReviewCount,
+                                        default => 0,
+                                    };
+                                @endphp
                                 <x-dropdown-link :href="route($item['route'])">
                                     <x-icon :name="$item['icon']" size="h-4 w-4" />
                                     <span>{{ $item['label'] }}</span>
-                                    @if (! $canManageRequests && $item['route'] === 'device-transfers.index' && $incomingTransferReviewCount > 0)
-                                        <span title="Jāizskata: {{ $incomingTransferReviewCount }}" class="ml-auto inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
+                                    @if ($itemCountKey)
+                                        <span x-cloak x-show="requestCounts.{{ $itemCountKey }} > 0" title="Jāizskata" class="ml-auto inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
                                             <x-icon name="exclamation-triangle" size="h-3 w-3" />
-                                            <span>{{ $incomingTransferReviewCount }}</span>
+                                            <span x-text="requestCounts.{{ $itemCountKey }}">{{ $itemCount }}</span>
                                         </span>
                                     @endif
                                 </x-dropdown-link>
@@ -122,9 +193,19 @@
                             @if ($requestHistoryNavigationItems !== [])
                                 <div class="mx-4 my-2 h-px bg-slate-200"></div>
                                 @foreach ($requestHistoryNavigationItems as $item)
+                                    @php
+                                        $itemCountKey = $item['route'] === 'device-transfers.index' ? 'device_transfers' : null;
+                                        $itemCount = $item['route'] === 'device-transfers.index' ? $pendingTransferRequestCount : 0;
+                                    @endphp
                                     <x-dropdown-link :href="route($item['route'])">
                                         <x-icon :name="$item['icon']" size="h-4 w-4" />
                                         <span>{{ $item['label'] }}</span>
+                                        @if ($itemCountKey)
+                                            <span x-cloak x-show="requestCounts.{{ $itemCountKey }} > 0" class="ml-auto inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
+                                                <x-icon name="exclamation-triangle" size="h-3 w-3" />
+                                                <span x-text="requestCounts.{{ $itemCountKey }}">{{ $itemCount }}</span>
+                                            </span>
+                                        @endif
                                     </x-dropdown-link>
                                 @endforeach
                             @endif
@@ -135,12 +216,10 @@
                         <x-nav-link :href="route($usersNavigationItem['route'])" :active="request()->routeIs($usersNavigationItem['pattern'])">
                             <x-icon :name="$usersNavigationItem['icon']" size="h-4 w-4" />
                             <span>{{ $usersNavigationItem['label'] }}</span>
-                            @if ($passwordResetRequestCount > 0)
-                                <span title="Paroles maiņas pieprasījumi: {{ $passwordResetRequestCount }}" class="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
+                            <span x-cloak x-show="requestCounts.password_reset_requests > 0" title="Paroles maiņas pieprasījumi" class="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
                                     <x-icon name="key" size="h-3 w-3" />
-                                    <span>{{ $passwordResetRequestCount }}</span>
+                                    <span x-text="requestCounts.password_reset_requests">{{ $passwordResetRequestCount }}</span>
                                 </span>
-                            @endif
                         </x-nav-link>
                     @endif
 
@@ -214,12 +293,14 @@
                         $pendingNotificationsCount = $canManageRequests
                             ? (\App\Models\RepairRequest::query()->where('status', \App\Models\RepairRequest::STATUS_SUBMITTED)->count()
                                 + \App\Models\WriteoffRequest::query()->where('status', \App\Models\WriteoffRequest::STATUS_SUBMITTED)->count()
+                                + \App\Models\DeviceTransfer::query()->where('status', \App\Models\DeviceTransfer::STATUS_SUBMITTED)->count()
                                 + $passwordResetRequestCount)
                             : $incomingTransferReviewCount;
                     @endphp
                     <div
                         x-data="navNotificationCenter({
                             initialCount: {{ $pendingNotificationsCount }},
+                            initialCounts: @js($initialNavCounts),
                             endpoint: '{{ route('live-notifications.index') }}',
                             markReadUrl: '{{ route('notifications.mark-all-read') }}',
                             csrfToken: '{{ csrf_token() }}',
@@ -556,16 +637,30 @@
                 <div class="px-3 pb-2 pt-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pieteikumi</div>
                 <div class="space-y-1">
                     @foreach ($requestReviewNavigationItems as $item)
+                        @php
+                            $itemCountKey = match ($item['route']) {
+                                'repair-requests.index' => 'repair_requests',
+                                'writeoff-requests.index' => 'writeoff_requests',
+                                'device-transfers.index' => $canManageRequests ? 'device_transfers' : 'incoming_transfers',
+                                default => null,
+                            };
+                            $itemCount = match ($item['route']) {
+                                'repair-requests.index' => $pendingRepairRequestCount,
+                                'writeoff-requests.index' => $pendingWriteoffRequestCount,
+                                'device-transfers.index' => $canManageRequests ? $pendingTransferRequestCount : $incomingTransferReviewCount,
+                                default => 0,
+                            };
+                        @endphp
                         <x-responsive-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
                             <span class="flex items-center justify-between gap-3">
                                 <span class="inline-flex items-center gap-2.5">
                                     <x-icon :name="$item['icon']" size="h-5 w-5" />
                                     <span>{{ $item['label'] }}</span>
                                 </span>
-                                @if (! $canManageRequests && $item['route'] === 'device-transfers.index' && $incomingTransferReviewCount > 0)
-                                    <span title="Jāizskata: {{ $incomingTransferReviewCount }}" class="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
+                                @if ($itemCountKey)
+                                    <span x-cloak x-show="requestCounts.{{ $itemCountKey }} > 0" title="Jāizskata" class="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
                                         <x-icon name="exclamation-triangle" size="h-3 w-3" />
-                                        <span>{{ $incomingTransferReviewCount }}</span>
+                                        <span x-text="requestCounts.{{ $itemCountKey }}">{{ $itemCount }}</span>
                                     </span>
                                 @endif
                             </span>
@@ -574,10 +669,22 @@
                     @if ($requestHistoryNavigationItems !== [])
                         <div class="mx-3 my-2 h-px bg-slate-200"></div>
                         @foreach ($requestHistoryNavigationItems as $item)
+                            @php
+                                $itemCountKey = $item['route'] === 'device-transfers.index' ? 'device_transfers' : null;
+                                $itemCount = $item['route'] === 'device-transfers.index' ? $pendingTransferRequestCount : 0;
+                            @endphp
                             <x-responsive-nav-link :href="route($item['route'])" :active="request()->routeIs($item['pattern'])">
-                                <span class="inline-flex items-center gap-2.5">
-                                    <x-icon :name="$item['icon']" size="h-5 w-5" />
-                                    <span>{{ $item['label'] }}</span>
+                                <span class="flex items-center justify-between gap-3">
+                                    <span class="inline-flex items-center gap-2.5">
+                                        <x-icon :name="$item['icon']" size="h-5 w-5" />
+                                        <span>{{ $item['label'] }}</span>
+                                    </span>
+                                    @if ($itemCountKey)
+                                        <span x-cloak x-show="requestCounts.{{ $itemCountKey }} > 0" class="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
+                                            <x-icon name="exclamation-triangle" size="h-3 w-3" />
+                                            <span x-text="requestCounts.{{ $itemCountKey }}">{{ $itemCount }}</span>
+                                        </span>
+                                    @endif
                                 </span>
                             </x-responsive-nav-link>
                         @endforeach
@@ -587,9 +694,15 @@
 
             @if ($usersNavigationItem)
                 <x-responsive-nav-link :href="route($usersNavigationItem['route'])" :active="request()->routeIs($usersNavigationItem['pattern'])">
-                    <span class="inline-flex items-center gap-2.5">
-                        <x-icon :name="$usersNavigationItem['icon']" size="h-5 w-5" />
-                        <span>{{ $usersNavigationItem['label'] }}</span>
+                    <span class="flex items-center justify-between gap-3">
+                        <span class="inline-flex items-center gap-2.5">
+                            <x-icon :name="$usersNavigationItem['icon']" size="h-5 w-5" />
+                            <span>{{ $usersNavigationItem['label'] }}</span>
+                        </span>
+                        <span x-cloak x-show="requestCounts.password_reset_requests > 0" class="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
+                                <x-icon name="key" size="h-3 w-3" />
+                                <span x-text="requestCounts.password_reset_requests">{{ $passwordResetRequestCount }}</span>
+                            </span>
                     </span>
                 </x-responsive-nav-link>
             @endif

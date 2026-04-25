@@ -987,6 +987,7 @@ const registerAlpineData = () => {
 
     Alpine.data('navNotificationCenter', ({
         initialCount = 0,
+        initialCounts = {},
         endpoint = '',
         markReadUrl = '',
         csrfToken = '',
@@ -1000,6 +1001,14 @@ const registerAlpineData = () => {
         csrfToken,
         storageKey,
         pollSeconds: Math.max(Number(pollSeconds) || 15, 5),
+        counts: {
+            requests_total: Number(initialCounts?.requests_total || 0),
+            repair_requests: Number(initialCounts?.repair_requests || 0),
+            writeoff_requests: Number(initialCounts?.writeoff_requests || 0),
+            device_transfers: Number(initialCounts?.device_transfers || 0),
+            password_reset_requests: Number(initialCounts?.password_reset_requests || 0),
+            incoming_transfers: Number(initialCounts?.incoming_transfers || 0),
+        },
         pollTimer: null,
         fingerprint: null,
         idleStreak: 0,
@@ -1007,6 +1016,7 @@ const registerAlpineData = () => {
         readFeedbackVisible: false,
         feedbackTimer: null,
         init() {
+            this.broadcastCounts();
             this.refreshUnreadCount();
             this.schedulePoll();
         },
@@ -1062,6 +1072,22 @@ const registerAlpineData = () => {
                 this.readFeedbackVisible = false;
             }, 2200);
         },
+        applyCounts(nextCounts = {}) {
+            this.counts = {
+                requests_total: Number(nextCounts?.requests_total || 0),
+                repair_requests: Number(nextCounts?.repair_requests || 0),
+                writeoff_requests: Number(nextCounts?.writeoff_requests || 0),
+                device_transfers: Number(nextCounts?.device_transfers || 0),
+                password_reset_requests: Number(nextCounts?.password_reset_requests || 0),
+                incoming_transfers: Number(nextCounts?.incoming_transfers || 0),
+            };
+            this.broadcastCounts();
+        },
+        broadcastCounts() {
+            window.dispatchEvent(new CustomEvent('nav-counts-updated', {
+                detail: { ...this.counts },
+            }));
+        },
         async refreshUnreadCount() {
             if (!this.endpoint || !window.axios) {
                 return;
@@ -1083,6 +1109,7 @@ const registerAlpineData = () => {
 
                 this.fingerprint = response?.data?.fingerprint ?? null;
                 this.idleStreak = 0;
+                this.applyCounts(response?.data?.counts ?? {});
 
                 const cutoff = this.readCutoff();
                 const notifications = Array.isArray(response?.data?.notifications)
