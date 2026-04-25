@@ -17,7 +17,13 @@ use Illuminate\Support\Str;
 class DeviceAssetController extends Controller
 {
     /**
-     * Atgriež lokāli glabātu ierīces attēlu.
+     * Atgriež lokāli glabātu ierīces attēlu pēc drošības pārbaudes.
+     *
+     * Pārbauda, vai pierakstītais lietotājs drīkst piekļūt šai ierīcei,
+     * un tikai tad atdod attēlu no local storage diska.
+     *
+     * Izsaukšana: GET /device-assets/{path} | Pieejams: autentificēts, ja ir pieejama ierīce.
+     * Scenārijs: Pārlūks pieprasīja ierīces attēlu, kura URL satur resursa ceļu.
      */
     public function show(string $path)
     {
@@ -31,7 +37,13 @@ class DeviceAssetController extends Controller
     }
 
     /**
-     * Starpnieko attāla attēla drošu priekšskatījumu.
+     * Starpnieko attāla attēla drošu priekšskatījumu ar drošības pārbaudēm.
+     *
+     * Validē attēla URL, pārbauda pieejamību un pagriežana pierakstītajam lietotājam.
+     * Attēli tiek iegūti ar lietotāja agenta nosaukumu un tiek pārbaudīti MIME tipi.
+     *
+     * Izsaukšana: GET /device-assets/remote-preview?url=... | Pieejams: autentificēts.
+     * Scenārijs: Pārlūks jautā par attāla sīkdatņu priekšskatījuma attēlu ar URL parametru.
      */
     public function remotePreview(Request $request)
     {

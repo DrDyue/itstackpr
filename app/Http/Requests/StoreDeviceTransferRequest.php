@@ -5,13 +5,26 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Ierīces nodošanas pieteikuma validācijas noteikumi.
+ *
+ * Pārbauda ierīces ID, saņēmēja ID un nodošanas iemeslu.
+ * Saņēmējs nedrīkst būt pats pieteikuma iesniedzējs.
+ * Pieejams tikai autentificētiem lietotājiem.
+ */
 class StoreDeviceTransferRequest extends FormRequest
 {
+    /**
+     * Pārbauda autorizāciju — pieteikumus var iesniegt tikai autentificēti lietotāji.
+     */
     public function authorize(): bool
     {
         return $this->user() !== null;
     }
 
+    /**
+     * Definē validācijas noteikumus nodošanas pieteikuma datu validācijai.
+     */
     public function rules(): array
     {
         return [
@@ -21,6 +34,9 @@ class StoreDeviceTransferRequest extends FormRequest
         ];
     }
 
+    /**
+     * Nodrošina lietotāju draudzīgus kļūdu paziņojumus validācijas kļūmju gadījumā.
+     */
     public function messages(): array
     {
         return [

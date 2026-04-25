@@ -17,14 +17,24 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Pieslēgšanās validācijas un throttling noteikumi.
+ *
+ * Apvieno e-pasta un paroles validāciju ar autentifikācijas loģiku
+ * un rate limiting aizsardzību pret brute force uzbrukumiem.
+ * Atbalsta pēdējās pieslēgšanās laika ievākšanu un sistēmas shēmas pārbaudi.
  */
 class LoginRequest extends FormRequest
 {
+    /**
+     * Pārbauda autorizāciju — pieslēgšanās forma ir pieejama jebkuram.
+     */
     public function authorize(): bool
     {
         return true;
     }
 
+    /**
+     * Definē validācijas noteikumus pieslēgšanās datu validācijai.
+     */
     public function rules(): array
     {
         return [
@@ -33,6 +43,9 @@ class LoginRequest extends FormRequest
         ];
     }
 
+    /**
+     * Sagatavo datus validācijai — konvertē e-pastu uz mazo burtu un noņem espacijas.
+     */
     protected function prepareForValidation(): void
     {
         $this->merge([
@@ -40,6 +53,9 @@ class LoginRequest extends FormRequest
         ]);
     }
 
+    /**
+     * Nodrošina lietotāju draudzīgus kļūdu paziņojumus validācijas kļūmju gadījumā.
+     */
     public function messages(): array
     {
         return [
@@ -49,6 +65,12 @@ class LoginRequest extends FormRequest
         ];
     }
 
+    /**
+     * Apstrādā autentifikāciju ar rate limiting aizsardzību un pēdējās pieslēgšanās atjauninājumu.
+     *
+     * Validē e-pastu un paroli, pārbauda sistēmas smiesnību, pierakstā lietotāju
+     * un atjaunina pēdējo pieslēgšanās laiku. Rate limiting bloķē ļaunprātīgus mēģinājumus.
+     */
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
@@ -94,6 +116,12 @@ class LoginRequest extends FormRequest
         RateLimiter::clear($this->throttleKey());
     }
 
+    /**
+     * Pārbauda, vai pieslēgšanās mēģinājumus nav pārāk daudz (rate limiting).
+     *
+     * Pieļauj ne vairāk kā 5 ļaunprātīgus mēģinājumus vienas IP/e-pasta kombinācijas attiecībā uz stundu.
+     * Ja limitu pārsniedz, izmet Lockout notikumu un validācijas kļūdu.
+     */
     public function ensureIsNotRateLimited(): void
     {
         if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
@@ -112,11 +140,21 @@ class LoginRequest extends FormRequest
         ]);
     }
 
+    /**
+     * Ģenerē rate limiting atslēgu, kas kombinē e-pastu un IP adresi.
+     *
+     * Šī kombinācija nodrošina unikālo bloķēšanu katram lietotājam no atsevišķas IP.
+     */
     public function throttleKey(): string
     {
         return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
     }
 
+    /**
+     * Atjaunina lietotāja pēdējo pieslēgšanās laiku, ja tabula to atbalsta.
+     *
+     * Ja atjauninājums neizdodas (kolonnas nava pieejama), logs pieraksta brīdinājumu.
+     */
     private function touchLastLogin(User $user): void
     {
         if (! $this->hasLastLoginColumn($user)) {
@@ -132,6 +170,12 @@ class LoginRequest extends FormRequest
         }
     }
 
+    /**
+     * Pārbauda, vai users tabula satur last_login kolonnu.
+     *
+     * Izmanto shēmas inspektoru, lai pārbaudītu kolonnas esamību.
+     * Ja pārbaude neizdodas, logs pieraksta brīdinājumu un atgriež false.
+     */
     private function hasLastLoginColumn(User $user): bool
     {
         try {
@@ -145,6 +189,12 @@ class LoginRequest extends FormRequest
         }
     }
 
+    /**
+     * Pārbauda, vai users tabula satur konkrētu kolonnu.
+     *
+     * Izmanto shēmas inspektoru, lai pārbaudītu kolonnas esamību.
+     * Ja pārbaude neizdodas, logs pieraksta brīdinājumu un atgriež false.
+     */
     private function hasUsersColumn(string $column): bool
     {
         try {

@@ -31,7 +31,13 @@ class RepairController extends Controller
     private const SORTABLE_COLUMNS = ['code', 'name', 'assigned', 'location', 'status', 'priority', 'repair_type', 'cost', 'start_date', 'end_date'];
 
     /**
-     * Parāda remontu sarakstu vienotā tabulā ar filtriem un kārtošanu.
+     * Parāda remontu sarakstu vienotā tabulā ar filtriem, kārtošanu un statusu kopsavilkumu.
+     *
+     * Administrators redz visus remontus ar filtrēšanu pēc statusa, prioritātes, tipa un ierīces.
+     * Parasts lietotājs redz tikai remontus, ko viņš ir piesaistījis vai par kuriem ziņojis.
+     *
+     * Izsaukšana: GET /repairs | Pieejams: jebkurš autentificēts lietotājs.
+     * Scenārijs: Lietotājs navigē uz "Remonti" sadaļu sānjoslā vai atgriežas no remonta detaļu skata.
      */
     public function index(Request $request)
     {
@@ -148,6 +154,12 @@ class RepairController extends Controller
 
     /**
      * Atrod remonta ierakstu pēc saistītās ierīces koda un atgriež lapu, kur tas atrodas.
+     *
+     * Meklēšana ņem vērā aktīvos filtrus un kārtošanu, tāpēc rezultāts ir precīzs
+     * attiecībā pret pašreiz rādīto datu kopu. Rezultāts satur lapas numuru un elementa ID.
+     *
+     * Izsaukšana: GET /repairs/find-by-code | Pieejams: jebkurš autentificēts lietotājs.
+     * Scenārijs: JavaScript izsauc šo metodi, kad lietotājs raksta ierīces kodu ātrajā meklēšanā.
      */
     public function findByCode(Request $request): JsonResponse
     {
@@ -197,7 +209,13 @@ class RepairController extends Controller
 
 
     /**
-     * Saglabā jaunu remonta ierakstu.
+     * Saglabā jaunu remonta ierakstu ar automātisku ierīces statusa sinhronizāciju.
+     *
+     * Remonta ieraksts tiek izveidots ar statsu "waiting" (gaidošs) un pārvaldnieka ID.
+     * Pēc saglabāšanas tiek pārbaudīts un atjaunināts saistītās ierīces statuss.
+     *
+     * Izsaukšana: POST /repairs | Pieejams: administrators, IT vadītājs.
+     * Scenārijs: Vadītājs aizpilda remonta formu un klikšķina "Pievienot remontu".
      */
     public function store(Request $request)
     {
@@ -221,7 +239,13 @@ class RepairController extends Controller
 
 
     /**
-     * Atjaunina remonta ierakstu.
+     * Atjaunina esošu remonta ierakstu ar pūriņu izsekošanu audita žurnālā.
+     *
+     * Atjaunina remonta detaļas (apraksts, tips, prioritāte, izmaksas, piegādātāja info).
+     * Pēc atjauninājuma tiek pārbaudīts ierīces statuss un reģistrētas izmaiņas audita žurnālā.
+     *
+     * Izsaukšana: PUT /repairs/{id} | Pieejams: administrators, IT vadītājs.
+     * Scenārijs: Vadītājs atvēr remonta detaļas modāli un rediģē tā laikus.
      */
     public function update(Request $request, Repair $repair)
     {
@@ -259,7 +283,13 @@ class RepairController extends Controller
     }
 
     /**
-     * Dzēš remonta ierakstu un izlīdzina ierīces statusu.
+     * Dzēš remonta ierakstu un atjauno ierīces iepriekšējo statusu.
+     *
+     * Dzēšanu var veikt tikai vadītājs. Pēc dzēšanas tiek reģistrēts audita žurnālā
+     * un atjaunināts saistītās ierīces statuss (parasti atgriežas uz "Active").
+     *
+     * Izsaukšana: DELETE /repairs/{id} | Pieejams: administrators, IT vadītājs.
+     * Scenārijs: Vadītājs klikšķina uz dzēšanas pogu remonta detaļu modālī.
      */
     public function destroy(Repair $repair)
     {
@@ -278,7 +308,13 @@ class RepairController extends Controller
     }
 
     /**
-     * Veic atļautu pāreju starp remonta statusiem.
+     * Pārveido remontu starp atļautajiem statusiem (waiting → in-progress → completed → cancelled).
+     *
+     * Validē mērķa statusu un pārbauda obligātos laukus (piemēram, ārējam remontam nepieciešami
+     * piegādātāja dati). Atjaunina remontu un sinhronizē ierīces statusu.
+     *
+     * Izsaukšana: POST /repairs/{id}/transition | Pieejams: administrators, IT vadītājs.
+     * Scenārijs: Vadītājs klikšķina uz statusa mainīšanas pogu remonta kartītē vai detaļu skata.
      */
     public function transition(Request $request, Repair $repair)
     {
@@ -353,7 +389,13 @@ class RepairController extends Controller
         return back()->with('success', 'Remonta statuss atjaunināts');
     }
     /**
-     * Vecais show ceļš projektā tiek izmantots kā pāradresācija uz rediģēšanu.
+     * Novirza uz remontu rediģēšanu modāli ar konkrēto remonta ID.
+     *
+     * Šī metode ir vecs ceļš, kuru uztur tikai atpakaļ saderības dēļ.
+     * Atspoguļo pieprasījumu uz pilnu remontu skata lapu.
+     *
+     * Izsaukšana: GET /repairs/{id} | Pieejams: jebkurš autentificēts lietotājs.
+     * Scenārijs: Direkta saite uz konkrētu remontu (retk, parasti izmanto modāli).
      */
     public function show(Repair $repair)
     {

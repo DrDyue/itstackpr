@@ -29,7 +29,13 @@ class RepairRequestController extends Controller
     private const SORTABLE_COLUMNS = ['code', 'name', 'requester', 'created_at', 'status'];
 
     /**
-     * Parāda remonta pieteikumu sarakstu atbilstoši lomai un filtriem.
+     * Parāda remonta pieteikumu sarakstu ar lomas atkarīgu filtrēšanu un statusa kopsavilkumu.
+     *
+     * Administrators redz visus pieteikumus. Parasts lietotājs redz tikai savus iesniegtos.
+     * Atspoguļo gaidošo, apstiprināto un noraidīto pieteikumu kopsavilkumu.
+     *
+     * Izsaukšana: GET /repair-requests | Pieejams: jebkurš autentificēts lietotājs.
+     * Scenārijs: Lietotājs navigē uz "Remonta pieteikumi" sadaļu sānjoslā.
      */
     public function index(Request $request)
     {
@@ -44,7 +50,12 @@ class RepairRequestController extends Controller
     }
 
     /**
-     * Atgriež filtrētu remonta pieteikumu tabulu (async).
+     * Atgriež filtrētu remonta pieteikumu tabulu bez pilnas lapas pārlādēšanas (async).
+     *
+     * Atjaunina tikai tabulas HTML fragmentu, kad tiek mainīti filtri vai kārtošana.
+     *
+     * Izsaukšana: GET /repair-requests/table | Pieejams: jebkurš autentificēts lietotājs.
+     * Scenārijs: JavaScript izsauc šo maršrutu, kad tiek mainīti filtri vai kārtošanas parametri.
      */
     public function table(Request $request)
     {
@@ -158,7 +169,13 @@ class RepairRequestController extends Controller
                     ->first()
                 : null,
             'sortDirectionLabels' => ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'],
-        ];
+      
+     * Meklēšana ņem vērā aktīvos filtrus un atgriež lapas numuru un elementa ID.
+     * Neprademanāks lietotājs var meklēt tikai savus pieteikumus.
+     *
+     * Izsaukšana: GET /repair-requests/find-by-code | Pieejams: jebkurš autentificēts lietotājs.
+     * Scenārijs: JavaScript izsauc šo metodi, kad lietotājs raksta mājēšanas lodziņā.
+     *  ];
     }
 
     /**
@@ -210,7 +227,13 @@ class RepairRequestController extends Controller
         if ($foundIndex === null) {
             return response()->json(['found' => false, 'page' => 1]);
         }
-
+ ar validāciju un pieejamības pārbaudi.
+     *
+     * Pieteikums tiek izveido ar stāvokli "submitted" (gaidošs). Validē ierīci un problēmas aprakstu.
+     * Tikai neprademanāks lietotājs var iesniegt pieteikumu tikai savai piesaistītai ierīcei.
+     *
+     * Izsaukšana: POST /repair-requests | Pieejams: parasts lietotājs (neadministrators).
+     * Scenārijs: Lietotājs izvēlas ierīci un apraksta problēmu remonta pieteikuma formā
         return response()->json([
             'found' => true,
             'page' => 1,
@@ -247,7 +270,14 @@ class RepairRequestController extends Controller
                 'device_id' => ['Vari pieteikt remontu tikai savai piesaistītai ierīcei.'],
             ]);
         }
-
+pstrādā remonta pieteikuma izskatīšanu (apstiprināšanu vai noraidīšanu).
+     *
+     * Tikai administrators var apstiprināt vai noraidīt pieteikumus. Apstiprināšanas gadījumā
+     * tiek automātiski izveidots remonta ieraksts un ierīces statuss mainīts uz "repair".
+     * Pieteikuma pārejas tiek reģistrētas audita žurnālā.
+     *
+     * Izsaukšana: POST /repair-requests/{id}/review | Pieejams: administrators, IT vadītājs.
+     * Scenārijs: Administrator klikšķina uz "Apstiprināt" vai "Noraidīt" pieteikuma kartītē
         $this->ensureDeviceCanAcceptRepairRequest($device);
 
         $repairRequest = RepairRequest::create([

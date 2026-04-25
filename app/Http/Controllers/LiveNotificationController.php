@@ -21,7 +21,14 @@ use Illuminate\Support\Collection;
 class LiveNotificationController extends Controller
 {
     /**
-     * Atzīmē visus paziņojumus kā lasītus.
+     * Atzīmē visus paziņojumus kā lasītus atbilstoši lietotāja lomai.
+     *
+     * Administrators atzīmē remonta un norakstīšanas pieteikumus kā lasītus.
+     * Parasts lietotājs atzīmē nodošanas pieteikumus, ko viņš saņēmis.
+     * Rezultāts ir JSON ar lasīšanas laika marķieri.
+     *
+     * Izsaukšana: POST /live-notifications/mark-all-read | Pieejams: jebkurš autentificēts lietotājs.
+     * Scenārijs: Lietotājs klikšķina uz "Atzīmēt visu kā lasītu" vai tas notiek automātiski.
      */
     public function markAllAsRead(): JsonResponse
     {

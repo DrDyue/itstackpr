@@ -7,9 +7,15 @@ use Illuminate\Validation\Rule;
 
 /**
  * Profila atjaunošanas validācijas noteikumi.
+ *
+ * Pārbauda autentificēta lietotāja profila pamatdatus: vārds, e-pasts, tālrunis un amats.
+ * E-pasta unikālumā ignorē pašreizējo lietotāju.
  */
 class ProfileUpdateRequest extends FormRequest
 {
+    /**
+     * Definē validācijas noteikumus profila datu validācijai.
+     */
     public function rules(): array
     {
         return [

@@ -12,12 +12,19 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 /**
- * Telpu pārvaldības CRUD kontrolieris.
- */
+ * Telpu pārvaldības CRUD kontrolieris. *
+ * Apvieno telpu sarakstu ar filtrēšanu pa ēkām, stāviem un atbildīgajiem
+ * lietotājiem, kā arī pilno CRUD plūsmu telpu izveide, rediģēšanai un dzēšanai. */
 class RoomController extends Controller
 {
     /**
-     * Parāda telpu sarakstu ar filtriem un kopsavilkumu.
+     * Parāda telpu sarakstu ar filtriem, kopsavilkumu un meklēšanas opcijām.
+     *
+     * Filtri ietver: ēka, stāvs, atbildīgais lietotājs un brīvais teksts.
+     * Telpu saraksts tiek kārtots pēc ēkas, stāva un telpas numura.
+     *
+     * Izsaukšana: GET /rooms | Pieejams: administrators, IT vadītājs.
+     * Scenārijs: Vadītājs atver "Telpas" sadaļu, lai pārvaldītu telpu konfigurāciju.
      */
     public function index(Request $request)
     {
@@ -91,6 +98,12 @@ class RoomController extends Controller
 
     /**
      * Atrod telpu pēc nosaukuma vai numura aktīvajā filtrētajā sarakstā.
+     *
+     * Meklēšana ņem vērā aktīvos filtrus, tāpēc rezultāts ir precīzs
+     * attiecībā pret pašreiz rādīto telpu kopu. Atgriež lapas numuru un elementu ID.
+     *
+     * Izsaukšana: GET /rooms/find-by-name | Pieejams: administrators, IT vadītājs.
+     * Scenārijs: JavaScript izsauc šo metodi, kad lietotājs raksta mājēšanas lodziņā.
      */
     public function findByName(Request $request): JsonResponse
     {
@@ -148,7 +161,13 @@ class RoomController extends Controller
 
 
     /**
-     * Saglabā jaunu telpu.
+     * Saglabā jaunu telpu ar validāciju un audita reģistrāciju.
+     *
+     * Validē ēkas ID, stāva numuru un unikālos telpas numura datos ēkas kontekstā.
+     * Pēc sekmīgas saglabāšanas reģistrē audita žurnālā.
+     *
+     * Izsaukšana: POST /rooms | Pieejams: administrators, IT vadītājs.
+     * Scenārijs: Vadītājs aizpilda "Jauna telpa" formu un klikšķina "Pievienot".
      */
     public function store(Request $request)
     {
@@ -162,7 +181,13 @@ class RoomController extends Controller
 
 
     /**
-     * Atjaunina telpas datus.
+     * Atjaunina telpas datus ar pūriņu izsekošanu audita žurnālā.
+     *
+     * Atjaunina telpas pamatdatus (nosaukums, stāvs, numurs, atbildīgais, nodaļa).
+     * Pēc atjauninājuma reģistrē izmaiņas audita žurnālā.
+     *
+     * Izsaukšana: PUT /rooms/{id} | Pieejams: administrators, IT vadītājs.
+     * Scenārijs: Vadītājs atvēr telpas detaļas modāli un rediģē tā laikus.
      */
     public function update(Request $request, Room $room)
     {
@@ -178,7 +203,13 @@ class RoomController extends Controller
     }
 
     /**
-     * Dzēš telpu tikai tad, ja tai vairs nav piesaistītu ierīču.
+     * Dzēš telpu tikai tad, ja tai nav piesaistītu ierīču.
+     *
+     * Telpas dzēšana ir bloķēta, ja tai vēl ir ierīces. Dzēšanu var veikt
+     * tikai vadītājs, un tā tiek reģistrēta audita žurnālā.
+     *
+     * Izsaukšana: DELETE /rooms/{id} | Pieejams: administrators, IT vadītājs.
+     * Scenārijs: Vadītājs klikšķina uz dzēšanas pogu telpas modālī.
      */
     public function destroy(Room $room)
     {

@@ -27,6 +27,9 @@ class UserRequestCenterController extends Controller
     /**
      * Lietotāju nosūta uz remonta pieteikumu sarakstu kā galveno ieejas punktu.
      *
+     * Šī metode vienkārši pāradresē uz remonta pieteikumu sarakstu, jo tas ir primārais
+     * pieteikuma tips. Citi pieteikuma veidi (norakstīšana, nodošana) ir pieejami no turienes.
+     *
      * Izsaukšana: GET /my-requests | Pieejams: parasts lietotājs (neadministrators).
      * Scenārijs: Lietotājs klikšķina uz "Mani pieteikumi" sānjoslā.
      */

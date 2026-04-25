@@ -26,8 +26,11 @@ class ProfileController extends Controller
     /**
      * Profila rediģēšanas skats — novirza uz galveno lapu pēc lomas.
      *
-     * Administrators tiek novirzīts uz darba virsmu, bet parastais lietotājs
+     * Administrators tiek novirzīts uz darba virsmu, bet parasts lietotājs
      * uz ierīču sarakstu. Profila modālis tiek atvērts JavaScript pusē.
+     *
+     * Izsaukšana: GET /profile | Pieejams: jebkurš autentificēts lietotājs.
+     * Scenārijs: Lietotājs klikšķina uz "Manu profilu" vai tiek novirzīts uz šo URL.
      */
     public function edit(Request $request): RedirectResponse
     {
@@ -38,10 +41,13 @@ class ProfileController extends Controller
     }
 
     /**
-     * Saglabā lietotāja profila pamatdatus (vārds, e-pasts, tālrunis, amats).
+     * Saglabā lietotāja profila pamatdatus ar pūriņu izsekošanu audita žurnālā.
      *
      * Izmaiņas tiek salīdzinātas ar iepriekšējo stāvokli un reģistrētas audita žurnālā.
      * Pēc veiksmīgas saglabāšanas nosūta sesijā signālu profila modāļa aizvēršanai.
+     *
+     * Izsaukšana: PUT /profile | Pieejams: jebkurš autentificēts lietotājs.
+     * Scenārijs: Lietotājs aizpilda profila formu (vārds, e-pasts, tālrunis, amats) un saglabā.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {

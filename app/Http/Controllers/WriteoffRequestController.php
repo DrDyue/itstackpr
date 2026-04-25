@@ -20,6 +20,9 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Lietotāju norakstīšanas pieteikumu plūsma.
+ *
+ * Neprademanāks lietotājs iesniedz norakstīšanas pieteikumu savai ierīcei,
+ * savukārt administrators to izskata un apstiprina vai noraida.
  */
 class WriteoffRequestController extends Controller
 {
@@ -30,7 +33,13 @@ class WriteoffRequestController extends Controller
     private const SORTABLE_COLUMNS = ['code', 'name', 'requester', 'created_at', 'status'];
 
     /**
-     * Parāda norakstīšanas pieteikumu sarakstu.
+     * Parāda norakstīšanas pieteikumu sarakstu ar lomas atkarīgu loģiku un filtriem.
+     *
+     * Administrators redz visus pieteikumus. Parasts lietotājs redz tikai savus iesniegtos.
+     * Atspoguļo gaidošo, apstiprināto un noraidīto pieteikumu kopsavilkumu.
+     *
+     * Izsaukšana: GET /writeoff-requests | Pieejams: jebkurš autentificēts lietotājs.
+     * Scenārijs: Lietotājs navigē uz "Norakstīšanas pieteikumi" sadaļu sānjoslā.
      */
     public function index(Request $request)
     {
@@ -39,7 +48,12 @@ class WriteoffRequestController extends Controller
         $viewData = $this->writeoffRequestsViewData($request, $user);
 
         AuditTrail::viewed($user, 'WriteoffRequest', null, 'Atvērts norakstīšanas pieteikumu saraksts.');
-        $this->auditWriteoffRequestListInteractions($request, $user, $viewData['filters'], $viewData['sorting']);
+        $this->auditWriteoffRequestListInteractions($reqbez pilnas lapas pārlādēšanas (async).
+     *
+     * Atjaunina tikai tabulas HTML fragmentu, kad tiek mainīti filtri vai kārtošana.
+     *
+     * Izsaukšana: GET /writeoff-requests/table | Pieejams: jebkurš autentificēts lietotājs.
+     * Scenārijs: JavaScript izsauc šo maršrutu, kad tiek mainīti filtri vai kārtošanas parametriuser, $viewData['filters'], $viewData['sorting']);
 
         return view('writeoff_requests.index', $viewData);
     }
@@ -155,7 +169,13 @@ class WriteoffRequestController extends Controller
                     ->first()
                 : null,
             'sortDirectionLabels' => ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'],
-        ];
+      
+     * Meklēšana ņem vērā aktīvos filtrus un atgriež lapas numuru un elementa ID.
+     * Neprademanāks lietotājs var meklēt tikai savus pieteikumus.
+     *
+     * Izsaukšana: GET /writeoff-requests/find-by-code | Pieejams: jebkurš autentificēts lietotājs.
+     * Scenārijs: JavaScript izsauc šo metodi, kad lietotājs raksta mājēšanas lodziņā.
+     *  ];
     }
 
     /**
@@ -207,7 +227,13 @@ class WriteoffRequestController extends Controller
         if ($foundIndex === null) {
             return response()->json(['found' => false, 'page' => 1]);
         }
-
+ ar validāciju un pieejamības pārbaudi.
+     *
+     * Pieteikums tiek izveido ar stāvokli "submitted" (gaidošs). Validē ierīci un iemeslu.
+     * Tikai neprademanāks lietotājs var iesniegt pieteikumu tikai savai piesaistītai ierīcei.
+     *
+     * Izsaukšana: POST /writeoff-requests | Pieejams: parasts lietotājs (neadministrators).
+     * Scenārijs: Lietotājs izvēlas ierīci un iemeslu norakstīšanas formā
         return response()->json([
             'found' => true,
             'page' => 1,
@@ -244,7 +270,14 @@ class WriteoffRequestController extends Controller
                 'device_id' => ['Vari pieteikt norakstīšanu tikai savai piesaistītai ierīcei.'],
             ]);
         }
-
+pstrādā norakstīšanas pieteikuma izskatīšanu (apstiprināšanu vai noraidīšanu).
+     *
+     * Tikai administrators var apstiprināt vai noraidīt pieteikumus. Apstiprināšanas gadījumā
+     * ierīces statuss tiek mainīts uz "writeoff" un tā pārvietota noliktavā.
+     * Pieteikuma pārejas tiek reģistrētas audita žurnālā.
+     *
+     * Izsaukšana: POST /writeoff-requests/{id}/review | Pieejams: administrators, IT vadītājs.
+     * Scenārijs: Administrator klikšķina uz "Apstiprināt" vai "Noraidīt" pieteikuma kartītē
         $this->ensureDeviceCanAcceptWriteoffRequest($device);
 
         $writeoffRequest = WriteoffRequest::create([

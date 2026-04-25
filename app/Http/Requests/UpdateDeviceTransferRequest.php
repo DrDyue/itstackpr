@@ -5,8 +5,17 @@ namespace App\Http\Requests;
 use App\Models\DeviceTransfer;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Ierīces nodošanas pieteikuma atjaunošanas validācijas noteikumi.
+ *
+ * Pārbauda autorizāciju — tikai iesniedzējs var rediģēt gaidošu pieteikumu.
+ * Pēc tam validē jaunus datus: ierīci, saņēmēju un nodošanas iemeslu.
+ */
 class UpdateDeviceTransferRequest extends FormRequest
 {
+    /**
+     * Pārbauda autorizāciju — pieteikumu var rediģēt tikai tā iesniedzējs un tikai gaidošajā stāvoklī.
+     */
     public function authorize(): bool
     {
         /** @var DeviceTransfer $deviceTransfer */
@@ -16,6 +25,9 @@ class UpdateDeviceTransferRequest extends FormRequest
             && $deviceTransfer->status === DeviceTransfer::STATUS_SUBMITTED;
     }
 
+    /**
+     * Definē validācijas noteikumus rediģēšanas pieteikuma datu validācijai.
+     */
     public function rules(): array
     {
         return [
@@ -25,6 +37,9 @@ class UpdateDeviceTransferRequest extends FormRequest
         ];
     }
 
+    /**
+     * Nodrošina lietotāju draudzīgus kļūdu paziņojumus validācijas kļūmju gadījumā.
+     */
     public function messages(): array
     {
         return [

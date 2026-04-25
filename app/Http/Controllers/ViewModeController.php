@@ -14,7 +14,13 @@ use Illuminate\Validation\Rule;
 class ViewModeController extends Controller
 {
     /**
-     * Saglabā izvēlēto skata režīmu sesijā.
+     * Saglabā administratora izvēlēto skata režīmu sesijā ar redirectu uz atbilstošo lapu.
+     *
+     * Administrators var pārslēgties starp admina skatu (darba virsma) un parastā darbinieka
+     * skatu (ierīču saraksts). Pārejas tiek reģistrētas audita žurnālā.
+     *
+     * Izsaukšana: POST /view-mode | Pieejams: tikai administrators.
+     * Scenārijs: Administrator klikšķina uz "Pārslēgt uz admina/darbinieka skatu" novilktnē.
      */
     public function update(Request $request): RedirectResponse
     {

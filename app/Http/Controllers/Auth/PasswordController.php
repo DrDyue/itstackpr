@@ -15,7 +15,13 @@ use Illuminate\Validation\Rules\Password;
 class PasswordController extends Controller
 {
     /**
-     * Atjauno pašreizējā lietotāja paroli.
+     * Atjauno pašreizējā lietotāja paroli ar validāciju un audita reģistrāciju.
+     *
+     * Validē pašreizējo paroli un pārbauda jauno paroles nosacījumus. Parole tiek šifrēta
+     * pirms saglabāšanas. Pēc veiksmīgas maiņas sesija tiek signalizēta profila modāļa aizvēršanai.
+     *
+     * Izsaukšana: PUT /password | Pieejams: autentificēts.
+     * Scenārijs: Lietotājs ievada jauno paroli profila modāļa paroles cilnē.
      */
     public function update(Request $request): RedirectResponse
     {

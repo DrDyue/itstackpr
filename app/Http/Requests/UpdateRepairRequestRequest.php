@@ -5,8 +5,17 @@ namespace App\Http\Requests;
 use App\Models\RepairRequest;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Remonta pieteikuma atjaunošanas validācijas noteikumi.
+ *
+ * Pārbauda autorizāciju — tikai iesniedzējs var rediģēt gaidošu pieteikumu.
+ * Pēc tam validē jaunus datus: ierīci un remonta problēmas aprakstu.
+ */
 class UpdateRepairRequestRequest extends FormRequest
 {
+    /**
+     * Pārbauda autorizāciju — pieteikumu var rediģēt tikai tā iesniedzējs un tikai gaidošajā stāvoklī.
+     */
     public function authorize(): bool
     {
         /** @var RepairRequest $repairRequest */
@@ -16,6 +25,9 @@ class UpdateRepairRequestRequest extends FormRequest
             && $repairRequest->status === RepairRequest::STATUS_SUBMITTED;
     }
 
+    /**
+     * Definē validācijas noteikumus rediģēšanas pieteikuma datu validācijai.
+     */
     public function rules(): array
     {
         return [
@@ -24,6 +36,9 @@ class UpdateRepairRequestRequest extends FormRequest
         ];
     }
 
+    /**
+     * Nodrošina lietotāju draudzīgus kļūdu paziņojumus validācijas kļūmju gadījumā.
+     */
     public function messages(): array
     {
         return [

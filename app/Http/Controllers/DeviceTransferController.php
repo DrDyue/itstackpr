@@ -29,7 +29,13 @@ class DeviceTransferController extends Controller
     private const SORTABLE_COLUMNS = ['code', 'name', 'requester', 'recipient', 'created_at', 'status'];
 
     /**
-     * Parāda nodošanas pieprasījumu sarakstu ar lomas atkarīgu loģiku.
+     * Parāda ierīču nodošanas pieteikumu sarakstu ar lomas atkarīgu filtrēšanu.
+     *
+     * Administrators redz visus pieteikumus. Parasts lietotājs redz tikai savus iesniegtos
+     * un saņemtos pieteikumus. Atspoguļo gaidošo, apstiprināto un noraidīto pieteikumu kopsavilkumu.
+     *
+     * Izsaukšana: GET /device-transfers | Pieejams: jebkurš autentificēts lietotājs.
+     * Scenārijs: Lietotājs navigē uz "Ierīču nodošana" sadaļu vai atgriežas no pieteikuma skata.
      */
     public function index(Request $request)
     {
@@ -174,6 +180,12 @@ class DeviceTransferController extends Controller
 
     /**
      * Atrod nodošanas pieteikumu pēc saistītās ierīces koda filtrētajā sarakstā.
+     *
+     * Meklēšana ņem vērā aktīvos filtrus un atgriež lapas numuru un elementa ID.
+     * Nepradīmētiem lietotājiem meklēšana tiek ierobežota tikai uz viņu pieteikumiem.
+     *
+     * Izsaukšana: GET /device-transfers/find-by-code | Pieejams: jebkurš autentificēts lietotājs.
+     * Scenārijs: JavaScript izsauc šo metodi, kad lietotājs raksta mājēšanas lodziņā.
      */
     public function findByCode(Request $request)
     {
@@ -235,7 +247,13 @@ class DeviceTransferController extends Controller
             'found' => true,
             'page' => 1,
             'term' => $code,
-            'highlight_id' => 'device-transfer-'.$transfers->values()[$foundIndex]->id,
+     * Saglabā jaunu ierīču nodošanas pieteikumu ar validāciju un atbildības pārbaudi.
+     *
+     * Pieteikums tiek izveido ar stāvokli "submitted" (gaidošs). Validē ierīci, saņēmēju
+     * un nodošanas iemeslu. Neprademanāja lietotāja var pieteikt tikai savas piesaistītās ierīces.
+     *
+     * Izsaukšana: POST /device-transfers | Pieejams: jebkurš autentificēts lietotājs.
+     * Scenārijs: Lietotājs izvēlas ierīci un saņēmēju "Jaunā nodošana" formā.ansfers->values()[$foundIndex]->id,
         ]);
     }
 
@@ -295,7 +313,14 @@ class DeviceTransferController extends Controller
         ]);
 
         AuditTrail::created($user->id, $transfer);
-        AuditTrail::submit($user->id, $transfer, 'Iesniegts ierīces nodošanas pieteikums: '.AuditTrail::labelFor($transfer));
+       Apstrādā nodošanas pieteikuma izskatīšanu (apstiprināšanu vai noraidīšanu).
+     *
+     * Tikai nodošanas saņēmējs var apstiprināt vai noraidīt pieteikumu. Apstiprināšanas gadījumā
+     * tiek atjaunināta ierīces piešķiruma un opcionalā telpa. Pieteikuma pārejas tiek reģistrētas
+     * audita žurnālā.
+     *
+     * Izsaukšana: POST /device-transfers/{id}/review | Pieejams: saņēmējs (neprademanāks).
+     * Scenārijs: Saņēmējs klikšķina uz "Apstiprināt" vai "Noraidīt" pieteikuma kartītē vai detaļu skatāerīces nodošanas pieteikums: '.AuditTrail::labelFor($transfer));
 
         return redirect()->route('device-transfers.index')->with('success', 'Ierīces nodošanas pieteikums izveidots');
     }

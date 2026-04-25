@@ -20,9 +20,13 @@ use Illuminate\View\View;
 class RegisteredUserController extends Controller
 {
     /**
-     * Parāda jauna lietotāja reģistrācijas formu.
+     * Parāda jauna lietotāja reģistrācijas formu administratoram.
      *
-     * Pieejams tikai administratoram. Administrators izvēlas lomu jaunajam kontam.
+     * Pieejams tikai administratoram. Forma ļauj piešķirt lomu jaunajam kontam
+     * un aizpildīt visu nepieciešamo informāciju (vārds, e-pasts, tālrunis, amats).
+     *
+     * Izsaukšana: GET /register | Pieejams: tikai administrators.
+     * Scenārijs: Administrator navigē uz "Jauns lietotājs" vai atver reģistrācijas formu.
      */
     public function create(): View
     {
@@ -34,11 +38,14 @@ class RegisteredUserController extends Controller
     }
 
     /**
-     * Apstrādā jauna lietotāja reģistrācijas formu.
+     * Apstrādā jauna lietotāja reģistrācijas formu ar validāciju un audita reģistrāciju.
      *
-     * Paroli šifrē ar Hash::make pirms saglabāšanas. Pēc izveides izsauc
-     * Laravel `Registered` notikumu un reģistrē izveidi audita žurnālā.
-     * Administrators tiek novirzīts uz lietotāju sarakstu.
+     * Paroli šifrē ar Hash::make pirms saglabāšanas. Pēc izveides izsauc Laravel `Registered`
+     * notikumu (kas var palaist e-pastu) un reģistrē izveidi audita žurnālā.
+     * Administrator tiek novirzīts uz lietotāju sarakstu.
+     *
+     * Izsaukšana: POST /register | Pieejams: tikai administrators.
+     * Scenārijs: Administrator aizpilda jauno lietotāju formu un klikšķina "Reģistrēt".
      */
     public function store(Request $request): RedirectResponse
     {

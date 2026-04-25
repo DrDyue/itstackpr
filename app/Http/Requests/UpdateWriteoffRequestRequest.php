@@ -5,8 +5,17 @@ namespace App\Http\Requests;
 use App\Models\WriteoffRequest;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Norakstīšanas pieteikuma atjaunošanas validācijas noteikumi.
+ *
+ * Pārbauda autorizāciju — tikai iesniedzējs var rediģēt gaidošu pieteikumu.
+ * Pēc tam validē jaunus datus: ierīci un norakstīšanas iemeslu.
+ */
 class UpdateWriteoffRequestRequest extends FormRequest
 {
+    /**
+     * Pārbauda autorizāciju — pieteikumu var rediģēt tikai tā iesniedzējs un tikai gaidošajā stāvoklī.
+     */
     public function authorize(): bool
     {
         /** @var WriteoffRequest $writeoffRequest */
@@ -16,6 +25,9 @@ class UpdateWriteoffRequestRequest extends FormRequest
             && $writeoffRequest->status === WriteoffRequest::STATUS_SUBMITTED;
     }
 
+    /**
+     * Definē validācijas noteikumus rediģēšanas pieteikuma datu validācijai.
+     */
     public function rules(): array
     {
         return [
@@ -24,6 +36,9 @@ class UpdateWriteoffRequestRequest extends FormRequest
         ];
     }
 
+    /**
+     * Nodrošina lietotāju draudzīgus kļūdu paziņojumus validācijas kļūmju gadījumā.
+     */
     public function messages(): array
     {
         return [

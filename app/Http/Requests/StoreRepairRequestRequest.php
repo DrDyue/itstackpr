@@ -4,13 +4,25 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Remonta pieteikuma validācijas noteikumi.
+ *
+ * Pārbauda ierīces ID un remonta problēmas aprakstu (minimums 10, maksimums 2000 rakstzīmes).
+ * Pieejams tikai autentificētiem lietotājiem.
+ */
 class StoreRepairRequestRequest extends FormRequest
 {
+    /**
+     * Pārbauda autorizāciju — pieteikumus var iesniegt tikai autentificēti lietotāji.
+     */
     public function authorize(): bool
     {
         return $this->user() !== null;
     }
 
+    /**
+     * Definē validācijas noteikumus remonta pieteikuma datu validācijai.
+     */
     public function rules(): array
     {
         return [
@@ -19,6 +31,9 @@ class StoreRepairRequestRequest extends FormRequest
         ];
     }
 
+    /**
+     * Nodrošina lietotāju draudzīgus kļūdu paziņojumus validācijas kļūmju gadījumā.
+     */
     public function messages(): array
     {
         return [

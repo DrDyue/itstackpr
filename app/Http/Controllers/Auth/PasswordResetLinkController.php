@@ -15,7 +15,13 @@ use Illuminate\View\View;
 class PasswordResetLinkController extends Controller
 {
     /**
-     * Parāda paroles maiņas pieprasījuma skatu.
+     * Parāda paroles maiņas pieprasījuma formu.
+     *
+     * Forma ir noraižu draudzīga un ļauj lietotājiem lūgt administratora palaišanu
+     * paroles maiņai, jo automātiskā e-pasta sistēma nav iespējota.
+     *
+     * Izsaukšana: GET /forgot-password | Pieejams: nav autentificēts.
+     * Scenārijs: Lietotājs klikšķina uz "Aizmirsu paroli" pieslēgšanās lapā.
      */
     public function create(): View
     {
@@ -23,9 +29,14 @@ class PasswordResetLinkController extends Controller
     }
 
     /**
-     * Reģistrē paroles maiņas pieprasījumu administratoru apstrādei.
+     * Reģistrē paroles maiņas pieprasījumu administratoru apstrādei ar audita atzīmi.
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * Meklē lietotāju pēc e-pasta un iestata maiņas pieprasījuma marķieri. Audita žurnāls
+     * tiek atjaunināts. Skaits norāda, ka pieprasījums tika saņemts neatkarīgi no tā, vai
+     * lietotājs tika atrasts (drošības dēļ).
+     *
+     * Izsaukšana: POST /forgot-password | Pieejams: nav autentificēts.
+     * Scenārijs: Lietotājs aizpilda paroles maiņas pieprasījuma formu un klikšķina Nosūtīt.
      */
     public function store(Request $request): RedirectResponse
     {
