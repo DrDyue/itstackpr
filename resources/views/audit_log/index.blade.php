@@ -155,16 +155,6 @@
                             <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($selectedSeverities), minimum: 0 })">
                                 <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Svarīgums</div>
                                 <div class="quick-status-filters">
-                                    <button
-                                        type="button"
-                                        @click="selected = []; $nextTick(() => $el.closest('form').requestSubmit())"
-                                        class="quick-status-filter quick-status-filter-slate"
-                                        :class="selected.length === 0 ? 'quick-status-filter-active' : ''"
-                                    >
-                                        <x-icon name="filter" size="h-4 w-4" />
-                                        <span>Visi</span>
-                                        <span class="quick-filter-count">{{ $summary['total'] }}</span>
-                                    </button>
                                     @foreach ($severityFilterLinks as $severityFilter)
                                         @php
                                             $toneClass = 'quick-status-filter-' . $severityFilter['tone'];

@@ -156,16 +156,6 @@
                         <div class="quick-filter-group" x-data="filterChipGroup({ selected: @js($filters['statuses']), minimum: 0 })">
                             <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Statuss</div>
                             <div class="quick-status-filters">
-                                <button
-                                    type="button"
-                                    @click="selected = []; $nextTick(() => window.submitAsyncTableForm($el.closest('form'), { resetPage: true }))"
-                                    class="quick-status-filter quick-status-filter-slate"
-                                    :class="selected.length === 0 ? 'quick-status-filter-active' : ''"
-                                >
-                                    <x-icon name="filter" size="h-4 w-4" />
-                                    <span>Visi</span>
-                                    <span class="quick-filter-count">{{ $requestSummary['total'] }}</span>
-                                </button>
                                 @foreach ($statuses as $status)
                                     @php
                                         $toneClass = $status === 'submitted'

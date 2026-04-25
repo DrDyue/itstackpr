@@ -9,7 +9,7 @@
             ['label' => 'Admins', 'value' => 'admin', 'icon' => 'users', 'tone' => 'violet'],
             ['label' => 'Darbinieki', 'value' => 'user', 'icon' => 'profile', 'tone' => 'sky'],
         ];
-        $selectedRoles = $filters['has_role_filter'] ? $filters['roles'] : collect($roleFilterLinks)->pluck('value')->all();
+        $selectedRoles = $filters['has_role_filter'] ? $filters['roles'] : [];
         $lastLoginOptions = [
             ['value' => 'today', 'label' => 'Šodien', 'description' => 'Pieslēdzās šodien', 'search' => 'Šodien pēdējā pieslēgšanās'],
             ['value' => 'recent', 'label' => 'Pēdējās 7 dienas', 'description' => 'Aktīvi pēdējā nedēļā', 'search' => 'Pēdējās 7 dienas nesen'],
@@ -149,17 +149,12 @@
                             <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Lietotāja statuss</div>
                             <div class="quick-status-filters" x-data="{ value: @js($filters['is_active']) }">
                                 <input type="hidden" name="is_active" :value="value">
-                                <button type="button" class="quick-status-filter quick-status-filter-emerald" :class="value === '1' ? 'quick-status-filter-active' : ''" @click="value = '1'; $nextTick(() => $el.closest('form').requestSubmit())">
+                                <button type="button" class="quick-status-filter quick-status-filter-emerald" :class="value === '1' ? 'quick-status-filter-active' : ''" @click="value = value === '1' ? '' : '1'; $nextTick(() => $el.closest('form').requestSubmit())">
                                     <x-icon name="check-circle" size="h-4 w-4" />
                                     <span>Aktīvi</span>
                                     <span class="quick-filter-count">{{ $userSummary['active'] }}</span>
                                 </button>
-                                <button type="button" class="quick-status-filter quick-status-filter-slate" :class="value === '' ? 'quick-status-filter-active' : ''" @click="value = ''; $nextTick(() => $el.closest('form').requestSubmit())">
-                                    <x-icon name="filter" size="h-4 w-4" />
-                                    <span>Visi</span>
-                                    <span class="quick-filter-count">{{ $userSummary['total'] }}</span>
-                                </button>
-                                <button type="button" class="quick-status-filter quick-status-filter-rose" :class="value === '0' ? 'quick-status-filter-active' : ''" @click="value = '0'; $nextTick(() => $el.closest('form').requestSubmit())">
+                                <button type="button" class="quick-status-filter quick-status-filter-rose" :class="value === '0' ? 'quick-status-filter-active' : ''" @click="value = value === '0' ? '' : '0'; $nextTick(() => $el.closest('form').requestSubmit())">
                                     <x-icon name="x-circle" size="h-4 w-4" />
                                     <span>Neaktīvi</span>
                                     <span class="quick-filter-count">{{ $userSummary['inactive'] }}</span>

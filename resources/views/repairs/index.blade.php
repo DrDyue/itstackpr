@@ -219,7 +219,9 @@
                             <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Remonta tips</div>
                             <div class="quick-status-filters">
                                 <a
-                                    href="{{ route('repairs.index', array_merge(request()->except(['repair_type', 'page']), ['repair_type' => 'internal', 'statuses_filter' => '1'])) }}"
+                                    href="{{ route('repairs.index', ($filters['repair_type'] ?? '') === 'internal'
+                                        ? array_merge(request()->except(['repair_type', 'page']), ['statuses_filter' => '1'])
+                                        : array_merge(request()->except(['repair_type', 'page']), ['repair_type' => 'internal', 'statuses_filter' => '1'])) }}"
                                     class="quick-status-filter quick-status-filter-sky {{ ($filters['repair_type'] ?? '') === 'internal' ? 'quick-status-filter-active' : '' }}"
                                     data-async-link="true"
                                 >
@@ -228,22 +230,15 @@
                                     <span class="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-white/80 px-1.5 py-0.5 text-[10px] font-bold text-current ring-1 ring-black/5">{{ $typeSummary['internal'] ?? 0 }}</span>
                                 </a>
                                 <a
-                                    href="{{ route('repairs.index', array_merge(request()->except(['repair_type', 'page']), ['repair_type' => 'external', 'statuses_filter' => '1'])) }}"
+                                    href="{{ route('repairs.index', ($filters['repair_type'] ?? '') === 'external'
+                                        ? array_merge(request()->except(['repair_type', 'page']), ['statuses_filter' => '1'])
+                                        : array_merge(request()->except(['repair_type', 'page']), ['repair_type' => 'external', 'statuses_filter' => '1'])) }}"
                                     class="quick-status-filter quick-status-filter-violet {{ ($filters['repair_type'] ?? '') === 'external' ? 'quick-status-filter-active' : '' }}"
                                     data-async-link="true"
                                 >
                                     <x-icon name="send" size="h-4 w-4" />
                                     <span>Ārējais</span>
                                     <span class="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-white/80 px-1.5 py-0.5 text-[10px] font-bold text-current ring-1 ring-black/5">{{ $typeSummary['external'] ?? 0 }}</span>
-                                </a>
-                                <a
-                                    href="{{ route('repairs.index', array_merge(request()->except(['repair_type', 'page']), ['statuses_filter' => '1'])) }}"
-                                    class="quick-status-filter quick-status-filter-slate {{ !isset($filters['repair_type']) ? 'quick-status-filter-active' : '' }}"
-                                    data-async-link="true"
-                                >
-                                    <x-icon name="view" size="h-4 w-4" />
-                                    <span>Visi</span>
-                                    <span class="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-white/80 px-1.5 py-0.5 text-[10px] font-bold text-current ring-1 ring-black/5">{{ $typeSummary['total'] ?? 0 }}</span>
                                 </a>
                             </div>
                         </div>
