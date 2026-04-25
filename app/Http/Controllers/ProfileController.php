@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\User;
 use App\Support\AuditTrail;
+use App\Support\RuntimeSchemaBootstrapper;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 /**
@@ -16,6 +19,11 @@ use Illuminate\View\View;
  */
 class ProfileController extends Controller
 {
+    public function __construct(
+        private readonly RuntimeSchemaBootstrapper $runtimeSchemaBootstrapper
+    ) {
+    }
+
     public function edit(Request $request): View
     {
         return view('profile.edit', [
@@ -68,9 +76,7 @@ class ProfileController extends Controller
         $settings = is_array($user->user_settings) ? $user->user_settings : [];
         $settings[User::SETTING_HIDE_WRITEOFF_DEVICES] = (bool) $validated['hide_written_off_devices'];
 
-        $user->forceFill([
-            'user_settings' => $settings,
-        ])->save();
+        $this->persistProfileSettings($user, $settings);
 
         $after = [
             User::SETTING_HIDE_WRITEOFF_DEVICES => $user->fresh()->prefersHiddenWrittenOffDevices(),
@@ -85,6 +91,35 @@ class ProfileController extends Controller
         );
 
         return Redirect::route('profile.edit')->with('success', 'Iestatījumi saglabāti.');
+    }
+
+    private function persistProfileSettings(User $user, array $settings): void
+    {
+        try {
+            $user->forceFill([
+                'user_settings' => $settings,
+            ])->save();
+        } catch (QueryException $exception) {
+            if (! $this->isMissingUserSettingsColumn($exception)) {
+                throw $exception;
+            }
+
+            $this->runtimeSchemaBootstrapper->ensure();
+
+            if (! Schema::hasColumn('users', 'user_settings')) {
+                throw $exception;
+            }
+
+            $user->refresh();
+            $user->forceFill([
+                'user_settings' => $settings,
+            ])->save();
+        }
+    }
+
+    private function isMissingUserSettingsColumn(QueryException $exception): bool
+    {
+        return str_contains(strtolower($exception->getMessage()), "unknown column 'user_settings'");
     }
 
     public function destroy(Request $request): RedirectResponse

@@ -126,6 +126,14 @@ class AuthBootstrapper
                 $table->timestamp('last_login')->nullable();
             }
 
+            if (! Schema::hasColumn('users', 'password_reset_requested_at')) {
+                $table->timestamp('password_reset_requested_at')->nullable();
+            }
+
+            if (! Schema::hasColumn('users', 'user_settings')) {
+                $table->text('user_settings')->nullable();
+            }
+
             if (! Schema::hasColumn('users', 'created_at')) {
                 $table->timestamp('created_at')->nullable();
             }

@@ -56,6 +56,7 @@ class RuntimeSchemaBootstrapper
     private function ensureUsersTable(): void
     {
         $this->addColumnIfMissing('users', 'password_reset_requested_at', fn (Blueprint $table) => $table->timestamp('password_reset_requested_at')->nullable());
+        $this->addColumnIfMissing('users', 'user_settings', fn (Blueprint $table) => $table->text('user_settings')->nullable());
     }
 
     /**
