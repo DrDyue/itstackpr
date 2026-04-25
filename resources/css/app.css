@@ -4917,6 +4917,76 @@ tbody td {
     background-color: rgba(147, 197, 253, 0.88) !important;
 }
 
+.table-search-outline td {
+    position: relative;
+}
+
+.table-search-outline.table-search-hit td,
+.table-search-outline.table-search-linger td,
+.table-search-outline.table-search-match td,
+.table-search-outline.table-search-active td {
+    background-image: none !important;
+}
+
+.table-search-outline.table-search-hit td {
+    box-shadow:
+        inset 0 2px 0 rgba(37, 99, 235, 0.95),
+        inset 0 -2px 0 rgba(37, 99, 235, 0.95);
+    animation: table-search-outline-pulse 2.2s ease;
+}
+
+.table-search-outline.table-search-linger td {
+    box-shadow:
+        inset 0 2px 0 rgba(59, 130, 246, 0.72),
+        inset 0 -2px 0 rgba(59, 130, 246, 0.72);
+}
+
+.table-search-outline.table-search-match td {
+    box-shadow:
+        inset 0 2px 0 rgba(96, 165, 250, 0.4),
+        inset 0 -2px 0 rgba(96, 165, 250, 0.4);
+}
+
+.table-search-outline.table-search-active td {
+    box-shadow:
+        inset 0 2px 0 rgba(37, 99, 235, 0.8),
+        inset 0 -2px 0 rgba(37, 99, 235, 0.8);
+}
+
+.table-search-outline.table-search-hit td:first-child,
+.table-search-outline.table-search-linger td:first-child,
+.table-search-outline.table-search-match td:first-child,
+.table-search-outline.table-search-active td:first-child {
+    box-shadow:
+        inset 4px 0 0 rgba(37, 99, 235, 0.95),
+        inset 0 2px 0 rgba(37, 99, 235, 0.95),
+        inset 0 -2px 0 rgba(37, 99, 235, 0.95);
+}
+
+.table-search-outline.table-search-hit td:last-child,
+.table-search-outline.table-search-linger td:last-child,
+.table-search-outline.table-search-match td:last-child,
+.table-search-outline.table-search-active td:last-child {
+    box-shadow:
+        inset -4px 0 0 rgba(37, 99, 235, 0.95),
+        inset 0 2px 0 rgba(37, 99, 235, 0.95),
+        inset 0 -2px 0 rgba(37, 99, 235, 0.95);
+}
+
+@keyframes table-search-outline-pulse {
+    0%,
+    100% {
+        box-shadow:
+            inset 0 2px 0 rgba(37, 99, 235, 0.95),
+            inset 0 -2px 0 rgba(37, 99, 235, 0.95);
+    }
+    35% {
+        box-shadow:
+            inset 0 3px 0 rgba(29, 78, 216, 1),
+            inset 0 -3px 0 rgba(29, 78, 216, 1);
+    }
+}
+
 .table-search-navigator {
     position: fixed;
     left: 1.25rem;
@@ -6797,6 +6867,57 @@ html[data-theme='dark'] .table-search-match td {
 
 html[data-theme='dark'] .table-search-active td {
     background-color: rgba(37, 99, 235, 0.36) !important;
+}
+
+html[data-theme='dark'] .table-search-outline.table-search-hit td,
+html[data-theme='dark'] .table-search-outline.table-search-linger td,
+html[data-theme='dark'] .table-search-outline.table-search-match td,
+html[data-theme='dark'] .table-search-outline.table-search-active td {
+    background-image: none !important;
+}
+
+html[data-theme='dark'] .table-search-outline.table-search-hit td {
+    box-shadow:
+        inset 0 2px 0 rgba(96, 165, 250, 0.94),
+        inset 0 -2px 0 rgba(96, 165, 250, 0.94);
+}
+
+html[data-theme='dark'] .table-search-outline.table-search-linger td {
+    box-shadow:
+        inset 0 2px 0 rgba(96, 165, 250, 0.66),
+        inset 0 -2px 0 rgba(96, 165, 250, 0.66);
+}
+
+html[data-theme='dark'] .table-search-outline.table-search-match td {
+    box-shadow:
+        inset 0 2px 0 rgba(96, 165, 250, 0.42),
+        inset 0 -2px 0 rgba(96, 165, 250, 0.42);
+}
+
+html[data-theme='dark'] .table-search-outline.table-search-active td {
+    box-shadow:
+        inset 0 2px 0 rgba(147, 197, 253, 0.82),
+        inset 0 -2px 0 rgba(147, 197, 253, 0.82);
+}
+
+html[data-theme='dark'] .table-search-outline.table-search-hit td:first-child,
+html[data-theme='dark'] .table-search-outline.table-search-linger td:first-child,
+html[data-theme='dark'] .table-search-outline.table-search-match td:first-child,
+html[data-theme='dark'] .table-search-outline.table-search-active td:first-child {
+    box-shadow:
+        inset 4px 0 0 rgba(96, 165, 250, 0.94),
+        inset 0 2px 0 rgba(96, 165, 250, 0.94),
+        inset 0 -2px 0 rgba(96, 165, 250, 0.94);
+}
+
+html[data-theme='dark'] .table-search-outline.table-search-hit td:last-child,
+html[data-theme='dark'] .table-search-outline.table-search-linger td:last-child,
+html[data-theme='dark'] .table-search-outline.table-search-match td:last-child,
+html[data-theme='dark'] .table-search-outline.table-search-active td:last-child {
+    box-shadow:
+        inset -4px 0 0 rgba(96, 165, 250, 0.94),
+        inset 0 2px 0 rgba(96, 165, 250, 0.94),
+        inset 0 -2px 0 rgba(96, 165, 250, 0.94);
 }
 
 html[data-theme='dark'] .app-loading-bar-shell {

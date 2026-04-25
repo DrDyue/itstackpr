@@ -235,10 +235,30 @@ const getAsyncTableFormByRootSelector = (rootSelector) => {
 
 const TABLE_SEARCH_HIT_DURATION = 2400;
 const TABLE_SEARCH_LINGER_DURATION = 10000;
+const TABLE_SEARCH_OUTLINE_ROW_CLASS_PATTERN = /\bapp-table-row-(?:pending|incoming|password-request|accent-[a-z0-9-]+)\b/;
+
+const usesOutlineTableSearchHighlight = (row) => {
+    if (!row) {
+        return false;
+    }
+
+    const configuredStyle = (row.dataset?.tableSearchHighlightStyle || '').trim().toLowerCase();
+
+    if (configuredStyle === 'outline') {
+        return true;
+    }
+
+    if (configuredStyle === 'background') {
+        return false;
+    }
+
+    return TABLE_SEARCH_OUTLINE_ROW_CLASS_PATTERN.test(row.className || '');
+};
 
 const clearTableSearchHighlights = (root) => {
     root?.querySelectorAll('.table-search-hit, .table-search-linger, .table-search-match, .table-search-active').forEach((row) => {
         row.classList.remove('table-search-hit', 'table-search-linger', 'table-search-match', 'table-search-active');
+        row.classList.remove('table-search-outline');
         delete row.dataset.tableSearchHighlightToken;
     });
 };
@@ -264,6 +284,7 @@ const applyNavigatorHighlights = (root) => {
             null;
 
         if (row) {
+            row.classList.toggle('table-search-outline', usesOutlineTableSearchHighlight(row));
             row.classList.add(index === currentIndex ? 'table-search-active' : 'table-search-match');
         }
     });
@@ -274,6 +295,7 @@ const highlightTableRow = (row) => {
 
     row.dataset.tableSearchHighlightToken = highlightToken;
     row.classList.remove('table-search-hit', 'table-search-linger');
+    row.classList.toggle('table-search-outline', usesOutlineTableSearchHighlight(row));
     void row.offsetWidth;
     row.classList.add('table-search-hit');
 
@@ -292,6 +314,7 @@ const highlightTableRow = (row) => {
         }
 
         row.classList.remove('table-search-linger');
+        row.classList.remove('table-search-outline');
         delete row.dataset.tableSearchHighlightToken;
     }, TABLE_SEARCH_HIT_DURATION + TABLE_SEARCH_LINGER_DURATION);
 };
