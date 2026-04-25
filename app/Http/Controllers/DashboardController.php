@@ -48,7 +48,7 @@ class DashboardController extends Controller
 
         $filters = $this->dashboardFilters($request);
         $sorting = $this->dashboardSorting($request);
-        $viewData = $this->dashboardDevicesData($filters, null, $sorting);
+        $viewData = $this->dashboardDevicesData($filters, null, $sorting, $user->prefersHiddenWrittenOffDevices());
 
         return view('dashboard.devices-table', [
             'dashboardDevices' => $viewData['dashboardDevices'],
@@ -68,11 +68,12 @@ class DashboardController extends Controller
     {
         $isManager = $user->canManageRequests();
         $hasRooms = $this->featureTableExists('rooms');
+        $hideWrittenOffDevices = $user->prefersHiddenWrittenOffDevices();
         $sorting = $this->dashboardSorting($request);
         $repairRequestQuery = Schema::hasTable('repair_requests') ? RepairRequest::query() : null;
         $writeoffRequestQuery = Schema::hasTable('writeoff_requests') ? WriteoffRequest::query() : null;
 
-        $locationRooms = $this->dashboardLocationRooms($hasRooms && $isManager);
+        $locationRooms = $this->dashboardLocationRooms($hasRooms && $isManager, $hideWrittenOffDevices);
         $locationTree = $this->dashboardLocationTree($locationRooms, $filters);
 
         $pendingRepairRequestCount = $repairRequestQuery
@@ -83,7 +84,7 @@ class DashboardController extends Controller
             ? (clone $writeoffRequestQuery)->where('status', WriteoffRequest::STATUS_SUBMITTED)->count()
             : 0;
 
-        return array_merge($this->dashboardDevicesData($filters, $locationRooms, $sorting), [
+        return array_merge($this->dashboardDevicesData($filters, $locationRooms, $sorting, $hideWrittenOffDevices), [
             'locationTree' => $locationTree,
             'quickActions' => $this->quickActions(
                 $pendingRepairRequestCount,
@@ -149,7 +150,7 @@ class DashboardController extends Controller
         ];
     }
 
-    private function dashboardLocationRooms(bool $shouldLoad): Collection
+    private function dashboardLocationRooms(bool $shouldLoad, bool $hideWrittenOffDevices = false): Collection
     {
         if (! $shouldLoad) {
             return collect();
@@ -158,7 +159,19 @@ class DashboardController extends Controller
         return Room::query()
             ->select(['id', 'building_id', 'floor_number', 'room_number', 'room_name', 'department'])
             ->with(['building:id,building_name'])
-            ->withCount(['devices'])
+            ->when(
+                $hideWrittenOffDevices,
+                fn (Builder $query) => $query->whereHas(
+                    'devices',
+                    fn (Builder $deviceQuery) => $deviceQuery->where('status', '!=', Device::STATUS_WRITEOFF)
+                )
+            )
+            ->withCount([
+                'devices' => fn (Builder $query) => $query->when(
+                    $hideWrittenOffDevices,
+                    fn (Builder $deviceQuery) => $deviceQuery->where('status', '!=', Device::STATUS_WRITEOFF)
+                ),
+            ])
             ->orderBy('floor_number')
             ->orderBy('room_number')
             ->get();
@@ -192,7 +205,7 @@ class DashboardController extends Controller
             ->values();
     }
 
-    private function dashboardDevicesData(array $filters, ?Collection $locationRooms = null, ?array $sorting = null): array
+    private function dashboardDevicesData(array $filters, ?Collection $locationRooms = null, ?array $sorting = null, bool $hideWrittenOffDevices = false): array
     {
         if (! $this->featureTableExists('devices')) {
             return [
@@ -211,7 +224,11 @@ class DashboardController extends Controller
         $deviceQuery = Device::query()
             ->leftJoin('rooms as sort_rooms', 'sort_rooms.id', '=', 'devices.room_id')
             ->leftJoin('buildings as sort_buildings', 'sort_buildings.id', '=', 'devices.building_id')
-            ->leftJoin('users as sort_users', 'sort_users.id', '=', 'devices.assigned_to_id');
+            ->leftJoin('users as sort_users', 'sort_users.id', '=', 'devices.assigned_to_id')
+            ->when(
+                $hideWrittenOffDevices,
+                fn (Builder $query) => $query->where('devices.status', '!=', Device::STATUS_WRITEOFF)
+            );
         $this->applyDashboardDeviceFilters($deviceQuery, $filters, $locationRooms);
         $this->applyDashboardDeviceSorting($deviceQuery, $sorting);
 

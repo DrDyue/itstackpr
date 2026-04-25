@@ -107,7 +107,7 @@ class DeviceController extends Controller
         AuditTrail::search($user, 'Device', $code, 'Meklēta ierīce pēc koda: '.$code);
 
         $canManageDevices = $user->canManageRequests();
-        $filters = $this->normalizedIndexFilters($request, $canManageDevices);
+        $filters = $this->normalizedIndexFilters($request, $user);
         $sorting = $this->normalizedDeviceSorting($request, $canManageDevices);
         $accessibleRooms = $this->accessibleRooms($user);
         $types = DeviceType::query()
@@ -174,7 +174,7 @@ class DeviceController extends Controller
     private function devicesIndexViewData(Request $request, User $user): array
     {
         $canManageDevices = $user->canManageRequests();
-        $filters = $this->normalizedIndexFilters($request, $canManageDevices);
+        $filters = $this->normalizedIndexFilters($request, $user);
         $sorting = $this->normalizedDeviceSorting($request, $canManageDevices);
 
         $summaryQuery = $this->visibleDevicesQuery($user);
@@ -330,7 +330,7 @@ class DeviceController extends Controller
             'selectedType' => $selectedType,
             'selectedAssignedUser' => $selectedAssignedUser,
             'assignableUsers' => $assignableUsers,
-            'statuses' => $this->availableStatuses($canManageDevices),
+            'statuses' => $this->availableStatuses($user),
             'statusLabels' => $this->statusLabels(),
             'canManageDevices' => $canManageDevices,
             'quickRoomOptions' => $canManageDevices ? $this->quickRoomOptions() : collect(),
@@ -357,9 +357,9 @@ class DeviceController extends Controller
     /**
      * Normalizē visus ierīču saraksta filtrus vienotā formā.
      */
-    private function normalizedIndexFilters(Request $request, bool $canManageDevices): array
+    private function normalizedIndexFilters(Request $request, User $user): array
     {
-        $availableStatuses = $this->availableStatuses($canManageDevices);
+        $availableStatuses = $this->availableStatuses($user);
         $statuses = collect($request->query('status', []))
             ->map(fn (mixed $status) => trim((string) $status))
             ->filter(fn (string $status) => in_array($status, $availableStatuses, true))
@@ -563,9 +563,15 @@ SQL;
         return array_intersect_key($options, array_flip(self::USER_SORTABLE_COLUMNS));
     }
 
-    private function availableStatuses(bool $canManageDevices): array
+    private function availableStatuses(User $user): array
     {
-        return $canManageDevices ? self::STATUSES : self::USER_VISIBLE_STATUSES;
+        if (! $user->canManageRequests()) {
+            return self::USER_VISIBLE_STATUSES;
+        }
+
+        return $user->prefersHiddenWrittenOffDevices()
+            ? self::USER_VISIBLE_STATUSES
+            : self::STATUSES;
     }
 
     private function auditDeviceListInteractions(Request $request, User $user, array $filters, array $sorting): void
@@ -904,12 +910,17 @@ SQL;
 
     private function visibleDevicesQuery(User $user): Builder
     {
-        return Device::query()->when(
-            ! $user->canManageRequests(),
-            fn (Builder $query) => $query
-                ->where('assigned_to_id', $user->id)
-                ->where('status', '!=', Device::STATUS_WRITEOFF)
-        );
+        return Device::query()
+            ->when(
+                ! $user->canManageRequests(),
+                fn (Builder $query) => $query
+                    ->where('assigned_to_id', $user->id)
+                    ->where('status', '!=', Device::STATUS_WRITEOFF)
+            )
+            ->when(
+                $user->canManageRequests() && $user->prefersHiddenWrittenOffDevices(),
+                fn (Builder $query) => $query->where('status', '!=', Device::STATUS_WRITEOFF)
+            );
     }
 
     private function accessibleRooms(User $user): Collection
@@ -918,7 +929,9 @@ SQL;
             ->select(['id', 'building_id', 'floor_number', 'room_number', 'room_name', 'department'])
             ->with('building:id,building_name')
             ->whereHas('devices', function (Builder $query) use ($user) {
-                $query->where('status', '!=', Device::STATUS_WRITEOFF);
+                if (! $user->canManageRequests() || $user->prefersHiddenWrittenOffDevices()) {
+                    $query->where('status', '!=', Device::STATUS_WRITEOFF);
+                }
 
                 if (! $user->canManageRequests()) {
                     $query->where('assigned_to_id', $user->id);

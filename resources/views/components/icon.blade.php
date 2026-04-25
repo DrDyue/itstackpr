@@ -88,6 +88,13 @@
         </svg>
         @break
 
+    @case('settings')
+        <svg xmlns="http://www.w3.org/2000/svg" {{ $attributes->class($size) }} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h3m-7.272 3.728 2.121-2.12m9.9 9.9 2.12-2.12M6 13.5v-3m12 3v-3m-2.228 7.272-2.12-2.121m-5.304 0-2.12 2.12M12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12a7.5 7.5 0 0 1-.138 1.432l1.799 1.399-1.5 2.598-2.215-.587a7.55 7.55 0 0 1-1.24.719L15.75 20.25h-3l-.456-2.689a7.55 7.55 0 0 1-1.24-.719l-2.215.587-1.5-2.598 1.799-1.399A7.5 7.5 0 0 1 9 12c0-.49.047-.969.138-1.432L7.339 9.169l1.5-2.598 2.215.587c.389-.286.804-.526 1.24-.719L12.75 3.75h3l.456 2.689c.436.193.851.433 1.24.719l2.215-.587 1.5 2.598-1.799 1.399c.091.463.138.942.138 1.432Z" />
+        </svg>
+        @break
+
     @case('logout')
         <svg xmlns="http://www.w3.org/2000/svg" {{ $attributes->class($size) }} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6A2.25 2.25 0 0 0 5.25 5.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15" />

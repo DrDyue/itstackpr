@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\User;
 use App\Support\AuditTrail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -48,6 +49,42 @@ class ProfileController extends Controller
         );
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    public function updateSettings(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user, 404);
+        abort_unless($user->isAdmin(), 403);
+
+        $validated = $request->validateWithBag('profileSettings', [
+            'hide_written_off_devices' => ['required', 'boolean'],
+        ]);
+
+        $before = [
+            User::SETTING_HIDE_WRITEOFF_DEVICES => $user->prefersHiddenWrittenOffDevices(),
+        ];
+
+        $settings = is_array($user->user_settings) ? $user->user_settings : [];
+        $settings[User::SETTING_HIDE_WRITEOFF_DEVICES] = (bool) $validated['hide_written_off_devices'];
+
+        $user->forceFill([
+            'user_settings' => $settings,
+        ])->save();
+
+        $after = [
+            User::SETTING_HIDE_WRITEOFF_DEVICES => $user->fresh()->prefersHiddenWrittenOffDevices(),
+        ];
+
+        AuditTrail::updatedFromState(
+            $user->id,
+            $user,
+            $before,
+            $after,
+            description: 'Profila iestatījumi atjaunināti: ' . AuditTrail::labelFor($user)
+        );
+
+        return Redirect::route('profile.edit')->with('success', 'Iestatījumi saglabāti.');
     }
 
     public function destroy(Request $request): RedirectResponse

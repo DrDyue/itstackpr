@@ -29,6 +29,8 @@ class User extends Authenticatable
 
     public const VIEW_MODE_SESSION_KEY = 'user_view_mode';
 
+    public const SETTING_HIDE_WRITEOFF_DEVICES = 'hide_written_off_devices';
+
     protected $fillable = [
         'full_name',
         'email',
@@ -40,6 +42,7 @@ class User extends Authenticatable
         'remember_token',
         'last_login',
         'password_reset_requested_at',
+        'user_settings',
     ];
 
     protected $hidden = [
@@ -56,7 +59,24 @@ class User extends Authenticatable
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
             'password' => 'hashed',
+            'user_settings' => 'array',
         ];
+    }
+
+    public function setting(string $key, mixed $default = null): mixed
+    {
+        $settings = $this->user_settings;
+
+        if (! is_array($settings) || ! array_key_exists($key, $settings)) {
+            return $default;
+        }
+
+        return $settings[$key];
+    }
+
+    public function prefersHiddenWrittenOffDevices(): bool
+    {
+        return (bool) $this->setting(self::SETTING_HIDE_WRITEOFF_DEVICES, false);
     }
 
     /**

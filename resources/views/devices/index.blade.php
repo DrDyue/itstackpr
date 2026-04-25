@@ -17,16 +17,11 @@
         $quickAssigneeSelectOptions = collect($quickAssigneeOptions ?? [])->values();
         $selectedStatuses = $filters['statuses'];
         $activeRequestsSelected = (bool) ($filters['active_requests'] ?? false);
-        $statusFilterLinks = $canManageDevices
-            ? [
-                ['label' => 'Aktīvas', 'value' => 'active', 'icon' => 'check-circle', 'tone' => 'emerald'],
-                ['label' => 'Remontā', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'sky'],
-                ['label' => 'Norakstītas', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
-            ]
-            : [
-                ['label' => 'Aktīvas', 'value' => 'active', 'icon' => 'check-circle', 'tone' => 'emerald'],
-                ['label' => 'Remontā', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'sky'],
-            ];
+        $statusFilterLinks = collect([
+            ['label' => 'Aktīvas', 'value' => 'active', 'icon' => 'check-circle', 'tone' => 'emerald'],
+            ['label' => 'Remontā', 'value' => 'repair', 'icon' => 'repair', 'tone' => 'sky'],
+            ['label' => 'Norakstītas', 'value' => 'writeoff', 'icon' => 'writeoff', 'tone' => 'rose'],
+        ])->filter(fn (array $statusFilter) => in_array($statusFilter['value'], $statuses, true))->values()->all();
         $roomSelectOptions = $roomOptions->map(fn ($room) => [
             'value' => (string) $room->id,
             'label' => $room->room_number . ($room->room_name ? ' - ' . $room->room_name : ''),
