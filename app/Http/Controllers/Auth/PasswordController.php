@@ -36,6 +36,8 @@ class PasswordController extends Controller
             AuditTrail::SEVERITY_WARNING
         );
 
-        return back()->with('status', 'password-updated');
+        return back()
+            ->with('success', 'Parole nomainīta.')
+            ->with('close_profile_modals', true);
     }
 }

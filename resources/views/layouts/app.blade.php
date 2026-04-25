@@ -41,6 +41,10 @@
             {{ $slot }}
         </main>
 
+        @auth
+            @include('profile.partials.header-modals')
+        @endauth
+
         <div data-app-toast-root class="app-toast-stack pointer-events-none fixed bottom-4 right-4 z-[70] flex w-[min(30rem,calc(100vw-1.5rem))] flex-col items-stretch gap-3 sm:bottom-6 sm:right-6">
         @include('layouts.loading-indicator')
 

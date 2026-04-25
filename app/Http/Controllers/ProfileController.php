@@ -12,7 +12,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\View\View;
 
 /**
  * Lietotāja profila rediģēšana un konta dzēšana.
@@ -24,11 +23,12 @@ class ProfileController extends Controller
     ) {
     }
 
-    public function edit(Request $request): View
+    public function edit(Request $request): RedirectResponse
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
-        ]);
+        $user = $request->user();
+        abort_unless($user, 404);
+
+        return redirect()->route($user->canManageRequests() ? 'dashboard' : 'devices.index');
     }
 
     public function update(ProfileUpdateRequest $request): RedirectResponse
@@ -56,7 +56,9 @@ class ProfileController extends Controller
             description: 'Profila dati atjaunināti: ' . AuditTrail::labelFor($user)
         );
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        return Redirect::back()
+            ->with('success', 'Profila informācija saglabāta.')
+            ->with('close_profile_modals', true);
     }
 
     public function updateSettings(Request $request): RedirectResponse
@@ -90,7 +92,9 @@ class ProfileController extends Controller
             description: 'Profila iestatījumi atjaunināti: ' . AuditTrail::labelFor($user)
         );
 
-        return Redirect::route('profile.edit')->with('success', 'Iestatījumi saglabāti.');
+        return Redirect::back()
+            ->with('success', 'Iestatījumi saglabāti.')
+            ->with('close_profile_modals', true);
     }
 
     private function persistProfileSettings(User $user, array $settings): void

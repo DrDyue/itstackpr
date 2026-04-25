@@ -210,7 +210,7 @@
 
                     {{-- Paziņojumu centrs --}}
                     @php
-                        $showNotificationPreviewCards = ! request()->routeIs('profile.edit');
+                        $showNotificationPreviewCards = true;
                         $pendingNotificationsCount = $canManageRequests
                             ? (\App\Models\RepairRequest::query()->where('status', \App\Models\RepairRequest::STATUS_SUBMITTED)->count()
                                 + \App\Models\WriteoffRequest::query()->where('status', \App\Models\WriteoffRequest::STATUS_SUBMITTED)->count()
@@ -466,10 +466,24 @@
                             </div>
                         </div>
                         <div class="mx-4 my-2 h-px bg-slate-200"></div>
-                        <x-dropdown-link :href="route('profile.edit')">
+                        <button
+                            type="button"
+                            class="flex w-full items-center gap-2.5 rounded-xl px-4 py-2.5 text-start text-sm font-medium text-slate-700 transition duration-150 ease-in-out hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900 focus:outline-none"
+                            @click="$dispatch('open-modal', 'profile-modal')"
+                        >
                             <x-icon name="profile" size="h-4 w-4" />
                             <span>Profils</span>
-                        </x-dropdown-link>
+                        </button>
+                        @if ($isAdmin)
+                            <button
+                                type="button"
+                                class="flex w-full items-center gap-2.5 rounded-xl px-4 py-2.5 text-start text-sm font-medium text-slate-700 transition duration-150 ease-in-out hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900 focus:outline-none"
+                                @click="$dispatch('open-modal', 'profile-settings-modal')"
+                            >
+                                <x-icon name="settings" size="h-4 w-4" />
+                                <span>Iestatījumi</span>
+                            </button>
+                        @endif
                         <x-post-action-button
                             :action="route('logout')"
                             button-class="flex w-full items-center gap-2.5 rounded-xl px-4 py-2.5 text-start text-sm font-medium text-rose-600 transition duration-150 ease-in-out hover:bg-rose-50 focus:bg-rose-50 focus:outline-none"
@@ -626,12 +640,28 @@
                         </button>
                     </div>
                 </div>
-                <x-responsive-nav-link :href="route('profile.edit')" :active="request()->routeIs('profile.edit')">
+                <button
+                    type="button"
+                    class="block w-full whitespace-nowrap rounded-2xl px-4 py-3 text-start text-base font-medium text-slate-700 transition duration-150 ease-in-out hover:bg-slate-50 hover:shadow-sm hover:text-slate-900"
+                    @click="open = false; $dispatch('open-modal', 'profile-modal')"
+                >
                     <span class="inline-flex items-center gap-2.5">
                         <x-icon name="profile" size="h-5 w-5" />
                         <span>Profils</span>
                     </span>
-                </x-responsive-nav-link>
+                </button>
+                @if ($isAdmin)
+                    <button
+                        type="button"
+                        class="block w-full whitespace-nowrap rounded-2xl px-4 py-3 text-start text-base font-medium text-slate-700 transition duration-150 ease-in-out hover:bg-slate-50 hover:shadow-sm hover:text-slate-900"
+                        @click="open = false; $dispatch('open-modal', 'profile-settings-modal')"
+                    >
+                        <span class="inline-flex items-center gap-2.5">
+                            <x-icon name="settings" size="h-5 w-5" />
+                            <span>Iestatījumi</span>
+                        </span>
+                    </button>
+                @endif
                 <x-post-action-button
                     :action="route('logout')"
                     button-class="block w-full whitespace-nowrap rounded-2xl px-4 py-3 text-start text-base font-medium text-rose-600 transition duration-150 ease-in-out hover:bg-rose-50 hover:shadow-sm hover:text-rose-700"
