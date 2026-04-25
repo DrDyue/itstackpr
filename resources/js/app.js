@@ -39,6 +39,136 @@ const writeStorageValue = (key, value) => {
     }
 };
 
+const initializeFloatingTableActionMenus = () => {
+    let frameId = null;
+
+    const panelSelector = '.table-action-menu .table-action-list';
+    const viewportPadding = 12;
+    const panelGap = 10;
+
+    const getVisiblePanels = () => Array.from(document.querySelectorAll(panelSelector)).filter((panel) => {
+        if (!(panel instanceof HTMLElement)) {
+            return false;
+        }
+
+        const styles = window.getComputedStyle(panel);
+        return styles.display !== 'none' && styles.visibility !== 'hidden';
+    });
+
+    const findTrigger = (menu) => {
+        if (!(menu instanceof HTMLElement)) {
+            return null;
+        }
+
+        return Array.from(menu.children).find((child) => {
+            if (!(child instanceof HTMLElement)) {
+                return false;
+            }
+
+            if (child.matches('.table-action-list, .table-action-inline-panel')) {
+                return false;
+            }
+
+            return child.matches('button, a, [role="button"]');
+        }) ?? null;
+    };
+
+    const resetPanelPosition = (panel) => {
+        panel.dataset.floatingMenu = 'false';
+        panel.style.position = '';
+        panel.style.top = '';
+        panel.style.left = '';
+        panel.style.right = '';
+        panel.style.bottom = '';
+        panel.style.marginTop = '';
+        panel.style.zIndex = '';
+    };
+
+    const positionPanel = (panel) => {
+        const menu = panel.closest('.table-action-menu');
+        const trigger = findTrigger(menu);
+
+        if (!(menu instanceof HTMLElement) || !(trigger instanceof HTMLElement)) {
+            resetPanelPosition(panel);
+            return;
+        }
+
+        panel.style.position = 'fixed';
+        panel.style.top = '0';
+        panel.style.left = '0';
+        panel.style.right = 'auto';
+        panel.style.bottom = 'auto';
+        panel.style.marginTop = '0';
+        panel.style.zIndex = '260';
+
+        const triggerRect = trigger.getBoundingClientRect();
+        const panelRect = panel.getBoundingClientRect();
+
+        const availableBelow = window.innerHeight - triggerRect.bottom - viewportPadding;
+        const availableAbove = triggerRect.top - viewportPadding;
+        const openUpward = panelRect.height > availableBelow && availableAbove > availableBelow;
+
+        let top = openUpward
+            ? triggerRect.top - panelRect.height - panelGap
+            : triggerRect.bottom + panelGap;
+        let left = triggerRect.right - panelRect.width;
+
+        top = Math.max(viewportPadding, Math.min(top, window.innerHeight - panelRect.height - viewportPadding));
+        left = Math.max(viewportPadding, Math.min(left, window.innerWidth - panelRect.width - viewportPadding));
+
+        panel.style.top = `${Math.round(top)}px`;
+        panel.style.left = `${Math.round(left)}px`;
+        panel.dataset.floatingMenu = 'true';
+    };
+
+    const syncPanels = () => {
+        frameId = null;
+
+        const visiblePanels = new Set(getVisiblePanels());
+
+        document.querySelectorAll(panelSelector).forEach((panel) => {
+            if (!(panel instanceof HTMLElement)) {
+                return;
+            }
+
+            if (!visiblePanels.has(panel)) {
+                resetPanelPosition(panel);
+                return;
+            }
+
+            positionPanel(panel);
+        });
+    };
+
+    const scheduleSync = () => {
+        if (frameId !== null) {
+            return;
+        }
+
+        frameId = window.requestAnimationFrame(syncPanels);
+    };
+
+    const observer = new MutationObserver(() => {
+        scheduleSync();
+    });
+
+    runOnDomReady(() => {
+        scheduleSync();
+
+        observer.observe(document.body, {
+            subtree: true,
+            childList: true,
+            attributes: true,
+            attributeFilter: ['style', 'class'],
+        });
+
+        window.addEventListener('resize', scheduleSync);
+        window.addEventListener('scroll', scheduleSync, true);
+        document.addEventListener('click', () => window.setTimeout(scheduleSync, 0));
+        document.addEventListener('keydown', () => window.setTimeout(scheduleSync, 0));
+    });
+};
+
 const getNotificationPriority = (notification) => {
     const accent = String(notification?.accent || '').toLowerCase();
     const type = String(notification?.type || '').toLowerCase();
@@ -1527,6 +1657,7 @@ const runAppInitializers = () => {
 };
 
 runOnDomReady(runAppInitializers);
+initializeFloatingTableActionMenus();
 
 if (Alpine && !window.__appAlpineStarted) {
     window.__appAlpineStarted = true;
