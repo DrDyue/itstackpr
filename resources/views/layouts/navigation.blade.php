@@ -70,12 +70,9 @@
         if ($canManageRequests) {
             $repairsNavigationItem = ['route' => 'repairs.index', 'pattern' => 'repairs*', 'label' => 'Remonti', 'icon' => 'repair'];
 
-            $secondaryNavigationItems = [
+            $lessImportantNavigationItems = [
                 ['route' => 'rooms.index', 'pattern' => 'rooms*', 'label' => 'Telpas', 'icon' => 'room'],
                 ['route' => 'buildings.index', 'pattern' => 'buildings*', 'label' => 'Ēkas', 'icon' => 'building'],
-            ];
-
-            $lessImportantNavigationItems = [
                 ['route' => 'device-types.index', 'pattern' => 'device-types*', 'label' => 'Ierīču tipi', 'icon' => 'tag'],
             ];
         }

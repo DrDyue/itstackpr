@@ -169,13 +169,7 @@ class RepairRequestController extends Controller
                     ->first()
                 : null,
             'sortDirectionLabels' => ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'],
-      
-     * Meklēšana ņem vērā aktīvos filtrus un atgriež lapas numuru un elementa ID.
-     * Neprademanāks lietotājs var meklēt tikai savus pieteikumus.
-     *
-     * Izsaukšana: GET /repair-requests/find-by-code | Pieejams: jebkurš autentificēts lietotājs.
-     * Scenārijs: JavaScript izsauc šo metodi, kad lietotājs raksta mājēšanas lodziņā.
-     *  ];
+        ];
     }
 
     /**
@@ -227,13 +221,6 @@ class RepairRequestController extends Controller
         if ($foundIndex === null) {
             return response()->json(['found' => false, 'page' => 1]);
         }
- ar validāciju un pieejamības pārbaudi.
-     *
-     * Pieteikums tiek izveido ar stāvokli "submitted" (gaidošs). Validē ierīci un problēmas aprakstu.
-     * Tikai neprademanāks lietotājs var iesniegt pieteikumu tikai savai piesaistītai ierīcei.
-     *
-     * Izsaukšana: POST /repair-requests | Pieejams: parasts lietotājs (neadministrators).
-     * Scenārijs: Lietotājs izvēlas ierīci un apraksta problēmu remonta pieteikuma formā
         return response()->json([
             'found' => true,
             'page' => 1,
@@ -270,14 +257,7 @@ class RepairRequestController extends Controller
                 'device_id' => ['Vari pieteikt remontu tikai savai piesaistītai ierīcei.'],
             ]);
         }
-pstrādā remonta pieteikuma izskatīšanu (apstiprināšanu vai noraidīšanu).
-     *
-     * Tikai administrators var apstiprināt vai noraidīt pieteikumus. Apstiprināšanas gadījumā
-     * tiek automātiski izveidots remonta ieraksts un ierīces statuss mainīts uz "repair".
-     * Pieteikuma pārejas tiek reģistrētas audita žurnālā.
-     *
-     * Izsaukšana: POST /repair-requests/{id}/review | Pieejams: administrators, IT vadītājs.
-     * Scenārijs: Administrator klikšķina uz "Apstiprināt" vai "Noraidīt" pieteikuma kartītē
+
         $this->ensureDeviceCanAcceptRepairRequest($device);
 
         $repairRequest = RepairRequest::create([

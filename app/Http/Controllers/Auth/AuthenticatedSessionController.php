@@ -30,14 +30,7 @@ class AuthenticatedSessionController extends Controller
         $bootstrapStatus = $bootstrapper->prepareLoginScreen();
 
         return view('auth.login', [
-            'authSetupMessage' => $bootstrapStatus['me un iestata sesiju.
-     *
-     * Validē e-pasta un paroles datus, regenerē sesijas ID un iestata skata režīmu.
-     * Administratori automātiski iegūst admina skatu, pārējie - parastā skatu.
-     * Lietotāji tiek novirzīti uz attiecīgo lapu pēc viņu lomas.
-     *
-     * Izsaukšana: POST /login | Pieejams: nav autentificēts.
-     * Scenārijs: Lietotājs aizpilda pieslēgšanās formu un klikšķina "Pieslēgties"ssage'] ?? null,
+            'authSetupMessage' => $bootstrapStatus['message'] ?? null,
         ]);
     }
 
@@ -57,13 +50,7 @@ class AuthenticatedSessionController extends Controller
         AuditTrail::login($request->user());
 
         return redirect()->intended(
-            $request->user()?->canM un izslēdz lietotāju no sistēmas.
-     *
-     * Anulē sesiju, nogēnē sesijas žetonu un noņem skatīšanas režīma sesijas datus.
-     * Lietotājs tiek novirzīts uz sāknējo lapu.
-     *
-     * Izsaukšana: POST /logout | Pieejams: autentificēts.
-     * Scenārijs: Lietotājs klikšķina uz "Izrakstīties" sānjoslā vai loguouta linkāanageRequests()
+            $request->user()?->canManageRequests()
                 ? route('dashboard', absolute: false)
                 : route('devices.index', absolute: false)
         );
