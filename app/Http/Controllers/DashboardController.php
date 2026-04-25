@@ -8,6 +8,7 @@ use App\Models\Room;
 use App\Models\WriteoffRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
@@ -27,9 +28,8 @@ class DashboardController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
-        $isManager = $user->canManageRequests();
 
-        if (! $isManager) {
+        if (! $user->canManageRequests()) {
             return redirect()->route('devices.index');
         }
 
@@ -45,12 +45,8 @@ class DashboardController extends Controller
         abort_unless($user, 403);
         abort_unless($user->canManageRequests(), 403);
 
-        $filters = [
-            'floor' => trim((string) $request->query('floor', '')),
-            'room_id' => trim((string) $request->query('room_id', '')),
-        ];
-
-        $viewData = $this->dashboardViewData($request, $user, $filters);
+        $filters = $this->dashboardFilters($request);
+        $viewData = $this->dashboardDevicesData($filters);
 
         return view('dashboard.devices-table', [
             'dashboardDevices' => $viewData['dashboardDevices'],
@@ -66,36 +62,76 @@ class DashboardController extends Controller
     private function dashboardViewData(Request $request, $user, array $filters): array
     {
         $isManager = $user->canManageRequests();
-        $hasDevices = $this->featureTableExists('devices');
         $hasRooms = $this->featureTableExists('rooms');
-
-        $deviceQuery = $hasDevices ? Device::query() : null;
         $repairRequestQuery = Schema::hasTable('repair_requests') ? RepairRequest::query() : null;
         $writeoffRequestQuery = Schema::hasTable('writeoff_requests') ? WriteoffRequest::query() : null;
 
-        if ($deviceQuery) {
-            $deviceQuery
-                ->when(
-                    $filters['floor'] !== '' && ctype_digit($filters['floor']),
-                    fn ($query) => $query->whereHas('room', fn ($roomQuery) => $roomQuery->where('floor_number', (int) $filters['floor']))
-                )
-                ->when(
-                    $filters['room_id'] !== '' && ctype_digit($filters['room_id']),
-                    fn ($query) => $query->where('room_id', (int) $filters['room_id'])
-                );
+        $locationRooms = $this->dashboardLocationRooms($hasRooms && $isManager);
+        $locationTree = $this->dashboardLocationTree($locationRooms, $filters);
+
+        $pendingRepairRequestCount = $repairRequestQuery
+            ? (clone $repairRequestQuery)->where('status', RepairRequest::STATUS_SUBMITTED)->count()
+            : 0;
+
+        $pendingWriteoffRequestCount = $writeoffRequestQuery
+            ? (clone $writeoffRequestQuery)->where('status', WriteoffRequest::STATUS_SUBMITTED)->count()
+            : 0;
+
+        return array_merge($this->dashboardDevicesData($filters, $locationRooms), [
+            'locationTree' => $locationTree,
+            'quickActions' => $this->quickActions(
+                $pendingRepairRequestCount,
+                $pendingWriteoffRequestCount
+            ),
+            'filters' => $filters,
+        ]);
+    }
+
+    /**
+     * Parāda darba virsmu ar visiem datiem.
+     */
+    public function renderDashboard(Request $request): View
+    {
+        $user = $this->user();
+        abort_unless($user, 403);
+        abort_unless($user->canManageRequests(), 403);
+
+        $filters = $this->dashboardFilters($request);
+        $viewData = $this->dashboardViewData($request, $user, $filters);
+
+        return view('dashboard', array_merge($viewData, [
+            'user' => $user,
+            'isManager' => true,
+            'filters' => $filters,
+        ]));
+    }
+
+    private function dashboardFilters(Request $request): array
+    {
+        return [
+            'floor' => trim((string) $request->query('floor', '')),
+            'room_id' => trim((string) $request->query('room_id', '')),
+        ];
+    }
+
+    private function dashboardLocationRooms(bool $shouldLoad): Collection
+    {
+        if (! $shouldLoad) {
+            return collect();
         }
 
-        $locationRooms = $hasRooms && $isManager
-            ? Room::query()
-                ->select(['id', 'building_id', 'floor_number', 'room_number', 'room_name', 'department'])
-                ->with(['building:id,building_name'])
-                ->withCount(['devices'])
-                ->orderBy('floor_number')
-                ->orderBy('room_number')
-                ->get()
-            : collect();
+        return Room::query()
+            ->select(['id', 'building_id', 'floor_number', 'room_number', 'room_name', 'department'])
+            ->with(['building:id,building_name'])
+            ->withCount(['devices'])
+            ->orderBy('floor_number')
+            ->orderBy('room_number')
+            ->get();
+    }
 
-        $locationTree = $locationRooms
+    private function dashboardLocationTree(Collection $locationRooms, array $filters): Collection
+    {
+        return $locationRooms
             ->groupBy(fn (Room $room) => (string) ($room->floor_number ?? 0))
             ->sortKeys()
             ->map(function ($rooms, $floorKey) use ($filters) {
@@ -119,55 +155,57 @@ class DashboardController extends Controller
                 ];
             })
             ->values();
+    }
 
-        $pendingRepairRequestCount = $repairRequestQuery
-            ? (clone $repairRequestQuery)->where('status', RepairRequest::STATUS_SUBMITTED)->count()
-            : 0;
+    private function dashboardDevicesData(array $filters, ?Collection $locationRooms = null): array
+    {
+        if (! $this->featureTableExists('devices')) {
+            return [
+                'dashboardDevices' => collect(),
+                'dashboardDeviceCount' => 0,
+                'dashboardDeviceStates' => [],
+            ];
+        }
 
-        $pendingWriteoffRequestCount = $writeoffRequestQuery
-            ? (clone $writeoffRequestQuery)->where('status', WriteoffRequest::STATUS_SUBMITTED)->count()
-            : 0;
+        $deviceQuery = Device::query();
+        $this->applyDashboardDeviceFilters($deviceQuery, $filters, $locationRooms);
 
         $dashboardDevices = $deviceQuery
-            ? (clone $deviceQuery)
-                ->select([
-                    'devices.id',
-                    'devices.code',
-                    'devices.name',
-                    'devices.device_type_id',
-                    'devices.model',
-                    'devices.status',
-                    'devices.building_id',
-                    'devices.room_id',
-                    'devices.assigned_to_id',
-                    'devices.serial_number',
-                    'devices.manufacturer',
-                    'devices.device_image_url',
-                    'devices.created_at',
-                ])
-                ->with([
-                    'room:id,building_id,room_number,room_name',
-                    'room.building:id,building_name',
-                    'building:id,building_name',
-                    'type:id,type_name',
-                    'assignedTo:id,full_name,job_title',
-                    'activeRepair',
-                    'activeRepair.acceptedBy:id,full_name',
-                    'activeRepair.request:id,responsible_user_id,reviewed_by_user_id',
-                    'activeRepair.request.responsibleUser:id,full_name',
-                    'pendingRepairRequest',
-                    'pendingRepairRequest.responsibleUser:id,full_name',
-                    'pendingWriteoffRequest',
-                    'pendingWriteoffRequest.responsibleUser:id,full_name',
-                    'pendingTransferRequest',
-                    'pendingTransferRequest.responsibleUser:id,full_name',
-                    'pendingTransferRequest.transferTo:id,full_name',
-                ])
-                ->latest('id')
-                ->get()
-            : collect();
-
-        $dashboardDeviceCount = $dashboardDevices->count();
+            ->select([
+                'devices.id',
+                'devices.code',
+                'devices.name',
+                'devices.device_type_id',
+                'devices.model',
+                'devices.status',
+                'devices.building_id',
+                'devices.room_id',
+                'devices.assigned_to_id',
+                'devices.serial_number',
+                'devices.manufacturer',
+                'devices.device_image_url',
+                'devices.created_at',
+            ])
+            ->with([
+                'room:id,building_id,room_number,room_name',
+                'room.building:id,building_name',
+                'building:id,building_name',
+                'type:id,type_name',
+                'assignedTo:id,full_name,job_title',
+                'activeRepair',
+                'activeRepair.acceptedBy:id,full_name',
+                'activeRepair.request:id,responsible_user_id,reviewed_by_user_id',
+                'activeRepair.request.responsibleUser:id,full_name',
+                'pendingRepairRequest',
+                'pendingRepairRequest.responsibleUser:id,full_name',
+                'pendingWriteoffRequest',
+                'pendingWriteoffRequest.responsibleUser:id,full_name',
+                'pendingTransferRequest',
+                'pendingTransferRequest.responsibleUser:id,full_name',
+                'pendingTransferRequest.transferTo:id,full_name',
+            ])
+            ->latest('id')
+            ->get();
 
         $dashboardDeviceStates = $dashboardDevices
             ->mapWithKeys(fn (Device $device) => [
@@ -181,38 +219,38 @@ class DashboardController extends Controller
 
         return [
             'dashboardDevices' => $dashboardDevices,
-            'dashboardDeviceCount' => $dashboardDeviceCount,
+            'dashboardDeviceCount' => $dashboardDevices->count(),
             'dashboardDeviceStates' => $dashboardDeviceStates,
-            'locationTree' => $locationTree,
-            'quickActions' => $this->quickActions(
-                $pendingRepairRequestCount,
-                $pendingWriteoffRequestCount
-            ),
-            'filters' => $filters,
         ];
     }
 
-    /**
-     * Parāda darba virsmu ar visiem datiem.
-     */
-    public function renderDashboard(Request $request): View
+    private function applyDashboardDeviceFilters($deviceQuery, array $filters, ?Collection $locationRooms = null): void
     {
-        $user = $this->user();
-        abort_unless($user, 403);
-        abort_unless($user->canManageRequests(), 403);
+        if ($filters['room_id'] !== '' && ctype_digit($filters['room_id'])) {
+            $deviceQuery->where('devices.room_id', (int) $filters['room_id']);
+            return;
+        }
 
-        $filters = [
-            'floor' => trim((string) $request->query('floor', '')),
-            'room_id' => trim((string) $request->query('room_id', '')),
-        ];
+        if ($filters['floor'] === '' || ! ctype_digit($filters['floor'])) {
+            return;
+        }
 
-        $viewData = $this->dashboardViewData($request, $user, $filters);
+        if ($locationRooms instanceof Collection && $locationRooms->isNotEmpty()) {
+            $roomIds = $locationRooms
+                ->filter(fn (Room $room) => (int) $room->floor_number === (int) $filters['floor'])
+                ->pluck('id')
+                ->all();
 
-        return view('dashboard', array_merge($viewData, [
-            'user' => $user,
-            'isManager' => true,
-            'filters' => $filters,
-        ]));
+            if ($roomIds === []) {
+                $deviceQuery->whereRaw('1 = 0');
+                return;
+            }
+
+            $deviceQuery->whereIn('devices.room_id', $roomIds);
+            return;
+        }
+
+        $deviceQuery->whereHas('room', fn ($roomQuery) => $roomQuery->where('floor_number', (int) $filters['floor']));
     }
 
     /**
@@ -351,9 +389,9 @@ class DashboardController extends Controller
             $params['highlight'] = $device->code ?: $device->name;
             $params['highlight_mode'] = $device->code ? 'exact' : 'contains';
             $params['highlight_id'] = match ($type) {
-                'repair' => 'repair-request-'.$requestId,
-                'writeoff' => 'writeoff-request-'.$requestId,
-                'transfer' => 'device-transfer-'.$requestId,
+                'repair' => 'repair-request-' . $requestId,
+                'writeoff' => 'writeoff-request-' . $requestId,
+                'transfer' => 'device-transfer-' . $requestId,
                 default => null,
             };
         }
@@ -376,7 +414,7 @@ class DashboardController extends Controller
             default => '',
         };
 
-        return $anchor !== '' ? $baseUrl.'#'.$anchor.$requestId : $baseUrl;
+        return $anchor !== '' ? $baseUrl . '#' . $anchor . $requestId : $baseUrl;
     }
 
     private function pendingRequestPreview(string $type, mixed $request): ?array
