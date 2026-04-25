@@ -11,7 +11,9 @@
                 @if ($isStatusLocked)
                     <input type="hidden" name="assigned_to_id" value="{{ $isWrittenOff ? '' : $current?->assigned_to_id }}">
                     <div class="crud-control flex items-center bg-slate-50 text-slate-700">
-                        <span>{{ $isWrittenOff ? 'Nav piešķirts' : ($selectedAssignedToLabel ?: 'Nav piešķirts') }}</span>
+                        <span title="{{ $isWrittenOff ? 'Norakstītām ierīcēm atbildīgais darbinieks vairs netiek rādīts.' : '' }}">
+                            {{ $isWrittenOff ? 'Vairs nav piešķirta' : ($selectedAssignedToLabel ?: 'Nav piešķirts') }}
+                        </span>
                     </div>
                 @else
                     <x-searchable-select

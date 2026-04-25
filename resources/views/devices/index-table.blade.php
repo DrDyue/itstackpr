@@ -219,8 +219,12 @@
 
                             @if ($canManageDevices)
                                 <td class="px-4 py-4">
-                                    <div class="font-semibold text-slate-900">{{ $device->assignedTo?->full_name ?: 'Nav piešķirta' }}</div>
-                                    <div class="mt-1 text-xs text-slate-500">{{ $device->assignedTo?->email ?: 'Lietotājs nav norādīts' }}</div>
+                                    <x-device-assignment
+                                        :device="$device"
+                                        secondary="email"
+                                        primary-class="font-semibold text-slate-900"
+                                        secondary-class="mt-1 text-xs text-slate-500"
+                                    />
                                 </td>
                             @endif
 

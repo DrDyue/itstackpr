@@ -472,7 +472,10 @@
                                         <div class="mt-1 text-xs text-slate-400">{{ $device?->type?->type_name ?: 'Tips nav norādīts' }}</div>
                                     </td>
                                     <td class="px-4 py-4">
-                                        <div class="font-semibold text-slate-900">{{ $assignedUser?->full_name ?: 'Nav piešķirta' }}</div>
+                                        <x-device-assignment
+                                            :device="$device"
+                                            primary-class="font-semibold text-slate-900"
+                                        />
                                         <div class="mt-1 text-xs text-slate-500">{{ $requester?->full_name ? 'Pieprasītājs: ' . $requester->full_name : 'Pieprasītājs nav norādīts' }}</div>
                                     </td>
                                     <td class="px-4 py-4">

@@ -18,7 +18,6 @@
             ? ($device->room->room_number . ($device->room->room_name ? ' – ' . $device->room->room_name : ''))
             : 'Nav norādīta';
         $deviceBuildingLabel = $device->building?->building_name ?: 'Nav norādīta';
-        $deviceUserLabel = $device->assignedTo?->full_name ?: 'Nav piešķirts';
         $metaLine = collect([$device->type?->type_name, $deviceMeta])->filter()->implode(' · ');
     @endphp
 
@@ -166,9 +165,15 @@
                     @endif
                     <div class="flex items-start gap-3 py-2">
                         <dt class="w-24 shrink-0 text-xs font-semibold text-slate-500">Piešķirts</dt>
-                        <dd class="min-w-0 text-sm text-slate-900">{{ $deviceUserLabel }}</dd>
+                        <dd class="min-w-0">
+                            <x-device-assignment
+                                :device="$device"
+                                primary-class="text-sm text-slate-900"
+                                secondary-class="text-sm text-slate-500"
+                            />
+                        </dd>
                     </div>
-                    @if ($device->assignedTo?->job_title)
+                    @if ($device->status !== \App\Models\Device::STATUS_WRITEOFF && $device->assignedTo?->job_title)
                         <div class="flex items-start gap-3 py-2">
                             <dt class="w-24 shrink-0 text-xs font-semibold text-slate-500">Amats</dt>
                             <dd class="min-w-0 text-sm text-slate-500">{{ $device->assignedTo->job_title }}</dd>

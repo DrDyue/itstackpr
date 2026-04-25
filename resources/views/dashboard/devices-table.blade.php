@@ -70,7 +70,6 @@
                                     : $model
                             )
                             : ($manufacturer !== '' ? $manufacturer : 'Ražotājs un modelis nav norādīts');
-                        $assignedJobTitle = $device->assignedTo?->job_title ?: 'Nav amata';
                         $roomLabel = collect([
                             $device->room?->room_number,
                             $device->room?->room_name,
@@ -114,8 +113,12 @@
                             <div class="dash-table-subline">{{ $roomLabel !== '' ? $roomLabel : 'Telpa nav norādīta' }}</div>
                         </td>
                         <td>
-                            <div class="dash-table-cell-strong">{{ $device->assignedTo?->full_name ?: 'Nav piešķirts' }}</div>
-                            <div class="dash-table-subline">{{ $assignedJobTitle }}</div>
+                            <x-device-assignment
+                                :device="$device"
+                                secondary="job_title"
+                                primary-class="dash-table-cell-strong"
+                                secondary-class="dash-table-subline"
+                            />
                         </td>
                         <td>
                             <div class="device-status-stack">
