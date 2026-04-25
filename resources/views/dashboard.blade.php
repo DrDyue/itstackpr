@@ -5,7 +5,7 @@
     Galvenās daļas:
     1. Hero zona ar ātrajām darbībām.
     2. Kreisā kolonna ar stāvu un telpu filtru koku.
-    3. Labā kolonna ar jaunāko ierīču tabulu un statusu priekšskatījumiem.
+    3. Labā kolonna ar ierīču tabulu un statusu priekšskatījumiem.
 --}}
 <x-app-layout>
     <section class="app-shell app-shell-wide">
@@ -19,7 +19,7 @@
                         </div>
                         <span class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700">
                             <x-icon name="device" size="h-3.5 w-3.5" />
-                            <span>Ierīces: {{ $dashboardDevices->total() }}</span>
+                            <span>Ierīces: {{ $dashboardDeviceCount }}</span>
                         </span>
                     </div>
 
@@ -48,7 +48,6 @@
             </div>
         </div>
 
-        {{-- Darba virsmas galvenais saturs sadalīts telpu kokā un ierīču tabulā. --}}
         <div class="dash-workspace-grid" x-data="dashboardFilter">
             <aside class="dash-location-panel">
                 <div class="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
@@ -112,7 +111,6 @@
             </aside>
 
             <div class="dash-main-stack">
-                {{-- Kompaktais jaunāko ierīču saraksts ar statusu un pieprasījumu preview. --}}
                 <section class="surface-card">
                     <div class="flex flex-wrap items-start justify-between gap-4">
                         <div>
@@ -131,11 +129,7 @@
                                     <x-icon name="room" size="h-3.5 w-3.5" />
                                     <span>{{ $filters['room_id'] !== '' ? 'Telpas filtrs ieslēgts' : 'Stāva filtrs ieslēgts' }}</span>
                                 </div>
-                                <button
-                                    type="button"
-                                    @click="clearFilters()"
-                                    class="btn-clear"
-                                >
+                                <button type="button" @click="clearFilters()" class="btn-clear">
                                     <x-icon name="x-circle" size="h-4 w-4" />
                                     <span>Notīrīt filtru</span>
                                 </button>
@@ -143,8 +137,12 @@
                         </div>
                     </div>
 
-                    {{-- Ierīču tabula --}}
-                    @include('dashboard.devices-table', ['dashboardDevices' => $dashboardDevices, 'dashboardDeviceStates' => $dashboardDeviceStates, 'filters' => $filters])
+                    @include('dashboard.devices-table', [
+                        'dashboardDevices' => $dashboardDevices,
+                        'dashboardDeviceCount' => $dashboardDeviceCount,
+                        'dashboardDeviceStates' => $dashboardDeviceStates,
+                        'filters' => $filters,
+                    ])
                 </section>
             </div>
         </div>
@@ -153,10 +151,14 @@
     <script>
         const dashboardFilter = {
             isLoading: false,
-            currentFilters: { floor: '', room_id: '' },
+            currentFilters: {
+                floor: @js($filters['floor']),
+                room_id: @js($filters['room_id']),
+            },
             async fetchDevices(params = {}) {
                 this.isLoading = true;
-                const filters = { ...this.currentFilters, ...params };
+                const filters = { floor: '', room_id: '', ...this.currentFilters, ...params };
+
                 try {
                     const queryString = new URLSearchParams(filters).toString();
                     const url = '{{ route("dashboard.devices") }}' + (queryString ? '?' + queryString : '');
@@ -170,6 +172,7 @@
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
                     const newTable = doc.querySelector('#dashboard-devices-table');
+
                     if (newTable) {
                         document.querySelector('#dashboard-devices-table').outerHTML = newTable.outerHTML;
                     }
@@ -201,6 +204,7 @@
                 document.querySelectorAll('.dash-room-link').forEach(el => {
                     el.classList.remove('dash-room-link-active');
                 });
+
                 if (roomId) {
                     const roomButton = document.querySelector(`.dash-room-link[data-room="${roomId}"]`);
                     if (roomButton) roomButton.classList.add('dash-room-link-active');

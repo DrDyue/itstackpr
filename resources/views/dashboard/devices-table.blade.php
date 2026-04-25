@@ -2,9 +2,18 @@
     Partial skats: Dashboard ierīču tabula.
     Izmantots async filtrēšanai bez lapas atjaunošanas.
 --}}
-@props(['dashboardDevices', 'dashboardDeviceStates', 'filters'])
+@props(['dashboardDevices', 'dashboardDeviceCount', 'dashboardDeviceStates', 'filters'])
 
 <div class="device-table-shell mt-5" id="dashboard-devices-table">
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-2 px-1">
+        <div class="text-sm font-semibold text-slate-900">{{ $dashboardDeviceCount }} ierīces</div>
+        @if ($filters['floor'] !== '' || $filters['room_id'] !== '')
+            <div class="text-xs text-slate-500">
+                Atlasītas pēc {{ $filters['room_id'] !== '' ? 'telpas' : 'stāva' }} filtra
+            </div>
+        @endif
+    </div>
+
     <div class="device-table-scroll rounded-[1.5rem] border border-slate-200 bg-white">
         <table class="dash-table">
             <thead class="dash-table-head">
@@ -185,49 +194,4 @@
             </tbody>
         </table>
     </div>
-
-    @if ($dashboardDevices->hasPages())
-        @php
-            $currentPage = $dashboardDevices->currentPage();
-            $lastPage = $dashboardDevices->lastPage();
-            $startPage = max(1, $currentPage - 2);
-            $endPage = min($lastPage, $currentPage + 2);
-        @endphp
-        <div class="dashboard-pagination">
-            <div class="dashboard-pagination-meta">
-                <span>Kopā {{ $dashboardDevices->total() }} ierīces</span>
-                <span>Lapa {{ $currentPage }} no {{ $lastPage }}</span>
-            </div>
-
-            <div class="dashboard-pagination-links">
-                @if ($dashboardDevices->onFirstPage())
-                    <span class="dashboard-pagination-btn dashboard-pagination-btn-disabled">Iepriekšējā</span>
-                @else
-                    <button type="button" @click="window.dashboardFilter.fetchDevices(getCurrentFilters({{ $dashboardDevices->currentPage() - 1 }}))" class="dashboard-pagination-btn">Iepriekšējā</button>
-                @endif
-
-                @for ($page = $startPage; $page <= $endPage; $page++)
-                    @if ($page === $currentPage)
-                        <span class="dashboard-pagination-btn dashboard-pagination-btn-active">{{ $page }}</span>
-                    @else
-                        <button type="button" @click="window.dashboardFilter.fetchDevices(getCurrentFilters({{ $page }}))" class="dashboard-pagination-btn">{{ $page }}</button>
-                    @endif
-                @endfor
-
-                @if ($dashboardDevices->hasMorePages())
-                    <button type="button" @click="window.dashboardFilter.fetchDevices(getCurrentFilters({{ $dashboardDevices->currentPage() + 1 }}))" class="dashboard-pagination-btn">Nākamā</button>
-                @else
-                    <span class="dashboard-pagination-btn dashboard-pagination-btn-disabled">Nākamā</span>
-                @endif
-            </div>
-        </div>
-    @endif
 </div>
-
-<script>
-function getCurrentFilters(page) {
-    const filter = window.dashboardFilter.currentFilters || { floor: '', room_id: '' };
-
-    return { ...filter, page: page };
-}
-</script>

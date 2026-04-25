@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Device;
-use App\Models\DeviceTransfer;
 use App\Models\RepairRequest;
 use App\Models\Room;
 use App\Models\WriteoffRequest;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -55,6 +55,7 @@ class DashboardController extends Controller
 
         return view('dashboard.devices-table', [
             'dashboardDevices' => $viewData['dashboardDevices'],
+            'dashboardDeviceCount' => $viewData['dashboardDeviceCount'],
             'dashboardDeviceStates' => $viewData['dashboardDeviceStates'],
             'filters' => $filters,
         ]);
@@ -130,36 +131,55 @@ class DashboardController extends Controller
 
         $dashboardDevices = $deviceQuery
             ? (clone $deviceQuery)
+                ->select([
+                    'devices.id',
+                    'devices.code',
+                    'devices.name',
+                    'devices.device_type_id',
+                    'devices.model',
+                    'devices.status',
+                    'devices.building_id',
+                    'devices.room_id',
+                    'devices.assigned_to_id',
+                    'devices.serial_number',
+                    'devices.manufacturer',
+                    'devices.device_image_url',
+                    'devices.created_at',
+                ])
                 ->with([
-                    'room:id,building_id,room_number,room_name,floor_number',
+                    'room:id,building_id,room_number,room_name',
                     'room.building:id,building_name',
                     'building:id,building_name',
                     'type:id,type_name',
                     'assignedTo:id,full_name,job_title',
+                    'activeRepair' => fn (Builder $query) => $query->select([
+                        'id',
+                        'device_id',
+                        'description',
+                        'status',
+                        'repair_type',
+                        'accepted_by',
+                        'request_id',
+                        'created_at',
+                    ]),
                     'activeRepair.acceptedBy:id,full_name',
                     'activeRepair.request:id,responsible_user_id,reviewed_by_user_id',
                     'activeRepair.request.responsibleUser:id,full_name',
-                    'activeRepair.request.reviewedBy:id,full_name',
-                    'latestRepair.acceptedBy:id,full_name',
-                    'latestRepair.request:id,responsible_user_id,reviewed_by_user_id',
-                    'latestRepair.request.responsibleUser:id,full_name',
-                    'latestRepair.request.reviewedBy:id,full_name',
+                    'pendingRepairRequest:id,device_id,responsible_user_id,description,created_at',
                     'pendingRepairRequest.responsibleUser:id,full_name',
+                    'pendingWriteoffRequest:id,device_id,responsible_user_id,reason,created_at',
                     'pendingWriteoffRequest.responsibleUser:id,full_name',
+                    'pendingTransferRequest:id,device_id,responsible_user_id,transfered_to_id,transfer_reason,created_at',
                     'pendingTransferRequest.responsibleUser:id,full_name',
                     'pendingTransferRequest.transferTo:id,full_name',
                 ])
-                ->withExists([
-                    'repairRequests as has_pending_repair_request' => fn ($query) => $query->where('status', RepairRequest::STATUS_SUBMITTED),
-                    'writeoffRequests as has_pending_writeoff_request' => fn ($query) => $query->where('status', WriteoffRequest::STATUS_SUBMITTED),
-                    'transfers as has_pending_transfer_request' => fn ($query) => $query->where('status', DeviceTransfer::STATUS_SUBMITTED),
-                ])
                 ->latest('id')
-                ->paginate(12)
-                ->withQueryString()
-            : $this->emptyPaginator(12);
+                ->get()
+            : collect();
 
-        $dashboardDeviceStates = collect($dashboardDevices->items())
+        $dashboardDeviceCount = $dashboardDevices->count();
+
+        $dashboardDeviceStates = $dashboardDevices
             ->mapWithKeys(fn (Device $device) => [
                 $device->id => [
                     'repairStatusLabel' => $this->visibleRepairStatusLabel($device),
@@ -171,6 +191,7 @@ class DashboardController extends Controller
 
         return [
             'dashboardDevices' => $dashboardDevices,
+            'dashboardDeviceCount' => $dashboardDeviceCount,
             'dashboardDeviceStates' => $dashboardDeviceStates,
             'locationTree' => $locationTree,
             'quickActions' => $this->quickActions(
