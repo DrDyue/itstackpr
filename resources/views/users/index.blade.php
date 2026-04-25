@@ -326,44 +326,84 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-4">
-                                        <div class="flex flex-wrap gap-2">
-                                            <a href="{{ route('users.show', $managedUser) }}" class="btn-view">
-                                                <x-icon name="view" size="h-4 w-4" />
-                                                <span>Profils</span>
-                                            </a>
+                                        <div class="table-action-menu" x-data="{ open: false }" @keydown.escape.window="open = false">
+                                            <button type="button" class="table-action-summary" @click="open = ! open" :aria-expanded="open.toString()">
+                                                <span>Darbības</span>
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                                </svg>
+                                            </button>
 
-                                            <a href="{{ $editUrl }}" class="btn-edit" @if (! $isCurrentUser) data-async-link="true" @endif>
-                                                <x-icon name="edit" size="h-4 w-4" />
-                                                <span>{{ $isCurrentUser ? 'Rediģēt profilu' : 'Rediģēt' }}</span>
-                                            </a>
+                                            <div class="table-action-list" x-cloak x-show="open" x-transition.origin.top.right @click.outside="open = false">
+                                                <div class="table-action-header">
+                                                    <div class="table-action-header-title">Darbības</div>
+                                                </div>
 
-                                            <x-post-action-button
-                                                :action="route('users.destroy', $managedUser)"
-                                                method="DELETE"
-                                                button-class="{{ $isCurrentUser || $hasAssignedDevices ? 'btn-disabled' : 'btn-danger' }}"
-                                                :button-type="$isCurrentUser || $hasAssignedDevices ? 'button' : 'submit'"
-                                                :button-attributes="$isCurrentUser
-                                                    ? [
-                                                        'data-app-toast-title' => 'Dzēšana nav pieejama',
-                                                        'data-app-toast-message' => 'Paša lietotāja kontu no šīs tabulas dzēst nevar. Izmanto citu administratora kontu, ja šo profilu tiešām vajag noņemt.',
-                                                        'data-app-toast-tone' => 'info',
-                                                    ]
-                                                    : ($hasAssignedDevices
-                                                        ? [
-                                                            'data-app-toast-title' => 'Dzēšana nav pieejama',
-                                                            'data-app-toast-message' => 'Lietotājam ir piesaistītas ierīces. Vispirms pārvieto vai atsaisti tās.',
-                                                            'data-app-toast-tone' => 'info',
-                                                        ]
-                                                        : [])"
-                                                data-app-confirm-title="Dzēst lietotāju?"
-                                                data-app-confirm-message="Vai tiešām dzēst šo lietotāju?"
-                                                data-app-confirm-accept="Jā, dzēst"
-                                                data-app-confirm-cancel="Nē"
-                                                data-app-confirm-tone="danger"
-                                            >
-                                                <x-icon name="trash" size="h-4 w-4" />
-                                                <span>Dzēst</span>
-                                            </x-post-action-button>
+                                                <div class="table-action-section">
+                                                    <div class="table-action-section-title">Pārskats</div>
+                                                    <a href="{{ route('users.show', $managedUser) }}" class="table-action-item table-action-item-primary" @click="open = false">
+                                                        <x-icon name="view" size="h-4 w-4" />
+                                                        <span>Profils</span>
+                                                    </a>
+                                                </div>
+
+                                                <div class="table-action-divider"></div>
+
+                                                <div class="table-action-section">
+                                                    <div class="table-action-section-title">Pārvaldība</div>
+                                                    <a href="{{ $editUrl }}" class="table-action-item table-action-item-amber" @click="open = false" @if (! $isCurrentUser) data-async-link="true" @endif>
+                                                        <x-icon name="edit" size="h-4 w-4" />
+                                                        <span>{{ $isCurrentUser ? 'Rediģēt profilu' : 'Rediģēt' }}</span>
+                                                    </a>
+
+                                                    @if ($managedUser->password_reset_requested_at)
+                                                        <a href="{{ $editUrl }}" class="table-action-item table-action-item-violet" @click="open = false" @if (! $isCurrentUser) data-async-link="true" @endif>
+                                                            <x-icon name="key" size="h-4 w-4" />
+                                                            <span>Mainīt paroli</span>
+                                                        </a>
+                                                    @endif
+
+                                                    <a href="{{ $assignedDevicesUrl }}" class="table-action-item" @click="open = false">
+                                                        <x-icon name="device" size="h-4 w-4" />
+                                                        <span>Piesaistītās ierīces</span>
+                                                    </a>
+                                                </div>
+
+                                                <div class="table-action-divider"></div>
+
+                                                <div class="table-action-section">
+                                                    <x-post-action-button
+                                                        :action="route('users.destroy', $managedUser)"
+                                                        method="DELETE"
+                                                        form-class="table-action-form"
+                                                        button-class="table-action-item table-action-item-rose"
+                                                        :button-type="$isCurrentUser || $hasAssignedDevices ? 'button' : 'submit'"
+                                                        :button-attributes="$isCurrentUser
+                                                            ? [
+                                                                'data-app-toast-title' => 'Dzēšana nav pieejama',
+                                                                'data-app-toast-message' => 'Paša lietotāja kontu no šīs tabulas dzēst nevar. Izmanto citu administratora kontu, ja šo profilu tiešām vajag noņemt.',
+                                                                'data-app-toast-tone' => 'info',
+                                                                'disabled' => true,
+                                                            ]
+                                                            : ($hasAssignedDevices
+                                                                ? [
+                                                                    'data-app-toast-title' => 'Dzēšana nav pieejama',
+                                                                    'data-app-toast-message' => 'Lietotājam ir piesaistītas ierīces. Vispirms pārvieto vai atsaisti tās.',
+                                                                    'data-app-toast-tone' => 'info',
+                                                                    'disabled' => true,
+                                                                ]
+                                                                : [])"
+                                                        data-app-confirm-title="Dzēst lietotāju?"
+                                                        data-app-confirm-message="Vai tiešām dzēst šo lietotāju?"
+                                                        data-app-confirm-accept="Jā, dzēst"
+                                                        data-app-confirm-cancel="Nē"
+                                                        data-app-confirm-tone="danger"
+                                                    >
+                                                        <x-icon name="trash" size="h-4 w-4" />
+                                                        <span>Dzēst</span>
+                                                    </x-post-action-button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>

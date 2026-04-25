@@ -4917,6 +4917,23 @@ tbody td {
     min-width: 70rem;
 }
 
+.users-table-scroll .table-col-actions {
+    width: 9rem;
+}
+
+.users-table-scroll .table-action-menu {
+    @apply inline-flex w-full justify-end;
+}
+
+.users-table-scroll .table-action-summary {
+    @apply min-w-[7.5rem];
+}
+
+.users-table-scroll .table-action-list {
+    min-width: 20rem;
+    max-width: min(22rem, calc(100vw - 1.5rem));
+}
+
 .app-table-content-wide {
     min-width: 100rem;
 }
