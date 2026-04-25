@@ -49,11 +49,38 @@
         </div>
 
         <div class="dash-workspace-grid" x-data="dashboardFilter">
+            @php
+                $activeFloor = $locationTree->firstWhere('id', $filters['floor']);
+                $activeRoom = $activeFloor
+                    ? collect($activeFloor['rooms'] ?? [])->firstWhere('id', (int) $filters['room_id'])
+                    : null;
+                $activeFilterLabel = $activeRoom
+                    ? trim(implode(' ', array_filter([
+                        'Telpa:',
+                        $activeRoom['room_number'] ?? null,
+                        $activeRoom['room_name'] ?? null,
+                    ])))
+                    : ($activeFloor ? 'Stāvs: ' . ($activeFloor['label'] ?? $filters['floor']) : null);
+            @endphp
             <aside class="dash-location-panel">
-                <div class="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
-                    <x-icon name="room" size="h-5 w-5" class="text-emerald-600" />
-                    <span>Stāvi un telpas</span>
+                <div class="dash-location-panel-head">
+                    <div class="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
+                        <x-icon name="room" size="h-5 w-5" class="text-emerald-600" />
+                        <span>Stāvi un telpas</span>
+                    </div>
+
+                    <button type="button" @click="clearFilters()" class="dash-location-clear-btn" :disabled="!currentFilters.floor && !currentFilters.room_id">
+                        <x-icon name="x-circle" size="h-4 w-4" />
+                        <span>Atcelt filtrus</span>
+                    </button>
                 </div>
+
+                @if ($activeFilterLabel)
+                    <div class="dash-location-active-filter">
+                        <x-icon name="filter" size="h-4 w-4" />
+                        <span>{{ $activeFilterLabel }}</span>
+                    </div>
+                @endif
 
                 <div class="dash-room-tree">
                     @forelse ($locationTree as $floor)

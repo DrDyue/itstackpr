@@ -1850,12 +1850,24 @@ tbody td {
 }
 
 .dash-location-panel {
-    @apply h-fit rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm xl:sticky xl:top-24;
+    @apply rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm xl:sticky xl:top-24 xl:flex xl:max-h-[calc(100vh-7.5rem)] xl:flex-col xl:overflow-hidden;
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 12px -2px rgba(15, 23, 42, 0.07);
 }
 
+.dash-location-panel-head {
+    @apply flex flex-wrap items-center justify-between gap-3 xl:shrink-0;
+}
+
+.dash-location-clear-btn {
+    @apply inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-800 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.dash-location-active-filter {
+    @apply mt-4 inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 xl:shrink-0;
+}
+
 .dash-room-tree {
-    @apply mt-5 space-y-3;
+    @apply mt-5 space-y-3 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1;
 }
 
 .dash-floor-card {
@@ -2077,6 +2089,12 @@ tbody td {
 
     .type-results-grid {
         @apply gap-2;
+    }
+}
+
+@media (min-width: 1280px) {
+    .dash-room-tree {
+        scrollbar-gutter: stable;
     }
 }
 
