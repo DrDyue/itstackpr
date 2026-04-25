@@ -16,6 +16,14 @@ class AuditLogController extends Controller
 {
     /**
      * Parāda auditam reģistrētās darbības administratoram.
+     *
+     * Atbalsta filtrēšanu pēc darbības tipa, svarīguma, datumu diapazona
+     * un lietotāja, kā arī kārtošanu pēc vairākiem laukiem.
+     * Ja audita tabula vēl nav izveidota, tiek rādīts tukšs skats ar paziņojumu.
+     *
+     * Izsaukšana: GET /audit-log | Pieejams: tikai administrators.
+     * Scenārijs: Administrators navigē uz "Audita žurnāls" sadaļu, lai izsekotu
+     * sistēmā veiktajām darbībām vai izmeklētu konkrētu notikumu.
      */
     public function index(Request $request)
     {
@@ -198,6 +206,13 @@ class AuditLogController extends Controller
 
     /**
      * Atrod audita ierakstu pēc ID, apraksta, darbības vai lietotāja.
+     *
+     * Meklē gan aprakstā, gan darbības tipā, gan lietotāja vārdā un atgriež
+     * lapu un enkuru, lai pārlūks ritinātu pie atrasto ierakstu.
+     *
+     * Izsaukšana: GET /audit-log/find-entry?lookup=... | Pieejams: tikai administrators.
+     * Scenārijs: Administrators audita žurnāla lapas meklēšanas lodziņā ievada
+     * tekstu un AJAX nosūta pieprasījumu, lai iezīmētu atbilstošo ierakstu.
      */
     public function findEntry(Request $request): JsonResponse
     {
@@ -267,6 +282,11 @@ class AuditLogController extends Controller
 
     /**
      * Reģistrē audita saraksta filtrēšanas un kārtošanas darbības.
+     *
+     * Tiek reģistrēts tikai tad, ja ir aktīvi filtri vai nestandarta kārtošana,
+     * lai žurnāls netiktu aizpildīts ar vienkāršiem lapas skatījumiem.
+     *
+     * Izsauc no: `index()` — tūlīt pēc skata datu sagatavošanas.
      *
      * @param  array<string, mixed>  $filters
      */

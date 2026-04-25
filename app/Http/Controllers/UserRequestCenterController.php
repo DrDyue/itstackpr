@@ -26,6 +26,9 @@ class UserRequestCenterController extends Controller
 
     /**
      * Lietotāju nosūta uz remonta pieteikumu sarakstu kā galveno ieejas punktu.
+     *
+     * Izsaukšana: GET /my-requests | Pieejams: parasts lietotājs (neadministrators).
+     * Scenārijs: Lietotājs klikšķina uz "Mani pieteikumi" sānjoslā.
      */
     public function index(Request $request)
     {
@@ -40,6 +43,9 @@ class UserRequestCenterController extends Controller
      * Validē pieprasījuma tipu un ierīci, pārbauda, vai ierīce jau nav aizņemta
      * ar citu aktīvu pieteikumu, un izveido attiecīgo ierakstu datubāzē.
      * Katrs veids tiek reģistrēts audita žurnālā un piesaistīts aktīvās sesijas lietotājam.
+     *
+     * Izsaukšana: POST /my-requests | Pieejams: parasts lietotājs (neadministrators).
+     * Scenārijs: Lietotājs izvēlas ierīci un pieteikuma tipu "Jauns pieteikums" formā.
      */
     public function store(Request $request)
     {
@@ -116,6 +122,9 @@ class UserRequestCenterController extends Controller
      *
      * Lietotājs var labot tikai sava pieprasījuma tekstu (aprakstu vai iemeslu),
      * kamēr tas vēl nav izskatīts. Izmaiņas tiek reģistrētas audita žurnālā.
+     *
+     * Izsaukšana: PATCH /my-requests/{type}/{id} | Pieejams: parasts lietotājs.
+     * Scenārijs: Lietotājs klikšķina "Labot" pie iesniegtā pieteikuma un saglabā jauno tekstu.
      */
     public function update(Request $request, string $requestType, int $requestId)
     {
@@ -142,6 +151,9 @@ class UserRequestCenterController extends Controller
 
     /**
      * Atceļ vēl neizskatītu pieprasījumu.
+     *
+     * Izsaukšana: DELETE /my-requests/{type}/{id} | Pieejams: parasts lietotājs.
+     * Scenārijs: Lietotājs klikšķina "Atcelt" pie iesniegtā pieteikuma un apstiprina atcelšanu.
      */
     public function destroy(string $requestType, int $requestId)
     {
@@ -160,6 +172,8 @@ class UserRequestCenterController extends Controller
      *
      * Ja lietotājs nav autentificēts vai ir administrators, tiek atgriezta kļūda 403.
      * Metode nodrošina, ka tikai parasti lietotāji var veikt darbības šajā kontrolierī.
+     *
+     * Izsauc no: `index()`, `store()`, `update()`, `destroy()`.
      */
     private function requireRegularUser(): User
     {
@@ -175,6 +189,8 @@ class UserRequestCenterController extends Controller
      *
      * Iekļauj tikai aktīvā statusā esošās ierīces ar ielādētām attiecībām,
      * kas nepieciešamas pieprasījumu veidošanas formu aizpildīšanai.
+     *
+     * Izsauc no: `store()`.
      */
     private function availableDevicesForUser(User $user)
     {
@@ -192,6 +208,8 @@ class UserRequestCenterController extends Controller
      * kāds cits aktīvs (iesniegts) pieteikums — neatkarīgi no tipa.
      * Katrai pieprasījuma tipa un bloķēšanas stāvokļa kombinācijai tiek
      * atgriezts informatīvs kļūdas ziņojums.
+     *
+     * Izsauc no: `store()`.
      */
     private function ensureDeviceCanAcceptRequest(Device $device, string $requestType): void
     {
@@ -284,6 +302,8 @@ class UserRequestCenterController extends Controller
      *
      * Atgriež divdaļīgu masīvu — modeli un konfigurāciju. Ja pieprasījums
      * nepieder lietotājam vai nav iesniegtā statusā, tiek atgriezta kļūda 403.
+     *
+     * Izsauc no: `update()`, `destroy()`.
      */
     private function editableRequestForUser(User $user, string $requestType, int $requestId): array
     {
@@ -304,6 +324,8 @@ class UserRequestCenterController extends Controller
      *
      * Katram tipam (repair, writeoff, transfer) definē: modeli, lauku, ziņojumus,
      * audita tekstu, ikonu un atbilstošo maršrutu. Neatpazīts tips rada 404 kļūdu.
+     *
+     * Izsauc no: `editableRequestForUser()`.
      */
     private function editableRequestConfig(string $requestType): array
     {

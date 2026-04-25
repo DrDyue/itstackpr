@@ -24,6 +24,9 @@ class DeviceTypeController extends Controller
      *
      * Administratoram rādāmi visi tipi. Katram tipam tiek uzskaitīts
      * piesaistīto ierīču skaits, kas palīdz novērtēt tā izmantojamību.
+     *
+     * Izsaukšana: GET /device-types | Pieejams: administrators, IT vadītājs.
+     * Scenārijs: Vadītājs atver sadaļu "Ierīču tipi", lai pārvaldītu tipu sarakstu.
      */
     public function index(Request $request)
     {
@@ -71,6 +74,9 @@ class DeviceTypeController extends Controller
      *
      * Izmantota JavaScript meklēšanas lodziņā, lai iezīmētu atbilstošo
      * rindu tabulā. Atgriež lapu un ieraksta ID priekš ritināšanas.
+     *
+     * Izsaukšana: GET /device-types/find-by-name | Pieejams: administrators, IT vadītājs.
+     * Scenārijs: JavaScript izsauc AJAX pieprasījumu, kad vadītājs raksta meklēšanas lodziņā.
      */
     public function findByName(Request $request): JsonResponse
     {
@@ -114,6 +120,9 @@ class DeviceTypeController extends Controller
      * Saglabā jaunu ierīces tipu datubāzē.
      *
      * Validē nosaukumu, pārbauda unikalitāti un reģistrē izveides notikumu auditā.
+     *
+     * Izsaukšana: POST /device-types | Pieejams: administrators, IT vadītājs.
+     * Scenārijs: Vadītājs aizpilda un iesniedz tipa pievienošanas formu.
      */
     public function store(Request $request)
     {
@@ -132,6 +141,9 @@ class DeviceTypeController extends Controller
      *
      * Pirms saglabāšanas salīdzina "pirms" un "pēc" stāvokļus un
      * pieraksta izmaiņas audita žurnālā.
+     *
+     * Izsaukšana: PUT/PATCH /device-types/{deviceType} | Pieejams: administrators, IT vadītājs.
+     * Scenārijs: Vadītājs rediģē ierīces tipa nosaukumu un saglabā izmaiņas.
      */
     public function update(Request $request, DeviceType $deviceType)
     {
@@ -152,6 +164,9 @@ class DeviceTypeController extends Controller
      *
      * Ja tipam vēl ir ierīces, dzēšana tiek noraidīta ar informatīvu kļūdas paziņojumu,
      * lai netiktu sabojāta datu integritāte.
+     *
+     * Izsaukšana: DELETE /device-types/{deviceType} | Pieejams: administrators, IT vadītājs.
+     * Scenārijs: Vadītājs nospiež dzēšanas pogu tipa rindā un apstiprina darbību.
      */
     public function destroy(DeviceType $deviceType)
     {

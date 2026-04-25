@@ -29,6 +29,9 @@ class UserController extends Controller
      *
      * Pieejams tikai administratoram. Filtri ietver vārdu, amatu, e-pastu,
      * lomu, aktivitātes statusu un pēdējās pieslēgšanās laiku.
+     *
+     * Izsaukšana: GET /users | Pieejams: tikai administrators.
+     * Scenārijs: Administrators atver sadaļu "Lietotāji", lai pārvaldītu kontus.
      */
     public function index(Request $request)
     {
@@ -131,6 +134,10 @@ class UserController extends Controller
 
     /**
      * Atrod lietotāju pēc vārda un uzvārda aktīvajā filtrētajā sarakstā.
+     *
+     * Izsaukšana: GET /users/find-by-name | Pieejams: tikai administrators.
+     * Scenārijs: JavaScript izsauc AJAX pieprasījumu, kad administrators ievada
+     * vārdu meklēšanas lodziņā, lai ritinātu sarakstu pie atbilstošā ieraksta.
      */
     public function findByName(Request $request): JsonResponse
     {
@@ -191,6 +198,10 @@ class UserController extends Controller
      *
      * Ielādē piesaistītās ierīces, aktīvos pieteikumus, nodošanas un audita žurnāla
      * pēdējos ierakstus. Pieejams tikai administratoram.
+     *
+     * Izsaukšana: GET /users/{user} | Pieejams: tikai administrators.
+     * Scenārijs: Administrators klikšķina uz lietotāja vārda sarakstā, lai apskatītu
+     * pilnu profilu ar ierīcēm, pieprasījumiem un aktivitātes vēsturi.
      */
     public function show(User $user)
     {
@@ -316,6 +327,9 @@ class UserController extends Controller
      *
      * Paroli iepriekš šifrē ar bcrypt pirms ierakstīšanas datubāzē.
      * Izveides notikums tiek reģistrēts audita žurnālā.
+     *
+     * Izsaukšana: POST /users | Pieejams: tikai administrators.
+     * Scenārijs: Administrators aizpilda un iesniedz jauna lietotāja reģistrācijas formu.
      */
     public function store(Request $request)
     {
@@ -335,6 +349,9 @@ class UserController extends Controller
      *
      * Ja tiek norādīta jauna parole, tā tiek šifrēta un paroles maiņas pieprasījuma
      * lauks tiek notīrīts. Izmaiņas tiek salīdzinātas un reģistrētas audita žurnālā.
+     *
+     * Izsaukšana: PUT/PATCH /users/{user} | Pieejams: tikai administrators.
+     * Scenārijs: Administrators rediģē lietotāja profila datus vai nomaina paroli.
      */
     public function update(Request $request, User $user)
     {
@@ -369,6 +386,9 @@ class UserController extends Controller
      * Pirms dzēšanas pārbauda visas saistītās relācijas — ierīces, telpas,
      * pieteikumus, remonts u.c. Ja kaut kas ir piesaistīts, dzēšana tiek
      * noraidīta ar detalizētu kļūdas paziņojumu. Administrators nevar dzēst pats sevi.
+     *
+     * Izsaukšana: DELETE /users/{user} | Pieejams: tikai administrators.
+     * Scenārijs: Administrators nospiež dzēšanas pogu lietotāja rindā un apstiprina darbību.
      */
     public function destroy(User $user)
     {
@@ -416,6 +436,8 @@ class UserController extends Controller
      *
      * Parole ir obligāta tikai jaunam lietotājam. E-pasta unikalitāte tiek pārbaudīta,
      * izslēdzot pašreizējo lietotāju (ja rediģē). Tālrunis un amats ir izvēles lauki.
+     *
+     * Izsauc no: `store()`, `update()`.
      */
     private function validatedData(Request $request, ?User $user = null): array
     {
@@ -443,6 +465,8 @@ class UserController extends Controller
 
     /**
      * Atgriež lomu cilvēkam saprotamos nosaukumus Blade skatiem.
+     *
+     * Izsauc no: `index()`, `show()`.
      */
     private function roleLabels(): array
     {
@@ -459,6 +483,8 @@ class UserController extends Controller
      * Izmanto kā "select sub" papildus kolonnas pievienošanai lietotāju vaicājumam,
      * lai varētu kārtot un rādīt faktisko pieslēgšanās datumu, pat ja `last_login`
      * kolonna ir tukša (piemēram, vecāki konti pirms audita ieviešanas).
+     *
+     * Izsauc no: `index()`, `show()`.
      */
     private function latestLoginAuditSubquery(): Builder
     {
@@ -476,6 +502,8 @@ class UserController extends Controller
      * Izmanto `last_login` lauku kā primāro avotu, bet ja tas ir tukšs,
      * mēģina atrast pieslēgšanās laiku no audita žurnāla apakšvaicājuma.
      * Tas nodrošina, ka pieslēgšanās laiks ir redzams vienmēr, ja tas ir pieejams.
+     *
+     * Izsauc no: `index()` (caur kolekcijas iterāciju), `show()`.
      */
     private function attachEffectiveLastLogin(User $user): void
     {
@@ -488,6 +516,8 @@ class UserController extends Controller
      *
      * Noklusētais kārtojums ir pēc vārda un uzvārda augošā secībā.
      * Pārbauda, vai pieprasītā kolonna atrodas atļauto kolonnu sarakstā.
+     *
+     * Izsauc no: `index()`, `findByName()`.
      */
     private function normalizedSorting(Request $request): array
     {
@@ -514,6 +544,8 @@ class UserController extends Controller
      *
      * Lielākā daļa kolonnu tiek kārtota bez reģistrjutības (LOWER/COALESCE).
      * Pēdējās pieslēgšanās kārtojums novieto NULL vērtības saraksta beigās.
+     *
+     * Izsauc no: `index()`, `findByName()`.
      */
     private function applySorting($query, array $sorting): void
     {
@@ -552,6 +584,11 @@ class UserController extends Controller
         $query->orderBy('id', $sorting['direction'] === 'asc' ? 'asc' : 'desc');
     }
 
+    /**
+     * Atgriež kārtojamo lauku nosaukumu karti Blade skatam un kārtošanas normalizācijai.
+     *
+     * Izsauc no: `index()`, `normalizedSorting()`.
+     */
     private function sortOptions(): array
     {
         return [

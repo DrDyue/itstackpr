@@ -24,6 +24,13 @@ class DashboardController extends Controller
 {
     /**
      * Parāda darba virsmu vai parasto lietotāju novirza uz viņa ierīcēm.
+     *
+     * Administrators un IT vadītājs redz pilno darba virsmu ar statistiku,
+     * telpu koku un ierīču tabulu. Parasts lietotājs automātiski tiek novirzīts
+     * uz savu ierīču sarakstu.
+     *
+     * Izsaukšana: GET /dashboard | Pieejams: jebkurš autentificēts lietotājs.
+     * Scenārijs: Pēc pieslēgšanās vai klikšķinot uz "Darba virsma" sānjoslā.
      */
     public function index(Request $request): View|RedirectResponse
     {
@@ -39,6 +46,13 @@ class DashboardController extends Controller
 
     /**
      * Atgriež filtrētu ierīču tabulu priekš dashboard (async).
+     *
+     * Atjaunina tikai tabulas HTML fragmentu bez pilnas lapas pārlādēšanas,
+     * kad administrators maina stāvu vai telpu filtru darba virsmas sānjoslā.
+     *
+     * Izsaukšana: GET /dashboard/devices | Pieejams: administrators, IT vadītājs.
+     * Scenārijs: JavaScript izsauc šo maršrutu, kad lietotājs izvēlas citu stāvu
+     * vai telpu darba virsmas atrašanās vietu kokā.
      */
     public function devices(Request $request): View
     {
@@ -62,7 +76,11 @@ class DashboardController extends Controller
     }
 
     /**
-     * Kopīga metode dashboard datu sagatavošanai.
+     * Sagatavo visus nepieciešamos datus darba virsmas skatam.
+     *
+     * Apvieno ierīču datus, telpu koku un ātro darbību kartītes vienā masīvā.
+     *
+     * Izsauc no: `renderDashboard()`.
      */
     private function dashboardViewData(Request $request, $user, array $filters): array
     {
@@ -95,7 +113,11 @@ class DashboardController extends Controller
     }
 
     /**
-     * Parāda darba virsmu ar visiem datiem.
+     * Renderē pilno darba virsmas skatu ar filtriem, kārtošanu un ierīču tabulu.
+     *
+     * Nodod sagatavoto Blade skatu ar visiem darba virsmai nepieciešamajiem datiem.
+     *
+     * Izsauc no: `index()` — tikai tad, ja lietotājs ir administrators vai IT vadītājs.
      */
     public function renderDashboard(Request $request): View
     {
@@ -117,6 +139,11 @@ class DashboardController extends Controller
         ]));
     }
 
+    /**
+     * Normalizē filtru parametrus (stāvs, telpa) no URL vaicājuma.
+     *
+     * Izsauc no: `renderDashboard()`, `devices()`.
+     */
     private function dashboardFilters(Request $request): array
     {
         return [
@@ -125,6 +152,11 @@ class DashboardController extends Controller
         ];
     }
 
+    /**
+     * Normalizē kārtošanas parametrus (kolonna, virziens) darba virsmas ierīču tabulai.
+     *
+     * Izsauc no: `renderDashboard()`, `devices()`, `dashboardViewData()`.
+     */
     private function dashboardSorting(Request $request): array
     {
         $sortOptions = $this->dashboardSortOptions();
@@ -150,6 +182,13 @@ class DashboardController extends Controller
         ];
     }
 
+    /**
+     * Ielādē telpas ar ierīču skaitu darba virsmas telpu koka atveidošanai.
+     *
+     * Ja `shouldLoad` ir false (parastam lietotājam), atgriež tukšu kolekciju.
+     *
+     * Izsauc no: `dashboardViewData()`.
+     */
     private function dashboardLocationRooms(bool $shouldLoad, bool $hideWrittenOffDevices = false): Collection
     {
         if (! $shouldLoad) {
@@ -177,6 +216,13 @@ class DashboardController extends Controller
             ->get();
     }
 
+    /**
+     * Pārveido telpu kolekciju hierarhiskā stāvu/telpu kokā Blade skatam.
+     *
+     * Grupē telpas pēc stāva un pievieno katrai rindai aktīvās filtrēšanas stāvokli.
+     *
+     * Izsauc no: `dashboardViewData()`.
+     */
     private function dashboardLocationTree(Collection $locationRooms, array $filters): Collection
     {
         return $locationRooms
@@ -205,6 +251,14 @@ class DashboardController extends Controller
             ->values();
     }
 
+    /**
+     * Ielādē darba virsmas ierīču tabulas datus ar statusu priekšskatījumiem.
+     *
+     * Pielieto filtrēšanu un kārtošanu, pēc tam sagatavo katras ierīces stāvokļa
+     * masīvu ar remonta statusu un gaidošo pieprasījumu žetoniem.
+     *
+     * Izsauc no: `dashboardViewData()`, `devices()`.
+     */
     private function dashboardDevicesData(array $filters, ?Collection $locationRooms = null, ?array $sorting = null, bool $hideWrittenOffDevices = false): array
     {
         if (! $this->featureTableExists('devices')) {
@@ -286,6 +340,11 @@ class DashboardController extends Controller
         ];
     }
 
+    /**
+     * Uzliek stāva un telpas filtrēšanas nosacījumus darba virsmas ierīču vaicājumam.
+     *
+     * Izsauc no: `dashboardDevicesData()`.
+     */
     private function applyDashboardDeviceFilters($deviceQuery, array $filters, ?Collection $locationRooms = null): void
     {
         if ($filters['room_id'] !== '' && ctype_digit($filters['room_id'])) {
@@ -315,6 +374,11 @@ class DashboardController extends Controller
         $deviceQuery->whereHas('room', fn ($roomQuery) => $roomQuery->where('floor_number', (int) $filters['floor']));
     }
 
+    /**
+     * Uzliek kārtošanu darba virsmas ierīču vaicājumam.
+     *
+     * Izsauc no: `dashboardDevicesData()`.
+     */
     private function applyDashboardDeviceSorting(Builder $query, array $sorting): void
     {
         $direction = ($sorting['direction'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
@@ -344,6 +408,11 @@ class DashboardController extends Controller
         };
     }
 
+    /**
+     * Atgriež SQL CASE izteiksmi ierīces statusa kārtošanai prioritātes secībā.
+     *
+     * Izsauc no: `applyDashboardDeviceSorting()` — kad kārtošanas kolonna ir "status".
+     */
     private function dashboardDeviceStatusSortExpression(): string
     {
         return <<<'SQL'
@@ -356,6 +425,11 @@ END
 SQL;
     }
 
+    /**
+     * Atgriež darba virsmas ierīču tabulas kārtošanas lauku nosaukumu karti.
+     *
+     * Izsauc no: `devices()`, `renderDashboard()`, `dashboardSorting()`.
+     */
     private function dashboardSortOptions(): array
     {
         return [
@@ -368,6 +442,11 @@ SQL;
         ];
     }
 
+    /**
+     * Atgriež kārtošanas virzienu cilvēkam saprotamo nosaukumu karti.
+     *
+     * Izsauc no: `devices()`, `renderDashboard()`.
+     */
     private function sortDirectionLabels(): array
     {
         return [
@@ -378,6 +457,10 @@ SQL;
 
     /**
      * Definē ātrās darbības kartītes darba virsmas augšdaļai.
+     *
+     * Katrai kartītei iestata etiķeti, ikonu, URL un gaidošo pieprasījumu skaitu.
+     *
+     * Izsauc no: `dashboardViewData()`.
      */
     private function quickActions(int $pendingRepairRequestCount, int $pendingWriteoffRequestCount): array
     {
@@ -415,6 +498,8 @@ SQL;
 
     /**
      * Pārveido remonta tehnisko statusu cilvēkam saprotamā birkā.
+     *
+     * Izsauc no: `visibleRepairStatusLabel()`, `repairPreview()`.
      */
     public function repairStatusLabel(?string $status): ?string
     {
@@ -427,6 +512,8 @@ SQL;
 
     /**
      * Aprēķina, kādu remonta apakšstatusu rādīt ierīcei dashboardā.
+     *
+     * Izsauc no: `dashboardDevicesData()` — iekļauts katrā ierīces stāvokļa masīvā.
      */
     public function visibleRepairStatusLabel(Device $device): ?string
     {
@@ -439,6 +526,11 @@ SQL;
 
     /**
      * Sagatavo remonta hover priekšskatījuma saturu.
+     *
+     * Atgriež masīvu ar remonta ieraksta detaļām, kuru JavaScript parāda
+     * kā peldošo pārskatu, virzot peli pār remonta birku ierīces rindā.
+     *
+     * Izsauc no: `dashboardDevicesData()` — iekļauts katrā ierīces stāvokļa masīvā.
      */
     public function repairPreview(Device $device): ?array
     {
@@ -462,6 +554,11 @@ SQL;
 
     /**
      * Sagatavo informāciju par gaidošo pieprasījumu birku dashboard tabulā.
+     *
+     * Pārbauda secībā: remonta → norakstīšanas → nodošanas pieprasījums.
+     * Atgriež pirmā atrastā pieprasījuma birkas datus vai null, ja pieprasījumu nav.
+     *
+     * Izsauc no: `dashboardDevicesData()` — iekļauts katrā ierīces stāvokļa masīvā.
      */
     public function pendingRequestBadge(Device $device): ?array
     {
@@ -501,6 +598,14 @@ SQL;
         return null;
     }
 
+    /**
+     * Ģenerē saiti uz attiecīgā pieprasījuma sarakstu ar izcēlumu un filtru parametriem.
+     *
+     * Papildina URL ar enkuru un koda vai nosaukuma parametriem, lai pārlūks automātiski
+     * ritinātu un iezīmētu mērķa pieprasījumu sarakstā.
+     *
+     * Izsauc no: `pendingRequestBadge()`.
+     */
     private function requestIndexUrl(Device $device, string $type, ?int $requestId = null): ?string
     {
         $params = [
@@ -540,6 +645,14 @@ SQL;
         return $anchor !== '' ? $baseUrl . '#' . $anchor . $requestId : $baseUrl;
     }
 
+    /**
+     * Sagatavo gaidošā pieprasījuma hover priekšskatījuma saturu pēc tipa.
+     *
+     * Atgriež masīvu ar pieprasījuma metadatiem (iesniedzējs, datums, kopsavilkums),
+     * kuru JavaScript parāda kā peldošo pārskatu virs birkas.
+     *
+     * Izsauc no: `pendingRequestBadge()`.
+     */
     private function pendingRequestPreview(string $type, mixed $request): ?array
     {
         if (! $request) {
