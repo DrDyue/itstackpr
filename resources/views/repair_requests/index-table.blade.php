@@ -87,7 +87,7 @@
                         $description = trim((string) $repairRequest->description);
                         $shortDescription = \Illuminate\Support\Str::limit(preg_replace('/\s+/u', ' ', $description), 70);
                     @endphp
-                    <tr id="repair-request-{{ $repairRequest->id }}" class="request-notification-target app-table-row align-top {{ $isPendingAction ? 'app-table-row-pending' : '' }}" data-table-row-id="repair-request-{{ $repairRequest->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
+                    <tr id="repair-request-{{ $repairRequest->id }}" class="request-notification-target app-table-row align-top {{ $isPendingAction ? 'app-table-row-pending' : '' }}" data-table-row-id="repair-request-{{ $repairRequest->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}" data-table-search-highlight-style="{{ $isPendingAction ? 'outline' : 'background' }}">
                         <td class="table-col-image px-4 py-4 text-center align-middle">
                             @if ($thumbUrl)
                                 <img

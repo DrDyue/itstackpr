@@ -233,9 +233,8 @@ const getAsyncTableFormByRootSelector = (rootSelector) => {
         .find((form) => form.dataset?.asyncRoot === rootSelector) || null;
 };
 
-const TABLE_SEARCH_HIT_DURATION = 2400;
+const TABLE_SEARCH_HIT_DURATION = 1000;
 const TABLE_SEARCH_LINGER_DURATION = 10000;
-const TABLE_SEARCH_OUTLINE_ROW_CLASS_PATTERN = /\bapp-table-row-(?:pending|incoming|password-request|accent-[a-z0-9-]+)\b/;
 
 const usesOutlineTableSearchHighlight = (row) => {
     if (!row) {
@@ -252,7 +251,7 @@ const usesOutlineTableSearchHighlight = (row) => {
         return false;
     }
 
-    return TABLE_SEARCH_OUTLINE_ROW_CLASS_PATTERN.test(row.className || '');
+    return false;
 };
 
 const clearTableSearchHighlights = (root) => {

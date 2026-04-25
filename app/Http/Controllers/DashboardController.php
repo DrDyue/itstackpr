@@ -6,7 +6,6 @@ use App\Models\Device;
 use App\Models\RepairRequest;
 use App\Models\Room;
 use App\Models\WriteoffRequest;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -152,7 +151,7 @@ class DashboardController extends Controller
                     'building:id,building_name',
                     'type:id,type_name',
                     'assignedTo:id,full_name,job_title',
-                    'activeRepair' => fn (Builder $query) => $query->select([
+                    'activeRepair' => fn ($query) => $query->select([
                         'id',
                         'device_id',
                         'description',
