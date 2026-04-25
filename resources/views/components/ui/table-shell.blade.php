@@ -7,8 +7,10 @@
 
 <div @if($id) id="{{ $id }}" @endif class="{{ $shellClass }}">
     <div class="{{ $scrollClass }}">
-        <table class="{{ $tableClass }}">
-            {{ $slot }}
-        </table>
+        <div class="table-scroll-viewport">
+            <table class="{{ $tableClass }}">
+                {{ $slot }}
+            </table>
+        </div>
     </div>
 </div>

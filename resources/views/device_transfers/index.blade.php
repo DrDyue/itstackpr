@@ -343,7 +343,8 @@
             @endif
 
             <div class="mt-4 device-table-shell">
-                <div class="device-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+                <div class="device-table-scroll table-scroll-overlay-frame rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+                    <div class="table-scroll-viewport">
                     <table class="min-w-full text-sm">
                         <thead class="bg-slate-50 text-left text-slate-500">
                             <tr>
@@ -634,6 +635,7 @@
                             @endforelse
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
 

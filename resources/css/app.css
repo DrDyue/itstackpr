@@ -4768,6 +4768,10 @@ tbody td {
     @apply px-0 py-0 text-left;
 }
 
+.table-action-section > * + * {
+    @apply mt-1.5;
+}
+
 .table-action-section + .table-action-section {
     @apply mt-3 pt-3;
 }
@@ -5176,9 +5180,41 @@ tbody td {
 .app-table-scroll,
 .device-table-scroll {
     @apply relative w-full overflow-x-auto overflow-y-visible rounded-[1.75rem];
+    isolation: isolate;
     box-shadow:
         inset 0 0 0 1px rgba(226, 232, 240, 0.95),
         0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.app-table-scroll .table-action-menu,
+.device-table-scroll .table-action-menu {
+    z-index: 80;
+}
+
+.app-table-scroll .table-action-list,
+.device-table-scroll .table-action-list,
+.users-table-scroll .table-action-list {
+    z-index: 120;
+}
+
+.table-scroll-overlay-frame {
+    overflow: visible;
+    isolation: isolate;
+}
+
+.table-scroll-overlay-frame .table-action-menu {
+    z-index: 80;
+}
+
+.table-scroll-overlay-frame .table-action-list {
+    z-index: 120;
+}
+
+.table-scroll-viewport {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    border-radius: inherit;
 }
 
 .app-table-scroll-balanced,

@@ -59,6 +59,7 @@ class UserController extends Controller
 
         $usersQuery = User::query()
             ->select(['id', 'full_name', 'email', 'phone', 'job_title', 'role', 'is_active', 'last_login', 'password_reset_requested_at'])
+            ->withCount('assignedDevices')
             ->selectSub($this->latestLoginAuditSubquery(), 'latest_login_audit_at')
             ->when($legacyName !== '', fn ($query) => $query->where('full_name', 'like', '%' . $legacyName . '%'))
             ->when($legacyEmail !== '', fn ($query) => $query->where('email', 'like', '%' . $legacyEmail . '%'))
@@ -124,6 +125,7 @@ class UserController extends Controller
                 ? tap(
                     User::query()
                         ->select(['id', 'full_name', 'email', 'phone', 'job_title', 'role', 'is_active', 'last_login', 'password_reset_requested_at'])
+                        ->withCount('assignedDevices')
                         ->selectSub($this->latestLoginAuditSubquery(), 'latest_login_audit_at')
                         ->find((int) $request->query('modal_user')),
                     fn (?User $modalUser) => $modalUser ? $this->attachEffectiveLastLogin($modalUser) : null
@@ -348,7 +350,10 @@ class UserController extends Controller
      * Atjaunina esošā lietotāja datus.
      *
      * Ja tiek norādīta jauna parole, tā tiek šifrēta un paroles maiņas pieprasījuma
-     * lauks tiek notīrīts. Izmaiņas tiek salīdzinātas un reģistrētas audita žurnālā.
+     * lauks tiek notīrīts. Administrators savu kontu no šīs sadaļas rediģēt nevar —
+     * tādā gadījumā notiek pāradresācija uz profila modāli. Papildus tiek pārbaudīts,
+     * vai izmaiņas neatstāj sistēmu bez neviena administratora. Izmaiņas tiek
+     * salīdzinātas un reģistrētas audita žurnālā.
      *
      * Izsaukšana: PUT/PATCH /users/{user} | Pieejams: tikai administrators.
      * Scenārijs: Administrators rediģē lietotāja profila datus vai nomaina paroli.
@@ -357,8 +362,21 @@ class UserController extends Controller
     {
         $this->requireAdmin();
 
+        if ((int) auth()->id() === (int) $user->id) {
+            return redirect()
+                ->route('profile.edit', ['profile_modal' => 'edit'])
+                ->with('warning', 'Savu kontu šeit rediģēt nevar. Izmanto profila sadaļu.');
+        }
+
         $before = $user->only(['full_name', 'email', 'phone', 'job_title', 'role', 'is_active']);
         $validated = $this->validatedData($request, $user);
+
+        if ($this->wouldRemoveLastAdmin($user, $validated)) {
+            return redirect()
+                ->route('users.index', ['user_modal' => 'edit', 'modal_user' => $user->id])
+                ->withInput()
+                ->with('error', 'Sistēmā jāpaliek vismaz vienam administratoram.');
+        }
 
         if (! filled($validated['password'] ?? null)) {
             unset($validated['password']);
@@ -385,7 +403,8 @@ class UserController extends Controller
      *
      * Pirms dzēšanas pārbauda visas saistītās relācijas — ierīces, telpas,
      * pieteikumus, remonts u.c. Ja kaut kas ir piesaistīts, dzēšana tiek
-     * noraidīta ar detalizētu kļūdas paziņojumu. Administrators nevar dzēst pats sevi.
+     * noraidīta ar detalizētu kļūdas paziņojumu. Administrators nevar dzēst pats sevi,
+     * un lietotāju nevar dzēst, kamēr tam vēl ir piesaistītas ierīces.
      *
      * Izsaukšana: DELETE /users/{user} | Pieejams: tikai administrators.
      * Scenārijs: Administrators nospiež dzēšanas pogu lietotāja rindā un apstiprina darbību.
@@ -396,6 +415,13 @@ class UserController extends Controller
 
         if (auth()->id() === $user->id) {
             return redirect()->route('users.index')->with('error', 'Nevar dzēst savu lietotāja kontu.');
+        }
+
+        if ($user->assignedDevices()->exists()) {
+            return redirect()->route('users.index')->with(
+                'error',
+                'Lietotāju nevar izdzēst, jo viņam ir piesaistītas ierīces. Vispirms atsaisti vai pārvieto tās uz citu lietotāju.'
+            );
         }
 
         $blockingRelations = collect([
@@ -600,5 +626,25 @@ class UserController extends Controller
             'is_active' => ['label' => 'statusa'],
             'last_login' => ['label' => 'pēdējās pieslēgšanās'],
         ];
+    }
+    /**
+     * Pārbauda, vai lietotāja lomas maiņa neatņems sistēmai pēdējo administratoru.
+     *
+     * Atgriež true tikai tad, ja rediģētais lietotājs pašlaik ir administrators,
+     * jaunajos datos viņam šī loma tiek noņemta un sistēmā nepaliek neviens cits
+     * administrators.
+     *
+     * Izsauc no: `update()` — pirms lietotāja izmaiņu saglabāšanas.
+     */
+    private function wouldRemoveLastAdmin(User $user, array $validated): bool
+    {
+        if ($user->role !== User::ROLE_ADMIN || ($validated['role'] ?? $user->role) === User::ROLE_ADMIN) {
+            return false;
+        }
+
+        return User::query()
+            ->where('role', User::ROLE_ADMIN)
+            ->whereKeyNot($user->id)
+            ->doesntExist();
     }
 }

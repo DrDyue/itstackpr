@@ -8,6 +8,10 @@
         $writeoffRequestsUrl = route('writeoff-requests.index', ['requester_id' => $managedUser->id, 'requester_query' => $managedUser->full_name, 'statuses_filter' => 1]);
         $outgoingTransfersUrl = route('device-transfers.index', ['requester_id' => $managedUser->id, 'requester_query' => $managedUser->full_name, 'statuses_filter' => 1]);
         $incomingTransfersUrl = route('device-transfers.index', ['recipient_id' => $managedUser->id, 'recipient_query' => $managedUser->full_name, 'statuses_filter' => 1]);
+        $isCurrentUser = (int) auth()->id() === (int) $managedUser->id;
+        $editUrl = $isCurrentUser
+            ? route('profile.edit', ['profile_modal' => 'edit'])
+            : route('users.index', ['user_modal' => 'edit', 'modal_user' => $managedUser->id]);
     @endphp
 
     <section class="app-shell app-shell-wide">
@@ -59,9 +63,9 @@
                 </div>
 
                 <div class="page-actions">
-                    <a href="{{ route('users.index', ['user_modal' => 'edit', 'modal_user' => $managedUser->id]) }}" class="btn-edit">
+                    <a href="{{ $editUrl }}" class="btn-edit">
                         <x-icon name="edit" size="h-4 w-4" />
-                        <span>Rediģēt</span>
+                        <span>{{ $isCurrentUser ? 'Rediģēt profilu' : 'Rediģēt' }}</span>
                     </a>
                     <a href="{{ route('users.index') }}" class="btn-back">
                         <x-icon name="back" size="h-4 w-4" />

@@ -7,7 +7,7 @@
 <x-ui.table-shell
     id="repair-requests-table-root"
     shell-class="app-table-shell"
-    scroll-class="app-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm"
+    scroll-class="app-table-scroll table-scroll-overlay-frame rounded-[1.75rem] border border-slate-200 bg-white shadow-sm"
     table-class="app-table-content app-table-content-wide min-w-full border-separate border-spacing-y-2 text-sm"
 >
             <thead class="app-table-head bg-slate-50 text-left text-slate-500">

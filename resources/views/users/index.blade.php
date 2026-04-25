@@ -26,6 +26,7 @@
             'is_active' => ['label' => 'Statuss', 'class' => 'table-col-status'],
             'last_login' => ['label' => 'Pēdējā pieslēgšanās', 'class' => 'table-col-date'],
         ];
+        $currentUserId = (int) auth()->id();
     @endphp
 
     <section class="app-shell app-shell-wide">
@@ -234,7 +235,8 @@
             @endif
 
             <div class="app-table-shell mt-4">
-                <div class="app-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+                <div class="app-table-scroll users-table-scroll table-scroll-overlay-frame rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+                    <div class="table-scroll-viewport">
                     <table class="app-table-content app-table-content-users min-w-full text-sm">
                         <thead class="app-table-head bg-slate-50 text-left text-slate-500">
                             <tr>
@@ -263,6 +265,7 @@
                                         </button>
                                     </th>
                                 @endforeach
+                                <th class="table-col-status px-4 py-3">Piesaistītās ierīces</th>
                                 <th class="table-col-actions px-4 py-3">Darbības</th>
                             </tr>
                         </thead>
@@ -270,10 +273,21 @@
                             @forelse ($users as $managedUser)
                                 @php
                                     $assignedDevicesUrl = route('devices.index', ['assigned_to_id' => $managedUser->id, 'assigned_to_query' => $managedUser->full_name]);
+                                    $isCurrentUser = $currentUserId === (int) $managedUser->id;
+                                    $hasAssignedDevices = (int) ($managedUser->assigned_devices_count ?? 0) > 0;
+                                    $editUrl = $isCurrentUser
+                                        ? route('profile.edit', ['profile_modal' => 'edit'])
+                                        : route('users.index', ['user_modal' => 'edit', 'modal_user' => $managedUser->id]);
                                 @endphp
                                 <tr id="user-{{ $managedUser->id }}" class="request-notification-target app-table-row border-t border-slate-100 align-top {{ $managedUser->password_reset_requested_at ? 'app-table-row-password-request' : ($managedUser->role === 'admin' ? 'app-table-row-accent-violet' : 'app-table-row-accent-sky') }}" data-table-row-id="user-{{ $managedUser->id }}" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim((string) $managedUser->full_name)) }}" data-table-search-highlight-style="{{ $managedUser->password_reset_requested_at ? 'outline' : 'background' }}">
                                     <td class="px-4 py-4">
                                         <div class="app-table-cell-strong">{{ $managedUser->full_name }}</div>
+                                        @if ($isCurrentUser)
+                                            <div class="mt-2 inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-800">
+                                                <x-icon name="profile" size="h-3.5 w-3.5" />
+                                                <span>Jūsu ieraksts</span>
+                                            </div>
+                                        @endif
                                         @if ($managedUser->password_reset_requested_at)
                                             <div class="mt-2 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">
                                                 <x-icon name="key" size="h-3.5 w-3.5" />
@@ -287,6 +301,16 @@
                                         <x-status-pill context="user-role" :value="$managedUser->role" :label="$roleLabels[$managedUser->role] ?? null" />
                                     </td>
                                     <td class="px-4 py-4 text-slate-600">{{ $managedUser->job_title ?: '-' }}</td>
+                                    <td class="px-4 py-4 text-slate-600">
+                                        @if ($hasAssignedDevices)
+                                            <a href="{{ $assignedDevicesUrl }}" class="inline-flex items-center gap-2 font-semibold text-sky-700 hover:text-sky-900">
+                                                <x-icon name="device" size="h-4 w-4" />
+                                                <span>{{ $managedUser->assigned_devices_count }}</span>
+                                            </a>
+                                        @else
+                                            <span>0</span>
+                                        @endif
+                                    </td>
                                     <td class="px-4 py-4">
                                         <x-status-pill context="user-active" :value="$managedUser->is_active" />
                                     </td>
@@ -323,16 +347,16 @@
 
                                                 <div class="table-action-section">
                                                     <div class="table-action-section-title">Pārvaldība</div>
-                                                    <button type="button" class="table-action-item table-action-item-amber" @click="open = false; $dispatch('open-modal', 'user-edit-modal-{{ $managedUser->id }}')">
+                                                    <a href="{{ $editUrl }}" class="table-action-item table-action-item-amber" @click="open = false" @if (! $isCurrentUser) data-async-link="true" @endif>
                                                         <x-icon name="edit" size="h-4 w-4" />
-                                                        <span>Rediģēt</span>
-                                                    </button>
+                                                        <span>{{ $isCurrentUser ? 'Rediģēt profilu' : 'Rediģēt' }}</span>
+                                                    </a>
 
                                                     @if ($managedUser->password_reset_requested_at)
-                                                        <button type="button" class="table-action-item table-action-item-violet" @click="open = false; $dispatch('open-modal', 'user-edit-modal-{{ $managedUser->id }}')">
+                                                        <a href="{{ $editUrl }}" class="table-action-item table-action-item-violet" @click="open = false" @if (! $isCurrentUser) data-async-link="true" @endif>
                                                             <x-icon name="key" size="h-4 w-4" />
                                                             <span>Mainīt paroli</span>
-                                                        </button>
+                                                        </a>
                                                     @endif
 
                                                     <a href="{{ $assignedDevicesUrl }}" class="table-action-item" @click="open = false">
@@ -347,16 +371,24 @@
                                                     <x-post-action-button
                                                         :action="route('users.destroy', $managedUser)"
                                                         method="DELETE"
+                                                        form-class="table-action-form"
                                                         button-class="table-action-item table-action-item-rose"
-                                                        :button-type="auth()->id() === $managedUser->id ? 'button' : 'submit'"
-                                                        :button-attributes="auth()->id() === $managedUser->id
+                                                        :button-type="$isCurrentUser || $hasAssignedDevices ? 'button' : 'submit'"
+                                                        :button-attributes="$isCurrentUser
                                                             ? [
                                                                 'data-app-toast-title' => 'Dzēšana nav pieejama',
                                                                 'data-app-toast-message' => 'Paša lietotāja kontu no šīs tabulas dzēst nevar. Izmanto citu administratora kontu, ja šo profilu tiešām vajag noņemt.',
                                                                 'data-app-toast-tone' => 'info',
                                                                 'disabled' => true,
                                                             ]
-                                                            : []"
+                                                            : ($hasAssignedDevices
+                                                                ? [
+                                                                    'data-app-toast-title' => 'Dzēšana nav pieejama',
+                                                                    'data-app-toast-message' => 'Lietotājam ir piesaistītas ierīces. Vispirms pārvieto vai atsaisti tās.',
+                                                                    'data-app-toast-tone' => 'info',
+                                                                    'disabled' => true,
+                                                                ]
+                                                                : [])"
                                                         data-app-confirm-title="Dzēst lietotāju?"
                                                         data-app-confirm-message="Vai tiešām dzēst šo lietotāju?"
                                                         data-app-confirm-accept="Jā, dzēst"
@@ -373,7 +405,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="px-4 py-6">
+                                    <td colspan="9" class="px-4 py-6">
                                         <x-empty-state
                                             compact
                                             icon="users"
@@ -385,6 +417,7 @@
                             @endforelse
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
 
@@ -431,3 +464,4 @@
         @endif
     </section>
 </x-app-layout>
+

@@ -27,7 +27,8 @@ class ProfileController extends Controller
      * Profila rediģēšanas skats — novirza uz galveno lapu pēc lomas.
      *
      * Administrators tiek novirzīts uz darba virsmu, bet parasts lietotājs
-     * uz ierīču sarakstu. Profila modālis tiek atvērts JavaScript pusē.
+     * uz ierīču sarakstu. Ja pieprasījumā ir `profile_modal`, tas tiek
+     * pārsūtīts tālāk uz mērķa lapu, lai profila modālis atvērtos JavaScript pusē.
      *
      * Izsaukšana: GET /profile | Pieejams: jebkurš autentificēts lietotājs.
      * Scenārijs: Lietotājs klikšķina uz "Manu profilu" vai tiek novirzīts uz šo URL.
@@ -37,7 +38,10 @@ class ProfileController extends Controller
         $user = $request->user();
         abort_unless($user, 404);
 
-        return redirect()->route($user->canManageRequests() ? 'dashboard' : 'devices.index');
+        $targetRoute = $user->canManageRequests() ? 'dashboard' : 'devices.index';
+        $query = $request->query('profile_modal') ? ['profile_modal' => $request->query('profile_modal')] : [];
+
+        return redirect()->route($targetRoute, $query);
     }
 
     /**

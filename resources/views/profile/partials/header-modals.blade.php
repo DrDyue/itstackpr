@@ -220,6 +220,10 @@
         <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'profile-modal' })));</script>
     @endif
 
+    @if (request()->query('profile_modal') === 'edit')
+        <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'profile-modal' })));</script>
+    @endif
+
     @if ($errors->updatePassword->isNotEmpty())
         <script>
             window.addEventListener('DOMContentLoaded', () => {
