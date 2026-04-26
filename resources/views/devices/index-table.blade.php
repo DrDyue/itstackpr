@@ -316,14 +316,13 @@
                                         </a>
 
                                         @if ($roomUpdateAvailability['allowed'])
-                                            <button
-                                                type="button"
+                                            <a
+                                                href="{{ route('devices.show', ['device' => $device, 'room_modal' => 'change']) }}"
                                                 class="table-action-button table-action-button-slate"
-                                                onclick="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-user-room-modal-{{ $device->id }}' }))"
                                             >
                                                 <x-icon name="room" size="h-4 w-4" />
                                                 <span>Mainīt telpu</span>
-                                            </button>
+                                            </a>
                                         @else
                                             <button type="button" class="btn-disabled" data-app-toast-title="Telpas maiņa nav pieejama" data-app-toast-message="{{ $roomUpdateAvailability['reason'] ?? 'Telpas maiņa šobrīd nav pieejama.' }}" data-app-toast-tone="info">
                                                 <x-icon name="room" size="h-4 w-4" />

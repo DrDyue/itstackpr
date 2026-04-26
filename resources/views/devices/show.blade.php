@@ -292,13 +292,13 @@
 
         {{-- Telpas maiņas modāls (lietotājs) --}}
         @if ($usesUserDeviceView && $roomUpdateAvailability['allowed'])
-            <x-modal name="device-show-room-modal" maxWidth="2xl">
+            <x-modal name="device-show-room-modal" maxWidth="4xl">
                 <div class="device-user-room-modal-shell">
                     <div class="device-user-room-modal-head">
                         <div>
                             <div class="device-user-room-modal-badge">Telpas maiņa</div>
                             <h2 class="device-user-room-modal-title">{{ $device->name }}</h2>
-                            <p class="device-user-room-modal-copy">Izvēlies telpu, uz kuru pārvietot ierīci. Ēka tiks atjaunota automātiski.</p>
+                            <p class="device-user-room-modal-copy">Izvēlies telpu no pilnā saraksta. Ēka tiks atjaunota automātiski.</p>
                         </div>
                         <button type="button" class="device-type-modal-close" x-data @click="$dispatch('close-modal', 'device-show-room-modal')" aria-label="Aizvērt">
                             <x-icon name="x-mark" size="h-5 w-5" />
@@ -337,7 +337,7 @@
                     </form>
                 </div>
             </x-modal>
-            @if (old('modal_form') === 'device_show_room')
+            @if (old('modal_form') === 'device_show_room' || ($roomModalRequested ?? false))
                 <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-show-room-modal' })));</script>
             @endif
         @endif

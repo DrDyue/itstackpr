@@ -358,7 +358,7 @@ class DeviceController extends Controller
             'statusLabels' => $this->statusLabels(),
             'canManageDevices' => $canManageDevices,
             'quickRoomOptions' => $canManageDevices ? $this->quickRoomOptions() : collect(),
-            'userRoomOptions' => $this->roomSelectOptions($accessibleRooms),
+            'userRoomOptions' => $this->allRoomOptions(),
             'quickAssigneeOptions' => $canManageDevices ? $this->quickAssigneeOptions() : collect(),
             'sortOptions' => $this->deviceSortOptions($canManageDevices),
             'deviceModalQuery' => (string) $request->query('device_modal', ''),
@@ -711,7 +711,7 @@ SQL;
      * Scenārijs: Lietotājs noklikšķina uz ierīces nosaukuma ierīču sarakstā.
      * Parasts lietotājs var atvērt tikai savu ierīci; administrators — jebkuru.
      */
-    public function show(Device $device)
+    public function show(Request $request, Device $device)
     {
         $this->authorizeView($device);
 
@@ -750,37 +750,7 @@ SQL;
             ->sortByDesc('created_at')
             ->first();
 
-        $roomOptions = Room::query()
-            ->with('building')
-            ->orderBy('floor_number')
-            ->orderBy('room_number')
-            ->get()
-            ->map(fn (Room $room) => [
-                'value' => (string) $room->id,
-                'label' => $room->room_number.($room->room_name ? ' - '.$room->room_name : ''),
-                'description' => collect([
-                    $room->building?->building_name,
-                    $room->floor_number !== null ? $room->floor_number.'. stāvs' : null,
-                    $room->department,
-                ])->filter()->implode(' | '),
-                'search' => implode(' ', array_filter([
-                    $room->room_number,
-                    $room->room_name,
-                    $room->building?->building_name,
-                    $room->department,
-                    $room->floor_number,
-                ])),
-            ])
-            ->values();
-
-        $roomOptions = $this->roomSelectOptions(
-            Room::query()
-                ->with('building')
-                ->orderBy('building_id')
-                ->orderBy('floor_number')
-                ->orderBy('room_number')
-                ->get()
-        );
+        $roomOptions = $this->allRoomOptions();
 
         $pendingRepairRequest = $device->repairRequests->firstWhere('status', 'submitted');
         $pendingWriteoffRequest = $device->writeoffRequests->firstWhere('status', 'submitted');
@@ -799,6 +769,7 @@ SQL;
                 : 'Ierīci tev piešķīra administrators.',
             'latestTransferToCurrentUser' => $latestTransferToCurrentUser,
             'roomOptions' => $roomOptions,
+            'roomModalRequested' => $request->query('room_modal') === 'change',
             'visibleWriteoffRequests' => $device->writeoffRequests->sortByDesc('created_at')->values(),
             'visibleTransfers' => $device->transfers->sortByDesc('created_at')->values(),
             'requestAvailability' => $this->requestAvailabilityForDevice(
@@ -2225,6 +2196,27 @@ SQL;
                 ])),
             ])
             ->values();
+    }
+
+    /**
+     * Atgriež pilnu telpu sarakstu formatētu izvēlnēm ar grupēšanu pa ēkām un stāviem.
+     *
+     * Parastajam lietotājam telpas maiņas izvēlnē jāredz visas telpas, ne tikai tās,
+     * kurās jau atrodas viņam piešķirtās ierīces. Tāpēc šī metode ielādē pilnu sarakstu
+     * no datubāzes un izmanto kopējo `roomSelectOptions()` formatēšanu.
+     *
+     * Izsauc no: `devicesIndexViewData()`, `show()`.
+     */
+    private function allRoomOptions(): Collection
+    {
+        return $this->roomSelectOptions(
+            Room::query()
+                ->with('building')
+                ->orderBy('building_id')
+                ->orderBy('floor_number')
+                ->orderBy('room_number')
+                ->get()
+        );
     }
 
     /**
