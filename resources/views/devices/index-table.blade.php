@@ -370,7 +370,7 @@
                                                 type="button"
                                                 class="table-action-button table-action-button-slate"
                                                 data-modal-detail="{{ e(json_encode($userRoomModalDetail, JSON_UNESCAPED_UNICODE)) }}"
-                                                @click="window.dispatchEvent(new CustomEvent('open-device-user-room', { detail: JSON.parse($el.dataset.modalDetail || '{}') }))"
+                                                onclick="window.dispatchEvent(new CustomEvent('open-device-user-room', { detail: JSON.parse(this.dataset.modalDetail || '{}') }))"
                                             >
                                                 <x-icon name="room" size="h-4 w-4" />
                                                 <span>Mainīt telpu</span>
@@ -457,7 +457,7 @@
                                                     <span>Rediģēt</span>
                                                 </button>
                                             @else
-                                                <button type="button" class="table-action-item table-action-item-amber" @click="closePanel(); $dispatch('open-modal', 'device-edit-modal-{{ $device->id }}')">
+                                                <button type="button" class="table-action-item table-action-item-amber" onclick="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-edit-modal-{{ $device->id }}' }))" @click="closePanel()">
                                                     <x-icon name="edit" size="h-4 w-4" />
                                                     <span>Rediģēt</span>
                                                 </button>
@@ -474,7 +474,8 @@
                                                         @click="closePanel()"
                                                     @else
                                                         data-modal-detail="{{ e(json_encode($adminRoomModalDetail, JSON_UNESCAPED_UNICODE)) }}"
-                                                        @click="closePanel(); window.dispatchEvent(new CustomEvent('open-device-admin-room', { detail: JSON.parse($el.dataset.modalDetail || '{}') }))"
+                                                        onclick="window.dispatchEvent(new CustomEvent('open-device-admin-room', { detail: JSON.parse(this.dataset.modalDetail || '{}') }))"
+                                                        @click="closePanel()"
                                                     @endif
                                                 >
                                                     <x-icon name="room" size="h-4 w-4" />
@@ -491,7 +492,8 @@
                                                         @click="closePanel()"
                                                     @else
                                                         data-modal-detail="{{ e(json_encode($adminAssigneeModalDetail, JSON_UNESCAPED_UNICODE)) }}"
-                                                        @click="closePanel(); window.dispatchEvent(new CustomEvent('open-device-admin-assignee', { detail: JSON.parse($el.dataset.modalDetail || '{}') }))"
+                                                        onclick="window.dispatchEvent(new CustomEvent('open-device-admin-assignee', { detail: JSON.parse(this.dataset.modalDetail || '{}') }))"
+                                                        @click="closePanel()"
                                                     @endif
                                                 >
                                                     <x-icon name="user" size="h-4 w-4" />
@@ -560,7 +562,34 @@
 
 @if (! $canManageDevices)
     <x-modal name="device-user-room-modal" maxWidth="2xl">
-        <div class="device-user-room-modal-shell">
+        {{-- 
+            Lietotāja ātrā telpas maiņa.
+            Forma pati klausās `open-device-user-room` notikumu, lai tā darbotos arī tad,
+            ja poga atrodas tabulas rindā vai pārzīmētā async tabulas fragmentā.
+        --}}
+        <div
+            class="device-user-room-modal-shell"
+            x-data='{
+                userRoomModal: {
+                    deviceId: @js($oldUserRoomDeviceId),
+                    deviceLabel: @js($oldUserRoomDevice ? (($oldUserRoomDevice->code ?: "Bez koda") . " | " . $oldUserRoomDevice->name) : ""),
+                    currentRoomLabel: @js($oldUserRoomLabel),
+                    selectedRoomId: @js($oldUserRoomModalForm ? old("room_id", (string) ($oldUserRoomDevice?->room_id ?? "")) : ""),
+                    action: @js($oldUserRoomDeviceId ? route("devices.user-room.update", $oldUserRoomDeviceId) : ""),
+                },
+                open(detail) {
+                    this.userRoomModal = {
+                        deviceId: detail.deviceId || null,
+                        deviceLabel: detail.deviceLabel || "",
+                        currentRoomLabel: detail.currentRoomLabel || "Nav norādīta",
+                        selectedRoomId: detail.selectedRoomId || "",
+                        action: detail.action || "",
+                    };
+                    window.dispatchEvent(new CustomEvent("open-modal", { detail: "device-user-room-modal" }));
+                },
+            }'
+            @open-device-user-room.window="open($event.detail || {})"
+        >
             <div class="device-user-room-modal-head">
                 <div>
                     <div class="device-user-room-modal-badge">Telpas maiņa</div>
@@ -630,7 +659,30 @@
     @endforeach
 
     <x-modal name="device-admin-room-modal" maxWidth="2xl">
-        <div class="device-user-room-modal-shell">
+        {{-- 
+            Administratora ātrā telpas maiņa.
+            Šī nav pilnā ierīces rediģēšanas forma: tiek sūtīta tikai `action=room`
+            un izvēlētā `target_room_id` vērtība uz `devices.quick-update`.
+        --}}
+        <div
+            class="device-user-room-modal-shell"
+            x-data='{
+                adminRoomModal: {
+                    deviceLabel: "",
+                    selectedRoomId: "",
+                    action: "",
+                },
+                open(detail) {
+                    this.adminRoomModal = {
+                        deviceLabel: detail.deviceLabel || "",
+                        selectedRoomId: detail.selectedRoomId || "",
+                        action: detail.action || "",
+                    };
+                    window.dispatchEvent(new CustomEvent("open-modal", { detail: "device-admin-room-modal" }));
+                },
+            }'
+            @open-device-admin-room.window="open($event.detail || {})"
+        >
             <div class="device-user-room-modal-head">
                 <div>
                     <div class="device-user-room-modal-badge">Telpas maiņa</div>
@@ -667,7 +719,30 @@
     </x-modal>
 
     <x-modal name="device-admin-assignee-modal" maxWidth="2xl">
-        <div class="device-user-room-modal-shell">
+        {{-- 
+            Administratora ātrā atbildīgā maiņa.
+            Forma saņem ierīces nosaukumu, pašreizējo atbildīgo un saglabāšanas URL
+            no darbības pogas `data-modal-detail`, pēc tam atver atsevišķu modāli.
+        --}}
+        <div
+            class="device-user-room-modal-shell"
+            x-data='{
+                adminAssigneeModal: {
+                    deviceLabel: "",
+                    selectedAssigneeId: "",
+                    action: "",
+                },
+                open(detail) {
+                    this.adminAssigneeModal = {
+                        deviceLabel: detail.deviceLabel || "",
+                        selectedAssigneeId: detail.selectedAssigneeId || "",
+                        action: detail.action || "",
+                    };
+                    window.dispatchEvent(new CustomEvent("open-modal", { detail: "device-admin-assignee-modal" }));
+                },
+            }'
+            @open-device-admin-assignee.window="open($event.detail || {})"
+        >
             <div class="device-user-room-modal-head">
                 <div>
                     <div class="device-user-room-modal-badge">Atbildīgā maiņa</div>
