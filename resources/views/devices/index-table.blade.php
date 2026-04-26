@@ -49,57 +49,7 @@
         ];
 @endphp
 
-<div
-    id="devices-table-root"
-    x-data='{
-        userRoomModal: {
-            deviceId: @js($oldUserRoomDeviceId),
-            deviceLabel: @js($oldUserRoomDevice ? (($oldUserRoomDevice->code ?: "Bez koda") . " | " . $oldUserRoomDevice->name) : ""),
-            currentRoomLabel: @js($oldUserRoomLabel),
-            selectedRoomId: @js($oldUserRoomModalForm ? old("room_id", (string) ($oldUserRoomDevice?->room_id ?? "")) : ""),
-            action: @js($oldUserRoomDeviceId ? route("devices.user-room.update", $oldUserRoomDeviceId) : ""),
-        },
-        adminRoomModal: {
-            deviceLabel: "",
-            selectedRoomId: "",
-            action: "",
-        },
-        adminAssigneeModal: {
-            deviceLabel: "",
-            selectedAssigneeId: "",
-            action: "",
-        },
-        openUserRoomModal(detail) {
-            this.userRoomModal = {
-                deviceId: detail.deviceId || null,
-                deviceLabel: detail.deviceLabel || "",
-                currentRoomLabel: detail.currentRoomLabel || "Nav norādīta",
-                selectedRoomId: detail.selectedRoomId || "",
-                action: detail.action || "",
-            };
-            window.dispatchEvent(new CustomEvent("open-modal", { detail: "device-user-room-modal" }));
-        },
-        openAdminRoomModal(detail) {
-            this.adminRoomModal = {
-                deviceLabel: detail.deviceLabel || "",
-                selectedRoomId: detail.selectedRoomId || "",
-                action: detail.action || "",
-            };
-            window.dispatchEvent(new CustomEvent("open-modal", { detail: "device-admin-room-modal" }));
-        },
-        openAdminAssigneeModal(detail) {
-            this.adminAssigneeModal = {
-                deviceLabel: detail.deviceLabel || "",
-                selectedAssigneeId: detail.selectedAssigneeId || "",
-                action: detail.action || "",
-            };
-            window.dispatchEvent(new CustomEvent("open-modal", { detail: "device-admin-assignee-modal" }));
-        },
-    }'
-    @open-device-user-room.window="openUserRoomModal($event.detail || {})"
-    @open-device-admin-room.window="openAdminRoomModal($event.detail || {})"
-    @open-device-admin-assignee.window="openAdminAssigneeModal($event.detail || {})"
->
+<div id="devices-table-root">
     <div class="repair-table-shell mt-5 rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
         <div class="repair-table-scroll">
             <table class="repair-table-content w-full min-w-full text-sm">
@@ -473,8 +423,7 @@
                                                         data-app-toast-tone="info"
                                                         @click="closePanel()"
                                                     @else
-                                                        data-modal-detail="{{ e(json_encode($adminRoomModalDetail, JSON_UNESCAPED_UNICODE)) }}"
-                                                        onclick="window.dispatchEvent(new CustomEvent('open-device-admin-room', { detail: JSON.parse(this.dataset.modalDetail || '{}') }))"
+                                                        onclick="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-admin-room-modal-{{ $device->id }}' }))"
                                                         @click="closePanel()"
                                                     @endif
                                                 >
@@ -491,8 +440,7 @@
                                                         data-app-toast-tone="info"
                                                         @click="closePanel()"
                                                     @else
-                                                        data-modal-detail="{{ e(json_encode($adminAssigneeModalDetail, JSON_UNESCAPED_UNICODE)) }}"
-                                                        onclick="window.dispatchEvent(new CustomEvent('open-device-admin-assignee', { detail: JSON.parse(this.dataset.modalDetail || '{}') }))"
+                                                        onclick="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-admin-assignee-modal-{{ $device->id }}' }))"
                                                         @click="closePanel()"
                                                     @endif
                                                 >
@@ -656,6 +604,107 @@
             'modalName' => 'device-edit-modal-' . $deviceModalItem->id,
             'device' => $deviceModalItem,
         ])
+
+        {{-- 
+            Ātrās darbības modāļi ir piesaistīti konkrētai tabulas rindai.
+            Šādi pogas "Mainīt telpu" un "Mainīt atbildīgo" atver jau sagatavotu formu
+            bez lapas pārlādes un bez papildu JavaScript datu parsēšanas klikšķa brīdī.
+        --}}
+        <x-modal :name="'device-admin-room-modal-' . $deviceModalItem->id" maxWidth="2xl">
+            <div class="device-user-room-modal-shell">
+                <div class="device-user-room-modal-head">
+                    <div>
+                        <div class="device-user-room-modal-badge">Telpas maiņa</div>
+                        <h2 class="device-user-room-modal-title">{{ ($deviceModalItem->code ?: 'Bez koda') . ' | ' . $deviceModalItem->name }}</h2>
+                        <p class="device-user-room-modal-copy">Izvēlies telpu, uz kuru uzreiz pārvietot ierīci.</p>
+                    </div>
+                    <button type="button" class="device-type-modal-close" x-data @click="$dispatch('close-modal', 'device-admin-room-modal-{{ $deviceModalItem->id }}')" aria-label="Aizvērt">
+                        <x-icon name="x-mark" size="h-5 w-5" />
+                    </button>
+                </div>
+                <form method="POST" action="{{ route('devices.quick-update', $deviceModalItem) }}" class="device-user-room-modal-form">
+                    @csrf
+                    <input type="hidden" name="action" value="room">
+                    <div class="device-user-room-modal-device">
+                        <div>
+                            <div class="device-user-room-modal-label">Pašreizējā telpa</div>
+                            <div class="device-user-room-modal-value">
+                                {{ $deviceModalItem->room ? ($deviceModalItem->room->room_number . ($deviceModalItem->room->room_name ? ' - ' . $deviceModalItem->room->room_name : '')) : 'Nav norādīta' }}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="device-user-room-modal-label">Ēka</div>
+                            <div class="device-user-room-modal-value">{{ $deviceModalItem->building?->building_name ?: 'Nav norādīta' }}</div>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="device-user-room-modal-label" for="device-admin-room-input-{{ $deviceModalItem->id }}">Jaunā telpa</label>
+                        <select id="device-admin-room-input-{{ $deviceModalItem->id }}" name="target_room_id" class="crud-control">
+                            <option value="">Izvēlies telpu</option>
+                            @foreach ($quickRoomSelectOptions as $roomOption)
+                                <option value="{{ $roomOption['value'] }}" @selected((string) $deviceModalItem->room_id === (string) $roomOption['value'])>
+                                    {{ $roomOption['label'] }}@if (! empty($roomOption['description'])) | {{ $roomOption['description'] }}@endif
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="device-user-room-modal-actions">
+                        <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'device-admin-room-modal-{{ $deviceModalItem->id }}')">Atcelt</button>
+                        <button type="submit" class="btn-search">
+                            <x-icon name="save" size="h-4 w-4" />
+                            <span>Saglabāt</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </x-modal>
+
+        <x-modal :name="'device-admin-assignee-modal-' . $deviceModalItem->id" maxWidth="2xl">
+            <div class="device-user-room-modal-shell">
+                <div class="device-user-room-modal-head">
+                    <div>
+                        <div class="device-user-room-modal-badge">Atbildīgā maiņa</div>
+                        <h2 class="device-user-room-modal-title">{{ ($deviceModalItem->code ?: 'Bez koda') . ' | ' . $deviceModalItem->name }}</h2>
+                        <p class="device-user-room-modal-copy">Izvēlies personu, kurai piešķirt ierīci.</p>
+                    </div>
+                    <button type="button" class="device-type-modal-close" x-data @click="$dispatch('close-modal', 'device-admin-assignee-modal-{{ $deviceModalItem->id }}')" aria-label="Aizvērt">
+                        <x-icon name="x-mark" size="h-5 w-5" />
+                    </button>
+                </div>
+                <form method="POST" action="{{ route('devices.quick-update', $deviceModalItem) }}" class="device-user-room-modal-form">
+                    @csrf
+                    <input type="hidden" name="action" value="assignee">
+                    <div class="device-user-room-modal-device">
+                        <div>
+                            <div class="device-user-room-modal-label">Pašreizējais atbildīgais</div>
+                            <div class="device-user-room-modal-value">{{ $deviceModalItem->assignedTo?->full_name ?: 'Nav norādīts' }}</div>
+                        </div>
+                        <div>
+                            <div class="device-user-room-modal-label">E-pasts</div>
+                            <div class="device-user-room-modal-value">{{ $deviceModalItem->assignedTo?->email ?: 'Nav norādīts' }}</div>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="device-user-room-modal-label" for="device-admin-assignee-input-{{ $deviceModalItem->id }}">Jaunais atbildīgais</label>
+                        <select id="device-admin-assignee-input-{{ $deviceModalItem->id }}" name="target_assigned_to_id" class="crud-control">
+                            <option value="">Izvēlies atbildīgo personu</option>
+                            @foreach ($quickAssigneeSelectOptions as $assigneeOption)
+                                <option value="{{ $assigneeOption['value'] }}" @selected((string) $deviceModalItem->assigned_to_id === (string) $assigneeOption['value'])>
+                                    {{ $assigneeOption['label'] }}@if (! empty($assigneeOption['description'])) | {{ $assigneeOption['description'] }}@endif
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="device-user-room-modal-actions">
+                        <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'device-admin-assignee-modal-{{ $deviceModalItem->id }}')">Atcelt</button>
+                        <button type="submit" class="btn-search">
+                            <x-icon name="save" size="h-4 w-4" />
+                            <span>Saglabāt</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </x-modal>
     @endforeach
 
     <x-modal name="device-admin-room-modal" maxWidth="2xl">
@@ -681,7 +730,6 @@
                     window.dispatchEvent(new CustomEvent("open-modal", { detail: "device-admin-room-modal" }));
                 },
             }'
-            @open-device-admin-room.window="open($event.detail || {})"
         >
             <div class="device-user-room-modal-head">
                 <div>
@@ -741,7 +789,6 @@
                     window.dispatchEvent(new CustomEvent("open-modal", { detail: "device-admin-assignee-modal" }));
                 },
             }'
-            @open-device-admin-assignee.window="open($event.detail || {})"
         >
             <div class="device-user-room-modal-head">
                 <div>
