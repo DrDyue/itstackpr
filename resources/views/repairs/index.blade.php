@@ -435,10 +435,6 @@
                                         ])
                                         : null;
                                     $deviceShowUrl = $device ? route('devices.show', $device) : null;
-                                    $editRepairUrl = route('repairs.index', array_merge(request()->except(['page', 'repair_modal', 'modal_repair']), [
-                                        'repair_modal' => 'edit',
-                                        'modal_repair' => $repair->id,
-                                    ]));
                                 @endphp
                                 <tr class="repair-table-row border-t border-slate-100 align-top" data-table-row-id="repair-{{ $repair->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
                                     <td class="px-4 py-4">
@@ -522,10 +518,14 @@
                                                 @endif
 
                                                 @if ($canManageRepairs)
-                                                    <a href="{{ $editRepairUrl }}" class="table-action-item table-action-item-amber" data-async-link="true" @click="closePanel()">
+                                                    <button
+                                                        type="button"
+                                                        class="table-action-item table-action-item-amber"
+                                                        @click="closePanel(); $dispatch('open-modal', 'repair-edit-modal-{{ $repair->id }}')"
+                                                    >
                                                         <x-icon name="edit" size="h-4 w-4" />
                                                         <span>Atvērt remontu</span>
-                                                    </a>
+                                                    </button>
 
                                                     @if ($deviceShowUrl)
                                                         <a href="{{ $deviceShowUrl }}" class="table-action-item table-action-item-sky" @click="closePanel()">
@@ -582,7 +582,26 @@
                     'featureMessage' => $featureMessage ?? null,
                 ])
 
-                @if (($selectedModalRepair ?? null)?->id)
+                {{-- 
+                    Rediģēšanas modāļi tiek renderēti jau ar tabulu redzamajiem remontiem.
+                    Tāpēc darbības pogai nav jāatjauno lapa ar `repair_modal=edit`,
+                    un forma var atvērties uzreiz pēc klikšķa.
+                --}}
+                @foreach ($repairs as $repairModalItem)
+                    @include('repairs.partials.modal-form', [
+                        'mode' => 'edit',
+                        'modalName' => 'repair-edit-modal-' . $repairModalItem->id,
+                        'repair' => $repairModalItem,
+                        'deviceOptions' => $deviceOptions,
+                        'priorities' => $priorities,
+                        'statusLabels' => $statusLabels,
+                        'priorityLabels' => $priorityLabels,
+                        'typeLabels' => $typeLabels,
+                        'featureMessage' => $featureMessage ?? null,
+                    ])
+                @endforeach
+
+                @if (($selectedModalRepair ?? null)?->id && ! $repairs->contains('id', $selectedModalRepair->id))
                     @include('repairs.partials.modal-form', [
                         'mode' => 'edit',
                         'modalName' => 'repair-edit-modal-' . $selectedModalRepair->id,
