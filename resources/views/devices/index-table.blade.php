@@ -316,13 +316,14 @@
                                         </a>
 
                                         @if ($roomUpdateAvailability['allowed'])
-                                            <a
-                                                href="{{ route('devices.show', ['device' => $device, 'room_modal' => 'change']) }}"
+                                            <button
+                                                type="button"
                                                 class="table-action-button table-action-button-slate"
+                                                onclick="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-user-room-modal-{{ $device->id }}' }))"
                                             >
                                                 <x-icon name="room" size="h-4 w-4" />
                                                 <span>Mainīt telpu</span>
-                                            </a>
+                                            </button>
                                         @else
                                             <button type="button" class="btn-disabled" data-app-toast-title="Telpas maiņa nav pieejama" data-app-toast-message="{{ $roomUpdateAvailability['reason'] ?? 'Telpas maiņa šobrīd nav pieejama.' }}" data-app-toast-tone="info">
                                                 <x-icon name="room" size="h-4 w-4" />
@@ -515,13 +516,13 @@
                 : 'Nav norādīta';
             $isOldUserRoomModal = $oldUserRoomDeviceId === $userRoomDeviceModalItem->id;
         @endphp
-        <x-modal :name="'device-user-room-modal-' . $userRoomDeviceModalItem->id" maxWidth="2xl">
+        <x-modal :name="'device-user-room-modal-' . $userRoomDeviceModalItem->id" maxWidth="4xl">
             <div class="device-user-room-modal-shell">
                 <div class="device-user-room-modal-head">
                     <div>
                         <div class="device-user-room-modal-badge">Telpas maiņa</div>
                         <h2 class="device-user-room-modal-title">{{ $userRoomDeviceLabel }}</h2>
-                        <p class="device-user-room-modal-copy">Izvēlies jauno telpu šai ierīcei. Ēka tiks pielāgota automātiski pēc izvēlētās telpas.</p>
+                        <p class="device-user-room-modal-copy">Izvēlies telpu no pilnā saraksta. Tu paliksi šajā pašā ierīču tabulā pēc saglabāšanas.</p>
                     </div>
                     <button type="button" class="device-type-modal-close" x-data @click="$dispatch('close-modal', 'device-user-room-modal-{{ $userRoomDeviceModalItem->id }}')" aria-label="Aizvērt">
                         <x-icon name="x-mark" size="h-5 w-5" />
@@ -530,16 +531,6 @@
                 <form method="POST" action="{{ route('devices.user-room.update', $userRoomDeviceModalItem) }}" class="device-user-room-modal-form">
                     @csrf
                     <input type="hidden" name="modal_form" value="device_user_room_{{ $userRoomDeviceModalItem->id }}">
-                    <div class="device-user-room-modal-device">
-                        <div>
-                            <div class="device-user-room-modal-label">Ierīce</div>
-                            <div class="device-user-room-modal-value">{{ $userRoomDeviceLabel }}</div>
-                        </div>
-                        <div>
-                            <div class="device-user-room-modal-label">Pašreizējā telpa</div>
-                            <div class="device-user-room-modal-value">{{ $userRoomCurrentLabel }}</div>
-                        </div>
-                    </div>
                     <div class="space-y-2">
                         <label class="device-user-room-modal-label" for="device-user-room-input-{{ $userRoomDeviceModalItem->id }}">Jaunā telpa</label>
                         <x-searchable-select
@@ -558,6 +549,16 @@
                         @if ($isOldUserRoomModal && $errors->has('room_id'))
                             <div class="text-sm text-rose-600">{{ $errors->first('room_id') }}</div>
                         @endif
+                    </div>
+                    <div class="device-user-room-modal-device mt-5">
+                        <div>
+                            <div class="device-user-room-modal-label">Ierīce</div>
+                            <div class="device-user-room-modal-value">{{ $userRoomDeviceLabel }}</div>
+                        </div>
+                        <div>
+                            <div class="device-user-room-modal-label">Pašreizējā telpa</div>
+                            <div class="device-user-room-modal-value">{{ $userRoomCurrentLabel }}</div>
+                        </div>
                     </div>
                     <div class="device-user-room-modal-actions">
                         <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'device-user-room-modal-{{ $userRoomDeviceModalItem->id }}')">Atcelt</button>
