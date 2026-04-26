@@ -328,7 +328,7 @@
                 'device' => null,
             ])
 
-            @if (($selectedModalDevice ?? null)?->id)
+            @if (($selectedModalDevice ?? null)?->id && ! $devices->contains('id', $selectedModalDevice->id))
                 @include('devices.partials.modal-form', [
                     'mode' => 'edit',
                     'modalName' => 'device-edit-modal-' . $selectedModalDevice->id,

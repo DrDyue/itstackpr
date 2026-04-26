@@ -1,0 +1,37 @@
+- generic [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - link "Ludzas novads Ludzas novads" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e7]:
+          - img "Ludzas novads" [ref=e8]
+          - generic [ref=e10]: Ludzas novads
+      - heading "IT inventāra uzskaites sistēma" [level=1] [ref=e11]
+      - paragraph [ref=e12]: Laipni lūdzam atpakaļ
+    - generic [ref=e13]:
+      - heading "Pierakstīšanās" [level=2] [ref=e15]
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - generic [ref=e19]: Darbinieka e-pasts
+          - textbox "Darbinieka e-pasts" [active] [ref=e20]:
+            - /placeholder: Ievadiet e-pastu
+        - generic [ref=e21]:
+          - generic [ref=e22]: Parole
+          - textbox "Parole" [ref=e23]:
+            - /placeholder: Ievadiet savu paroli
+        - generic [ref=e24]:
+          - checkbox "Atcerēties mani" [ref=e25] [cursor=pointer]
+          - generic [ref=e26]: Atcerēties mani
+        - button "Pierakstīties" [ref=e27] [cursor=pointer]:
+          - img [ref=e28]
+          - text: Pierakstīties
+        - link "Aizmirsi paroli?" [ref=e32] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/forgot-password
+      - paragraph [ref=e34]: IT inventāra uzskaites sistēma 2026
+    - generic [ref=e35]:
+      - paragraph [ref=e36]: "Demo admins: artis.berzins@ludzas.lv | Parole: password"
+      - paragraph [ref=e37]: "Demo darbinieks: ilze.strautina@ludzas.lv | Parole: password"
+  - generic:
+    - generic:
+      - status:
+        - generic: Notiek ielāde...

@@ -168,10 +168,6 @@
                             $repairModalUrl = $repairRecord ? route('repairs.index', [
                                 'highlight_id' => 'repair-' . $repairRecord->id,
                             ]) : null;
-                            $deviceEditUrl = route('devices.index', array_merge(request()->except(['page', 'device_modal', 'modal_device']), [
-                                'device_modal' => 'edit',
-                                'modal_device' => $device->id,
-                            ]));
                             $repairCreateUrl = route('repairs.index', ['repair_modal' => 'create', 'device_id' => $device->id]);
                             $repairRequestCreateUrl = route('repair-requests.index', ['repair_request_modal' => 'create', 'device_id' => $device->id]);
                             $writeoffRequestCreateUrl = route('writeoff-requests.index', ['writeoff_request_modal' => 'create', 'device_id' => $device->id]);
@@ -185,6 +181,25 @@
                                 : ($device->room?->room_number ? 'Telpa ' . $device->room->room_number : 'Atrašanās vieta nav norādīta');
                             $locationSecondary = $device->building?->building_name ?: $device->room?->department;
                             $nameMeta = collect([$device->manufacturer, $device->model])->filter()->implode(' | ');
+                            $userRoomModalDetail = [
+                                'deviceId' => $device->id,
+                                'deviceLabel' => ($device->code ?: 'Bez koda') . ' | ' . $device->name,
+                                'currentRoomLabel' => $device->room
+                                    ? ($device->room->room_number . ($device->room->room_name ? ' - ' . $device->room->room_name : ''))
+                                    : 'Nav norādīta',
+                                'selectedRoomId' => (string) ($device->room_id ?? ''),
+                                'action' => route('devices.user-room.update', $device),
+                            ];
+                            $adminRoomModalDetail = [
+                                'deviceLabel' => ($device->code ?: 'Bez koda') . ' | ' . $device->name,
+                                'selectedRoomId' => (string) ($device->room_id ?? ''),
+                                'action' => route('devices.quick-update', $device),
+                            ];
+                            $adminAssigneeModalDetail = [
+                                'deviceLabel' => ($device->code ?: 'Bez koda') . ' | ' . $device->name,
+                                'selectedAssigneeId' => (string) ($device->assigned_to_id ?? ''),
+                                'action' => route('devices.quick-update', $device),
+                            ];
                         @endphp
 
                         <tr class="repair-table-row border-t border-slate-100 align-top" data-table-row-id="device-{{ $device->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) $device->code)) }}">
@@ -351,7 +366,12 @@
                                         </a>
 
                                         @if ($roomUpdateAvailability['allowed'])
-                                            <button type="button" class="table-action-button table-action-button-slate" x-data @click='$dispatch("open-device-user-room", { deviceId: {{ $device->id }}, deviceLabel: @js(($device->code ?: "Bez koda") . " | " . $device->name), currentRoomLabel: @js(($device->room ? ($device->room->room_number . ($device->room->room_name ? " - " . $device->room->room_name : "")) : "Nav norādīta")), selectedRoomId: @js((string) ($device->room_id ?? "")), action: @js(route("devices.user-room.update", $device)) })'>
+                                            <button
+                                                type="button"
+                                                class="table-action-button table-action-button-slate"
+                                                data-modal-detail="{{ e(json_encode($userRoomModalDetail, JSON_UNESCAPED_UNICODE)) }}"
+                                                @click="window.dispatchEvent(new CustomEvent('open-device-user-room', { detail: JSON.parse($el.dataset.modalDetail || '{}') }))"
+                                            >
                                                 <x-icon name="room" size="h-4 w-4" />
                                                 <span>Mainīt telpu</span>
                                             </button>
@@ -431,18 +451,49 @@
                                                 </a>
                                             @endif
 
-                                            <a href="{{ $hasActiveRequest ? '#' : $deviceEditUrl }}" class="table-action-item table-action-item-amber {{ $hasActiveRequest ? 'opacity-50 cursor-not-allowed' : '' }}" @if (! $hasActiveRequest) data-async-link="true" @else data-app-toast-title="Rediģēšana nav pieejama" data-app-toast-message="{{ $activeRequestMessage }}" data-app-toast-tone="info" @endif @click="closePanel()">
-                                                <x-icon name="edit" size="h-4 w-4" />
-                                                <span>Rediģēt</span>
-                                            </a>
+                                            @if ($hasActiveRequest)
+                                                <button type="button" class="table-action-item table-action-item-amber opacity-50 cursor-not-allowed" data-app-toast-title="Rediģēšana nav pieejama" data-app-toast-message="{{ $activeRequestMessage }}" data-app-toast-tone="info" @click="closePanel()">
+                                                    <x-icon name="edit" size="h-4 w-4" />
+                                                    <span>Rediģēt</span>
+                                                </button>
+                                            @else
+                                                <button type="button" class="table-action-item table-action-item-amber" @click="closePanel(); $dispatch('open-modal', 'device-edit-modal-{{ $device->id }}')">
+                                                    <x-icon name="edit" size="h-4 w-4" />
+                                                    <span>Rediģēt</span>
+                                                </button>
+                                            @endif
 
                                             @if ($device->status === 'active')
-                                                <button type="button" class="table-action-item table-action-item-sky {{ $hasActiveRequest ? 'opacity-50 cursor-not-allowed' : '' }}" @if ($hasActiveRequest) data-app-toast-title="Telpas maiņa nav pieejama" data-app-toast-message="{{ $activeRequestMessage }}" data-app-toast-tone="info" @click="closePanel()" @else @click='closePanel(); $dispatch("open-device-admin-room", { deviceLabel: @js(($device->code ?: "Bez koda") . " | " . $device->name), selectedRoomId: @js((string) ($device->room_id ?? "")), action: @js(route("devices.quick-update", $device)) })' @endif>
+                                                <button
+                                                    type="button"
+                                                    class="table-action-item table-action-item-sky {{ $hasActiveRequest ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                    @if ($hasActiveRequest)
+                                                        data-app-toast-title="Telpas maiņa nav pieejama"
+                                                        data-app-toast-message="{{ $activeRequestMessage }}"
+                                                        data-app-toast-tone="info"
+                                                        @click="closePanel()"
+                                                    @else
+                                                        data-modal-detail="{{ e(json_encode($adminRoomModalDetail, JSON_UNESCAPED_UNICODE)) }}"
+                                                        @click="closePanel(); window.dispatchEvent(new CustomEvent('open-device-admin-room', { detail: JSON.parse($el.dataset.modalDetail || '{}') }))"
+                                                    @endif
+                                                >
                                                     <x-icon name="room" size="h-4 w-4" />
                                                     <span>Mainīt telpu</span>
                                                 </button>
 
-                                                <button type="button" class="table-action-item table-action-item-violet {{ $hasActiveRequest ? 'opacity-50 cursor-not-allowed' : '' }}" @if ($hasActiveRequest) data-app-toast-title="Atbildīgā maiņa nav pieejama" data-app-toast-message="{{ $activeRequestMessage }}" data-app-toast-tone="info" @click="closePanel()" @else @click='closePanel(); $dispatch("open-device-admin-assignee", { deviceLabel: @js(($device->code ?: "Bez koda") . " | " . $device->name), selectedAssigneeId: @js((string) ($device->assigned_to_id ?? "")), action: @js(route("devices.quick-update", $device)) })' @endif>
+                                                <button
+                                                    type="button"
+                                                    class="table-action-item table-action-item-violet {{ $hasActiveRequest ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                    @if ($hasActiveRequest)
+                                                        data-app-toast-title="Atbildīgā maiņa nav pieejama"
+                                                        data-app-toast-message="{{ $activeRequestMessage }}"
+                                                        data-app-toast-tone="info"
+                                                        @click="closePanel()"
+                                                    @else
+                                                        data-modal-detail="{{ e(json_encode($adminAssigneeModalDetail, JSON_UNESCAPED_UNICODE)) }}"
+                                                        @click="closePanel(); window.dispatchEvent(new CustomEvent('open-device-admin-assignee', { detail: JSON.parse($el.dataset.modalDetail || '{}') }))"
+                                                    @endif
+                                                >
                                                     <x-icon name="user" size="h-4 w-4" />
                                                     <span>Mainīt atbildīgo</span>
                                                 </button>
@@ -565,6 +616,19 @@
         <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-user-room-modal' })));</script>
     @endif
 @else
+    {{-- 
+        Ierīču rediģēšanas modāļi tiek sagatavoti kopā ar redzamo tabulu.
+        Tāpēc darbību izvēlnes poga "Rediģēt" atver formu uzreiz un nelieto
+        `device_modal=edit` URL pārlādi.
+    --}}
+    @foreach ($devices as $deviceModalItem)
+        @include('devices.partials.modal-form', [
+            'mode' => 'edit',
+            'modalName' => 'device-edit-modal-' . $deviceModalItem->id,
+            'device' => $deviceModalItem,
+        ])
+    @endforeach
+
     <x-modal name="device-admin-room-modal" maxWidth="2xl">
         <div class="device-user-room-modal-shell">
             <div class="device-user-room-modal-head">
