@@ -77,7 +77,7 @@
                 selectedRoomId: detail.selectedRoomId || "",
                 action: detail.action || "",
             };
-            $dispatch("open-modal", "device-user-room-modal");
+            window.dispatchEvent(new CustomEvent("open-modal", { detail: "device-user-room-modal" }));
         },
         openAdminRoomModal(detail) {
             this.adminRoomModal = {
@@ -85,7 +85,7 @@
                 selectedRoomId: detail.selectedRoomId || "",
                 action: detail.action || "",
             };
-            $dispatch("open-modal", "device-admin-room-modal");
+            window.dispatchEvent(new CustomEvent("open-modal", { detail: "device-admin-room-modal" }));
         },
         openAdminAssigneeModal(detail) {
             this.adminAssigneeModal = {
@@ -93,7 +93,7 @@
                 selectedAssigneeId: detail.selectedAssigneeId || "",
                 action: detail.action || "",
             };
-            $dispatch("open-modal", "device-admin-assignee-modal");
+            window.dispatchEvent(new CustomEvent("open-modal", { detail: "device-admin-assignee-modal" }));
         },
     }'
     @open-device-user-room.window="openUserRoomModal($event.detail || {})"
