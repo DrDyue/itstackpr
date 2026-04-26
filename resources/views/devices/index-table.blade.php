@@ -593,18 +593,18 @@
             $userRoomDeviceLabel = ($userRoomDeviceModalItem->code ?: 'Bez koda') . ' | ' . $userRoomDeviceModalItem->name;
             $userRoomCurrentLabel = $userRoomDeviceModalItem->room
                 ? ($userRoomDeviceModalItem->room->room_number . ($userRoomDeviceModalItem->room->room_name ? ' - ' . $userRoomDeviceModalItem->room->room_name : ''))
-                : 'Nav norÄdÄ«ta';
+                : 'Nav norādīta';
             $isOldUserRoomModal = $oldUserRoomDeviceId === $userRoomDeviceModalItem->id;
         @endphp
         <x-modal :name="'device-user-room-modal-' . $userRoomDeviceModalItem->id" maxWidth="2xl">
             <div class="device-user-room-modal-shell">
                 <div class="device-user-room-modal-head">
                     <div>
-                        <div class="device-user-room-modal-badge">Telpas maiÅ†a</div>
+                        <div class="device-user-room-modal-badge">Telpas maiņa</div>
                         <h2 class="device-user-room-modal-title">{{ $userRoomDeviceLabel }}</h2>
-                        <p class="device-user-room-modal-copy">IzvÄ“lies jauno telpu Åai ierÄ«cei. Ä’ka tiks pielÄgota automÄtiski pÄ“c izvÄ“lÄ“tÄs telpas.</p>
+                        <p class="device-user-room-modal-copy">Izvēlies jauno telpu šai ierīcei. Ēka tiks pielāgota automātiski pēc izvēlētās telpas.</p>
                     </div>
-                    <button type="button" class="device-type-modal-close" x-data @click="$dispatch('close-modal', 'device-user-room-modal-{{ $userRoomDeviceModalItem->id }}')" aria-label="AizvÄ“rt">
+                    <button type="button" class="device-type-modal-close" x-data @click="$dispatch('close-modal', 'device-user-room-modal-{{ $userRoomDeviceModalItem->id }}')" aria-label="Aizvērt">
                         <x-icon name="x-mark" size="h-5 w-5" />
                     </button>
                 </div>
@@ -613,27 +613,29 @@
                     <input type="hidden" name="modal_form" value="device_user_room_{{ $userRoomDeviceModalItem->id }}">
                     <div class="device-user-room-modal-device">
                         <div>
-                            <div class="device-user-room-modal-label">IerÄ«ce</div>
+                            <div class="device-user-room-modal-label">Ierīce</div>
                             <div class="device-user-room-modal-value">{{ $userRoomDeviceLabel }}</div>
                         </div>
                         <div>
-                            <div class="device-user-room-modal-label">PaÅreizÄ“jÄ telpa</div>
+                            <div class="device-user-room-modal-label">Pašreizējā telpa</div>
                             <div class="device-user-room-modal-value">{{ $userRoomCurrentLabel }}</div>
                         </div>
                     </div>
                     <div class="space-y-2">
-                        <label class="device-user-room-modal-label" for="device-user-room-input-{{ $userRoomDeviceModalItem->id }}">JaunÄ telpa</label>
-                        <select id="device-user-room-input-{{ $userRoomDeviceModalItem->id }}" name="room_id" class="crud-control">
-                            <option value="">IzvÄ“lies telpu</option>
-                            @foreach ($userRoomOptions as $roomOption)
-                                <option
-                                    value="{{ $roomOption['value'] }}"
-                                    @selected($isOldUserRoomModal ? old('room_id', (string) ($userRoomDeviceModalItem->room_id ?? '')) === (string) $roomOption['value'] : (string) ($userRoomDeviceModalItem->room_id ?? '') === (string) $roomOption['value'])
-                                >
-                                    {{ $roomOption['label'] }}@if (! empty($roomOption['description'])) | {{ $roomOption['description'] }}@endif
-                                </option>
-                            @endforeach
-                        </select>
+                        <label class="device-user-room-modal-label" for="device-user-room-input-{{ $userRoomDeviceModalItem->id }}">Jaunā telpa</label>
+                        <x-searchable-select
+                            name="room_id"
+                            queryName="room_query"
+                            :options="$userRoomOptions"
+                            :selected="$isOldUserRoomModal ? old('room_id', (string) ($userRoomDeviceModalItem->room_id ?? '')) : (string) ($userRoomDeviceModalItem->room_id ?? '')"
+                            :query="$isOldUserRoomModal ? old('room_query', $userRoomCurrentLabel) : $userRoomCurrentLabel"
+                            :identifier="'device-user-room-' . $userRoomDeviceModalItem->id"
+                            :prioritize-selected="true"
+                            selected-group-label="Pašreizējā telpa"
+                            placeholder="Izvēlies telpu"
+                            empty-message="Neviena telpa neatbilst meklējumam."
+                            :error="$isOldUserRoomModal ? $errors->first('room_id') : null"
+                        />
                         @if ($isOldUserRoomModal && $errors->has('room_id'))
                             <div class="text-sm text-rose-600">{{ $errors->first('room_id') }}</div>
                         @endif
@@ -642,7 +644,7 @@
                         <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'device-user-room-modal-{{ $userRoomDeviceModalItem->id }}')">Atcelt</button>
                         <button type="submit" class="btn-search">
                             <x-icon name="save" size="h-4 w-4" />
-                            <span>SaglabÄt</span>
+                            <span>Saglabāt</span>
                         </button>
                     </div>
                 </form>
