@@ -2349,12 +2349,41 @@ SQL;
     {
         $previousUrl = url()->previous();
         $previousPath = is_string($previousUrl) ? (parse_url($previousUrl, PHP_URL_PATH) ?: '') : '';
+        $previousQuery = [];
+
+        if (is_string($previousUrl) && $previousUrl !== '') {
+            parse_str((string) parse_url($previousUrl, PHP_URL_QUERY), $previousQuery);
+        }
+
+        $devicesIndexPath = route('devices.index', absolute: false);
+        $devicesTablePath = route('devices.table', absolute: false);
+        $dashboardPath = route('dashboard', absolute: false);
+        $dashboardDevicesPath = route('dashboard.devices', absolute: false);
+        $deviceShowPath = route('devices.show', $device, absolute: false);
+
+        // Ja darbība veikta no ierīces detalizētā skata, saglabā novirzi uz to pašu kartīti.
+        if ($previousPath === $deviceShowPath) {
+            return redirect()->route('devices.show', $device)->with($level, $message);
+        }
+
+        // Async tabulas URL pārvērš par pilno ierīču saraksta GET lapu ar tiem pašiem filtriem.
+        if ($previousPath === $devicesIndexPath || $previousPath === $devicesTablePath) {
+            return redirect()->route('devices.index', $previousQuery)->with($level, $message);
+        }
+
+        // Dashboard async tabulas URL pārvērš par pilno dashboard GET lapu ar tiem pašiem filtriem.
+        if ($previousPath === $dashboardPath || $previousPath === $dashboardDevicesPath) {
+            return redirect()->route('dashboard', $previousQuery)->with($level, $message);
+        }
 
         if (is_string($previousUrl) && $previousUrl !== '' && ! str_contains($previousPath, '/quick-update')) {
             return redirect()->to($previousUrl)->with($level, $message);
         }
 
-        return redirect()->route('devices.show', $device)->with($level, $message);
+        // Ja iepriekšējais URL nav uzticams, izmanto drošu rezerves maršrutu pēc lietotāja lomas.
+        return ($this->user()?->canManageRequests() ?? false)
+            ? redirect()->route('devices.index')->with($level, $message)
+            : redirect()->route('devices.show', $device)->with($level, $message);
     }
 
     /**
