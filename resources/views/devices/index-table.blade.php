@@ -604,6 +604,10 @@
             'modalName' => 'device-edit-modal-' . $deviceModalItem->id,
             'device' => $deviceModalItem,
         ])
+        @php
+            $quickRoomSelectedOption = $quickRoomSelectOptions->firstWhere('value', (string) $deviceModalItem->room_id);
+            $quickAssigneeSelectedOption = $quickAssigneeSelectOptions->firstWhere('value', (string) $deviceModalItem->assigned_to_id);
+        @endphp
 
         {{-- 
             Ātrās darbības modāļi ir piesaistīti konkrētai tabulas rindai.
@@ -638,15 +642,17 @@
                         </div>
                     </div>
                     <div class="space-y-2">
-                        <label class="device-user-room-modal-label" for="device-admin-room-input-{{ $deviceModalItem->id }}">Jaunā telpa</label>
-                        <select id="device-admin-room-input-{{ $deviceModalItem->id }}" name="target_room_id" class="crud-control">
-                            <option value="">Izvēlies telpu</option>
-                            @foreach ($quickRoomSelectOptions as $roomOption)
-                                <option value="{{ $roomOption['value'] }}" @selected((string) $deviceModalItem->room_id === (string) $roomOption['value'])>
-                                    {{ $roomOption['label'] }}@if (! empty($roomOption['description'])) | {{ $roomOption['description'] }}@endif
-                                </option>
-                            @endforeach
-                        </select>
+                        <span class="device-user-room-modal-label">Jaunā telpa</span>
+                        <x-searchable-select
+                            name="target_room_id"
+                            query-name="target_room_query"
+                            identifier="device-admin-room-quick-select-{{ $deviceModalItem->id }}"
+                            :options="$quickRoomSelectOptions"
+                            :selected="(string) $deviceModalItem->room_id"
+                            :query="$quickRoomSelectedOption['label'] ?? ''"
+                            placeholder="Meklē telpu"
+                            empty-message="Neviena telpa neatbilst meklējumam."
+                        />
                     </div>
                     <div class="device-user-room-modal-actions">
                         <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'device-admin-room-modal-{{ $deviceModalItem->id }}')">Atcelt</button>
@@ -685,15 +691,17 @@
                         </div>
                     </div>
                     <div class="space-y-2">
-                        <label class="device-user-room-modal-label" for="device-admin-assignee-input-{{ $deviceModalItem->id }}">Jaunais atbildīgais</label>
-                        <select id="device-admin-assignee-input-{{ $deviceModalItem->id }}" name="target_assigned_to_id" class="crud-control">
-                            <option value="">Izvēlies atbildīgo personu</option>
-                            @foreach ($quickAssigneeSelectOptions as $assigneeOption)
-                                <option value="{{ $assigneeOption['value'] }}" @selected((string) $deviceModalItem->assigned_to_id === (string) $assigneeOption['value'])>
-                                    {{ $assigneeOption['label'] }}@if (! empty($assigneeOption['description'])) | {{ $assigneeOption['description'] }}@endif
-                                </option>
-                            @endforeach
-                        </select>
+                        <span class="device-user-room-modal-label">Jaunais atbildīgais</span>
+                        <x-searchable-select
+                            name="target_assigned_to_id"
+                            query-name="target_assigned_to_query"
+                            identifier="device-admin-assignee-quick-select-{{ $deviceModalItem->id }}"
+                            :options="$quickAssigneeSelectOptions"
+                            :selected="(string) $deviceModalItem->assigned_to_id"
+                            :query="$quickAssigneeSelectedOption['label'] ?? ''"
+                            placeholder="Meklē atbildīgo personu"
+                            empty-message="Neviens lietotājs neatbilst meklējumam."
+                        />
                     </div>
                     <div class="device-user-room-modal-actions">
                         <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'device-admin-assignee-modal-{{ $deviceModalItem->id }}')">Atcelt</button>
@@ -707,122 +715,5 @@
         </x-modal>
     @endforeach
 
-    <x-modal name="device-admin-room-modal" maxWidth="2xl">
-        {{-- 
-            Administratora ātrā telpas maiņa.
-            Šī nav pilnā ierīces rediģēšanas forma: tiek sūtīta tikai `action=room`
-            un izvēlētā `target_room_id` vērtība uz `devices.quick-update`.
-        --}}
-        <div
-            class="device-user-room-modal-shell"
-            x-data='{
-                adminRoomModal: {
-                    deviceLabel: "",
-                    selectedRoomId: "",
-                    action: "",
-                },
-                open(detail) {
-                    this.adminRoomModal = {
-                        deviceLabel: detail.deviceLabel || "",
-                        selectedRoomId: detail.selectedRoomId || "",
-                        action: detail.action || "",
-                    };
-                    window.dispatchEvent(new CustomEvent("open-modal", { detail: "device-admin-room-modal" }));
-                },
-            }'
-        >
-            <div class="device-user-room-modal-head">
-                <div>
-                    <div class="device-user-room-modal-badge">Telpas maiņa</div>
-                    <h2 class="device-user-room-modal-title" x-text="adminRoomModal.deviceLabel || 'Ierīce'"></h2>
-                    <p class="device-user-room-modal-copy">Izvēlies telpu, uz kuru uzreiz pārvietot ierīci.</p>
-                </div>
-                <button type="button" class="device-type-modal-close" x-data @click="$dispatch('close-modal', 'device-admin-room-modal')" aria-label="Aizvērt">
-                    <x-icon name="x-mark" size="h-5 w-5" />
-                </button>
-            </div>
-            <form method="POST" :action="adminRoomModal.action || '#'" class="device-user-room-modal-form">
-                @csrf
-                <input type="hidden" name="action" value="room">
-                <div class="space-y-2">
-                    <label class="device-user-room-modal-label" for="device-admin-room-shared-input">Jaunā telpa</label>
-                    <select id="device-admin-room-shared-input" name="target_room_id" class="crud-control" x-model="adminRoomModal.selectedRoomId">
-                        <option value="">Izvēlies telpu</option>
-                        @foreach ($quickRoomSelectOptions as $roomOption)
-                            <option value="{{ $roomOption['value'] }}">
-                                {{ $roomOption['label'] }}@if (! empty($roomOption['description'])) | {{ $roomOption['description'] }}@endif
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="device-user-room-modal-actions">
-                    <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'device-admin-room-modal')">Atcelt</button>
-                    <button type="submit" class="btn-search">
-                        <x-icon name="save" size="h-4 w-4" />
-                        <span>Saglabāt</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </x-modal>
-
-    <x-modal name="device-admin-assignee-modal" maxWidth="2xl">
-        {{-- 
-            Administratora ātrā atbildīgā maiņa.
-            Forma saņem ierīces nosaukumu, pašreizējo atbildīgo un saglabāšanas URL
-            no darbības pogas `data-modal-detail`, pēc tam atver atsevišķu modāli.
-        --}}
-        <div
-            class="device-user-room-modal-shell"
-            x-data='{
-                adminAssigneeModal: {
-                    deviceLabel: "",
-                    selectedAssigneeId: "",
-                    action: "",
-                },
-                open(detail) {
-                    this.adminAssigneeModal = {
-                        deviceLabel: detail.deviceLabel || "",
-                        selectedAssigneeId: detail.selectedAssigneeId || "",
-                        action: detail.action || "",
-                    };
-                    window.dispatchEvent(new CustomEvent("open-modal", { detail: "device-admin-assignee-modal" }));
-                },
-            }'
-        >
-            <div class="device-user-room-modal-head">
-                <div>
-                    <div class="device-user-room-modal-badge">Atbildīgā maiņa</div>
-                    <h2 class="device-user-room-modal-title" x-text="adminAssigneeModal.deviceLabel || 'Ierīce'"></h2>
-                    <p class="device-user-room-modal-copy">Izvēlies personu, kurai piešķirt ierīci.</p>
-                </div>
-                <button type="button" class="device-type-modal-close" x-data @click="$dispatch('close-modal', 'device-admin-assignee-modal')" aria-label="Aizvērt">
-                    <x-icon name="x-mark" size="h-5 w-5" />
-                </button>
-            </div>
-            <form method="POST" :action="adminAssigneeModal.action || '#'" class="device-user-room-modal-form">
-                @csrf
-                <input type="hidden" name="action" value="assignee">
-                <div class="space-y-2">
-                    <label class="device-user-room-modal-label" for="device-admin-assignee-shared-input">Jaunais atbildīgais</label>
-                    <select id="device-admin-assignee-shared-input" name="target_assigned_to_id" class="crud-control" x-model="adminAssigneeModal.selectedAssigneeId">
-                        <option value="">Izvēlies atbildīgo personu</option>
-                        @foreach ($quickAssigneeSelectOptions as $assigneeOption)
-                            <option value="{{ $assigneeOption['value'] }}">
-                                {{ $assigneeOption['label'] }}@if (! empty($assigneeOption['description'])) | {{ $assigneeOption['description'] }}@endif
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="device-user-room-modal-actions">
-                    <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'device-admin-assignee-modal')">Atcelt</button>
-                    <button type="submit" class="btn-search">
-                        <x-icon name="save" size="h-4 w-4" />
-                        <span>Saglabāt</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </x-modal>
 @endif
 </div>
