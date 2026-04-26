@@ -328,20 +328,6 @@
                 <x-empty-state compact icon="information-circle" title="Funkcija īslaicīgi nav pieejama" :description="$featureMessage" />
             @endif
 
-            @if (! $isAdmin)
-                <div class="mt-4 rounded-[1.5rem] border border-amber-200 bg-amber-50/90 px-5 py-4 shadow-sm">
-                    <div class="flex flex-wrap items-center gap-3" x-cloak x-show="livePendingCount > 0">
-                        <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-sm">
-                            <x-icon name="exclamation-triangle" size="h-5 w-5" />
-                        </span>
-                        <div>
-                            <div class="text-sm font-semibold text-amber-950" x-text="`Tev ir ${livePendingCount} ienākoš${livePendingCount === 1 ? 's' : 'i'} nodošanas pieteikum${livePendingCount === 1 ? 's' : 'i'}`">Tev ir {{ $incomingPendingCount }} ienākoši nodošanas pieteikumi</div>
-                            <div class="mt-1 text-sm text-amber-900">Tabulā vari uzreiz apstiprināt vai noraidīt ienākošos ierīču nodošanas pieprasījumus.</div>
-                        </div>
-                    </div>
-                </div>
-            @endif
-
             <div class="mt-4 device-table-shell">
                 <div class="device-table-scroll table-scroll-overlay-frame rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
                     <div class="table-scroll-viewport">
@@ -545,15 +531,14 @@
                                                     @endphp
 
                                                     @if ($isOwnerCanEdit)
-                                                        <a
-                                                            href="{{ $editTransferUrl }}"
+                                                        <button
+                                                            type="button"
                                                             class="table-action-item table-action-item-amber"
-                                                            data-async-link="true"
-                                                            @click="closePanel()"
+                                                            @click="closePanel(); $dispatch('open-modal', 'transfer-request-edit-{{ $transfer->id }}')"
                                                         >
                                                             <x-icon name="edit" size="h-4 w-4" />
                                                             <span>Rediģēt pieteikumu</span>
-                                                        </a>
+                                                        </button>
 
                                                         <x-post-action-button
                                                             :action="route('my-requests.destroy', ['requestType' => 'transfer', 'requestId' => $transfer->id])"
