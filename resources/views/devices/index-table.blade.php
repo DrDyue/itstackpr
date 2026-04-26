@@ -7,7 +7,8 @@
     'canManageDevices',
     'quickRoomSelectOptions',
     'userRoomOptions' => collect(),
-    'quickAssigneeSelectOptions',
+    'quickAssigneeSelectOptions' => null,
+    'quickAssigneeOptions' => null,
     'types' => collect(),
     'buildings' => collect(),
     'rooms' => collect(),
@@ -19,6 +20,7 @@
 ])
 
 @php
+    $quickAssigneeSelectOptions = collect($quickAssigneeSelectOptions ?? $quickAssigneeOptions ?? [])->values();
     $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
     $oldUserRoomModalForm = str_starts_with((string) old('modal_form'), 'device_user_room_')
         ? (string) old('modal_form')
@@ -505,8 +507,6 @@
         </div>
     </div>
 
-</div>
-
 @if (! $canManageDevices)
     <x-modal name="device-user-room-modal" maxWidth="2xl">
         <div class="device-user-room-modal-shell">
@@ -639,3 +639,4 @@
         </div>
     </x-modal>
 @endif
+</div>
