@@ -1037,6 +1037,18 @@ const registerAlpineData = () => {
                 transfer: '\u004E\u006F\u0064\u006F\u0161\u0061\u006E\u0061',
                 'incoming-transfer': '\u004A\u0101\u0069\u007A\u0073\u006B\u0061\u0074\u0061',
                 'password-reset': 'Parole',
+                // Jaunās persistēto paziņojumu kategorijas. Backend tās saglabā
+                // `user_notifications.type`, bet frontend šeit pārvērš īsā birkā toast kartītei.
+                'repair-approved': 'Remonts',
+                'repair-rejected': 'Remonts',
+                'writeoff-approved': '\u004E\u006F\u0072\u0061\u006B\u0073\u0074\u012B\u0161\u0061\u006E\u0061',
+                'writeoff-rejected': '\u004E\u006F\u0072\u0061\u006B\u0073\u0074\u012B\u0161\u0061\u006E\u0061',
+                'transfer-approved': '\u004E\u006F\u0064\u006F\u0161\u0061\u006E\u0061',
+                'transfer-rejected': '\u004E\u006F\u0064\u006F\u0161\u0061\u006E\u0061',
+                'device-assigned': '\u0049\u0065\u0072\u012B\u0063\u0065',
+                'repair-status-in-progress': 'Remonts',
+                'repair-status-completed': 'Remonts',
+                'repair-status-cancelled': 'Remonts',
             }[type] ?? '\u0050\u0069\u0065\u0070\u0072\u0061\u0073\u012B\u006A\u0075\u006D\u0073';
         },
         actionClasses(tone) {

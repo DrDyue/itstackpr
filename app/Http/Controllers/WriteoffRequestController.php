@@ -11,6 +11,7 @@ use App\Models\Room;
 use App\Models\User;
 use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
+use App\Support\UserNotifier;
 use App\Support\WarehouseConfig;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -337,6 +338,10 @@ class WriteoffRequestController extends Controller
         } else {
             AuditTrail::reject($manager->id, $writeoffRequest, null, 'Noraidīts norakstīšanas pieteikums: '.AuditTrail::labelFor($writeoffRequest));
         }
+
+        // Paziņojam pieteikuma autoram par lēmumu, jo norakstīšana maina ierīces pieejamību.
+        // Šis ieraksts paliek paziņojumu centrā līdz lietotājs to atzīmē kā lasītu.
+        app(UserNotifier::class)->requestReviewed($writeoffRequest->fresh(['device', 'responsibleUser']), $validated['status']);
 
         if ($request->expectsJson()) {
             return response()->json([

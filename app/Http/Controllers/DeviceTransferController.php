@@ -10,6 +10,7 @@ use App\Models\Room;
 use App\Models\User;
 use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
+use App\Support\UserNotifier;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -356,7 +357,11 @@ class DeviceTransferController extends Controller
 
         $before = $deviceTransfer->only(['status', 'reviewed_by_user_id', 'review_notes']);
 
-        DB::transaction(function () use ($validated, $deviceTransfer, $reviewer, $keepCurrentRoom) {
+        // Saglabājam iepriekšējo atbildīgo, lai pēc apstiprinātas nodošanas
+        // jaunajam lietotājam paziņojumu sūtītu tikai tad, ja atbildīgais tiešām mainījās.
+        $previousAssignedUserId = null;
+
+        DB::transaction(function () use ($validated, $deviceTransfer, $reviewer, $keepCurrentRoom, &$previousAssignedUserId) {
             $deviceTransfer->update([
                 'status' => $validated['status'],
                 'reviewed_by_user_id' => $reviewer->id,
@@ -375,6 +380,7 @@ class DeviceTransferController extends Controller
                 ]);
             }
 
+            $previousAssignedUserId = $device->assigned_to_id ? (int) $device->assigned_to_id : null;
             $targetRoom = null;
 
             if (! $keepCurrentRoom) {
@@ -404,6 +410,14 @@ class DeviceTransferController extends Controller
             AuditTrail::approve($reviewer->id, $deviceTransfer, 'Apstiprināts ierīces nodošanas pieteikums: '.AuditTrail::labelFor($deviceTransfer));
         } else {
             AuditTrail::reject($reviewer->id, $deviceTransfer, null, 'Noraidīts ierīces nodošanas pieteikums: '.AuditTrail::labelFor($deviceTransfer));
+        }
+
+        // Nodošanas rezultāts interesē pieteikuma iesniedzēju, bet apstiprināšanas gadījumā
+        // jaunajam atbildīgajam papildus jāparāda arī "piešķirta ierīce" paziņojums.
+        $freshTransfer = $deviceTransfer->fresh(['device', 'responsibleUser', 'transferTo']);
+        app(UserNotifier::class)->requestReviewed($freshTransfer, $validated['status']);
+        if ($validated['status'] === DeviceTransfer::STATUS_APPROVED && $freshTransfer?->device) {
+            app(UserNotifier::class)->deviceAssigned($freshTransfer->device, $previousAssignedUserId);
         }
 
         if ($request->expectsJson()) {

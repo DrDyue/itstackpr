@@ -9,6 +9,7 @@ use App\Models\RepairRequest;
 use App\Models\User;
 use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
+use App\Support\UserNotifier;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -385,6 +386,10 @@ class RepairController extends Controller
             $after,
             description: 'Remonta statuss mainīts: ' . $this->labelForStatus((string) ($before['status'] ?? 'waiting')) . ' -> ' . $this->labelForStatus((string) ($after['status'] ?? 'waiting'))
         );
+
+        // Remonta statusa maiņa ir lietotājam redzams notikums: sākts, pabeigts vai atcelts.
+        // Serviss pats izvēlas, kuros statusos paziņojums ir jāsūta.
+        app(UserNotifier::class)->repairStatusChanged($repair->fresh(['device']), (string) ($before['status'] ?? 'waiting'), (string) ($after['status'] ?? $validated['target_status']));
 
         return back()->with('success', 'Remonta statuss atjaunināts');
     }

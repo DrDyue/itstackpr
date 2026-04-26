@@ -14,6 +14,7 @@ use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
 use App\Support\DeviceAssetManager;
 use App\Support\RuntimeSchemaBootstrapper;
+use App\Support\UserNotifier;
 use App\Support\WarehouseConfig;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\QueryException;
@@ -888,6 +889,9 @@ SQL;
         }
 
         $before = $device->only($this->trackedFields());
+        // Atbildīgās personas sākotnējā vērtība vajadzīga, lai nepaziņotu par
+        // "jaunu" ierīci, ja ierīces forma saglabāta bez atbildīgā maiņas.
+        $previousAssignedUserId = $device->assigned_to_id ? (int) $device->assigned_to_id : null;
 
         $this->saveDevicePayload($device, $this->validatedData($request, $device));
         $this->syncUploads($request, $device);
@@ -895,6 +899,10 @@ SQL;
 
         $after = $device->fresh()->only(array_keys($before));
         AuditTrail::updatedFromState(auth()->id(), $device, $before, $after);
+
+        // Ja rediģēšanas rezultātā ierīcei ir jauns atbildīgais, viņš saņem
+        // personīgu paziņojumu ar saiti uz ierīces karti.
+        app(UserNotifier::class)->deviceAssigned($device->fresh(['type', 'room.building', 'building', 'assignedTo']), $previousAssignedUserId);
 
         return redirect()->route('devices.index')->with('success', 'Ierīces dati atjaunināti');
     }
@@ -2093,6 +2101,9 @@ SQL;
         AuditTrail::updatedFromState(auth()->id(), $device, $before, [
             'assigned_to_id' => $assignee->id,
         ]);
+
+        // Ātrā atbildīgā maiņa izmanto to pašu paziņojumu mehānismu kā pilnā forma.
+        app(UserNotifier::class)->deviceAssigned($device->fresh(['type', 'room.building', 'building', 'assignedTo']), (int) ($before['assigned_to_id'] ?? 0));
 
         return ['level' => 'success', 'message' => 'Atbildīgā persona atjaunināta.'];
     }

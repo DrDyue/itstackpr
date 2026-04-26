@@ -10,6 +10,7 @@ use App\Models\RepairRequest;
 use App\Models\User;
 use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
+use App\Support\UserNotifier;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -363,6 +364,10 @@ class RepairRequestController extends Controller
         } else {
             AuditTrail::reject($manager->id, $repairRequest, null, 'Noraidīts remonta pieteikums: '.AuditTrail::labelFor($repairRequest));
         }
+
+        // Pēc administratora lēmuma pieteikuma autoram saglabājam personīgo paziņojumu.
+        // To vēlāk nolasa LiveNotificationController un parāda toastā / paziņojumu centrā.
+        app(UserNotifier::class)->requestReviewed($repairRequest->fresh(['device', 'responsibleUser']), $validated['status']);
 
         if ($request->expectsJson()) {
             return response()->json([

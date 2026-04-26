@@ -282,12 +282,22 @@
                     {{-- Paziņojumu centrs --}}
                     @php
                         $showNotificationPreviewCards = true;
+                        // Jaunā paziņojumu funkcija glabā personīgos notikumus tabulā `user_notifications`.
+                        // Šeit tos pieskaitām zvaniņa emblēmai, lai lietotājs redzētu ne tikai gaidošus
+                        // pieteikumus, bet arī rezultātus: apstiprināts, noraidīts, piešķirta ierīce, remonts pabeigts.
+                        $personalNotificationCount = \Illuminate\Support\Facades\Schema::hasTable('user_notifications') && $user
+                            ? \App\Models\UserNotification::query()
+                                ->where('user_id', $user->id)
+                                ->whereNull('read_at')
+                                ->count()
+                            : 0;
                         $pendingNotificationsCount = $canManageRequests
                             ? (\App\Models\RepairRequest::query()->where('status', \App\Models\RepairRequest::STATUS_SUBMITTED)->count()
                                 + \App\Models\WriteoffRequest::query()->where('status', \App\Models\WriteoffRequest::STATUS_SUBMITTED)->count()
                                 + \App\Models\DeviceTransfer::query()->where('status', \App\Models\DeviceTransfer::STATUS_SUBMITTED)->count()
-                                + $passwordResetRequestCount)
-                            : $incomingTransferReviewCount;
+                                + $passwordResetRequestCount
+                                + $personalNotificationCount)
+                            : $incomingTransferReviewCount + $personalNotificationCount;
                     @endphp
                     <div
                         x-data="navNotificationCenter({
@@ -348,6 +358,38 @@
                             </div>
 
                             <div class="max-h-[28rem] overflow-y-auto p-2">
+                                @php
+                                    // Personīgie paziņojumi tiek rādīti virs lomas specifiskajiem pieteikumiem.
+                                    // Tas nodrošina, ka lietotājs uzreiz redz jaunāko rezultātu par savām ierīcēm.
+                                    $personalNotifications = \Illuminate\Support\Facades\Schema::hasTable('user_notifications') && $user
+                                        ? \App\Models\UserNotification::query()
+                                            ->where('user_id', $user->id)
+                                            ->whereNull('read_at')
+                                            ->latest('id')
+                                            ->limit(5)
+                                            ->get()
+                                        : collect();
+                                @endphp
+
+                                @if ($personalNotifications->count() > 0)
+                                    <div class="px-3 pb-2 pt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Mani paziņojumi</div>
+                                    @foreach ($personalNotifications as $notification)
+                                        <a href="{{ $notification->url ?: route('devices.index') }}" class="pending-review-card group flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-3 transition hover:border-sky-200 hover:bg-sky-50">
+                                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 ring-1 ring-sky-200">
+                                                <x-icon name="mail" size="h-5 w-5" />
+                                            </div>
+                                            <div class="min-w-0 flex-1">
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <p class="truncate text-sm font-semibold text-slate-900">{{ $notification->title }}</p>
+                                                    <span class="shrink-0 text-[10px] text-slate-400">{{ $notification->created_at?->diffForHumans(short: true) }}</span>
+                                                </div>
+                                                <p class="truncate text-xs text-slate-600">{{ $notification->message }}</p>
+                                                <p class="truncate text-xs text-slate-500">{{ data_get($notification->data, 'device_name', 'Sistēmas paziņojums') }}</p>
+                                            </div>
+                                        </a>
+                                    @endforeach
+                                @endif
+
                                 @if ($canManageRequests)
                                     @php
                                         $pendingRepairs = \App\Models\RepairRequest::query()
@@ -433,7 +475,7 @@
                                         </div>
                                     @endif
 
-                                    @if ($pendingRepairs->count() === 0 && $pendingWriteoffs->count() === 0 && $pendingPasswordResets->count() === 0)
+                                    @if ($pendingRepairs->count() === 0 && $pendingWriteoffs->count() === 0 && $pendingPasswordResets->count() === 0 && $personalNotifications->count() === 0)
                                         <div class="flex flex-col items-center justify-center gap-2 py-8 text-center">
                                             <div class="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                                                 <x-icon name="check-circle" size="h-7 w-7" />
@@ -469,7 +511,7 @@
                                                 </div>
                                             </a>
                                         @endforeach
-                                    @else
+                                    @elseif ($personalNotifications->count() === 0)
                                         <div class="flex flex-col items-center justify-center gap-2 py-8 text-center">
                                             <div class="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                                                 <x-icon name="check-circle" size="h-7 w-7" />

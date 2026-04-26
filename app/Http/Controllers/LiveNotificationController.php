@@ -6,6 +6,7 @@ use App\Models\Device;
 use App\Models\DeviceTransfer;
 use App\Models\RepairRequest;
 use App\Models\User;
+use App\Models\UserNotification;
 use App\Models\WriteoffRequest;
 use App\Support\AuditTrail;
 use Illuminate\Http\JsonResponse;
@@ -50,6 +51,15 @@ class LiveNotificationController extends Controller
                 ->where('transfered_to_id', $user->id)
                 ->where('status', DeviceTransfer::STATUS_SUBMITTED)
                 ->update(['updated_at' => now()]);
+        }
+
+        // Jaunās funkcijas persistētie paziņojumi tiek dzēsti loģiski:
+        // saglabājam `read_at`, lai tie pazustu no lietotāja centra, bet vēsturiski paliktu datubāzē.
+        if ($this->featureTableExists('user_notifications')) {
+            $markedCount += UserNotification::query()
+                ->where('user_id', $user->id)
+                ->whereNull('read_at')
+                ->update(['read_at' => now()]);
         }
 
         if ($markedCount > 0) {
@@ -152,23 +162,57 @@ class LiveNotificationController extends Controller
             }
         }
 
+        // Fingerprintā iekļaujam arī personīgos paziņojumus. Tas ļauj frontendam
+        // saņemt `unchanged: true`, ja nav jaunu ierakstu, un neveikt pilnu ielādi katrā poll reizē.
+        if ($this->featureTableExists('user_notifications')) {
+            $row = UserNotification::query()
+                ->where('user_id', $user->id)
+                ->whereNull('read_at')
+                ->selectRaw('COUNT(*) as cnt, COALESCE(MAX(id), 0) as max_id')
+                ->toBase()
+                ->first();
+            $latest = UserNotification::query()
+                ->where('user_id', $user->id)
+                ->max('updated_at');
+            $parts[] = 'u'.($row->cnt ?? 0).':'.($row->max_id ?? 0).':'.($latest ?? '-');
+        }
+
         return md5(implode('|', $parts));
     }
 
     /**
      * Izvēlas atbilstošo paziņojumu avotu pēc lietotāja lomas un skata.
+     *
+     * Vecā funkcionalitāte ģenerē paziņojumus no gaidošiem pieteikumiem:
+     * administratoram tie ir iesniegtie remonta/norakstīšanas pieteikumi,
+     * parastam lietotājam — ienākošās nodošanas.
+     *
+     * Jaunā funkcionalitāte papildus pievieno `personalNotifications()`,
+     * kas nāk no `user_notifications` tabulas un rāda jau izskatītu notikumu rezultātus.
      */
     private function notificationsFor(User $user): Collection
     {
         if ($user->canManageRequests()) {
-            return $this->managerNotifications($user);
+            return $this->managerNotifications($user)
+                ->concat($this->personalNotifications($user))
+                ->sortByDesc('created_unix')
+                ->take(12)
+                ->values();
         }
 
-        return $this->incomingTransferNotifications($user);
+        return $this->incomingTransferNotifications($user)
+            ->concat($this->personalNotifications($user))
+            ->sortByDesc('created_unix')
+            ->take(12)
+            ->values();
     }
 
     /**
      * Atgriež navigācijas badge skaitītājus reāllaika atjaunošanai.
+     *
+     * `personal_notifications` ir jaunās paziņojumu funkcijas skaitītājs.
+     * Tas netiek jaukts ar `requests_total`, jo `requests_total` joprojām nozīmē
+     * gaidošus pieteikumus, kuriem lietotājam vai administratoram jāpieņem lēmums.
      */
     private function countsFor(User $user): array
     {
@@ -193,6 +237,13 @@ class LiveNotificationController extends Controller
 
             $deviceTransfers = 0;
 
+            $personalNotifications = $this->featureTableExists('user_notifications')
+                ? UserNotification::query()
+                    ->where('user_id', $user->id)
+                    ->whereNull('read_at')
+                    ->count()
+                : 0;
+
             return [
                 'requests_total' => $repairRequests + $writeoffRequests + $deviceTransfers,
                 'repair_requests' => $repairRequests,
@@ -200,6 +251,7 @@ class LiveNotificationController extends Controller
                 'device_transfers' => $deviceTransfers,
                 'password_reset_requests' => $passwordResetRequests,
                 'incoming_transfers' => 0,
+                'personal_notifications' => $personalNotifications,
             ];
         }
 
@@ -210,6 +262,13 @@ class LiveNotificationController extends Controller
                 ->count()
             : 0;
 
+        $personalNotifications = $this->featureTableExists('user_notifications')
+            ? UserNotification::query()
+                ->where('user_id', $user->id)
+                ->whereNull('read_at')
+                ->count()
+            : 0;
+
         return [
             'requests_total' => $incomingTransfers,
             'repair_requests' => 0,
@@ -217,7 +276,51 @@ class LiveNotificationController extends Controller
             'device_transfers' => 0,
             'password_reset_requests' => 0,
             'incoming_transfers' => $incomingTransfers,
+            'personal_notifications' => $personalNotifications,
         ];
+    }
+
+    /**
+     * Nolasa pašreizējā lietotāja nelasītos persistētos paziņojumus.
+     *
+     * Šeit tiek formatēti tie paši `user_notifications` ieraksti, ko izveido
+     * `UserNotifier`. Rezultāts tiek pielāgots frontend formai, kuru jau izmanto
+     * esošie toast paziņojumi: `id`, `type`, `accent`, `title`, `message`,
+     * `details`, `url` un `created_unix`.
+     */
+    private function personalNotifications(User $user): Collection
+    {
+        if (! $this->featureTableExists('user_notifications')) {
+            return collect();
+        }
+
+        return UserNotification::query()
+            ->where('user_id', $user->id)
+            ->whereNull('read_at')
+            ->latest('id')
+            ->limit(8)
+            ->get()
+            ->map(fn (UserNotification $notification) => $this->formatNotification(
+                id: 'user-notification:'.$notification->id,
+                type: $notification->type,
+                accent: $notification->accent,
+                title: $notification->title,
+                message: $notification->message,
+                details: $notification->data ?: [
+                    'device_name' => '-',
+                    'submitted_by' => 'Sistēma',
+                    'submitted_at' => $notification->created_at?->format('d.m.Y H:i') ?: '-',
+                    'device_code' => '-',
+                    'serial_number' => '-',
+                    'device_location' => '-',
+                    'reason_label' => 'Paziņojums',
+                    'reason_value' => $notification->message,
+                    'cta_label' => 'Atvērt',
+                ],
+                url: $notification->url ?: route('devices.index'),
+                createdAt: $notification->created_at,
+                actions: [],
+            ));
     }
 
     /**
