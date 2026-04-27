@@ -75,22 +75,6 @@
                             <x-icon name="repair" size="h-4 w-4" /><span>Atdot uz remontu</span>
                         </button>
                     @endif
-                @else
-                    @if ($requestAvailability['repair'])
-                        <a href="{{ $repairRequestCreateUrl }}" class="btn-edit">
-                            <x-icon name="repair" size="h-4 w-4" /><span>Remonts</span>
-                        </a>
-                    @endif
-                    @if ($requestAvailability['writeoff'])
-                        <a href="{{ $writeoffRequestCreateUrl }}" class="btn-danger">
-                            <x-icon name="writeoff" size="h-4 w-4" /><span>Norakstīt</span>
-                        </a>
-                    @endif
-                    @if ($requestAvailability['transfer'])
-                        <a href="{{ $transferCreateUrl }}" class="btn-view">
-                            <x-icon name="transfer" size="h-4 w-4" /><span>Nodot</span>
-                        </a>
-                    @endif
                 @endif
                 <a href="{{ route('devices.index') }}" class="btn-back">
                     <x-icon name="back" size="h-4 w-4" /><span>Atpakaļ</span>
@@ -243,6 +227,45 @@
                         </div>
                     @endif
                 @else
+                    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <h3 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+                            <x-icon name="repair-request" size="h-3.5 w-3.5" />
+                            <span>Pieteikumi</span>
+                        </h3>
+                        <p class="mt-2 text-sm leading-relaxed text-slate-600">
+                            Izvēlies, kādu pieteikumu vēlies sagatavot šai ierīcei.
+                        </p>
+
+                        <div class="mt-4 grid gap-3">
+                            @if ($requestAvailability['repair'])
+                                <a href="{{ $repairRequestCreateUrl }}" class="btn-edit w-full justify-center">
+                                    <x-icon name="repair" size="h-4 w-4" />
+                                    <span>Pieteikt remontu</span>
+                                </a>
+                            @endif
+
+                            @if ($requestAvailability['writeoff'])
+                                <a href="{{ $writeoffRequestCreateUrl }}" class="btn-danger w-full justify-center">
+                                    <x-icon name="writeoff" size="h-4 w-4" />
+                                    <span>Pieteikt norakstīšanu</span>
+                                </a>
+                            @endif
+
+                            @if ($requestAvailability['transfer'])
+                                <a href="{{ $transferCreateUrl }}" class="btn-view w-full justify-center">
+                                    <x-icon name="transfer" size="h-4 w-4" />
+                                    <span>Pieteikt nodošanu</span>
+                                </a>
+                            @endif
+
+                            @if (! $requestAvailability['repair'] && ! $requestAvailability['writeoff'] && ! $requestAvailability['transfer'])
+                                <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                                    Šai ierīcei pašlaik nav pieejams neviens jauns pieteikums.
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
                     {{-- Lietotāja pieteikumu ierobežojums --}}
                     @if ($requestAvailability['reason'])
                         <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5">

@@ -129,7 +129,6 @@ class DeviceController extends Controller
 
         $canManageDevices = $user->canManageRequests();
         $filters = $this->normalizedIndexFilters($request, $user);
-        $sorting = $this->normalizedDeviceSorting($request, $canManageDevices);
         $accessibleRooms = $this->accessibleRooms($user);
         $types = DeviceType::query()
             ->select(['id', 'type_name'])
@@ -155,24 +154,13 @@ class DeviceController extends Controller
 
         $devicesQuery = $this->visibleDevicesQuery($user)->select('devices.id', 'devices.code');
         $this->applyDeviceIndexFilters($devicesQuery, $filters, $selectedAssignedUser, $selectedRoom, $selectedType);
-        $this->applyDeviceIndexSorting($devicesQuery, $sorting);
 
-        $allDevices = $devicesQuery->get();
+        // Precīza koda meklēšanai pietiek ar vienu atlasītu ierīci, nav jāielādē viss saraksts.
+        $foundDevice = $devicesQuery
+            ->whereRaw('LOWER(TRIM(devices.code)) = ?', [mb_strtolower($code)])
+            ->first();
 
-        $foundDevice = null;
-        $foundIndex = null;
-        $searchCode = mb_strtolower($code);
-
-        foreach ($allDevices as $index => $device) {
-            $deviceCode = mb_strtolower(trim((string) ($device->code ?? '')));
-            if ($deviceCode === $searchCode) {
-                $foundDevice = $device;
-                $foundIndex = $index;
-                break;
-            }
-        }
-
-        if (!$foundDevice || $foundIndex === null) {
+        if (! $foundDevice) {
             return response()->json(['found' => false, 'page' => 1]);
         }
 
@@ -455,6 +443,12 @@ class DeviceController extends Controller
         ?DeviceType $selectedType
     ): void {
         $query
+            // Saistītās ierīces atvēršanā no pieteikumiem kods tiek padots jau URL, tāpēc filtrējam uzreiz datubāzē.
+            ->when($filters['code'] !== '', function (Builder $deviceQuery) use ($filters) {
+                $normalizedCode = mb_strtolower(trim($filters['code']));
+
+                $deviceQuery->whereRaw('LOWER(TRIM(devices.code)) = ?', [$normalizedCode]);
+            })
             ->when($filters['q'] !== '', function (Builder $deviceQuery) use ($filters) {
                 $term = $filters['q'];
 
