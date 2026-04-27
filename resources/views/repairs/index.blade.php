@@ -434,7 +434,12 @@
                                             'statuses_filter' => 1,
                                         ])
                                         : null;
-                                    $deviceShowUrl = $device ? route('devices.show', $device) : null;
+                                    $deviceIndexUrl = $device
+                                        ? route('devices.index', array_filter([
+                                            'code' => $device->code,
+                                            'q' => $device->code ? null : $device->name,
+                                        ]))
+                                        : null;
                                 @endphp
                                 <tr class="repair-table-row border-t border-slate-100 align-top" data-table-row-id="repair-{{ $repair->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}">
                                     <td class="px-4 py-4">
@@ -527,8 +532,8 @@
                                                         <span>Atvērt remontu</span>
                                                     </button>
 
-                                                    @if ($deviceShowUrl)
-                                                        <a href="{{ $deviceShowUrl }}" class="table-action-item table-action-item-sky" @click="closePanel()">
+                                                    @if ($deviceIndexUrl)
+                                                        <a href="{{ $deviceIndexUrl }}" class="table-action-item table-action-item-sky" @click="closePanel()">
                                                             <x-icon name="device" size="h-4 w-4" />
                                                             <span>Skatīt ierīci</span>
                                                         </a>
