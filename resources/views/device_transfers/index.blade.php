@@ -397,8 +397,9 @@
                                     ]));
                                     $deviceFilterUrl = $device
                                         ? route('devices.index', array_filter([
-                                            'code' => $device->code,
-                                            'q' => $device->code ? null : $device->name,
+                                            'highlight' => $device->code ?: $device->name,
+                                            'highlight_mode' => $device->code ? 'exact' : 'contains',
+                                            'highlight_id' => 'device-' . $device->id,
                                         ]))
                                         : null;
                                     $deviceMeta = collect([$device?->manufacturer, $device?->model])->filter()->implode(' | ');
