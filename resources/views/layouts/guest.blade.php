@@ -34,7 +34,7 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="layout-body-reset guest-bg bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.18),transparent_32%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.14),transparent_28%),linear-gradient(180deg,_#eff6ff_0%,_#f8fafc_100%)]">
+    <body class="layout-body-reset guest-bg bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.18),transparent_32%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.14),transparent_28%),linear-gradient(180deg,_#eff6ff_0%,_#f8fafc_100%)] antialiased">
         <div class="auth-wrapper">
             <div class="auth-left">
                 <div class="auth-container auth-container-compact">
@@ -96,6 +96,33 @@
                     </div>
                     <h2 class="text-3xl font-bold text-white leading-snug">IT inventāra<br>pārvaldības sistēma</h2>
                     <p class="mt-4 text-base text-white/75 leading-relaxed">Ludzas novada pašvaldības centralizēta platforma IT aprīkojuma uzskaitei un pieprasījumu apstrādei.</p>
+
+                    <ul class="mt-8 space-y-3">
+                        <li class="flex items-center gap-3 text-sm text-white/85">
+                            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                            </span>
+                            Centralizēta IT aprīkojuma uzskaite
+                        </li>
+                        <li class="flex items-center gap-3 text-sm text-white/85">
+                            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                            </span>
+                            Remonta un norakstīšanas pieteikumi
+                        </li>
+                        <li class="flex items-center gap-3 text-sm text-white/85">
+                            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                            </span>
+                            Ierīču nodošana starp telpām
+                        </li>
+                        <li class="flex items-center gap-3 text-sm text-white/85">
+                            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                            </span>
+                            Pilns revīzijas žurnāls visām darbībām
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -104,8 +131,8 @@
         @include('layouts.loading-indicator')
 
         @php
-            $flashMessage = session('success') ?? session('error') ?? session('status');
-            $flashTone = session('success') ? 'success' : (session('error') ? 'error' : (session('status') ? 'info' : null));
+            $flashMessage = session('success') ?? session('error') ?? session('warning') ?? session('status');
+            $flashTone = session('success') ? 'success' : (session('error') ? 'error' : (session('warning') ? 'warning' : (session('status') ? 'info' : null)));
         @endphp
         @if ($flashMessage)
             <div x-data="{ open: true }" x-init="setTimeout(() => open = false, 3800)" class="pointer-events-none flex flex-col">
@@ -125,12 +152,14 @@
                             <x-icon name="check-circle" size="h-4 w-4" />
                         @elseif ($flashTone === 'error')
                             <x-icon name="x-circle" size="h-4 w-4" />
+                        @elseif ($flashTone === 'warning')
+                            <x-icon name="exclamation-triangle" size="h-4 w-4" />
                         @else
                             <x-icon name="information-circle" size="h-4 w-4" />
                         @endif
                     </div>
                     <div class="flash-toast-body">
-                        <div class="flash-toast-title">{{ $flashTone === 'success' ? 'Veiksmīgi' : 'Paziņojums' }}</div>
+                        <div class="flash-toast-title">{{ $flashTone === 'success' ? 'Veiksmīgi' : ($flashTone === 'warning' ? 'Brīdinājums' : 'Paziņojums') }}</div>
                         <div class="flash-toast-message">{{ $flashMessage }}</div>
                     </div>
                     <button type="button" class="flash-toast-close" @click="open = false" aria-label="Aizvērt">

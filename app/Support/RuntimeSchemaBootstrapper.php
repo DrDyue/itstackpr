@@ -57,6 +57,7 @@ class RuntimeSchemaBootstrapper
     {
         $this->addColumnIfMissing('users', 'password_reset_requested_at', fn (Blueprint $table) => $table->timestamp('password_reset_requested_at')->nullable());
         $this->addColumnIfMissing('users', 'user_settings', fn (Blueprint $table) => $table->text('user_settings')->nullable());
+        $this->ensureMysqlColumnNullable('users', 'employee_id');
     }
 
     /**
@@ -888,6 +889,36 @@ class RuntimeSchemaBootstrapper
                 ->contains(fn (object $index) => ($index->name ?? null) === $indexName),
             default => false,
         };
+    }
+
+    private function ensureMysqlColumnNullable(string $tableName, string $column): void
+    {
+        if (
+            DB::getDriverName() !== 'mysql'
+            || ! Schema::hasTable($tableName)
+            || ! Schema::hasColumn($tableName, $column)
+        ) {
+            return;
+        }
+
+        $columnDefinition = collect(Schema::getColumns($tableName))
+            ->firstWhere('name', $column);
+
+        if (($columnDefinition['nullable'] ?? false) === true) {
+            return;
+        }
+
+        $columnType = $this->mysqlColumnType($tableName, $column);
+        if ($columnType === '') {
+            return;
+        }
+
+        DB::statement(sprintf(
+            'ALTER TABLE `%s` MODIFY `%s` %s NULL',
+            $tableName,
+            $column,
+            $columnType,
+        ));
     }
 
     private function dropColumnIfPresent(string $tableName, string $column): void

@@ -142,6 +142,8 @@ class AuthBootstrapper
                 $table->timestamp('updated_at')->nullable();
             }
         });
+
+        $this->ensureMysqlColumnNullable('users', 'employee_id');
     }
 
     private function backfillLegacyUserData(): void
@@ -283,6 +285,42 @@ class AuthBootstrapper
             Log::warning('Unable to inspect users table column ' . $column . ': ' . $e->getMessage());
 
             return false;
+        }
+    }
+
+    private function ensureMysqlColumnNullable(string $table, string $column): void
+    {
+        try {
+            if (
+                DB::getDriverName() !== 'mysql'
+                || ! Schema::hasTable($table)
+                || ! Schema::hasColumn($table, $column)
+            ) {
+                return;
+            }
+
+            $columnDefinition = collect(Schema::getColumns($table))
+                ->firstWhere('name', $column);
+
+            if (($columnDefinition['nullable'] ?? false) === true) {
+                return;
+            }
+
+            $columnMetadata = DB::selectOne(sprintf("SHOW COLUMNS FROM `%s` LIKE '%s'", $table, $column));
+            $columnType = (string) ($columnMetadata->Type ?? '');
+
+            if ($columnType === '') {
+                return;
+            }
+
+            DB::statement(sprintf(
+                'ALTER TABLE `%s` MODIFY `%s` %s NULL',
+                $table,
+                $column,
+                $columnType,
+            ));
+        } catch (Throwable $e) {
+            Log::warning("Unable to relax legacy {$table}.{$column} column: " . $e->getMessage());
         }
     }
 }

@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Support\NavigationViewData;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\View;
 
 /**
  * Aplikācijas servisu sniedzējs.
@@ -22,6 +24,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        View::composer('layouts.navigation', function ($view): void {
+            $view->with(app(NavigationViewData::class)->data());
+        });
     }
 }

@@ -6,84 +6,6 @@
     2. Lietotājam šeit paliek tikai tās sadaļas, kuras viņš drīkst izmantot.
     3. Navigācijā tiek rādīti arī gaidošo pieteikumu indikatori un ātrās saites.
 --}}
-@php
-        $user = auth()->user();
-        $isAdmin = $user?->isAdmin() ?? false;
-        $canManageRequests = $user?->canManageRequests() ?? false;
-        $currentViewMode = $user?->currentViewMode() ?? \App\Models\User::VIEW_MODE_USER;
-        $incomingTransferReviewCount = ! $canManageRequests && $user
-            ? \App\Models\DeviceTransfer::query()
-                ->where('transfered_to_id', $user->id)
-                ->where('status', \App\Models\DeviceTransfer::STATUS_SUBMITTED)
-                ->count()
-            : 0;
-        $passwordResetRequestCount = $canManageRequests
-            ? \App\Models\User::query()->whereNotNull('password_reset_requested_at')->count()
-            : 0;
-        $pendingRepairRequestCount = $canManageRequests && $user
-            ? \App\Models\RepairRequest::query()
-                ->where('status', \App\Models\RepairRequest::STATUS_SUBMITTED)
-                ->where('responsible_user_id', '!=', $user->id)
-                ->count()
-            : 0;
-        $pendingWriteoffRequestCount = $canManageRequests && $user
-            ? \App\Models\WriteoffRequest::query()
-                ->where('status', \App\Models\WriteoffRequest::STATUS_SUBMITTED)
-                ->where('responsible_user_id', '!=', $user->id)
-                ->count()
-            : 0;
-        $pendingTransferRequestCount = 0;
-        $requestGroupCount = $canManageRequests
-            ? $pendingRepairRequestCount + $pendingWriteoffRequestCount + $pendingTransferRequestCount
-            : $incomingTransferReviewCount;
-        $initialNavCounts = [
-            'requests_total' => $requestGroupCount,
-            'repair_requests' => $pendingRepairRequestCount,
-            'writeoff_requests' => $pendingWriteoffRequestCount,
-            'device_transfers' => $pendingTransferRequestCount,
-            'password_reset_requests' => $passwordResetRequestCount,
-            'incoming_transfers' => $incomingTransferReviewCount,
-        ];
-        $primaryNavigationItems = array_values(array_filter([
-            $canManageRequests ? ['route' => 'dashboard', 'pattern' => 'dashboard', 'label' => 'Darbvirsma', 'icon' => 'dashboard'] : null,
-            ['route' => 'devices.index', 'pattern' => 'devices*', 'label' => 'Ierīces', 'icon' => 'device'],
-        ]));
-        $requestNavigationItems = [
-            ['route' => 'repair-requests.index', 'pattern' => 'repair-requests*', 'label' => 'Remonta pieteikumi', 'icon' => 'repair-request'],
-            ['route' => 'writeoff-requests.index', 'pattern' => 'writeoff-requests*', 'label' => 'Norakstīšanas pieteikumi', 'icon' => 'writeoff'],
-            ['route' => 'device-transfers.index', 'pattern' => 'device-transfers*', 'label' => 'Nodošanas pieteikumi', 'icon' => 'transfer'],
-        ];
-        $requestReviewNavigationItems = $canManageRequests ? collect($requestNavigationItems)->take(2)->values()->all() : $requestNavigationItems;
-        $requestHistoryNavigationItems = $canManageRequests ? collect($requestNavigationItems)->slice(2)->values()->all() : [];
-        $secondaryNavigationItems = [];
-        $lessImportantNavigationItems = [];
-        $repairsNavigationItem = null;
-        $usersNavigationItem = null;
-        $requestGroupActive = collect($requestNavigationItems)->contains(fn (array $item) => request()->routeIs($item['pattern']));
-        $lessImportantGroupActive = false;
-
-        if ($canManageRequests) {
-            $repairsNavigationItem = ['route' => 'repairs.index', 'pattern' => 'repairs*', 'label' => 'Remonti', 'icon' => 'repair'];
-
-            $lessImportantNavigationItems = [
-                ['route' => 'rooms.index', 'pattern' => 'rooms*', 'label' => 'Telpas', 'icon' => 'room'],
-                ['route' => 'buildings.index', 'pattern' => 'buildings*', 'label' => 'Ēkas', 'icon' => 'building'],
-                ['route' => 'device-types.index', 'pattern' => 'device-types*', 'label' => 'Ierīču tipi', 'icon' => 'tag'],
-            ];
-        }
-
-        if ($isAdmin && $canManageRequests) {
-            $usersNavigationItem = ['route' => 'users.index', 'pattern' => 'users*', 'label' => 'Lietotāji', 'icon' => 'users'];
-
-            $lessImportantNavigationItems[] = ['route' => 'audit-log.index', 'pattern' => 'audit-log*', 'label' => 'Audits', 'icon' => 'audit'];
-        }
-
-        if ($lessImportantNavigationItems !== []) {
-            $lessImportantGroupActive = collect($lessImportantNavigationItems)->contains(
-                fn (array $item) => request()->routeIs($item['pattern'])
-            );
-        }
-@endphp
 <nav
     x-data="{
         open: false,
@@ -280,25 +202,6 @@
                     @endif
 
                     {{-- Paziņojumu centrs --}}
-                    @php
-                        $showNotificationPreviewCards = true;
-                        // Jaunā paziņojumu funkcija glabā personīgos notikumus tabulā `user_notifications`.
-                        // Šeit tos pieskaitām zvaniņa emblēmai, lai lietotājs redzētu ne tikai gaidošus
-                        // pieteikumus, bet arī rezultātus: apstiprināts, noraidīts, piešķirta ierīce, remonts pabeigts.
-                        $personalNotificationCount = \Illuminate\Support\Facades\Schema::hasTable('user_notifications') && $user
-                            ? \App\Models\UserNotification::query()
-                                ->where('user_id', $user->id)
-                                ->whereNull('read_at')
-                                ->count()
-                            : 0;
-                        $pendingNotificationsCount = $canManageRequests
-                            ? (\App\Models\RepairRequest::query()->where('status', \App\Models\RepairRequest::STATUS_SUBMITTED)->count()
-                                + \App\Models\WriteoffRequest::query()->where('status', \App\Models\WriteoffRequest::STATUS_SUBMITTED)->count()
-                                + \App\Models\DeviceTransfer::query()->where('status', \App\Models\DeviceTransfer::STATUS_SUBMITTED)->count()
-                                + $passwordResetRequestCount
-                                + $personalNotificationCount)
-                            : $incomingTransferReviewCount + $personalNotificationCount;
-                    @endphp
                     <div
                         x-data="navNotificationCenter({
                             initialCount: {{ $pendingNotificationsCount }},
@@ -358,20 +261,7 @@
                             </div>
 
                             <div class="max-h-[28rem] overflow-y-auto p-2">
-                                @php
-                                    // Personīgie paziņojumi tiek rādīti virs lomas specifiskajiem pieteikumiem.
-                                    // Tas nodrošina, ka lietotājs uzreiz redz jaunāko rezultātu par savām ierīcēm.
-                                    $personalNotifications = \Illuminate\Support\Facades\Schema::hasTable('user_notifications') && $user
-                                        ? \App\Models\UserNotification::query()
-                                            ->where('user_id', $user->id)
-                                            ->whereNull('read_at')
-                                            ->latest('id')
-                                            ->limit(5)
-                                            ->get()
-                                        : collect();
-                                @endphp
-
-                                @if ($personalNotifications->count() > 0)
+@if ($personalNotifications->count() > 0)
                                     <div class="px-3 pb-2 pt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Mani paziņojumi</div>
                                     @foreach ($personalNotifications as $notification)
                                         <a href="{{ $notification->url ?: route('devices.index') }}" class="pending-review-card group flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-3 transition hover:border-sky-200 hover:bg-sky-50">
@@ -391,27 +281,7 @@
                                 @endif
 
                                 @if ($canManageRequests)
-                                    @php
-                                        $pendingRepairs = \App\Models\RepairRequest::query()
-                                            ->with(['device', 'responsibleUser'])
-                                            ->where('status', \App\Models\RepairRequest::STATUS_SUBMITTED)
-                                            ->latest('id')
-                                            ->limit(5)
-                                            ->get();
-                                        $pendingWriteoffs = \App\Models\WriteoffRequest::query()
-                                            ->with(['device', 'responsibleUser'])
-                                            ->where('status', \App\Models\WriteoffRequest::STATUS_SUBMITTED)
-                                            ->latest('id')
-                                            ->limit(5)
-                                            ->get();
-                                        $pendingPasswordResets = \App\Models\User::query()
-                                            ->whereNotNull('password_reset_requested_at')
-                                            ->latest('password_reset_requested_at')
-                                            ->limit(5)
-                                            ->get(['id', 'full_name', 'email', 'phone', 'job_title', 'password_reset_requested_at']);
-                                    @endphp
-
-                                    @if ($showNotificationPreviewCards && $pendingPasswordResets->count() > 0)
+@if ($showNotificationPreviewCards && $pendingPasswordResets->count() > 0)
                                         <div class="px-3 pb-2 pt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Paroles maiņas pieprasījumi</div>
                                         @foreach ($pendingPasswordResets as $requestUser)
                                             <a href="{{ route('users.index', ['password_reset' => 1, 'highlight' => $requestUser->full_name, 'highlight_mode' => 'contains', 'highlight_id' => 'user-'.$requestUser->id]) }}" class="pending-review-card group flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-3 transition hover:border-amber-200 hover:bg-amber-50">
@@ -486,16 +356,7 @@
                                     @endif
                                 @else
                                     @if ($incomingTransferReviewCount > 0)
-                                        @php
-                                            $pendingTransfers = \App\Models\DeviceTransfer::query()
-                                                ->with(['device', 'responsibleUser'])
-                                                ->where('transfered_to_id', auth()->id())
-                                                ->where('status', \App\Models\DeviceTransfer::STATUS_SUBMITTED)
-                                                ->latest('id')
-                                                ->limit(5)
-                                                ->get();
-                                        @endphp
-                                        <div class="px-3 pb-2 pt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ienākošās nodošanas</div>
+<div class="px-3 pb-2 pt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ienākošās nodošanas</div>
                                         @foreach ($pendingTransfers as $transfer)
                                             <a href="{{ route('device-transfers.index', ['incoming' => 1]) }}#device-transfer-{{ $transfer->id }}" class="pending-review-card group flex items-start gap-3 rounded-2xl border border-slate-100 bg-white p-3 transition hover:border-emerald-200 hover:bg-emerald-50">
                                                 <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200">
@@ -551,8 +412,8 @@
                     <x-dropdown align="right" width="w-64">
                     <x-slot name="trigger">
                         <button class="inline-flex min-w-0 max-w-[17rem] items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-500">
-                            <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-sm font-semibold text-white shadow-sm">
-                                {{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($user?->full_name ?? 'L', 0, 1)) }}
+                            <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-700 text-sm font-semibold text-white shadow-sm">
+                                {{ $userInitial }}
                             </div>
                             <div class="min-w-0 text-left leading-tight">
                                 <div class="truncate font-semibold text-slate-900">{{ $user?->full_name ?? 'Lietotājs' }}</div>

@@ -34,7 +34,7 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="layout-body-reset app-bg bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),transparent_32%),radial-gradient(circle_at_top_right,_rgba(16,185,129,0.12),transparent_28%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] text-slate-900">
+    <body class="layout-body-reset app-bg bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),transparent_32%),radial-gradient(circle_at_top_right,_rgba(16,185,129,0.12),transparent_28%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] text-slate-900 antialiased">
         @include('layouts.navigation')
 
         <main class="px-4 py-6 sm:px-6 lg:px-8 pb-10">
@@ -49,8 +49,8 @@
         @include('layouts.loading-indicator')
 
         @php
-            $flashMessage = session('success') ?? session('error') ?? session('status');
-            $flashTone = session('success') ? 'success' : (session('error') ? 'error' : (session('status') ? 'info' : null));
+            $flashMessage = session('success') ?? session('error') ?? session('warning') ?? session('status');
+            $flashTone = session('success') ? 'success' : (session('error') ? 'error' : (session('warning') ? 'warning' : (session('status') ? 'info' : null)));
         @endphp
         @if ($flashMessage)
             <div x-data="{ open: true }" x-init="setTimeout(() => open = false, 3800)" class="pointer-events-none flex flex-col">
@@ -70,12 +70,14 @@
                             <x-icon name="check-circle" size="h-4 w-4" />
                         @elseif ($flashTone === 'error')
                             <x-icon name="x-circle" size="h-4 w-4" />
+                        @elseif ($flashTone === 'warning')
+                            <x-icon name="exclamation-triangle" size="h-4 w-4" />
                         @else
                             <x-icon name="information-circle" size="h-4 w-4" />
                         @endif
                     </div>
                     <div class="flash-toast-body">
-                        <div class="flash-toast-title">{{ $flashTone === 'success' ? 'Veiksmīgi' : 'Paziņojums' }}</div>
+                        <div class="flash-toast-title">{{ $flashTone === 'success' ? 'Veiksmīgi' : ($flashTone === 'warning' ? 'Brīdinājums' : 'Paziņojums') }}</div>
                         <div class="flash-toast-message">{{ $flashMessage }}</div>
                     </div>
                     <button type="button" class="flash-toast-close" @click="open = false" aria-label="Aizvērt">
