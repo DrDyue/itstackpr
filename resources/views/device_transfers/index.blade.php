@@ -308,14 +308,14 @@
 
             <x-active-filters
                 :items="[
-                    ['label' => 'Filtrēt tekstu', 'value' => $filters['q']],
-                    ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
-                    ['label' => 'Pieteicējs', 'value' => $isAdmin ? $selectedRequesterLabel : ($isIncomingFilter ? null : $selectedRequesterLabel)],
-                    ['label' => 'Saņēmējs', 'value' => $isAdmin ? $selectedRecipientLabel : ($isIncomingFilter ? null : $selectedRecipientLabel)],
-                    ['label' => 'Skats', 'value' => $activeTransferViewLabel],
-                    ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
-                    ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
-                    ['label' => 'Statuss', 'value' => $activeStatusLabel],
+                    ['label' => 'Filtrēt tekstu', 'value' => $filters['q'], 'remove' => 'q'],
+                    ['label' => 'Ierīce', 'value' => $selectedDeviceLabel, 'remove' => ['device_id', 'device_query']],
+                    ['label' => 'Pieteicējs', 'value' => $isAdmin ? $selectedRequesterLabel : ($isIncomingFilter ? null : $selectedRequesterLabel), 'remove' => ['requester_id', 'requester_query']],
+                    ['label' => 'Saņēmējs', 'value' => $isAdmin ? $selectedRecipientLabel : ($isIncomingFilter ? null : $selectedRecipientLabel), 'remove' => ['recipient_id', 'recipient_query']],
+                    ['label' => 'Skats', 'value' => $activeTransferViewLabel, 'remove' => 'incoming'],
+                    ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null, 'remove' => 'date_from'],
+                    ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null, 'remove' => 'date_to'],
+                    ['label' => 'Statuss', 'value' => $activeStatusLabel, 'remove' => 'status'],
                 ]"
                 :clear-url="route('device-transfers.index')"
             />

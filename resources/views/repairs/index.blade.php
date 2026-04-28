@@ -332,16 +332,16 @@
             <div class="mt-5">
             <x-active-filters
                 :items="[
-                    ['label' => 'Teksts', 'value' => $filters['q']],
-                    ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
-                    ['label' => 'Pieprasītājs', 'value' => $selectedRequesterLabel],
-                    ['label' => 'Datuma lauks', 'value' => ($filters['date_from'] || $filters['date_to']) ? (($filters['date_field'] ?? 'start_date') === 'end_date' ? 'Beigu datums' : 'Sākuma datums') : null],
-                    ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
-                    ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
-                    ['label' => 'Statuss', 'value' => $activeStatusLabel],
-                    ['label' => 'Prioritāte', 'value' => $activePriorityLabel],
-                    ['label' => 'Remonta tips', 'value' => $activeTypeLabel ? $repairTypeLabels[$activeTypeLabel] ?? $activeTypeLabel : null],
-                    ['label' => 'Piešķirts', 'value' => ($filters['mine'] ?? false) ? 'Man' : null],
+                    ['label' => 'Teksts', 'value' => $filters['q'], 'remove' => 'q'],
+                    ['label' => 'Ierīce', 'value' => $selectedDeviceLabel, 'remove' => ['device_id', 'device_query']],
+                    ['label' => 'Pieprasītājs', 'value' => $selectedRequesterLabel, 'remove' => ['requester_id', 'requester_query']],
+                    ['label' => 'Datuma lauks', 'value' => ($filters['date_from'] || $filters['date_to']) ? (($filters['date_field'] ?? 'start_date') === 'end_date' ? 'Beigu datums' : 'Sākuma datums') : null, 'remove' => ['date_field', 'date_from', 'date_to']],
+                    ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null, 'remove' => 'date_from'],
+                    ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null, 'remove' => 'date_to'],
+                    ['label' => 'Statuss', 'value' => $activeStatusLabel, 'remove' => 'status'],
+                    ['label' => 'Prioritāte', 'value' => $activePriorityLabel, 'remove' => 'priorities'],
+                    ['label' => 'Remonta tips', 'value' => $activeTypeLabel ? $repairTypeLabels[$activeTypeLabel] ?? $activeTypeLabel : null, 'remove' => 'type'],
+                    ['label' => 'Piešķirts', 'value' => ($filters['mine'] ?? false) ? 'Man' : null, 'remove' => 'mine'],
                 ]"
                 :clear-url="route('repairs.index', ['statuses_filter' => '1'])"
             />

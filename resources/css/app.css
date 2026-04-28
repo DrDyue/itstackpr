@@ -2897,20 +2897,16 @@ tbody td {
     @apply rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-6 text-center text-sm text-slate-500;
 }
 
-[data-async-table-root] {
-    @apply relative;
-}
-
-.async-table-root-loading {
-    @apply min-h-48;
-}
-
 .async-table-skeleton {
-    @apply pointer-events-none absolute inset-x-0 top-0 z-30 rounded-[1.5rem] border border-slate-200 bg-white/90 p-4 shadow-xl ring-1 ring-slate-100 backdrop-blur;
+    @apply pointer-events-none absolute inset-0 z-30 flex items-start rounded-[1.5rem] border border-slate-200 bg-white/85 p-4 shadow-xl ring-1 ring-slate-100 backdrop-blur-sm;
+}
+
+.async-table-loading-target {
+    @apply relative overflow-hidden;
 }
 
 .async-table-skeleton-card {
-    @apply space-y-4;
+    @apply w-full space-y-4;
 }
 
 .async-table-skeleton-head {
@@ -5573,6 +5569,10 @@ tbody td {
     @apply inline-flex items-center gap-1 rounded-full bg-sky-600 px-2 py-0.5 text-[10px] font-bold leading-none text-white shadow-sm;
 }
 
+.device-sort-trigger-pending .device-sort-current-label {
+    @apply bg-amber-500 text-white;
+}
+
 .device-sort-current-label::before {
     @apply text-[11px] leading-none;
 }
@@ -7554,6 +7554,20 @@ html[data-theme='dark'] .device-sort-trigger-active::after {
 html[data-theme='dark'] .device-sort-current-label {
     background-color: #38bdf8 !important;
     color: #082f49 !important;
+}
+
+html[data-theme='dark'] .device-sort-trigger-pending .device-sort-current-label {
+    background-color: #f59e0b !important;
+    color: #111827 !important;
+}
+
+html[data-theme='dark'] .filter-chip-remove {
+    color: #94a3b8 !important;
+}
+
+html[data-theme='dark'] .filter-chip-remove:hover {
+    background-color: rgba(71, 85, 105, 0.62) !important;
+    color: #f8fafc !important;
 }
 
 html[data-theme='dark'] .device-sort-icon {

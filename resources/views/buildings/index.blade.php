@@ -118,7 +118,7 @@
             <div class="mt-4">
                 <x-active-filters
                     :items="[
-                        ['label' => 'Stāvu skaits', 'value' => $filters['total_floors'] !== '' ? $filters['total_floors'] : null],
+                        ['label' => 'Stāvu skaits', 'value' => $filters['total_floors'] !== '' ? $filters['total_floors'] : null, 'remove' => 'total_floors'],
                     ]"
                     :clear-url="route('buildings.index')"
                 />

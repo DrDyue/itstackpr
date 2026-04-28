@@ -191,12 +191,12 @@
             <div class="mt-5">
                 <x-active-filters
                     :items="[
-                        ['label' => 'Darbība', 'value' => $selectedActionLabel],
-                        ['label' => 'Objekts', 'value' => $selectedEntityLabel],
-                        ['label' => 'Lietotājs', 'value' => $selectedUserLabel],
-                        ['label' => 'No datuma', 'value' => $filters['date_from'] !== '' ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
-                        ['label' => 'Līdz datumam', 'value' => $filters['date_to'] !== '' ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
-                        ['label' => 'Svarīgums', 'value' => $selectedSeverityLabels !== '' ? $selectedSeverityLabels : null],
+                        ['label' => 'Darbība', 'value' => $selectedActionLabel, 'remove' => ['action', 'action_query']],
+                        ['label' => 'Objekts', 'value' => $selectedEntityLabel, 'remove' => ['entity_type', 'entity_query']],
+                        ['label' => 'Lietotājs', 'value' => $selectedUserLabel, 'remove' => ['user_id', 'user_query']],
+                        ['label' => 'No datuma', 'value' => $filters['date_from'] !== '' ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null, 'remove' => 'date_from'],
+                        ['label' => 'Līdz datumam', 'value' => $filters['date_to'] !== '' ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null, 'remove' => 'date_to'],
+                        ['label' => 'Svarīgums', 'value' => $selectedSeverityLabels !== '' ? $selectedSeverityLabels : null, 'remove' => 'severity'],
                     ]"
                     :clear-url="route('audit-log.index')"
                 />

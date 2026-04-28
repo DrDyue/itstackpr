@@ -18,7 +18,7 @@
         }
 
         $query = request()->query();
-        foreach ([...$removeKeys, 'page'] as $key) {
+        foreach ([...$removeKeys, 'page', 'clear'] as $key) {
             unset($query[$key]);
         }
 

@@ -57,6 +57,16 @@ const createAsyncTableSkeleton = () => {
     return overlay;
 };
 
+const findAsyncTableLoadingTarget = (root) => {
+    const table = root?.querySelector?.('table');
+    const shell = table?.closest?.('.device-table-shell, .repair-table-shell, .app-table-shell, .table-card');
+
+    return shell
+        || table?.closest?.('.app-table-scroll, .device-table-scroll, .repair-table-scroll, .users-table-scroll, .overflow-x-auto, .overflow-hidden')
+        || table?.parentElement
+        || root;
+};
+
 const setAsyncTableLoading = (rootSelector, isLoading) => {
     const root = document.querySelector(rootSelector);
 
@@ -67,10 +77,17 @@ const setAsyncTableLoading = (rootSelector, isLoading) => {
     root.dataset.asyncLoading = isLoading ? 'true' : 'false';
     root.classList.toggle('async-table-root-loading', isLoading);
     root.setAttribute('aria-busy', isLoading ? 'true' : 'false');
-    root.querySelector('[data-async-table-skeleton="true"]')?.remove();
+    root.querySelectorAll('[data-async-table-skeleton="true"]').forEach((element) => element.remove());
+    root.querySelectorAll('.async-table-loading-target').forEach((element) => {
+        element.classList.remove('async-table-loading-target');
+        element.removeAttribute('aria-busy');
+    });
 
     if (isLoading) {
-        root.appendChild(createAsyncTableSkeleton());
+        const target = findAsyncTableLoadingTarget(root);
+        target.classList.add('async-table-loading-target');
+        target.setAttribute('aria-busy', 'true');
+        target.appendChild(createAsyncTableSkeleton());
     }
 };
 
@@ -89,21 +106,44 @@ const enhanceSortTriggerLabels = (root = document) => {
         trigger.removeAttribute('data-sort-current-direction');
 
         if (!currentDirection) {
-            trigger.setAttribute('aria-label', `${trigger.textContent.trim()}, kārtot`);
+            trigger.setAttribute('aria-label', `${trigger.textContent.trim()}, k\u0101rtot`);
             return;
         }
 
-        const label = currentDirection === 'asc' ? 'Augoši' : 'Dilstoši';
-        const nextLabel = trigger.dataset.sortDirection === 'asc' ? 'augošā secībā' : 'dilstošā secībā';
+        const label = currentDirection === 'asc' ? 'Augo\u0161i' : 'Dilsto\u0161i';
+        const nextLabel = trigger.dataset.sortDirection === 'asc' ? 'augo\u0161\u0101 sec\u012bb\u0101' : 'dilsto\u0161\u0101 sec\u012bb\u0101';
         const badge = document.createElement('span');
         badge.className = 'device-sort-current-label';
         badge.dataset.sortCurrentLabel = 'true';
         badge.textContent = label;
 
         trigger.dataset.sortCurrentDirection = currentDirection;
-        trigger.setAttribute('aria-label', `${trigger.textContent.trim()}, pašlaik ${label.toLowerCase()}, klikšķini, lai kārtotu ${nextLabel}`);
+        trigger.setAttribute('aria-label', `${trigger.textContent.trim()}, pa\u0161laik ${label.toLowerCase()}, klik\u0161\u0137ini, lai k\u0101rtotu ${nextLabel}`);
         trigger.appendChild(badge);
     });
+};
+
+const applyPendingSortState = (root, activeTrigger) => {
+    root?.querySelectorAll?.('[data-sort-trigger]').forEach((trigger) => {
+        trigger.classList.remove('device-sort-trigger-pending', 'device-sort-trigger-active');
+        trigger.removeAttribute('data-sort-current-direction');
+        trigger.querySelector('[data-sort-current-label]')?.remove();
+    });
+
+    if (!activeTrigger) {
+        return;
+    }
+
+    const pendingDirection = activeTrigger.dataset.sortDirection || 'asc';
+    const label = pendingDirection === 'asc' ? 'Augo\u0161i' : 'Dilsto\u0161i';
+    const badge = document.createElement('span');
+    badge.className = 'device-sort-current-label';
+    badge.dataset.sortCurrentLabel = 'true';
+    badge.textContent = label;
+
+    activeTrigger.classList.add('device-sort-trigger-active', 'device-sort-trigger-pending');
+    activeTrigger.dataset.sortCurrentDirection = pendingDirection;
+    activeTrigger.appendChild(badge);
 };
 
 const getNamedFormControls = (form, name) => {
@@ -1325,6 +1365,8 @@ export const initializeAsyncTableFilters = () => {
             if (directionInput) {
                 directionInput.value = sortTrigger.dataset.sortDirection || 'asc';
             }
+
+            applyPendingSortState(root, sortTrigger);
 
             window.submitAsyncTableForm(form, {
                 resetPage: true,

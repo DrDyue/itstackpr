@@ -218,13 +218,13 @@
             <div class="mt-4">
             <x-active-filters
                 :items="[
-                    ['label' => 'Vārds', 'value' => $filters['search']],
-                    ['label' => 'Amats', 'value' => $filters['job_title_query']],
-                    ['label' => 'E-pasts', 'value' => $filters['email_query']],
-                    ['label' => 'Loma', 'value' => $filters['has_role_filter'] ? collect($filters['roles'])->map(fn ($role) => $roleLabels[$role] ?? $role)->implode(', ') : null],
-                    ['label' => 'Statuss', 'value' => $filters['is_active'] === '1' ? 'Aktīvs' : ($filters['is_active'] === '0' ? 'Neaktīvs' : null)],
-                    ['label' => 'Pēdējā pieslēgšanās', 'value' => $filters['last_login'] === 'today' ? 'Šodien' : ($filters['last_login'] === 'recent' ? 'Pēdējās 7 dienas' : ($filters['last_login'] === 'never' ? 'Nav pieslēdzies' : null))],
-                    ['label' => 'Paroles pieprasījums', 'value' => $filters['password_reset'] === '1' ? 'Gaida administratoru' : null],
+                    ['label' => 'Vārds', 'value' => $filters['search'], 'remove' => 'search'],
+                    ['label' => 'Amats', 'value' => $filters['job_title_query'], 'remove' => 'job_title_query'],
+                    ['label' => 'E-pasts', 'value' => $filters['email_query'], 'remove' => 'email_query'],
+                    ['label' => 'Loma', 'value' => $filters['has_role_filter'] ? collect($filters['roles'])->map(fn ($role) => $roleLabels[$role] ?? $role)->implode(', ') : null, 'remove' => 'roles'],
+                    ['label' => 'Statuss', 'value' => $filters['is_active'] === '1' ? 'Aktīvs' : ($filters['is_active'] === '0' ? 'Neaktīvs' : null), 'remove' => 'is_active'],
+                    ['label' => 'Pēdējā pieslēgšanās', 'value' => $filters['last_login'] === 'today' ? 'Šodien' : ($filters['last_login'] === 'recent' ? 'Pēdējās 7 dienas' : ($filters['last_login'] === 'never' ? 'Nav pieslēdzies' : null)), 'remove' => ['last_login', 'last_login_query']],
+                    ['label' => 'Paroles pieprasījums', 'value' => $filters['password_reset'] === '1' ? 'Gaida administratoru' : null, 'remove' => 'password_reset'],
                 ]"
                 :clear-url="route('users.index')"
             />

@@ -280,13 +280,13 @@
             <div class="mt-5">
                 <x-active-filters
                     :items="[
-                        ['label' => 'Teksts', 'value' => $filters['q']],
-                        ['label' => 'Piešķirta', 'value' => $canManageDevices ? $selectedAssignedUserLabel : null],
-                        ['label' => 'Stāvs', 'value' => $selectedFloorLabel],
-                        ['label' => 'Telpa', 'value' => $selectedRoomLabel],
-                        ['label' => 'Tips', 'value' => $selectedTypeLabel],
-                        ['label' => 'Statuss', 'value' => $filters['has_status_filter'] ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ') : null],
-                        ['label' => 'Pieteikumi', 'value' => $activeRequestsSelected ? 'Aktīvie pieteikumi' : null],
+                        ['label' => 'Teksts', 'value' => $filters['q'], 'remove' => 'q'],
+                        ['label' => 'Piešķirta', 'value' => $canManageDevices ? $selectedAssignedUserLabel : null, 'remove' => ['assigned_to_id', 'assigned_to_query']],
+                        ['label' => 'Stāvs', 'value' => $selectedFloorLabel, 'remove' => ['floor', 'floor_query', 'room_id', 'room_query']],
+                        ['label' => 'Telpa', 'value' => $selectedRoomLabel, 'remove' => ['room_id', 'room_query']],
+                        ['label' => 'Tips', 'value' => $selectedTypeLabel, 'remove' => ['type', 'type_query']],
+                        ['label' => 'Statuss', 'value' => $filters['has_status_filter'] ? collect($filters['statuses'])->map(fn ($status) => $statusLabels[$status] ?? $status)->implode(', ') : null, 'remove' => 'status'],
+                        ['label' => 'Pieteikumi', 'value' => $activeRequestsSelected ? 'Aktīvie pieteikumi' : null, 'remove' => 'active_requests'],
                     ]"
                     :clear-url="route('devices.index')"
                 />

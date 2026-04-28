@@ -149,9 +149,9 @@
         <div class="mt-4">
             <x-active-filters
                 :items="[
-                    ['label' => 'Ēka', 'value' => $filters['building_id'] !== '' ? optional($buildings->firstWhere('id', (int) $filters['building_id']))->building_name : null],
-                    ['label' => 'Stāvs', 'value' => $selectedFloorLabel],
-                    ['label' => 'Atbildīgais', 'value' => $filters['user_id'] !== '' ? optional($responsibleUsers->firstWhere('id', (int) $filters['user_id']))->full_name : null],
+                    ['label' => 'Ēka', 'value' => $filters['building_id'] !== '' ? optional($buildings->firstWhere('id', (int) $filters['building_id']))->building_name : null, 'remove' => ['building_id', 'building_query']],
+                    ['label' => 'Stāvs', 'value' => $selectedFloorLabel, 'remove' => ['floor', 'floor_query']],
+                    ['label' => 'Atbildīgais', 'value' => $filters['user_id'] !== '' ? optional($responsibleUsers->firstWhere('id', (int) $filters['user_id']))->full_name : null, 'remove' => ['user_id', 'user_query']],
                 ]"
                 :clear-url="route('rooms.index')"
             />

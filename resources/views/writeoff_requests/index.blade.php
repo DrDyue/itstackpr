@@ -223,12 +223,12 @@
 
             <x-active-filters
                 :items="[
-                    ['label' => 'Filtrēt tekstu', 'value' => $filters['q']],
-                    ['label' => 'Ierīce', 'value' => $selectedDeviceLabel],
-                    ['label' => 'Pieteicējs', 'value' => $canReview ? $selectedRequesterLabel : null],
-                    ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null],
-                    ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null],
-                    ['label' => 'Statuss', 'value' => $activeStatusLabel],
+                    ['label' => 'Filtrēt tekstu', 'value' => $filters['q'], 'remove' => 'q'],
+                    ['label' => 'Ierīce', 'value' => $selectedDeviceLabel, 'remove' => ['device_id', 'device_query']],
+                    ['label' => 'Pieteicējs', 'value' => $canReview ? $selectedRequesterLabel : null, 'remove' => ['requester_id', 'requester_query']],
+                    ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null, 'remove' => 'date_from'],
+                    ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null, 'remove' => 'date_to'],
+                    ['label' => 'Statuss', 'value' => $activeStatusLabel, 'remove' => 'status'],
                 ]"
                 :clear-url="route('writeoff-requests.index', ['statuses_filter' => 1])"
             />
