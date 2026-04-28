@@ -30,11 +30,11 @@
             @csrf
             @method('delete')
 
-            <h2 class="text-lg font-medium text-gray-900">
+            <h2 class="text-lg font-medium text-slate-900">
                 Vai tiešām dzēst kontu?
             </h2>
 
-            <p class="mt-1 text-sm text-gray-600">
+            <p class="mt-1 text-sm text-slate-600">
                 Konta dzēšana ir neatgriezeniska. Ievadi savu paroli, lai apstiprinātu darbību.
             </p>
 

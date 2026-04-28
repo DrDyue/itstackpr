@@ -74,6 +74,38 @@ const setAsyncTableLoading = (rootSelector, isLoading) => {
     }
 };
 
+const getCurrentSortDirection = (trigger) => {
+    if (!trigger.classList.contains('device-sort-trigger-active')) {
+        return '';
+    }
+
+    return trigger.dataset.sortDirection === 'asc' ? 'desc' : 'asc';
+};
+
+const enhanceSortTriggerLabels = (root = document) => {
+    root.querySelectorAll('[data-sort-trigger]').forEach((trigger) => {
+        const currentDirection = getCurrentSortDirection(trigger);
+        trigger.querySelector('[data-sort-current-label]')?.remove();
+        trigger.removeAttribute('data-sort-current-direction');
+
+        if (!currentDirection) {
+            trigger.setAttribute('aria-label', `${trigger.textContent.trim()}, kārtot`);
+            return;
+        }
+
+        const label = currentDirection === 'asc' ? 'Augoši' : 'Dilstoši';
+        const nextLabel = trigger.dataset.sortDirection === 'asc' ? 'augošā secībā' : 'dilstošā secībā';
+        const badge = document.createElement('span');
+        badge.className = 'device-sort-current-label';
+        badge.dataset.sortCurrentLabel = 'true';
+        badge.textContent = label;
+
+        trigger.dataset.sortCurrentDirection = currentDirection;
+        trigger.setAttribute('aria-label', `${trigger.textContent.trim()}, pašlaik ${label.toLowerCase()}, klikšķini, lai kārtotu ${nextLabel}`);
+        trigger.appendChild(badge);
+    });
+};
+
 const getNamedFormControls = (form, name) => {
     return Array.from(form?.elements || []).filter((element) => element?.name === name);
 };
@@ -135,6 +167,10 @@ const swapAsyncTableRoot = (rootSelector, html) => {
     const mountedRoot = document.querySelector(rootSelector);
     if (mountedRoot && window.Alpine?.initTree) {
         window.Alpine.initTree(mountedRoot);
+    }
+
+    if (mountedRoot) {
+        enhanceSortTriggerLabels(mountedRoot);
     }
 
     return true;
@@ -1168,6 +1204,7 @@ export const initializeAsyncTableFilters = () => {
     }
 
     window.__asyncTableFiltersInitialized = true;
+    enhanceSortTriggerLabels();
 
     document.addEventListener('submit', async (event) => {
         const form = findAsyncTableForm(event.target);

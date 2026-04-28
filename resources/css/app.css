@@ -3142,6 +3142,10 @@ tbody td {
     @apply inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-medium text-slate-700;
 }
 
+.filter-chip-remove {
+    @apply -mr-1 inline-flex h-5 w-5 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500;
+}
+
 .filter-chip-label {
     @apply text-slate-500;
 }
@@ -5557,6 +5561,30 @@ tbody td {
     @apply border-sky-200 bg-sky-50 text-sky-600;
 }
 
+.device-sort-trigger:focus-visible {
+    @apply outline-none ring-2 ring-sky-500;
+}
+
+.device-sort-trigger-active::after {
+    content: none;
+}
+
+.device-sort-current-label {
+    @apply inline-flex items-center gap-1 rounded-full bg-sky-600 px-2 py-0.5 text-[10px] font-bold leading-none text-white shadow-sm;
+}
+
+.device-sort-current-label::before {
+    @apply text-[11px] leading-none;
+}
+
+.device-sort-trigger-active[data-sort-current-direction='asc'] .device-sort-current-label::before {
+    content: '↑';
+}
+
+.device-sort-trigger-active[data-sort-current-direction='desc'] .device-sort-current-label::before {
+    content: '↓';
+}
+
 .device-status-stack {
     @apply flex flex-col items-start gap-2;
 }
@@ -7519,6 +7547,11 @@ html[data-theme='dark'] .device-sort-trigger-active {
 }
 
 html[data-theme='dark'] .device-sort-trigger-active::after {
+    background-color: #38bdf8 !important;
+    color: #082f49 !important;
+}
+
+html[data-theme='dark'] .device-sort-current-label {
     background-color: #38bdf8 !important;
     color: #082f49 !important;
 }

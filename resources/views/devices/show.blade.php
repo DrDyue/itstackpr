@@ -42,7 +42,7 @@
                 <div class="flex flex-wrap items-center gap-2">
                     <h1 class="text-xl font-bold text-slate-900">{{ $device->name }}</h1>
                     @if ($device->code)
-                        <span class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 font-mono text-xs font-semibold text-slate-600 ring-1 ring-slate-200">{{ $device->code }}</span>
+                        <span class="inline-flex items-center rounded-xl bg-slate-100 px-2 py-0.5 font-mono text-xs font-semibold text-slate-600 ring-1 ring-slate-200">{{ $device->code }}</span>
                     @endif
                     <x-status-pill context="device" :value="$device->status" :label="$statusLabels[$device->status] ?? null" />
                     @if ($repairStatusLabel)
@@ -447,7 +447,7 @@
                                     <x-status-pill context="repair" :value="$repair->status" />
                                     @if ($canManageDevices)
                                         <a href="{{ route('repairs.index', ['repair_modal' => 'edit', 'modal_repair' => $repair->id]) }}"
-                                            class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:text-slate-900">
+                                            class="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:text-slate-900">
                                             <x-icon name="repair" size="h-3.5 w-3.5" /><span>Atvērt</span>
                                         </a>
                                     @endif

@@ -1,20 +1,29 @@
-{{--
-    Komponents: Aktīvo filtru čipi.
-    Atbildība: parāda, kuri filtri saraksta lapā pašlaik ir ieslēgti, un piedāvā ātru atiestatīšanu.
-    Kāpēc tas ir svarīgi:
-    1. Lietotājs nepazaudē kontekstu, kāpēc tabulā redzams tieši šāds rezultāts.
-    2. Ļauj ātri noņemt visus filtrus un atgriezties pilnajā sarakstā.
-    3. Uzlabo lietojamību garos sarakstos ar daudziem filtru nosacījumiem.
---}}
+{{-- Komponents: Aktīvo filtru čipi ar atsevišķu filtru noņemšanu. --}}
 @props([
     'items' => [],
     'clearUrl' => null,
 ])
 
 @php
-    $activeItems = collect($items)->filter(function ($item) {
-        return filled($item['value'] ?? null);
-    });
+    $activeItems = collect($items)->filter(fn ($item) => filled($item['value'] ?? null));
+
+    $removeUrl = function (array $item): ?string {
+        if (! empty($item['removeUrl'])) {
+            return $item['removeUrl'];
+        }
+
+        $removeKeys = \Illuminate\Support\Arr::wrap($item['remove'] ?? []);
+        if ($removeKeys === []) {
+            return null;
+        }
+
+        $query = request()->query();
+        foreach ([...$removeKeys, 'page'] as $key) {
+            unset($query[$key]);
+        }
+
+        return url()->current() . ($query === [] ? '' : '?' . http_build_query($query));
+    };
 @endphp
 
 @if ($activeItems->isNotEmpty())
@@ -25,9 +34,21 @@
         </div>
         <div class="filter-summary-items">
             @foreach ($activeItems as $item)
+                @php($itemRemoveUrl = $removeUrl($item))
                 <span class="filter-chip">
                     <span class="filter-chip-label">{{ $item['label'] }}:</span>
                     <span>{{ $item['value'] }}</span>
+                    @if ($itemRemoveUrl)
+                        <a
+                            href="{{ $itemRemoveUrl }}"
+                            class="filter-chip-remove"
+                            data-async-link="true"
+                            aria-label="Noņemt filtru {{ $item['label'] }}"
+                            title="Noņemt filtru"
+                        >
+                            <x-icon name="x-mark" size="h-3 w-3" />
+                        </a>
+                    @endif
                 </span>
             @endforeach
             @if ($clearUrl)
