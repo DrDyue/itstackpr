@@ -29,6 +29,51 @@ const findAsyncTableForm = (element) => {
     return element.closest?.('[data-async-table-form]') ?? null;
 };
 
+const createAsyncTableSkeleton = () => {
+    const overlay = document.createElement('div');
+    overlay.className = 'async-table-skeleton';
+    overlay.dataset.asyncTableSkeleton = 'true';
+    overlay.setAttribute('role', 'status');
+    overlay.setAttribute('aria-live', 'polite');
+    overlay.innerHTML = `
+        <div class="async-table-skeleton-card">
+            <div class="async-table-skeleton-head">
+                <span class="async-table-skeleton-spinner" aria-hidden="true"></span>
+                <span>Atjauno sarakstu...</span>
+            </div>
+            <div class="async-table-skeleton-grid" aria-hidden="true">
+                ${Array.from({ length: 6 }).map(() => `
+                    <div class="async-table-skeleton-row">
+                        <span class="async-table-skeleton-line async-table-skeleton-line-short"></span>
+                        <span class="async-table-skeleton-line"></span>
+                        <span class="async-table-skeleton-line"></span>
+                        <span class="async-table-skeleton-line async-table-skeleton-line-medium"></span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+
+    return overlay;
+};
+
+const setAsyncTableLoading = (rootSelector, isLoading) => {
+    const root = document.querySelector(rootSelector);
+
+    if (!root) {
+        return;
+    }
+
+    root.dataset.asyncLoading = isLoading ? 'true' : 'false';
+    root.classList.toggle('async-table-root-loading', isLoading);
+    root.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+    root.querySelector('[data-async-table-skeleton="true"]')?.remove();
+
+    if (isLoading) {
+        root.appendChild(createAsyncTableSkeleton());
+    }
+};
+
 const getNamedFormControls = (form, name) => {
     return Array.from(form?.elements || []).filter((element) => element?.name === name);
 };
@@ -1066,6 +1111,7 @@ export const registerAsyncTableGlobals = () => {
         const controller = new AbortController();
         asyncTableControllers.set(requestKey, controller);
         form.dataset.asyncLoading = 'true';
+        setAsyncTableLoading(rootSelector, true);
 
         try {
             const response = await window.fetch(targetUrl.toString(), {
@@ -1109,9 +1155,9 @@ export const registerAsyncTableGlobals = () => {
         } finally {
             if (asyncTableControllers.get(requestKey) === controller) {
                 asyncTableControllers.delete(requestKey);
+                form.dataset.asyncLoading = 'false';
+                setAsyncTableLoading(rootSelector, false);
             }
-
-            form.dataset.asyncLoading = 'false';
         }
     };
 };

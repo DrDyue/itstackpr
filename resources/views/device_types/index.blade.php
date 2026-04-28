@@ -208,10 +208,9 @@
                             @empty
                                 <tr>
                                     <td colspan="3" class="px-4 py-6">
-                                        <x-empty-state
-                                            compact
+                                        <x-table-empty-state
                                             icon="tag"
-                                            title="Ierīču tipu saraksts pašlaik ir tukšs"
+                                            title="Ierīču tipi netika atrasti"
                                             description="Pievieno pirmo ierīces tipu, lai varētu to izmantot ierīču formās un filtros."
                                         />
                                     </td>

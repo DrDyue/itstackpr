@@ -429,11 +429,10 @@
                             @empty
                                 <tr>
                                     <td colspan="9" class="px-4 py-6">
-                                        <x-empty-state
-                                            compact
+                                        <x-table-empty-state
                                             icon="users"
-                                            title="Lietotāji vēl nav pievienoti"
-                                            description="Kad sistēmā būs izveidoti lietotāji, tie parādīsies šajā tabulā."
+                                            title="Lietotāji netika atrasti"
+                                            description="Kad sistēmā būs izveidoti lietotāji, tie parādīsies šajā tabulā. Ja izmanto filtrus, pamēģini tos notīrīt."
                                         />
                                     </td>
                                 </tr>
@@ -487,4 +486,3 @@
         @endif
     </section>
 </x-app-layout>
-

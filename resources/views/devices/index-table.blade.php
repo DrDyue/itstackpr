@@ -493,8 +493,7 @@
                     @empty
                         <tr>
                             <td colspan="{{ $canManageDevices ? 9 : 7 }}" class="px-4 py-6">
-                                <x-empty-state
-                                    compact
+                                <x-table-empty-state
                                     icon="devices"
                                     title="Ierīces netika atrastas"
                                     description="Pamēģini paplašināt filtru nosacījumus vai notīrīt atlasītos kritērijus."

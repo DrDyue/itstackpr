@@ -369,11 +369,10 @@
                             @empty
                                 <tr>
                                     <td colspan="6" class="px-4 py-6">
-                                        <x-empty-state
-                                            compact
+                                        <x-table-empty-state
                                             icon="audit"
-                                            title="Audita ierakstu nav"
-                                            description="Kad lietotāji veiks darbības sistēmā, tās parādīsies audita žurnālā."
+                                            title="Audita ieraksti netika atrasti"
+                                            description="Kad lietotāji veiks darbības sistēmā, tās parādīsies audita žurnālā. Ja izmanto filtrus, pamēģini tos notīrīt."
                                         />
                                     </td>
                                 </tr>

@@ -609,8 +609,7 @@
                             @empty
                                 <tr>
                                     <td colspan="9" class="px-4 py-6">
-                                        <x-empty-state
-                                            compact
+                                        <x-table-empty-state
                                             icon="transfer"
                                             title="Nodošanas pieteikumi netika atrasti"
                                             description="Pamēģini noņemt daļu filtru vai mainīt meklēšanas nosacījumus."

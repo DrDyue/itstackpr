@@ -442,32 +442,72 @@ const registerAlpineData = () => {
         open: false,
         value: value || '',
         viewDate: null,
+        mode: 'days',
+        yearPageStart: null,
         weekdays: ['Pr', 'Ot', 'Tr', 'Ce', 'Pk', 'Se', 'Sv'],
-        months: ['Janvaris', 'Februaris', 'Marts', 'Aprilis', 'Maijs', 'Junijs', 'Julijs', 'Augusts', 'Septembris', 'Oktobris', 'Novembris', 'Decembris'],
+        months: ['Janvāris', 'Februāris', 'Marts', 'Aprīlis', 'Maijs', 'Jūnijs', 'Jūlijs', 'Augusts', 'Septembris', 'Oktobris', 'Novembris', 'Decembris'],
         init() {
-            this.viewDate = this.value ? this.parseDate(this.value) : new Date();
+            this.setViewDate(this.value ? this.parseDate(this.value) : new Date());
         },
         toggle() {
             this.open = !this.open;
+            this.mode = 'days';
+        },
+        setViewDate(date) {
+            const safeDate = date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date();
+            this.viewDate = new Date(safeDate.getFullYear(), safeDate.getMonth(), 1);
+            this.yearPageStart = safeDate.getFullYear() - (safeDate.getFullYear() % 12);
         },
         previousMonth() {
-            this.viewDate = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() - 1, 1);
+            this.setViewDate(new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() - 1, 1));
         },
         nextMonth() {
-            this.viewDate = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() + 1, 1);
+            this.setViewDate(new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() + 1, 1));
+        },
+        previousYearPage() {
+            this.yearPageStart -= 12;
+        },
+        nextYearPage() {
+            this.yearPageStart += 12;
+        },
+        showDays() {
+            this.mode = 'days';
+        },
+        showMonths() {
+            this.mode = 'months';
+        },
+        showYears() {
+            this.mode = 'years';
+        },
+        selectMonth(monthIndex) {
+            this.setViewDate(new Date(this.viewDate.getFullYear(), monthIndex, 1));
+            this.mode = 'days';
+        },
+        selectYear(year) {
+            this.setViewDate(new Date(year, this.viewDate.getMonth(), 1));
+            this.mode = 'months';
         },
         select(selectedValue) {
             this.value = selectedValue;
-            this.viewDate = this.parseDate(selectedValue);
+            this.setViewDate(this.parseDate(selectedValue));
             this.open = false;
+        },
+        today() {
+            this.select(this.toIso(new Date()));
         },
         clear() {
             this.value = '';
             this.open = false;
         },
         parseDate(dateValue) {
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue || '')) {
+                return new Date();
+            }
+
             const [year, month, day] = dateValue.split('-').map(Number);
-            return new Date(year, month - 1, day);
+            const parsed = new Date(year, month - 1, day);
+
+            return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
         },
         formatDate(dateValue) {
             if (!dateValue) {
@@ -489,6 +529,12 @@ const registerAlpineData = () => {
         },
         get monthLabel() {
             return `${this.months[this.viewDate.getMonth()]} ${this.viewDate.getFullYear()}`;
+        },
+        get yearRangeLabel() {
+            return `${this.yearPageStart}–${this.yearPageStart + 11}`;
+        },
+        get yearOptions() {
+            return Array.from({ length: 12 }, (_, index) => this.yearPageStart + index);
         },
         get days() {
             const startOfMonth = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth(), 1);

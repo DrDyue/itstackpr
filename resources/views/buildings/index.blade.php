@@ -226,11 +226,10 @@
                             @empty
                                 <tr>
                                     <td colspan="8" class="px-4 py-6">
-                                        <x-empty-state
-                                            compact
+                                        <x-table-empty-state
                                             icon="building"
-                                            title="Ēkas vēl nav pievienotas"
-                                            description="Kad pievienosi pirmo ēku, tā parādīsies šajā sarakstā."
+                                            title="Ēkas netika atrastas"
+                                            description="Kad pievienosi pirmo ēku, tā parādīsies šajā sarakstā. Ja izmanto filtrus, pamēģini tos notīrīt."
                                         />
                                     </td>
                                 </tr>

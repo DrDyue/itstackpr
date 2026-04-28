@@ -1,4 +1,4 @@
-{{-- Datuma izvēles komponents ar tekstlauku un kalendāra logiku. --}}
+{{-- Datuma izvēles komponents ar tekstlauku un kopīgu kalendāra loģiku. --}}
 @props([
     'name' => null,
     'value' => '',
@@ -23,9 +23,10 @@
     @endif
 
     <div
-        class="relative"
+        class="localized-date-picker"
         x-data="localizedDatePicker({ value: @js($value) })"
         @if ($xModel) x-modelable="value" x-model="{{ $xModel }}" @endif
+        @keydown.escape.window="open = false"
     >
         @if ($name)
             <input type="hidden" name="{{ $name }}" x-model="value" @if($required) required @endif>
@@ -38,153 +39,57 @@
             </svg>
         </button>
 
-        <div x-cloak x-show="open" @click.outside="open = false" class="absolute left-0 top-full z-20 mt-2 w-80 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-xl">
-            <div class="mb-3 flex items-center justify-between">
-                <button type="button" class="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50" @click="previousMonth()">&larr;</button>
-                <div class="text-sm font-semibold text-slate-900" x-text="monthLabel"></div>
-                <button type="button" class="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50" @click="nextMonth()">&rarr;</button>
+        <div x-cloak x-show="open" x-transition.origin.top.left @click.outside="open = false" class="localized-date-panel">
+            <div class="localized-date-header">
+                <button type="button" class="localized-date-nav" @click="mode === 'years' ? previousYearPage() : previousMonth()" aria-label="Iepriekšējais periods">&#8249;</button>
+                <div class="localized-date-heading">
+                    <button type="button" class="localized-date-current-button" @click="showMonths()" x-text="months[viewDate.getMonth()]"></button>
+                    <button type="button" class="localized-date-current-button" @click="showYears()" x-text="viewDate.getFullYear()"></button>
+                    <span class="localized-date-year-range" x-show="mode === 'years'" x-text="yearRangeLabel"></span>
+                </div>
+                <button type="button" class="localized-date-nav" @click="mode === 'years' ? nextYearPage() : nextMonth()" aria-label="Nākamais periods">&#8250;</button>
             </div>
 
-            <div class="mb-2 grid grid-cols-7 gap-1 text-center text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                <template x-for="weekday in weekdays" :key="weekday">
-                    <span x-text="weekday"></span>
+            <div x-show="mode === 'days'">
+                <div class="localized-date-weekdays">
+                    <template x-for="weekday in weekdays" :key="weekday">
+                        <span class="localized-date-weekday" x-text="weekday"></span>
+                    </template>
+                </div>
+
+                <div class="localized-date-grid">
+                    <template x-for="day in days" :key="day.key">
+                        <button
+                            type="button"
+                            class="localized-date-cell"
+                            :class="[
+                                day.isCurrentMonth ? 'localized-date-cell-current' : 'localized-date-cell-muted',
+                                day.isSelected ? 'localized-date-cell-selected' : '',
+                            ]"
+                            @click="select(day.value)"
+                            x-text="day.label"
+                        ></button>
+                    </template>
+                </div>
+            </div>
+
+            <div x-show="mode === 'months'" class="localized-date-view-grid localized-date-month-grid">
+                <template x-for="(month, index) in months" :key="month">
+                    <button type="button" class="localized-date-option" :class="index === viewDate.getMonth() ? 'localized-date-option-selected' : ''" @click="selectMonth(index)" x-text="month"></button>
                 </template>
             </div>
 
-            <div class="grid grid-cols-7 gap-1">
-                <template x-for="day in days" :key="day.key">
-                    <button
-                        type="button"
-                        class="flex h-10 items-center justify-center rounded-xl text-sm transition"
-                        :class="day.isCurrentMonth
-                            ? (day.isSelected ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100')
-                            : 'text-slate-300'"
-                        :disabled="!day.isCurrentMonth"
-                        @click="select(day.value)"
-                        x-text="day.label"
-                    ></button>
+            <div x-show="mode === 'years'" class="localized-date-view-grid localized-date-year-grid">
+                <template x-for="year in yearOptions" :key="year">
+                    <button type="button" class="localized-date-option" :class="year === viewDate.getFullYear() ? 'localized-date-option-selected' : ''" @click="selectYear(year)" x-text="year"></button>
                 </template>
             </div>
 
-            <div class="mt-3 flex items-center justify-between gap-3">
-                <button type="button" class="text-sm text-slate-500 hover:text-slate-700" @click="clear()">Notīrīt datumu</button>
-                <button type="button" class="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800" @click="open = false">Aizvērt</button>
+            <div class="localized-date-actions">
+                <button type="button" class="btn-clear" @click="clear()">Notīrīt</button>
+                <button type="button" class="btn-view" @click="today()">Šodien</button>
+                <button type="button" class="btn-back" @click="open = false">Aizvērt</button>
             </div>
         </div>
     </div>
 </label>
-
-@once
-    <script>
-        (() => {
-            const registerLocalizedDatePicker = () => {
-                if (!window.Alpine || window.__localizedDatePickerRegistered) {
-                    return;
-                }
-
-                window.__localizedDatePickerRegistered = true;
-
-                window.Alpine.data('localizedDatePicker', ({ value = '' } = {}) => ({
-                    open: false,
-                    value: value || '',
-                    viewDate: null,
-                    weekdays: ['Pr', 'Ot', 'Tr', 'Ce', 'Pk', 'Se', 'Sv'],
-                    months: ['Janvaris', 'Februaris', 'Marts', 'Aprilis', 'Maijs', 'Junijs', 'Julijs', 'Augusts', 'Septembris', 'Oktobris', 'Novembris', 'Decembris'],
-                    init() {
-                        this.viewDate = this.value ? this.parseDate(this.value) : new Date();
-                    },
-                    toggle() {
-                        this.open = !this.open;
-                    },
-                    previousMonth() {
-                        this.viewDate = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() - 1, 1);
-                    },
-                    nextMonth() {
-                        this.viewDate = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() + 1, 1);
-                    },
-                    select(selectedValue) {
-                        this.value = selectedValue;
-                        this.viewDate = this.parseDate(selectedValue);
-                        this.open = false;
-                    },
-                    clear() {
-                        this.value = '';
-                        this.open = false;
-                    },
-                    parseDate(dateValue) {
-                        const [year, month, day] = dateValue.split('-').map(Number);
-                        return new Date(year, month - 1, day);
-                    },
-                    formatDate(dateValue) {
-                        if (!dateValue) {
-                            return '';
-                        }
-
-                        const [year, month, day] = dateValue.split('-');
-                        return `${day}.${month}.${year}`;
-                    },
-                    toIso(date) {
-                        const year = date.getFullYear();
-                        const month = String(date.getMonth() + 1).padStart(2, '0');
-                        const day = String(date.getDate()).padStart(2, '0');
-
-                        return `${year}-${month}-${day}`;
-                    },
-                    get displayValue() {
-                        return this.formatDate(this.value);
-                    },
-                    get monthLabel() {
-                        return `${this.months[this.viewDate.getMonth()]} ${this.viewDate.getFullYear()}`;
-                    },
-                    get days() {
-                        const startOfMonth = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth(), 1);
-                        const endOfMonth = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() + 1, 0);
-                        const startWeekday = (startOfMonth.getDay() + 6) % 7;
-                        const days = [];
-
-                        for (let i = startWeekday; i > 0; i -= 1) {
-                            const date = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth(), 1 - i);
-                            days.push({
-                                key: `prev-${this.toIso(date)}`,
-                                label: date.getDate(),
-                                value: this.toIso(date),
-                                isCurrentMonth: false,
-                                isSelected: false,
-                            });
-                        }
-
-                        for (let day = 1; day <= endOfMonth.getDate(); day += 1) {
-                            const date = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth(), day);
-                            const iso = this.toIso(date);
-
-                            days.push({
-                                key: iso,
-                                label: day,
-                                value: iso,
-                                isCurrentMonth: true,
-                                isSelected: this.value === iso,
-                            });
-                        }
-
-                        while (days.length < 42) {
-                            const offset = days.length - (startWeekday + endOfMonth.getDate()) + 1;
-                            const date = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() + 1, offset);
-                            days.push({
-                                key: `next-${this.toIso(date)}`,
-                                label: date.getDate(),
-                                value: this.toIso(date),
-                                isCurrentMonth: false,
-                                isSelected: false,
-                            });
-                        }
-
-                        return days;
-                    },
-                }));
-            };
-
-            document.addEventListener('alpine:init', registerLocalizedDatePicker);
-            registerLocalizedDatePicker();
-        })();
-    </script>
-@endonce

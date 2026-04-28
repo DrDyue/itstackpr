@@ -243,10 +243,9 @@
                     @empty
                         <tr>
                             <td colspan="9" class="px-4 py-6">
-                                <x-empty-state
-                                    compact
+                                <x-table-empty-state
                                     icon="room"
-                                    title="Telpas vēl nav pievienotas"
+                                    title="Telpas netika atrastas"
                                     description="Pievieno telpu vai paplašini filtrus, lai šeit redzētu ierakstus."
                                 />
                             </td>

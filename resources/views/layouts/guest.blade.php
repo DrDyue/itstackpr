@@ -159,7 +159,7 @@
                         @endif
                     </div>
                     <div class="flash-toast-body">
-                        <div class="flash-toast-title">{{ $flashTone === 'success' ? 'Veiksmīgi' : ($flashTone === 'warning' ? 'Brīdinājums' : 'Paziņojums') }}</div>
+                        <div class="flash-toast-title">{{ $flashTone === 'success' ? 'Veiksmīgi' : ($flashTone === 'warning' ? 'Brīdinājums' : ($flashTone === 'error' ? 'Kļūda' : 'Paziņojums')) }}</div>
                         <div class="flash-toast-message">{{ $flashMessage }}</div>
                     </div>
                     <button type="button" class="flash-toast-close" @click="open = false" aria-label="Aizvērt">

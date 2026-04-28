@@ -560,8 +560,7 @@
                             @empty
                                 <tr>
                                     <td colspan="12" class="px-4 py-6">
-                                        <x-empty-state
-                                            compact
+                                        <x-table-empty-state
                                             icon="repair"
                                             title="Remonta ieraksti netika atrasti"
                                             description="Pamēģini paplašināt filtru nosacījumus vai notīrīt atlasītos kritērijus."

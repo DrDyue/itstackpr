@@ -7,11 +7,54 @@ const createToastIcon = (tone) => {
         `;
     }
 
+    if (tone === 'warning') {
+        return `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12v-.008ZM10.29 3.86 1.82 18a1.5 1.5 0 0 0 1.29 2.25h17.78A1.5 1.5 0 0 0 22.18 18L13.71 3.86a1.5 1.5 0 0 0-2.42 0Z" />
+            </svg>
+        `;
+    }
+
+    if (tone === 'error') {
+        return `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+        `;
+    }
+
     return `
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25 12 11.25v4.5m0-8.25h.008v.008H12V7.5ZM21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
         </svg>
     `;
+};
+
+const escapeHtml = (value) => String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+
+const getToastTitle = (tone, title) => {
+    if (title) {
+        return title;
+    }
+
+    if (tone === 'success') {
+        return 'Veiksmīgi';
+    }
+
+    if (tone === 'warning') {
+        return 'Brīdinājums';
+    }
+
+    if (tone === 'error') {
+        return 'Kļūda';
+    }
+
+    return 'Paziņojums';
 };
 
 const ensureAppToastRoot = () => {
@@ -134,11 +177,12 @@ export const registerFeedbackGlobals = () => {
 
         const root = ensureAppToastRoot();
         const toast = document.createElement('div');
-        const normalizedTone = ['success', 'error'].includes(String(tone || '').toLowerCase())
+        const normalizedTone = ['success', 'info', 'warning', 'error', 'danger'].includes(String(tone || '').toLowerCase())
             ? String(tone).toLowerCase()
             : 'info';
+        const resolvedTone = normalizedTone === 'danger' ? 'error' : normalizedTone;
         const toastPriority = getToastPriority({ tone, title, message, priority });
-        const toastKey = `${normalizedTone}::${title || ''}::${message}`;
+        const toastKey = `${resolvedTone}::${title || ''}::${message}`;
         const existingToast = root.querySelector(`[data-toast-key="${CSS.escape(toastKey)}"]`);
 
         if (existingToast && existingToast.dataset.closing !== '1') {
@@ -154,17 +198,17 @@ export const registerFeedbackGlobals = () => {
             return;
         }
 
-        toast.className = `flash-toast flash-toast-${normalizedTone} pointer-events-auto`;
+        toast.className = `flash-toast flash-toast-${resolvedTone} pointer-events-auto`;
         toast.dataset.toastKey = toastKey;
         toast.dataset.toastPriority = String(toastPriority);
         toast.style.opacity = '0';
         toast.style.transform = 'translateY(16px) scale(0.96)';
         toast.style.transition = 'opacity 260ms ease, transform 260ms ease';
         toast.innerHTML = `
-            <div class="flash-toast-icon">${createToastIcon(normalizedTone)}</div>
+            <div class="flash-toast-icon">${createToastIcon(resolvedTone)}</div>
             <div class="flash-toast-body">
-                <div class="flash-toast-title">${title || (normalizedTone === 'success' ? 'Veiksmīgi' : 'Paziņojums')}</div>
-                <div class="flash-toast-message">${message}</div>
+                <div class="flash-toast-title">${escapeHtml(getToastTitle(resolvedTone, title))}</div>
+                <div class="flash-toast-message">${escapeHtml(message)}</div>
             </div>
             <button type="button" class="flash-toast-close" aria-label="Aizvērt">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -292,3 +336,4 @@ export const initializeAppConfirm = () => {
         form.requestSubmit();
     });
 };
+

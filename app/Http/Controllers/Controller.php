@@ -96,26 +96,34 @@ abstract class Controller
     protected function validationMessages(): array
     {
         return [
-            'required' => 'Lauks ":attribute" ir obligāts. Aizpildi to un mēģini vēlreiz.',
-            'string' => 'Laukam ":attribute" jābūt tekstam. Pārbaudi, vai ievadītā vērtība nav skaitlis vai tukšs saraksts.',
-            'email' => 'Laukam ":attribute" jābūt derīgai e-pasta adresei. Pārbaudi, vai adrese satur @ un derīgu domēnu.',
+            'required' => 'Aizpildi lauku ":attribute".',
+            'required_if' => 'Aizpildi lauku ":attribute", jo tas ir nepieciešams izvēlētajai darbībai.',
+            'required_with' => 'Aizpildi lauku ":attribute", jo ir aizpildīts saistīts lauks.',
+            'string' => 'Laukā ":attribute" ievadi tekstu.',
+            'email' => 'Laukā ":attribute" ievadi derīgu e-pasta adresi, piemēram, vards@domeins.lv.',
             'unique' => 'Šāda ":attribute" vērtība jau tiek izmantota. Ievadi citu vērtību vai atver esošo ierakstu.',
-            'exists' => 'Izvēlētā ":attribute" vērtība vairs nav atrasta. Izvēlies ierakstu no saraksta vēlreiz.',
+            'exists' => 'Izvēlētā ":attribute" vērtība vairs nav pieejama. Atsvaidzini lapu un izvēlies ierakstu vēlreiz.',
             'confirmed' => 'Lauks ":attribute" nesakrīt ar apstiprinājumu. Pārbaudi abas ievadītās vērtības.',
-            'date' => 'Laukam ":attribute" jābūt derīgam datumam. Izvēlies datumu kalendāra laukā vai ievadi to pareizajā formātā.',
-            'numeric' => 'Laukam ":attribute" jābūt skaitlim. Izmanto tikai ciparus un decimālatdalītāju, ja tas nepieciešams.',
-            'integer' => 'Laukam ":attribute" jābūt veselam skaitlim. Decimālas vērtības šeit neder.',
-            'boolean' => 'Lauks ":attribute" nav derīgs. Izvēlies vienu no piedāvātajiem variantiem.',
-            'array' => 'Laukam ":attribute" jābūt sarakstam. Izvēlies vienu vai vairākus ierakstus no piedāvātā saraksta.',
-            'image' => 'Lauks ":attribute" drīkst saturēt tikai attēlu failu. Izvēlies JPG, PNG vai citu atbalstītu attēla formātu.',
+            'date' => 'Laukā ":attribute" ievadi derīgu datumu.',
+            'numeric' => 'Laukā ":attribute" ievadi skaitli.',
+            'integer' => 'Laukā ":attribute" ievadi veselu skaitli.',
+            'boolean' => 'Laukam ":attribute" ir nederīga izvēle. Izvēlies vienu no piedāvātajiem variantiem.',
+            'array' => 'Laukam ":attribute" jābūt sarakstam. Izvēlies vienu vai vairākus ierakstus.',
+            'image' => 'Laukā ":attribute" augšupielādē attēla failu, piemēram, JPG vai PNG.',
             'in' => 'Laukam ":attribute" ir nederīga vērtība. Izvēlies vienu no pieejamajām vērtībām.',
-            'max.string' => 'Lauks ":attribute" nedrīkst būt garāks par :max rakstzīmēm. Saīsini tekstu un mēģini vēlreiz.',
-            'max.numeric' => 'Lauka ":attribute" vērtība nedrīkst pārsniegt :max. Samazini ievadīto vērtību.',
-            'max.file' => 'Fails ":attribute" ir par lielu. Izvēlies mazāka izmēra failu.',
-            'min.string' => 'Lauks ":attribute" nedrīkst būt īsāks par :min rakstzīmēm. Papildini informāciju un mēģini vēlreiz.',
-            'min.numeric' => 'Lauka ":attribute" vērtībai jābūt vismaz :min. Palielini ievadīto vērtību.',
-            'min.array' => 'Izvēlies vismaz :min ":attribute" vienumu. Pievieno vēl trūkstošos ierakstus.',
+            'different' => 'Laukam ":attribute" jāatšķiras no lauka ":other".',
+            'not_in' => 'Izvēlētā ":attribute" vērtība nav atļauta šai darbībai.',
+            'current_password' => 'Ievadītā parole nav pareiza.',
+            'after_or_equal' => 'Laukam ":attribute" jābūt pēc vai tajā pašā dienā kā ":date".',
+            'before_or_equal' => 'Laukam ":attribute" jābūt pirms vai tajā pašā dienā kā ":date".',
+            'max.string' => 'Lauks ":attribute" nedrīkst būt garāks par :max rakstzīmēm.',
+            'max.numeric' => 'Lauka ":attribute" vērtība nedrīkst pārsniegt :max.',
+            'max.file' => 'Fails ":attribute" ir par lielu. Augšupielādē mazāku failu.',
+            'min.string' => 'Lauks ":attribute" nedrīkst būt īsāks par :min rakstzīmēm.',
+            'min.numeric' => 'Lauka ":attribute" vērtībai jābūt vismaz :min.',
+            'min.array' => 'Izvēlies vismaz :min ierakstu laukā ":attribute".',
         ];
+
     }
 
     /**
@@ -132,6 +140,7 @@ abstract class Controller
             'city' => 'pilsēta',
             'code' => 'kods',
             'cost' => 'izmaksas',
+            'current_password' => 'pašreizējā parole',
             'department' => 'nodaļa',
             'description' => 'apraksts',
             'device_id' => 'ierīce',
@@ -143,6 +152,7 @@ abstract class Controller
             'end_date' => 'beigu datums',
             'floor_number' => 'stāvs',
             'full_name' => 'vārds un uzvārds',
+            'hide_written_off_devices' => 'norakstīto ierīču slēpšana',
             'invoice_number' => 'rēķina numurs',
             'is_active' => 'aktivitātes statuss',
             'issue_reported_by' => 'izpildītājs',
@@ -160,6 +170,7 @@ abstract class Controller
             'reason' => 'iemesls',
             'repair_type' => 'remonta tips',
             'request_id' => 'saistītais pieteikums',
+            'request_type' => 'pieteikuma tips',
             'review_notes' => 'izskatīšanas piezīmes',
             'role' => 'loma',
             'room_id' => 'telpa',
@@ -168,6 +179,7 @@ abstract class Controller
             'serial_number' => 'sērijas numurs',
             'start_date' => 'sākuma datums',
             'status' => 'statuss',
+            'target_assigned_to_id' => 'mērķa atbildīgais',
             'target_room_id' => 'mērķa telpa',
             'target_status' => 'mērķa statuss',
             'total_floors' => 'stāvu skaits',
@@ -178,6 +190,7 @@ abstract class Controller
             'vendor_name' => 'pakalpojuma sniedzējs',
             'warranty_until' => 'garantija līdz',
         ];
+
     }
 
     /**

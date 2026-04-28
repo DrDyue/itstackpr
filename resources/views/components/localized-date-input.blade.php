@@ -1,4 +1,4 @@
-{{-- Datuma ievades komponents ar lokalizētu formātu un Alpine palīdzloģiku. --}}
+{{-- Datuma ievades komponents ar lokalizētu formātu un Alpine palīgloģiku. --}}
 @props([
     'name',
     'value' => '',
@@ -43,36 +43,66 @@
             @click.outside="open = false"
         >
             <div class="localized-date-header">
-                <button type="button" class="localized-date-nav" @click="previousMonth()">&#8249;</button>
-                <div class="localized-date-title" x-text="monthLabel"></div>
-                <button type="button" class="localized-date-nav" @click="nextMonth()">&#8250;</button>
+                <button type="button" class="localized-date-nav" @click="mode === 'years' ? previousYearPage() : previousMonth()" aria-label="Iepriekšējais periods">&#8249;</button>
+                <div class="localized-date-heading">
+                    <button type="button" class="localized-date-current-button" @click="showMonths()" x-text="months[viewDate.getMonth()]"></button>
+                    <button type="button" class="localized-date-current-button" @click="showYears()" x-text="viewDate.getFullYear()"></button>
+                    <span class="localized-date-year-range" x-show="mode === 'years'" x-text="yearRangeLabel"></span>
+                </div>
+                <button type="button" class="localized-date-nav" @click="mode === 'years' ? nextYearPage() : nextMonth()" aria-label="Nākamais periods">&#8250;</button>
             </div>
 
-            <div class="localized-date-weekdays">
-                <template x-for="day in weekdays" :key="day">
-                    <div class="localized-date-weekday" x-text="day"></div>
+            <div x-show="mode === 'days'">
+                <div class="localized-date-weekdays">
+                    <template x-for="day in weekdays" :key="day">
+                        <div class="localized-date-weekday" x-text="day"></div>
+                    </template>
+                </div>
+
+                <div class="localized-date-grid">
+                    <template x-for="day in days" :key="day.key">
+                        <button
+                            type="button"
+                            class="localized-date-cell"
+                            :class="[
+                                day.isCurrentMonth ? 'localized-date-cell-current' : 'localized-date-cell-muted',
+                                day.isSelected ? 'localized-date-cell-selected' : '',
+                            ]"
+                            @click="select(day.value)"
+                        >
+                            <span x-text="day.label"></span>
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            <div x-show="mode === 'months'" class="localized-date-view-grid localized-date-month-grid">
+                <template x-for="(month, index) in months" :key="month">
+                    <button
+                        type="button"
+                        class="localized-date-option"
+                        :class="index === viewDate.getMonth() ? 'localized-date-option-selected' : ''"
+                        @click="selectMonth(index)"
+                        x-text="month"
+                    ></button>
                 </template>
             </div>
 
-            <div class="localized-date-grid">
-                <template x-for="day in days" :key="day.key">
+            <div x-show="mode === 'years'" class="localized-date-view-grid localized-date-year-grid">
+                <template x-for="year in yearOptions" :key="year">
                     <button
                         type="button"
-                        class="localized-date-cell"
-                        :class="[
-                            day.isCurrentMonth ? 'localized-date-cell-current' : 'localized-date-cell-muted',
-                            day.isSelected ? 'localized-date-cell-selected' : '',
-                        ]"
-                        @click="select(day.value)"
-                    >
-                        <span x-text="day.label"></span>
-                    </button>
+                        class="localized-date-option"
+                        :class="year === viewDate.getFullYear() ? 'localized-date-option-selected' : ''"
+                        @click="selectYear(year)"
+                        x-text="year"
+                    ></button>
                 </template>
             </div>
 
             <div class="localized-date-actions">
                 <button type="button" class="btn-clear" @click="clear()">Notīrīt</button>
-                <button type="button" class="btn-view" @click="select(toIso(new Date()))">Šodien</button>
+                <button type="button" class="btn-view" @click="today()">Šodien</button>
                 <button type="button" class="btn-back" @click="open = false">Aizvērt</button>
             </div>
         </div>

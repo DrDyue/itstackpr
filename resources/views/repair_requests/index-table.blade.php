@@ -238,8 +238,7 @@
                 @empty
                     <tr>
                         <td colspan="8" class="px-4 py-6">
-                            <x-empty-state
-                                compact
+                            <x-table-empty-state
                                 icon="repair-request"
                                 title="Remonta pieteikumi netika atrasti"
                                 description="Maini filtrus vai meklēšanas nosacījumus, lai atrastu vajadzīgo pieteikumu."
