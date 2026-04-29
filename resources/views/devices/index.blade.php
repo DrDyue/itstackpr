@@ -214,6 +214,67 @@
                             </label>
                         </div>
                     </div>
+
+                    <div class="devices-filter-section"
+                        x-data="{
+                            field: @js($sorting['sort']),
+                            dir: @js($sorting['direction']),
+                            apply() {
+                                const form = this.$el.closest('form');
+                                form.querySelector('[data-sort-hidden=\'field\']').value = this.field;
+                                form.querySelector('[data-sort-hidden=\'direction\']').value = this.dir;
+                                form.requestSubmit();
+                            }
+                        }"
+                    >
+                        <h3 class="devices-filter-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
+                            </svg>
+                            <span>Kārtošana</span>
+                        </h3>
+                        <div class="devices-filter-grid">
+                            <label class="block">
+                                <span class="crud-label">Kārtot pēc</span>
+                                <select
+                                    class="crud-control"
+                                    x-model="field"
+                                    @change="apply()"
+                                >
+                                    @foreach ($sortOptions as $value => $option)
+                                        <option value="{{ $value }}">{{ $option['display'] ?? ucfirst($option['label']) }}</option>
+                                    @endforeach
+                                </select>
+                            </label>
+                            <label class="block">
+                                <span class="crud-label">Virziens</span>
+                                <div class="flex gap-1.5">
+                                    <button
+                                        type="button"
+                                        @click="dir = 'asc'; apply()"
+                                        :class="dir === 'asc' ? 'quick-status-filter-active quick-status-filter-sky' : ''"
+                                        class="quick-status-filter quick-status-filter-slate flex-1"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 9m0 0L21 12.75M17.25 9v12" />
+                                        </svg>
+                                        <span>A → Z</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="dir = 'desc'; apply()"
+                                        :class="dir === 'desc' ? 'quick-status-filter-active quick-status-filter-sky' : ''"
+                                        class="quick-status-filter quick-status-filter-slate flex-1"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0-3.75-3.75M17.25 21l3.75-3.75" />
+                                        </svg>
+                                        <span>Z → A</span>
+                                    </button>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="filter-toolbar-footer repairs-filter-footer">

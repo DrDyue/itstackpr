@@ -171,8 +171,7 @@
                 <div class="device-user-room-modal-head">
                     <div>
                         <div class="device-user-room-modal-badge">Iestatījumi</div>
-                        <h2 class="device-user-room-modal-title">Admina darba vides iestatījumi</h2>
-                        <p class="device-user-room-modal-copy">Šie iestatījumi saglabājas tieši tavam kontam un tiek izmantoti arī pēc nākamās pieslēgšanās.</p>
+                        <h2 class="device-user-room-modal-title">Darba vides iestatījumi</h2>
                     </div>
                     <button type="button" class="device-type-modal-close" x-data @click="$dispatch('close-modal', 'profile-settings-modal')" aria-label="Aizvērt">
                         <x-icon name="x-mark" size="h-5 w-5" />
@@ -183,92 +182,166 @@
                     @csrf
                     @method('patch')
 
+                    {{-- Toggle: Paslēpt norakstītās ierīces --}}
                     <input type="hidden" name="hide_written_off_devices" value="0">
-
                     <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-                        <label for="profile_hide_written_off_devices" class="flex cursor-pointer items-start justify-between gap-4">
-                            <div class="pr-2">
-                                <div class="text-sm font-semibold text-slate-900">Paslēpt norakstītās ierīces</div>
-                                <p class="mt-1 text-sm leading-6 text-slate-600">
-                                    Ja ieslēgts, dashboardā un ierīču tabulās netiks rādītas norakstītās ierīces. Vecajos remonta, pieteikumu un nodošanas ierakstos tās joprojām paliek redzamas.
-                                </p>
-                            </div>
-
-                            <span class="relative mt-1 inline-flex shrink-0 items-center">
+                        <label for="profile_hide_written_off_devices" class="flex cursor-pointer items-center justify-between gap-4">
+                            <div class="text-sm font-semibold text-slate-900">Paslēpt norakstītās ierīces</div>
+                            <span class="relative inline-flex shrink-0 items-center">
                                 <input id="profile_hide_written_off_devices" type="checkbox" name="hide_written_off_devices" value="1" class="peer sr-only" @checked((bool) $hideWrittenOffDevices) x-ref="firstField">
                                 <span class="h-7 w-12 rounded-full bg-slate-300 transition peer-checked:bg-sky-500"></span>
                                 <span class="pointer-events-none absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow-sm transition peer-checked:translate-x-5"></span>
                             </span>
                         </label>
-
                         <x-input-error class="mt-3" :messages="$errors->profileSettings->get('hide_written_off_devices')" />
                     </div>
 
-                    <div class="grid gap-4 md:grid-cols-2">
+                    <div class="grid gap-5 md:grid-cols-2">
+
+                        {{-- Sākuma lapa (6 opcijas — dropdown) --}}
                         <div>
                             <x-input-label for="profile_default_start_page" value="Sākuma lapa pēc pieslēgšanās" />
                             <select id="profile_default_start_page" name="default_start_page" class="crud-control mt-2">
-                                <option value="{{ \App\Models\User::START_PAGE_DASHBOARD }}" @selected($defaultStartPage === \App\Models\User::START_PAGE_DASHBOARD)>Dashboard</option>
-                                <option value="{{ \App\Models\User::START_PAGE_DEVICES }}" @selected($defaultStartPage === \App\Models\User::START_PAGE_DEVICES)>Ierīces</option>
+                                <option value="{{ \App\Models\User::START_PAGE_DASHBOARD }}"        @selected($defaultStartPage === \App\Models\User::START_PAGE_DASHBOARD)>Dashboard</option>
+                                <option value="{{ \App\Models\User::START_PAGE_DEVICES }}"         @selected($defaultStartPage === \App\Models\User::START_PAGE_DEVICES)>Ierīces</option>
                                 <option value="{{ \App\Models\User::START_PAGE_REPAIR_REQUESTS }}" @selected($defaultStartPage === \App\Models\User::START_PAGE_REPAIR_REQUESTS)>Remonta pieteikumi</option>
                                 <option value="{{ \App\Models\User::START_PAGE_WRITEOFF_REQUESTS }}" @selected($defaultStartPage === \App\Models\User::START_PAGE_WRITEOFF_REQUESTS)>Norakstīšanas pieteikumi</option>
                                 <option value="{{ \App\Models\User::START_PAGE_DEVICE_TRANSFERS }}" @selected($defaultStartPage === \App\Models\User::START_PAGE_DEVICE_TRANSFERS)>Nodošanas pieteikumi</option>
-                                <option value="{{ \App\Models\User::START_PAGE_AUDIT_LOG }}" @selected($defaultStartPage === \App\Models\User::START_PAGE_AUDIT_LOG)>Audita žurnāls</option>
+                                <option value="{{ \App\Models\User::START_PAGE_AUDIT_LOG }}"       @selected($defaultStartPage === \App\Models\User::START_PAGE_AUDIT_LOG)>Audita žurnāls</option>
                             </select>
                             <x-input-error class="mt-2" :messages="$errors->profileSettings->get('default_start_page')" />
                         </div>
 
-                        <div>
-                            <x-input-label for="profile_default_view_mode" value="Noklusētais skata režīms" />
-                            <select id="profile_default_view_mode" name="default_view_mode" class="crud-control mt-2">
-                                <option value="{{ \App\Models\User::VIEW_MODE_ADMIN }}" @selected($defaultViewMode === \App\Models\User::VIEW_MODE_ADMIN)>Admina skats</option>
-                                <option value="{{ \App\Models\User::VIEW_MODE_USER }}" @selected($defaultViewMode === \App\Models\User::VIEW_MODE_USER)>Darbinieka skats</option>
-                                <option value="{{ \App\Models\User::DEFAULT_VIEW_MODE_LAST }}" @selected($defaultViewMode === \App\Models\User::DEFAULT_VIEW_MODE_LAST)>Atcerēties pēdējo</option>
-                            </select>
+                        {{-- Skata režīms (3 opcijas — pogu grupa) --}}
+                        <div
+                            x-data="{
+                                val: @js($defaultViewMode),
+                                pick(v) { this.val = v; this.$el.closest('form').dispatchEvent(new Event('change', { bubbles: true })); }
+                            }"
+                        >
+                            <x-input-label value="Noklusētais skata režīms" />
+                            <input type="hidden" name="default_view_mode" :value="val">
+                            <div class="mt-2 flex gap-1.5">
+                                <button type="button" @click="pick('{{ \App\Models\User::VIEW_MODE_ADMIN }}')"
+                                    class="quick-status-filter quick-status-filter-slate flex-1"
+                                    :class="val === '{{ \App\Models\User::VIEW_MODE_ADMIN }}' ? 'quick-status-filter-active quick-status-filter-sky' : ''">
+                                    <x-icon name="dashboard" size="h-4 w-4" />
+                                    <span>Admins</span>
+                                </button>
+                                <button type="button" @click="pick('{{ \App\Models\User::VIEW_MODE_USER }}')"
+                                    class="quick-status-filter quick-status-filter-slate flex-1"
+                                    :class="val === '{{ \App\Models\User::VIEW_MODE_USER }}' ? 'quick-status-filter-active quick-status-filter-emerald' : ''">
+                                    <x-icon name="user" size="h-4 w-4" />
+                                    <span>Darbinieks</span>
+                                </button>
+                                <button type="button" @click="pick('{{ \App\Models\User::DEFAULT_VIEW_MODE_LAST }}')"
+                                    class="quick-status-filter quick-status-filter-slate flex-1"
+                                    :class="val === '{{ \App\Models\User::DEFAULT_VIEW_MODE_LAST }}' ? 'quick-status-filter-active quick-status-filter-slate' : ''">
+                                    <x-icon name="clock" size="h-4 w-4" />
+                                    <span>Pēdējais</span>
+                                </button>
+                            </div>
                             <x-input-error class="mt-2" :messages="$errors->profileSettings->get('default_view_mode')" />
                         </div>
 
-                        <div>
-                            <x-input-label for="profile_default_device_filter" value="Ierīču noklusētais filtrs" />
-                            <select id="profile_default_device_filter" name="default_device_filter" class="crud-control mt-2">
-                                <option value="{{ \App\Models\User::DEVICE_FILTER_ALL }}" @selected($defaultDeviceFilter === \App\Models\User::DEVICE_FILTER_ALL)>Visas ierīces</option>
-                                <option value="{{ \App\Models\User::DEVICE_FILTER_ACTIVE }}" @selected($defaultDeviceFilter === \App\Models\User::DEVICE_FILTER_ACTIVE)>Tikai aktīvās</option>
-                                <option value="{{ \App\Models\User::DEVICE_FILTER_REPAIR }}" @selected($defaultDeviceFilter === \App\Models\User::DEVICE_FILTER_REPAIR)>Tikai remontā</option>
-                            </select>
+                        {{-- Ierīču filtrs (3 opcijas — pogu grupa) --}}
+                        <div
+                            x-data="{
+                                val: @js($defaultDeviceFilter),
+                                pick(v) { this.val = v; this.$el.closest('form').dispatchEvent(new Event('change', { bubbles: true })); }
+                            }"
+                        >
+                            <x-input-label value="Ierīču noklusētais filtrs" />
+                            <input type="hidden" name="default_device_filter" :value="val">
+                            <div class="mt-2 flex gap-1.5">
+                                <button type="button" @click="pick('{{ \App\Models\User::DEVICE_FILTER_ALL }}')"
+                                    class="quick-status-filter quick-status-filter-slate flex-1"
+                                    :class="val === '{{ \App\Models\User::DEVICE_FILTER_ALL }}' ? 'quick-status-filter-active quick-status-filter-slate' : ''">
+                                    <x-icon name="device" size="h-4 w-4" />
+                                    <span>Visas</span>
+                                </button>
+                                <button type="button" @click="pick('{{ \App\Models\User::DEVICE_FILTER_ACTIVE }}')"
+                                    class="quick-status-filter quick-status-filter-slate flex-1"
+                                    :class="val === '{{ \App\Models\User::DEVICE_FILTER_ACTIVE }}' ? 'quick-status-filter-active quick-status-filter-emerald' : ''">
+                                    <x-icon name="check-circle" size="h-4 w-4" />
+                                    <span>Aktīvās</span>
+                                </button>
+                                <button type="button" @click="pick('{{ \App\Models\User::DEVICE_FILTER_REPAIR }}')"
+                                    class="quick-status-filter quick-status-filter-slate flex-1"
+                                    :class="val === '{{ \App\Models\User::DEVICE_FILTER_REPAIR }}' ? 'quick-status-filter-active quick-status-filter-sky' : ''">
+                                    <x-icon name="repair" size="h-4 w-4" />
+                                    <span>Remontā</span>
+                                </button>
+                            </div>
                             <x-input-error class="mt-2" :messages="$errors->profileSettings->get('default_device_filter')" />
                         </div>
 
-                        <div>
-                            <x-input-label for="profile_default_request_filter" value="Pieteikumu noklusētais filtrs" />
-                            <select id="profile_default_request_filter" name="default_request_filter" class="crud-control mt-2">
-                                <option value="{{ \App\Models\User::REQUEST_FILTER_SUBMITTED }}" @selected($defaultRequestFilter === \App\Models\User::REQUEST_FILTER_SUBMITTED)>Tikai iesniegtie</option>
-                                <option value="{{ \App\Models\User::REQUEST_FILTER_ALL }}" @selected($defaultRequestFilter === \App\Models\User::REQUEST_FILTER_ALL)>Visi pieteikumi</option>
-                                <option value="{{ \App\Models\User::REQUEST_FILTER_TODAY }}" @selected($defaultRequestFilter === \App\Models\User::REQUEST_FILTER_TODAY)>Tikai šodienas</option>
-                            </select>
+                        {{-- Pieteikumu filtrs (3 opcijas — pogu grupa) --}}
+                        <div
+                            x-data="{
+                                val: @js($defaultRequestFilter),
+                                pick(v) { this.val = v; this.$el.closest('form').dispatchEvent(new Event('change', { bubbles: true })); }
+                            }"
+                        >
+                            <x-input-label value="Pieteikumu noklusētais filtrs" />
+                            <input type="hidden" name="default_request_filter" :value="val">
+                            <div class="mt-2 flex gap-1.5">
+                                <button type="button" @click="pick('{{ \App\Models\User::REQUEST_FILTER_SUBMITTED }}')"
+                                    class="quick-status-filter quick-status-filter-slate flex-1"
+                                    :class="val === '{{ \App\Models\User::REQUEST_FILTER_SUBMITTED }}' ? 'quick-status-filter-active quick-status-filter-amber' : ''">
+                                    <x-icon name="clock" size="h-4 w-4" />
+                                    <span>Iesniegtie</span>
+                                </button>
+                                <button type="button" @click="pick('{{ \App\Models\User::REQUEST_FILTER_ALL }}')"
+                                    class="quick-status-filter quick-status-filter-slate flex-1"
+                                    :class="val === '{{ \App\Models\User::REQUEST_FILTER_ALL }}' ? 'quick-status-filter-active quick-status-filter-slate' : ''">
+                                    <x-icon name="filter" size="h-4 w-4" />
+                                    <span>Visi</span>
+                                </button>
+                                <button type="button" @click="pick('{{ \App\Models\User::REQUEST_FILTER_TODAY }}')"
+                                    class="quick-status-filter quick-status-filter-slate flex-1"
+                                    :class="val === '{{ \App\Models\User::REQUEST_FILTER_TODAY }}' ? 'quick-status-filter-active quick-status-filter-sky' : ''">
+                                    <x-icon name="calendar" size="h-4 w-4" />
+                                    <span>Šodienas</span>
+                                </button>
+                            </div>
                             <x-input-error class="mt-2" :messages="$errors->profileSettings->get('default_request_filter')" />
                         </div>
 
-                        <div class="md:col-span-2">
-                            <x-input-label for="profile_notification_visual_mode" value="Paziņojumu izcelšana" />
-                            <select id="profile_notification_visual_mode" name="notification_visual_mode" class="crud-control mt-2">
-                                <option value="{{ \App\Models\User::NOTIFICATION_VISUAL_ANIMATED }}" @selected($notificationVisualMode === \App\Models\User::NOTIFICATION_VISUAL_ANIMATED)>Pilna animācija</option>
-                                <option value="{{ \App\Models\User::NOTIFICATION_VISUAL_SUBTLE }}" @selected($notificationVisualMode === \App\Models\User::NOTIFICATION_VISUAL_SUBTLE)>Klusāka izcelšana</option>
-                                <option value="{{ \App\Models\User::NOTIFICATION_VISUAL_OFF }}" @selected($notificationVisualMode === \App\Models\User::NOTIFICATION_VISUAL_OFF)>Bez toast paziņojumiem</option>
-                            </select>
+                        {{-- Paziņojumu izcelšana (2 opcijas — pogu pāris, bez "off") --}}
+                        <div
+                            class="md:col-span-2"
+                            x-data="{
+                                val: @js(in_array($notificationVisualMode, [\App\Models\User::NOTIFICATION_VISUAL_ANIMATED, \App\Models\User::NOTIFICATION_VISUAL_SUBTLE], true) ? $notificationVisualMode : \App\Models\User::NOTIFICATION_VISUAL_ANIMATED),
+                                pick(v) { this.val = v; this.$el.closest('form').dispatchEvent(new Event('change', { bubbles: true })); }
+                            }"
+                        >
+                            <x-input-label value="Paziņojumu izcelšana" />
+                            <input type="hidden" name="notification_visual_mode" :value="val">
+                            <div class="mt-2 flex gap-1.5">
+                                <button type="button" @click="pick('{{ \App\Models\User::NOTIFICATION_VISUAL_ANIMATED }}')"
+                                    class="quick-status-filter quick-status-filter-slate flex-1"
+                                    :class="val === '{{ \App\Models\User::NOTIFICATION_VISUAL_ANIMATED }}' ? 'quick-status-filter-active quick-status-filter-sky' : ''">
+                                    <x-icon name="bell" size="h-4 w-4" />
+                                    <span>Pilna animācija</span>
+                                </button>
+                                <button type="button" @click="pick('{{ \App\Models\User::NOTIFICATION_VISUAL_SUBTLE }}')"
+                                    class="quick-status-filter quick-status-filter-slate flex-1"
+                                    :class="val === '{{ \App\Models\User::NOTIFICATION_VISUAL_SUBTLE }}' ? 'quick-status-filter-active quick-status-filter-emerald' : ''">
+                                    <x-icon name="bell" size="h-4 w-4" />
+                                    <span>Klusāka</span>
+                                </button>
+                            </div>
                             <x-input-error class="mt-2" :messages="$errors->profileSettings->get('notification_visual_mode')" />
                         </div>
-                    </div>
 
-                    <div class="rounded-[1.5rem] border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-900">
-                        <div class="font-semibold">Šie iestatījumi attiecas tikai uz tavu kontu.</div>
-                        <p class="mt-1">Tie nosaka, kur nonāc pēc pieslēgšanās, kādi saraksti atveras pēc noklusējuma un cik uzkrītoši tiek rādīti jaunie paziņojumi.</p>
                     </div>
 
                     <div class="device-user-room-modal-actions">
                         <button type="button" class="btn-clear" x-data @click="$dispatch('close-modal', 'profile-settings-modal')">Atcelt</button>
                         <button type="submit" class="btn-search" :disabled="submitting" :class="submitting ? 'opacity-70 cursor-wait' : ''">
                             <x-icon name="save" size="h-4 w-4" />
-                            <span x-text="submitting ? 'Saglabā...' : 'Saglabāt iestatījumus'"></span>
+                            <span x-text="submitting ? 'Saglabā...' : 'Saglabāt'"></span>
                         </button>
                     </div>
                 </form>

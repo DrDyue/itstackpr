@@ -5571,7 +5571,7 @@ tbody td {
 }
 
 .device-sort-icon {
-    @apply inline-flex items-center justify-center rounded-full border border-slate-200 bg-white p-1 text-slate-400 shadow-sm transition;
+    @apply inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white p-1 text-slate-400 shadow-sm transition;
 }
 
 .device-sort-trigger-active::after {
@@ -5591,6 +5591,22 @@ tbody td {
     @apply border-sky-200 bg-sky-50 text-sky-600;
 }
 
+.device-sort-trigger-active[data-sort-current-direction] .device-sort-icon svg {
+    @apply hidden;
+}
+
+.device-sort-trigger-active[data-sort-current-direction] .device-sort-icon::before {
+    @apply text-sm font-black leading-none;
+}
+
+.device-sort-trigger-active[data-sort-current-direction='asc'] .device-sort-icon::before {
+    content: '↑';
+}
+
+.device-sort-trigger-active[data-sort-current-direction='desc'] .device-sort-icon::before {
+    content: '↓';
+}
+
 .device-sort-trigger:focus-visible {
     @apply outline-none ring-2 ring-sky-500;
 }
@@ -5600,7 +5616,7 @@ tbody td {
 }
 
 .device-sort-current-label {
-    @apply inline-flex items-center gap-1 rounded-full bg-sky-600 px-2 py-0.5 text-[10px] font-bold leading-none text-white shadow-sm;
+    @apply hidden;
 }
 
 .device-sort-trigger-pending .device-sort-current-label {

@@ -110,16 +110,10 @@ const enhanceSortTriggerLabels = (root = document) => {
             return;
         }
 
-        const label = currentDirection === 'asc' ? 'Augo\u0161i' : 'Dilsto\u0161i';
         const nextLabel = trigger.dataset.sortDirection === 'asc' ? 'augo\u0161\u0101 sec\u012bb\u0101' : 'dilsto\u0161\u0101 sec\u012bb\u0101';
-        const badge = document.createElement('span');
-        badge.className = 'device-sort-current-label';
-        badge.dataset.sortCurrentLabel = 'true';
-        badge.textContent = label;
 
         trigger.dataset.sortCurrentDirection = currentDirection;
-        trigger.setAttribute('aria-label', `${trigger.textContent.trim()}, pa\u0161laik ${label.toLowerCase()}, klik\u0161\u0137ini, lai k\u0101rtotu ${nextLabel}`);
-        trigger.appendChild(badge);
+        trigger.setAttribute('aria-label', `${trigger.textContent.trim()}, pa\u0161laik ${currentDirection === 'asc' ? 'augo\u0161i' : 'dilsto\u0161i'}, klik\u0161\u0137ini, lai k\u0101rtotu ${nextLabel}`);
     });
 };
 
@@ -135,15 +129,9 @@ const applyPendingSortState = (root, activeTrigger) => {
     }
 
     const pendingDirection = activeTrigger.dataset.sortDirection || 'asc';
-    const label = pendingDirection === 'asc' ? 'Augo\u0161i' : 'Dilsto\u0161i';
-    const badge = document.createElement('span');
-    badge.className = 'device-sort-current-label';
-    badge.dataset.sortCurrentLabel = 'true';
-    badge.textContent = label;
 
     activeTrigger.classList.add('device-sort-trigger-active', 'device-sort-trigger-pending');
     activeTrigger.dataset.sortCurrentDirection = pendingDirection;
-    activeTrigger.appendChild(badge);
 };
 
 const getNamedFormControls = (form, name) => {

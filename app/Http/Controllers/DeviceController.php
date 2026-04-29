@@ -41,11 +41,11 @@ class DeviceController extends Controller
 
     private const STATUSES = [Device::STATUS_ACTIVE, Device::STATUS_REPAIR, Device::STATUS_WRITEOFF];
 
-    private const SORTABLE_COLUMNS = ['code', 'serial_number', 'name', 'location', 'created_at', 'assigned_to', 'status'];
+    private const SORTABLE_COLUMNS = ['code', 'serial_number', 'name', 'manufacturer', 'model', 'type', 'location', 'created_at', 'assigned_to', 'status'];
 
     private const USER_VISIBLE_STATUSES = [Device::STATUS_ACTIVE, Device::STATUS_REPAIR];
 
-    private const USER_SORTABLE_COLUMNS = ['code', 'serial_number', 'name', 'location', 'status'];
+    private const USER_SORTABLE_COLUMNS = ['code', 'serial_number', 'name', 'manufacturer', 'model', 'type', 'location', 'status'];
 
     /**
      * Parāda ierīču sarakstu ar lomām atkarīgu filtrēšanu un statusu palīgdatiem.
@@ -237,6 +237,7 @@ class DeviceController extends Controller
             ->leftJoin('rooms as sort_rooms', 'sort_rooms.id', '=', 'devices.room_id')
             ->leftJoin('buildings as sort_buildings', 'sort_buildings.id', '=', 'devices.building_id')
             ->leftJoin('users as sort_users', 'sort_users.id', '=', 'devices.assigned_to_id')
+            ->leftJoin('device_types as sort_types', 'sort_types.id', '=', 'devices.device_type_id')
             ->with([
                 'type',
                 'building',
@@ -546,6 +547,15 @@ class DeviceController extends Controller
             'name' => $query
                 ->orderByRaw('LOWER(COALESCE(devices.name, \'\')) ' . $direction)
                 ->orderBy('devices.id'),
+            'manufacturer' => $query
+                ->orderByRaw('LOWER(COALESCE(devices.manufacturer, \'\')) ' . $direction)
+                ->orderBy('devices.id'),
+            'model' => $query
+                ->orderByRaw('LOWER(COALESCE(devices.model, \'\')) ' . $direction)
+                ->orderBy('devices.id'),
+            'type' => $query
+                ->orderByRaw('LOWER(COALESCE(sort_types.type_name, \'\')) ' . $direction)
+                ->orderBy('devices.id'),
             'location' => $query
                 ->orderByRaw('LOWER(COALESCE(sort_buildings.building_name, \'\')) ' . $direction)
                 ->orderBy('sort_rooms.floor_number', $direction)
@@ -595,13 +605,16 @@ SQL;
     private function deviceSortOptions(bool $canManageDevices = true): array
     {
         $options = [
-            'code' => ['label' => 'koda'],
-            'serial_number' => ['label' => 'sērijas numura'],
-            'name' => ['label' => 'nosaukuma'],
-            'location' => ['label' => 'atrašanās vietas'],
-            'created_at' => ['label' => 'izveides datuma'],
-            'assigned_to' => ['label' => 'piešķirtās personas'],
-            'status' => ['label' => 'statusa'],
+            'code' => ['label' => 'koda', 'display' => 'Kods'],
+            'serial_number' => ['label' => 'sērijas numura', 'display' => 'Sērijas numurs'],
+            'name' => ['label' => 'nosaukuma', 'display' => 'Nosaukums'],
+            'manufacturer' => ['label' => 'ražotāja', 'display' => 'Ražotājs'],
+            'model' => ['label' => 'modeļa', 'display' => 'Modelis'],
+            'type' => ['label' => 'ierīces tipa', 'display' => 'Ierīces tips'],
+            'location' => ['label' => 'atrašanās vietas', 'display' => 'Atrašanās vieta'],
+            'created_at' => ['label' => 'izveides datuma', 'display' => 'Izveides datums'],
+            'assigned_to' => ['label' => 'piešķirtās personas', 'display' => 'Piešķirtā persona'],
+            'status' => ['label' => 'statusa', 'display' => 'Statuss'],
         ];
 
         if ($canManageDevices) {
