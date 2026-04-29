@@ -431,6 +431,28 @@ class DeviceTransferController extends Controller
         return back()->with('success', 'Ierīces nodošanas pieteikums izskatīts');
     }
 
+    /**
+     * Parāda ierīces nodošanas aktu drukāšanai.
+     *
+     * Pieejams tikai apstiprinātiem pieteikumiem. Atgriež standalone HTML lapu ar
+     * visas informāciju par ierīci, abām pusēm un vietu parakstiem.
+     *
+     * Izsaukšana: GET /device-transfers/{deviceTransfer}/act | Pieejams: jebkurš autentificēts lietotājs.
+     */
+    public function printAct(DeviceTransfer $deviceTransfer)
+    {
+        $user = $this->user();
+        abort_unless($user, 403);
+
+        abort_unless($deviceTransfer->status === DeviceTransfer::STATUS_APPROVED, 404);
+
+        $deviceTransfer->load(['device.type', 'device.building', 'device.room', 'responsibleUser', 'transferTo', 'reviewedBy']);
+
+        AuditTrail::viewed($user, 'DeviceTransfer', $deviceTransfer->id, 'Atvērts nodošanas akts drukāšanai: '.AuditTrail::labelFor($deviceTransfer));
+
+        return view('device_transfers.print_act', ['transfer' => $deviceTransfer]);
+    }
+
     private function availableDevicesForUser(User $user): Builder
     {
         return Device::query()

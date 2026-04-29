@@ -70,4 +70,5 @@ Route::middleware('auth')->group(function () {
     Route::post('/device-transfers', [DeviceTransferController::class, 'store'])->name('device-transfers.store');
     Route::put('/device-transfers/{deviceTransfer}', [DeviceTransferController::class, 'update'])->name('device-transfers.update');
     Route::post('/device-transfers/{deviceTransfer}/review', [DeviceTransferController::class, 'review'])->name('device-transfers.review');
+    Route::get('/device-transfers/{deviceTransfer}/act', [DeviceTransferController::class, 'printAct'])->name('device-transfers.act');
 });

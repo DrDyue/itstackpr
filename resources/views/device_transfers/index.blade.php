@@ -495,11 +495,19 @@
                                     </td>
                                     <td class="px-4 py-4 text-right">
                                         @if ($isAdmin && $deviceFilterUrl)
-                                            {{-- Adminam - tikai viena poga bez dropdown --}}
-                                            <a href="{{ $deviceFilterUrl }}" class="table-action-summary table-action-summary-single">
-                                                <x-icon name="view" size="h-4 w-4" />
-                                                <span>Saistītā ierīce</span>
-                                            </a>
+                                            {{-- Adminam: ierīces saite + drukāt aktu ja apstiprināts --}}
+                                            <div class="flex flex-col items-end gap-1">
+                                                @if ($transfer->status === 'approved')
+                                                    <a href="{{ route('device-transfers.act', $transfer) }}" target="_blank" class="table-action-summary table-action-summary-single">
+                                                        <x-icon name="print" size="h-4 w-4" />
+                                                        <span>Drukāt aktu</span>
+                                                    </a>
+                                                @endif
+                                                <a href="{{ $deviceFilterUrl }}" class="table-action-summary table-action-summary-single">
+                                                    <x-icon name="view" size="h-4 w-4" />
+                                                    <span>Saistītā ierīce</span>
+                                                </a>
+                                            </div>
                                         @elseif ($hasActions)
                                             {{-- Pārējiem - dropdown ar darbībām --}}
                                             <div class="table-action-menu inline-block" x-data="createFloatingDropdown({ zIndex: 400 })" @keydown.escape.window="closePanel()">
@@ -519,6 +527,13 @@
                                                         <a href="{{ $deviceFilterUrl }}" class="table-action-item table-action-item-sky table-action-item-wide text-sky-700" @click="closePanel()">
                                                             <x-icon name="view" size="h-4 w-4" />
                                                             <span>Skatīt saistīto ierīci</span>
+                                                        </a>
+                                                    @endif
+
+                                                    @if ($transfer->status === 'approved')
+                                                        <a href="{{ route('device-transfers.act', $transfer) }}" target="_blank" class="table-action-item table-action-item-wide" @click="closePanel()">
+                                                            <x-icon name="print" size="h-4 w-4" />
+                                                            <span>Drukāt nodošanas aktu</span>
                                                         </a>
                                                     @endif
 
@@ -593,16 +608,23 @@
                                                 </template>
                                             </div>
                                         @else
-                                            <button
-                                                type="button"
-                                                class="btn-disabled"
-                                                data-app-toast-title="Darbības nav pieejamas"
-                                                data-app-toast-message="Šim nodošanas pieteikumam pašlaik nav pieejamu darbību. Tas jau ir izskatīts vai arī tavai lomai nav atļauts to mainīt."
-                                                data-app-toast-tone="info"
-                                            >
-                                                <x-icon name="information-circle" size="h-4 w-4" />
-                                                <span>Nav darbību</span>
-                                            </button>
+                                            @if ($transfer->status === 'approved')
+                                                <a href="{{ route('device-transfers.act', $transfer) }}" target="_blank" class="table-action-summary table-action-summary-single">
+                                                    <x-icon name="print" size="h-4 w-4" />
+                                                    <span>Drukāt aktu</span>
+                                                </a>
+                                            @else
+                                                <button
+                                                    type="button"
+                                                    class="btn-disabled"
+                                                    data-app-toast-title="Darbības nav pieejamas"
+                                                    data-app-toast-message="Šim nodošanas pieteikumam pašlaik nav pieejamu darbību. Tas jau ir izskatīts vai arī tavai lomai nav atļauts to mainīt."
+                                                    data-app-toast-tone="info"
+                                                >
+                                                    <x-icon name="information-circle" size="h-4 w-4" />
+                                                    <span>Nav darbību</span>
+                                                </button>
+                                            @endif
                                         @endif
                                     </td>
                                 </tr>
