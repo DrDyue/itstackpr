@@ -855,6 +855,38 @@ class AuditTrail
         return $text;
     }
 
+    /**
+     * Extracts field-level changes from localized audit descriptions.
+     *
+     * @return array<int, array{field:string, old:string, new:string}>
+     */
+    public static function changeDetails(?string $description, ?string $entityType = null): array
+    {
+        $text = self::localizedDescription($description, $entityType);
+
+        if (! preg_match('/\|\s*(?:detaļas|lauki):\s*(?<details>.+)$/u', $text, $matches)) {
+            return [];
+        }
+
+        return collect(explode(';', $matches['details']))
+            ->map(function (string $entry) {
+                $entry = trim($entry);
+
+                if (! preg_match('/^(?<field>[^:]+):\s*(?<old>.*?)\s*(?:->|→)\s*(?<new>.+)$/u', $entry, $parts)) {
+                    return null;
+                }
+
+                return [
+                    'field' => trim($parts['field']),
+                    'old' => trim($parts['old']),
+                    'new' => trim($parts['new']),
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
+    }
+
     private static function defaultDescription(string $action, Model $model, array $changedFields = []): string
     {
         $entity = self::readableEntityName(class_basename($model));

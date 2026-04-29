@@ -553,7 +553,26 @@ class DeviceTransferController extends Controller
     private function normalizedIndexFilters(Request $request, array $availableStatuses): array
     {
         $statusFilterTouched = $request->has('statuses_filter');
-        $selectedStatuses = collect($request->query('status', $statusFilterTouched ? [] : []))
+        $filtersCleared = $request->boolean('clear');
+        $hasOtherFilters = $request->filled('q')
+            || $request->filled('code')
+            || $request->filled('device_id')
+            || $request->filled('requester_id')
+            || $request->filled('recipient_id')
+            || $request->filled('date_from')
+            || $request->filled('date_to')
+            || $request->boolean('incoming');
+        $user = $this->user();
+        $canManageTransfers = $user?->canManageRequests() ?? false;
+        $defaultRequestFilter = $canManageTransfers ? $user->defaultRequestFilter() : User::REQUEST_FILTER_ALL;
+        $shouldApplyDefault = $canManageTransfers && ! $filtersCleared && ! $hasOtherFilters && ! $statusFilterTouched;
+        $defaultStatuses = $shouldApplyDefault && $defaultRequestFilter === User::REQUEST_FILTER_SUBMITTED
+            ? [DeviceTransfer::STATUS_SUBMITTED]
+            : [];
+        $defaultDate = $shouldApplyDefault && $defaultRequestFilter === User::REQUEST_FILTER_TODAY
+            ? now()->toDateString()
+            : '';
+        $selectedStatuses = collect($request->query('status', $statusFilterTouched ? [] : $defaultStatuses))
             ->map(fn (mixed $status) => trim((string) $status))
             ->filter(fn (string $status) => in_array($status, $availableStatuses, true))
             ->unique()
@@ -569,8 +588,8 @@ class DeviceTransferController extends Controller
             'requester_query' => trim((string) $request->query('requester_query', '')),
             'recipient_id' => ctype_digit((string) $request->query('recipient_id', '')) ? (int) $request->query('recipient_id') : null,
             'recipient_query' => trim((string) $request->query('recipient_query', '')),
-            'date_from' => trim((string) $request->query('date_from', '')),
-            'date_to' => trim((string) $request->query('date_to', '')),
+            'date_from' => trim((string) $request->query('date_from', $defaultDate)),
+            'date_to' => trim((string) $request->query('date_to', $defaultDate)),
             'statuses' => $selectedStatuses,
             'status_filter_touched' => $statusFilterTouched,
             'incoming' => $request->boolean('incoming'),

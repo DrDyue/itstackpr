@@ -30,6 +30,33 @@ class User extends Authenticatable
     public const VIEW_MODE_SESSION_KEY = 'user_view_mode';
 
     public const SETTING_HIDE_WRITEOFF_DEVICES = 'hide_written_off_devices';
+    public const SETTING_DEFAULT_START_PAGE = 'default_start_page';
+    public const SETTING_DEFAULT_VIEW_MODE = 'default_view_mode';
+    public const SETTING_LAST_VIEW_MODE = 'last_view_mode';
+    public const SETTING_DEFAULT_DEVICE_FILTER = 'default_device_filter';
+    public const SETTING_NOTIFICATION_VISUAL_MODE = 'notification_visual_mode';
+    public const SETTING_DEFAULT_REQUEST_FILTER = 'default_request_filter';
+
+    public const START_PAGE_DASHBOARD = 'dashboard';
+    public const START_PAGE_DEVICES = 'devices';
+    public const START_PAGE_REPAIR_REQUESTS = 'repair_requests';
+    public const START_PAGE_WRITEOFF_REQUESTS = 'writeoff_requests';
+    public const START_PAGE_DEVICE_TRANSFERS = 'device_transfers';
+    public const START_PAGE_AUDIT_LOG = 'audit_log';
+
+    public const DEFAULT_VIEW_MODE_LAST = 'last';
+
+    public const DEVICE_FILTER_ALL = 'all';
+    public const DEVICE_FILTER_ACTIVE = 'active';
+    public const DEVICE_FILTER_REPAIR = 'repair';
+
+    public const REQUEST_FILTER_SUBMITTED = 'submitted';
+    public const REQUEST_FILTER_ALL = 'all';
+    public const REQUEST_FILTER_TODAY = 'today';
+
+    public const NOTIFICATION_VISUAL_ANIMATED = 'animated';
+    public const NOTIFICATION_VISUAL_SUBTLE = 'subtle';
+    public const NOTIFICATION_VISUAL_OFF = 'off';
 
     protected $fillable = [
         'full_name',
@@ -77,6 +104,102 @@ class User extends Authenticatable
     public function prefersHiddenWrittenOffDevices(): bool
     {
         return (bool) $this->setting(self::SETTING_HIDE_WRITEOFF_DEVICES, false);
+    }
+
+    public function defaultStartPage(): string
+    {
+        $value = (string) $this->setting(self::SETTING_DEFAULT_START_PAGE, self::START_PAGE_DASHBOARD);
+
+        return in_array($value, self::startPageOptions(), true) ? $value : self::START_PAGE_DASHBOARD;
+    }
+
+    public function defaultStartRouteName(): string
+    {
+        return match ($this->defaultStartPage()) {
+            self::START_PAGE_DEVICES => 'devices.index',
+            self::START_PAGE_REPAIR_REQUESTS => 'repair-requests.index',
+            self::START_PAGE_WRITEOFF_REQUESTS => 'writeoff-requests.index',
+            self::START_PAGE_DEVICE_TRANSFERS => 'device-transfers.index',
+            self::START_PAGE_AUDIT_LOG => 'audit-log.index',
+            default => 'dashboard',
+        };
+    }
+
+    public function defaultViewMode(): string
+    {
+        $value = (string) $this->setting(self::SETTING_DEFAULT_VIEW_MODE, self::VIEW_MODE_ADMIN);
+
+        return in_array($value, self::defaultViewModeOptions(), true) ? $value : self::VIEW_MODE_ADMIN;
+    }
+
+    public function initialViewMode(): string
+    {
+        if (! $this->isAdmin()) {
+            return self::VIEW_MODE_USER;
+        }
+
+        if ($this->defaultViewMode() === self::DEFAULT_VIEW_MODE_LAST) {
+            $lastMode = (string) $this->setting(self::SETTING_LAST_VIEW_MODE, self::VIEW_MODE_ADMIN);
+
+            return in_array($lastMode, [self::VIEW_MODE_ADMIN, self::VIEW_MODE_USER], true)
+                ? $lastMode
+                : self::VIEW_MODE_ADMIN;
+        }
+
+        return $this->defaultViewMode();
+    }
+
+    public function defaultDeviceFilter(): string
+    {
+        $value = (string) $this->setting(self::SETTING_DEFAULT_DEVICE_FILTER, self::DEVICE_FILTER_ALL);
+
+        return in_array($value, self::deviceFilterOptions(), true) ? $value : self::DEVICE_FILTER_ALL;
+    }
+
+    public function defaultRequestFilter(): string
+    {
+        $value = (string) $this->setting(self::SETTING_DEFAULT_REQUEST_FILTER, self::REQUEST_FILTER_SUBMITTED);
+
+        return in_array($value, self::requestFilterOptions(), true) ? $value : self::REQUEST_FILTER_SUBMITTED;
+    }
+
+    public function notificationVisualMode(): string
+    {
+        $value = (string) $this->setting(self::SETTING_NOTIFICATION_VISUAL_MODE, self::NOTIFICATION_VISUAL_ANIMATED);
+
+        return in_array($value, self::notificationVisualOptions(), true) ? $value : self::NOTIFICATION_VISUAL_ANIMATED;
+    }
+
+    public static function startPageOptions(): array
+    {
+        return [
+            self::START_PAGE_DASHBOARD,
+            self::START_PAGE_DEVICES,
+            self::START_PAGE_REPAIR_REQUESTS,
+            self::START_PAGE_WRITEOFF_REQUESTS,
+            self::START_PAGE_DEVICE_TRANSFERS,
+            self::START_PAGE_AUDIT_LOG,
+        ];
+    }
+
+    public static function defaultViewModeOptions(): array
+    {
+        return [self::VIEW_MODE_ADMIN, self::VIEW_MODE_USER, self::DEFAULT_VIEW_MODE_LAST];
+    }
+
+    public static function deviceFilterOptions(): array
+    {
+        return [self::DEVICE_FILTER_ALL, self::DEVICE_FILTER_ACTIVE, self::DEVICE_FILTER_REPAIR];
+    }
+
+    public static function requestFilterOptions(): array
+    {
+        return [self::REQUEST_FILTER_SUBMITTED, self::REQUEST_FILTER_ALL, self::REQUEST_FILTER_TODAY];
+    }
+
+    public static function notificationVisualOptions(): array
+    {
+        return [self::NOTIFICATION_VISUAL_ANIMATED, self::NOTIFICATION_VISUAL_SUBTLE, self::NOTIFICATION_VISUAL_OFF];
     }
 
     /**

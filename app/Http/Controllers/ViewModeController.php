@@ -35,6 +35,10 @@ class ViewModeController extends Controller
         ]);
 
         $request->session()->put(User::VIEW_MODE_SESSION_KEY, $validated['mode']);
+        $settings = is_array($user->user_settings) ? $user->user_settings : [];
+        $settings[User::SETTING_LAST_VIEW_MODE] = $validated['mode'];
+        $user->forceFill(['user_settings' => $settings])->save();
+
         AuditTrail::switchViewMode($user, $previousMode, $validated['mode']);
 
         return redirect()->route(

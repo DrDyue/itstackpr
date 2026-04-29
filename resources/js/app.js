@@ -783,11 +783,12 @@ const registerAlpineData = () => {
         },
     }));
 
-    Alpine.data('liveRequestNotifications', ({ endpoint = '', storageKey = 'live-request-notifications', pollSeconds = 12, pageKind = '' } = {}) => ({
+    Alpine.data('liveRequestNotifications', ({ endpoint = '', storageKey = 'live-request-notifications', pollSeconds = 12, pageKind = '', visualMode = 'animated' } = {}) => ({
         endpoint,
         storageKey,
         pollSeconds: Math.max(Number(pollSeconds) || 12, 5),
         pageKind,
+        visualMode: ['animated', 'subtle', 'off'].includes(visualMode) ? visualMode : 'animated',
         items: [],
         seenIds: [],
         bootstrapped: false,
@@ -799,7 +800,7 @@ const registerAlpineData = () => {
         fingerprint: null,
         idleStreak: 0,
         init() {
-            // Ć„Ā¢enerĆ„ā€ sesijas ID, lai noteiktu lapas pĆ„ĀrlĆ„Ādi vai navigĆ„Āciju
+            // Ģenerē sesijas ID, lai noteiktu lapas pārlādi vai navigāciju.
             this.lastSessionId = this.generateSessionId();
             this.lastViewMode = this.getViewMode();
             this.seenIds = this.readSeenIds();
@@ -829,11 +830,11 @@ const registerAlpineData = () => {
             }
         },
         generateSessionId() {
-            // Ć„Ā¢enerĆ„ā€ unikĆ„Ālu sesijas ID Ć…ļ£¼Ć„Ā«s lapas sesijai
+            // Ģenerē unikālu sesijas ID šīs lapas sesijai.
             return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         },
         getViewMode() {
-            // Nolasa paĆ…ļ£¼reizĆ„ā€jo skata reĆ…Ā¾Ć„Ā«mu no glabĆ„Ātuves atslĆ„ā€gas
+            // Nolasa pašreizējo skata režīmu no glabātuves atslēgas.
             const parts = this.storageKey.split(':');
             return parts.length > 2 ? parts[parts.length - 1] : 'user';
         },
@@ -844,18 +845,18 @@ const registerAlpineData = () => {
             return hasChanged;
         },
         cleanup() {
-            // SaglabĆ„Ā sesijas informĆ„Āciju, lai nĆ„ĀkamajĆ„Ā ielĆ„ĀdĆ„ā€ varĆ„ā€tu veikt tĆ„Ā«rĆ„Ā«Ć…ļ£¼anu
+            // Saglabā sesijas informāciju, lai nākamajā ielādē varētu veikt tīrīšanu.
             try {
                 const staleData = sessionStorage.getItem(this.storageKey + ':stale');
                 if (staleData) {
                     const parsed = JSON.parse(staleData);
-                    // NoĆ…ā€ em vecos sesijas datus, kas ir vecĆ„Āki par 5 minĆ…Ā«tĆ„ā€m
+                    // Noņem vecos sesijas datus, kas ir vecāki par 5 minūtēm.
                     const now = Date.now();
                     const freshData = parsed.filter(item => (now - item.timestamp) < 300000);
                     sessionStorage.setItem(this.storageKey + ':stale', JSON.stringify(freshData));
                 }
             } catch (e) {
-                // IgnorĆ„ā€ glabĆ„Ātuves kĆ„Ā¼Ć…Ā«das
+                // Ignorē glabātuves kļūdas.
             }
         },
         computePollDelay() {
@@ -907,18 +908,18 @@ const registerAlpineData = () => {
                     ? response.data.notifications
                     : [];
 
-                // Nosaka skata reĆ…Ā¾Ć„Ā«ma maiĆ…ā€ u, lai atiestatĆ„Ā«tu redzĆ„ā€tos paziĆ…ā€ ojumus
+                // Nosaka skata režīma maiņu, lai atiestatītu redzētos paziņojumus.
                 const viewModeChanged = this.detectViewModeChange();
 
                 if (!this.bootstrapped || isInitial) {
-                    // Ja skata reĆ…Ā¾Ć„Ā«ms mainĆ„Ā«jies, neatzĆ„Ā«mĆ„ā€ paziĆ…ā€ ojumus kĆ„Ā redzĆ„ā€tus uzreiz
-                    // Tas Ć„Ā¼auj parĆ„ĀdĆ„Ā«t animĆ„Ācijas, pĆ„ĀrslĆ„ā€dzoties starp admina un lietotĆ„Āja skatu
+                    // Ja skata režīms mainījies, neatzīmē paziņojumus kā redzētus uzreiz.
+                    // Tas ļauj parādīt animācijas, pārslēdzoties starp admina un lietotāja skatu.
                     if (viewModeChanged) {
-                        // NotĆ„Ā«ra redzĆ„ā€to ID sarakstu jaunajam skata reĆ…Ā¾Ć„Ā«mam, lai paziĆ…ā€ ojumi animĆ„ā€tos
+                        // Notīra redzēto ID sarakstu jaunajam skata režīmam, lai paziņojumi animētos.
                         this.seenIds = [];
                         this.writeSeenIds();
                         this.bootstrapped = true;
-                        // Turpina izpildi, lai paziĆ…ā€ ojumi tiktu parĆ„ĀdĆ„Ā«ti ar animĆ„Āciju
+                        // Turpina izpildi, lai paziņojumi tiktu parādīti ar animāciju.
                     } else {
                         notifications.forEach((notification) => this.remember(notification.id));
                         this.bootstrapped = true;
@@ -941,9 +942,14 @@ const registerAlpineData = () => {
                         return;
                     }
 
+                    if (this.visualMode === 'off') {
+                        this.remember(notification.id);
+                        return;
+                    }
+
                     const toast = {
                         ...notification,
-                        visible: false,
+                        visible: this.visualMode === 'subtle',
                         busy: false,
                         priority: getNotificationPriority(notification),
                     };
@@ -959,20 +965,23 @@ const registerAlpineData = () => {
                         })
                         .slice(0, 4);
                     this.remember(notification.id);
-                    window.requestAnimationFrame(() => {
-                        const createdToast = this.items.find((item) => item.id === notification.id);
-                        if (createdToast) {
-                            createdToast.visible = true;
-                        }
-                    });
-                    window.setTimeout(() => this.dismiss(notification.id), 9000);
+                    if (this.visualMode === 'animated') {
+                        window.requestAnimationFrame(() => {
+                            const createdToast = this.items.find((item) => item.id === notification.id);
+                            if (createdToast) {
+                                createdToast.visible = true;
+                            }
+                        });
+                    }
+
+                    window.setTimeout(() => this.dismiss(notification.id), this.visualMode === 'subtle' ? 6000 : 9000);
 
                     if (this.shouldRefreshForNotification(notification)) {
                         this.scheduleRefresh();
                     }
                 });
             } catch (error) {
-                // IgnorĆ„ā€ Ć„Ā«slaicĆ„Ā«gas aptaujas kĆ„Ā¼Ć…Ā«das un mĆ„ā€Ć„Ā£ina vĆ„ā€lreiz nĆ„ĀkamajĆ„Ā ciklĆ„Ā.
+                // Ignorē īslaicīgas aptaujas kļūdas un mēģina vēlreiz nākamajā ciklā.
             }
         },
         hasSeen(id) {
@@ -1119,7 +1128,7 @@ const registerAlpineData = () => {
             try {
                 window.localStorage.setItem(this.storageKey, JSON.stringify(this.seenIds));
             } catch (error) {
-                // IgnorĆ„ā€ glabĆ„Ātuves rakstĆ„Ā«Ć…ļ£¼anas kĆ„Ā¼Ć…Ā«das; paziĆ…ā€ ojumi sesijas laikĆ„Ā joprojĆ„Ām darbosies.
+                // Ignorē glabātuves rakstīšanas kļūdas; paziņojumi sesijas laikā joprojām darbosies.
             }
         },
     }));
@@ -1197,7 +1206,7 @@ const registerAlpineData = () => {
             try {
                 window.localStorage.setItem(this.storageKey, String(timestamp));
             } catch (error) {
-                // IgnorĆ„ā€ glabĆ„Ātuves kĆ„Ā¼Ć…Ā«das; navigĆ„Ācijas emblĆ„ā€ma Ć…ļ£¼ajĆ„Ā attĆ„ā€lojumĆ„Ā joprojĆ„Ām darbosies.
+                // Ignorē glabātuves kļūdas; navigācijas emblēma šajā attēlojumā joprojām darbosies.
             }
         },
         showFeedback() {
@@ -1260,7 +1269,7 @@ const registerAlpineData = () => {
                     return createdUnix > 0 && (createdUnix * 1000) > cutoff;
                 }).length;
             } catch (error) {
-                // IgnorĆ„ā€ Ć„Ā«slaicĆ„Ā«gas emblĆ„ā€mas atjaunoĆ…ļ£¼anas kĆ„Ā¼Ć…Ā«das.
+                // Ignorē īslaicīgas emblēmas atjaunošanas kļūdas.
             }
         },
         async markAllAsRead() {

@@ -374,7 +374,17 @@ class DeviceController extends Controller
     private function normalizedIndexFilters(Request $request, User $user): array
     {
         $availableStatuses = $this->availableStatuses($user);
-        $statuses = collect($request->query('status', []))
+        $defaultStatuses = [];
+
+        if ($user->canManageRequests() && $request->query() === []) {
+            $defaultStatuses = match ($user->defaultDeviceFilter()) {
+                User::DEVICE_FILTER_ACTIVE => [Device::STATUS_ACTIVE],
+                User::DEVICE_FILTER_REPAIR => [Device::STATUS_REPAIR],
+                default => [],
+            };
+        }
+
+        $statuses = collect($request->query('status', $defaultStatuses))
             ->map(fn (mixed $status) => trim((string) $status))
             ->filter(fn (string $status) => in_array($status, $availableStatuses, true))
             ->unique()
@@ -2141,19 +2151,19 @@ SQL;
         if ($device->status === Device::STATUS_REPAIR || $device->activeRepair()->exists()) {
             $repairStatusLabel = $this->visibleRepairStatusLabel($device);
 
-            return 'IerÄ«ces statusu nevar mainÄ«t, kamÄ“r tai notiek remonts'.($repairStatusLabel ? ' ar statusu "'.$repairStatusLabel.'".' : '.');
+            return 'Ierīces statusu nevar mainīt, kamēr tai notiek remonts'.($repairStatusLabel ? ' ar statusu "'.$repairStatusLabel.'".' : '.');
         }
 
         if ($device->repairRequests()->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
-            return 'IerÄ«ces statusu nevar mainÄ«t, kamÄ“r tai ir aktÄ«vs remonta pieprasÄ«jums.';
+            return 'Ierīces statusu nevar mainīt, kamēr tai ir aktīvs remonta pieprasījums.';
         }
 
         if ($device->writeoffRequests()->where('status', WriteoffRequest::STATUS_SUBMITTED)->exists()) {
-            return 'IerÄ«ces statusu nevar mainÄ«t, kamÄ“r tai ir aktÄ«vs norakstÄ«Åanas pieprasÄ«jums.';
+            return 'Ierīces statusu nevar mainīt, kamēr tai ir aktīvs norakstīšanas pieprasījums.';
         }
 
         if ($device->transfers()->where('status', DeviceTransfer::STATUS_SUBMITTED)->exists()) {
-            return 'IerÄ«ces statusu nevar mainÄ«t, kamÄ“r tai ir aktÄ«vs nodoÅanas pieprasÄ«jums.';
+            return 'Ierīces statusu nevar mainīt, kamēr tai ir aktīvs nodošanas pieprasījums.';
         }
 
         return null;

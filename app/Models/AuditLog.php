@@ -55,6 +55,16 @@ class AuditLog extends Model
         return AuditTrail::compactDescription($this->description, $this->entity_type, $this->action);
     }
 
+    /**
+     * Strukturētas izmaiņas auditam: lauks, vecā vērtība un jaunā vērtība.
+     *
+     * @return array<int, array{field:string, old:string, new:string}>
+     */
+    public function getChangeDetailsAttribute(): array
+    {
+        return AuditTrail::changeDetails($this->description, $this->entity_type);
+    }
+
     public function getLocalizedEntityTypeAttribute(): string
     {
         return AuditTrail::entityLabel($this->entity_type);

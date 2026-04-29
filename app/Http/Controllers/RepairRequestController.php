@@ -471,7 +471,14 @@ class RepairRequestController extends Controller
             || $request->filled('requester_id')
             || $request->filled('date_from')
             || $request->filled('date_to');
-        $defaultStatuses = $canReview && ! $filtersCleared && ! $hasOtherFilters ? [RepairRequest::STATUS_SUBMITTED] : [];
+        $defaultRequestFilter = $canReview ? ($this->user()?->defaultRequestFilter() ?? User::REQUEST_FILTER_SUBMITTED) : User::REQUEST_FILTER_SUBMITTED;
+        $shouldApplyDefault = $canReview && ! $filtersCleared && ! $hasOtherFilters && ! $statusFilterTouched;
+        $defaultStatuses = $shouldApplyDefault && $defaultRequestFilter === User::REQUEST_FILTER_SUBMITTED
+            ? [RepairRequest::STATUS_SUBMITTED]
+            : [];
+        $defaultDate = $shouldApplyDefault && $defaultRequestFilter === User::REQUEST_FILTER_TODAY
+            ? now()->toDateString()
+            : '';
         $selectedStatuses = collect($request->query('status', $statusFilterTouched ? [] : $defaultStatuses))
             ->map(fn (mixed $status) => trim((string) $status))
             ->filter(fn (string $status) => in_array($status, $availableStatuses, true))
@@ -487,8 +494,8 @@ class RepairRequestController extends Controller
             'device_query' => trim((string) $request->query('device_query', '')),
             'requester_id' => ctype_digit((string) $request->query('requester_id', '')) ? (int) $request->query('requester_id') : null,
             'requester_query' => trim((string) $request->query('requester_query', '')),
-            'date_from' => trim((string) $request->query('date_from', '')),
-            'date_to' => trim((string) $request->query('date_to', '')),
+            'date_from' => trim((string) $request->query('date_from', $defaultDate)),
+            'date_to' => trim((string) $request->query('date_to', $defaultDate)),
             'statuses' => $selectedStatuses,
             'status_filter_touched' => $statusFilterTouched,
         ];

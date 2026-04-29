@@ -102,6 +102,7 @@
                     storageKey: @js('live-request-notifications:' . auth()->id() . ':' . (auth()->user()?->currentViewMode() ?? 'user')),
                     pollSeconds: 10,
                     pageKind: @js($liveNotificationPageKind),
+                    visualMode: @js(auth()->user()?->notificationVisualMode() ?? \App\Models\User::NOTIFICATION_VISUAL_ANIMATED),
                 })"
                 class="pointer-events-none flex flex-col gap-3"
             >

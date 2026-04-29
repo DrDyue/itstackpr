@@ -301,6 +301,10 @@
                                         'ViewMode' => ['icon' => 'users', 'class' => 'audit-badge audit-badge-violet'],
                                         default => ['icon' => 'audit', 'class' => 'audit-badge audit-badge-slate'],
                                     };
+                                    $changeDetails = $log->change_details;
+                                    $displayDescription = $changeDetails !== []
+                                        ? preg_replace('/\s*\|\s*(?:detaļas|lauki):\s*.+$/u', '', $log->compact_description)
+                                        : $log->compact_description;
                                 @endphp
                                 <tr
                                     class="app-table-row border-t border-slate-100"
@@ -308,6 +312,7 @@
                                     data-table-search-value="{{ \Illuminate\Support\Str::lower(trim(implode(' ', array_filter([
                                         (string) $log->id,
                                         $log->compact_description,
+                                        collect($changeDetails)->map(fn ($change) => implode(' ', $change))->implode(' '),
                                         $log->localized_action,
                                         $log->localized_entity_type,
                                         $log->entity_reference,
@@ -362,8 +367,22 @@
                                     </td>
                                     <td class="px-4 py-3">
                                         <div class="audit-description-text">
-                                            {{ $log->compact_description }}
+                                            {{ $displayDescription }}
                                         </div>
+                                        @if ($changeDetails !== [])
+                                            <dl class="audit-change-list" aria-label="Izmaiņu detaļas">
+                                                @foreach ($changeDetails as $change)
+                                                    <div class="audit-change-row">
+                                                        <dt class="audit-change-field">{{ $change['field'] }}</dt>
+                                                        <dd class="audit-change-values">
+                                                            <span class="audit-change-old">{{ $change['old'] }}</span>
+                                                            <x-icon name="arrow-right" size="h-3.5 w-3.5" />
+                                                            <span class="audit-change-new">{{ $change['new'] }}</span>
+                                                        </dd>
+                                                    </div>
+                                                @endforeach
+                                            </dl>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty

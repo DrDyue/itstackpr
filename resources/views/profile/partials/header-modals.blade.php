@@ -2,6 +2,11 @@
     $user = auth()->user();
     $isAdmin = $user?->isAdmin() ?? false;
     $hideWrittenOffDevices = old('hide_written_off_devices', $user?->prefersHiddenWrittenOffDevices() ?? false);
+    $defaultStartPage = old('default_start_page', $user?->defaultStartPage() ?? \App\Models\User::START_PAGE_DASHBOARD);
+    $defaultViewMode = old('default_view_mode', $user?->defaultViewMode() ?? \App\Models\User::VIEW_MODE_ADMIN);
+    $defaultDeviceFilter = old('default_device_filter', $user?->defaultDeviceFilter() ?? \App\Models\User::DEVICE_FILTER_ALL);
+    $notificationVisualMode = old('notification_visual_mode', $user?->notificationVisualMode() ?? \App\Models\User::NOTIFICATION_VISUAL_ANIMATED);
+    $defaultRequestFilter = old('default_request_filter', $user?->defaultRequestFilter() ?? \App\Models\User::REQUEST_FILTER_SUBMITTED);
 @endphp
 
 @if ($user)
@@ -152,7 +157,7 @@
     </x-modal>
 
     @if ($isAdmin)
-        <x-modal name="profile-settings-modal" maxWidth="2xl">
+        <x-modal name="profile-settings-modal" maxWidth="4xl">
             <div
                 x-data="managedModalForm({
                     modalName: 'profile-settings-modal',
@@ -199,9 +204,64 @@
                         <x-input-error class="mt-3" :messages="$errors->profileSettings->get('hide_written_off_devices')" />
                     </div>
 
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <x-input-label for="profile_default_start_page" value="Sākuma lapa pēc pieslēgšanās" />
+                            <select id="profile_default_start_page" name="default_start_page" class="crud-control mt-2">
+                                <option value="{{ \App\Models\User::START_PAGE_DASHBOARD }}" @selected($defaultStartPage === \App\Models\User::START_PAGE_DASHBOARD)>Dashboard</option>
+                                <option value="{{ \App\Models\User::START_PAGE_DEVICES }}" @selected($defaultStartPage === \App\Models\User::START_PAGE_DEVICES)>Ierīces</option>
+                                <option value="{{ \App\Models\User::START_PAGE_REPAIR_REQUESTS }}" @selected($defaultStartPage === \App\Models\User::START_PAGE_REPAIR_REQUESTS)>Remonta pieteikumi</option>
+                                <option value="{{ \App\Models\User::START_PAGE_WRITEOFF_REQUESTS }}" @selected($defaultStartPage === \App\Models\User::START_PAGE_WRITEOFF_REQUESTS)>Norakstīšanas pieteikumi</option>
+                                <option value="{{ \App\Models\User::START_PAGE_DEVICE_TRANSFERS }}" @selected($defaultStartPage === \App\Models\User::START_PAGE_DEVICE_TRANSFERS)>Nodošanas pieteikumi</option>
+                                <option value="{{ \App\Models\User::START_PAGE_AUDIT_LOG }}" @selected($defaultStartPage === \App\Models\User::START_PAGE_AUDIT_LOG)>Audita žurnāls</option>
+                            </select>
+                            <x-input-error class="mt-2" :messages="$errors->profileSettings->get('default_start_page')" />
+                        </div>
+
+                        <div>
+                            <x-input-label for="profile_default_view_mode" value="Noklusētais skata režīms" />
+                            <select id="profile_default_view_mode" name="default_view_mode" class="crud-control mt-2">
+                                <option value="{{ \App\Models\User::VIEW_MODE_ADMIN }}" @selected($defaultViewMode === \App\Models\User::VIEW_MODE_ADMIN)>Admina skats</option>
+                                <option value="{{ \App\Models\User::VIEW_MODE_USER }}" @selected($defaultViewMode === \App\Models\User::VIEW_MODE_USER)>Darbinieka skats</option>
+                                <option value="{{ \App\Models\User::DEFAULT_VIEW_MODE_LAST }}" @selected($defaultViewMode === \App\Models\User::DEFAULT_VIEW_MODE_LAST)>Atcerēties pēdējo</option>
+                            </select>
+                            <x-input-error class="mt-2" :messages="$errors->profileSettings->get('default_view_mode')" />
+                        </div>
+
+                        <div>
+                            <x-input-label for="profile_default_device_filter" value="Ierīču noklusētais filtrs" />
+                            <select id="profile_default_device_filter" name="default_device_filter" class="crud-control mt-2">
+                                <option value="{{ \App\Models\User::DEVICE_FILTER_ALL }}" @selected($defaultDeviceFilter === \App\Models\User::DEVICE_FILTER_ALL)>Visas ierīces</option>
+                                <option value="{{ \App\Models\User::DEVICE_FILTER_ACTIVE }}" @selected($defaultDeviceFilter === \App\Models\User::DEVICE_FILTER_ACTIVE)>Tikai aktīvās</option>
+                                <option value="{{ \App\Models\User::DEVICE_FILTER_REPAIR }}" @selected($defaultDeviceFilter === \App\Models\User::DEVICE_FILTER_REPAIR)>Tikai remontā</option>
+                            </select>
+                            <x-input-error class="mt-2" :messages="$errors->profileSettings->get('default_device_filter')" />
+                        </div>
+
+                        <div>
+                            <x-input-label for="profile_default_request_filter" value="Pieteikumu noklusētais filtrs" />
+                            <select id="profile_default_request_filter" name="default_request_filter" class="crud-control mt-2">
+                                <option value="{{ \App\Models\User::REQUEST_FILTER_SUBMITTED }}" @selected($defaultRequestFilter === \App\Models\User::REQUEST_FILTER_SUBMITTED)>Tikai iesniegtie</option>
+                                <option value="{{ \App\Models\User::REQUEST_FILTER_ALL }}" @selected($defaultRequestFilter === \App\Models\User::REQUEST_FILTER_ALL)>Visi pieteikumi</option>
+                                <option value="{{ \App\Models\User::REQUEST_FILTER_TODAY }}" @selected($defaultRequestFilter === \App\Models\User::REQUEST_FILTER_TODAY)>Tikai šodienas</option>
+                            </select>
+                            <x-input-error class="mt-2" :messages="$errors->profileSettings->get('default_request_filter')" />
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <x-input-label for="profile_notification_visual_mode" value="Paziņojumu izcelšana" />
+                            <select id="profile_notification_visual_mode" name="notification_visual_mode" class="crud-control mt-2">
+                                <option value="{{ \App\Models\User::NOTIFICATION_VISUAL_ANIMATED }}" @selected($notificationVisualMode === \App\Models\User::NOTIFICATION_VISUAL_ANIMATED)>Pilna animācija</option>
+                                <option value="{{ \App\Models\User::NOTIFICATION_VISUAL_SUBTLE }}" @selected($notificationVisualMode === \App\Models\User::NOTIFICATION_VISUAL_SUBTLE)>Klusāka izcelšana</option>
+                                <option value="{{ \App\Models\User::NOTIFICATION_VISUAL_OFF }}" @selected($notificationVisualMode === \App\Models\User::NOTIFICATION_VISUAL_OFF)>Bez toast paziņojumiem</option>
+                            </select>
+                            <x-input-error class="mt-2" :messages="$errors->profileSettings->get('notification_visual_mode')" />
+                        </div>
+                    </div>
+
                     <div class="rounded-[1.5rem] border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-900">
-                        <div class="font-semibold">Pēc noklusējuma šis iestatījums ir izslēgts.</div>
-                        <p class="mt-1">Tas ļauj adminam redzēt pilnu inventāru. Iestatījumu vari ieslēgt, ja ikdienas darbā gribi paslēpt jau norakstītās ierīces no darba virsmas un ierīču saraksta.</p>
+                        <div class="font-semibold">Šie iestatījumi attiecas tikai uz tavu kontu.</div>
+                        <p class="mt-1">Tie nosaka, kur nonāc pēc pieslēgšanās, kādi saraksti atveras pēc noklusējuma un cik uzkrītoši tiek rādīti jaunie paziņojumi.</p>
                     </div>
 
                     <div class="device-user-room-modal-actions">

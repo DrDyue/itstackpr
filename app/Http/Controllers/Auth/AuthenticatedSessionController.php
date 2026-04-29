@@ -42,16 +42,18 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
-        if ($request->user()?->isAdmin()) {
-            $request->session()->put(User::VIEW_MODE_SESSION_KEY, User::VIEW_MODE_ADMIN);
+        $user = $request->user();
+
+        if ($user?->isAdmin()) {
+            $request->session()->put(User::VIEW_MODE_SESSION_KEY, $user->initialViewMode());
         } else {
             $request->session()->forget(User::VIEW_MODE_SESSION_KEY);
         }
-        AuditTrail::login($request->user());
+        AuditTrail::login($user);
 
         return redirect()->intended(
-            $request->user()?->canManageRequests()
-                ? route('dashboard', absolute: false)
+            $user?->canManageRequests()
+                ? route($user->defaultStartRouteName(), absolute: false)
                 : route('devices.index', absolute: false)
         );
     }

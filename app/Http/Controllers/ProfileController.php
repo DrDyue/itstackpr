@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 
 /**
  * Lietotāja profila rediģēšana un konta dzēšana.
@@ -97,19 +98,40 @@ class ProfileController extends Controller
 
         $validated = $request->validateWithBag('profileSettings', [
             'hide_written_off_devices' => ['required', 'boolean'],
+            'default_start_page' => ['required', 'string', Rule::in(User::startPageOptions())],
+            'default_view_mode' => ['required', 'string', Rule::in(User::defaultViewModeOptions())],
+            'default_device_filter' => ['required', 'string', Rule::in(User::deviceFilterOptions())],
+            'notification_visual_mode' => ['required', 'string', Rule::in(User::notificationVisualOptions())],
+            'default_request_filter' => ['required', 'string', Rule::in(User::requestFilterOptions())],
         ]);
 
         $before = [
             User::SETTING_HIDE_WRITEOFF_DEVICES => $user->prefersHiddenWrittenOffDevices(),
+            User::SETTING_DEFAULT_START_PAGE => $user->defaultStartPage(),
+            User::SETTING_DEFAULT_VIEW_MODE => $user->defaultViewMode(),
+            User::SETTING_DEFAULT_DEVICE_FILTER => $user->defaultDeviceFilter(),
+            User::SETTING_NOTIFICATION_VISUAL_MODE => $user->notificationVisualMode(),
+            User::SETTING_DEFAULT_REQUEST_FILTER => $user->defaultRequestFilter(),
         ];
 
         $settings = is_array($user->user_settings) ? $user->user_settings : [];
         $settings[User::SETTING_HIDE_WRITEOFF_DEVICES] = (bool) $validated['hide_written_off_devices'];
+        $settings[User::SETTING_DEFAULT_START_PAGE] = $validated['default_start_page'];
+        $settings[User::SETTING_DEFAULT_VIEW_MODE] = $validated['default_view_mode'];
+        $settings[User::SETTING_DEFAULT_DEVICE_FILTER] = $validated['default_device_filter'];
+        $settings[User::SETTING_NOTIFICATION_VISUAL_MODE] = $validated['notification_visual_mode'];
+        $settings[User::SETTING_DEFAULT_REQUEST_FILTER] = $validated['default_request_filter'];
 
         $this->persistProfileSettings($user, $settings);
 
+        $updatedUser = $user->fresh();
         $after = [
-            User::SETTING_HIDE_WRITEOFF_DEVICES => $user->fresh()->prefersHiddenWrittenOffDevices(),
+            User::SETTING_HIDE_WRITEOFF_DEVICES => $updatedUser->prefersHiddenWrittenOffDevices(),
+            User::SETTING_DEFAULT_START_PAGE => $updatedUser->defaultStartPage(),
+            User::SETTING_DEFAULT_VIEW_MODE => $updatedUser->defaultViewMode(),
+            User::SETTING_DEFAULT_DEVICE_FILTER => $updatedUser->defaultDeviceFilter(),
+            User::SETTING_NOTIFICATION_VISUAL_MODE => $updatedUser->notificationVisualMode(),
+            User::SETTING_DEFAULT_REQUEST_FILTER => $updatedUser->defaultRequestFilter(),
         ];
 
         AuditTrail::updatedFromState(
@@ -171,19 +193,84 @@ class ProfileController extends Controller
      */
     private function profileSettingsAuditDescription(User $user, array $before, array $after): string
     {
-        $beforeValue = (bool) ($before[User::SETTING_HIDE_WRITEOFF_DEVICES] ?? false);
-        $afterValue = (bool) ($after[User::SETTING_HIDE_WRITEOFF_DEVICES] ?? false);
+        $labels = [
+            User::SETTING_HIDE_WRITEOFF_DEVICES => 'norakstīto ierīču slēpšana',
+            User::SETTING_DEFAULT_START_PAGE => 'sākuma lapa',
+            User::SETTING_DEFAULT_VIEW_MODE => 'noklusētais skata režīms',
+            User::SETTING_DEFAULT_DEVICE_FILTER => 'ierīču noklusētais filtrs',
+            User::SETTING_NOTIFICATION_VISUAL_MODE => 'paziņojumu izcelšana',
+            User::SETTING_DEFAULT_REQUEST_FILTER => 'pieteikumu noklusētais filtrs',
+        ];
 
-        if ($beforeValue === $afterValue) {
-            return 'Administrēšanas skata iestatījums netika mainīts: "Paslēpt norakstītās ierīces" palika '.($afterValue ? 'ieslēgts' : 'izslēgts').': ' . AuditTrail::labelFor($user);
+        $changes = collect($after)
+            ->filter(fn (mixed $value, string $key) => ($before[$key] ?? null) !== $value)
+            ->map(fn (mixed $value, string $key) => ($labels[$key] ?? $key).': '.$this->settingValueLabel($before[$key] ?? null, $key).' -> '.$this->settingValueLabel($value, $key))
+            ->values()
+            ->all();
+
+        if ($changes === []) {
+            return 'Admina darba vides iestatījumi saglabāti bez izmaiņām: '.AuditTrail::labelFor($user);
         }
 
-        return 'Administrēšanas skata iestatījums "Paslēpt norakstītās ierīces" mainīts: '
-            . ($beforeValue ? 'ieslēgts' : 'izslēgts')
-            . ' -> '
-            . ($afterValue ? 'ieslēgts' : 'izslēgts')
-            . ': '
-            . AuditTrail::labelFor($user);
+        return 'Admina darba vides iestatījumi mainīti: '.implode('; ', $changes).': '.AuditTrail::labelFor($user);
+    }
+
+    private function settingValueLabel(mixed $value, ?string $key = null): string
+    {
+        if ($key === User::SETTING_DEFAULT_START_PAGE) {
+            return match ($value) {
+                User::START_PAGE_DASHBOARD => 'Dashboard',
+                User::START_PAGE_DEVICES => 'Ierīces',
+                User::START_PAGE_REPAIR_REQUESTS => 'Remonta pieteikumi',
+                User::START_PAGE_WRITEOFF_REQUESTS => 'Norakstīšanas pieteikumi',
+                User::START_PAGE_DEVICE_TRANSFERS => 'Nodošanas pieteikumi',
+                User::START_PAGE_AUDIT_LOG => 'Audita žurnāls',
+                default => 'nav norādīts',
+            };
+        }
+
+        if ($key === User::SETTING_DEFAULT_VIEW_MODE) {
+            return match ($value) {
+                User::VIEW_MODE_ADMIN => 'admina skats',
+                User::VIEW_MODE_USER => 'darbinieka skats',
+                User::DEFAULT_VIEW_MODE_LAST => 'atcerēties pēdējo',
+                default => 'nav norādīts',
+            };
+        }
+
+        if ($key === User::SETTING_DEFAULT_DEVICE_FILTER) {
+            return match ($value) {
+                User::DEVICE_FILTER_ACTIVE => 'aktīvās ierīces',
+                User::DEVICE_FILTER_REPAIR => 'remontā esošās ierīces',
+                User::DEVICE_FILTER_ALL => 'visas ierīces',
+                default => 'nav norādīts',
+            };
+        }
+
+        if ($key === User::SETTING_DEFAULT_REQUEST_FILTER) {
+            return match ($value) {
+                User::REQUEST_FILTER_SUBMITTED => 'iesniegtie pieteikumi',
+                User::REQUEST_FILTER_TODAY => 'šodienas pieteikumi',
+                User::REQUEST_FILTER_ALL => 'visi pieteikumi',
+                default => 'nav norādīts',
+            };
+        }
+
+        if ($key === User::SETTING_NOTIFICATION_VISUAL_MODE) {
+            return match ($value) {
+                User::NOTIFICATION_VISUAL_SUBTLE => 'klusāka izcelšana',
+                User::NOTIFICATION_VISUAL_OFF => 'bez toast paziņojumiem',
+                User::NOTIFICATION_VISUAL_ANIMATED => 'pilna animācija',
+                default => 'nav norādīts',
+            };
+        }
+
+        return match ($value) {
+            true => 'ieslēgts',
+            false => 'izslēgts',
+            null, '' => 'nav norādīts',
+            default => (string) $value,
+        };
     }
 
     /**
