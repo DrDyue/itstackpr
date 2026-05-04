@@ -95,7 +95,7 @@ class ProfileController extends Controller
      *
      * Kā strādā: Pieejams tikai administratoriem. Iestatījumi glabājas `user_settings` JSON kolonnā. Izmaiņas tiek reģistrētas audita žurnālā ar skaidru aprakstu.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Kad administrators profila sadaļā maina darba vides noklusējumus.
      */
     public function updateSettings(Request $request): RedirectResponse
     {
@@ -103,6 +103,8 @@ class ProfileController extends Controller
         abort_unless($user, 404);
         abort_unless($user->isAdmin(), 403);
 
+        // Iestatījumus validējam ar atsevišķu kļūdu grozu, lai profila modālī
+        // kļūdas neiejauktos paroles vai konta dzēšanas formās.
         $validated = $request->validateWithBag('profileSettings', [
             'hide_written_off_devices' => ['required', 'boolean'],
             'default_start_page' => ['required', 'string', Rule::in(User::startPageOptions())],
@@ -112,6 +114,8 @@ class ProfileController extends Controller
             'default_request_filter' => ['required', 'string', Rule::in(User::requestFilterOptions())],
         ]);
 
+        // Pirms saglabāšanas no modeļa nolasām cilvēkam saprotamās vērtības,
+        // lai auditā varētu parādīt precīzu "pirms/pēc" izmaiņu sarakstu.
         $before = [
             User::SETTING_HIDE_WRITEOFF_DEVICES => $user->prefersHiddenWrittenOffDevices(),
             User::SETTING_DEFAULT_START_PAGE => $user->defaultStartPage(),
@@ -121,6 +125,8 @@ class ProfileController extends Controller
             User::SETTING_DEFAULT_REQUEST_FILTER => $user->defaultRequestFilter(),
         ];
 
+        // Saglabājam tikai atļautās atslēgas JSON iestatījumos, nepārrakstot
+        // iespējamas citas profila vērtības, kas var atrasties tajā pašā kolonnā.
         $settings = is_array($user->user_settings) ? $user->user_settings : [];
         $settings[User::SETTING_HIDE_WRITEOFF_DEVICES] = (bool) $validated['hide_written_off_devices'];
         $settings[User::SETTING_DEFAULT_START_PAGE] = $validated['default_start_page'];
@@ -131,6 +137,8 @@ class ProfileController extends Controller
 
         $this->persistProfileSettings($user, $settings);
 
+        // Pēc saglabāšanas pārlasām lietotāju no datubāzes, lai audits salīdzina
+        // tieši tās vērtības, kas patiešām tika ierakstītas.
         $updatedUser = $user->fresh();
         $after = [
             User::SETTING_HIDE_WRITEOFF_DEVICES => $updatedUser->prefersHiddenWrittenOffDevices(),
@@ -159,11 +167,13 @@ class ProfileController extends Controller
      *
      * Kā strādā: Ja `user_settings` kolonna vēl nav datubāzē (legacy shēma), tiek izsaukts RuntimeSchemaBootstrapper, lai to izveidotu, un saglabāšana tiek atkārtota.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Kad profila iestatījumi jāsaglabā arī instalācijās, kur `user_settings` kolonna var vēl nebūt izveidota.
      */
     private function persistProfileSettings(User $user, array $settings): void
     {
         try {
+            // forceFill šeit tiek izmantots kontrolētam iestatījumu JSON laukam,
+            // pat ja šis lauks nav modeļa mass-assignment sarakstā.
             $user->forceFill([
                 'user_settings' => $settings,
             ])->save();
@@ -172,13 +182,16 @@ class ProfileController extends Controller
                 throw $exception;
             }
 
+            // Ja kolonna trūka vecākā datubāzes shēmā, bootstrapper mēģinās to izveidot runtime laikā.
             $this->runtimeSchemaBootstrapper->ensure();
 
+            // Pēc labošanas pārbaudām, vai kolonna tiešām eksistē; ja nē, nemēģinām kļūdu noslēpt.
             if (! Schema::hasColumn('users', 'user_settings')) {
                 throw $exception;
             }
 
             $user->refresh();
+            // Lietotāju pārlasām un saglabājam atkārtoti, jo modeļa stāvoklis mainījās pēc shēmas labošanas.
             $user->forceFill([
                 'user_settings' => $settings,
             ])->save();
@@ -188,9 +201,9 @@ class ProfileController extends Controller
     /**
      * Ko dara: Pārbauda, vai datubāzes kļūda ir par trūkstošo `user_settings` kolonnu.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Pārbauda datubāzes kļūdas tekstu un nosaka, vai saglabāšana izgāzās tieši trūkstošas `user_settings` kolonnas dēļ.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: `persistProfileSettings()` kļūdas apstrādē, lai atšķirtu migrācijas problēmu no citām datubāzes kļūdām.
      */
     private function isMissingUserSettingsColumn(QueryException $exception): bool
     {
@@ -202,7 +215,7 @@ class ProfileController extends Controller
      *
      * Kā strādā: Ja vērtība nav mainījusies, apraksts to norāda. Ja mainījusies — parāda pirms/pēc pāreju (ieslēgts/izslēgts).
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Kad profila iestatījumu izmaiņas jāpārvērš saprotamā audita aprakstā.
      */
     private function profileSettingsAuditDescription(User $user, array $before, array $after): string
     {
@@ -231,12 +244,14 @@ class ProfileController extends Controller
     /**
      * Ko dara: Pārvērš profila iestatījuma tehnisko vērtību cilvēkam saprotamā tekstā.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Katram iestatījuma tipam tehnisko konstantu vai boolean vērtību pārvērš latviskā tekstā, ko izmanto audita pierakstā.
      *
      * Kad pielietojas: Izsauc no: `profileSettingsAuditDescription()`.
      */
     private function settingValueLabel(mixed $value, ?string $key = null): string
     {
+        // Katram izvēlnes tipa iestatījumam tehnisko konstantu pārvēršam tekstā,
+        // lai audita žurnāls būtu saprotams bez koda skatīšanās.
         if ($key === User::SETTING_DEFAULT_START_PAGE) {
             return match ($value) {
                 User::START_PAGE_DASHBOARD => 'Dashboard',
@@ -285,6 +300,8 @@ class ProfileController extends Controller
             };
         }
 
+        // Boolean un tukšās vērtības apstrādājam kopīgi, jo tās izmanto vairākas
+        // profila izvēles un auditā tām jāizskatās vienādi.
         return match ($value) {
             true => 'ieslēgts',
             false => 'izslēgts',
@@ -298,10 +315,11 @@ class ProfileController extends Controller
      *
      * Kā strādā: Pirms dzēšanas reģistrē audita žurnālā brīdinājuma līmeņa notikumu. Sesija tiek pilnīgi atiestatīta, lai novērstu jebkādu sesijas noplūdi.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Kad lietotājs profila sadaļā apstiprina sava konta dzēšanu ar paroli.
      */
     public function destroy(Request $request): RedirectResponse
     {
+        // Konta dzēšanai prasa pašreizējo paroli; Laravel salīdzina ievadi ar saglabāto paroles hash.
         $request->validateWithBag('userDeletion', [
             'password' => ['required', 'current_password'],
         ]);
@@ -309,9 +327,11 @@ class ProfileController extends Controller
         $user = $request->user();
         AuditTrail::deleted($user?->id, $user, 'Lietotāja konts dzēsts: ' . AuditTrail::labelFor($user), AuditTrail::SEVERITY_WARNING);
 
+        // Vispirms izrakstām lietotāju, lai pēc dzēšanas sesija vairs nebūtu piesaistīta neeksistējošam kontam.
         Auth::logout();
         $user?->delete();
 
+        // Sesijas anulēšana un jauns CSRF tokens nodrošina, ka vecie pieprasījumi pēc konta dzēšanas vairs neder.
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

@@ -114,6 +114,8 @@ class Device extends Model
      */
     public function activeRepair(): HasOne
     {
+        // latestOfMany nodrošina, ka no vairākiem aktīviem ierakstiem (piemēram, legacy datu kļūdas gadījumā)
+        // priekšroka tiek dota jaunākajam, ko interfeiss arī uzskata par aktuālo.
         return $this->hasOne(Repair::class)
             ->whereIn('status', ['waiting', 'in-progress'])
             ->latestOfMany('id');
@@ -140,6 +142,8 @@ class Device extends Model
      */
     public function pendingRepairRequest(): HasOne
     {
+        // "pending" šajā projektā nozīmē tieši "submitted" statusu,
+        // jo tikai tas vēl gaida izskatīšanu un bloķē nākamās darbības ar ierīci.
         return $this->hasOne(RepairRequest::class)
             ->where('status', RepairRequest::STATUS_SUBMITTED)
             ->latestOfMany('id');
@@ -202,6 +206,8 @@ class Device extends Model
      */
     public function getAssignedUserIdAttribute(): mixed
     {
+        // Šis alias uztur savietojamību ar vecāku kodu, kur laukam bija cits nosaukums.
+        // Tādā veidā jaunais modelis var apkalpot gan current, gan legacy piekļuves punktus.
         return $this->attributes['assigned_to_id'] ?? $this->attributes['assigned_user_id'] ?? null;
     }
 
@@ -235,6 +241,8 @@ class Device extends Model
      */
     public static function normalizeStatus(?string $status): string
     {
+        // Visi vecie vai nekorektie statusi tiek salocīti uz vienu no trim atļautajiem stāvokļiem,
+        // lai biznesa loģika nestrādātu ar brīvām teksta vērtībām.
         return match ($status) {
             'repair' => self::STATUS_REPAIR,
             'writeoff', 'written_off' => self::STATUS_WRITEOFF,

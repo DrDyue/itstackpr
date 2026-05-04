@@ -5,6 +5,8 @@
 --}}
 <x-app-layout>
     @php
+        // Atlasīto filtru label teksti tiek aprēķināti šeit,
+        // lai aktīvo filtru josla un searchable-select inicializācija lietotu vienu un to pašu avotu.
         $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
         $livePendingWriteoffCount = $canReview ? ($requestSummary['submitted'] ?? 0) : 0;
         $selectedDeviceLabel = collect($deviceOptions)->firstWhere('value', (string) ($filters['device_id'] ?? ''))['label'] ?? ($filters['device_query'] ?: null);
@@ -29,6 +31,8 @@
         x-data="{
             livePendingCount: {{ $livePendingWriteoffCount }},
             syncCounts(counts = {}) {
+                // Paziņojumu centrs izsūta aktuālos countus visai lapai.
+                // Šeit tos izmantojam, lai pending badge negaidītu nākamo servera renderi.
                 if (! {{ $canReview ? 'true' : 'false' }}) {
                     return;
                 }
@@ -98,6 +102,8 @@
                 data-manual-search-pagination="false"
             >
                 <input type="hidden" name="statuses_filter" value="1">
+                {{-- Async tabulas kārtošana izmanto hidden laukus, nevis tieši klikšķa pogu stāvokļus,
+                     tāpēc backend vienmēr saņem parastu GET payload. --}}
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
 
@@ -195,6 +201,8 @@
                                     @endphp
                                     <button
                                         type="button"
+                                        {{-- `filterChipGroup` uztur atlasīto statusu masīvu Alpine pusē,
+                                             bet hidden inputi zemāk to pārvērš klasiskā HTML formas struktūrā `status[]`. --}}
                                         @click="toggle(@js($status)); $nextTick(() => window.submitAsyncTableForm($el.closest('form'), { resetPage: true }))"
                                         class="quick-status-filter {{ $toneClass }}"
                                         :class="isSelected(@js($status)) ? 'quick-status-filter-active' : ''"
@@ -276,6 +284,8 @@
     @endunless
 
     @if (old('request_form_type') === 'writeoff' && $errors->any())
+        {{-- Šis nosacījumu bloks atjauno pareizo modāļa stāvokli pēc redirect,
+             lai create un edit formas neapmaldītos savā starpā. --}}
         <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'request-form-writeoff' })));</script>
     @elseif (str_starts_with((string) old('modal_form'), 'writeoff_request_edit_'))
         @php($writeoffRequestModalTarget = str_replace('writeoff_request_edit_', '', (string) old('modal_form')))

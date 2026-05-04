@@ -9,6 +9,8 @@
 ])
 
 @php
+    // `compact` režīms ļauj to pašu komponenti izmantot gan lielās lapu sekcijās,
+    // gan tabulas rindā, kur vietas ir mazāk.
     $wrapperClasses = $compact
         ? 'empty-state empty-state-compact'
         : 'empty-state';
@@ -28,6 +30,8 @@
     </div>
 
     @if ($actionHref && $actionLabel)
+        {{-- Darbības poga tiek renderēta tikai tad, ja komponentei ir gan URL, gan teksts.
+             Tas ļauj vienu komponenti izmantot informatīvam un darbības stāvoklim. --}}
         <div class="empty-state-actions">
             <a href="{{ $actionHref }}" class="btn-clear">
                 <x-icon name="clear" size="h-4 w-4" />

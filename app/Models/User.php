@@ -94,6 +94,8 @@ class User extends Authenticatable
     {
         $settings = $this->user_settings;
 
+        // user_settings tiek glabāts vienā JSON kolonnā.
+        // Šis palīgs pasargā pārējo kodu no tiešas darba ar null vai bojātu masīva struktūru.
         if (! is_array($settings) || ! array_key_exists($key, $settings)) {
             return $default;
         }
@@ -138,6 +140,8 @@ class User extends Authenticatable
             return self::VIEW_MODE_USER;
         }
 
+        // Ja lietotājs izvēlējies režīmu "last", sistēma mēģina atjaunot pēdējo izmantoto skatu.
+        // Pretējā gadījumā tiek lietots profila noklusētais režīms.
         if ($this->defaultViewMode() === self::DEFAULT_VIEW_MODE_LAST) {
             $lastMode = (string) $this->setting(self::SETTING_LAST_VIEW_MODE, self::VIEW_MODE_ADMIN);
 
@@ -309,6 +313,8 @@ class User extends Authenticatable
             return self::VIEW_MODE_USER;
         }
 
+        // Aktīvais skata režīms dzīvo sesijā, nevis tikai profilā,
+        // jo administrators vienas sesijas laikā var pārslēgties starp admina un lietotāja skatu.
         $request = app()->bound('request') ? request() : null;
         $mode = $request && $request->hasSession()
             ? $request->session()->get(self::VIEW_MODE_SESSION_KEY)
@@ -348,6 +354,8 @@ class User extends Authenticatable
      */
     public function canViewDevice(Device $device): bool
     {
+        // Vadītājs/admins redz visas ierīces, bet parastais lietotājs tikai sev piesaistītās.
+        // Šis ir centrālais piekļuves noteikums, ko izmanto kontrolieri un asset preview.
         return $this->canManageRequests()
             || ((int) $device->assigned_to_id === (int) $this->id);
     }

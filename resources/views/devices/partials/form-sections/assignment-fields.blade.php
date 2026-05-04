@@ -9,6 +9,8 @@
             <label class="block">
                 <span class="crud-label">Atbildīgā persona *</span>
                 @if ($isStatusLocked)
+                    {{-- Ja ierīce ir norakstīta vai bloķēta aktīvas plūsmas dēļ,
+                         atbildīgo personu neļaujam mainīt. Norakstītai ierīcei iesniedzam tukšu vērtību. --}}
                     <input type="hidden" name="assigned_to_id" value="{{ $isWrittenOff ? '' : $current?->assigned_to_id }}">
                     <div class="crud-control flex items-center bg-slate-50 text-slate-700">
                         <span title="{{ $isWrittenOff ? 'Norakstītām ierīcēm atbildīgais darbinieks vairs netiek rādīts.' : '' }}">
@@ -32,6 +34,8 @@
             <label class="block">
                 <span class="crud-label">Telpa *</span>
                 @if ($isStatusLocked)
+                    {{-- Telpai ir tāds pats bloķēšanas princips kā atbildīgajam:
+                         pie atvērta procesa nedrīkst pārvietot ierīci uz citu vietu. --}}
                     <input type="hidden" name="room_id" value="{{ $isWrittenOff ? '' : $current?->room_id }}">
                     <div class="crud-control flex items-center bg-slate-50 text-slate-700">
                         <span>{{ $isWrittenOff ? 'Nav piešķirta telpai' : ($selectedRoomLabel ?: 'Nav piešķirta telpai') }}</span>
@@ -51,6 +55,8 @@
             </label>
         </div>
 
+        {{-- `building_id` ir atvasināts no telpas vai esošās piesaistes.
+             To sūtām hidden laukā, lai backend var sinhronizēt ēku arī tad, ja lietotājs tieši izvēlas tikai telpu. --}}
         <input type="hidden" name="building_id" value="{{ $isStatusLocked ? ($isWrittenOff ? '' : $current?->building_id) : $selectedBuildingId }}">
     </div>
 </div>

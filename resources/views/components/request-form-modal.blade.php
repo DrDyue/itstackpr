@@ -17,6 +17,8 @@
 ])
 
 @php
+    // Viens Blade komponents apkalpo trīs pieprasījumu tipus.
+    // Tādēļ maršruti, virsraksti un validācijas teksti tiek salikti konfigurācijas masīvos pēc tipa.
     $routes = [
         'repair' => 'repair-requests.store',
         'writeoff' => 'writeoff-requests.store',
@@ -68,6 +70,8 @@
         class="surface-card space-y-6 p-6"
     >
         @csrf
+        {{-- Pēc redirect ar validācijas kļūdām šis hidden lauks ļauj backendam/frontendam zināt,
+             kuru tieši modāli jāatver atkārtoti un kuram form tipam pieder kļūdas. --}}
         <input type="hidden" name="request_form_type" value="{{ $type }}">
 
         <div>
@@ -88,6 +92,8 @@
                 <label class="crud-label">
                     Ierīce <span class="text-rose-500">*</span>
                 </label>
+                {{-- Meklējamais select atdala redzamo tekstu no faktiskā ID,
+                     tāpēc lietotājs var meklēt pēc nosaukuma, koda vai telpas, bet forma iesniedz stabilu primāro atslēgu. --}}
                 <x-searchable-select
                     name="device_id"
                     query-name="device_query"
@@ -137,6 +143,8 @@
                         <label class="crud-label">
                             Nodot lietotājam <span class="text-rose-500">*</span>
                         </label>
+                        {{-- Nodošanas pieteikumam vajag otru searchable-select,
+                             jo jāiesniedz nevis brīvs teksts, bet konkrēta saņēmēja lietotāja ID vērtība. --}}
                         <x-searchable-select
                             name="transfered_to_id"
                             query-name="transfered_to_query"

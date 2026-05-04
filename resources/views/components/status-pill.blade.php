@@ -15,8 +15,12 @@
 ])
 
 @php
+    // Statusu vērtības projektā reizēm ir bool, reizēm string kodi.
+    // Normalizācija nodrošina, ka `true`, `1` un tekstuālie kodi tiek apstrādāti vienādi.
     $normalizedValue = is_bool($value) ? ($value ? '1' : '0') : strtolower((string) ($value ?? ''));
 
+    // Karte centralizē statusa tekstu, krāsu un ikonu.
+    // Tas novērš situāciju, kur katra tabula vienu un to pašu statusu attēlo citādāk.
     $maps = [
         'device' => [
             'active' => ['label' => 'Aktīva', 'tone' => 'success', 'icon' => 'check-circle'],
@@ -69,6 +73,8 @@
     ];
 
     $resolvedLabel = $label ?: $meta['label'];
+    // `pendingAction` ļauj atsevišķos skatos izcelt "gaida darbību" stāvokli,
+    // bet transferiem to var apzināti izslēgt vai aizvietot ar savu tekstu.
     $isPendingAction = is_bool($pendingAction)
         ? $pendingAction
         : ($context === 'request' && $normalizedValue === 'submitted');

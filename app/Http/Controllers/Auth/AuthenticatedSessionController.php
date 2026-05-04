@@ -40,14 +40,16 @@ class AuthenticatedSessionController extends Controller
     /**
      * Ko dara: Apstrādā ienākošu autentifikācijas pieprasījumu.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Validē lietotāja e-pastu/paroli `LoginRequest` klasē, atjauno sesijas ID, saglabā admina skata režīmu un pieraksta login auditu.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Izsaukšana: POST /login. Scenārijs: lietotājs iesniedz pieslēgšanās formu un pēc veiksmīgas autentifikācijas tiek novirzīts uz sākuma lapu.
      */
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
 
+        // Pēc veiksmīgas pieslēgšanās atjaunojam sesijas ID,
+        // lai vecu vai uzminētu sesiju nevar izmantot pieslēgšanās pārņemšanai.
         $request->session()->regenerate();
         $user = $request->user();
 
@@ -68,19 +70,22 @@ class AuthenticatedSessionController extends Controller
     /**
      * Ko dara: Izbeidz autentificēto sesiju.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Pieraksta izrakstīšanās auditu, izsauc Laravel web guard logout, anulē sesiju un ģenerē jaunu CSRF tokenu.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Izsaukšana: POST /logout. Scenārijs: lietotājs izvēlas izrakstīties no sistēmas.
      */
     public function destroy(Request $request): RedirectResponse
     {
         $user = $request->user();
         AuditTrail::logout($user);
 
+        // Laravel web guard aizmirst autentificēto lietotāju servera pusē.
         Auth::guard('web')->logout();
 
+        // Pilnībā anulējam sesiju, lai pēc logout vecie sesijas dati vairs nav derīgi.
         $request->session()->invalidate();
 
+        // Jauns CSRF tokens nodrošina, ka vecas formas vai tokeni pēc izrakstīšanās vairs neder.
         $request->session()->regenerateToken();
 
         return redirect('/');

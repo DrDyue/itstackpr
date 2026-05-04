@@ -5,6 +5,9 @@
 ])
 
 @php
+    // Šis partial apkalpo gan izveides, gan rediģēšanas modāli.
+    // `modal_form` ir stabils identifikators, pēc kura pēc redirect var saprast,
+    // kurai konkrētajai formai pieder `old()` ievade un validācijas kļūdas.
     $isEdit = $mode === 'edit' && $device;
     $modalForm = $isEdit ? 'device_edit_' . $device->id : 'device_create';
     $shouldUseOldInput = old('modal_form') === $modalForm;
@@ -42,6 +45,8 @@
             @method('PUT')
         @endif
 
+        {{-- Hidden lauks tiek nosūtīts kopā ar formu un pēc validācijas kļūdas ļauj atvērt tieši šo modāli,
+             nevis jebkuru citu ierīces formu tajā pašā lapā. --}}
         <input type="hidden" name="modal_form" value="{{ $modalForm }}">
 
         <div class="device-type-modal-head">
@@ -63,6 +68,8 @@
 
         <div class="device-type-modal-body overflow-y-auto">
             @if ($shouldUseOldInput && $errors->any())
+                {{-- Kopsavilkumu rādām tikai tai formai, kas patiešām tika iesniegta,
+                     lai vienas ierīces kļūdas neparādītos citu ierīču edit modāļos. --}}
                 <x-validation-summary
                     class="mb-5"
                     title="{{ $isEdit ? 'Neizdevās saglabāt ierīces izmaiņas' : 'Neizdevās izveidot ierīci' }}"
@@ -100,6 +107,8 @@
 @if ($shouldUseOldInput && $errors->any())
     <script>
         window.addEventListener('DOMContentLoaded', () => {
+            // Pēc neveiksmīgas validācijas fokusu pārliekam uz pirmo kļūdaino lauku,
+            // lai lietotājam nav jāmeklē, kur forma jālabo.
             window.setTimeout(() => window.focusValidationField?.('{{ array_key_first($errors->getMessages()) }}'), 180);
         });
     </script>

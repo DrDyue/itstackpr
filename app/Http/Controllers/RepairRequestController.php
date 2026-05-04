@@ -76,12 +76,14 @@ class RepairRequestController extends Controller
     /**
      * Ko dara: Kopīga metode remonta pieteikumu datu sagatavošanai.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Normalizē filtrus un kārtošanu, ierobežo redzamību pēc lomas, sagatavo sarakstu, kopsavilkumu, filtru opcijas un modālā loga datus.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Remonta pieteikumu pilnās lapas un async tabulas datu sagatavošanā.
      */
     private function repairRequestsViewData(Request $request, $user): array
     {
+        // Ātrā meklēšana atkārto tās pašas tiesības un filtrus, kas sarakstā:
+        // vadītājs redz visus, parasts lietotājs tikai savus pieteikumus.
         $canReview = $user->canManageRequests();
         $availableStatuses = [
             RepairRequest::STATUS_SUBMITTED,
@@ -91,6 +93,8 @@ class RepairRequestController extends Controller
         $filters = $this->normalizedIndexFilters($request, $availableStatuses, $canReview);
         $sorting = $this->normalizedSorting($request);
 
+        // Ja legacy instalācijā remonta pieteikumu tabula vēl nav izveidota,
+        // skats saņem tukšu, bet pilnu datu struktūru un netiek apturēts ar kļūdu.
         if (! $this->featureTableExists('repair_requests')) {
             return [
                 'requests' => collect(),
@@ -115,9 +119,13 @@ class RepairRequestController extends Controller
             ];
         }
 
+        // Bāzes vaicājums nosaka redzamību: vadītājs redz visus pieteikumus,
+        // bet parasts lietotājs tikai tos, kurus pats iesniedza.
         $baseQuery = RepairRequest::query()
             ->when(! $canReview, fn (Builder $query) => $query->where('responsible_user_id', $user->id));
 
+        // Filtru izvēlnes veidojam no tās pašas redzamās datu kopas, izlaižot
+        // pašreizējo filtru, lai lietotājs varētu pārslēgt vērtības.
         $deviceOptions = $this->repairDeviceOptions(
             (clone $this->applyIndexFilters(clone $baseQuery, $filters, ['device_id', 'code']))
                 ->with(['device.type'])
@@ -138,6 +146,10 @@ class RepairRequestController extends Controller
             ? $this->deviceOptions($this->availableDevicesForUser($user)->get())
             : collect();
 
+        // Galvenais saraksta vaicājums ielādē ierīci, iesniedzēju un izskatītāju,
+        // lai skatā nav jāveic papildu pieprasījumi katrai rindai.
+        // Ielādējam filtrēto sarakstu ar ierīces kodu, jo atrastā pozīcija
+        // nosaka, kuru rindu frontendam jāizceļ.
         $requestsQuery = (clone $baseQuery)
             ->with(['device.type', 'responsibleUser', 'reviewedBy'])
             ->select('repair_requests.*');
@@ -147,6 +159,8 @@ class RepairRequestController extends Controller
 
         $requests = $requestsQuery->get();
 
+        // Vienā masīvā atdodam tabulas rindas, kopsavilkumu, filtrus un modālo
+        // formu opcijas, jo to visu izmanto viens remonta pieteikumu skats.
         return [
             'requests' => $requests,
             'requestSummary' => [
@@ -179,9 +193,9 @@ class RepairRequestController extends Controller
     /**
      * Ko dara: Atrod remonta pieteikumu pēc saistītās ierīces koda filtrētajā sarakstā.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Atkārto saraksta filtrus, kārtošanu un lomu redzamību, ielādē ierīces kodus un atgriež atrastās rindas highlight ID.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Kad JavaScript ātrajā meklēšanā remonta pieteikumu sarakstā meklē pēc ierīces koda.
      */
     public function findByCode(Request $request)
     {
@@ -218,6 +232,8 @@ class RepairRequestController extends Controller
         $needle = mb_strtolower(trim($code));
         $foundIndex = null;
 
+        // Meklējam precīzu ierīces koda sakritību, lai daļēja ievade neizceltu
+        // citu remonta pieteikumu.
         foreach ($requests as $index => $repairRequest) {
             $deviceCode = mb_strtolower(trim((string) ($repairRequest->device?->code ?? '')));
             if ($deviceCode === $needle) {
@@ -241,9 +257,9 @@ class RepairRequestController extends Controller
     /**
      * Ko dara: Saglabā jaunu remonta pieteikumu.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Parastam lietotājam validē izvēlēto ierīci un aprakstu, pārbauda konfliktējošus pieteikumus/remontus un izveido `submitted` remonta pieteikumu.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Kad darbinieks savai aktīvajai ierīcei iesniedz remonta pieteikumu.
      */
     public function store(Request $request)
     {
@@ -288,9 +304,9 @@ class RepairRequestController extends Controller
     /**
      * Ko dara: Administratora lēmums par remonta pieteikumu.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Vadītājs validē lēmumu, transakcijā bloķē pieteikumu, apstiprināšanas gadījumā izveido remonta ierakstu un atjaunina ierīces statusu.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Kad administrators vai IT vadītājs apstiprina vai noraida iesniegtu remonta pieteikumu.
      */
     public function review(Request $request, RepairRequest $repairRequest)
     {
@@ -417,7 +433,7 @@ class RepairRequestController extends Controller
     /**
      * Ko dara: Atgriež lietotājam pieejamās ierīces konkrētās plūsmas izveides formai.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Atgriež lietotāja aktīvās ierīces, kurām nav aktīva remonta, gaidoša remonta/norakstīšanas pieteikuma vai nodošanas.
      *
      * Kad pielietojas: Izsauc no: saraksta datu sagatavošanas metodes un `store()`.
      */
@@ -437,7 +453,7 @@ class RepairRequestController extends Controller
     /**
      * Ko dara: Sagatavo ierīču izvēlnes opcijas formai vai filtram.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Ierīču kolekciju pārvērš dropdown opcijās ar nosaukumu, kodu, tipu, modeli, atrašanās vietu un meklēšanas tekstu.
      *
      * Kad pielietojas: Izsauc no: saraksta datu sagatavošanas metodes.
      */
@@ -472,7 +488,7 @@ class RepairRequestController extends Controller
     /**
      * Ko dara: Pārbauda, vai ierīcei drīkst izveidot remonta pieteikumu.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Pārbauda, vai ierīce nav remontā un tai nav gaidoša remonta, norakstīšanas vai nodošanas pieteikuma; konflikta gadījumā izmet validācijas kļūdu.
      *
      * Kad pielietojas: Izsauc no: `store()`.
      */
@@ -506,9 +522,9 @@ class RepairRequestController extends Controller
     /**
      * Ko dara: Sakārto saraksta filtru stāvokli, ieskaitot admina noklusēto "iesniegts".
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Nolasa URL filtrus, vajadzības gadījumā uzliek vadītāja noklusēto "iesniegts" vai "šodien" filtru un normalizē statusu atlasi.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Remonta pieteikumu sarakstā, async tabulā un ātrajā meklēšanā.
      */
     private function normalizedIndexFilters(Request $request, array $availableStatuses, bool $canReview): array
     {
@@ -553,14 +569,16 @@ class RepairRequestController extends Controller
     /**
      * Ko dara: Pielieto meklēšanu un filtrus pieteikumu vaicājumam.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Pielieto precīzu ierīces koda filtru, brīvo ierīces meklēšanu, pieteikuma/ierīces/pieteicēja/datuma/statusa filtrus.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Kad remonta pieteikumu vaicājums jāsašaurina pēc lietotāja izvēlētajiem filtriem.
      */
     private function applyIndexFilters(Builder $query, array $filters, array $skip = []): Builder
     {
         $skipLookup = array_flip($skip);
 
+        // Precīzais ierīces koda filtrs palīdz atrast vienu konkrētu pieteikumu
+        // pēc koda, ignorējot lielo/mazo burtu atšķirības.
         if (! isset($skipLookup['code']) && $filters['code'] !== '') {
             $code = mb_strtolower(trim($filters['code']));
 
@@ -569,6 +587,8 @@ class RepairRequestController extends Controller
             });
         }
 
+        // Brīvā meklēšana iet cauri galvenajiem ierīces laukiem, jo pieteikumu
+        // sarakstā lietotājs bieži meklē pēc ierīces, nevis paša pieteikuma ID.
         if (! isset($skipLookup['q']) && $filters['q'] !== '') {
             $term = $filters['q'];
 
@@ -583,6 +603,8 @@ class RepairRequestController extends Controller
             });
         }
 
+        // Modālie skati var padot konkrētu pieteikuma ID, lai saraksts
+        // nofiltrētos līdz vienai rediģējamai rindai.
         if (! isset($skipLookup['request_id']) && filled($filters['request_id'])) {
             $query->whereKey($filters['request_id']);
         }
@@ -603,6 +625,8 @@ class RepairRequestController extends Controller
             $query->whereDate('repair_requests.created_at', '<=', $filters['date_to']);
         }
 
+        // Statusa WHERE IN pievienojam tikai tad, ja lietotājs nav atstājis
+        // visus statusus redzamus.
         if (! isset($skipLookup['statuses'])) {
             $selectedStatuses = $filters['statuses'] ?? [];
 
@@ -617,9 +641,9 @@ class RepairRequestController extends Controller
     /**
      * Ko dara: Pielieto drošu kārtošanu pēc atļautajām kolonnām.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Pievieno kārtošanai vajadzīgos join uz ierīci un pieteicēju, pēc tam kārto pēc koda, nosaukuma, pieteicēja, statusa vai izveides datuma.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Remonta pieteikumu sarakstā un ātrajā meklēšanā, lai saglabātu vienādu rindas secību.
      */
     private function applySorting(Builder $query, array $sorting): void
     {
@@ -659,9 +683,9 @@ class RepairRequestController extends Controller
     /**
      * Ko dara: Normalizē kārtošanas parametrus tabulas galvenei un toast paziņojumiem.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Pārbauda `sort` un `direction` query parametrus pret atļautajām vērtībām un pievieno latvisku label.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Pirms remonta pieteikumu saraksta kārtošanas un audita paziņojuma veidošanas.
      */
     private function normalizedSorting(Request $request): array
     {
@@ -686,9 +710,9 @@ class RepairRequestController extends Controller
     /**
      * Ko dara: Lietotāja paziņojumiem izmantojamās kārtošanas etiķetes.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Atgriež atļauto kārtošanas lauku label karti, ko izmanto UI un audita teksti.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Remonta pieteikumu tabulas galvenēs, aktīvā kārtojuma tekstā un auditā.
      */
     private function sortOptions(): array
     {
@@ -704,7 +728,7 @@ class RepairRequestController extends Controller
     /**
      * Ko dara: Reģistrē remonta pieteikumu saraksta filtrēšanu un kārtošanu audita žurnālā.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: No filtriem izveido audita payload un pieraksta filtrēšanu/kārtošanu tikai tad, ja lietotājs patiešām mainījis saraksta atlasi vai secību.
      *
      * Kad pielietojas: Izsauc no: `index()`, `table()`.
      */
@@ -748,9 +772,9 @@ class RepairRequestController extends Controller
     /**
      * Ko dara: Sagatavo ierīču dropdown opcijas remonta pieteikumu filtram.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: No pieteikumu kolekcijas paņem unikālās saistītās ierīces un pārvērš tās filtra dropdown opcijās.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Remonta pieteikumu ierīces filtra opciju sagatavošanā.
      */
     private function repairDeviceOptions($requests)
     {
@@ -783,9 +807,9 @@ class RepairRequestController extends Controller
     /**
      * Ko dara: Sagatavo pieteicēju dropdown opcijas remonta pieteikumu filtram.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: No pieteikumu kolekcijas paņem unikālos pieteicējus un pārvērš tos dropdown opcijās ar amatu/e-pastu un meklēšanas tekstu.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Remonta pieteikumu pieteicēja filtra opciju sagatavošanā.
      */
     private function repairRequesterOptions($requests)
     {

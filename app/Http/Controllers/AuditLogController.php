@@ -30,6 +30,8 @@ class AuditLogController extends Controller
         $this->requireAdmin();
         $user = $this->user();
 
+        // Meklēšana saglabā tos pašus filtrus, kas jau ir audita žurnāla tabulā,
+        // lai atrastais ieraksts sakristu ar lietotājam redzamo sarakstu.
         $filters = [
             'action' => trim((string) $request->query('action', '')),
             'entity_type' => trim((string) $request->query('entity_type', '')),
@@ -51,6 +53,8 @@ class AuditLogController extends Controller
             AuditTrail::viewed($user, 'AuditLog', null, 'Atvērts audita žurnāls.');
         }
 
+        // Audita tabula var nebūt pieejama vecākā instalācijā vai pirms migrāciju palaišanas.
+        // Šādā gadījumā rādām tukšu, bet stabilu skatu, nevis ļaujam vaicājumam izgāzties.
         if (! $this->featureTableExists('audit_log')) {
             return view('audit_log.index', [
                 'logs' => $this->emptyPaginator(20),
@@ -71,6 +75,8 @@ class AuditLogController extends Controller
             ]);
         }
 
+        // Visus filtrus būvējam vienā bāzes query, lai to pašu atlasi vēlāk varētu
+        // izmantot gan lapotajam sarakstam, gan meklēšanai un opciju sagatavošanai.
         $baseLogQuery = AuditLog::query()
             ->when($filters['action'] !== '', fn ($query) => $query->where('action', $filters['action']))
             ->when($filters['severities'] !== [], fn ($query) => $query->whereIn('severity', $filters['severities']))
@@ -79,6 +85,8 @@ class AuditLogController extends Controller
             ->when($filters['date_from'] !== '', fn ($query) => $query->where('timestamp', '>=', CarbonImmutable::parse($filters['date_from'])->startOfDay()))
             ->when($filters['date_to'] !== '', fn ($query) => $query->where('timestamp', '<=', CarbonImmutable::parse($filters['date_to'])->endOfDay()));
 
+        // Bāzes vaicājumu izmantojam gan sarakstam, gan vēlāk filtru/audita loģikai.
+        // Klonēšana ļauj nepazaudēt sākotnējos filtrus, kad pieliekam kārtošanu vai lapošanu.
         $logQuery = (clone $baseLogQuery)->with('user:id,full_name,email');
 
         $sortField = $filters['sort'];
@@ -104,6 +112,8 @@ class AuditLogController extends Controller
                 $logQuery->orderBy('entity_type', $sortDirection)->orderBy('timestamp', 'desc');
                 break;
             case 'severity':
+                // Smaguma kārtošana nav alfabētiska: viskritiskākie ieraksti tiek rādīti pirmie,
+                // tāpēc izmantojam CASE prioritāšu secību, nevis vienkāršu orderBy.
                 $logQuery->orderByRaw(
                     'CASE severity
                         WHEN "critical" THEN 1
@@ -122,6 +132,8 @@ class AuditLogController extends Controller
 
         $logs = (clone $logQuery)->paginate(20)->withQueryString();
 
+        // Kopsavilkumu skaitām neatkarīgi no aktīvajiem filtriem, lai augšējās kartītes
+        // vienmēr parāda kopējo sistēmas audita situāciju.
         $summaryRow = AuditLog::query()
             ->selectRaw('COUNT(*) as total')
             ->selectRaw('SUM(CASE WHEN timestamp >= ? THEN 1 ELSE 0 END) as today', [now()->startOfDay()])
@@ -140,6 +152,8 @@ class AuditLogController extends Controller
             'critical' => (int) ($summaryRow->critical ?? 0),
         ];
 
+        // Filtru izvēlnes tiek būvētas no reāliem audita ierakstiem,
+        // tāpēc lietotājam nerādās darbības, smagumi vai objekti, kuru sistēmā nav.
         $actionOptions = AuditLog::query()
             ->select('action')
             ->distinct()
@@ -162,6 +176,8 @@ class AuditLogController extends Controller
                 'search' => AuditTrail::severityLabel($severity).' '.$severity,
             ]);
 
+        // Vispirms atlasām tikai tos user_id, kas tiešām ir auditā,
+        // lai filtra izvēlne nerādītu visus sistēmas lietotājus bez vajadzības.
         $actorIds = AuditLog::query()
             ->whereNotNull('user_id')
             ->distinct()
@@ -235,6 +251,8 @@ class AuditLogController extends Controller
                 ->all(),
         ];
 
+        // Ielādējam filtrēto audita kopu vienā secībā ar tabulu, jo pēc indeksa
+        // vēlāk aprēķinām, kurā lapā atrastais ieraksts atrodas.
         $logs = AuditLog::query()
             ->with('user:id,full_name,email')
             ->when($filters['action'] !== '', fn ($query) => $query->where('action', $filters['action']))
@@ -247,6 +265,8 @@ class AuditLogController extends Controller
             ->orderByDesc('id')
             ->get(['id', 'description', 'action', 'entity_type', 'severity', 'user_id', 'timestamp']);
 
+        // Salīdzināšanai apvienojam gan tehniskos laukus, gan lokalizētos tekstus,
+        // lai meklēšana strādātu pēc ID, darbības, smaguma, apraksta un lietotāja.
         $needle = mb_strtolower($search);
         $foundIndex = $logs->search(function (AuditLog $log) use ($needle) {
             $haystack = mb_strtolower(implode(' ', array_filter([
@@ -269,6 +289,8 @@ class AuditLogController extends Controller
 
         AuditTrail::search($user, 'AuditLog', $search, 'Audita žurnālā meklēts ieraksts: '.$search);
 
+        // Frontend izmanto lapas numuru un highlight_id, lai pāršķirtu tabulu
+        // un iezīmētu konkrēto audita ierakstu.
         return response()->json([
             'found' => true,
             'page' => intdiv((int) $foundIndex, 20) + 1,

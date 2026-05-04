@@ -10,6 +10,8 @@ class UserFacingDatabaseError
     {
         $text = self::exceptionText($exception);
 
+        // Tehnisko SQL kļūdu pārvēršam lietotājam saprotamā tekstā,
+        // lai interfeiss nerādītu draivera iekšējo ziņojumu vai stack informāciju.
         if (str_contains($text, 'duplicate entry') || str_contains($text, 'integrity constraint violation: 1062')) {
             return 'Ierakstu nevar saglabāt, jo šāda vērtība jau eksistē. Pārbaudi e-pastu, kodu vai citu unikālu lauku un mēģini vēlreiz.';
         }
@@ -48,6 +50,8 @@ class UserFacingDatabaseError
     {
         $text = self::exceptionText($exception);
 
+        // Nesinhronizētas shēmas kļūdas marķējam kā 503, jo problēma ir servera/vides pusē.
+        // Datu validācijas un saistību kļūdām paliek 422 kā lietotāja darbības kļūdai.
         if (str_contains($text, 'doesn\'t have a default value') || str_contains($text, 'unknown column') || str_contains($text, 'base table or view not found')) {
             return 503;
         }

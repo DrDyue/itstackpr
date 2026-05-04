@@ -14,10 +14,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Runtime schema middleware tiek palaists pirms pārējās web ķēdes,
+        // lai legacy/demo vidēs minimālās DB kolonnas būtu sakārtotas pirms kontrolieru izpildes.
         $middleware->web(prepend: [
             \App\Http\Middleware\EnsureRuntimeSchema::class,
         ]);
 
+        // Alias nosaukumi tiek lietoti route failos, lai maršruti būtu lasāmi:
+        // `admin` un `manager` skaidri norāda piekļuves līmeni.
         $middleware->alias([
             'auth' => \App\Http\Middleware\Authenticate::class,
             'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
@@ -26,22 +30,28 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Datubāzes kļūdas pārtulkojam lietotājam saprotamā valodā,
+        // nevis rādām SQL kļūdas tekstu.
         $exceptions->render(function (QueryException $exception, Request $request) {
             $message = UserFacingDatabaseError::message($exception);
             $status = UserFacingDatabaseError::status($exception);
 
             if ($request->expectsJson()) {
+                // AJAX/JSON pieprasījumiem atgriežam strukturētu JSON kļūdu.
                 return response()->json([
                     'message' => $message,
                 ], $status);
             }
 
             if (! $request->isMethod('get') && $request->headers->has('referer')) {
+                // Formu POST/PATCH/DELETE kļūdas vedam atpakaļ ar ievadi,
+                // bet paroles laukus apzināti neglabājam sesijā.
                 return back()
                     ->withInput($request->except(['password', 'password_confirmation', 'current_password']))
                     ->with('error', $message);
             }
 
+            // GET pieprasījumiem rādām atsevišķu kļūdas lapu.
             return response()->view('errors.database', [
                 'title' => UserFacingDatabaseError::title($exception),
                 'message' => $message,

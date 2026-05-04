@@ -5,6 +5,9 @@
 --}}
 <x-app-layout>
     @php
+        // Filtru "aktīvie nosaukumi" tiek sagatavoti sākumā,
+        // lai viena un tā pati vērtība tiktu izmantota gan searchable-select inicializācijā,
+        // gan aktīvo filtru joslā.
         $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
         $selectedDeviceLabel = collect($deviceOptions)->firstWhere('value', (string) ($filters['device_id'] ?? ''))['label'] ?? ($filters['device_query'] ?: null);
         $selectedRequesterLabel = collect($requesterOptions)->firstWhere('value', (string) ($filters['requester_id'] ?? ''))['label'] ?? ($filters['requester_query'] ?: null);
@@ -61,6 +64,8 @@
         </div>
 
         <div id="repairs-index-root" data-async-table-root x-data="requestDetailsDrawer()" @open-request-detail.window="show($event.detail)">
+            {{-- Remontu tabula un detalizācijas drawer izmanto vienu saknes konteineru,
+                 lai no tabulas rindas varētu atvērt ātro skatu bez pārejas uz citu lapu. --}}
             <form
                 method="GET"
                 action="{{ route('repairs.index') }}"
@@ -71,6 +76,8 @@
                 data-manual-search-pagination="false"
             >
                 <input type="hidden" name="statuses_filter" value="1">
+                {{-- Hidden sort lauki uztur vienotu backend līgumu:
+                     kārtošanas avots var būt gan header poga, gan cita UI vadīkla, bet serveris vienmēr saņem `sort` un `direction`. --}}
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
                 @if ($filters['mine'] ?? false)
@@ -106,6 +113,9 @@
                     </div>
 
                     <div class="devices-filter-section" x-data="{ dateField: '{{ ($filters['date_field'] ?? 'start_date') === 'end_date' ? 'end_date' : 'start_date' }}' }">
+                        {{-- Datuma intervāls te var nozīmēt divas dažādas lietas:
+                             filtrēšanu pēc remonta sākuma datuma vai pēc beigu datuma.
+                             Alpine state uztur, kuru no šiem laukiem lietotājs pašlaik kontrolē. --}}
                         <div class="repairs-filter-title-row">
                             <h3 class="devices-filter-title repairs-filter-title">
                                 <x-icon name="filter" size="h-4 w-4" />
@@ -265,6 +275,8 @@
                                         @endphp
                                         <button
                                             type="button"
+                                            {{-- Statusa čipi glabā vairākatlasījumu masīvu un pēc klikšķa submito formu,
+                                                 tādēļ backend pusē šis joprojām izskatās pēc parasta `status[]` GET filtra. --}}
                                             @click="toggle(@js($status)); $nextTick(() => $el.closest('form').requestSubmit())"
                                             class="quick-status-filter {{ $toneClass }}"
                                             :class="isSelected(@js($status)) ? 'quick-status-filter-active' : ''"
@@ -303,6 +315,8 @@
                                     @endphp
                                     <button
                                         type="button"
+                                        {{-- Prioritātes filtri darbojas tieši tāpat kā statusi,
+                                             tikai raksta `priorities[]`, jo tie ir atsevišķs daudzvērtību filtrs. --}}
                                         @click="toggle(@js($priority)); $nextTick(() => $el.closest('form').requestSubmit())"
                                         class="quick-status-filter {{ $priorityToneClass }}"
                                         :class="isSelected(@js($priority)) ? 'quick-status-filter-active' : ''"

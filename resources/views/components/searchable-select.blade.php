@@ -16,6 +16,8 @@
     $resolvedError = $error ?? ($name ? $errors->first($name) : null);
     $controlId = $identifier !== '' ? $identifier . '-input' : $queryName . '-input';
     $panelId = $identifier !== '' ? $identifier . '-panel' : $queryName . '-panel';
+    // Opcijas jau servera pusē normalizējam vienotā masīvā,
+    // lai Alpine komponente frontendā var strādāt ar vienādu struktūru neatkarīgi no avota modeļa.
     $optionsPayload = collect($options)
         ->map(function ($option) {
             if (is_array($option)) {
@@ -58,6 +60,8 @@
     @mouseup.window="finishTriggerInteraction()"
     @searchable-select-clear.window="if (! $event.detail?.target || $event.detail.target === @js($identifier)) { clearSelection() }"
 >
+    {{-- Lietotājam redzams teksts un sistēmā iesniedzamā vērtība tiek glabāti atsevišķi:
+         hidden input satur izvēlēto ID/kodu, bet text input kalpo meklēšanai un UX. --}}
     <input type="hidden" name="{{ $name }}" x-model="selected">
 
     <div class="searchable-select-control">

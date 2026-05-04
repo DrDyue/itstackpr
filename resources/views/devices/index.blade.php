@@ -5,6 +5,8 @@
 --}}
 <x-app-layout>
     @php
+        // Select opcijas sagatavojam Blade sākumā, lai reusable searchable-select komponente saņemtu
+        // vienādu `value/label/description/search` struktūru neatkarīgi no filtra tipa.
         $selectedFloorLabel = $filters['floor'] !== ''
             ? ($filters['floor'] . '. stāvs')
             : ($filters['floor_query'] !== '' ? $filters['floor_query'] : null);
@@ -109,6 +111,8 @@
                 data-async-root="#devices-index-root"
                 data-search-endpoint="{{ route('devices.find-by-code') }}"
                 data-manual-search-pagination="false"
+                {{-- Stāvs un telpa ir hierarhiski saistīti filtri.
+                     Mainot stāvu, telpas filtrs tiek notīrīts, lai nepaliktu nederīga telpa no cita stāva. --}}
                 @searchable-select-updated.window="if ($event.detail.identifier === 'device-floor-filter') { $dispatch('searchable-select-clear', { target: 'device-room-filter' }) }"
             >
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
@@ -220,6 +224,8 @@
                             field: @js($sorting['sort']),
                             dir: @js($sorting['direction']),
                             apply() {
+                                // Kārtošanas vadība raksta vērtības hidden laukos un submito formu,
+                                // lai backend saņemtu to pašu klasisko payload kā no tabulas header sort pogām.
                                 const form = this.$el.closest('form');
                                 form.querySelector('[data-sort-hidden=\'field\']').value = this.field;
                                 form.querySelector('[data-sort-hidden=\'direction\']').value = this.dir;
@@ -294,6 +300,7 @@
                                     @endphp
                                     <button
                                         type="button"
+                                        {{-- Statusa filtri tiek glabāti kā masīvs, jo lietotājs drīkst atlasīt vairākus statusus reizē. --}}
                                         @click="toggle(@js($statusFilter['value'])); $nextTick(() => $el.closest('form').requestSubmit())"
                                         class="quick-status-filter {{ $toneClass }}"
                                         :class="isSelected(@js($statusFilter['value'])) ? 'quick-status-filter-active' : ''"
@@ -315,6 +322,8 @@
                             <div class="quick-status-filters">
                                 <button
                                     type="button"
+                                    {{-- Šis ir binārs filtrs, tāpēc pietiek ar vienu hidden lauku `active_requests=1`,
+                                         kuru iesniedzam tikai tad, ja slēdzis ir ieslēgts. --}}
                                     @click="active = ! active; $nextTick(() => $el.closest('form').requestSubmit())"
                                     class="quick-status-filter quick-status-filter-amber"
                                     :class="active ? 'quick-status-filter-active' : ''"
@@ -399,6 +408,8 @@
         @endif
 
         @if (old('modal_form') === 'device_create')
+            {{-- Pēc validācijas kļūdām vai query signāla atveram pareizo modāli atkārtoti.
+                 `openModalWithLoading` tiek izmantots, ja globālais helper jau ir ielādēts un vajag vienotu loading UX. --}}
             <script>window.addEventListener('DOMContentLoaded', () => window.openModalWithLoading ? window.openModalWithLoading('device-create-modal') : window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-create-modal' })));</script>
         @elseif (str_starts_with((string) old('modal_form'), 'device_edit_'))
             @php($deviceModalTarget = str_replace('device_edit_', '', (string) old('modal_form')))

@@ -5,6 +5,9 @@
 --}}
 <x-app-layout>
     @php
+        // Nodošanām ir divi dažādi skatījumi:
+        // admins redz kopējo vēsturi, bet lietotājs strādā arī ar "incoming" jeb saņemamajiem pieprasījumiem.
+        // Tāpēc daļa filtru label un badge loģikas ir atkarīga no lomas.
         $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
         $liveTransferPendingCount = $isAdmin ? 0 : ($incomingPendingCount ?? 0);
         $selectedDeviceLabel = collect($deviceOptions)->firstWhere('value', (string) ($filters['device_id'] ?? ''))['label'] ?? ($filters['device_query'] ?: null);
@@ -30,6 +33,8 @@
         x-data="{
             livePendingCount: {{ $liveTransferPendingCount }},
             syncCounts(counts = {}) {
+                // Lietotājam skaitlis nāk no `incoming_transfers`, adminam tas vienmēr ir 0,
+                // jo administrators neapstrādā nodošanu kā saņēmējs.
                 this.livePendingCount = {{ $isAdmin ? '0' : 'Number(counts?.incoming_transfers || 0)' }};
             },
         }"
@@ -223,6 +228,9 @@
                             toggleStatus(value) {
                                 const normalizedValue = String(value);
 
+                                // Statusa filtrs un "incoming" skats ir savstarpēji izslēdzoši.
+                                // Ja lietotājs izvēlas statusu, incoming režīmu noņemam,
+                                // lai backend nesaņemtu pretrunīgus filtra signālus.
                                 this.incoming = false;
 
                                 if (this.isSelected(normalizedValue)) {
@@ -236,6 +244,8 @@
                                 this.incoming = ! this.incoming;
 
                                 if (this.incoming) {
+                                    // Incoming skats apzināti notīra statusu čipus,
+                                    // jo tas jau pats definē šaurāku "gaida manu darbību" kontekstu.
                                     this.selected = [];
                                 }
                             },
@@ -291,6 +301,8 @@
                                         <input type="hidden" name="status[]" :value="value">
                                     </template>
 
+                                    {{-- Hidden `incoming=1` tiek iesniegts tikai tad, kad incoming režīms ir aktīvs.
+                                         Tas ļauj vienu un to pašu backend endpoint izmantot diviem skatījumiem. --}}
                                     <input x-bind:disabled="!incoming" type="hidden" name="incoming" value="1">
                                 </div>
                             </div>
@@ -388,9 +400,11 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse ($transfers as $transfer)
-                                @php
-                                    $device = $transfer->device;
+                                @forelse ($transfers as $transfer)
+                                    @php
+                                        $device = $transfer->device;
+                                    // Transfer tabulā daļa darbību ir atkarīga ne tikai no statusa,
+                                    // bet arī no tā, vai pašreizējais lietotājs ir pieteicējs vai saņēmējs.
                                     $editTransferUrl = route('device-transfers.index', array_merge(request()->except(['page', 'device_transfer_modal', 'modal_request']), [
                                         'device_transfer_modal' => 'edit',
                                         'modal_request' => $transfer->id,
@@ -416,8 +430,10 @@
                                     $statusLabel = $isIncomingPending
                                         ? 'Ienākošs'
                                         : ($statusLabels[$transfer->status] ?? null);
-                                    $hasActions = true;
-                                @endphp
+                                        $hasActions = true;
+                                    @endphp
+                                    {{-- Rindas stāvokļa klase nav tikai vizuāls dekors.
+                                         Tā signalizē, vai konkrētā nodošana lietotājam ir ienākoša un prasa reakciju. --}}
                                 <tr id="device-transfer-{{ $transfer->id }}" class="request-notification-target app-table-row border-t border-slate-100 align-top {{ $rowStateClass }}" data-table-row-id="device-transfer-{{ $transfer->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}" data-table-search-highlight-style="{{ $rowStateClass !== '' ? 'outline' : 'background' }}">
                                     <td class="table-col-image px-4 py-4 text-center align-middle">
                                         @php
@@ -495,6 +511,8 @@
                                     </td>
                                     <td class="px-4 py-4 text-right">
                                         @if ($isAdmin && $deviceFilterUrl)
+                                            {{-- Administratoram šeit nav jāpieņem nodošana saņēmēja vārdā,
+                                                 tāpēc admina darbības reducējas līdz pārskatam un akta drukai. --}}
                                             {{-- Adminam: ierīces saite + drukāt aktu ja apstiprināts --}}
                                             <div class="flex flex-col items-end gap-1">
                                                 @if ($transfer->status === 'approved')
@@ -509,6 +527,8 @@
                                                 </a>
                                             </div>
                                         @elseif ($hasActions)
+                                            {{-- Lietotāja darbību izvēlne apvieno trīs scenārijus:
+                                                 saņēmēja apstiprināšanu/noraidīšanu, pieteicēja labošanu un vispārēju pārskatu. --}}
                                             {{-- Pārējiem - dropdown ar darbībām --}}
                                             <div class="table-action-menu inline-block" x-data="createFloatingDropdown({ zIndex: 400 })" @keydown.escape.window="closePanel()">
                                                 <button type="button" class="table-action-summary {{ $isIncomingPending ? 'table-action-summary-pending' : '' }}" x-ref="trigger" @click="togglePanel()" :aria-expanded="open.toString()">
@@ -522,6 +542,7 @@
                                                 </button>
 
                                                 <template x-teleport="body">
+                                                {{-- Teleport uz `body` neļauj dropdown izvēlnei pazust zem tabulas scroll konteineriem. --}}
                                                 <div class="table-action-list table-action-list-dropdown" data-floating-menu="manual" x-ref="panel" x-cloak x-show="open" x-transition.origin.top.right x-bind:style="panelStyle" @click.outside="closePanel()">
                                                     @if ($deviceFilterUrl && ! $isIncomingPending)
                                                         <a href="{{ $deviceFilterUrl }}" class="table-action-item table-action-item-sky table-action-item-wide text-sky-700" @click="closePanel()">
@@ -538,6 +559,7 @@
                                                     @endif
 
                                                     @php
+                                                        // Rediģēt drīkst tikai pieteicējs un tikai kamēr nodošana vēl nav izskatīta.
                                                         $isOwnerCanEdit = $usesUserTransferState
                                                             && (int) $currentUserId === (int) $transfer->responsible_user_id
                                                             && $transfer->status === 'submitted';

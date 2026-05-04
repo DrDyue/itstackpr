@@ -14,6 +14,8 @@
             <label class="block md:col-span-4">
                 <span class="crud-label">Statuss *</span>
                 @if ($isStatusLocked)
+                    {{-- Bloķētam statusam vērtību tomēr iesniedzam hidden laukā,
+                         lai update pieprasījumā saglabātos esošais stāvoklis un forma nepārrakstītu to ar tukšumu. --}}
                     <input type="hidden" name="status" value="{{ $current?->status }}">
                     <div class="crud-control flex items-center bg-slate-50 text-slate-700">
                         <span>{{ $statusLabels[$current?->status] ?? 'Norakstīta' }}</span>
@@ -32,6 +34,8 @@
                 @endif
             </label>
         @else
+            {{-- Jauna ierīce vienmēr sākas kā aktīva.
+                 Remonta vai norakstīšanas statuss rodas vēlāk caur atsevišķām biznesa plūsmām. --}}
             <input type="hidden" name="status" value="{{ \App\Models\Device::STATUS_ACTIVE }}">
         @endif
     </div>
@@ -41,6 +45,8 @@
         <div class="form-field-group-label">Specifikācija</div>
         <div class="grid gap-3 md:grid-cols-3">
             <x-ui.form-field label="Tips" name="device_type_id" :required="true">
+                {{-- Tips tiek izvēlēts ar ID, bet meklēšanas lauks rāda nosaukumu.
+                     Tādēļ komponentei padodam gan `device_type_id`, gan `device_type_query`. --}}
                 <x-searchable-select
                     name="device_type_id"
                     query-name="device_type_query"

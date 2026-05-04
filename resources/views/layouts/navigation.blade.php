@@ -18,6 +18,8 @@
             incoming_transfers: 0,
         },
         syncCounts(counts = {}) {
+            // Navigācijas badge skaiti tiek atjaunoti no globālā `nav-counts-updated` notikuma,
+            // lai header varētu dzīvot neatkarīgi no tā, kura lapa šobrīd veic polling vai mark-as-read darbību.
             this.requestCounts = {
                 requests_total: Number(counts?.requests_total || 0),
                 repair_requests: Number(counts?.repair_requests || 0),
@@ -213,6 +215,8 @@
                         })"
                         class="relative"
                     >
+                        {{-- Storage key ietver lietotāja ID un skata tipu,
+                             lai admina un darbinieka paziņojumu stāvokļi savā starpā nesajauktos. --}}
                         <button
                             @click="open = ! open"
                             @click.outside="open = false"

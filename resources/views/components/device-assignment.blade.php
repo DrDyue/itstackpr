@@ -6,6 +6,8 @@
 ])
 
 @php
+    // Norakstītām ierīcēm atbildīgais vairs nav aktīva darba piesaiste.
+    // Tāpēc komponentē centralizēti paslēpjam lietotāja vārdu, lai visās tabulās tas izskatītos vienādi.
     $isWrittenOff = ($device?->status ?? null) === \App\Models\Device::STATUS_WRITEOFF;
     $tooltip = $isWrittenOff ? 'Norakstītām ierīcēm atbildīgais darbinieks vairs netiek rādīts.' : null;
 
@@ -14,6 +16,7 @@
         : ($device?->assignedTo?->full_name ?: 'Nav piešķirta');
 
     $secondaryLabel = match ($secondary) {
+        // Sekundārā rinda ir konfigurējama, jo dažās tabulās vajag amatu, bet citās e-pastu.
         'job_title' => $isWrittenOff
             ? 'Norakstīta ierīce'
             : ($device?->assignedTo?->job_title ?: 'Nav amata'),

@@ -1,3 +1,5 @@
+// Atļauto statusu pāreju karte pasargā UI no neatļautu pāreju piedāvāšanas.
+// Backend tās tik un tā pārbauda, bet frontend jau iepriekš neļauj lietotājam kļūdīties.
 const repairTransitionRules = {
     waiting: ['in-progress', 'cancelled'],
     'in-progress': ['waiting', 'completed', 'cancelled'],
@@ -18,6 +20,8 @@ const canRepairTransition = (fromStatus, toStatus) => {
 };
 
 export const registerRepairWorkflowGlobals = () => {
+    // Statusa maiņai ģenerējam īstu POST formu, jo backend šeit sagaida klasisku Laravel pieprasījumu
+    // ar CSRF tokenu un papildu laukiem, nevis tīru fetch/JSON API zvanu.
     window.submitRepairTransition = (transitionBaseUrl, csrfToken, repairId, targetStatus, extra = {}) => {
         const form = document.createElement('form');
         form.method = 'POST';
@@ -132,6 +136,8 @@ export const registerRepairWorkflowGlobals = () => {
         normalizedCost() {
             return String(this.cost ?? '').trim();
         },
+        // Vienuviet saliekam payload, kas jāpiesūta statusa pārejai,
+        // lai visi submit ceļi sūtītu vienādu datu struktūru.
         transitionFormPayload() {
             return {
                 description: this.description ?? '',
@@ -143,6 +149,8 @@ export const registerRepairWorkflowGlobals = () => {
                 invoice_number: this.invoiceNumber ?? '',
             };
         },
+        // Obligāto lauku saraksts ir atkarīgs no remonta tipa un mērķa statusa.
+        // Piemēram, ārējam remontam pabeigšanai vajag arī vendora un rēķina datus.
         requirementRows(targetStatus = this.repairStatus) {
             if (targetStatus !== 'completed' && this.repairStatus !== 'in-progress') {
                 return [];

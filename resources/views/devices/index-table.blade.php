@@ -58,6 +58,9 @@
                         <th class="table-col-image px-3 py-3">Attēls</th>
                         @foreach ($columns as $column => $label)
                             @php
+                                // Kolonnu komplekts mainās pēc lomas:
+                                // administrators redz piešķirto lietotāju un izveides datumu,
+                                // bet parastais lietotājs tikai savu saīsināto skatu.
                                 $isCurrentSort = $sorting['sort'] === $column;
                                 $headerWidthClass = match ($column) {
                                     'code' => 'table-col-code',
@@ -98,6 +101,8 @@
                 <tbody>
                     @forelse ($devices as $device)
                         @php
+                            // `deviceStates` ir kontrolierī iepriekš sagatavots stāvokļu komplekts,
+                            // lai Blade neveidotu sarežģītus biznesa noteikumus pats no modeļa īpašībām.
                             $thumbUrl = $device->deviceImageThumbUrl();
                             $deviceState = $deviceStates[$device->id] ?? [];
                             $requestAvailability = $deviceState['requestAvailability'] ?? ['repair' => false, 'writeoff' => false, 'transfer' => false, 'can_create_any' => false, 'reason' => null];
@@ -152,6 +157,8 @@
                             ];
                         @endphp
 
+                        {{-- Rinda nes `data-table-row-id` un `data-table-code`, lai async meklēšana un highlight mehānisms
+                             pēc filtrēšanas vai manuālās atrašanas varētu precīzi atrast konkrēto ierīci DOM līmenī. --}}
                         <tr class="repair-table-row border-t border-slate-100 align-top" data-table-row-id="device-{{ $device->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) $device->code)) }}">
                             <td class="px-3 py-4">
                                 @if ($thumbUrl)
@@ -204,6 +211,8 @@
 
                             <td class="px-4 py-4">
                                 @if ($hasActiveRepair && $repairStatusLabel)
+                                    {{-- Aktīvs remonts pārdefinē ierīces statusa attēlojumu.
+                                         Lietotājam jāredz ne tikai "remontā", bet arī konkrētais remonta posms. --}}
                                     <div class="relative inline-flex" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
                                         @if ($repairModalUrl)
                                             <a href="{{ $repairModalUrl }}" class="device-status-split-chip device-status-split-chip-repair" @focusin="open = true" @focusout="open = false">
@@ -249,6 +258,8 @@
                                         @endif
                                     </div>
                                 @elseif ($pendingRequestBadge)
+                                    {{-- Ja nav aktīva remonta, bet ir atvērts pieprasījums,
+                                         statusa šūna kļūst par navigācijas un preview ieeju uz pašu pieteikumu. --}}
                                     <div class="relative inline-flex" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
                                         @if (! empty($pendingRequestBadge['url']))
                                             <a href="{{ $pendingRequestBadge['url'] }}" class="device-request-badge-link {{ $pendingRequestBadge['class'] }}" @focusin="open = true" @focusout="open = false">
@@ -339,6 +350,7 @@
                                                 </button>
 
                                                 <template x-teleport="body">
+                                                {{-- Dropdown tiek teleportēts uz `body`, lai tabulas scroll/overflow to neapgrieztu. --}}
                                                 <div class="table-action-list" data-floating-menu="manual" x-ref="panel" x-cloak x-show="open" x-transition.origin.top.right x-bind:style="panelStyle" @click.outside="closePanel()">
                                                     <div class="table-action-section">
                                                         <div class="table-action-section-title">Pieteikumi</div>
@@ -383,6 +395,8 @@
                                         </button>
 
                                         <template x-teleport="body">
+                                        {{-- Admina darbību saraksts ir kontekstatkarīgs:
+                                             daļa darbību pazūd vai kļūst disabled, ja ierīcei jau ir aktīvs pieteikums. --}}
                                         <div class="table-action-list" data-floating-menu="manual" x-ref="panel" x-cloak x-show="open" x-transition.origin.top.right x-bind:style="panelStyle" @click.outside="closePanel()">
                                             <div class="table-action-header">
                                                 <div class="table-action-header-title">Darbības</div>

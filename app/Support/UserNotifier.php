@@ -37,6 +37,8 @@ class UserNotifier
             return;
         }
 
+        // Pirms paziņojuma būvēšanas ielādējam visas attiecības,
+        // lai tostu un paziņojumu centra kartītes saņem pilnu ierīces kontekstu.
         $request->loadMissing(['device.type', 'device.room.building', 'device.building']);
         $device = $request->device;
         $approved = $status === 'approved';
@@ -143,6 +145,8 @@ class UserNotifier
 
         $repair->loadMissing(['device.type', 'device.room.building', 'device.building']);
         $device = $repair->device;
+        // Vienu un to pašu statusa ziņu var būt jārāda gan pieteicējam, gan pašreizējam ierīces lietotājam,
+        // tāpēc savācam abus ID un noņemam dublikātus.
         $recipientIds = collect([$repair->issue_reported_by, $device?->assigned_to_id])
             ->filter()
             ->map(fn ($id) => (int) $id)
@@ -185,6 +189,8 @@ class UserNotifier
             return;
         }
 
+        // Šajā līmenī saglabājam jau gatavu, frontendam paredzētu struktūru,
+        // lai UI vēlāk var vienādi renderēt dažādu tipu notikumus.
         UserNotification::query()->create([
             'user_id' => $userId,
             'type' => $payload['type'],
@@ -205,6 +211,8 @@ class UserNotifier
      */
     private function deviceDetails(?Device $device, array $extra = []): array
     {
+        // Paziņojuma kartītes datu bloks ir vienots visiem notikumiem:
+        // ierīces identitāte, atrašanās vieta un papildu konteksts tiek normalizēti vienā vietā.
         $location = collect([
             $device?->room?->room_number ? 'telpa '.$device->room->room_number : null,
             $device?->room?->room_name,

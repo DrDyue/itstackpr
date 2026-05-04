@@ -18,6 +18,8 @@
         x-transition:leave-end="translate-x-[104%] opacity-0 scale-[0.985]"
         @click.stop
     >
+        {{-- Šis drawer nerenderē konkrētu modeli tieši.
+             Tas saņem jau sagatavotu "item" objektu ar universāliem laukiem, lai viena veidne strādātu dažādiem ierakstu tipiem. --}}
         <div class="request-detail-head">
             <div class="request-detail-head-copy">
                 <div class="request-detail-eyebrow" x-text="item?.drawer_title || 'Ātrais skats'"></div>
@@ -32,6 +34,7 @@
 
         <template x-if="item">
             <div class="request-detail-body">
+                {{-- Hero blokā parādām primāro identitāti: kas tas ir un kāpēc šo ierakstu lietotājs atvēra. --}}
                 <section class="request-detail-hero">
                     <div
                         class="request-detail-hero-mark"
@@ -50,6 +53,8 @@
                 </section>
 
                 <section class="request-detail-summary-grid">
+                    {{-- Kopsavilkuma kartītes ir domātas 2-3 ātri nolasāmiem faktiem:
+                         statuss, datums, objekts vai cits svarīgākais metadatu fragments. --}}
                     <template x-for="(summary, index) in summaryItems()" :key="`summary-${index}`">
                         <article class="request-detail-summary-card">
                             <div class="request-detail-summary-head">
@@ -74,6 +79,8 @@
                 </section>
 
                 <section class="request-detail-grid">
+                    {{-- Pārējie lauki tiek grupēti vienotās info kartītēs,
+                         lai dažādi pieprasījumu tipi saglabātu vienādu lasīšanas struktūru. --}}
                     <template x-for="(card, index) in infoCards()" :key="`card-${index}`">
                         <article class="request-detail-card">
                             <div class="request-detail-card-head">
@@ -125,6 +132,7 @@
                 </section>
 
                 <template x-if="item && (item.details_intro || item.details_body || item.review_notes || item.reviewed_by_name)">
+                    {{-- Papildbloks tiek rādīts tikai tad, ja ir ko paskaidrot par lēmumu, pārskatīšanu vai papildinformāciju. --}}
                     <section class="request-detail-card request-detail-card-wide request-detail-card-muted">
                         <div class="request-detail-card-head">
                             <span

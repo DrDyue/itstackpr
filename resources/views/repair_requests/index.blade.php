@@ -5,6 +5,8 @@
 --}}
 <x-app-layout>
     @php
+        // Šeit jau servera pusē sagatavojam cilvēkam lasāmus label tekstus atlasītajiem filtriem.
+        // Tādēļ Blade un aktīvo filtru komponentei nav atkārtoti jāmeklē nosaukumi pēc ID.
         $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
         $livePendingRepairCount = $canReview ? ($requestSummary['submitted'] ?? 0) : 0;
         $selectedDeviceLabel = collect($deviceOptions)->firstWhere('value', (string) ($filters['device_id'] ?? ''))['label'] ?? ($filters['device_query'] ?: null);
@@ -29,6 +31,8 @@
         x-data="{
             livePendingCount: {{ $livePendingRepairCount }},
             syncCounts(counts = {}) {
+                // Navigācija un saraksta lapa dzīvo neatkarīgi, tāpēc skaitli sinhronizējam ar globālu notikumu.
+                // Adminam tas ļauj badge un tabulas virsraksta skaitli uzturēt vienādu bez pilnas lapas pārlādes.
                 if (! {{ $canReview ? 'true' : 'false' }}) {
                     return;
                 }
@@ -98,6 +102,8 @@
                 data-manual-search-pagination="false"
             >
                 <input type="hidden" name="statuses_filter" value="1">
+                {{-- Slēptie sort lauki ir vienotais avots async tabulai.
+                     Klikšķi uz kolonnu virsrakstiem un citas UI vadīklas tikai pārraksta šīs vērtības. --}}
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
                 @if (! empty($filters['request_id']))
@@ -200,6 +206,8 @@
                                     @endphp
                                     <button
                                         type="button"
+                                        {{-- Filtra poga uzreiz pārbūvē hidden `status[]` laukus caur Alpine state
+                                             un pēc tam pārsubmito async formu bez pilnas lapas pārlādes. --}}
                                         @click="toggle(@js($status)); $nextTick(() => window.submitAsyncTableForm($el.closest('form'), { resetPage: true }))"
                                         class="quick-status-filter {{ $toneClass }}"
                                         :class="isSelected(@js($status)) ? 'quick-status-filter-active' : ''"
@@ -281,6 +289,8 @@
     @endunless
 
     @if (old('request_form_type') === 'repair' && $errors->any())
+        {{-- Pēc validācijas kļūdas atveram tieši to modāli, no kuras forma tika iesniegta,
+             lai lietotājs uzreiz redz ievadītās vērtības un kļūdu ziņas. --}}
         <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'request-form-repair' })));</script>
     @elseif (str_starts_with((string) old('modal_form'), 'repair_request_edit_'))
         @php($repairRequestModalTarget = str_replace('repair_request_edit_', '', (string) old('modal_form')))

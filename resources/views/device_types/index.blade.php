@@ -1,5 +1,7 @@
 <x-app-layout>
     @php
+        // Šī lapa ir klasifikators: ierīču tips tiek izmantots ierīču formās, filtros un atskaitēs.
+        // Noklusētās vērtības aizsargā skatu, ja kontrolieris kādu masīvu nepadod legacy situācijā.
         $sorting = $sorting ?? ['sort' => 'type_name', 'direction' => 'asc'];
         $filters = $filters ?? ['search' => ''];
         $sortOptions = $sortOptions ?? [
@@ -49,6 +51,7 @@
         </div>
 
         <div id="device-types-index-root" data-async-table-root>
+            {{-- Meklēšanas forma saglabā GET uzvedību, bet async atribūti ļauj pārzīmēt tikai tabulu. --}}
             <form
                 method="GET"
                 action="{{ route('device-types.index') }}"
@@ -57,6 +60,7 @@
                 data-async-root="#device-types-index-root"
                 data-search-endpoint="{{ route('device-types.find-by-name') }}"
             >
+                {{-- Sort vērtības ir hidden laukos, lai async-table modulis varētu tās pārrakstīt no kolonnu pogām. --}}
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
 
@@ -148,6 +152,8 @@
                         <tbody>
                             @forelse ($types as $type)
                                 @php
+                                    // Tipu drīkst dzēst tikai tad, ja neviena ierīce to neizmanto.
+                                    // Pretējā gadījumā ierīcēm pazustu klasifikācija.
                                     $canDelete = (int) $type->devices_count === 0;
                                     $deleteTooltip = 'Šo ierīces tipu nevar dzēst, kamēr tam vēl ir piesaistītas ierīces.';
                                 @endphp
@@ -157,6 +163,7 @@
                                     </td>
                                     <td class="px-4 py-4">
                                         @if ($type->devices_count > 0)
+                                            {{-- Skaits kalpo arī kā ātrā pāreja uz ierīču sarakstu ar tipa filtru. --}}
                                             <a
                                                 href="{{ route('devices.index', ['type' => $type->id, 'type_query' => $type->type_name]) }}"
                                                 class="inline-flex items-center justify-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 transition hover:bg-sky-100"
@@ -231,6 +238,7 @@
             ])
 
             @foreach ($types as $type)
+                {{-- Katram redzamajam tipam renderējam savu edit modāli, lai rediģēšana notiktu tajā pašā lapā. --}}
                 @include('device_types.partials.modal-form', [
                     'mode' => 'edit',
                     'modalName' => 'device-type-edit-modal-' . $type->id,
@@ -239,6 +247,7 @@
             @endforeach
 
             @if (($selectedModalType?->id ?? null) && ! $types->getCollection()->contains('id', $selectedModalType->id))
+                {{-- Ja kļūda attiecas uz tipu ārpus pašreizējās lapas, renderējam šo modāli papildus. --}}
                 @include('device_types.partials.modal-form', [
                     'mode' => 'edit',
                     'modalName' => 'device-type-edit-modal-' . $selectedModalType->id,
@@ -249,6 +258,7 @@
     </section>
 
     @if (old('modal_form') === 'device_type_create')
+        {{-- Create/edit modāļa atkārtota atvēršana pēc validācijas kļūdas vai query parametra. --}}
         <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'device-type-create-modal' })));</script>
     @elseif (str_starts_with((string) old('modal_form'), 'device_type_edit_'))
         @php($deviceTypeModalTarget = str_replace('device_type_edit_', '', (string) old('modal_form')))

@@ -26,6 +26,8 @@ class DeviceAssetController extends Controller
      */
     public function show(string $path)
     {
+        // Pirms faila atdošanas pārbaudām ne tikai paša faila esamību,
+        // bet arī to, vai konkrētais lietotājs drīkst redzēt ar to saistīto ierīci.
         abort_unless($this->canViewStoredAsset($path), 404);
 
         $disk = Storage::disk((string) config('devices.asset_disk', 'public'));
@@ -49,6 +51,8 @@ class DeviceAssetController extends Controller
         abort_unless($this->isAllowedRemoteUrl($url), 404);
         abort_unless($this->canViewRemoteAsset($url), 404);
 
+        // Attālo priekšskatījumu ielādē serveris, nevis pārlūks tieši,
+        // lai mēs saglabātu piekļuves kontroli un varētu pārbaudīt saturu.
         $response = Http::timeout(12)
             ->retry(1, 250)
             ->withUserAgent((string) config('devices.auto_image_user_agent', 'ITStackPR Device Image Fetcher/1.0'))
@@ -65,6 +69,8 @@ class DeviceAssetController extends Controller
         $contentType = strtolower((string) $response->header('Content-Type'));
         $imageInfo = @getimagesizefromstring($contents);
 
+        // Daži avoti nesūta korektu Content-Type galveni, tāpēc kā rezerves pārbaudi
+        // nolasām MIME tipu no faktiskā binārā satura.
         if (! Str::startsWith($contentType, 'image/')) {
             $contentType = is_array($imageInfo) ? (string) ($imageInfo['mime'] ?? '') : '';
         }
@@ -81,7 +87,7 @@ class DeviceAssetController extends Controller
     /**
      * Ko dara: Pārbauda, vai attālais attēla URL ir drošs ielādei.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Pieļauj tikai http/https adreses, nolasa URL daļas un bloķē localhost, .local domēnus, privātās IP adreses un rezervētos tīklus.
      *
      * Kad pielietojas: Izsauc no: `remotePreview()`.
      */
@@ -99,6 +105,8 @@ class DeviceAssetController extends Controller
             return false;
         }
 
+        // Ja host ir IP adrese, bloķējam privātos un rezervētos tīklus,
+        // lai attēlu priekšskatījums nevarētu tikt izmantots iekšējo resursu pieprasīšanai.
         if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
             return filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false;
         }
@@ -109,7 +117,7 @@ class DeviceAssetController extends Controller
     /**
      * Ko dara: Pārbauda lietotāja tiesības skatīt lokāli glabātu ierīces attēlu.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Nolasa pašreizējo lietotāju, pēc attēla ceļa atrod saistīto ierīci un izmanto lietotāja `canViewDevice()` tiesību pārbaudi.
      *
      * Kad pielietojas: Izsauc no: `show()`.
      */
@@ -129,7 +137,7 @@ class DeviceAssetController extends Controller
     /**
      * Ko dara: Pārbauda lietotāja tiesības skatīt attālu ierīces attēlu.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Pēc attālā URL atrod ierīci, kurai šis URL saglabāts kā attēls, un pārbauda, vai lietotājs drīkst redzēt šo ierīci.
      *
      * Kad pielietojas: Izsauc no: `remotePreview()`.
      */
@@ -151,7 +159,7 @@ class DeviceAssetController extends Controller
     /**
      * Ko dara: Atrod ierīci pēc glabātā attēla ceļa vai faila nosaukuma.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Salīdzina pilno saglabāto ceļu un faila nosaukumu, lai atrastu ierīci arī tad, ja attēls tiek pieprasīts ar storage ceļa variantu.
      *
      * Kad pielietojas: Izsauc no: `canViewStoredAsset()`.
      */
@@ -159,6 +167,8 @@ class DeviceAssetController extends Controller
     {
         $basename = strtolower(basename($path));
 
+        // Salīdzinām gan pilno ceļu, gan faila nosaukuma beigas,
+        // jo storage URL formāts var atšķirties starp vidi un pieprasījuma ceļu.
         return Device::query()
             ->where(function ($query) use ($path, $basename) {
                 $query->where('device_image_url', $path)

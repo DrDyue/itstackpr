@@ -67,6 +67,8 @@
             <tbody>
                 @forelse ($requests as $repairRequest)
                     @php
+                        // Tabulai tiek padota jau bagātināta saite uz ierīču sarakstu ar highlight parametriem,
+                        // lai no pieteikuma varētu pārlēkt uz konkrēto ierīci un to uzreiz izcelt.
                         $device = $repairRequest->device;
                         $isPendingAction = $repairRequest->status === 'submitted';
                         $thumbUrl = $device?->deviceImageThumbUrl();
@@ -85,6 +87,8 @@
                         $description = trim((string) $repairRequest->description);
                         $shortDescription = \Illuminate\Support\Str::limit(preg_replace('/\s+/u', ' ', $description), 70);
                     @endphp
+                    {{-- Pending rinda saņem citu highlight stilu,
+                         jo neizskatīti pieteikumi interfeisā ir svarīgāki par vēsturiskajiem. --}}
                     <tr id="repair-request-{{ $repairRequest->id }}" class="request-notification-target app-table-row align-top {{ $isPendingAction ? 'app-table-row-pending' : '' }}" data-table-row-id="repair-request-{{ $repairRequest->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}" data-table-search-highlight-style="{{ $isPendingAction ? 'outline' : 'background' }}">
                         <td class="table-col-image px-4 py-4 text-center align-middle">
                             @if ($thumbUrl)
@@ -117,6 +121,8 @@
                         </td>
                         <td class="px-4 py-4">
                             <div class="relative" x-data="{ open: false }">
+                                {{-- Tabulā rādam īso aprakstu, bet hover/focus atver pilno tekstu,
+                                     lai saglabātu kompaktu tabulu un nezaudētu pilnu problēmas saturu. --}}
                                 <button
                                     type="button"
                                     class="max-w-[22rem] truncate text-left text-sm text-slate-700 hover:text-slate-900"
@@ -148,6 +154,8 @@
                         </td>
                         <td class="px-4 py-4 text-right">
                             @if (in_array($repairRequest->status, ['approved', 'rejected'], true) && $deviceFilterUrl)
+                                {{-- Slēgtiem pieteikumiem darbību komplekts vairs nav vajadzīgs.
+                                     Atstājam tikai pāreju uz saistīto ierīci. --}}
                                 {{-- Apstiprinātiem/noraidītiem pieteikumiem - tikai viena poga --}}
                                 <a href="{{ $deviceFilterUrl }}" class="table-action-summary table-action-summary-single">
                                     <x-icon name="view" size="h-4 w-4" />
@@ -164,6 +172,7 @@
                                     </button>
 
                                     <template x-teleport="body">
+                                    {{-- Floating izvēlne tiek teleportēta uz `body`, lai tā nekonfliktētu ar tabulas scroll konteineriem. --}}
                                     <div class="table-action-list table-action-list-dropdown" data-floating-menu="manual" x-ref="panel" x-cloak x-show="open" x-transition.origin.top.right x-bind:style="panelStyle" @click.outside="closePanel()">
                                         @if ($deviceFilterUrl)
                                             <a href="{{ $deviceFilterUrl }}" class="table-action-item table-action-item-sky table-action-item-wide text-sky-700" @click="closePanel()">
@@ -173,6 +182,8 @@
                                         @endif
 
                                         @if ($canReview && $repairRequest->status === 'submitted')
+                                            {{-- Adminam neizskatītam pieteikumam ir review darbības,
+                                                 kas caur POST formu sūta vienu un to pašu endpoint ar atšķirīgu statusu. --}}
                                             <div class="table-action-grid-actions">
                                                 <x-post-action-button
                                                     :action="route('repair-requests.review', $repairRequest)"
@@ -209,6 +220,7 @@
                                                 </x-post-action-button>
                                             </div>
                                         @elseif (! $canReview && $repairRequest->status === 'submitted')
+                                            {{-- Pieteicējam līdz review brīdim atļaujam tikai labot vai atcelt savu paša pieteikumu. --}}
                                             <button type="button" class="table-action-item table-action-item-amber" @click="closePanel(); $dispatch('open-modal', 'repair-request-edit-{{ $repairRequest->id }}')">
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Labot pieteikumu</span>

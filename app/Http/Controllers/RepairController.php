@@ -48,6 +48,8 @@ class RepairController extends Controller
         $user = $this->user();
         abort_unless($user, 403);
 
+        // Ātrā meklēšana atkārto saraksta lomu nosacījumus, filtrus un kārtošanu,
+        // lai nevarētu atrast remontu ārpus pašreiz redzamās datu kopas.
         $canManageRepairs = $user->canManageRequests();
         $filters = $this->normalizedIndexFilters($request, $canManageRepairs);
         $sorting = $this->normalizedSorting($request);
@@ -88,9 +90,13 @@ class RepairController extends Controller
             ]);
         }
 
+        // Bāzes vaicājums satur tikai tos remontus, ko konkrētais lietotājs drīkst redzēt.
+        // Ja administrators ieslēdz "mani remonti", tas papildus sašaurinās uz viņa pieņemtajiem remontiem.
         $baseQuery = $this->visibleRepairsQuery($user)
             ->when($filters['mine'] && $canManageRepairs, fn (Builder $query) => $query->where('repairs.accepted_by', $user->id));
 
+        // Filtru dropdown opcijas tiek iegūtas no tās pašas redzamās datu kopas,
+        // izlaižot konkrēto filtru, lai lietotājs varētu pārslēgt izvēli bez opciju pazušanas.
         $deviceOptions = $this->repairDeviceOptions(
             clone $this->applyIndexFilters(clone $baseQuery, $filters, ['device_id'])
         );
@@ -116,6 +122,8 @@ class RepairController extends Controller
         $this->applySorting($repairsQuery, $sorting);
 
         $repairs = $repairsQuery->get();
+        // Kopsavilkuma kartītes izmanto bāzes vaicājumu, nevis jau filtrēto sarakstu,
+        // lai rādītu kopējo remontu stāvokli lietotājam pieejamajā apjomā.
         $repairSummary = $this->repairSummary($baseQuery);
         $prioritySummary = $this->prioritySummary($baseQuery);
         $typeSummary = $this->typeSummary($baseQuery);
@@ -182,6 +190,8 @@ class RepairController extends Controller
         $baseQuery = $this->visibleRepairsQuery($user)
             ->when($filters['mine'] && $canManageRepairs, fn (Builder $query) => $query->where('repairs.accepted_by', $user->id));
 
+        // Pievienojam ierīces kodu kā atsevišķu atlasītu lauku, jo meklēšana
+        // notiek pēc saistītās ierīces, nevis remonta ieraksta kolonnas.
         $searchQuery = (clone $baseQuery)
             ->leftJoin('devices as repair_search_device', 'repair_search_device.id', '=', 'repairs.device_id')
             ->select([
@@ -192,6 +202,8 @@ class RepairController extends Controller
         $this->applyIndexFilters($searchQuery, $filters);
         $this->applySorting($searchQuery, $sorting);
 
+        // Precīzs normalizēta koda salīdzinājums novērš daļējas sakritības, kas
+        // varētu izcelt nepareizu remonta rindu.
         $repair = $searchQuery->first(function ($repair) use ($code) {
             return mb_strtolower(trim((string) ($repair->device_code ?? ''))) === mb_strtolower($code);
         });
@@ -355,6 +367,8 @@ class RepairController extends Controller
         ]);
         $payload = array_merge($draft, ['status' => $validated['target_status']]);
 
+        // Statusa pāreja maina arī datumu laukus: gaidīšana notīra sākumu/beigas,
+        // darba sākšana ieliek sākuma datumu, bet pabeigšana ieliek beigu datumu.
         if ($validated['target_status'] === 'waiting') {
             $payload['start_date'] = null;
             $payload['end_date'] = null;
@@ -405,7 +419,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Izveido remontu vaicājumu, ko pašreizējais lietotājs drīkst redzēt.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Vadītājam atgriež visus remontus, bet parastam lietotājam tikai viņa ziņotos remontus vai remontus viņam piesaistītām ierīcēm.
      *
      * Kad pielietojas: Izsauc no: `index()`, `findByCode()`.
      */
@@ -422,7 +436,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Sagatavo remonta formas izvēlnes, statusus un etiķetes.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Ielādē formas ierīces, aktīvos lietotājus, statusu/prioritāšu/tipu sarakstus un latviskās etiķetes vienā datu masīvā.
      *
      * Kad pielietojas: Izsauc no: remonta formas datu sagatavošanas plūsmas.
      */
@@ -473,7 +487,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Validē un normalizē formas datus pirms saglabāšanas.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Validē remonta ierīci, tipu, prioritāti, izmaksas un ārējā remonta laukus, pārbauda konfliktus ar pieteikumiem un normalizē saglabāšanas payload.
      *
      * Kad pielietojas: Izsauc no: izveides un rediģēšanas darbības.
      */
@@ -513,6 +527,8 @@ class RepairController extends Controller
         $validated['start_date'] = $repair?->start_date?->toDateString();
         $validated['end_date'] = $repair?->end_date?->toDateString();
 
+        // Esošam remontam ierīci nemainām, jo remonta vēsture, pieteikumi un audits ir piesaistīti konkrētai ierīcei.
+        // Ja remonts izveidots kļūdainai ierīcei, drošāk ir to atcelt un veidot jaunu ierakstu.
         if ($repair && (int) $validated['device_id'] !== (int) $repair->device_id) {
             throw ValidationException::withMessages([
                 'device_id' => ['Esošam remontam ierīci mainīt nevar. Atcel šo remontu un izveido jaunu ierakstu pareizajai ierīcei.'],
@@ -526,12 +542,16 @@ class RepairController extends Controller
             ]);
         }
 
+        // Jaunu remontu drīkst veidot tikai brīvai aktīvai ierīcei.
+        // Pārējie statusi nozīmē, ka ierīcei jau ir cits process vai tā nav lietošanā.
         if (! $repair && $device && $device->status !== Device::STATUS_ACTIVE) {
             throw ValidationException::withMessages([
                 'device_id' => ['Jaunu remontu var izveidot tikai aktīvai ierīcei.'],
             ]);
         }
 
+        // Pirms jauna remonta izveides pārbaudām visas pieteikumu plūsmas.
+        // Tas novērš konfliktu, kur viena ierīce vienlaikus tiek remontēta, norakstīta vai nodota citam lietotājam.
         if (! $repair && $device && RepairRequest::query()->where('device_id', $device->id)->where('status', RepairRequest::STATUS_SUBMITTED)->exists()) {
             throw ValidationException::withMessages([
                 'device_id' => ['Šai ierīcei jau ir gaidošs remonta pieteikums.'],
@@ -567,6 +587,8 @@ class RepairController extends Controller
             $validated['cost'] = null;
         }
 
+        // Iekšējam remontam piegādātāja un rēķina lauki nav vajadzīgi,
+        // tāpēc tos notīrām, lai datubāzē nepaliek veci ārējā remonta dati.
         if ($validated['repair_type'] === 'internal') {
             $validated['vendor_name'] = null;
             $validated['vendor_contact'] = null;
@@ -579,7 +601,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Validē remonta statusa pārejas laikā iesniegtos papildlaukus.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Validē statusa maiņas laikā padotos labojumus, saglabā esošās vērtības kā noklusējumu un pielāgo ārējā/iekšējā remonta laukus.
      *
      * Kad pielietojas: Izsauc no: `transition()`.
      */
@@ -621,7 +643,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Atgriež ierīces, kurām drīkst izveidot jaunu remonta ierakstu.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Atgriež aktīvas ierīces, kurām nav aktīva remonta un nav gaidošu remonta, norakstīšanas vai nodošanas pieteikumu.
      *
      * Kad pielietojas: Izsauc no: `formData()`.
      */
@@ -672,7 +694,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Sagatavo ierīču izvēlnes opcijas formai vai filtram.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Ierīču kolekciju pārvērš dropdown opcijās ar nosaukumu, kodu, tipu, modeli, atbildīgo, atrašanās vietu un meklēšanas tekstu.
      *
      * Kad pielietojas: Izsauc no: saraksta datu sagatavošanas metodes.
      */
@@ -709,7 +731,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Sinhronizē ierīces statusu ar remonta ieraksta statusu.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Ja remonts ir gaidošs vai procesā, ierīci pārslēdz uz `repair`; ja remonts beidzas un nav citu aktīvu remontu, ierīci atgriež aktīvā statusā.
      *
      * Kad pielietojas: Izsauc no: `store()`, `update()`, `transition()`.
      */
@@ -728,6 +750,8 @@ class RepairController extends Controller
         if (in_array($repair->status, ['waiting', 'in-progress'], true) || $hasOtherActiveRepairs) {
             if ($device->status !== 'repair') {
                 $before = ['status' => $device->status];
+                // Ja remonts ir gaidos vai procesā, ierīces kopējais statuss jāparāda kā "remontā".
+                // forceFill šeit maina tikai sistēmas kontrolētu statusa lauku, nevis lietotāja brīvu ievadi.
                 $device->forceFill(['status' => 'repair'])->save();
                 AuditTrail::updatedFromState(auth()->id(), $device, $before, ['status' => 'repair']);
             }
@@ -737,6 +761,7 @@ class RepairController extends Controller
 
         if (($previousRepairStatus === 'waiting' || $previousRepairStatus === 'in-progress' || $device->status === 'repair') && ! $hasOtherActiveRepairs) {
             $before = ['status' => $device->status];
+            // Kad aktīvu remontu vairs nav, ierīci automātiski atgriežam aktīvā statusā.
             $device->forceFill(['status' => Device::STATUS_ACTIVE])->save();
             AuditTrail::updatedFromState(auth()->id(), $device, $before, ['status' => Device::STATUS_ACTIVE]);
         }
@@ -745,7 +770,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Atjauno ierīces statusu pēc remonta ieraksta dzēšanas.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Pēc dzēšanas pārbauda, vai ierīcei nav citu aktīvu remontu; ja nav, atjauno iepriekšējo vai aktīvo statusu.
      *
      * Kad pielietojas: Izsauc no: `destroy()`.
      */
@@ -762,6 +787,7 @@ class RepairController extends Controller
         }
 
         if ($previousRepairStatus === 'waiting' || $previousRepairStatus === 'in-progress' || $device->status === 'repair') {
+            // Dzēšot pēdējo aktīvo remontu, ierīce nedrīkst palikt "remontā" bez remonta ieraksta.
             $device->forceFill(['status' => Device::STATUS_ACTIVE])->save();
         }
     }
@@ -769,12 +795,14 @@ class RepairController extends Controller
     /**
      * Ko dara: Normalizē saraksta filtrus vienotā masīvā.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: No URL nolasa meklēšanu, ierīci, pieteicēju, statusus, prioritātes, tipu, datumu filtru un "mani remonti" pazīmi drošā masīvā.
      *
      * Kad pielietojas: Izsauc no: saraksta skata un meklēšanas metodes.
      */
     private function normalizedIndexFilters(Request $request, bool $canManageRepairs): array
     {
+        // Statusu un prioritāšu vērtības normalizējam no URL, lai saraksta skats,
+        // ātrā meklēšana un audita pieraksti lietotu vienādu filtru struktūru.
         $availableStatuses = ['waiting', 'in-progress', 'completed', 'cancelled'];
         $rawStatuses = $request->query('status', []);
         $selectedStatuses = collect(is_array($rawStatuses) ? $rawStatuses : [$rawStatuses])
@@ -784,6 +812,8 @@ class RepairController extends Controller
             ->values()
             ->all();
 
+        // Ja filtrus notīra, noklusētie statusi netiek uzlikti atpakaļ tajā pašā
+        // pieprasījumā; citādi vadītājam pēc noklusējuma rāda aktīvos remontus.
         if ($request->boolean('clear_all')) {
             $selectedStatuses = [];
         } elseif ($canManageRepairs && ! $request->has('statuses_filter') && ! $request->has('status')) {
@@ -803,6 +833,8 @@ class RepairController extends Controller
             $selectedPriorities = [];
         }
 
+        // Atgriežam tikai pārbaudītas vērtības, ko tālāk droši var izmantot
+        // Eloquent vaicājumos un Blade filtru laukos.
         return [
             'q' => trim((string) $request->query('q', '')),
             'code' => trim((string) $request->query('code', '')),
@@ -823,7 +855,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Pielieto saraksta filtrus Eloquent vaicājumam.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Pielieto brīvo meklēšanu remonta, ierīces un lietotāju laukos, kā arī ierīces, pieteicēja, statusa, prioritātes, tipa un datuma filtrus.
      *
      * Kad pielietojas: Izsauc no: saraksta skata un meklēšanas metodes.
      */
@@ -899,14 +931,18 @@ class RepairController extends Controller
     /**
      * Ko dara: Pielieto drošu kārtošanu saraksta vaicājumam.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Katrai atļautajai kolonnai pievieno savu join/order loģiku un statusus/prioritātes kārto ar SQL CASE prioritāšu secībā.
      *
      * Kad pielietojas: Izsauc no: saraksta skata un meklēšanas metodes.
      */
     private function applySorting(Builder $query, array $sorting): void
     {
+        // Kārtošanas virzienu vēlreiz ierobežojam uz asc/desc, jo tas tiek
+        // ievietots arī raw order izteiksmēs statusiem un prioritātēm.
         $direction = $sorting['direction'] === 'asc' ? 'asc' : 'desc';
 
+        // Katra redzamā kolonna saņem savu join/order loģiku; relāciju laukus
+        // kārtojam ar leftJoin, lai sarakstā neizkristu ieraksti bez relācijas.
         switch ($sorting['sort']) {
             case 'code':
                 $query->leftJoin('devices as repair_sort_device', 'repair_sort_device.id', '=', 'repairs.device_id')
@@ -959,6 +995,8 @@ class RepairController extends Controller
                 $query->orderBy('repairs.end_date', $direction);
                 break;
             default:
+                // Ja kārtošana nav atpazīta, remontus rādam pēc svarīguma:
+                // kritiskie un jaunākie ieraksti nonāk saraksta augšā.
                 $query->orderByRaw("case repairs.priority when 'critical' then 0 when 'high' then 1 when 'medium' then 2 when 'low' then 3 else 4 end")
                     ->orderByDesc('repairs.id');
                 return;
@@ -970,7 +1008,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Normalizē kārtošanas parametrus tabulas galvenei un audita ierakstiem.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Normalizē `sort` un `direction` query parametrus pret atļautajiem laukiem un pievieno latvisku label audita tekstiem.
      *
      * Kad pielietojas: Izsauc no: saraksta skata un meklēšanas metodes.
      */
@@ -993,7 +1031,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Atgriež saraksta kārtošanas opciju etiķetes.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Atgriež remonta saraksta kārtojamo lauku label karti, ko izmanto tabulas galvene un audita paziņojumi.
      *
      * Kad pielietojas: Izsauc no: saraksta skatus un kārtošanas normalizēšanu.
      */
@@ -1016,7 +1054,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Reģistrē remontu saraksta filtrēšanu un kārtošanu audita žurnālā.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: No aktīvajiem filtriem izveido audita payload un pieraksta filtrēšanu/kārtošanu tikai tad, ja lietotājs mainījis atlasi vai secību.
      *
      * Kad pielietojas: Izsauc no: `index()`.
      */
@@ -1068,7 +1106,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Saskaita remontus pa statusiem kopsavilkuma kartītēm.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: No bāzes vaicājuma sagrupē remontus pēc statusa un atgriež kopskaitu un katra statusa skaitu kopsavilkuma kartītēm.
      *
      * Kad pielietojas: Izsauc no: `index()`.
      */
@@ -1091,7 +1129,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Saskaita remontus pa prioritātēm kopsavilkuma kartītēm.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: No bāzes vaicājuma sagrupē remontus pēc prioritātes un atgriež zemas, vidējas, augstas un kritiskas prioritātes skaitu.
      *
      * Kad pielietojas: Izsauc no: `index()`.
      */
@@ -1113,7 +1151,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Saskaita remontus pa remonta tipiem kopsavilkuma kartītēm.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: No bāzes vaicājuma sagrupē remontus pēc remonta tipa un atgriež iekšējo, ārējo un kopējo remonta skaitu.
      *
      * Kad pielietojas: Izsauc no: `index()`.
      */
@@ -1134,12 +1172,14 @@ class RepairController extends Controller
     /**
      * Ko dara: Sagatavo ierīču izvēlnes opcijas remontu filtram.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: No filtrētā remonta vaicājuma paņem unikālos ierīču ID, ielādē šo ierīču kontekstu un pārvērš tās filtra opcijās.
      *
      * Kad pielietojas: Izsauc no: `index()`.
      */
     private function repairDeviceOptions(Builder $repairsQuery): Collection
     {
+        // Vispirms no jau filtrētā remonta vaicājuma paņemam tikai ierīču ID,
+        // lai filtra izvēlnē netiktu rādītas ierīces ārpus aktuālās datu kopas.
         $deviceIds = (clone $repairsQuery)
             ->whereNotNull('repairs.device_id')
             ->distinct()
@@ -1151,6 +1191,8 @@ class RepairController extends Controller
             return collect();
         }
 
+        // Pēc ID ielādējam pašas ierīces ar tipu un atrašanās vietu, lai opcijām
+        // var izveidot saprotamu nosaukumu, aprakstu un meklēšanas tekstu.
         return Device::query()
             ->select([
                 'id',
@@ -1172,6 +1214,8 @@ class RepairController extends Controller
             ->orderBy('name')
             ->get()
             ->map(function (Device $device) {
+                // Apraksts apvieno tehnisko un atrašanās vietas informāciju, ko
+                // filtra izvēlnē var parādīt kā īsu kontekstu zem nosaukuma.
                 $description = collect([
                     $device->type?->type_name,
                     collect([$device->manufacturer, $device->model])->filter()->implode(' '),
@@ -1202,7 +1246,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Sagatavo pieteicēju izvēlnes opcijas remontu filtram.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: No remontiem savāc pieteicēju ID gan no remonta pieteikuma, gan no `issue_reported_by`, ielādē lietotājus un pārvērš dropdown opcijās.
      *
      * Kad pielietojas: Izsauc no: `index()`.
      */
@@ -1240,7 +1284,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Atgriež remonta statusu cilvēkam saprotamās etiķetes.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Tehniskos remonta statusus sasaista ar latviskiem tekstiem, ko izmanto saraksti, formas un audita apraksti.
      *
      * Kad pielietojas: Izsauc no: skatu datu sagatavošanas metodes.
      */
@@ -1257,7 +1301,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Atgriež remonta prioritāšu cilvēkam saprotamās etiķetes.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Tehniskās prioritāšu vērtības pārvērš latviskās etiķetēs no zemas līdz kritiskai.
      *
      * Kad pielietojas: Izsauc no: `index()`, `formData()`.
      */
@@ -1274,7 +1318,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Atgriež remonta tipu cilvēkam saprotamās etiķetes.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Tehniskos remonta tipus `internal` un `external` pārvērš latviskos nosaukumos.
      *
      * Kad pielietojas: Izsauc no: `index()`, `formData()`.
      */
@@ -1289,7 +1333,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Atgriež konkrēta remonta statusa etiķeti audita aprakstiem.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Atgriež statusa label no `statusLabels()` kartes vai pašu tehnisko vērtību, ja statuss nav definēts.
      *
      * Kad pielietojas: Izsauc no: `transition()`.
      */
@@ -1301,7 +1345,7 @@ class RepairController extends Controller
     /**
      * Ko dara: Definē atļautos nākamos statusus remonta dzīves ciklā.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Ar `match` definē remonta dzīves cikla atļautās pārejas, piemēram, no `waiting` uz `in-progress` vai `cancelled`.
      *
      * Kad pielietojas: Izsauc no: `transition()`.
      */

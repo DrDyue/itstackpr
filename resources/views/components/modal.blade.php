@@ -22,6 +22,8 @@ $maxWidth = [
     x-data="{
         show: @js($show),
         requestClose() {
+            // Pirms modāļa aizvēršanas izsūtām atceļamu notikumu.
+            // Tas ļauj citām komponentēm nobloķēt aizvēršanu, piemēram, ja formā ir nesaglabātas izmaiņas.
             const closeEvent = new CustomEvent('modal-before-close', {
                 detail: '{{ $name }}',
                 cancelable: true,
@@ -36,6 +38,8 @@ $maxWidth = [
     }"
     x-init="$watch('show', value => {
         if (value) {
+            // `modal-opened` izsūtām nākamajā animation frame,
+            // lai klausītāji saņemtu notikumu brīdī, kad modālis jau ir ielikts DOM un vizuāli atvērts.
             window.requestAnimationFrame(() => {
                 window.dispatchEvent(new CustomEvent('modal-opened', { detail: '{{ $name }}' }));
             });

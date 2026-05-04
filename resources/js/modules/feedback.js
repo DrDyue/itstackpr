@@ -72,6 +72,8 @@ const ensureAppToastRoot = () => {
     return root;
 };
 
+// Toast prioritāte ļauj kritiskākos paziņojumus rādīt augstāk stekā,
+// pat ja tie tika izveidoti vēlāk nekā mazāk svarīgi info ziņojumi.
 const getToastPriority = ({ tone = 'info', title = '', message = '', priority = null } = {}) => {
     if (Number.isFinite(Number(priority))) {
         return Number(priority);
@@ -118,6 +120,8 @@ const insertToastByPriority = (root, toast) => {
     root.appendChild(toast);
 };
 
+// Toast aizvēršana vispirms iedarbina animāciju un tikai tad izņem mezglu no DOM,
+// lai pāreja būtu gluda un neraustītu pārējo steku.
 const dismissAppToast = (toast) => {
     if (!toast || toast.dataset.closing === '1') {
         return;
@@ -185,6 +189,8 @@ export const registerFeedbackGlobals = () => {
         const toastKey = `${resolvedTone}::${title || ''}::${message}`;
         const existingToast = root.querySelector(`[data-toast-key="${CSS.escape(toastKey)}"]`);
 
+        // Vienādus toastus nedublējam: ja tas pats ziņojums jau redzams,
+        // pagarinām tā dzīvildzi un vajadzības gadījumā pārceļam pēc prioritātes.
         if (existingToast && existingToast.dataset.closing !== '1') {
             if (existingToast.dataset.dismissTimer) {
                 window.clearTimeout(Number(existingToast.dataset.dismissTimer));
@@ -265,6 +271,8 @@ export const registerFeedbackGlobals = () => {
         window.requestAnimationFrame(() => root.classList.add('is-visible'));
         acceptButton.focus();
 
+        // Confirm dialogs tiek iepakots Promise, lai izsaucējs var izmantot `await`
+        // un rakstīt lineāru loģiku bez callback ķēdēm.
         return new Promise((resolve) => {
             const cleanup = (result) => {
                 root.classList.remove('is-visible');
@@ -302,6 +310,8 @@ export const initializeAppConfirm = () => {
 
     window.__appConfirmInitialized = true;
 
+    // Formām pietiek ielikt data atribūtus, un šis globālais handleris
+    // automātiski ieslēdz apstiprināšanas dialogu pirms submit.
     document.addEventListener('submit', async (event) => {
         const form = event.target;
         if (!(form instanceof HTMLFormElement)) {

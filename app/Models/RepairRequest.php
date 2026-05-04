@@ -64,6 +64,8 @@ class RepairRequest extends Model
      */
     public function repair(): HasOne
     {
+        // Saite uz faktisko remonta ierakstu ļauj pārslēgties no "gaida izskatīšanu"
+        // stāvokļa uz jau izveidotu izpildes procesu, nezaudējot pieteikuma izcelsmi.
         return $this->hasOne(Repair::class, 'request_id');
     }
 }

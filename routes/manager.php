@@ -7,7 +7,10 @@ use App\Http\Controllers\RepairController;
 use App\Http\Controllers\RoomController;
 use Illuminate\Support\Facades\Route;
 
+// Manager grupa paredzēta inventāra pārvaldības darbībām.
+// Šeit nonāk gan admini, gan IT darbinieki, ja `EnsureManager` to atļauj.
 Route::middleware(['auth', 'manager'])->group(function () {
+    // Ēku un telpu maršruti ir atdalīti, jo tie tiek izmantoti arī ierīču piesaistes validācijā.
     Route::post('/buildings', [BuildingController::class, 'store'])->name('buildings.store');
     Route::match(['put', 'patch'], '/buildings/{building}', [BuildingController::class, 'update'])->name('buildings.update');
     Route::delete('/buildings/{building}', [BuildingController::class, 'destroy'])->name('buildings.destroy');
@@ -21,18 +24,22 @@ Route::middleware(['auth', 'manager'])->group(function () {
     Route::get('/rooms/find-by-name', [RoomController::class, 'findByName'])->name('rooms.find-by-name');
 
     Route::get('/device-types/find-by-name', [DeviceTypeController::class, 'findByName'])->name('device-types.find-by-name');
+    // Ierīču tips ir atsevišķa vārdnīca; dzēšanu kontrolieris bloķē, ja tips tiek izmantots ierīcēs.
     Route::post('/device-types', [DeviceTypeController::class, 'store'])->name('device-types.store');
     Route::match(['put', 'patch'], '/device-types/{deviceType}', [DeviceTypeController::class, 'update'])->name('device-types.update');
     Route::delete('/device-types/{deviceType}', [DeviceTypeController::class, 'destroy'])->name('device-types.destroy');
     Route::get('/device-types', [DeviceTypeController::class, 'index'])->name('device-types.index');
 
     Route::get('/devices/{device}/quick-update', [DeviceController::class, 'quickUpdateRedirect'])->name('devices.quick-update.redirect');
+    // Quick update ir mazas mērķētas darbības no tabulas: telpa, atbildīgais vai statuss.
+    // Tas atšķiras no pilnā device update, kur tiek saglabāta visa ierīces forma.
     Route::post('/devices/{device}/quick-update', [DeviceController::class, 'quickUpdate'])->name('devices.quick-update');
     Route::post('/devices', [DeviceController::class, 'store'])->name('devices.store');
     Route::match(['put', 'patch'], '/devices/{device}', [DeviceController::class, 'update'])->name('devices.update');
     Route::delete('/devices/{device}', [DeviceController::class, 'destroy'])->name('devices.destroy');
 
     Route::post('/repairs/{repair}/transition', [RepairController::class, 'transition'])->name('repairs.transition');
+    // Remonta transition endpoint maina dzīves cikla statusu bez visas formas pārsūtīšanas.
     Route::post('/repairs', [RepairController::class, 'store'])->name('repairs.store');
     Route::match(['put', 'patch'], '/repairs/{repair}', [RepairController::class, 'update'])->name('repairs.update');
     Route::delete('/repairs/{repair}', [RepairController::class, 'destroy'])->name('repairs.destroy');

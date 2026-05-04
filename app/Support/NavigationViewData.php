@@ -40,6 +40,8 @@ class NavigationViewData
         $navigationItems = $this->navigationItems($isAdmin, $canManageRequests);
         $personalNotifications = $this->personalNotifications($user);
         $personalNotificationCount = $this->personalNotificationCount($user);
+        // Navigācijas emblēmai skaitu rēķinām atsevišķi no preview kolekcijām,
+        // jo badge jāparāda pilnais neizskatīto notikumu skaits, nevis tikai pirmie 5 ieraksti.
         $pendingNotificationsCount = $canManageRequests
             ? RepairRequest::query()->where('status', RepairRequest::STATUS_SUBMITTED)->count()
                 + WriteoffRequest::query()->where('status', WriteoffRequest::STATUS_SUBMITTED)->count()
@@ -121,6 +123,8 @@ class NavigationViewData
             return collect();
         }
 
+        // Preview blokam pietiek ar nelielu jaunāko paziņojumu izlasi;
+        // pilnais saraksts dzīvo paziņojumu centrā un nav jāielādē katrā lapā.
         return UserNotification::query()
             ->where('user_id', $user->id)
             ->whereNull('read_at')
@@ -199,6 +203,8 @@ class NavigationViewData
 
     private function navigationItems(bool $isAdmin, bool $canManageRequests): array
     {
+        // Navigācija tiek būvēta no lomas un aktīvā skata režīma, nevis tikai no lomas vien.
+        // Tāpēc administrators lietotāja skatā redz citu izvēlņu komplektu nekā admina skatā.
         $primaryNavigationItems = array_values(array_filter([
             $canManageRequests ? ['route' => 'dashboard', 'pattern' => 'dashboard', 'label' => 'Darbvirsma', 'icon' => 'dashboard'] : null,
             ['route' => 'devices.index', 'pattern' => 'devices*', 'label' => 'Ierīces', 'icon' => 'device'],
@@ -243,6 +249,8 @@ class NavigationViewData
 
     private function hasUserNotificationsTable(): bool
     {
+        // Legacy instalācijās paziņojumu tabula var vēl nepastāvēt,
+        // tāpēc navigācijas būvēšana nedrīkst pieņemt, ka šī funkcija vienmēr ir ieslēgta.
         return Schema::hasTable('user_notifications');
     }
 }

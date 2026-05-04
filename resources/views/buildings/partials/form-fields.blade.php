@@ -4,6 +4,8 @@
 ])
 
 @php
+    // `value()` izvēlas starp `old()` un esošo modeļa vērtību.
+    // Tas saglabā lietotāja ievadi, ja forma pēc validācijas kļūdas tiek atvērta vēlreiz.
     $value = function (string $field, mixed $default = '') use ($building, $useOldInput) {
         if ($useOldInput) {
             return old($field, $default);

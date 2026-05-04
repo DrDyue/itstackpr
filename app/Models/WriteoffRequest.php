@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class WriteoffRequest extends Model
 {
+    // Statusi tiek turēti kā konstantes, lai kontrolieri, skati un modeļi
+    // visur lietotu vienu un to pašu vērtību kopu bez "cieti" ierakstītiem stringiem.
     public const STATUS_SUBMITTED = 'submitted';
     public const STATUS_APPROVED = 'approved';
     public const STATUS_REJECTED = 'rejected';

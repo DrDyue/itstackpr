@@ -537,6 +537,9 @@ const registerAlpineData = () => {
             return Array.from({ length: 12 }, (_, index) => this.yearPageStart + index);
         },
         get days() {
+            // Kalendāra režģis vienmēr satur 6 rindas x 7 dienas = 42 šūnas.
+            // Tāpēc sākumā piepildām iepriekšējā mēneša atlikumu, tad tekošo mēnesi,
+            // un beigās nākamā mēneša dienas, lai panelis "nelēkātu" starp mēnešiem.
             const startOfMonth = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth(), 1);
             const endOfMonth = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() + 1, 0);
             const startWeekday = (startOfMonth.getDay() + 6) % 7;
@@ -623,6 +626,8 @@ const registerAlpineData = () => {
             }
         },
         handleSubmit() {
+            // Pēc submit formas "dirty" stāvoklis tiek notīrīts,
+            // jo turpmāka modāļa aizvēršana jau ir sagaidāma plūsmas daļa.
             this.submitting = true;
             this.dirty = false;
         },
@@ -641,6 +646,9 @@ const registerAlpineData = () => {
             });
         },
         async confirmClose(event) {
+            // Modālis aizveras caur atceļamu notikumu.
+            // Tas ļauj vienā vietā notvert visus aizvēršanas scenārijus
+            // un pirms aizvēršanas parādīt apstiprinājumu, ja forma ir labota.
             if (event.detail !== this.modalName || !this.dirty || this.submitting) {
                 return;
             }
@@ -668,6 +676,8 @@ const registerAlpineData = () => {
         open: false,
         item: null,
         iconSvg(name = 'view') {
+            // Ikonas glabājam vienā kartē, lai drawer payload var atsūtīt tikai simbolisku nosaukumu,
+            // nevis katrai rindai atkārtot pilnu SVG HTML.
             const icons = {
                 view: '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12 18 18.75 12 18.75 2.25 12 2.25 12Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" /></svg>',
                 repair: '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="m11.42 3.73 1.18 1.77a2.25 2.25 0 0 1-.28 2.84l-6.7 6.7a2.25 2.25 0 1 0 3.18 3.18l6.7-6.7a2.25 2.25 0 0 1 2.84-.28l1.77 1.18a6 6 0 1 0-8.69-8.69Z" /></svg>',
@@ -690,6 +700,8 @@ const registerAlpineData = () => {
             return icons[name] ?? icons.view;
         },
         show(item) {
+            // Drawer pieņem jau sagatavotu "normalizētu" objektu no servera/JS.
+            // Tādēļ vienu un to pašu paneli var izmantot auditam, remonta pieteikumiem un citām vienībām.
             this.item = item || null;
             this.open = true;
             document.body.classList.add('overflow-hidden');
@@ -715,6 +727,8 @@ const registerAlpineData = () => {
                 return this.item.summary_items.filter((entry) => entry?.value);
             }
 
+            // Ja backend nav atsūtījis gatavu summary masīvu,
+            // frontends uzbūvē minimālu kopsavilkumu no universālajiem laukiem.
             const items = [];
 
             if (this.item?.status_label) {
@@ -748,6 +762,8 @@ const registerAlpineData = () => {
             return items.slice(0, 3);
         },
         infoCards() {
+            // Trīs "kartīšu" slots ļauj uzturēt stabilu drawer izkārtojumu,
+            // pat ja konkrētam ierakstam pieejami tikai daži no laukiem.
             return [
                 {
                     label: this.item?.primary_label || '\u0047\u0061\u006C\u0076\u0065\u006E\u0101 \u0069\u006E\u0066\u006F\u0072\u006D\u0101\u0063\u0069\u006A\u0061',
@@ -776,6 +792,7 @@ const registerAlpineData = () => {
             ].filter((entry) => entry.value || entry.meta || entry.notes.length > 0);
         },
         textLines(value) {
+            // Daudzrindu teksti tiek sadalīti pa rindām, lai UI varētu tos attēlot kā atsevišķus punktus.
             return String(value || '')
                 .split('\n')
                 .map((line) => line.trim())
@@ -859,6 +876,8 @@ const registerAlpineData = () => {
                 // Ignorē glabātuves kļūdas.
             }
         },
+        // Ja serveris ilgāk atgriež `unchanged`, pakāpeniski retinām polling biežumu,
+        // lai samazinātu liekus pieprasījumus pie neaktīvas situācijas.
         computePollDelay() {
             const base = this.pollSeconds;
             if (this.idleStreak >= 10) return Math.min(base * 4, 60);
@@ -888,6 +907,8 @@ const registerAlpineData = () => {
             }
 
             try {
+                // Fingerprint ļauj backendam ātri atbildēt ar `unchanged`,
+                // ja paziņojumu saturs kopš iepriekšējās pārbaudes nav mainījies.
                 const response = await window.axios.get(this.endpoint, {
                     headers: {
                         Accept: 'application/json',
@@ -1112,6 +1133,8 @@ const registerAlpineData = () => {
                 reject: 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100',
             }[tone] ?? 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50';
         },
+        // Redzēto ID sarakstu glabājam localStorage, lai pēc pārlādes
+        // neanimētu tos pašus paziņojumus atkārtoti katrā lapas atvēršanas reizē.
         readSeenIds() {
             try {
                 const raw = window.localStorage.getItem(this.storageKey);
@@ -1195,6 +1218,8 @@ const registerAlpineData = () => {
                 this.schedulePoll();
             }, this.computePollDelay() * 1000);
         },
+        // "Izlasīts" stāvokli šeit glabājam kā timestamp robežu, nevis ID sarakstu.
+        // Tas ir lētāk emblēmai: viss, kas radīts pirms cutoff, skaitās izlasīts.
         readCutoff() {
             try {
                 return Number(window.localStorage.getItem(this.storageKey) || 0) || 0;
@@ -1242,6 +1267,8 @@ const registerAlpineData = () => {
             }
 
             try {
+                // Ar to pašu fingerprint principu atjaunojam navigācijas emblēmu,
+                // lai nevajadzētu katrā ciklā pārsūtīt pilnu paziņojumu saturu bez izmaiņām.
                 const response = await window.axios.get(this.endpoint, {
                     headers: {
                         Accept: 'application/json',
@@ -1281,6 +1308,8 @@ const registerAlpineData = () => {
             const cutoff = Date.now();
             const previousCount = this.unreadCount;
 
+            // UI optimistiski uzreiz noņem neizlasīto skaitu, bet kļūdas gadījumā
+            // zemāk to atjaunojam no `previousCount`.
             this.writeCutoff(cutoff);
             this.unreadCount = 0;
             this.showFeedback();
@@ -1309,6 +1338,9 @@ const registerAlpineData = () => {
         identifier,
         prioritizeSelected: Boolean(prioritizeSelected),
         selectedGroupLabel,
+        // Komponente atbalsta divus izvēles režīmus:
+        // 1) klasisku meklēšanu/klikšķi panelī;
+        // 2) "drag preview" uz paša trigera, kur lietotājs velk uz augšu/leju un ātri pārslēdz vērtību.
         pointerSelecting: false,
         triggerDragging: false,
         dragPreviewActive: false,
@@ -1339,6 +1371,8 @@ const registerAlpineData = () => {
         get interactionOptions() {
             const baseOptions = this.prioritizedOptions(this.options);
 
+            // Drag preview laikā nerobežojam sarakstu ar tekstuālu filtru,
+            // jo velkot jāstaigā pa pilno izvēļu secību.
             if (this.triggerDragging || this.dragPreviewActive) {
                 return baseOptions;
             }
@@ -1374,6 +1408,7 @@ const registerAlpineData = () => {
                 return options;
             }
 
+            // Atlasīto vērtību paceļam uz augšu, lai garos sarakstos lietotājs uzreiz redz pašreizējo stāvokli.
             const selectedIndex = options.findIndex((option) => option.value === this.selected);
             if (selectedIndex <= 0) {
                 if (selectedIndex === 0 && options[0]) {
@@ -1450,6 +1485,8 @@ const registerAlpineData = () => {
             return this.previewOptionAt(this.highlightedIndex + 1);
         },
         startTriggerInteraction(event) {
+            // Saglabājam sākuma punktu un sākuma indeksu.
+            // Pēc tam vertikālo pointer kustību pārvēršam diskrētos "soļos" starp opcijām.
             this.triggerDragging = true;
             this.dragPreviewActive = false;
             this.suppressNextClick = false;
@@ -1481,6 +1518,7 @@ const registerAlpineData = () => {
             const maxIndex = this.interactionOptions.length - 1;
             const nextIndex = Math.min(maxIndex, Math.max(0, this.dragStartIndex + steps));
 
+            // Neliels kustības slieksnis atšķir parastu klikšķi no "drag select".
             if (Math.abs(delta) >= Math.max(6, this.dragStepPx / 3)) {
                 this.dragPreviewActive = true;
                 this.open = false;
@@ -1505,6 +1543,8 @@ const registerAlpineData = () => {
             this.triggerDragging = false;
             this.suppressNextClick = this.dragPreviewActive;
 
+            // Ja drag režīms tika tikai iedarbināts, bet izvēle nav mainīta,
+            // neizsaucam lieku submit, izņemot vienkāršo gadījumu ar vienu vienīgu opciju.
             if (!this.dragCommitted) {
                 if (this.dragPreviewActive && this.interactionOptions.length === 1) {
                     const onlyOption = this.interactionOptions[0];
@@ -1551,10 +1591,14 @@ const registerAlpineData = () => {
             this.closePanelOnly();
         },
         preparePanel() {
+            // Atverot paneli, izceļam pašreizējo atlasīto vienību,
+            // lai klaviatūras navigācija turpinātos no loģiska punkta.
             const selectedIndex = this.filteredOptions.findIndex((option) => option.value === this.selected);
             this.highlightedIndex = selectedIndex >= 0 ? selectedIndex : 0;
             this.$nextTick(() => this.scrollToHighlighted());
         },
+        // Rakstot laukā, mēģinām atrast precīzu label sakritību.
+        // Ja tāda ir, hidden select vērtība tiek uzturēta sinhronā ar redzamo tekstu.
         handleInput() {
             this.open = true;
             this.showAllOptions = false;
@@ -1612,6 +1656,8 @@ const registerAlpineData = () => {
                 this.choose(option);
             }
         },
+        // `searchable-select` neiesniedz formu pats tieši.
+        // Tā vietā tas dispatcho vienotu notikumu, ko async-table modulis var debounce vai submitot pēc sava režīma.
         dispatchUpdate({ submit = true } = {}) {
             if (!this.identifier) {
                 return;
@@ -1640,6 +1686,8 @@ const registerAlpineData = () => {
                 return;
             }
 
+            // Pie klaviatūras vai drag navigācijas automātiski piestinām paneli,
+            // lai izceltā opcija vienmēr paliktu redzamajā daļā.
             const option = panel.querySelectorAll('.searchable-select-option')[this.highlightedIndex];
             if (!option) {
                 return;
@@ -1662,6 +1710,8 @@ const registerAlpineData = () => {
 registerAlpineData();
 document.addEventListener('alpine:init', registerAlpineData);
 
+// Viena centrāla inicializācijas ķēde samazina risku, ka jauns modulis tiks pieslēgts "pa kluso"
+// kādā Blade failā un vēlāk būs grūti saprast, kas patiesībā notiek pie app starta.
 // Keep one explicit startup pipeline so future refactors are easy to follow.
 const appInitializers = Object.freeze([
     () => initializeThemeToggle({ readStorageValue, writeStorageValue }),

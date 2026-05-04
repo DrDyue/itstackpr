@@ -31,6 +31,8 @@ class RoomController extends Controller
     {
         $this->requireManager();
 
+        // Filtri tiek nolasīti vienā masīvā, lai tos varētu izmantot gan tabulas
+        // vaicājumam, gan atgriezt skatam kā pašreizējo filtra stāvokli.
         $filters = [
             'search' => trim((string) $request->query('search', $request->query('q', ''))),
             'building_id' => trim((string) $request->query('building_id', '')),
@@ -39,6 +41,8 @@ class RoomController extends Controller
             'user_id' => trim((string) $request->query('user_id', '')),
         ];
 
+        // Telpu sarakstā ielādējam ēku, atbildīgo un ierīču skaitu, jo šie dati
+        // tiek rādīti tabulā bez papildu vaicājumiem katrai rindai.
         $rooms = Room::query()
             ->select(['id', 'building_id', 'floor_number', 'room_number', 'room_name', 'department', 'user_id', 'notes'])
             ->with([
@@ -62,6 +66,8 @@ class RoomController extends Controller
 
         AuditTrail::viewed($this->user(), 'Room', null, "Atv\u{0113}rts telpu saraksts.");
 
+        // Audita ierakstu par filtrēšanu veidojam tikai tad, ja lietotājs tiešām
+        // ir mainījis kādu filtru, nevis vienkārši atvēris sarakstu.
         if ($filters['building_id'] !== '' || $filters['floor'] !== '' || $filters['floor_query'] !== '' || $filters['user_id'] !== '') {
             AuditTrail::filter($this->user(), 'Room', [
                 "\u{0113}ka" => $filters['building_id'],
@@ -70,6 +76,8 @@ class RoomController extends Controller
             ], "Filtr\u{0113}ts telpu saraksts.");
         }
 
+        // Skatam atdodam gan lapoto sarakstu, gan izvēļņu vērtības filtru un
+        // modālo logu aizpildīšanai.
         return view('rooms.index', [
             'rooms' => $rooms,
             'roomSummary' => [
@@ -115,6 +123,8 @@ class RoomController extends Controller
 
         AuditTrail::search($this->user(), 'Room', $search, "Mekl\u{0113}ta telpa p\u{0113}c nosaukuma vai numura: ".$search);
 
+        // Meklēšanā atkārtojam aktīvos filtrus, lai rezultāts atrastos tajā pašā
+        // telpu kopā, kuru lietotājs redz sarakstā.
         $filters = [
             'building_id' => trim((string) $request->query('building_id', '')),
             'floor' => trim((string) $request->query('floor', '')),
@@ -122,6 +132,8 @@ class RoomController extends Controller
             'user_id' => trim((string) $request->query('user_id', '')),
         ];
 
+        // Sarakstu sakārtojam tāpat kā index skatā, jo atrastais indekss nosaka
+        // lapas numuru un rindas izcelšanu.
         $rooms = Room::query()
             ->when($filters['building_id'] !== '' && ctype_digit($filters['building_id']), fn (Builder $query) => $query->where('building_id', (int) $filters['building_id']))
             ->when($filters['floor'] !== '' && is_numeric($filters['floor']), fn (Builder $query) => $query->where('floor_number', (int) $filters['floor']))
@@ -136,6 +148,8 @@ class RoomController extends Controller
             ->orderBy('room_number')
             ->get(['id', 'room_number', 'room_name']);
 
+        // Meklējam gan pēc telpas numura, gan nosaukuma, jo lietotājs var ievadīt
+        // jebkuru no šiem apzīmējumiem.
         $needle = mb_strtolower($search);
         $foundIndex = $rooms->search(function (Room $room) use ($needle) {
             $searchValue = mb_strtolower(trim(implode(' ', array_filter([
@@ -170,6 +184,8 @@ class RoomController extends Controller
     {
         $this->requireManager();
 
+        // Izveide izmanto to pašu validācijas metodi kā labošana,
+        // lai ēkas, stāva un telpas numura noteikumi visur būtu identiski.
         $room = Room::create($this->validatedData($request));
         AuditTrail::created(auth()->id(), $room);
 
@@ -210,6 +226,8 @@ class RoomController extends Controller
 
         $devicesCount = $room->devices()->count();
 
+        // Telpu nevar dzēst, kamēr tajā vēl atrodas ierīces,
+        // jo tad ierīcēm pazustu fiziskās atrašanās vietas saite.
         if ($devicesCount > 0) {
             return redirect()
                 ->route('rooms.index')
@@ -226,7 +244,7 @@ class RoomController extends Controller
     /**
      * Ko dara: Validē un normalizē formas datus pirms saglabāšanas.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Validē ēku, stāvu, telpas numuru, atbildīgo lietotāju un papildu laukus; telpas numura unikalitāti pārbauda konkrētās ēkas ietvaros.
      *
      * Kad pielietojas: Izsauc no: izveides un rediģēšanas darbības.
      */
@@ -254,6 +272,8 @@ class RoomController extends Controller
             'room_number.unique' => 'Šāds telpas numurs šajā ēkā jau eksistē.',
         ]);
 
+        // Tukšās izvēles vērtības pārvēršam par null, lai datubāzē neglabātos
+        // tukšas virknes un relāciju laukiem saglabātos vienota semantika.
         $data['user_id'] = $data['user_id'] ?: null;
         $data['room_name'] = $data['room_name'] ?: null;
         $data['department'] = $data['department'] ?: null;

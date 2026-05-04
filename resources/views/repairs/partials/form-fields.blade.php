@@ -1,4 +1,6 @@
 @php
+    // Ja remonts jau eksistē, ierīces piesaiste vairs netiek mainīta šajā formā.
+    // Izveides režīmā ierīce vēl jāizvēlas ar searchable-select.
     $currentRepair = $repair;
 @endphp
 
@@ -11,6 +13,8 @@
             </div>
 
             @if ($currentRepair)
+                {{-- Edit režīmā ierīci tikai parādām un iesniedzam hidden laukā,
+                     jo remonta ieraksta pārvietošana uz citu ierīci salauztu vēstures saiti. --}}
                 <div class="repair-device-note">
                     <x-icon name="device" size="h-4 w-4" />
                     <span>{{ $currentRepair->device?->name ?: 'Ierīce nav atrasta' }}</span>
@@ -24,6 +28,8 @@
             @unless ($currentRepair)
                 <div class="lg:col-span-1">
                     <x-ui.form-field label="Ierīce" name="device_id">
+                        {{-- Create režīmā jāizvēlas konkrēta ierīce.
+                             Komponente iesniedz `device_id`, bet `device_query` saglabā redzamo meklēšanas tekstu pēc validācijas kļūdas. --}}
                         <x-searchable-select
                             name="device_id"
                             query-name="device_query"
@@ -55,6 +61,8 @@
         <div class="mt-4 grid gap-4 md:grid-cols-2">
             <div class="md:col-span-2">
                 <span class="crud-label">Prioritāte</span>
+                {{-- Prioritātes pogas ir radio inputi ar pielāgotu vizuālo slāni.
+                     Backend saņem parastu `priority` vērtību, bet lietotājs redz skaidru statusa izvēli. --}}
                 <div class="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                     @foreach ($priorities as $priority)
                         @php
@@ -107,6 +115,8 @@
 
             <div>
                 <span class="crud-label">Remonta tips</span>
+                {{-- Remonta tips vada arī nosacīto ārējā remonta lauku bloku zemāk.
+                     Alpine `repairType` nodrošina tūlītēju UI pārslēgšanu bez lapas pārlādes. --}}
                 <div class="mt-2 rounded-2xl border bg-slate-50 p-2 {{ $errors->has('repair_type') ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200' }}">
                     <div class="relative grid grid-cols-2 rounded-xl bg-white p-1 shadow-inner">
                         <div
@@ -141,6 +151,8 @@
         x-cloak
         x-show="repairType === 'external'"
     >
+        {{-- Ārējā remonta dati tiek rādīti tikai tad, ja tips ir `external`.
+             Tas atdala iekšējo servisa darbu no pakalpojuma sniedzēja/rēķina uzskaites. --}}
         <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ārējā remonta dati</div>
         <div class="mt-1 text-sm text-slate-500">Šie lauki tiek izmantoti ārējā pakalpojuma uzskaitei un vēsturei.</div>
 
@@ -160,4 +172,5 @@
     </div>
 </div>
 
+{{-- Statusu šeit iesniedzam kā hidden vērtību, jo dzīves cikla pārejas tiek veiktas ar atsevišķām pogām/endpointu. --}}
 <input type="hidden" name="status" value="{{ $currentRepair?->status ?? 'waiting' }}">

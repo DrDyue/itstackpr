@@ -89,6 +89,8 @@ class Repair extends Model
      */
     public function getApprovalActorAttribute(): ?User
     {
+        // Priekšroka tiek dota jau ielādētai relācijai, lai nevajadzētu papildu vaicājumus.
+        // Ja acceptedBy nav pieejams, fallback ir saistītā pieteikuma reviewedBy relācija.
         if ($this->relationLoaded('acceptedBy') && $this->acceptedBy) {
             return $this->acceptedBy;
         }
@@ -105,6 +107,8 @@ class Repair extends Model
      */
     public function getApprovalActorNameAttribute(): ?string
     {
+        // Šis accessor palīdz skatam iegūt apstiprinātāja vārdu arī tad,
+        // ja konkrētā relācija iepriekš nav eager load ielādēta.
         if ($this->approval_actor?->full_name) {
             return $this->approval_actor->full_name;
         }
@@ -120,9 +124,6 @@ class Repair extends Model
         return null;
     }
 
-    /**
-     * Pieprasījums, no kura izveidots remonts.
-     */
     /**
      * Pieprasījums, no kura izveidots remonts.
      */

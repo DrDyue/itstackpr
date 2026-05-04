@@ -6,9 +6,13 @@
 ])
 
 @php
+    // Komponents var strādāt ar noklusēto kļūdu maisu vai konkrētu named error bag.
+    // Tas ļauj vienā lapā droši rādīt atsevišķas kļūdas profilam, parolei, iestatījumiem u.c.
     $errorBag = $bag ?? $errors;
     $errorKeys = collect($errorBag->keys())->values();
     $firstErrorField = $focusFirstError ? $errorKeys->first() : null;
+    // Kļūdas pārveidojam vienotā masīvā ar tehnisko lauka nosaukumu,
+    // cilvēkam saprotamu label un pašu validācijas ziņu.
     $displayErrors = collect($errorBag->messages())
         ->flatMap(function (array $messages, string $field) use ($fieldLabels) {
             $label = $fieldLabels[$field] ?? null;
@@ -20,6 +24,8 @@
             ]);
         })
         ->values();
+    // Padomi tiek ģenerēti pēc lauka nosaukuma.
+    // Tas nav validācijas noteikums, bet lietotājam saprotams skaidrojums, ko darīt tālāk.
     $tips = $errorKeys
         ->flatMap(function (string $field) {
             return match (true) {
@@ -44,6 +50,7 @@
         role="alert"
         aria-live="polite"
         @if ($firstErrorField)
+            {{-- JS izmanto šo atribūtu, lai pēc kļūdas varētu fokusēt pirmo problemātisko lauku. --}}
             data-first-error-field="{{ $firstErrorField }}"
         @endif
     >
@@ -68,6 +75,7 @@
                             <button
                                 type="button"
                                 class="validation-summary-link"
+                                {{-- Klikšķis uz kļūdas pārvieto fokusu uz attiecīgo formas lauku. --}}
                                 @click="window.focusValidationField(@js($error['field']))"
                             >
                                 @if ($error['label'])

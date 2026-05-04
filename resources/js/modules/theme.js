@@ -4,6 +4,8 @@ const getStoredTheme = (readStorageValue) => {
     return readStorageValue(THEME_STORAGE_KEY, 'light') === 'dark' ? 'dark' : 'light';
 };
 
+// Tēmu rakstām gan `data-theme`, gan `color-scheme`,
+// lai CSS un pārlūka native elementi būtu vienā režīmā.
 const applyTheme = (theme) => {
     const normalizedTheme = theme === 'dark' ? 'dark' : 'light';
     document.documentElement.dataset.theme = normalizedTheme;

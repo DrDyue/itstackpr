@@ -49,6 +49,7 @@ class PasswordResetLinkController extends Controller
             ->first();
 
         if ($user) {
+            // Šeit netiek ģenerēta jauna parole. Sistēma tikai atzīmē, ka lietotājs lūdz administratora palīdzību.
             $user->forceFill([
                 'password_reset_requested_at' => now(),
             ])->save();

@@ -8,10 +8,14 @@
 ])
 
 @php
+    // Ja pašreizējā URL ir query parametri, tukšais stāvoklis var piedāvāt "Notīrīt filtrus".
+    // Ja filtru nav, darbības pogu nerādām, jo nav ko notīrīt.
     $hasQuery = request()->query() !== [];
     $resolvedClearHref = $clearHref ?? ($hasQuery ? url()->current() : null);
 @endphp
 
+{{-- Tabulu tukšais stāvoklis balstās uz vispārīgo empty-state komponenti,
+     bet automātiski pievieno filtru notīrīšanas darbību, kad tā ir jēgpilna. --}}
 <x-empty-state
     compact
     class="table-empty-state"

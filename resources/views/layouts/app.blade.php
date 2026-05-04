@@ -18,11 +18,14 @@
         <script>
             (() => {
                 try {
+                    // Tēmu uzliekam vēl pirms CSS un galvenā JS ielādes,
+                    // lai lapa nepaspēj "uzmirkšķināt" nepareizā režīmā.
                     const savedTheme = window.localStorage.getItem('itstack-theme');
                     const theme = savedTheme === 'dark' ? 'dark' : 'light';
                     document.documentElement.dataset.theme = theme;
                     document.documentElement.style.colorScheme = theme;
                 } catch (error) {
+                    // Ja localStorage nav pieejams, fallback ir drošs un deterministisks.
                     document.documentElement.dataset.theme = 'light';
                     document.documentElement.style.colorScheme = 'light';
                 }
@@ -65,6 +68,8 @@
                     x-transition:leave-end="translate-y-4 scale-[0.97] opacity-0"
                     class="flash-toast flash-toast-{{ $flashTone }}"
                 >
+                    {{-- Session flash ir servera puses vienreizējs paziņojums.
+                         Tas atšķiras no live polling paziņojumiem, jo tiek rādīts pēc redirect cikla. --}}
                     <div class="flash-toast-icon">
                         @if ($flashTone === 'success')
                             <x-icon name="check-circle" size="h-4 w-4" />
@@ -106,6 +111,8 @@
                 })"
                 class="pointer-events-none flex flex-col gap-3"
             >
+                {{-- `storageKey` apzināti satur lietotāja ID un skata režīmu,
+                     lai admina un darbinieka paziņojumu "seen" stāvokļi nesajauktos vienā localStorage ierakstā. --}}
                 <template x-for="notification in items" :key="notification.id">
                     <div
                         x-cloak

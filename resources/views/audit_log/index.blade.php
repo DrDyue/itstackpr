@@ -10,6 +10,8 @@
 --}}
 <x-app-layout>
     @php
+        // Audita žurnālā filtru vērtības bieži nāk kā kodi (`action`, `entity_type`, `severity`),
+        // tāpēc cilvēklasāmos nosaukumus sagatavojam atsevišķi jau Blade sākumā.
         $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
         $selectedActionLabel = collect($actionOptions)->firstWhere('value', $filters['action'])['label'] ?? null;
         $selectedUserLabel = collect($actorOptions)->firstWhere('value', $filters['user_id'])['label'] ?? null;
@@ -64,6 +66,8 @@
             >
                 <input type="hidden" name="sort" value="{{ $filters['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $filters['direction'] }}" data-sort-hidden="direction">
+                {{-- Pat audita lapā, kur ir daudz filtru, kārtošana tiek reducēta līdz diviem hidden laukiem.
+                     Tas padara backend vaicājuma būvēšanu vienkāršu un vienādu ar citām tabulām. --}}
 
                 <div class="toolbar-panels toolbar-panels-wide">
                     <div class="devices-filter-section">
@@ -161,6 +165,8 @@
                                         @endphp
                                         <button
                                             type="button"
+                                            {{-- Severity čipi atbalsta vairākatlasījumu.
+                                                 Tāpēc zemāk veidojam vairākus hidden laukus ar vienu un to pašu nosaukumu. --}}
                                             @click="toggle(@js($severityFilter['value'])); $nextTick(() => $el.closest('form').requestSubmit())"
                                             class="quick-status-filter {{ $toneClass }}"
                                             :class="isSelected(@js($severityFilter['value'])) ? 'quick-status-filter-active' : ''"
@@ -261,6 +267,8 @@
                         <tbody>
                             @forelse ($logs as $log)
                                 @php
+                                    // Daļa auditā glabāto kodu nav piemēroti tiešai rādīšanai.
+                                    // Te tos pārvēršam badge stilā un ikonā, lai tabula būtu nolasāma bez tehnisku kodu zināšanas.
                                     $entityPreview = \App\Support\AuditTrail::entityPreview($log->entity_type, $log->entity_id);
                                     $actionStyles = match ($log->action) {
                                         'CREATE' => ['icon' => 'plus', 'class' => 'audit-badge audit-badge-emerald'],

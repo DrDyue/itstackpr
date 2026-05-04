@@ -87,6 +87,8 @@ class DeviceTypeController extends Controller
         AuditTrail::search($this->user(), 'DeviceType', $search, 'Meklēts ierīces tips pēc nosaukuma: '.$search);
 
         $sorting = $this->normalizedSorting($request);
+        // Sarakstu kārtojam tieši tāpat kā tabulā, jo meklēšanā atrastais indekss
+        // vēlāk tiek pārvērsts lapas numurā un rindas highlight identifikatorā.
         $types = DeviceType::query()
             ->withCount('devices')
             ->orderBy(
@@ -164,6 +166,8 @@ class DeviceTypeController extends Controller
     {
         $this->requireManager();
 
+        // Tipu nedrīkst dzēst, ja tas vēl tiek lietots kaut vienā ierīcē,
+        // citādi ierīces paliktu bez korekta klasifikatora.
         if ($deviceType->devices()->exists()) {
             return redirect()
                 ->route('device-types.index')
@@ -181,7 +185,7 @@ class DeviceTypeController extends Controller
      *
      * Kā strādā: Šī metode ir saglabāta saderībai ar Laravel resursu maršrutiem. Ja nākotnē tiks veidota atsevišķa tipa lapas, tā tiks implementēta šeit.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Kad Laravel resource maršruts izsauc `show`, bet projektā atsevišķa ierīces tipa detaļu lapa nav paredzēta.
      */
     public function show(DeviceType $deviceType)
     {
@@ -195,7 +199,7 @@ class DeviceTypeController extends Controller
      *
      * Kā strādā: Pārbauda, vai pieprasītā kolonna ir atļauto kārtojamo kolonnu sarakstā. Noklusēts kārtojums ir pēc tipa nosaukuma augošā secībā.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Ierīču tipu sarakstā un ātrās meklēšanas darbībās, kur jāievēro vienāds kārtojums.
      */
     private function normalizedSorting(Request $request): array
     {
@@ -220,9 +224,9 @@ class DeviceTypeController extends Controller
     /**
      * Ko dara: Atgriež kārtojamo lauku nosaukumu karti Blade skatam un audita paziņojumiem.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Definē, kā tabulas kolonnu tehniskie nosaukumi jāparāda lietotājam un audita tekstos.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Ierīču tipu sarakstā, kad jāparāda aktīvā kārtojuma nosaukums vai jāveido audita apraksts.
      */
     private function sortOptions(): array
     {
@@ -237,7 +241,7 @@ class DeviceTypeController extends Controller
      *
      * Kā strādā: Pārbauda obligāto aizpildījumu, garuma ierobežojumu un unikalitāti (reģistrjutīgi). Metode pieņem esošu tipu, lai izslēgtu to no unikalitātes pārbaudes.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Ierīces tipa izveides un labošanas formās pirms datu saglabāšanas.
      */
     private function validateTypeName(Request $request, ?DeviceType $deviceType = null): array
     {
@@ -248,6 +252,8 @@ class DeviceTypeController extends Controller
             'type_name.max' => 'Ierīces tipa nosaukums nedrīkst būt garāks par 30 rakstzīmēm.',
         ]);
 
+        // Pēc validācijas apgriežam atstarpes, lai "Monitors" un " Monitors "
+        // sistēmā netiktu uztverti kā dažādi nosaukumi.
         $data['type_name'] = trim($data['type_name']);
 
         if ($data['type_name'] === '') {
@@ -256,6 +262,8 @@ class DeviceTypeController extends Controller
             ]);
         }
 
+        // Unikalitāti pārbaudām reģistrnejutīgi, jo lietotājam "Printeris" un
+        // "printeris" ir tas pats tips, kaut arī SQL kolācija to ne vienmēr garantē.
         $exists = DeviceType::query()
             ->when($deviceType, fn ($query) => $query->whereKeyNot($deviceType->id))
             ->whereRaw('LOWER(type_name) = ?', [mb_strtolower($data['type_name'])])

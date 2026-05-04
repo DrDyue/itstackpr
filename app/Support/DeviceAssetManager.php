@@ -50,6 +50,8 @@ class DeviceAssetManager
             return null;
         }
 
+        // Attāliem attēliem neatdodam oriģinālo URL tieši pārlūkam.
+        // To vietā izmantojam drošu preview maršrutu, kas veic piekļuves un satura pārbaudi.
         if (Str::startsWith($path, ['http://', 'https://'])) {
             return route('device-assets.remote-preview', ['url' => $path]);
         }
@@ -108,6 +110,8 @@ class DeviceAssetManager
     {
         $optimized = $this->optimize($file);
 
+        // Faila nosaukumu ģenerējam nejauši, nevis no oriģinālā nosaukuma,
+        // lai nebūtu konfliktu, nevajadzīgu persondatu un paredzamu ceļu.
         $extension = $optimized['extension'] ?? strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'jpg');
         $path = trim($directory, '/') . '/' . Str::lower(Str::random(40)) . '.' . $extension;
         $disk = Storage::disk($this->disk());
@@ -119,12 +123,14 @@ class DeviceAssetManager
         }
 
         if ($withThumbnail) {
+            // Thumbnail glabājam atsevišķi, jo sarakstos un preview kartītēs nav vajadzīgs pilna izmēra attēls.
             $thumbnail = $this->optimize($file, (int) config('devices.thumbnail_dimension', 480));
             if (isset($thumbnail['contents'])) {
                 $disk->put($this->thumbnailPath($path), $thumbnail['contents'], ['visibility' => 'public']);
             }
         }
 
+        // Pēc nomaiņas iztīrām vecos failus, lai glabātuvē nekrātos nelietoti attēli.
         if ($previousPath && $previousPath !== $path) {
             $this->delete($previousPath);
             $this->delete($this->thumbnailPath($previousPath));
@@ -201,6 +207,8 @@ class DeviceAssetManager
             return [];
         }
 
+        // Attēlu samazinām proporcionāli pēc garākās malas,
+        // lai samazinātu izmēru, bet nesabojātu malu attiecību.
         $maxDimension = $maxDimension ?: (int) config('devices.max_dimension', 1800);
         $scale = min(1, $maxDimension / max($width, $height));
         $targetWidth = max(1, (int) round($width * $scale));
@@ -223,6 +231,8 @@ class DeviceAssetManager
         $encoded = false;
         $extension = 'jpg';
 
+        // Ja serveris atbalsta WebP, dodam priekšroku kompaktākam formātam;
+        // pretējā gadījumā krītam atpakaļ uz JPEG.
         if (function_exists('imagewebp')) {
             $encoded = imagewebp($canvas, null, (int) config('devices.webp_quality', 80));
             $extension = 'webp';

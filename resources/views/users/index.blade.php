@@ -5,6 +5,8 @@
 --}}
 <x-app-layout>
     @php
+        // Lietotāju sarakstā daļa filtru ir "toggle" tipa, bet daļa ir pilni meklēšanas lauki.
+        // Tāpēc te iepriekš sagatavojam arī label un route datus, ko vēlāk izmanto filtriem un tabulai.
         $roleFilterLinks = [
             ['label' => 'Admins', 'value' => 'admin', 'icon' => 'users', 'tone' => 'violet'],
             ['label' => 'Darbinieki', 'value' => 'user', 'icon' => 'profile', 'tone' => 'sky'],
@@ -69,6 +71,8 @@
             >
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
+                {{-- Kārtošana tiek turēta hidden laukos, lai async tabulas skripts varētu vienādi apstrādāt
+                     gan header pogas, gan nākotnes vadīklas bez backend izmaiņām. --}}
 
                 <div class="devices-filter-header">
                     <div class="devices-filter-section">
@@ -149,6 +153,8 @@
                         <div class="quick-filter-group">
                             <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Lietotāja statuss</div>
                             <div class="quick-status-filters" x-data="{ value: @js($filters['is_active']) }">
+                                {{-- Šeit statuss ir vienvērtības filtrs, tāpēc pietiek ar vienu hidden lauku,
+                                     kuru pārslēdzam starp `1`, `0` un tukšu vērtību. --}}
                                 <input type="hidden" name="is_active" :value="value">
                                 <button type="button" class="quick-status-filter quick-status-filter-emerald" :class="value === '1' ? 'quick-status-filter-active' : ''" @click="value = value === '1' ? '' : '1'; $nextTick(() => $el.closest('form').requestSubmit())">
                                     <x-icon name="check-circle" size="h-4 w-4" />
@@ -180,6 +186,8 @@
                             <div class="quick-status-filters">
                                 @foreach ($roleFilterLinks as $roleFilter)
                                     @php
+                                        // Lomu filtram veidojam nākamo URL servera pusē,
+                                        // lai klikšķis uz čipa būtu parasts GET links un strādātu arī bez JavaScript.
                                         $query = request()->except('page', 'role');
                                         $roleValues = collect($selectedRoles);
                                         $isActive = $roleValues->contains($roleFilter['value']);
@@ -312,6 +320,8 @@
                                         </div>
                                     </td>
                                     <td class="px-4 py-4">
+                                        {{-- Saite uz ierīču sarakstu izmanto jau sagatavotu filtra query,
+                                             lai no lietotāju tabulas varētu uzreiz pāriet uz konkrētā lietotāja ierīcēm. --}}
                                         @if ($hasAssignedDevices)
                                             <a
                                                 href="{{ $assignedDevicesUrl }}"
@@ -331,6 +341,8 @@
                                             x-data="createFloatingDropdown({ zIndex: 400 })"
                                             @keydown.escape.window="closePanel()"
                                         >
+                                            {{-- Darbību izvēlne tiek renderēta kā floating panelis `body` līmenī,
+                                                 lai tabulas scroll un overflow konteineri to nenokniebtu. --}}
                                             <button
                                                 type="button"
                                                 class="table-action-summary"

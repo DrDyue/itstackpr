@@ -27,12 +27,15 @@ class PasswordController extends Controller
      */
     public function update(Request $request): RedirectResponse
     {
+        // `current_password` nav parasta teksta salīdzināšana: Laravel pārbauda ievadīto paroli
+        // pret datubāzē saglabāto hash, neizvelkot ārā īsto paroli.
         $validated = $request->validateWithBag('updatePassword', [
             'current_password' => ['required', 'current_password'],
             'password' => ['required', Password::defaults(), 'confirmed'],
         ]);
 
         $request->user()->update([
+            // Jauno paroli pirms saglabāšanas hashējam, lai datubāzē nekad nenonāktu atklāta parole.
             'password' => Hash::make($validated['password']),
         ]);
 

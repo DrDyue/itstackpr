@@ -37,6 +37,8 @@ class RuntimeSchemaBootstrapper
     public function ensure(): void
     {
         try {
+            // Šī metode apzināti ir idempotenta: to var droši izsaukt vairākas reizes,
+            // jo katrs solis pirms izmaiņām pārbauda tabulas, kolonnas un indeksu esamību.
             $this->ensureBuildingsTable();
             $this->ensureRoomsTable();
             $this->ensureDeviceTypesTable();
@@ -416,6 +418,10 @@ class RuntimeSchemaBootstrapper
             return;
         }
 
+        // Pāreju veicam divos soļos:
+        // 1) īslaicīgi paplašinām ENUM ar vecajām vērtībām,
+        // 2) normalizējam datus,
+        // 3) sašaurinām kolonnu atpakaļ uz kanonisko vērtību kopu.
         DB::statement(sprintf(
             'ALTER TABLE `%s` MODIFY `%s` ENUM(%s) NOT NULL DEFAULT %s',
             $table,
@@ -474,6 +480,8 @@ class RuntimeSchemaBootstrapper
             return;
         }
 
+        // Vecās sistēmas statusus pārvēršam jaunajā trīs stāvokļu modelī,
+        // lai jaunais kods nestrādātu ar vairs neatbalstītām vērtībām.
         DB::table('devices')->whereIn('status', ['reserve', 'broken', 'kitting'])->update(['status' => Device::STATUS_ACTIVE]);
         DB::table('devices')->where('status', 'written_off')->update(['status' => Device::STATUS_WRITEOFF]);
     }
@@ -545,6 +553,8 @@ class RuntimeSchemaBootstrapper
             return;
         }
 
+        // Patiesību par remonta statusu ņemam no remonta ierakstiem, nevis tikai no devices.status,
+        // jo legacy datos abas vietas var būt nesinhronas.
         $activeRepairDeviceIds = DB::table('repairs')
             ->whereIn('status', ['waiting', 'in-progress'])
             ->whereNotNull('device_id')
@@ -565,6 +575,8 @@ class RuntimeSchemaBootstrapper
             $repairDeviceUpdates['updated_at'] = now();
         }
 
+        // Visām ierīcēm, kas palikušas "repair" bez aktīva remonta ieraksta,
+        // statusu atgriežam uz "active", lai saraksti atspoguļo realitāti.
         $repairDeviceQuery->update($repairDeviceUpdates);
 
         if ($activeRepairDeviceIds->isEmpty()) {
@@ -576,6 +588,8 @@ class RuntimeSchemaBootstrapper
             $activeRepairUpdates['updated_at'] = now();
         }
 
+        // Un otrādi: ja aktīvs remonts eksistē, ierīcei piespiežam "repair" statusu,
+        // lai UI un biznesa noteikumi redz konsekventu stāvokli.
         DB::table('devices')
             ->whereIn('id', $activeRepairDeviceIds->all())
             ->where('status', '!=', Device::STATUS_WRITEOFF)
@@ -858,6 +872,8 @@ class RuntimeSchemaBootstrapper
             return;
         }
 
+        // Kolonnu pievienojam tikai mērķētajai vietai, nepalaižot visas migrācijas,
+        // jo runtime labojuma mērķis ir ātri salabot tieši trūkstošo shēmas daļu.
         Schema::table($tableName, function (Blueprint $table) use ($definition) {
             $definition($table);
         });
@@ -876,6 +892,8 @@ class RuntimeSchemaBootstrapper
 
     private function hasIndex(string $tableName, string $indexName): bool
     {
+        // Indeksu esamību pārbaudām atkarībā no DB draivera,
+        // jo Laravel Schema API šeit nedod vienotu cross-driver pārbaudes metodi.
         return match (DB::getDriverName()) {
             'mysql' => (int) (DB::selectOne(
                 'SELECT COUNT(*) AS aggregate FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ?',
@@ -913,6 +931,8 @@ class RuntimeSchemaBootstrapper
             return;
         }
 
+        // Saglabājam oriģinālo kolonnas tipu un nomainām tikai nullability,
+        // lai nejauši nepazaudētu garumu, enum definīciju vai citu tipu specifiku.
         DB::statement(sprintf(
             'ALTER TABLE `%s` MODIFY `%s` %s NULL',
             $tableName,

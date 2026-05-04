@@ -9,6 +9,8 @@
 --}}
 <x-app-layout>
     @php
+        // Lapas augšā sagatavojam kārtošanas kolonnu aprakstus,
+        // lai tabulas galva var ģenerēt vienādas sort pogas visām kolonnām.
         $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
         $sortableHeaders = [
             'building_name' => ['label' => 'Nosaukums'],
@@ -42,6 +44,8 @@
         </div>
 
         <div id="buildings-index-root" data-async-table-root>
+            {{-- Filtru forma darbojas arī kā parasts GET pieprasījums,
+                 bet `data-async-table-form` ļauj JS atjaunot tikai tabulas daļu bez pilnas lapas pārlādes. --}}
             <form
                 method="GET"
                 action="{{ route('buildings.index') }}"
@@ -50,6 +54,7 @@
                 data-async-root="#buildings-index-root"
                 data-search-endpoint="{{ route('buildings.find-by-name') }}"
             >
+                {{-- Sort stāvoklis glabājas hidden laukos, lai kolonnu pogas un backend izmantotu vienu līgumu. --}}
                 <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
                 <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
 
@@ -167,6 +172,8 @@
                         <tbody class="divide-y divide-slate-100">
                             @forelse ($buildings as $building)
                                 @php
+                                    // Ēku drīkst dzēst tikai tad, ja nav piesaistītu telpu un ierīču.
+                                    // Pretējā gadījumā dzēšana salauztu atrašanās vietu hierarhiju.
                                     $canDelete = (int) $building->rooms_count === 0 && (int) $building->devices_count === 0;
                                     $deleteMessage = ((int) $building->rooms_count > 0 || (int) $building->devices_count > 0)
                                         ? 'Ēku nevar dzēst, kamēr tai ir piesaistītas telpas vai ierīces.'
@@ -174,6 +181,7 @@
                                 @endphp
                                 <tr
                                     class="app-table-row"
+                                    {{-- `data-table-search-value` ļauj manuālajai meklēšanai atrast rindu pēc nosaukuma/adreses arī pēc async ielādes. --}}
                                     data-table-row-id="building-{{ $building->id }}"
                                     data-table-search-value="{{ \Illuminate\Support\Str::lower(trim(implode(' ', array_filter([(string) $building->building_name, (string) $building->address])))) }}"
                                 >
@@ -247,6 +255,8 @@
             'modalName' => 'building-create-modal',
         ])
 
+        {{-- Katram pašreizējā lapā redzamam ierakstam sagatavojam edit modāli,
+             lai rediģēšana notiktu bez atsevišķas edit lapas. --}}
         @foreach ($buildings as $building)
             @include('buildings.partials.modal-form', [
                 'mode' => 'edit',
@@ -256,6 +266,8 @@
         @endforeach
 
         @if (($selectedModalBuilding?->id ?? null) && ! $buildings->getCollection()->contains('id', $selectedModalBuilding->id))
+            {{-- Ja validācijas kļūda attiecas uz ierakstu, kas nav pašreizējā lapā,
+                 kontrolieris padod `selectedModalBuilding`, lai modāli tomēr varētu atvērt. --}}
             @include('buildings.partials.modal-form', [
                 'mode' => 'edit',
                 'modalName' => 'building-edit-modal-' . $selectedModalBuilding->id,
@@ -264,6 +276,7 @@
         @endif
 
         @if (old('modal_form') === 'building_create')
+            {{-- Pēc redirect ar validācijas kļūdām atveram pareizo create/edit modāli pēc `modal_form` vērtības. --}}
             <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'building-create-modal' })));</script>
         @elseif (str_starts_with((string) old('modal_form'), 'building_edit_'))
             @php($buildingModalTarget = str_replace('building_edit_', '', (string) old('modal_form')))

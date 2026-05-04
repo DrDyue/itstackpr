@@ -8,6 +8,8 @@
 ])
 
 @php
+    // Viena edit modāļa komponente tiek izmantota remonta, norakstīšanas un nodošanas pieteikumiem.
+    // Atšķiras tikai labojamais teksta lauks un vizuālie nosaukumi.
     $typeLabels = [
         'repair' => 'remonta pieteikumu',
         'writeoff' => 'norakstīšanas pieteikumu',
@@ -43,6 +45,8 @@
         @csrf
         @method('PATCH')
 
+        {{-- `modal_form` ļauj pēc validācijas kļūdas atvērt tieši šo edit modāli,
+             nevis pieteikuma izveides formu vai cita ieraksta rediģēšanu. --}}
         <input type="hidden" name="modal_form" value="{{ $modalForm }}">
 
         <div class="device-type-modal-head">
@@ -69,6 +73,7 @@
 
         <div class="device-type-modal-body overflow-y-auto">
             @if (old('modal_form') === $modalForm && $errors->any())
+                {{-- Validācijas kļūdas rādam tikai šim modālim, jo lapā vienlaikus var būt vairāki edit modāļi. --}}
                 <x-validation-summary
                     class="mb-5"
                     :title="'Neizdevās saglabāt ' . ($typeLabels[$type] ?? 'pieprasījumu')"
@@ -92,6 +97,8 @@
 
             <label class="mt-5 block">
                 <span class="crud-label">{{ $fieldLabel }}</span>
+                {{-- Drošības un biznesa noteikumu dēļ lietotājs šeit labo tikai tekstu.
+                     Ierīces piesaiste, saņēmējs un statusi paliek nemainīgi un tiek kontrolēti backendā. --}}
                 <textarea name="{{ $fieldName }}" rows="7" class="crud-control" required>{{ old($fieldName, (string) ($requestModel->{$fieldName} ?? '')) }}</textarea>
                 @error($fieldName)
                     @if (old('modal_form') === $modalForm)

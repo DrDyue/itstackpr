@@ -12,6 +12,9 @@
 ])
 
 @php
+    // Remonta modālis ir kopīgs create/edit režīmam.
+    // `modal_form` sasaista servera validācijas kļūdas ar tieši šo modāli,
+    // bet Alpine `repairProcess` tur klienta puses statusa un pāreju loģiku.
     $isEdit = $mode === 'edit' && $repair;
     $modalForm = $isEdit ? 'repair_edit_' . $repair->id : 'repair_create';
     $shouldUseOldInput = old('modal_form') === $modalForm;
@@ -34,6 +37,8 @@
         action="{{ $action }}"
         class="repair-modal-form-shell flex max-h-[calc(100vh-2.5rem)] flex-col overflow-hidden"
         x-data="repairProcess({
+            // Sākuma stāvoklis tiek ielādēts no `old()` tikai tad,
+            // ja tieši šī modāļa forma iepriekš izgāzās validācijā.
             repairId: {{ $repair?->id ? (int) $repair->id : 'null' }},
             repairType: @js($shouldUseOldInput ? old('repair_type', $repair?->repair_type ?? 'internal') : ($repair?->repair_type ?? 'internal')),
             status: @js($repair?->status ?? 'waiting'),
@@ -52,6 +57,7 @@
             @method('PUT')
         @endif
 
+        {{-- Šis identifikators vēlāk tiek izmantots, lai pēc redirect atvērtu pareizo remonta modāli. --}}
         <input type="hidden" name="modal_form" value="{{ $modalForm }}">
 
         <div class="device-type-modal-head repair-modal-head">
@@ -113,6 +119,8 @@
 
         <div class="device-type-modal-body overflow-y-auto">
             @if ($shouldUseOldInput && $errors->any())
+                {{-- Remonta forma satur vairākus nosacītus laukus, tāpēc kļūdu kopsavilkums palīdz ātri saprast,
+                     vai problēma ir ierīcē, izmaksās, vendorā vai citā daļā. --}}
                 <x-validation-summary
                     class="mb-5"
                     :title="$isEdit ? 'Neizdevās saglabāt remonta izmaiņas' : 'Neizdevās izveidot remontu'"
@@ -135,6 +143,9 @@
 
             @if ($isEdit)
                 <div class="repair-next-step-panel mb-5" x-cloak>
+                    {{-- Šis panelis nav tikai vizuāls kopsavilkums.
+                         Tas izmanto `repairProcess` aprēķinus, lai parādītu,
+                         kuri lauki vēl jāaizpilda pirms drošas statusa pārejas. --}}
                     <div class="repair-next-step-head">
                         <div>
                             <div class="repair-next-step-title">Nākamais solis</div>
@@ -183,6 +194,8 @@
             @if ($isEdit)
                 <div class="flex flex-wrap items-center gap-2">
                     @if ($repair->status === 'waiting')
+                        {{-- Statusa pārejas sūta atsevišķu transition pieprasījumu,
+                             nevis parastu formas saglabāšanu, jo tās maina remonta dzīves ciklu. --}}
                         <button type="button" class="btn-search" @click="submitTransition({{ $repair->id }}, 'in-progress')">
                             <x-icon name="stats" size="h-4 w-4" />
                             <span>Pārvietot uz procesu</span>

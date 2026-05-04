@@ -10,6 +10,8 @@
 ])
 
 @php
+    // HTML formas atbalsta tikai GET/POST, tāpēc Laravel PATCH/PUT/DELETE darbības
+    // tiek sūtītas kā POST ar slēpto `_method` lauku.
     $normalizedMethod = strtoupper($method);
     $buttonAttributes = $buttonAttributes instanceof \Illuminate\View\ComponentAttributeBag
         ? $buttonAttributes
@@ -20,11 +22,14 @@
     @csrf
 
     @if ($normalizedMethod !== 'POST')
+        {{-- Metodes spoofing ļauj izmantot REST maršrutus, nezaudējot CSRF aizsardzību. --}}
         @method($normalizedMethod)
     @endif
 
+    {{-- `fields` slots paredzēts slēptajiem laukiem, piemēram review statusam `approved/rejected`. --}}
     {{ $fields }}
 
+    {{-- Pogai ļaujam padot atribūtus no ārpuses, lai confirm/toast JS var pieslēgties bez jauna komponenta. --}}
     <button {{ $buttonAttributes->merge(['type' => $buttonType, 'class' => $buttonClass]) }}>
         {{ $slot }}
     </button>

@@ -47,6 +47,8 @@ class AuditLog extends Model
      */
     public function getLocalizedDescriptionAttribute(): string
     {
+        // Frontend un Blade skati lieto šo accessor, lai neanalizētu izejas audit text paši.
+        // Visa lokalizācija un "cilvēkam saprotamā" pārtulkošana paliek centralizēti AuditTrail klasē.
         return AuditTrail::localizedDescription($this->description, $this->entity_type);
     }
 
@@ -87,6 +89,8 @@ class AuditLog extends Model
 
     public function getEntityUrlAttribute(): ?string
     {
+        // Vēsturiskais audita ieraksts pēc vajadzības var atgriezt saiti uz pašreizējo entītijas vietu sistēmā,
+        // ja vien attiecīgais ieraksts joprojām eksistē.
         return AuditTrail::entityUrl($this->entity_type, $this->entity_id);
     }
 }

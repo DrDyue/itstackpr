@@ -31,7 +31,7 @@ class BuildingController extends Controller
     /**
      * Ko dara: Parāda ēku sarakstu ar filtriem.
      *
-     * Kā strādā: Apstrādā pieprasījumu, pārbauda tiesības un atgriež atbilstošo skatu, JSON atbildi vai pāradresāciju.
+     * Kā strādā: Nolasa meklēšanas, stāvu skaita un kārtošanas parametrus, izveido lapotu ēku vaicājumu ar telpu/ierīču skaitītājiem un pieraksta audita notikumus.
      *
      * Kad pielietojas: Izsaukšana: GET /buildings | Pieejams: administrators, IT vadītājs.
      */
@@ -39,12 +39,16 @@ class BuildingController extends Controller
     {
         $this->requireManager();
 
+        // Filtrus turam vienā masīvā, lai tos vienādi izmantotu vaicājumā,
+        // audita pierakstā un atgrieztu atpakaļ Blade skatam.
         $filters = [
             'search' => trim((string) $request->query('search', $request->query('q', ''))),
             'total_floors' => trim((string) $request->query('total_floors', '')),
         ];
         $sorting = $this->resolveSorting($request);
 
+        // Sarakstam pievienojam telpu un ierīču skaitītājus, lai vadītājs uzreiz
+        // redzētu, vai ēku drīkstēs dzēst un cik daudz datu tai piesaistīts.
         $buildingsQuery = Building::query()
             ->select(['id', 'building_name', 'address', 'city', 'total_floors', 'notes', 'created_at'])
             ->withCount(['rooms', 'devices'])
@@ -105,7 +109,7 @@ class BuildingController extends Controller
     /**
      * Ko dara: Atrod ēku pēc nosaukuma aktīvajā filtrētajā sarakstā.
      *
-     * Kā strādā: Apstrādā pieprasījumu, pārbauda tiesības un atgriež atbilstošo skatu, JSON atbildi vai pāradresāciju.
+     * Kā strādā: Atkārto saraksta aktīvos filtrus un kārtošanu, pēc tam atrod pirmo ēku, kuras nosaukumā vai adresē ir meklētais teksts.
      *
      * Kad pielietojas: Izsaukšana: GET /buildings/find-by-name | Pieejams: administrators, IT vadītājs.
      */
@@ -120,11 +124,15 @@ class BuildingController extends Controller
 
         AuditTrail::search($this->user(), 'Building', $search, "Mekl\u{0113}ta \u{0113}ka p\u{0113}c nosaukuma vai adreses: ".$search);
 
+        // Meklēšana ņem vērā aktīvo stāvu skaita filtru, lai atrastā ēka
+        // piederētu tai pašai kopai, kas redzama sarakstā.
         $filters = [
             'total_floors' => trim((string) $request->query('total_floors', '')),
         ];
         $sorting = $this->resolveSorting($request);
 
+        // Vaicājumu kārtojam tāpat kā index skatā, jo atrastais indekss tiek
+        // pārvērsts lapas numurā un rindas highlight_id.
         $buildingsQuery = Building::query()
             ->when($filters['total_floors'] !== '' && ctype_digit($filters['total_floors']), fn (Builder $query) => $query->where('total_floors', (int) $filters['total_floors']))
             ->select(['id', 'building_name', 'address']);
@@ -133,6 +141,8 @@ class BuildingController extends Controller
 
         $buildings = $buildingsQuery->get();
 
+        // Meklējam gan ēkas nosaukumā, gan adresē, jo lietotājs var ievadīt
+        // jebkuru no šiem tekstiem.
         $needle = mb_strtolower($search);
         $foundIndex = $buildings->search(function (Building $building) use ($needle) {
             $searchValue = mb_strtolower(trim(implode(' ', array_filter([
@@ -159,7 +169,7 @@ class BuildingController extends Controller
     /**
      * Ko dara: Saglabā jaunu ēkas ierakstu.
      *
-     * Kā strādā: Apstrādā pieprasījumu, pārbauda tiesības un atgriež atbilstošo skatu, JSON atbildi vai pāradresāciju.
+     * Kā strādā: Pārbauda vadītāja tiesības, validē ēkas laukus, izveido jaunu `Building` ierakstu un pieraksta izveides notikumu auditā.
      *
      * Kad pielietojas: Izsaukšana: POST /buildings | Pieejams: administrators, IT vadītājs.
      */
@@ -167,6 +177,8 @@ class BuildingController extends Controller
     {
         $this->requireManager();
 
+        // Visus ievades laukus izlaižam caur kopīgo validācijas metodi,
+        // lai izveide un labošana ievēro vienādus datu noteikumus.
         $building = Building::create($this->validatedData($request));
         AuditTrail::created(auth()->id(), $building);
 
@@ -177,7 +189,7 @@ class BuildingController extends Controller
     /**
      * Ko dara: Atjaunina ēkas datus.
      *
-     * Kā strādā: Apstrādā pieprasījumu, pārbauda tiesības un atgriež atbilstošo skatu, JSON atbildi vai pāradresāciju.
+     * Kā strādā: Pirms saglabāšanas saglabā vecās vērtības, validē jaunos laukus, atjaunina ēku un auditā ieraksta tikai mainītos laukus.
      *
      * Kad pielietojas: Izsaukšana: PUT/PATCH /buildings/{building} | Pieejams: administrators, IT vadītājs.
      */
@@ -196,7 +208,7 @@ class BuildingController extends Controller
     /**
      * Ko dara: Dzēš ēku tikai tad, ja tai vairs nav piesaistītu telpu un ierīču.
      *
-     * Kā strādā: Apstrādā pieprasījumu, pārbauda tiesības un atgriež atbilstošo skatu, JSON atbildi vai pāradresāciju.
+     * Kā strādā: Saskaita piesaistītās telpas un ierīces; ja tādas ir, dzēšanu bloķē ar skaidru kļūdas tekstu, citādi dzēš ierakstu un pieraksta auditu.
      *
      * Kad pielietojas: Izsaukšana: DELETE /buildings/{building} | Pieejams: administrators, IT vadītājs.
      */
@@ -207,6 +219,8 @@ class BuildingController extends Controller
         $roomsCount = $building->rooms()->count();
         $devicesCount = $building->devices()->count();
 
+        // Ēku nedrīkst dzēst, kamēr uz to vēl atsaucas telpas vai ierīces,
+        // citādi paliktu nederīgas ārējās atslēgas un nekorekts atrašanās vietas konteksts.
         if ($roomsCount > 0 || $devicesCount > 0) {
             $parts = [];
 
@@ -256,6 +270,8 @@ class BuildingController extends Controller
             'building_name.unique' => 'Ēka ar šādu nosaukumu jau eksistē.',
         ]);
 
+        // Ja piezīmes nav iesūtītas, glabājam vienotu tukšu virkni,
+        // lai skatā un auditā šim laukam nav jaukta null/empty uzvedība.
         $data['notes'] = $data['notes'] ?? self::NOTES_DEFAULT;
 
         return $data;
@@ -290,7 +306,7 @@ class BuildingController extends Controller
     /**
      * Ko dara: Atgriež kārtojamo lauku nosaukumu karti Blade skatam un audita paziņojumiem.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Atgriež drošu kārtošanas opciju sarakstu ar latviskiem nosaukumiem, ko izmanto tabulas galvene un audita apraksti.
      *
      * Kad pielietojas: Izsauc no: `index()` — kārtošanas birku atveidošanai un audita aprakstam.
      */

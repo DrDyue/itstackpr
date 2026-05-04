@@ -2,6 +2,8 @@
 @props(['align' => 'right', 'width' => '48', 'contentClasses' => 'py-1 bg-white'])
 
 @php
+// Klases tiek noteiktas servera pusē, lai komponenti varētu vienādi izmantot navigācijā,
+// profila izvēlnēs un citos dropdown scenārijos bez papildu JavaScript konfigurācijas.
 $alignmentClasses = match ($align) {
     'left' => 'ltr:origin-top-left rtl:origin-top-right start-0',
     'top' => 'origin-top',
@@ -15,6 +17,7 @@ $width = match ($width) {
 @endphp
 
 <div class="relative" x-data="{ open: false }" @click.outside="open = false" @close.stop="open = false" @keydown.escape.window="open = false">
+    {{-- Trigger saturs tiek padots no ārpuses, tāpēc komponente nekodē konkrētu pogas dizainu. --}}
     <div @click="open = ! open">
         {{ $trigger }}
     </div>
@@ -29,10 +32,10 @@ $width = match ($width) {
             x-transition:leave-end="opacity-0 scale-95"
             class="app-dropdown-panel absolute z-50 mt-2 {{ $width }} rounded-2xl shadow-lg {{ $alignmentClasses }}"
             @click="open = false">
+        {{-- Klikšķis uz paneļa satura aizver izvēlni, kas ir ērti navigācijas linkiem un darbību sarakstiem. --}}
         <div class="app-dropdown-content rounded-2xl ring-1 ring-black ring-opacity-5 {{ $contentClasses }}">
             {{ $content }}
         </div>
     </div>
 </div>
-
 

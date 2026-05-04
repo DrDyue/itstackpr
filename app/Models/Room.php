@@ -54,6 +54,8 @@ class Room extends Model
      */
     public function devices(): HasMany
     {
+        // Telpa ir praktiskākais fiziskās atrašanās vietas līmenis,
+        // tāpēc lielākā daļa UI skatu un filtru ierīces sasaista tieši ar room_id.
         return $this->hasMany(Device::class);
     }
 }

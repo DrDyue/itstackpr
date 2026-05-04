@@ -83,6 +83,8 @@ class DashboardController extends Controller
         $hasRooms = $this->featureTableExists('rooms');
         $hideWrittenOffDevices = $user->prefersHiddenWrittenOffDevices();
         $sorting = $this->dashboardSorting($request);
+        // Dažas funkciju tabulas vecākās instalācijās var vēl neeksistēt,
+        // tāpēc pirms vaicājumu veidošanas pārbaudām to esamību.
         $repairRequestQuery = Schema::hasTable('repair_requests') ? RepairRequest::query() : null;
         $writeoffRequestQuery = Schema::hasTable('writeoff_requests') ? WriteoffRequest::query() : null;
 
@@ -137,7 +139,7 @@ class DashboardController extends Controller
     /**
      * Ko dara: Normalizē filtru parametrus (stāvs, telpa) no URL vaicājuma.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: No URL nolasa tikai `floor` un `room_id`, apgriež atstarpes un atgriež vienotu filtru masīvu dashboard vaicājumiem.
      *
      * Kad pielietojas: Izsauc no: `renderDashboard()`, `devices()`.
      */
@@ -152,7 +154,7 @@ class DashboardController extends Controller
     /**
      * Ko dara: Normalizē kārtošanas parametrus (kolonna, virziens) darba virsmas ierīču tabulai.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Pārbauda, vai pieprasītais lauks ir atļautajās dashboard kolonnās, normalizē virzienu un sagatavo label tekstu skatam.
      *
      * Kad pielietojas: Izsauc no: `renderDashboard()`, `devices()`, `dashboardViewData()`.
      */
@@ -259,6 +261,8 @@ class DashboardController extends Controller
      */
     private function dashboardDevicesData(array $filters, ?Collection $locationRooms = null, ?array $sorting = null, bool $hideWrittenOffDevices = false): array
     {
+        // Ja ierīču tabula nav pieejama, informācijas panelis atgriež tukšu
+        // kolekciju un neaptur visas sākumlapas ielādi.
         if (! $this->featureTableExists('devices')) {
             return [
                 'dashboardDevices' => collect(),
@@ -273,6 +277,8 @@ class DashboardController extends Controller
             'label' => 'izveides datuma',
         ];
 
+        // Pievienojam telpu, ēku un lietotāju tabulas, lai dashboard sarakstu
+        // var kārtot pēc redzamiem nosaukumiem, ne tikai pēc ID laukiem.
         $deviceQuery = Device::query()
             ->leftJoin('rooms as sort_rooms', 'sort_rooms.id', '=', 'devices.room_id')
             ->leftJoin('buildings as sort_buildings', 'sort_buildings.id', '=', 'devices.building_id')
@@ -284,6 +290,8 @@ class DashboardController extends Controller
         $this->applyDashboardDeviceFilters($deviceQuery, $filters, $locationRooms);
         $this->applyDashboardDeviceSorting($deviceQuery, $sorting);
 
+        // Atlasām tikai dashboard vajadzīgos laukus un relācijas, lai rindām
+        // varētu parādīt atrašanās vietu, atbildīgo un aktīvos pieprasījumus.
         $dashboardDevices = $deviceQuery
             ->select([
                 'devices.id',
@@ -321,6 +329,8 @@ class DashboardController extends Controller
             ->latest('id')
             ->get();
 
+        // UI stāvokļus sagatavojam pēc ierīces ID, lai Blade skats var ātri
+        // atrast remonta statusu, priekšskatījumu un gaidošā pieprasījuma badge.
         $dashboardDeviceStates = $dashboardDevices
             ->mapWithKeys(fn (Device $device) => [
                 $device->id => [
@@ -341,7 +351,7 @@ class DashboardController extends Controller
     /**
      * Ko dara: Uzliek stāva un telpas filtrēšanas nosacījumus darba virsmas ierīču vaicājumam.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Ja norādīta konkrēta telpa, filtrē pēc tās; ja norādīts stāvs, izmanto jau ielādētās telpas vai `whereHas` vaicājumu pret telpas stāvu.
      *
      * Kad pielietojas: Izsauc no: `dashboardDevicesData()`.
      */
@@ -377,7 +387,7 @@ class DashboardController extends Controller
     /**
      * Ko dara: Uzliek kārtošanu darba virsmas ierīču vaicājumam.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Atkarībā no izvēlētās kolonnas pievieno vajadzīgos ORDER BY nosacījumus, tostarp atrašanās vietas, lietotāja un statusa īpašo kārtošanu.
      *
      * Kad pielietojas: Izsauc no: `dashboardDevicesData()`.
      */
@@ -413,7 +423,7 @@ class DashboardController extends Controller
     /**
      * Ko dara: Atgriež SQL CASE izteiksmi ierīces statusa kārtošanai prioritātes secībā.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Atgriež SQL CASE fragmentu, kur aktīvas ierīces tiek kārtotas pirms remonta un norakstītām ierīcēm.
      *
      * Kad pielietojas: Izsauc no: `applyDashboardDeviceSorting()` — kad kārtošanas kolonna ir "status".
      */
@@ -432,7 +442,7 @@ SQL;
     /**
      * Ko dara: Atgriež darba virsmas ierīču tabulas kārtošanas lauku nosaukumu karti.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Definē atļautās dashboard tabulas kārtošanas kolonnas un katrai piešķir cilvēkam saprotamu latvisku label.
      *
      * Kad pielietojas: Izsauc no: `devices()`, `renderDashboard()`, `dashboardSorting()`.
      */
@@ -451,7 +461,7 @@ SQL;
     /**
      * Ko dara: Atgriež kārtošanas virzienu cilvēkam saprotamo nosaukumu karti.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Tehniskās vērtības `asc` un `desc` pārvērš tekstos, ko var izmantot pogās, auditā un aktīvā kārtojuma aprakstā.
      *
      * Kad pielietojas: Izsauc no: `devices()`, `renderDashboard()`.
      */
@@ -507,7 +517,7 @@ SQL;
     /**
      * Ko dara: Pārveido remonta tehnisko statusu cilvēkam saprotamā birkā.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Ar `match` izteiksmi remonta statusus `waiting` un `in-progress` pārvērš īsās latviskās birkās; citiem statusiem birku nerāda.
      *
      * Kad pielietojas: Izsauc no: `visibleRepairStatusLabel()`, `repairPreview()`.
      */
@@ -523,7 +533,7 @@ SQL;
     /**
      * Ko dara: Aprēķina, kādu remonta apakšstatusu rādīt ierīcei dashboardā.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Pārbauda ierīces aktīvo remontu un atgriež statusa birku; ja statuss nav atpazīts, izmanto drošu noklusējumu "Gaida".
      *
      * Kad pielietojas: Izsauc no: `dashboardDevicesData()` — iekļauts katrā ierīces stāvokļa masīvā.
      */

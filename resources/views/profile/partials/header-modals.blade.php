@@ -10,6 +10,8 @@
 @endphp
 
 @if ($user)
+    {{-- Profila logs glabā personas datus un kalpo kā "vecāka" modālis.
+         Paroles logs tiek atvērts virs tā, nevis atsevišķā lapā, lai neizrautu lietotāju no konteksta. --}}
     <x-modal name="profile-modal" maxWidth="4xl">
         <div
             x-data="managedModalForm({
@@ -216,6 +218,9 @@
                         <div
                             x-data="{
                                 val: @js($defaultViewMode),
+                                // Pogu grupa pati par sevi nav HTML form lauks,
+                                // tāpēc izvēlēto vērtību glabājam hidden input un manuāli izraisām `change`,
+                                // lai kopējā modāļa dirty-state loģika pamanītu izmaiņas.
                                 pick(v) { this.val = v; this.$el.closest('form').dispatchEvent(new Event('change', { bubbles: true })); }
                             }"
                         >
@@ -350,6 +355,8 @@
     @endif
 
     @if ($errors->isNotEmpty() && ! $errors->hasBag('updatePassword') && ! $errors->hasBag('profileSettings'))
+        {{-- Pēc validācijas kļūdas parastajam profilam modāli atveram atkārtoti,
+             lai lietotājs uzreiz redzētu kļūdas un nezaudētu ievades kontekstu. --}}
         <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'profile-modal' })));</script>
     @endif
 
@@ -360,6 +367,8 @@
     @if ($errors->updatePassword->isNotEmpty())
         <script>
             window.addEventListener('DOMContentLoaded', () => {
+                // Paroles validācijas gadījumā atveram gan pamata profila modāli, gan bērna modāli,
+                // jo paroles logs eksistē profilā kā otrā līmeņa dialogs.
                 window.dispatchEvent(new CustomEvent('open-modal', { detail: 'profile-modal' }));
                 window.dispatchEvent(new CustomEvent('open-modal', { detail: 'profile-password-modal' }));
             });

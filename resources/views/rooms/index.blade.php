@@ -9,6 +9,8 @@
 --}}
 <x-app-layout>
     @php
+        // Searchable-select komponentēm sagatavojam vienotu `value/label/description/search` formātu.
+        // Tas ļauj filtriem strādāt pēc ID, bet lietotājam rādīt cilvēkam saprotamu tekstu.
         $buildingOptions = $buildings->map(fn ($building) => [
             'value' => (string) $building->id,
             'label' => $building->building_name,
@@ -63,7 +65,9 @@
         </div>
 
         <div id="rooms-index-root" data-async-table-root>
+        {{-- Telpu saraksta forma ir pilnvērtīgs GET filtrs un vienlaikus async tabulas avots. --}}
         <form method="GET" action="{{ route('rooms.index') }}" class="devices-filter-surface devices-filter-surface-elevated" data-async-table-form data-async-root="#rooms-index-root" data-search-endpoint="{{ route('rooms.find-by-name') }}">
+            {{-- Kārtošanas hidden lauki tiek uzturēti vienādi ar citām sistēmas tabulām. --}}
             <input type="hidden" name="sort" value="{{ $sorting['sort'] ?? 'id' }}" data-sort-hidden="field">
             <input type="hidden" name="direction" value="{{ $sorting['direction'] ?? 'asc' }}" data-sort-hidden="direction">
 
@@ -180,9 +184,12 @@
                 <tbody>
                     @forelse ($rooms as $room)
                         @php
+                            // Telpu nedrīkst dzēst, ja tai vēl ir ierīces.
+                            // Šī aizsardzība saglabā inventāra atrašanās vietu konsekventu.
                             $canDelete = (int) $room->devices_count === 0;
                             $deleteMessage = 'Telpu nevar dzēst, jo tai joprojām ir piesaistītas ierīces. Vispirms pārvieto vai atsien visas ierīces no šīs telpas.';
                         @endphp
+                        {{-- Rindas `data-*` atribūti ļauj manuālajai meklēšanai un highlight mehānismam atrast telpu pēc numura/nosaukuma. --}}
                         <tr class="app-table-row border-t border-slate-100" data-table-row-id="room-{{ $room->id }}" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim(implode(' ', array_filter([$room->room_number, $room->room_name])))) }}">
                             <td class="px-4 py-3">{{ $room->building?->building_name }}</td>
                             <td class="px-4 py-3">{{ $room->floor_number }}</td>
@@ -192,6 +199,7 @@
                             <td class="px-4 py-3">{{ $room->user?->full_name ?: '-' }}</td>
                             <td class="px-4 py-3">
                                 @if ($room->devices_count > 0)
+                                    {{-- Ierīču skaits ir arī saite uz ierīču sarakstu ar jau uzliktu telpas filtru. --}}
                                     <a
                                         href="{{ route('devices.index', ['room_id' => $room->id, 'room_query' => trim(implode(' ', array_filter([$room->room_name, $room->room_number])))]) }}"
                                         class="inline-flex items-center justify-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 transition hover:bg-sky-100"
@@ -269,6 +277,7 @@
         ])
 
         @foreach ($rooms as $room)
+            {{-- Edit modāļi tiek renderēti tikai redzamajām rindām, lai katras rindas poga varētu atvērt savu formu. --}}
             @include('rooms.partials.modal-form', [
                 'mode' => 'edit',
                 'modalName' => 'room-edit-modal-' . $room->id,
@@ -281,6 +290,8 @@
         @endforeach
 
         @if (($selectedModalRoom?->id ?? null) && ! $rooms->getCollection()->contains('id', $selectedModalRoom->id))
+            {{-- Ja modāļa mērķa telpa nav pašreizējā lapas kolekcijā,
+                 to renderējam papildus, lai validācijas kļūdu varētu parādīt pareizajā formā. --}}
             @include('rooms.partials.modal-form', [
                 'mode' => 'edit',
                 'modalName' => 'room-edit-modal-' . $selectedModalRoom->id,
@@ -293,6 +304,7 @@
         @endif
 
         @if (old('modal_form') === 'room_create')
+            {{-- Pēc validācijas kļūdas vai query parametra atveram pareizo modāli, nevis atstājam lietotāju sarakstā bez konteksta. --}}
             <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'room-create-modal' })));</script>
         @elseif (str_starts_with((string) old('modal_form'), 'room_edit_'))
             @php($roomModalTarget = str_replace('room_edit_', '', (string) old('modal_form')))

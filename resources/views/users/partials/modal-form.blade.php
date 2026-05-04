@@ -7,6 +7,9 @@
 ])
 
 @php
+    // Lietotāja forma arī strādā divos režīmos: create un edit.
+    // `fieldValue()` centralizē izvēli starp `old()` vērtību un esošo modeļa vērtību,
+    // lai pēc validācijas kļūdas nepazustu lietotāja ievadītie dati.
     $isEdit = $mode === 'edit' && $user;
     $modalForm = $isEdit ? 'user_edit_' . $user->id : 'user_create';
     $shouldUseOldInput = old('modal_form') === $modalForm;
@@ -29,6 +32,8 @@
             @method('PUT')
         @endif
 
+        {{-- Ar `modal_form` atšķiram create un katra konkrētā lietotāja edit formu,
+             lai kļūdas un `old()` vērtības nepārlektu uz nepareizu modāli. --}}
         <input type="hidden" name="modal_form" value="{{ $modalForm }}">
 
         <div class="device-type-modal-head user-modal-head">
@@ -55,6 +60,7 @@
 
         <div class="device-type-modal-body overflow-y-auto">
             @if ($shouldUseOldInput && $errors->any())
+                {{-- Kļūdu kopsavilkums tiek rādīts tikai tad, ja šī konkrētā forma bija pēdējā iesniegtā forma. --}}
                 <x-validation-summary
                     class="mb-5"
                     :title="$isEdit ? 'Neizdevās saglabāt lietotāja izmaiņas' : 'Neizdevās izveidot lietotāju'"
@@ -73,6 +79,8 @@
 
             <div class="space-y-5">
                 @if ($isEdit && $user->password_reset_requested_at)
+                    {{-- Šis brīdinājums savieno lietotāja pašapkalpošanās pieprasījumu ar admina darbību:
+                         administrators iestata jaunu paroli, un backend pēc saglabāšanas atzīmē pieprasījumu kā apstrādātu. --}}
                     <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                         <div class="flex items-start gap-2">
                             <x-icon name="key" size="h-4 w-4" class="mt-0.5 shrink-0" />
@@ -126,6 +134,8 @@
                         <div class="block">
                             <span class="crud-label">Loma</span>
                             <div class="mt-2" x-data="{ role: @js($currentRole) }">
+                                {{-- Lomas izvēle ir pogu grupa, bet backendam vajag parastu `role` lauku.
+                                     Tāpēc vizuālais stāvoklis dzīvo Alpine mainīgajā, bet forma iesniedz hidden input. --}}
                                 <input type="hidden" name="role" :value="role">
                                 <div class="role-toggle role-toggle-compact">
                                     @foreach ($roles as $roleValue)
@@ -142,6 +152,7 @@
                             <span class="text-sm text-slate-700">Konts aktīvs</span>
                         </label>
                         <x-ui.form-field label="{{ $isEdit ? 'Jauna parole' : 'Parole' }}" name="password" :required="! $isEdit">
+                            {{-- Izveidojot lietotāju parole ir obligāta; rediģējot tukša parole nozīmē "nemainīt esošo paroli". --}}
                             <input type="password" name="password" class="crud-control" @required(! $isEdit)>
                         </x-ui.form-field>
                         <x-ui.form-field label="Apstiprināt paroli" name="password_confirmation" :required="! $isEdit">

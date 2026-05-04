@@ -7,6 +7,8 @@
 ])
 
 @php
+    // Backend strādā ar ISO datumu `Y-m-d`, bet lietotājam rādām `dd.mm.gggg`.
+    // Tāpēc īstā formas vērtība tiek glabāta hidden inputā, nevis pogas tekstā.
     $inputValue = (string) $value;
 @endphp
 
@@ -20,8 +22,10 @@
         class="localized-date-picker"
         @keydown.escape.window="open = false"
     >
+        {{-- Šis hidden input ir vienīgais lauks, ko forma iesniedz backendam. --}}
         <input type="hidden" name="{{ $name }}" x-model="value">
 
+        {{-- Redzamā poga tikai attēlo lokalizēto vērtību un atver kalendāru. --}}
         <button
             type="button"
             class="localized-date-trigger"
@@ -43,6 +47,7 @@
             @click.outside="open = false"
         >
             <div class="localized-date-header">
+                {{-- Navigācija maina mēnesi vai 12 gadu lapu atkarībā no pašreizējā režīma. --}}
                 <button type="button" class="localized-date-nav" @click="mode === 'years' ? previousYearPage() : previousMonth()" aria-label="Iepriekšējais periods">&#8249;</button>
                 <div class="localized-date-heading">
                     <button type="button" class="localized-date-current-button" @click="showMonths()" x-text="months[viewDate.getMonth()]"></button>
@@ -53,6 +58,8 @@
             </div>
 
             <div x-show="mode === 'days'">
+                {{-- Dienu režģi aprēķina Alpine `localizedDatePicker.days`,
+                     lai kalendārs vienmēr saglabātu stabilu 6x7 izkārtojumu. --}}
                 <div class="localized-date-weekdays">
                     <template x-for="day in weekdays" :key="day">
                         <div class="localized-date-weekday" x-text="day"></div>
@@ -101,6 +108,7 @@
             </div>
 
             <div class="localized-date-actions">
+                {{-- Ātrās darbības maina hidden ISO vērtību, nevis tikai redzamo tekstu. --}}
                 <button type="button" class="btn-clear" @click="clear()">Notīrīt</button>
                 <button type="button" class="btn-view" @click="today()">Šodien</button>
                 <button type="button" class="btn-back" @click="open = false">Aizvērt</button>

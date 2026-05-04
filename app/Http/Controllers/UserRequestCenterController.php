@@ -50,6 +50,8 @@ class UserRequestCenterController extends Controller
     {
         $user = $this->requireRegularUser();
 
+        // Viena forma apkalpo trīs pieteikumu veidus, tāpēc katra apraksta lauka
+        // obligātums ir atkarīgs no izvēlētā request_type.
         $validated = $this->validateInput($request, [
             'request_type' => ['required', Rule::in(['repair', 'writeoff', 'transfer'])],
             'device_id' => ['required', 'exists:devices,id'],
@@ -65,6 +67,8 @@ class UserRequestCenterController extends Controller
             'transfer_reason.required' => 'Apraksti nodošanas iemeslu.',
         ]);
 
+        // Lietotājs drīkst veidot pieteikumu tikai savai aktīvajai ierīcei, kas
+        // vēl nav norakstīta un nav paslēpta ar pieejamības nosacījumiem.
         $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
         if (! $device) {
             throw ValidationException::withMessages([
@@ -72,8 +76,12 @@ class UserRequestCenterController extends Controller
             ]);
         }
 
+        // Pirms ieraksta izveides pārbaudām, vai nav cita aktīva pieteikuma,
+        // kas bloķē remonta, norakstīšanas vai nodošanas sākšanu.
         $this->ensureDeviceCanAcceptRequest($device, $validated['request_type']);
 
+        // Tālāk pēc pieprasījuma tipa izveidojam konkrētās tabulas ierakstu un
+        // lietotāju pārvirzām uz atbilstošo pieteikumu sadaļu.
         if ($validated['request_type'] === 'repair') {
             $repairRequest = RepairRequest::create([
                 'device_id' => $device->id,
@@ -128,6 +136,8 @@ class UserRequestCenterController extends Controller
         $user = $this->requireRegularUser();
         [$editableRequest, $config] = $this->editableRequestForUser($user, $requestType, $requestId);
         $field = $config['field'];
+        // Katram pieteikuma tipam ir viens rediģējamais teksta lauks;
+        // pārējos biznesa laukus pēc iesniegšanas lietotājs vairs nevar mainīt.
         $validated = $this->validateInput($request, [
             $field => ['required', 'string'],
         ], [
@@ -149,7 +159,7 @@ class UserRequestCenterController extends Controller
     /**
      * Ko dara: Atceļ vēl neizskatītu pieprasījumu.
      *
-     * Kā strādā: Apstrādā pieprasījumu, pārbauda tiesības un atgriež atbilstošo skatu, JSON atbildi vai pāradresāciju.
+     * Kā strādā: Atrod tikai pašam lietotājam piederošu un vēl neizskatītu pieteikumu, pieraksta atcelšanas/dzēšanas auditu un izdzēš ierakstu.
      *
      * Kad pielietojas: Izsaukšana: DELETE /my-requests/{type}/{id} | Pieejams: parasts lietotājs.
      */
@@ -158,6 +168,8 @@ class UserRequestCenterController extends Controller
         $user = $this->requireRegularUser();
         [$editableRequest, $config] = $this->editableRequestForUser($user, $requestType, $requestId);
 
+        // Atcelšanu auditā pierakstām atsevišķi no fiziskās dzēšanas,
+        // lai žurnālā paliek skaidrs biznesa notikums un tehniskā darbība.
         AuditTrail::cancel($user->id, $editableRequest, 'Atcelts pieteikums: '.AuditTrail::labelFor($editableRequest));
         AuditTrail::deleted($user->id, $editableRequest, $config['deleted_audit_message']);
         $editableRequest->delete();
@@ -212,6 +224,8 @@ class UserRequestCenterController extends Controller
             ]);
         }
 
+        // Katru pieteikumu tipu pārbaudām atsevišķi, jo kļūdas ziņai jābūt precīzai:
+        // lietotājam jāsaprot, kas tieši bloķē nākamās darbības ar ierīci.
         $hasPendingRepair = RepairRequest::query()
             ->where('device_id', $device->id)
             ->where('status', RepairRequest::STATUS_SUBMITTED)
@@ -311,6 +325,8 @@ class UserRequestCenterController extends Controller
             ->where('responsible_user_id', $user->id)
             ->firstOrFail();
 
+        // Labot vai dzēst drīkst tikai vēl neizskatītu pieteikumu;
+        // pēc statusa maiņas to kontrolē jau vadītāja lēmums, nevis iesniedzējs.
         abort_unless(($editableRequest->status ?? null) === $config['submitted_status'], 403);
 
         return [$editableRequest, $config];
@@ -325,6 +341,8 @@ class UserRequestCenterController extends Controller
      */
     private function editableRequestConfig(string $requestType): array
     {
+        // Konfigurācija vienā vietā sasaista tipu ar modeli, rediģējamo lauku,
+        // tekstiem un maršrutu, lai edit/delete metodes var strādāt kopīgi.
         return match ($requestType) {
             'repair' => [
                 'model' => RepairRequest::class,

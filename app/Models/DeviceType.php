@@ -22,6 +22,8 @@ class DeviceType extends Model
      */
     public function devices(): HasMany
     {
+        // Šo relāciju izmanto ne tikai tipu detalizācijai, bet arī drošai dzēšanas kontrolei:
+        // ja tipam vēl ir ierīces, kontrolieris tipu neļauj dzēst.
         return $this->hasMany(Device::class);
     }
 

@@ -1,3 +1,5 @@
+// Vienam tabulas saknes selektoram glabājam vienu aktīvu AbortController,
+// lai nākamais pieprasījums var atcelt iepriekšējo un neielādē "novecojušu" HTML.
 const asyncTableControllers = new Map();
 const asyncTableDebounceTimers = new WeakMap();
 const searchableSelectSubmitTimers = new WeakMap();
@@ -154,6 +156,8 @@ const shouldSkipSerializedField = (form, key, { resetPage = true, includeManual 
     return getNamedFormControls(form, key).some((element) => isManualSearchField(element));
 };
 
+// Formas laukus serializējam URL parametros, jo backend jau atbalsta filtrēšanu caur query string.
+// Tas ļauj vienu un to pašu endpoint izmantot gan pilnai lapai, gan AJAX tabulas atjaunošanai.
 const appendSerializedFormParams = (form, targetUrl, { resetPage = true, includeManual = false } = {}) => {
     const formData = new window.FormData(form);
 
@@ -180,6 +184,8 @@ const buildAsyncTableUrl = (form, { resetPage = true, includeManual = false } = 
     return url;
 };
 
+// Backend atgriež pilnu HTML fragmentu, nevis JSON rindas.
+// Tāpēc frontend pārswapo tikai vajadzīgo root mezglu un pēc tam pārinicializē Alpine komponentes.
 const swapAsyncTableRoot = (rootSelector, html) => {
     const parser = new DOMParser();
     const nextDocument = parser.parseFromString(html, 'text/html');
@@ -253,6 +259,8 @@ const getAlpineComponentData = (element) => {
     return stack[0] ?? null;
 };
 
+// Filtru notīrīšana skar ne tikai native input laukus, bet arī Alpine komponentes
+// (`searchable-select`, datumu atlasītājus, quick filter grupas), kurām stāvoklis dzīvo JS pusē.
 const clearAsyncTableFormUi = (form, root) => {
     if (!form) {
         return;
@@ -524,6 +532,8 @@ const buildAsyncTablePageUrl = (form, page) => {
     return targetUrl;
 };
 
+// Manuālā meklēšana var iet pāri vairākām lapām, tāpēc pa vienai ielādējam nākamo tabulas HTML
+// un tajā meklējam rindas, nevis paļaujamies tikai uz pašreiz atvērto lapu.
 const searchAcrossPaginatedMatches = async (form, rootSelector, rawTerm, mode = 'contains') => {
     const currentPage = getCurrentAsyncPage();
     const baseUrl = buildAsyncTableUrl(form, { resetPage: false });
@@ -857,6 +867,9 @@ const moveTableSearchNavigator = async (step) => {
     return true;
 };
 
+// Manuālā tabulas meklēšana strādā divos līmeņos:
+// 1) mēģina atrast sakritību esošajā vai ielādētajās lapās,
+// 2) ja vajag, izmanto backend search endpoint, kas atgriež pareizo lapu un highlight ID.
 const performManualTableSearch = async (form) => {
     const rootSelector = form?.dataset?.asyncRoot;
     const searchInput = getManualSearchInput(form);
@@ -1168,6 +1181,8 @@ export const registerAsyncTableGlobals = () => {
 
         const requestKey = rootSelector;
 
+        // Ja lietotājs strauji maina filtrus vai kārtošanu, vecais pieprasījums tiek atcelts,
+        // lai DOM neuzvarētu lēnāka, bet jau neaktuāla atbilde.
         if (asyncTableControllers.has(requestKey)) {
             asyncTableControllers.get(requestKey)?.abort();
         }
@@ -1234,6 +1249,8 @@ export const initializeAsyncTableFilters = () => {
     window.__asyncTableFiltersInitialized = true;
     enhanceSortTriggerLabels();
 
+    // Centrāls submit klausītājs ļauj visas AJAX tabulas apkalpot vienādi,
+    // bez atsevišķa JS katram Blade skatam.
     document.addEventListener('submit', async (event) => {
         const form = findAsyncTableForm(event.target);
 

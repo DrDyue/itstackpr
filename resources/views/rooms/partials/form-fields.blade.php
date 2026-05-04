@@ -9,6 +9,8 @@
 ])
 
 @php
+    // `value()` ir kopīgs veids, kā forma atjauno lauku vērtības pēc validācijas kļūdas
+    // vai ielasa esošo telpas ierakstu edit režīmā.
     $value = function (string $field, mixed $default = '') use ($room, $useOldInput) {
         if ($useOldInput) {
             return old($field, $default);
@@ -18,6 +20,7 @@
     };
 
     $buildingValue = $value('building_id');
+    // Searchable-selectam vajag gan saglabājamo ID, gan redzamo label tekstu.
     $buildingLabel = $buildingValue !== null && $buildingValue !== ''
         ? optional($buildings->firstWhere('id', (int) $buildingValue))->building_name
         : null;

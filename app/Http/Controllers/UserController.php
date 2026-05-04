@@ -41,6 +41,8 @@ class UserController extends Controller
     {
         $this->requireAdmin();
 
+        // Meklēšanai izmantojam tos pašus filtrus, kas redzami lietotāju sarakstā,
+        // lai rezultāts nepārlēktu uz lietotāju ārpus pašreizējās atlases.
         $filters = [
             'search' => trim((string) $request->query('search', $request->query('q', ''))),
             'roles' => collect($request->query('role', []))
@@ -61,6 +63,10 @@ class UserController extends Controller
         $legacyName = trim((string) $request->query('name', ''));
         $legacyEmail = trim((string) $request->query('email', ''));
 
+        // Lietotāju saraksts atbalsta gan jaunos filtrus, gan vecos query parametrus (`name`, `email`),
+        // lai saglabātu saderību ar vecākām saitēm vai pāradresācijām.
+        // Vaicājums atkārto saraksta filtrus un kārtošanu, jo atrastā indeksa
+        // pozīcija tiek izmantota lapas numura aprēķināšanai.
         $usersQuery = User::query()
             ->select(['id', 'full_name', 'email', 'phone', 'job_title', 'role', 'is_active', 'last_login', 'password_reset_requested_at'])
             ->withCount('assignedDevices')
@@ -82,6 +88,8 @@ class UserController extends Controller
         $users = $usersQuery
             ->paginate(15)
             ->withQueryString();
+        // Efektīvā pēdējā pieslēgšanās var nākt gan no users.last_login, gan audita ierakstiem,
+        // tāpēc pēc lapošanas katram modelim pieliekam vienotu rādāmo vērtību.
         $users->getCollection()->each(fn (User $user) => $this->attachEffectiveLastLogin($user));
 
         $userSummaryQuery = User::query();
@@ -125,6 +133,8 @@ class UserController extends Controller
             'sortOptions' => $this->sortOptions(),
             'roles' => self::ROLES,
             'roleLabels' => $this->roleLabels(),
+            // Modāļa lietotājs tiek ielādēts atsevišķi, jo saraksts ir lapots un izvēlētais
+            // ieraksts var nebūt pašreizējā lapā.
             'selectedModalUser' => ctype_digit((string) $request->query('modal_user'))
                 ? tap(
                     User::query()
@@ -141,7 +151,7 @@ class UserController extends Controller
     /**
      * Ko dara: Atrod lietotāju pēc vārda un uzvārda aktīvajā filtrētajā sarakstā.
      *
-     * Kā strādā: Apstrādā pieprasījumu, pārbauda tiesības un atgriež atbilstošo skatu, JSON atbildi vai pāradresāciju.
+     * Kā strādā: Atkārto lietotāju saraksta filtrus un kārtošanu, atrod pirmo pilnā vārda sakritību un atgriež lapu ar rindas highlight ID.
      *
      * Kad pielietojas: Izsaukšana: GET /users/find-by-name | Pieejams: tikai administrators.
      */
@@ -182,6 +192,8 @@ class UserController extends Controller
 
         $users = $usersQuery->get(['id', 'full_name']);
 
+        // Salīdzinām normalizētu pilno vārdu, lai meklēšana nebūtu atkarīga
+        // no lielajiem un mazajiem burtiem.
         $needle = mb_strtolower($search);
         $foundIndex = $users->search(function (User $user) use ($needle) {
             return str_contains(mb_strtolower($user->full_name), $needle);
@@ -211,6 +223,8 @@ class UserController extends Controller
         $this->requireAdmin();
         AuditTrail::viewed($this->user(), 'User', (string) $user->id, 'Atvērta lietotāja karte: '.AuditTrail::labelFor($user));
 
+        // Lietotāja kartītei atlasām galveno profila informāciju un skaitītājus,
+        // lai augšējā kopsavilkumā nav jāveic papildu vaicājumi.
         $managedUser = User::query()
             ->select(['id', 'full_name', 'email', 'phone', 'job_title', 'role', 'is_active', 'last_login', 'created_at'])
             ->selectSub($this->latestLoginAuditSubquery(), 'latest_login_audit_at')
@@ -225,6 +239,8 @@ class UserController extends Controller
             ->findOrFail($user->id);
         $this->attachEffectiveLastLogin($managedUser);
 
+        // Kartītē rādām tikai nelielu piesaistīto ierīču priekšskatījumu; pilnais
+        // saraksts paliek ierīču sadaļā ar filtriem.
         $assignedDevices = Device::query()
             ->select(['id', 'code', 'name', 'device_type_id', 'room_id', 'building_id'])
             ->with([
@@ -237,6 +253,8 @@ class UserController extends Controller
             ->limit(8)
             ->get();
 
+        // Aktīvo pieprasījumu sadaļas rāda tikai vēl neizskatītos ierakstus,
+        // lai administrators uzreiz redz lietotāja aktuālos darbus.
         $openRepairRequests = RepairRequest::query()
             ->select(['id', 'device_id', 'responsible_user_id', 'description', 'status', 'created_at'])
             ->with([
@@ -291,6 +309,8 @@ class UserController extends Controller
             ->limit(6)
             ->get();
 
+        // Atsevišķi sagatavojam īso pēdējo darbību sarakstu un pilno lapoto
+        // aktivitātes vēsturi profila apakšsadaļai.
         $recentAuditLogs = AuditLog::query()
             ->where('user_id', $managedUser->id)
             ->select(['id', 'user_id', 'action', 'entity_type', 'entity_id', 'description', 'severity', 'timestamp'])
@@ -305,6 +325,8 @@ class UserController extends Controller
             ->paginate(12, ['*'], 'activity_page')
             ->withQueryString();
 
+        // Kopsummu pierakstām modelim kā aprēķinātu lauku, lai Blade skatā nav
+        // jāatkārto četru dažādu pieprasījumu tipu saskaitīšana.
         $managedUser->active_requests_total = (int) (
             ($managedUser->active_repair_requests_count ?? 0)
             + ($managedUser->active_writeoff_requests_count ?? 0)
@@ -337,6 +359,8 @@ class UserController extends Controller
         $this->requireAdmin();
 
         $validated = $this->validatedData($request);
+        // Administratora ievadīto sākotnējo paroli uzreiz pārvēršam hash vērtībā;
+        // datubāzē glabājas tikai pārbaudei izmantojams paroles nospiedums.
         $validated['password'] = Hash::make($validated['password']);
 
         $user = User::create($validated);
@@ -373,8 +397,10 @@ class UserController extends Controller
         }
 
         if (! filled($validated['password'] ?? null)) {
+            // Labošanas formā parole nav obligāta: ja lauks ir tukšs, esošais paroles hash paliek nemainīts.
             unset($validated['password']);
         } else {
+            // Ja parole tomēr ir ievadīta, saglabājam tikai jaunu hash un noņemam paroles maiņas pieprasījuma atzīmi.
             $validated['password'] = Hash::make($validated['password']);
             $validated['password_reset_requested_at'] = null;
         }
@@ -383,6 +409,7 @@ class UserController extends Controller
         $after = $user->fresh()->only(array_keys($before));
 
         if (array_key_exists('password', $validated)) {
+            // Audita žurnālā nerakstām ne paroli, ne hash vērtību; pietiek ar drošu norādi, ka parole tika nomainīta.
             $before['password'] = '[veca parole]';
             $after['password'] = '[jauna parole]';
         }
@@ -414,6 +441,8 @@ class UserController extends Controller
             );
         }
 
+        // Pirms lietotāja dzēšanas savācam visas relācijas, kas vēl atsaucas uz šo lietotāju.
+        // Tas pasargā sistēmu no ierakstiem, kuros pēc dzēšanas paliktu nederīgs user_id.
         $blockingRelations = collect([
             'piesaistītas ierīces' => $user->assignedDevices()->count(),
             'atbildētās telpas' => $user->responsibleRooms()->count(),
@@ -431,6 +460,8 @@ class UserController extends Controller
         ])->filter(fn (int $count) => $count > 0);
 
         if ($blockingRelations->isNotEmpty()) {
+            // Kļūdas tekstā apzināti parādām konkrētas piesaistes un skaitu,
+            // lai administrators zina, kas jāpārvieto vai jāatsien pirms dzēšanas.
             $summary = $blockingRelations
                 ->map(fn (int $count, string $label) => $label . ' (' . $count . ')')
                 ->implode(', ');
@@ -481,7 +512,7 @@ class UserController extends Controller
     /**
      * Ko dara: Atgriež lomu cilvēkam saprotamos nosaukumus Blade skatiem.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Tehniskās lietotāja lomas konstantes pārvērš latviskos nosaukumos, ko rāda sarakstā, profilā un formās.
      *
      * Kad pielietojas: Izsauc no: `index()`, `show()`.
      */
@@ -598,7 +629,7 @@ class UserController extends Controller
     /**
      * Ko dara: Atgriež kārtojamo lauku nosaukumu karti Blade skatam un kārtošanas normalizācijai.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Atgriež atļauto lietotāju saraksta kārtošanas lauku label karti, ko izmanto normalizēšana, UI un audita apraksti.
      *
      * Kad pielietojas: Izsauc no: `index()`, `normalizedSorting()`.
      */

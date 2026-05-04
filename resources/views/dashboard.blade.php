@@ -192,6 +192,8 @@
             },
             async fetchDevices(params = {}) {
                 this.isLoading = true;
+                // Dashboard ierīču tabula tiek atjaunota ar AJAX, nevis ar pilnu lapas reload.
+                // `currentFilters` glabā vienotu stāvokli starp stāva, telpas un kārtošanas izvēlēm.
                 const filters = { floor: '', room_id: '', ...this.currentFilters, ...params };
 
                 try {
@@ -204,6 +206,8 @@
                         },
                     });
                     const html = await response.text();
+                    // Serveris atgriež HTML fragmentu, tāpēc to parsējam kā dokumentu
+                    // un paņemam tikai tabulas mezglu, kuru vajag pārswopot lapā.
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
                     const newTable = doc.querySelector('#dashboard-devices-table');
@@ -237,6 +241,8 @@
                 this.fetchDevices();
             },
             updateActiveState(floorId, roomId) {
+                // Aktīvo filtru CSS klases uzturam manuāli,
+                // lai kreisajā navigācijā vizuāli sakristu atlasītais stāvs vai telpa ar tabulas saturu.
                 document.querySelectorAll('.dash-floor-filter').forEach(el => {
                     el.classList.remove('dash-floor-filter-active');
                 });
@@ -255,6 +261,8 @@
         };
         window.dashboardFilter = dashboardFilter;
 
+        // Kārtošanas klikšķus pārtveram globāli, jo pati tabula tiek periodiski aizvietota ar jaunu HTML.
+        // Tādēļ tiešie event listener uz header pogām pēc katra swap kļūtu nederīgi.
         document.addEventListener('click', (event) => {
             const sortTrigger = event.target.closest('#dashboard-devices-table [data-sort-trigger="true"]');
             if (!sortTrigger || !window.dashboardFilter) {

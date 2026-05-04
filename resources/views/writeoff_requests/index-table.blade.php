@@ -67,6 +67,8 @@
             <tbody>
                 @forelse ($requests as $writeoffRequest)
                     @php
+                        // Arī šeit saistītās ierīces URL nes highlight parametrus,
+                        // lai pēc klikšķa lietotājs nonāktu tieši pie attiecīgā ieraksta ierīču tabulā.
                         $device = $writeoffRequest->device;
                         $isPendingAction = $writeoffRequest->status === 'submitted';
                         $thumbUrl = $device?->deviceImageThumbUrl();
@@ -85,6 +87,8 @@
                         $reason = trim((string) $writeoffRequest->reason);
                         $shortReason = \Illuminate\Support\Str::limit(preg_replace('/\s+/u', ' ', $reason), 70);
                     @endphp
+                    {{-- Pending norakstīšanas pieteikumiem piešķiram izcelto rindu,
+                         jo tie vēl gaida gala lēmumu un ir operatīvi svarīgi. --}}
                     <tr id="writeoff-request-{{ $writeoffRequest->id }}" class="request-notification-target app-table-row align-top {{ $isPendingAction ? 'app-table-row-pending' : '' }}" data-table-row-id="writeoff-request-{{ $writeoffRequest->id }}" data-table-code="{{ \Illuminate\Support\Str::lower(trim((string) ($device?->code ?? ''))) }}" data-table-search-highlight-style="{{ $isPendingAction ? 'outline' : 'background' }}">
                         <td class="table-col-image px-4 py-4 text-center align-middle">
                             @if ($thumbUrl)
@@ -117,6 +121,8 @@
                         </td>
                         <td class="px-4 py-4">
                             <div class="relative" x-data="{ open: false }">
+                                {{-- Iemesla lauks bieži ir garš, tāpēc tabula rāda saīsinājumu,
+                                     bet hover/focus palīdzību pilnu tekstu var izlasīt bez atsevišķas lapas. --}}
                                 <button
                                     type="button"
                                     class="max-w-[22rem] truncate text-left text-sm text-slate-700 hover:text-slate-900"
@@ -148,6 +154,8 @@
                         </td>
                         <td class="px-4 py-4 text-right">
                             @if (in_array($writeoffRequest->status, ['approved', 'rejected'], true) && $deviceFilterUrl)
+                                {{-- Kad lēmums jau pieņemts, darbību izvēlne vairs nav vajadzīga.
+                                     Lietotāju interesē tikai rezultāts un saistītā ierīce. --}}
                                 {{-- Apstiprinātiem/noraidītiem pieteikumiem - tikai viena poga --}}
                                 <a href="{{ $deviceFilterUrl }}" class="table-action-summary table-action-summary-single">
                                     <x-icon name="view" size="h-4 w-4" />
@@ -164,6 +172,8 @@
                                     </button>
 
                                     <template x-teleport="body">
+                                    {{-- Teleport uz `body` saglabā dropdown redzamu arī tad,
+                                         ja tabula atrodas scroll vai overflow konteinerā. --}}
                                     <div class="table-action-list table-action-list-dropdown" data-floating-menu="manual" x-ref="panel" x-cloak x-show="open" x-transition.origin.top.right x-bind:style="panelStyle" @click.outside="closePanel()">
                                         @if ($deviceFilterUrl)
                                             <a href="{{ $deviceFilterUrl }}" class="table-action-item table-action-item-sky table-action-item-wide text-sky-700" @click="closePanel()">
@@ -173,6 +183,8 @@
                                         @endif
 
                                         @if ($canReview && $writeoffRequest->status === 'submitted')
+                                            {{-- Review darbības sūta vienu endpoint ar atšķirīgu slēpto `status` vērtību,
+                                                 kas vienkāršo backend apstrādi. --}}
                                             <div class="table-action-grid-actions">
                                                 <x-post-action-button
                                                     :action="route('writeoff-requests.review', $writeoffRequest)"
@@ -207,6 +219,7 @@
                                                 </x-post-action-button>
                                             </div>
                                         @elseif (! $canReview && $writeoffRequest->status === 'submitted')
+                                            {{-- Līdz admina lēmumam pieteicējs drīkst tikai koriģēt vai atcelt savu iesniegumu. --}}
                                             <button type="button" class="table-action-item table-action-item-amber" @click="closePanel(); $dispatch('open-modal', 'writeoff-request-edit-{{ $writeoffRequest->id }}')">
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Labot pieteikumu</span>

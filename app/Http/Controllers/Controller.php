@@ -22,9 +22,9 @@ abstract class Controller
     /**
      * Ko dara: Atgriež pašreiz autorizēto lietotāju kā projekta User modeli.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Paņem `auth()->user()` un pārbauda, vai tas ir projekta `User` modelis, nevis cita autentifikācijas objekta instance.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Kad kontrolierim vajag droši nolasīt pierakstīto lietotāju pirms tiesību vai datu redzamības pārbaudes.
      */
     protected function user(): ?User
     {
@@ -36,9 +36,9 @@ abstract class Controller
     /**
      * Ko dara: Pārbauda, vai darbību veic administrators.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Izsauc `user()`, pārbauda `isAdmin()` un ar 403 aptur pieprasījumu, ja lietotājs nav administrators.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Administratoru sadaļās pirms darbībām ar lietotājiem, auditu vai sistēmas konfigurāciju.
      */
     protected function requireAdmin(): User
     {
@@ -52,9 +52,9 @@ abstract class Controller
     /**
      * Ko dara: Pārbauda, vai lietotājs drīkst pārvaldīt inventāru admina skatā.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Izsauc `user()`, pārbauda `canManageRequests()` un atgriež lietotāju tikai tad, ja viņš drīkst pārvaldīt pieteikumus un inventāru.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Vadītāja/admina funkcijās, kur parastam darbiniekam piekļuve nav atļauta.
      */
     protected function requireManager(): User
     {
@@ -68,9 +68,9 @@ abstract class Controller
     /**
      * Ko dara: Centralizēti pārbauda, vai konkrētā tabula datubāzē vispār eksistē.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Izmanto Laravel Schema pārbaudi, lai pirms vaicājumiem noskaidrotu, vai konkrētā funkcijas tabula eksistē datubāzē.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Sadaļās, kurām jāstrādā arī legacy instalācijā ar nepilnām migrācijām.
      */
     protected function featureTableExists(string $table): bool
     {
@@ -80,9 +80,9 @@ abstract class Controller
     /**
      * Ko dara: Izveido tukšu paginatoru skatījumiem, kuros funkcija nav pieejama vai tabulas nav.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Izveido Laravel `LengthAwarePaginator` ar tukšu datu masīvu, nulles kopskaitu un pašreizējo lapas ceļu.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Kad saraksta skats jāparāda bez kļūdas, lai gan attiecīgā tabula vai funkcionalitāte nav pieejama.
      */
     protected function emptyPaginator(int $perPage = 20): LengthAwarePaginator
     {
@@ -101,9 +101,9 @@ abstract class Controller
     /**
      * Ko dara: Vienotā validācijas ieeja ar lokalizētiem paziņojumiem un atribūtu nosaukumiem.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Apvieno projekta noklusētos validācijas tekstus ar konkrētās formas tekstiem un pārbauda visu pieprasījuma ievadi pret padotajiem noteikumiem.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Kontrolieru `store`, `update` un citās POST/PATCH darbībās, kur jāvalidē lietotāja ievadītie dati.
      */
     protected function validateInput(Request $request, array $rules, array $messages = [], array $attributes = []): array
     {
@@ -118,12 +118,14 @@ abstract class Controller
     /**
      * Ko dara: Projekta kopējie validācijas tekstu šabloni.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Atgriež vienotu Laravel validācijas noteikumu tekstu masīvu latviešu valodā, ko izmanto visas formas.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Katru reizi, kad `validateInput()` veido validācijas kļūdu paziņojumus.
      */
     protected function validationMessages(): array
     {
+        // Šī vārdnīca satur projekta kopīgos kļūdu tekstus, lai dažādās formās
+        // lietotājs redzētu vienādu un saprotamu validācijas valodu.
         return [
             'required' => 'Aizpildi lauku ":attribute".',
             'required_if' => 'Aizpildi lauku ":attribute", jo tas ir nepieciešams izvēlētajai darbībai.',
@@ -158,12 +160,14 @@ abstract class Controller
     /**
      * Ko dara: Cilvēkam saprotami lauku nosaukumi validācijas kļūdām.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Atgriež masīvu, kur katra formas lauka tehniskais nosaukums sasaistīts ar latvisku nosaukumu validācijas kļūdām.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Kad validācijas kļūdā jāparāda saprotams lauka nosaukums, piemēram, "ierīce", nevis `device_id`.
      */
     protected function validationAttributes(): array
     {
+        // Šī vārdnīca pārvērš tehniskos formu lauku nosaukumus saprotamā latviešu
+        // tekstā visiem kontrolieriem, kas izmanto kopīgo validateInput metodi.
         return [
             'action' => 'darbība',
             'address' => 'adrese',
@@ -229,9 +233,9 @@ abstract class Controller
     /**
      * Ko dara: Vienoti pieprasījumu statusu nosaukumi Blade skatījumiem un filtriem.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Tehniskos pieteikumu statusus sasaista ar latviskiem tekstiem, ko var droši rādīt Blade skatos.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Remonta, norakstīšanas un nodošanas pieteikumu sarakstos, filtros un detaļu skatā.
      */
     protected function requestStatusLabels(): array
     {
@@ -245,9 +249,9 @@ abstract class Controller
     /**
      * Ko dara: Izveido remonta ierakstu, pirms tam izlīdzinot datumus legacy shēmām.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Pirms `Repair::create()` izsaukšanas payload izlaiž caur `normalizeRepairPayloadForPersistence()`, lai datumu lauki būtu saderīgi ar datubāzes shēmu.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Visās vietās, kur kontrolieri izveido jaunu remonta ierakstu no pieteikuma vai manuālas formas.
      */
     protected function createRepairRecord(array $payload): Repair
     {
@@ -257,15 +261,17 @@ abstract class Controller
     /**
      * Ko dara: Remonta payload pielāgo kolonnām, kuras dažās vidēs var nepieļaut NULL datumus.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Pārbauda, vai `start_date` un `end_date` kolonnas atļauj NULL; ja neatļauj, tukšu datumu aizstāj ar drošu tehnisku datumu.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Pirms remonta saglabāšanas vidēs, kur datubāzes shēma var atšķirties no jaunākajām migrācijām.
      */
     protected function normalizeRepairPayloadForPersistence(array $payload): array
     {
         $status = (string) ($payload['status'] ?? 'waiting');
         $today = now()->toDateString();
 
+        // Dažās vecākās datubāzēs remonta datumu kolonnas nav nullable.
+        // Ja lietotājs datumu vēl nav norādījis, ieliekam drošu tehnisku vērtību, lai saglabāšana neizkristu.
         if (($payload['start_date'] ?? null) === null && ! $this->repairColumnAllowsNull('start_date')) {
             $payload['start_date'] = $status === 'completed'
                 ? (string) ($payload['end_date'] ?? $today)
@@ -284,15 +290,17 @@ abstract class Controller
     /**
      * Ko dara: Nolasa, vai remonta tabulas konkrētā datuma kolonna atļauj NULL vērtības.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Pirmā izsaukuma laikā nolasa `repairs` tabulas kolonnu metadatus un tos saglabā statiskā kešatmiņā šī pieprasījuma ietvaros.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Kad remonta saglabāšanas loģikai jāzina, vai konkrētu datuma lauku drīkst atstāt tukšu.
      */
     protected function repairColumnAllowsNull(string $column): bool
     {
         static $repairsColumnNullability = null;
 
         if ($repairsColumnNullability === null) {
+            // Kolonnu struktūru nolasām tikai vienu reizi pieprasījuma laikā,
+            // jo šī pārbaude var tikt izsaukta vairākās remonta saglabāšanas vietās.
             $repairsColumnNullability = collect(Schema::getColumns('repairs'))
                 ->mapWithKeys(fn (array $definition) => [
                     (string) ($definition['name'] ?? '') => (bool) ($definition['nullable'] ?? false),

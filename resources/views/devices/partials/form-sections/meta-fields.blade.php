@@ -15,6 +15,8 @@
             </div>
 
             <div>
+                {{-- Datuma komponente backendam iesniedz ISO formātu `Y-m-d`,
+                     bet lietotājam rāda lokalizētu datumu ar atsevišķu date picker loģiku. --}}
                 <x-localized-date-input
                     name="warranty_until"
                     label="Garantija līdz"
@@ -25,6 +27,7 @@
             <label class="block">
                 <span class="crud-label">Iegādes cena</span>
                 <div class="device-money-field">
+                    {{-- Cena paliek skaitlisks input ar `step=0.01`, bet valūtas simbols ir tikai vizuāls suffix. --}}
                     <input type="number" step="0.01" name="purchase_price" value="{{ $fieldValue('purchase_price', $current?->purchase_price) }}" class="crud-control device-money-input">
                     <span class="device-money-suffix">€</span>
                 </div>
@@ -49,6 +52,8 @@
             <div class="device-image-field md:col-span-5">
                 <div class="crud-label">Ierīces attēls</div>
                 <div class="device-image-upload-card">
+                    {{-- Failu izvēle un dzēšanas checkbox ir atsevišķi signāli:
+                         ja ir jauns fails, backend saglabā to; ja ir `remove_device_image`, backend notīra esošo attēlu. --}}
                     <input type="file" name="device_image" class="device-file-input">
                     <div class="device-image-upload-copy">PNG, JPG vai WEBP līdz {{ (int) config('devices.max_upload_kb', 5120) / 1024 }} MB.</div>
 

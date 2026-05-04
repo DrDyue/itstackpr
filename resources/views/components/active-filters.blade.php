@@ -18,6 +18,8 @@
         }
 
         $query = request()->query();
+        // Noņemot vienu filtru, apzināti notīrām arī `page` un `clear`,
+        // lai lietotājs pēc URL pārbūves nonāktu konsekventā filtru stāvoklī no pirmās lapas.
         foreach ([...$removeKeys, 'page', 'clear'] as $key) {
             unset($query[$key]);
         }
@@ -52,6 +54,8 @@
                 </span>
             @endforeach
             @if ($clearUrl)
+                {{-- Pilnā filtru notīrīšana iet caur to pašu async link mehānismu kā pārējie saraksta filtri,
+                     tāpēc nav vajadzīgs atsevišķs JavaScript katram skatam. --}}
                 <a href="{{ str_contains($clearUrl, '?') ? $clearUrl . '&clear=1' : $clearUrl . '?clear=1' }}" class="filter-chip filter-chip-link" data-async-link="true" data-async-clear="true">
                     <x-icon name="clear" size="h-3.5 w-3.5" />
                     <span>Notīrīt filtrus</span>

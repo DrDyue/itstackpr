@@ -64,12 +64,16 @@ class RegisteredUserController extends Controller
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?: null,
             'job_title' => $validated['job_title'] ?: null,
+            // Hash::make neglabā paroli atklātā tekstā. Laravel izveido vienvirziena paroles hash
+            // (bcrypt vai Argon atkarībā no konfigurācijas), ko vēlāk var tikai pārbaudīt, nevis atkodēt.
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
             'is_active' => true,
         ]);
 
         AuditTrail::created(Auth::id(), $user);
+        // Registered notikums ļauj Laravel palaist ar reģistrāciju saistītas darbības,
+        // piemēram, e-pasta verifikāciju, ja tāda funkcionalitāte ir ieslēgta.
         event(new Registered($user));
 
         return redirect(route('users.index'))->with('success', 'Lietotājs veiksmīgi izveidots');

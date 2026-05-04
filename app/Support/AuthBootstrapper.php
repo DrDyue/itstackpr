@@ -66,6 +66,8 @@ class AuthBootstrapper
                 ];
             }
 
+            // Autentifikācijas minimums tiek atjaunots runtime laikā, lai login forma var strādāt
+            // arī tad, ja videi vēl nav pilnībā izpildītas visas migrācijas.
             $this->ensureUsersSchema();
             $this->backfillLegacyUserData();
             $this->normalizeLegacyRoles();
@@ -225,10 +227,13 @@ class AuthBootstrapper
         }
 
         try {
+            // Sākumā mēģinām pilnu payload, lai demo konts būtu maksimāli pilnīgs.
             DB::table('users')->updateOrInsert(['email' => $email], $payload);
         } catch (QueryException $e) {
             Log::warning('Demo user full upsert failed, retrying with minimal payload: ' . $e->getMessage());
 
+            // Ja legacy shēma nepieņem visus laukus, atkāpjamies uz minimālo komplektu:
+            // e-pasts un paroles hash ir pietiekami, lai autentifikācija tomēr darbotos.
             $minimalPayload = [
                 'email' => $email,
                 'password' => Hash::make(self::DEMO_PASSWORD),
@@ -259,6 +264,8 @@ class AuthBootstrapper
             default => [User::ROLE_USER],
         };
 
+        // Dažās vecās instalācijās admin loma var saukties atšķirīgi,
+        // tāpēc mēģinām vairākus kandidātus, līdz datubāze pieņem vienu no tiem.
         foreach ($candidates as $candidate) {
             try {
                 DB::table('users')

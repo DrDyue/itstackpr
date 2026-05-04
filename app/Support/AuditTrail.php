@@ -67,6 +67,8 @@ class AuditTrail
         string $severity = 'info'
     ): void {
         try {
+            // Audita rakstīšana nedrīkst apstādināt galveno biznesa darbību.
+            // Ja audit_log tabula vai inserts īslaicīgi nav pieejams, sistēma turpina pamatplūsmu.
             AuditLog::create([
                 'timestamp' => now(),
                 'user_id' => $userId,
@@ -909,6 +911,8 @@ class AuditTrail
             return $entity . ' atjaunināts: ' . $label;
         }
 
+        // Izmaiņu detaļas saliekam vienā cilvēkam lasāmā rindā,
+        // lai auditā var redzēt ne tikai to, ka objekts mainījās, bet arī tieši kas mainījās.
         $details = collect($changes)
             ->map(function (array $change, string $field) {
                 return self::translateFieldName($field) . ': '
@@ -1010,6 +1014,8 @@ class AuditTrail
     {
         $changes = [];
 
+        // Salīdzinām apvienotu "pirms" un "pēc" lauku kopu, lai pamanītu gan izmaiņas,
+        // gan jaunus/noņemtus laukus. Salīdzināšanai izmantojam formatētu vērtību, nevis raw tipu.
         foreach (array_unique(array_merge(array_keys($before), array_keys($after))) as $field) {
             if (in_array($field, $ignoredFields, true)) {
                 continue;
@@ -1045,6 +1051,8 @@ class AuditTrail
             return 'tukšs';
         }
 
+        // Masīvus serializējam JSON formā, lai auditā saglabātos arī strukturētu iestatījumu
+        // vai vairāku izvēļu saturs, nevis vienkārši teksts "Array".
         if (is_array($value)) {
             return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: 'masivs';
         }
@@ -1062,6 +1070,8 @@ class AuditTrail
 
     private static function filterSummary(array $filters): string
     {
+        // Filtru kopsavilkums auditā pārvērš tehniskās query vērtības cilvēkam saprotamā tekstā,
+        // lai vēlāk var atjaunot, pēc kā tieši saraksts bija atlasīts.
         return collect($filters)
             ->map(function (mixed $value, mixed $key) {
                 $label = self::translateFieldName((string) $key);
@@ -1223,6 +1233,8 @@ class AuditTrail
             return null;
         }
 
+        // Entītijas modeli atjaunojam tikai zināmajiem tipiem.
+        // Tas vēlāk ļauj auditā parādīt korektu nosaukumu, atsauci un URL arī no vēsturiska ieraksta.
         return match (self::normalizeEntityKey($entityType)) {
             'building' => Building::query()->find($entityId),
             'room' => Room::query()->with('building')->find($entityId),

@@ -14,9 +14,9 @@ trait HasRepairStatusLabels
     /**
      * Ko dara: Konvertē remonta statusu uz latviskiem statusu labeliem.
      *
-     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     * Kā strādā: Ar `match` izteiksmi tehnisko statusa vērtību (`waiting`, `in-progress`, `completed`, `cancelled`) pārvērš īsā latviskā nosaukumā.
      *
-     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
+     * Kad pielietojas: Kad kontrolierim paziņojumā, kartītē vai sarakstā jāparāda remonta statuss lietotājam saprotamā tekstā.
      */
     private function repairStatusLabel(?string $status): string
     {

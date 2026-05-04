@@ -41,6 +41,8 @@ class Building extends Model
      */
     public function devices(): HasMany
     {
+        // Tieša ēkas -> ierīču saite ļauj skaitīt un filtrēt ierīces pa ēku
+        // bez obligātas starpsoļa iešanas caur rooms tabulu.
         return $this->hasMany(Device::class);
     }
 

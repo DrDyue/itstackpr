@@ -1,4 +1,7 @@
 @php
+    // `fieldValue()` vienā vietā izlemj, vai rādīt iepriekš iesniegto `old()` vērtību
+    // vai pašreizējo modeļa vērtību. Tas ir svarīgi modāļiem, jo pēc validācijas kļūdas
+    // lietotājam nedrīkst pazust jau ievadītie dati.
     $formKey = $formKey ?? ($device?->id ? 'device-edit-'.$device->id : 'device-create');
     $useOldInput = $useOldInput ?? true;
     $fieldValue = fn (string $field, mixed $default = null) => $useOldInput ? old($field, $default) : $default;
@@ -8,6 +11,8 @@
     $hasPendingRepairRequest = (bool) (($current?->has_pending_repair_request ?? false) || $current?->pendingRepairRequest);
     $hasPendingWriteoffRequest = (bool) (($current?->has_pending_writeoff_request ?? false) || $current?->pendingWriteoffRequest);
     $hasPendingTransferRequest = (bool) (($current?->has_pending_transfer_request ?? false) || $current?->pendingTransferRequest);
+    // Statusa, telpas un atbildīgā maiņu bloķējam, ja ierīce ir procesā:
+    // remontā, norakstīta vai tai ir atvērts pieteikums. Tas novērš konfliktus starp paralēlām plūsmām.
     $isStatusLocked = ! $isCreating && (
         $isWrittenOff
         || ($current?->status ?? null) === \App\Models\Device::STATUS_REPAIR
@@ -25,6 +30,8 @@
         default => null,
     };
     $deviceImageUrl = $current?->deviceImageUrl();
+    // Searchable-select komponentēm vajag atsevišķi gan ID, gan redzamo tekstu.
+    // ID tiek iesniegts backendam, bet query teksts ļauj pēc validācijas atjaunot ievades lauka izskatu.
     $selectedTypeId = (string) $fieldValue('device_type_id', $current?->device_type_id ?? '');
     $selectedTypeLabel = $fieldValue(
         'device_type_query',
@@ -96,12 +103,16 @@
 
 <div class="space-y-6">
     @if ($isWrittenOff)
+        {{-- Norakstītai ierīcei atļaujam labot informatīvos laukus,
+             bet neļaujam mainīt statusu un piesaistes, lai vēsture paliktu konsekventa. --}}
         <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
             Norakstītai ierīcei var labot tikai informācijas laukus. Statuss, piesaiste un telpa netiek mainīti.
         </div>
     @endif
 
     @if ($statusLockMessage && ! $isWrittenOff)
+        {{-- Šis paziņojums paskaidro, kāpēc daļa formas lauku ir bloķēta,
+             nevis vienkārši atstāj lietotāju ar disabled laukiem bez iemesla. --}}
         <div class="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm leading-6 text-sky-900">
             {{ $statusLockMessage }}
         </div>
