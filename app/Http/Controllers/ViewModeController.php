@@ -9,18 +9,20 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 /**
- * Pārslēdz administratoru starp admina un darbinieka skatu.
+ * Ko dara: Pārvalda administratora skata režīma pārslēgšanu.
+ *
+ * Kā strādā: Saglabā izvēlēto skata režīmu sesijā vai lietotāja iestatījumos un auditē pāreju starp admina un darbinieka skatu.
+ *
+ * Kad pielietojas: Kad administrators pārslēdzas uz citu darba režīmu saskarnē.
  */
 class ViewModeController extends Controller
 {
     /**
-     * Saglabā administratora izvēlēto skata režīmu sesijā ar redirectu uz atbilstošo lapu.
+     * Ko dara: Saglabā administratora izvēlēto skata režīmu sesijā ar redirectu uz atbilstošo lapu.
      *
-     * Administrators var pārslēgties starp admina skatu (darba virsma) un parastā darbinieka
-     * skatu (ierīču saraksts). Pārejas tiek reģistrētas audita žurnālā.
+     * Kā strādā: Administrators var pārslēgties starp admina skatu (darba virsma) un parastā darbinieka skatu (ierīču saraksts). Pārejas tiek reģistrētas audita žurnālā.
      *
-     * Izsaukšana: POST /view-mode | Pieejams: tikai administrators.
-     * Scenārijs: Administrator klikšķina uz "Pārslēgt uz admina/darbinieka skatu" novilktnē.
+     * Kad pielietojas: Izsaukšana: POST /view-mode | Pieejams: tikai administrators. Scenārijs: Administrator klikšķina uz "Pārslēgt uz admina/darbinieka skatu" novilktnē.
      */
     public function update(Request $request): RedirectResponse
     {

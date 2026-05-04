@@ -20,10 +20,11 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Lietotāju norakstīšanas pieteikumu plūsma.
+ * Ko dara: Pārvalda ierīču norakstīšanas pieteikumus.
  *
- * Neprademanāks lietotājs iesniedz norakstīšanas pieteikumu savai ierīcei,
- * savukārt administrators to izskata un apstiprina vai noraida.
+ * Kā strādā: Ļauj lietotājam pieteikt ierīci norakstīšanai, administratoram pieņemt lēmumu un apstiprināšanas gadījumā pārvietot ierīci uz noliktavu.
+ *
+ * Kad pielietojas: Kad ierīce vairs nav izmantojama un jāiziet norakstīšanas apstiprināšanas plūsma.
  */
 class WriteoffRequestController extends Controller
 {
@@ -31,16 +32,15 @@ class WriteoffRequestController extends Controller
 
 
 
+    // Atļautās norakstīšanas pieteikumu saraksta kārtošanas kolonnas.
     private const SORTABLE_COLUMNS = ['code', 'name', 'requester', 'created_at', 'status'];
 
     /**
-     * Parāda norakstīšanas pieteikumu sarakstu ar lomas atkarīgu loģiku un filtriem.
+     * Ko dara: Parāda norakstīšanas pieteikumu sarakstu ar lomas atkarīgu loģiku un filtriem.
      *
-     * Administrators redz visus pieteikumus. Parasts lietotājs redz tikai savus iesniegtos.
-     * Atspoguļo gaidošo, apstiprināto un noraidīto pieteikumu kopsavilkumu.
+     * Kā strādā: Administrators redz visus pieteikumus. Parasts lietotājs redz tikai savus iesniegtos. Atspoguļo gaidošo, apstiprināto un noraidīto pieteikumu kopsavilkumu.
      *
-     * Izsaukšana: GET /writeoff-requests | Pieejams: jebkurš autentificēts lietotājs.
-     * Scenārijs: Lietotājs navigē uz "Norakstīšanas pieteikumi" sadaļu sānjoslā.
+     * Kad pielietojas: Izsaukšana: GET /writeoff-requests | Pieejams: jebkurš autentificēts lietotājs. Scenārijs: Lietotājs navigē uz "Norakstīšanas pieteikumi" sadaļu sānjoslā.
      */
     public function index(Request $request)
     {
@@ -55,7 +55,11 @@ class WriteoffRequestController extends Controller
     }
 
     /**
-     * Atgriež filtrētu norakstīšanas pieteikumu tabulu (async).
+     * Ko dara: Atgriež filtrētu norakstīšanas pieteikumu tabulu (async).
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     public function table(Request $request)
     {
@@ -74,7 +78,11 @@ class WriteoffRequestController extends Controller
     }
 
     /**
-     * Kopīga metode norakstīšanas pieteikumu datu sagatavošanai.
+     * Ko dara: Kopīga metode norakstīšanas pieteikumu datu sagatavošanai.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function writeoffRequestsViewData(Request $request, $user): array
     {
@@ -169,7 +177,11 @@ class WriteoffRequestController extends Controller
     }
 
     /**
-     * Atrod norakstīšanas pieteikumu pēc saistītās ierīces koda filtrētajā sarakstā.
+     * Ko dara: Atrod norakstīšanas pieteikumu pēc saistītās ierīces koda filtrētajā sarakstā.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     public function findByCode(Request $request)
     {
@@ -227,7 +239,11 @@ class WriteoffRequestController extends Controller
 
 
     /**
-     * Saglabā jaunu norakstīšanas pieteikumu.
+     * Ko dara: Saglabā jaunu norakstīšanas pieteikumu.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     public function store(Request $request)
     {
@@ -270,7 +286,11 @@ class WriteoffRequestController extends Controller
     }
 
     /**
-     * Administratora lēmums par norakstīšanas pieprasījumu.
+     * Ko dara: Administratora lēmums par norakstīšanas pieprasījumu.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     public function review(Request $request, WriteoffRequest $writeoffRequest)
     {
@@ -300,6 +320,8 @@ class WriteoffRequestController extends Controller
 
         $before = $writeoffRequest->only(['status', 'reviewed_by_user_id', 'review_notes']);
 
+        // Norakstīšanas apstiprināšana maina gan pieteikuma statusu, gan pašu ierīci.
+        // Transakcija nodrošina, ka abas izmaiņas tiek saglabātas kopā vai netiek saglabātas nemaz.
         DB::transaction(function () use ($validated, $writeoffRequest, $manager) {
             $writeoffRequest->update([
                 'status' => $validated['status'],
@@ -311,6 +333,8 @@ class WriteoffRequestController extends Controller
                 return;
             }
 
+            // Ierīci bloķējam līdz transakcijas beigām, lai paralēli nevarētu sākt remontu,
+            // nodošanu vai citu statusa maiņu tai pašai ierīcei.
             $device = $writeoffRequest->device()->lockForUpdate()->first();
 
             if (! $device) {
@@ -325,6 +349,8 @@ class WriteoffRequestController extends Controller
                 ]);
             }
 
+            // Apstiprināta norakstīšana noņem atbildīgo lietotāju un pārvieto ierīci
+            // uz noliktavas telpu, lai tā vairs neparādītos kā lietošanā esoša.
             $device->forceFill(array_merge(
                 ['status' => Device::STATUS_WRITEOFF],
                 $this->writeoffWarehousePayload($manager->id)
@@ -354,6 +380,13 @@ class WriteoffRequestController extends Controller
         return back()->with('success', 'Norakstīšanas pieteikums izskatīts');
     }
 
+    /**
+     * Ko dara: Atgriež lietotājam pieejamās ierīces konkrētās plūsmas izveides formai.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: saraksta datu sagatavošanas metodes un `store()`.
+     */
     private function availableDevicesForUser(User $user): Builder
     {
         return Device::query()
@@ -367,6 +400,13 @@ class WriteoffRequestController extends Controller
             ->orderBy('name');
     }
 
+    /**
+     * Ko dara: Pārbauda, vai ierīcei drīkst izveidot norakstīšanas pieteikumu.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `store()`.
+     */
     private function ensureDeviceCanAcceptWriteoffRequest(Device $device): void
     {
         if ($device->status === Device::STATUS_REPAIR) {
@@ -394,6 +434,13 @@ class WriteoffRequestController extends Controller
         }
     }
 
+    /**
+     * Ko dara: Sagatavo ierīču izvēlnes opcijas formai vai filtram.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: saraksta datu sagatavošanas metodes.
+     */
     private function deviceOptions($devices)
     {
         return collect($devices)->map(function (Device $device) {
@@ -422,6 +469,13 @@ class WriteoffRequestController extends Controller
         })->values();
     }
 
+    /**
+     * Ko dara: Sagatavo ierīces noliktavas atrašanās vietas datus pēc norakstīšanas.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `review()`.
+     */
     private function writeoffWarehousePayload(?int $preferredUserId = null): array
     {
         $warehouseRoom = $this->ensureWarehouseRoom($preferredUserId);
@@ -433,6 +487,13 @@ class WriteoffRequestController extends Controller
         ];
     }
 
+    /**
+     * Ko dara: Atrod vai izveido noklusēto noliktavas telpu norakstītām ierīcēm.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `writeoffWarehousePayload()`.
+     */
     private function ensureWarehouseRoom(?int $preferredUserId = null): Room
     {
         $warehouseRoom = Room::query()
@@ -461,6 +522,13 @@ class WriteoffRequestController extends Controller
         ])->load('building');
     }
 
+    /**
+     * Ko dara: Atrod piemērotāko ēku noklusētās noliktavas telpas izveidei.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `ensureWarehouseRoom()`.
+     */
     private function preferredWarehouseBuilding(): Building
     {
         $preferredBuilding = Building::query()
@@ -486,6 +554,13 @@ class WriteoffRequestController extends Controller
         ]);
     }
 
+    /**
+     * Ko dara: Aprēķina nākamo brīvo noliktavas telpas numuru ēkā.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `ensureWarehouseRoom()`.
+     */
     private function nextWarehouseRoomNumber(int $buildingId): string
     {
         $existingNumbers = Room::query()
@@ -505,6 +580,13 @@ class WriteoffRequestController extends Controller
         return $candidate;
     }
 
+    /**
+     * Ko dara: Pārbauda, vai teksts norāda uz noliktavas telpu.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `ensureWarehouseRoom()`.
+     */
     private function isWarehouseLabel(?string $value): bool
     {
         if (! filled($value)) {
@@ -514,6 +596,13 @@ class WriteoffRequestController extends Controller
         return str_contains(mb_strtolower(trim($value)), 'noliktav');
     }
 
+    /**
+     * Ko dara: Pārbauda, vai ēkas nosaukums atbilst vēlamajai noliktavas ēkai.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `preferredWarehouseBuilding()`.
+     */
     private function matchesPreferredBuildingName(?string $value): bool
     {
         if (! filled($value)) {
@@ -524,7 +613,11 @@ class WriteoffRequestController extends Controller
     }
 
     /**
-     * Sakārto saraksta filtru stāvokli, ieskaitot admina noklusēto "iesniegts".
+     * Ko dara: Sakārto saraksta filtru stāvokli, ieskaitot admina noklusēto "iesniegts".
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function normalizedIndexFilters(Request $request, array $availableStatuses, bool $canReview): array
     {
@@ -566,7 +659,11 @@ class WriteoffRequestController extends Controller
     }
 
     /**
-     * Pielieto meklēšanu un filtrus pieteikumu vaicājumam.
+     * Ko dara: Pielieto meklēšanu un filtrus pieteikumu vaicājumam.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function applyIndexFilters(Builder $query, array $filters, array $skip = []): Builder
     {
@@ -622,7 +719,11 @@ class WriteoffRequestController extends Controller
     }
 
     /**
-     * Pielieto drošu kārtošanu pēc atļautajām kolonnām.
+     * Ko dara: Pielieto drošu kārtošanu pēc atļautajām kolonnām.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function applySorting(Builder $query, array $sorting): void
     {
@@ -660,7 +761,11 @@ class WriteoffRequestController extends Controller
     }
 
     /**
-     * Normalizē kārtošanas parametrus tabulas galvenei un toast paziņojumiem.
+     * Ko dara: Normalizē kārtošanas parametrus tabulas galvenei un toast paziņojumiem.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function normalizedSorting(Request $request): array
     {
@@ -683,7 +788,11 @@ class WriteoffRequestController extends Controller
     }
 
     /**
-     * Lietotāja paziņojumiem izmantojamās kārtošanas etiķetes.
+     * Ko dara: Lietotāja paziņojumiem izmantojamās kārtošanas etiķetes.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function sortOptions(): array
     {
@@ -696,6 +805,13 @@ class WriteoffRequestController extends Controller
         ];
     }
 
+    /**
+     * Ko dara: Reģistrē norakstīšanas pieteikumu saraksta filtrēšanu un kārtošanu audita žurnālā.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `index()`, `table()`.
+     */
     private function auditWriteoffRequestListInteractions(Request $request, User $user, array $filters, array $sorting): void
     {
         $filterPayload = array_filter([
@@ -734,7 +850,11 @@ class WriteoffRequestController extends Controller
     }
 
     /**
-     * Sagatavo ierīču dropdown opcijas norakstīšanas pieteikumu filtram.
+     * Ko dara: Sagatavo ierīču dropdown opcijas norakstīšanas pieteikumu filtram.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function writeoffDeviceOptions($requests)
     {
@@ -765,7 +885,11 @@ class WriteoffRequestController extends Controller
     }
 
     /**
-     * Sagatavo pieteicēju dropdown opcijas norakstīšanas pieteikumu filtram.
+     * Ko dara: Sagatavo pieteicēju dropdown opcijas norakstīšanas pieteikumu filtram.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function writeoffRequesterOptions($requests)
     {

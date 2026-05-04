@@ -9,21 +9,20 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
- * Droša ierīču attēlu atdošana.
+ * Ko dara: Droši atdod ierīču attēlus lietotājiem.
  *
- * Kontrolieris pārbauda, vai lietotājs drīkst skatīt konkrēto ierīci,
- * un tikai tad atdod lokālo vai attālo attēlu.
+ * Kā strādā: Pārbauda piekļuves tiesības konkrētajai ierīcei un tikai pēc tam atdod lokālu attēlu vai attāla attēla priekšskatījumu.
+ *
+ * Kad pielietojas: Kad pārlūks pieprasa ierīces attēlu ierīču sarakstā, detalizētajā skatā vai attēla priekšskatījumā.
  */
 class DeviceAssetController extends Controller
 {
     /**
-     * Atgriež lokāli glabātu ierīces attēlu pēc drošības pārbaudes.
+     * Ko dara: Atgriež lokāli glabātu ierīces attēlu pēc drošības pārbaudes.
      *
-     * Pārbauda, vai pierakstītais lietotājs drīkst piekļūt šai ierīcei,
-     * un tikai tad atdod attēlu no local storage diska.
+     * Kā strādā: Pārbauda, vai pierakstītais lietotājs drīkst piekļūt šai ierīcei, un tikai tad atdod attēlu no local storage diska.
      *
-     * Izsaukšana: GET /device-assets/{path} | Pieejams: autentificēts, ja ir pieejama ierīce.
-     * Scenārijs: Pārlūks pieprasīja ierīces attēlu, kura URL satur resursa ceļu.
+     * Kad pielietojas: Izsaukšana: GET /device-assets/{path} | Pieejams: autentificēts, ja ir pieejama ierīce. Scenārijs: Pārlūks pieprasīja ierīces attēlu, kura URL satur resursa ceļu.
      */
     public function show(string $path)
     {
@@ -37,13 +36,11 @@ class DeviceAssetController extends Controller
     }
 
     /**
-     * Starpnieko attāla attēla drošu priekšskatījumu ar drošības pārbaudēm.
+     * Ko dara: Starpnieko attāla attēla drošu priekšskatījumu ar drošības pārbaudēm.
      *
-     * Validē attēla URL, pārbauda pieejamību un pagriežana pierakstītajam lietotājam.
-     * Attēli tiek iegūti ar lietotāja agenta nosaukumu un tiek pārbaudīti MIME tipi.
+     * Kā strādā: Validē attēla URL, pārbauda pieejamību un pagriežana pierakstītajam lietotājam. Attēli tiek iegūti ar lietotāja agenta nosaukumu un tiek pārbaudīti MIME tipi.
      *
-     * Izsaukšana: GET /device-assets/remote-preview?url=... | Pieejams: autentificēts.
-     * Scenārijs: Pārlūks jautā par attāla sīkdatņu priekšskatījuma attēlu ar URL parametru.
+     * Kad pielietojas: Izsaukšana: GET /device-assets/remote-preview?url=... | Pieejams: autentificēts. Scenārijs: Pārlūks jautā par attāla sīkdatņu priekšskatījuma attēlu ar URL parametru.
      */
     public function remotePreview(Request $request)
     {
@@ -81,6 +78,13 @@ class DeviceAssetController extends Controller
         ]);
     }
 
+    /**
+     * Ko dara: Pārbauda, vai attālais attēla URL ir drošs ielādei.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `remotePreview()`.
+     */
     private function isAllowedRemoteUrl(string $url): bool
     {
         if (! Str::startsWith($url, ['http://', 'https://'])) {
@@ -102,6 +106,13 @@ class DeviceAssetController extends Controller
         return true;
     }
 
+    /**
+     * Ko dara: Pārbauda lietotāja tiesības skatīt lokāli glabātu ierīces attēlu.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `show()`.
+     */
     private function canViewStoredAsset(string $path): bool
     {
         $user = $this->user();
@@ -115,6 +126,13 @@ class DeviceAssetController extends Controller
         return $device !== null && $user->canViewDevice($device);
     }
 
+    /**
+     * Ko dara: Pārbauda lietotāja tiesības skatīt attālu ierīces attēlu.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `remotePreview()`.
+     */
     private function canViewRemoteAsset(string $url): bool
     {
         $user = $this->user();
@@ -130,6 +148,13 @@ class DeviceAssetController extends Controller
         return $device !== null && $user->canViewDevice($device);
     }
 
+    /**
+     * Ko dara: Atrod ierīci pēc glabātā attēla ceļa vai faila nosaukuma.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `canViewStoredAsset()`.
+     */
     private function findDeviceByAssetPath(string $path): ?Device
     {
         $basename = strtolower(basename($path));

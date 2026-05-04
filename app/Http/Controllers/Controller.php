@@ -11,15 +11,20 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 
 /**
- * Projekta bāzes kontrolieris.
+ * Ko dara: Nodrošina kopīgās palīgmetodes visiem Laravel kontrolieriem projektā.
  *
- * Šeit glabājas kopīgie palīgmehānismi validācijai, lomu pārbaudēm,
- * tukšajiem paginatoriem un statusu etiķetēm.
+ * Kā strādā: Centralizē lietotāja iegūšanu, tiesību pārbaudes, tabulu pieejamības pārbaudi, validācijas ziņojumus un remonta ierakstu izveides palīgloģiku.
+ *
+ * Kad pielietojas: Kad jebkuram konkrētam kontrolierim vajag kopīgu autorizācijas, validācijas vai remonta saglabāšanas funkcionalitāti.
  */
 abstract class Controller
 {
     /**
-     * Atgriež pašreiz autorizēto lietotāju kā projekta User modeli.
+     * Ko dara: Atgriež pašreiz autorizēto lietotāju kā projekta User modeli.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     protected function user(): ?User
     {
@@ -29,7 +34,11 @@ abstract class Controller
     }
 
     /**
-     * Pārbauda, vai darbību veic administrators.
+     * Ko dara: Pārbauda, vai darbību veic administrators.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     protected function requireAdmin(): User
     {
@@ -41,7 +50,11 @@ abstract class Controller
     }
 
     /**
-     * Pārbauda, vai lietotājs drīkst pārvaldīt inventāru admina skatā.
+     * Ko dara: Pārbauda, vai lietotājs drīkst pārvaldīt inventāru admina skatā.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     protected function requireManager(): User
     {
@@ -53,7 +66,11 @@ abstract class Controller
     }
 
     /**
-     * Centralizēti pārbauda, vai konkrētā tabula datubāzē vispār eksistē.
+     * Ko dara: Centralizēti pārbauda, vai konkrētā tabula datubāzē vispār eksistē.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     protected function featureTableExists(string $table): bool
     {
@@ -61,7 +78,11 @@ abstract class Controller
     }
 
     /**
-     * Izveido tukšu paginatoru skatījumiem, kuros funkcija nav pieejama vai tabulas nav.
+     * Ko dara: Izveido tukšu paginatoru skatījumiem, kuros funkcija nav pieejama vai tabulas nav.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     protected function emptyPaginator(int $perPage = 20): LengthAwarePaginator
     {
@@ -78,7 +99,11 @@ abstract class Controller
     }
 
     /**
-     * Vienotā validācijas ieeja ar lokalizētiem paziņojumiem un atribūtu nosaukumiem.
+     * Ko dara: Vienotā validācijas ieeja ar lokalizētiem paziņojumiem un atribūtu nosaukumiem.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     protected function validateInput(Request $request, array $rules, array $messages = [], array $attributes = []): array
     {
@@ -91,7 +116,11 @@ abstract class Controller
     }
 
     /**
-     * Projekta kopējie validācijas tekstu šabloni.
+     * Ko dara: Projekta kopējie validācijas tekstu šabloni.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     protected function validationMessages(): array
     {
@@ -127,7 +156,11 @@ abstract class Controller
     }
 
     /**
-     * Cilvēkam saprotami lauku nosaukumi validācijas kļūdām.
+     * Ko dara: Cilvēkam saprotami lauku nosaukumi validācijas kļūdām.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     protected function validationAttributes(): array
     {
@@ -194,7 +227,11 @@ abstract class Controller
     }
 
     /**
-     * Vienoti pieprasījumu statusu nosaukumi Blade skatījumiem un filtriem.
+     * Ko dara: Vienoti pieprasījumu statusu nosaukumi Blade skatījumiem un filtriem.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     protected function requestStatusLabels(): array
     {
@@ -206,7 +243,11 @@ abstract class Controller
     }
 
     /**
-     * Izveido remonta ierakstu, pirms tam izlīdzinot datumus legacy shēmām.
+     * Ko dara: Izveido remonta ierakstu, pirms tam izlīdzinot datumus legacy shēmām.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     protected function createRepairRecord(array $payload): Repair
     {
@@ -214,7 +255,11 @@ abstract class Controller
     }
 
     /**
-     * Remonta payload pielāgo kolonnām, kuras dažās vidēs var nepieļaut NULL datumus.
+     * Ko dara: Remonta payload pielāgo kolonnām, kuras dažās vidēs var nepieļaut NULL datumus.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     protected function normalizeRepairPayloadForPersistence(array $payload): array
     {
@@ -237,7 +282,11 @@ abstract class Controller
     }
 
     /**
-     * Nolasa, vai remonta tabulas konkrētā datuma kolonna atļauj NULL vērtības.
+     * Ko dara: Nolasa, vai remonta tabulas konkrētā datuma kolonna atļauj NULL vērtības.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     protected function repairColumnAllowsNull(string $column): bool
     {

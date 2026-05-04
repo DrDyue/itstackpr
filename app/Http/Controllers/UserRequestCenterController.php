@@ -15,23 +15,22 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Vienotais lietotāja pieprasījumu ieejas punkts.
+ * Ko dara: Pārvalda parastā lietotāja pieteikumu centru.
  *
- * Praktiski tas darbojas kā novirzītājs un kopīga vieta labošanai/atcelšanai,
- * kamēr galvenās plūsmas dzīvo atsevišķos kontrolieros.
+ * Kā strādā: Ļauj veidot, labot un atcelt savus remonta, norakstīšanas vai nodošanas pieteikumus, ievērojot ierīces pieejamības nosacījumus.
+ *
+ * Kad pielietojas: Kad darbinieks strādā ar saviem pieteikumiem bez administratora tiesībām.
  */
 class UserRequestCenterController extends Controller
 {
     use HasRepairStatusLabels;
 
     /**
-     * Lietotāju nosūta uz remonta pieteikumu sarakstu kā galveno ieejas punktu.
+     * Ko dara: Lietotāju nosūta uz remonta pieteikumu sarakstu kā galveno ieejas punktu.
      *
-     * Šī metode vienkārši pāradresē uz remonta pieteikumu sarakstu, jo tas ir primārais
-     * pieteikuma tips. Citi pieteikuma veidi (norakstīšana, nodošana) ir pieejami no turienes.
+     * Kā strādā: Šī metode vienkārši pāradresē uz remonta pieteikumu sarakstu, jo tas ir primārais pieteikuma tips. Citi pieteikuma veidi (norakstīšana, nodošana) ir pieejami no turienes.
      *
-     * Izsaukšana: GET /my-requests | Pieejams: parasts lietotājs (neadministrators).
-     * Scenārijs: Lietotājs klikšķina uz "Mani pieteikumi" sānjoslā.
+     * Kad pielietojas: Izsaukšana: GET /my-requests | Pieejams: parasts lietotājs (neadministrators). Scenārijs: Lietotājs klikšķina uz "Mani pieteikumi" sānjoslā.
      */
     public function index(Request $request)
     {
@@ -41,14 +40,11 @@ class UserRequestCenterController extends Controller
     }
 
     /**
-     * Saglabā jaunu pieprasījumu — remonta, norakstīšanas vai nodošanas.
+     * Ko dara: Saglabā jaunu pieprasījumu — remonta, norakstīšanas vai nodošanas.
      *
-     * Validē pieprasījuma tipu un ierīci, pārbauda, vai ierīce jau nav aizņemta
-     * ar citu aktīvu pieteikumu, un izveido attiecīgo ierakstu datubāzē.
-     * Katrs veids tiek reģistrēts audita žurnālā un piesaistīts aktīvās sesijas lietotājam.
+     * Kā strādā: Validē pieprasījuma tipu un ierīci, pārbauda, vai ierīce jau nav aizņemta ar citu aktīvu pieteikumu, un izveido attiecīgo ierakstu datubāzē. Katrs veids tiek reģistrēts audita žurnālā un piesaistīts aktīvās sesijas lietotājam.
      *
-     * Izsaukšana: POST /my-requests | Pieejams: parasts lietotājs (neadministrators).
-     * Scenārijs: Lietotājs izvēlas ierīci un pieteikuma tipu "Jauns pieteikums" formā.
+     * Kad pielietojas: Izsaukšana: POST /my-requests | Pieejams: parasts lietotājs (neadministrators). Scenārijs: Lietotājs izvēlas ierīci un pieteikuma tipu "Jauns pieteikums" formā.
      */
     public function store(Request $request)
     {
@@ -121,13 +117,11 @@ class UserRequestCenterController extends Controller
     }
 
     /**
-     * Atļauj labot tikai aprakstošo lauku iesniegtam pieprasījumam.
+     * Ko dara: Atļauj labot tikai aprakstošo lauku iesniegtam pieprasījumam.
      *
-     * Lietotājs var labot tikai sava pieprasījuma tekstu (aprakstu vai iemeslu),
-     * kamēr tas vēl nav izskatīts. Izmaiņas tiek reģistrētas audita žurnālā.
+     * Kā strādā: Lietotājs var labot tikai sava pieprasījuma tekstu (aprakstu vai iemeslu), kamēr tas vēl nav izskatīts. Izmaiņas tiek reģistrētas audita žurnālā.
      *
-     * Izsaukšana: PATCH /my-requests/{type}/{id} | Pieejams: parasts lietotājs.
-     * Scenārijs: Lietotājs klikšķina "Labot" pie iesniegtā pieteikuma un saglabā jauno tekstu.
+     * Kad pielietojas: Izsaukšana: PATCH /my-requests/{type}/{id} | Pieejams: parasts lietotājs. Scenārijs: Lietotājs klikšķina "Labot" pie iesniegtā pieteikuma un saglabā jauno tekstu.
      */
     public function update(Request $request, string $requestType, int $requestId)
     {
@@ -153,10 +147,11 @@ class UserRequestCenterController extends Controller
     }
 
     /**
-     * Atceļ vēl neizskatītu pieprasījumu.
+     * Ko dara: Atceļ vēl neizskatītu pieprasījumu.
      *
-     * Izsaukšana: DELETE /my-requests/{type}/{id} | Pieejams: parasts lietotājs.
-     * Scenārijs: Lietotājs klikšķina "Atcelt" pie iesniegtā pieteikuma un apstiprina atcelšanu.
+     * Kā strādā: Apstrādā pieprasījumu, pārbauda tiesības un atgriež atbilstošo skatu, JSON atbildi vai pāradresāciju.
+     *
+     * Kad pielietojas: Izsaukšana: DELETE /my-requests/{type}/{id} | Pieejams: parasts lietotājs.
      */
     public function destroy(string $requestType, int $requestId)
     {
@@ -171,12 +166,11 @@ class UserRequestCenterController extends Controller
     }
 
     /**
-     * Pārbauda, vai aktīvais lietotājs ir parastais lietotājs (nevis administrators/vadītājs).
+     * Ko dara: Pārbauda, vai aktīvais lietotājs ir parastais lietotājs (nevis administrators/vadītājs).
      *
-     * Ja lietotājs nav autentificēts vai ir administrators, tiek atgriezta kļūda 403.
-     * Metode nodrošina, ka tikai parasti lietotāji var veikt darbības šajā kontrolierī.
+     * Kā strādā: Ja lietotājs nav autentificēts vai ir administrators, tiek atgriezta kļūda 403. Metode nodrošina, ka tikai parasti lietotāji var veikt darbības šajā kontrolierī.
      *
-     * Izsauc no: `index()`, `store()`, `update()`, `destroy()`.
+     * Kad pielietojas: Izsauc no: `index()`, `store()`, `update()`, `destroy()`.
      */
     private function requireRegularUser(): User
     {
@@ -188,12 +182,11 @@ class UserRequestCenterController extends Controller
     }
 
     /**
-     * Atgriež vaicājumu ar aktīvajām ierīcēm, kas piešķirtas konkrētajam lietotājam.
+     * Ko dara: Atgriež vaicājumu ar aktīvajām ierīcēm, kas piešķirtas konkrētajam lietotājam.
      *
-     * Iekļauj tikai aktīvā statusā esošās ierīces ar ielādētām attiecībām,
-     * kas nepieciešamas pieprasījumu veidošanas formu aizpildīšanai.
+     * Kā strādā: Iekļauj tikai aktīvā statusā esošās ierīces ar ielādētām attiecībām, kas nepieciešamas pieprasījumu veidošanas formu aizpildīšanai.
      *
-     * Izsauc no: `store()`.
+     * Kad pielietojas: Izsauc no: `store()`.
      */
     private function availableDevicesForUser(User $user)
     {
@@ -205,14 +198,11 @@ class UserRequestCenterController extends Controller
     }
 
     /**
-     * Pārbauda, vai ierīce var pieņemt jaunu pieprasījumu, un meta izņēmumu, ja nevar.
+     * Ko dara: Pārbauda, vai ierīce var pieņemt jaunu pieprasījumu, un meta izņēmumu, ja nevar.
      *
-     * Bloķē pieprasījuma izveidi, ja ierīce jau ir remontā, vai tai ir
-     * kāds cits aktīvs (iesniegts) pieteikums — neatkarīgi no tipa.
-     * Katrai pieprasījuma tipa un bloķēšanas stāvokļa kombinācijai tiek
-     * atgriezts informatīvs kļūdas ziņojums.
+     * Kā strādā: Bloķē pieprasījuma izveidi, ja ierīce jau ir remontā, vai tai ir kāds cits aktīvs (iesniegts) pieteikums — neatkarīgi no tipa. Katrai pieprasījuma tipa un bloķēšanas stāvokļa kombinācijai tiek atgriezts informatīvs kļūdas ziņojums.
      *
-     * Izsauc no: `store()`.
+     * Kad pielietojas: Izsauc no: `store()`.
      */
     private function ensureDeviceCanAcceptRequest(Device $device, string $requestType): void
     {
@@ -237,6 +227,8 @@ class UserRequestCenterController extends Controller
             ->where('status', DeviceTransfer::STATUS_SUBMITTED)
             ->exists();
 
+        // Tālāk katram pieteikuma tipam pārbaudām ne tikai savu dublikātu,
+        // bet arī pārējos aktīvos pieteikumus, jo viena ierīce vienlaikus nedrīkst būt vairākās plūsmās.
         if ($requestType === 'repair') {
             if ($hasPendingRepair) {
                 throw ValidationException::withMessages([
@@ -257,6 +249,7 @@ class UserRequestCenterController extends Controller
             }
         }
 
+        // Norakstīšana ir gala plūsma, tāpēc tai jāgaida, kamēr nav aktīva remonta vai nodošanas pieteikuma.
         if ($requestType === 'writeoff') {
             if ($hasPendingWriteoff) {
                 throw ValidationException::withMessages([
@@ -277,6 +270,8 @@ class UserRequestCenterController extends Controller
             }
         }
 
+        // Nodošanu bloķējam, ja ierīcei jau ir iesniegts jebkura veida pieteikums,
+        // lai atbildīgais lietotājs nemainītos brīdī, kad par ierīci jau tiek pieņemts cits lēmums.
         if ($requestType === 'transfer') {
             if ($hasPendingTransfer) {
                 throw ValidationException::withMessages([
@@ -301,12 +296,11 @@ class UserRequestCenterController extends Controller
 
 
     /**
-     * Atrod rediģējamo pieprasījumu un pārliecinās, ka tas pieder aktīvajam lietotājam.
+     * Ko dara: Atrod rediģējamo pieprasījumu un pārliecinās, ka tas pieder aktīvajam lietotājam.
      *
-     * Atgriež divdaļīgu masīvu — modeli un konfigurāciju. Ja pieprasījums
-     * nepieder lietotājam vai nav iesniegtā statusā, tiek atgriezta kļūda 403.
+     * Kā strādā: Atgriež divdaļīgu masīvu — modeli un konfigurāciju. Ja pieprasījums nepieder lietotājam vai nav iesniegtā statusā, tiek atgriezta kļūda 403.
      *
-     * Izsauc no: `update()`, `destroy()`.
+     * Kad pielietojas: Izsauc no: `update()`, `destroy()`.
      */
     private function editableRequestForUser(User $user, string $requestType, int $requestId): array
     {
@@ -323,12 +317,11 @@ class UserRequestCenterController extends Controller
     }
 
     /**
-     * Atgriež pieprasījuma tipa konfigurāciju rediģēšanas un atcelšanas darbībām.
+     * Ko dara: Atgriež pieprasījuma tipa konfigurāciju rediģēšanas un atcelšanas darbībām.
      *
-     * Katram tipam (repair, writeoff, transfer) definē: modeli, lauku, ziņojumus,
-     * audita tekstu, ikonu un atbilstošo maršrutu. Neatpazīts tips rada 404 kļūdu.
+     * Kā strādā: Katram tipam (repair, writeoff, transfer) definē: modeli, lauku, ziņojumus, audita tekstu, ikonu un atbilstošo maršrutu. Neatpazīts tips rada 404 kļūdu.
      *
-     * Izsauc no: `editableRequestForUser()`.
+     * Kad pielietojas: Izsauc no: `editableRequestForUser()`.
      */
     private function editableRequestConfig(string $requestType): array
     {

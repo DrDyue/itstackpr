@@ -10,20 +10,20 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Audita žurnāla skats ar filtrēšanu, kārtošanu un manuālu ierakstu meklēšanu.
+ * Ko dara: Pārvalda audita žurnāla apskati un meklēšanu.
+ *
+ * Kā strādā: Sagatavo filtrus, kārtošanu, lietotāju izvēlnes un audita ierakstu sarakstu administratora skatam.
+ *
+ * Kad pielietojas: Kad administratoram jāapskata sistēmā veiktās darbības, jāmeklē konkrēts notikums vai jāpārbauda lietotāju aktivitāte.
  */
 class AuditLogController extends Controller
 {
     /**
-     * Parāda auditam reģistrētās darbības administratoram.
+     * Ko dara: Parāda auditam reģistrētās darbības administratoram.
      *
-     * Atbalsta filtrēšanu pēc darbības tipa, svarīguma, datumu diapazona
-     * un lietotāja, kā arī kārtošanu pēc vairākiem laukiem.
-     * Ja audita tabula vēl nav izveidota, tiek rādīts tukšs skats ar paziņojumu.
+     * Kā strādā: Atbalsta filtrēšanu pēc darbības tipa, svarīguma, datumu diapazona un lietotāja, kā arī kārtošanu pēc vairākiem laukiem. Ja audita tabula vēl nav izveidota, tiek rādīts tukšs skats ar paziņojumu.
      *
-     * Izsaukšana: GET /audit-log | Pieejams: tikai administrators.
-     * Scenārijs: Administrators navigē uz "Audita žurnāls" sadaļu, lai izsekotu
-     * sistēmā veiktajām darbībām vai izmeklētu konkrētu notikumu.
+     * Kad pielietojas: Izsaukšana: GET /audit-log | Pieejams: tikai administrators. Scenārijs: Administrators navigē uz "Audita žurnāls" sadaļu, lai izsekotu sistēmā veiktajām darbībām vai izmeklētu konkrētu notikumu.
      */
     public function index(Request $request)
     {
@@ -205,14 +205,11 @@ class AuditLogController extends Controller
     }
 
     /**
-     * Atrod audita ierakstu pēc ID, apraksta, darbības vai lietotāja.
+     * Ko dara: Atrod audita ierakstu pēc ID, apraksta, darbības vai lietotāja.
      *
-     * Meklē gan aprakstā, gan darbības tipā, gan lietotāja vārdā un atgriež
-     * lapu un enkuru, lai pārlūks ritinātu pie atrasto ierakstu.
+     * Kā strādā: Meklē gan aprakstā, gan darbības tipā, gan lietotāja vārdā un atgriež lapu un enkuru, lai pārlūks ritinātu pie atrasto ierakstu.
      *
-     * Izsaukšana: GET /audit-log/find-entry?lookup=... | Pieejams: tikai administrators.
-     * Scenārijs: Administrators audita žurnāla lapas meklēšanas lodziņā ievada
-     * tekstu un AJAX nosūta pieprasījumu, lai iezīmētu atbilstošo ierakstu.
+     * Kad pielietojas: Izsaukšana: GET /audit-log/find-entry?lookup=... | Pieejams: tikai administrators. Scenārijs: Administrators audita žurnāla lapas meklēšanas lodziņā ievada tekstu un AJAX nosūta pieprasījumu, lai iezīmētu atbilstošo ierakstu.
      */
     public function findEntry(Request $request): JsonResponse
     {
@@ -281,12 +278,11 @@ class AuditLogController extends Controller
     }
 
     /**
-     * Reģistrē audita saraksta filtrēšanas un kārtošanas darbības.
+     * Ko dara: Reģistrē audita saraksta filtrēšanas un kārtošanas darbības.
      *
-     * Tiek reģistrēts tikai tad, ja ir aktīvi filtri vai nestandarta kārtošana,
-     * lai žurnāls netiktu aizpildīts ar vienkāršiem lapas skatījumiem.
+     * Kā strādā: Tiek reģistrēts tikai tad, ja ir aktīvi filtri vai nestandarta kārtošana, lai žurnāls netiktu aizpildīts ar vienkāršiem lapas skatījumiem.
      *
-     * Izsauc no: `index()` — tūlīt pēc skata datu sagatavošanas.
+     * Kad pielietojas: Izsauc no: `index()` — tūlīt pēc skata datu sagatavošanas.
      *
      * @param  array<string, mixed>  $filters
      */

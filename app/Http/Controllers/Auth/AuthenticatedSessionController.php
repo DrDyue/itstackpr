@@ -13,17 +13,20 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 /**
- * Pieslēgšanās un izrakstīšanās plūsma.
+ * Ko dara: Pārvalda lietotāja pieslēgšanos un atslēgšanos no sistēmas.
+ *
+ * Kā strādā: Rāda pieslēgšanās formu, validē pieteikšanās datus, atjauno sesiju un reģistrē būtiskus drošības notikumus.
+ *
+ * Kad pielietojas: Kad lietotājs atver login lapu, pieslēdzas sistēmai vai izrakstās.
  */
 class AuthenticatedSessionController extends Controller
 {
     /**
-     * Parāda pieslēgšanās skatu ar autentifikācijas konfigurācijas paziņojumu.
+     * Ko dara: Parāda pieslēgšanās skatu ar autentifikācijas konfigurācijas paziņojumu.
      *
-     * Uzlāde augšupejošā konfigurācija to pārbauda un rāda norādes, ja sistēma nav gatava.
+     * Kā strādā: Uzlāde augšupejošā konfigurācija to pārbauda un rāda norādes, ja sistēma nav gatava.
      *
-     * Izsaukšana: GET /login | Pieejams: nav autentificēts.
-     * Scenārijs: Lietotājs navigē uz pieslēgšanās URL vai tiek novirzīts no aizsargātās lapas.
+     * Kad pielietojas: Izsaukšana: GET /login | Pieejams: nav autentificēts. Scenārijs: Lietotājs navigē uz pieslēgšanās URL vai tiek novirzīts no aizsargātās lapas.
      */
     public function create(AuthBootstrapper $bootstrapper): View
     {
@@ -35,7 +38,11 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Apstrādā ienākošu autentifikācijas pieprasījumu.
+     * Ko dara: Apstrādā ienākošu autentifikācijas pieprasījumu.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     public function store(LoginRequest $request): RedirectResponse
     {
@@ -59,7 +66,11 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Izbeidz autentificēto sesiju.
+     * Ko dara: Izbeidz autentificēto sesiju.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     public function destroy(Request $request): RedirectResponse
     {

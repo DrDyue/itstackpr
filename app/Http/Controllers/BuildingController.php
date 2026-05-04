@@ -10,11 +10,17 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 /**
- * Ēku pārvaldības CRUD kontrolieris.
+ * Ko dara: Pārvalda ēku sarakstu un ēku CRUD darbības.
+ *
+ * Kā strādā: Nodrošina ēku apskati, meklēšanu, izveidi, rediģēšanu, dzēšanu, validāciju un kārtošanu.
+ *
+ * Kad pielietojas: Kad administrators vai IT vadītājs uztur ēku datus, kas vēlāk tiek izmantoti telpām un ierīču atrašanās vietām.
  */
 class BuildingController extends Controller
 {
+    // Noklusētā vērtība ēkas piezīmēm, ja forma šo lauku neatgriež.
     private const NOTES_DEFAULT = '';
+    // Atļautās ēku saraksta kārtošanas kolonnas, lai pieprasījumā nevarētu padot patvaļīgu SQL lauku.
     private const SORTABLE_COLUMNS = [
         'building_name' => 'building_name',
         'address' => 'address',
@@ -23,10 +29,11 @@ class BuildingController extends Controller
     ];
 
     /**
-     * Parāda ēku sarakstu ar filtriem.
+     * Ko dara: Parāda ēku sarakstu ar filtriem.
      *
-     * Izsaukšana: GET /buildings | Pieejams: administrators, IT vadītājs.
-     * Scenārijs: Vadītājs atver sadaļu "Ēkas", lai pārskatītu vai meklētu ēkas.
+     * Kā strādā: Apstrādā pieprasījumu, pārbauda tiesības un atgriež atbilstošo skatu, JSON atbildi vai pāradresāciju.
+     *
+     * Kad pielietojas: Izsaukšana: GET /buildings | Pieejams: administrators, IT vadītājs.
      */
     public function index(Request $request)
     {
@@ -44,6 +51,8 @@ class BuildingController extends Controller
             ->when($filters['search'] !== '', function (Builder $query) use ($filters) {
                 $search = $filters['search'];
 
+                // Brīvā teksta meklēšana skatās gan ēkas nosaukumā, gan adresē.
+                // Iekšējais where bloks vajadzīgs, lai OR nosacījumi neietekmētu citus filtrus.
                 $query->where(function (Builder $nestedQuery) use ($search) {
                     $nestedQuery
                         ->where('building_name', 'like', "%{$search}%")
@@ -94,11 +103,11 @@ class BuildingController extends Controller
     }
 
     /**
-     * Atrod ēku pēc nosaukuma aktīvajā filtrētajā sarakstā.
+     * Ko dara: Atrod ēku pēc nosaukuma aktīvajā filtrētajā sarakstā.
      *
-     * Izsaukšana: GET /buildings/find-by-name | Pieejams: administrators, IT vadītājs.
-     * Scenārijs: JavaScript izsauc AJAX pieprasījumu, kad vadītājs raksta meklēšanas lodziņā,
-     * lai ritinātu sarakstu pie atbilstošā ieraksta un to iezīmētu.
+     * Kā strādā: Apstrādā pieprasījumu, pārbauda tiesības un atgriež atbilstošo skatu, JSON atbildi vai pāradresāciju.
+     *
+     * Kad pielietojas: Izsaukšana: GET /buildings/find-by-name | Pieejams: administrators, IT vadītājs.
      */
     public function findByName(Request $request): JsonResponse
     {
@@ -148,10 +157,11 @@ class BuildingController extends Controller
 
 
     /**
-     * Saglabā jaunu ēkas ierakstu.
+     * Ko dara: Saglabā jaunu ēkas ierakstu.
      *
-     * Izsaukšana: POST /buildings | Pieejams: administrators, IT vadītājs.
-     * Scenārijs: Vadītājs aizpilda un iesniedz ēkas pievienošanas formu.
+     * Kā strādā: Apstrādā pieprasījumu, pārbauda tiesības un atgriež atbilstošo skatu, JSON atbildi vai pāradresāciju.
+     *
+     * Kad pielietojas: Izsaukšana: POST /buildings | Pieejams: administrators, IT vadītājs.
      */
     public function store(Request $request)
     {
@@ -165,10 +175,11 @@ class BuildingController extends Controller
 
 
     /**
-     * Atjaunina ēkas datus.
+     * Ko dara: Atjaunina ēkas datus.
      *
-     * Izsaukšana: PUT/PATCH /buildings/{building} | Pieejams: administrators, IT vadītājs.
-     * Scenārijs: Vadītājs rediģē ēkas ierakstu un saglabā izmaiņas.
+     * Kā strādā: Apstrādā pieprasījumu, pārbauda tiesības un atgriež atbilstošo skatu, JSON atbildi vai pāradresāciju.
+     *
+     * Kad pielietojas: Izsaukšana: PUT/PATCH /buildings/{building} | Pieejams: administrators, IT vadītājs.
      */
     public function update(Request $request, Building $building)
     {
@@ -183,10 +194,11 @@ class BuildingController extends Controller
     }
 
     /**
-     * Dzēš ēku tikai tad, ja tai vairs nav piesaistītu telpu un ierīču.
+     * Ko dara: Dzēš ēku tikai tad, ja tai vairs nav piesaistītu telpu un ierīču.
      *
-     * Izsaukšana: DELETE /buildings/{building} | Pieejams: administrators, IT vadītājs.
-     * Scenārijs: Vadītājs nospiež dzēšanas pogu ēkas rindā un apstiprina darbību.
+     * Kā strādā: Apstrādā pieprasījumu, pārbauda tiesības un atgriež atbilstošo skatu, JSON atbildi vai pāradresāciju.
+     *
+     * Kad pielietojas: Izsaukšana: DELETE /buildings/{building} | Pieejams: administrators, IT vadītājs.
      */
     public function destroy(Building $building)
     {
@@ -219,13 +231,11 @@ class BuildingController extends Controller
 
 
     /**
-     * Validē un normalizē ēkas ievaddatus pirms saglabāšanas.
+     * Ko dara: Validē un normalizē ēkas ievaddatus pirms saglabāšanas.
      *
-     * Pārbauda nosaukuma obligāto aizpildījumu, unikalitāti sistēmā
-     * (izņemot rediģējamo ēku) un citu lauku robežvērtības. Ja piezīmes nav
-     * norādītas, tiek lietota noklusētā tukšā virkne.
+     * Kā strādā: Pārbauda nosaukuma obligāto aizpildījumu, unikalitāti sistēmā (izņemot rediģējamo ēku) un citu lauku robežvērtības. Ja piezīmes nav norādītas, tiek lietota noklusētā tukšā virkne.
      *
-     * Izsauc no: `store()`, `update()`.
+     * Kad pielietojas: Izsauc no: `store()`, `update()`.
      */
     private function validatedData(Request $request, ?Building $building = null): array
     {
@@ -252,13 +262,11 @@ class BuildingController extends Controller
     }
 
     /**
-     * Normalizē kārtošanas parametrus no URL vaicājuma.
+     * Ko dara: Normalizē kārtošanas parametrus no URL vaicājuma.
      *
-     * Pārbauda, vai pieprasītā kolonna atrodas atļauto kolonnu sarakstā.
-     * Ja norādītā kolonna vai virziens nav derīgs, lietotāja vietā tiek
-     * izmantota noklusētā kārtošana pēc ēkas nosaukuma augošajā secībā.
+     * Kā strādā: Pārbauda, vai pieprasītā kolonna atrodas atļauto kolonnu sarakstā. Ja norādītā kolonna vai virziens nav derīgs, lietotāja vietā tiek izmantota noklusētā kārtošana pēc ēkas nosaukuma augošajā secībā.
      *
-     * Izsauc no: `index()`, `findByName()`.
+     * Kad pielietojas: Izsauc no: `index()`, `findByName()`.
      */
     private function resolveSorting(Request $request): array
     {
@@ -280,9 +288,11 @@ class BuildingController extends Controller
     }
 
     /**
-     * Atgriež kārtojamo lauku nosaukumu karti Blade skatam un audita paziņojumiem.
+     * Ko dara: Atgriež kārtojamo lauku nosaukumu karti Blade skatam un audita paziņojumiem.
      *
-     * Izsauc no: `index()` — kārtošanas birku atveidošanai un audita aprakstam.
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `index()` — kārtošanas birku atveidošanai un audita aprakstam.
      */
     private function sortOptions(): array
     {
@@ -295,13 +305,11 @@ class BuildingController extends Controller
     }
 
     /**
-     * Pielieto kārtošanu ēku vaicājumam.
+     * Ko dara: Pielieto kārtošanu ēku vaicājumam.
      *
-     * Izmanto drošo kolonnu karti (SORTABLE_COLUMNS), lai izvairītos no
-     * SQL injekcijas riskiem. Ja primārā kolonna nav ēkas nosaukums,
-     * kā sekundārā kārtošanas atslēga tiek pievienots nosaukums.
+     * Kā strādā: Izmanto drošo kolonnu karti (SORTABLE_COLUMNS), lai izvairītos no SQL injekcijas riskiem. Ja primārā kolonna nav ēkas nosaukums, kā sekundārā kārtošanas atslēga tiek pievienots nosaukums.
      *
-     * Izsauc no: `index()`, `findByName()`.
+     * Kad pielietojas: Izsauc no: `index()`, `findByName()`.
      */
     private function applySorting(Builder $query, array $sorting): void
     {

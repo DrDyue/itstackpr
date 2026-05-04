@@ -14,22 +14,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 /**
- * Reāllaika paziņojumu API kontrolieris.
+ * Ko dara: Pārvalda dzīvos paziņojumus un skaitītājus lietotāja saskarnei.
  *
- * Frontend polling ceļā no šīs klases saņem toast paziņojumus par jauniem
- * pieteikumiem, kas jāizskata administratoram vai nodošanas saņēmējam.
+ * Kā strādā: Apkopo gaidošus pieteikumus, personīgos paziņojumus, ienākošās nodošanas un formatē tos frontend vajadzībām.
+ *
+ * Kad pielietojas: Kad saskarne prasa aktuālo paziņojumu skaitu, paziņojumu sarakstu vai atzīmē tos kā lasītus.
  */
 class LiveNotificationController extends Controller
 {
     /**
-     * Atzīmē visus paziņojumus kā lasītus atbilstoši lietotāja lomai.
+     * Ko dara: Atzīmē visus paziņojumus kā lasītus atbilstoši lietotāja lomai.
      *
-     * Administrators atzīmē remonta un norakstīšanas pieteikumus kā lasītus.
-     * Parasts lietotājs atzīmē nodošanas pieteikumus, ko viņš saņēmis.
-     * Rezultāts ir JSON ar lasīšanas laika marķieri.
+     * Kā strādā: Administrators atzīmē remonta un norakstīšanas pieteikumus kā lasītus. Parasts lietotājs atzīmē nodošanas pieteikumus, ko viņš saņēmis. Rezultāts ir JSON ar lasīšanas laika marķieri.
      *
-     * Izsaukšana: POST /live-notifications/mark-all-read | Pieejams: jebkurš autentificēts lietotājs.
-     * Scenārijs: Lietotājs klikšķina uz "Atzīmēt visu kā lasītu" vai tas notiek automātiski.
+     * Kad pielietojas: Izsaukšana: POST /live-notifications/mark-all-read | Pieejams: jebkurš autentificēts lietotājs. Scenārijs: Lietotājs klikšķina uz "Atzīmēt visu kā lasītu" vai tas notiek automātiski.
      */
     public function markAllAsRead(): JsonResponse
     {
@@ -78,10 +76,11 @@ class LiveNotificationController extends Controller
     }
 
     /**
-     * Atgriež pašreizējam lietotājam aktuālos paziņojumus JSON formā.
+     * Ko dara: Atgriež pašreizējam lietotājam aktuālos paziņojumus JSON formā.
      *
-     * Ja klients sūta X-Notification-Fingerprint galveni ar aktuālo nospiedumu,
-     * tiek izpildīti tikai lēti COUNT vaicājumi. Pilnie JOIN vaicājumi tiek izlaisti.
+     * Kā strādā: Ja klients sūta X-Notification-Fingerprint galveni ar aktuālo nospiedumu, tiek izpildīti tikai lēti COUNT vaicājumi. Pilnie JOIN vaicājumi tiek izlaisti.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     public function index(Request $request): JsonResponse
     {
@@ -103,8 +102,11 @@ class LiveNotificationController extends Controller
     }
 
     /**
-     * Aprēķina lētu nospiedumu no gaidošo pieprasījumu skaita un jaunākā ID.
-     * Izmanto tikai COUNT + MAX vaicājumus — bez eager loading.
+     * Ko dara: Aprēķina lētu nospiedumu no gaidošo pieprasījumu skaita un jaunākā ID.
+     *
+     * Kā strādā: Izmanto tikai COUNT + MAX vaicājumus — bez eager loading.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function fingerprintFor(User $user): string
     {
@@ -181,18 +183,17 @@ class LiveNotificationController extends Controller
     }
 
     /**
-     * Izvēlas atbilstošo paziņojumu avotu pēc lietotāja lomas un skata.
+     * Ko dara: Izvēlas atbilstošo paziņojumu avotu pēc lietotāja lomas un skata.
      *
-     * Vecā funkcionalitāte ģenerē paziņojumus no gaidošiem pieteikumiem:
-     * administratoram tie ir iesniegtie remonta/norakstīšanas pieteikumi,
-     * parastam lietotājam — ienākošās nodošanas.
+     * Kā strādā: Vecā funkcionalitāte ģenerē paziņojumus no gaidošiem pieteikumiem: administratoram tie ir iesniegtie remonta/norakstīšanas pieteikumi, parastam lietotājam — ienākošās nodošanas. Jaunā funkcionalitāte papildus pievieno `personalNotifications()`, kas nāk no `user_notifications` tabulas un rāda jau izskatītu notikumu rezultātus.
      *
-     * Jaunā funkcionalitāte papildus pievieno `personalNotifications()`,
-     * kas nāk no `user_notifications` tabulas un rāda jau izskatītu notikumu rezultātus.
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function notificationsFor(User $user): Collection
     {
         if ($user->canManageRequests()) {
+            // Vadītāja paziņojumos apvienojam divas lietas:
+            // aktīvos pieteikumus, kas jāizskata, un personīgos paziņojumus par jau notikušiem lēmumiem.
             return $this->managerNotifications($user)
                 ->concat($this->personalNotifications($user))
                 ->sortByDesc('created_unix')
@@ -200,6 +201,8 @@ class LiveNotificationController extends Controller
                 ->values();
         }
 
+        // Parastam lietotājam svarīgākie ir ienākošie nodošanas pieteikumi,
+        // bet klāt pievienojam arī personīgos rezultātu paziņojumus no user_notifications tabulas.
         return $this->incomingTransferNotifications($user)
             ->concat($this->personalNotifications($user))
             ->sortByDesc('created_unix')
@@ -208,15 +211,17 @@ class LiveNotificationController extends Controller
     }
 
     /**
-     * Atgriež navigācijas badge skaitītājus reāllaika atjaunošanai.
+     * Ko dara: Atgriež navigācijas badge skaitītājus reāllaika atjaunošanai.
      *
-     * `personal_notifications` ir jaunās paziņojumu funkcijas skaitītājs.
-     * Tas netiek jaukts ar `requests_total`, jo `requests_total` joprojām nozīmē
-     * gaidošus pieteikumus, kuriem lietotājam vai administratoram jāpieņem lēmums.
+     * Kā strādā: `personal_notifications` ir jaunās paziņojumu funkcijas skaitītājs. Tas netiek jaukts ar `requests_total`, jo `requests_total` joprojām nozīmē gaidošus pieteikumus, kuriem lietotājam vai administratoram jāpieņem lēmums.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function countsFor(User $user): array
     {
         if ($user->canManageRequests()) {
+            // Administratora badge skaitītāji rāda tikai darāmās lietas:
+            // neizskatītos remonta/norakstīšanas pieteikumus un paroles palīdzības pieprasījumus.
             $passwordResetRequests = User::query()
                 ->whereNotNull('password_reset_requested_at')
                 ->count();
@@ -255,6 +260,8 @@ class LiveNotificationController extends Controller
             ];
         }
 
+        // Parastam lietotājam galvenais darba skaitītājs ir ienākoša nodošana,
+        // jo tieši par to viņam jāpieņem lēmums.
         $incomingTransfers = $this->featureTableExists('device_transfers')
             ? DeviceTransfer::query()
                 ->where('transfered_to_id', $user->id)
@@ -281,12 +288,11 @@ class LiveNotificationController extends Controller
     }
 
     /**
-     * Nolasa pašreizējā lietotāja nelasītos persistētos paziņojumus.
+     * Ko dara: Nolasa pašreizējā lietotāja nelasītos persistētos paziņojumus.
      *
-     * Šeit tiek formatēti tie paši `user_notifications` ieraksti, ko izveido
-     * `UserNotifier`. Rezultāts tiek pielāgots frontend formai, kuru jau izmanto
-     * esošie toast paziņojumi: `id`, `type`, `accent`, `title`, `message`,
-     * `details`, `url` un `created_unix`.
+     * Kā strādā: Šeit tiek formatēti tie paši `user_notifications` ieraksti, ko izveido `UserNotifier`. Rezultāts tiek pielāgots frontend formai, kuru jau izmanto esošie toast paziņojumi: `id`, `type`, `accent`, `title`, `message`, `details`, `url` un `created_unix`.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function personalNotifications(User $user): Collection
     {
@@ -324,7 +330,11 @@ class LiveNotificationController extends Controller
     }
 
     /**
-     * Savāc administratora skatam gaidošos remonta, norakstīšanas un nodošanas pieteikumus.
+     * Ko dara: Savāc administratora skatam gaidošos remonta, norakstīšanas un nodošanas pieteikumus.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function managerNotifications(User $user): Collection
     {
@@ -485,7 +495,11 @@ class LiveNotificationController extends Controller
     }
 
     /**
-     * Savāc parastam lietotājam ienākošos nodošanas pieteikumus.
+     * Ko dara: Savāc parastam lietotājam ienākošos nodošanas pieteikumus.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function incomingTransferNotifications(User $user): Collection
     {
@@ -531,7 +545,11 @@ class LiveNotificationController extends Controller
     }
 
     /**
-     * Vienotā formā sagatavo vienu toast paziņojuma objektu.
+     * Ko dara: Vienotā formā sagatavo vienu toast paziņojuma objektu.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function formatNotification(
         string $id,
@@ -559,7 +577,11 @@ class LiveNotificationController extends Controller
     }
 
     /**
-     * Apraksta klikšķināmu paziņojuma darbības pogu.
+     * Ko dara: Apraksta klikšķināmu paziņojuma darbības pogu.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function actionConfig(string $label, string $tone, string $url, array $payload): array
     {
@@ -572,7 +594,11 @@ class LiveNotificationController extends Controller
     }
 
     /**
-     * Sagatavo ierīces bloku, ko rāda paziņojuma kartītē.
+     * Ko dara: Sagatavo ierīces bloku, ko rāda paziņojuma kartītē.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function deviceDetails(?Device $device, array $extra = []): array
     {
@@ -600,7 +626,11 @@ class LiveNotificationController extends Controller
     }
 
     /**
-     * Izveido īsu, cilvēkam saprotamu gaidīšanas ilguma tekstu.
+     * Ko dara: Izveido īsu, cilvēkam saprotamu gaidīšanas ilguma tekstu.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function waitLabel($createdAt): string
     {

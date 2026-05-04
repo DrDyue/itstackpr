@@ -30,31 +30,34 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Galvenais inventāra kontrolieris.
+ * Ko dara: Pārvalda galveno inventāra ierīču plūsmu.
  *
- * Šī klase apvieno ierīču sarakstu, filtrus, pilno CRUD plūsmu,
- * ātrās darbības un statusu/pieprasījumu priekšskatījumu sagatavošanu.
+ * Kā strādā: Apvieno ierīču sarakstu, filtrēšanu, kārtošanu, izveidi, rediģēšanu, dzēšanu, ātrās darbības, statusus un pieprasījumu priekšskatījumus.
+ *
+ * Kad pielietojas: Kad lietotājs vai administrators strādā ar inventāra ierīcēm un to atrašanās vietu, atbildīgo personu vai statusu.
  */
 class DeviceController extends Controller
 {
     use HasRepairStatusLabels;
 
+    // Visi ierīces statusi, ko administrators drīkst redzēt un izmantot ierīču pārvaldībā.
     private const STATUSES = [Device::STATUS_ACTIVE, Device::STATUS_REPAIR, Device::STATUS_WRITEOFF];
 
+    // Atļautās administratora ierīču saraksta kārtošanas kolonnas.
     private const SORTABLE_COLUMNS = ['code', 'serial_number', 'name', 'manufacturer', 'model', 'type', 'location', 'created_at', 'assigned_to', 'status'];
 
+    // Statusi, ko parastam lietotājam rāda viņa ierīču skatā.
     private const USER_VISIBLE_STATUSES = [Device::STATUS_ACTIVE, Device::STATUS_REPAIR];
 
+    // Atļautās parastā lietotāja ierīču saraksta kārtošanas kolonnas.
     private const USER_SORTABLE_COLUMNS = ['code', 'serial_number', 'name', 'manufacturer', 'model', 'type', 'location', 'status'];
 
     /**
-     * Parāda ierīču sarakstu ar lomām atkarīgu filtrēšanu un statusu palīgdatiem.
+     * Ko dara: Parāda ierīču sarakstu ar lomām atkarīgu filtrēšanu un statusu palīgdatiem.
      *
-     * Administrators redz visas ierīces ar pilnīgiem filtriem un kārtošanas iespējām.
-     * Parasts lietotājs redz tikai savas aktīvās un remontā esošās ierīces.
+     * Kā strādā: Administrators redz visas ierīces ar pilnīgiem filtriem un kārtošanas iespējām. Parasts lietotājs redz tikai savas aktīvās un remontā esošās ierīces.
      *
-     * Izsaukšana: GET /devices | Pieejams: jebkurš autentificēts lietotājs.
-     * Scenārijs: Lietotājs navigē uz "Ierīces" galveno lapu sānjoslā.
+     * Kad pielietojas: Izsaukšana: GET /devices | Pieejams: jebkurš autentificēts lietotājs. Scenārijs: Lietotājs navigē uz "Ierīces" galveno lapu sānjoslā.
      */
     public function index(Request $request)
     {
@@ -69,14 +72,11 @@ class DeviceController extends Controller
     }
 
     /**
-     * Atgriež filtrētu ierīču tabulu (async).
+     * Ko dara: Atgriež filtrētu ierīču tabulu (async).
      *
-     * Atjaunina tikai tabulas HTML fragmentu, nevis visu lapu, lai paātrinātu
-     * filtrēšanas un kārtošanas darbības bez pilnas lapas pārlādēšanas.
+     * Kā strādā: Atjaunina tikai tabulas HTML fragmentu, nevis visu lapu, lai paātrinātu filtrēšanas un kārtošanas darbības bez pilnas lapas pārlādēšanas.
      *
-     * Izsaukšana: GET /devices/table | Pieejams: jebkurš autentificēts lietotājs.
-     * Scenārijs: JavaScript automātiski izsauc šo maršrutu, kad lietotājs maina
-     * filtru vērtību vai kārtošanas kolonnu ierīču sarakstā.
+     * Kad pielietojas: Izsaukšana: GET /devices/table | Pieejams: jebkurš autentificēts lietotājs. Scenārijs: JavaScript automātiski izsauc šo maršrutu, kad lietotājs maina filtru vērtību vai kārtošanas kolonnu ierīču sarakstā.
      */
     public function table(Request $request)
     {
@@ -105,14 +105,11 @@ class DeviceController extends Controller
     }
 
     /**
-     * Atrod ierīci pēc koda un atgriež informāciju par lapu kurā tā atrodas.
+     * Ko dara: Atrod ierīci pēc koda un atgriež informāciju par lapu kurā tā atrodas.
      *
-     * Atgriež JSON ar lapu, ierīces ID un enkura ID iezīmēšanai tabulā.
-     * Ja ierīce nav atrasta ar norādīto kodu, atgriež `found: false`.
+     * Kā strādā: Atgriež JSON ar lapu, ierīces ID un enkura ID iezīmēšanai tabulā. Ja ierīce nav atrasta ar norādīto kodu, atgriež `found: false`.
      *
-     * Izsaukšana: GET /devices/find-by-code?code=... | Pieejams: jebkurš autentificēts lietotājs.
-     * Scenārijs: Meklēšanas lodziņš ierīču sarakstā sūta AJAX pieprasījumu, kad
-     * lietotājs ievada ierīces kodu un nospiež meklēšanas ikonu.
+     * Kad pielietojas: Izsaukšana: GET /devices/find-by-code?code=... | Pieejams: jebkurš autentificēts lietotājs. Scenārijs: Meklēšanas lodziņš ierīču sarakstā sūta AJAX pieprasījumu, kad lietotājs ievada ierīces kodu un nospiež meklēšanas ikonu.
      */
     public function findByCode(Request $request): JsonResponse
     {
@@ -175,12 +172,11 @@ class DeviceController extends Controller
     }
 
     /**
-     * Sagatavo visus datus ierīču saraksta lapai.
+     * Ko dara: Sagatavo visus datus ierīču saraksta lapai.
      *
-     * Šī metode centralizē filtru normalizēšanu, ierīču atlasi, kārtošanu
-     * un arī papildu palīgdatus, ko izmanto Blade skats.
+     * Kā strādā: Šī metode centralizē filtru normalizēšanu, ierīču atlasi, kārtošanu un arī papildu palīgdatus, ko izmanto Blade skats.
      *
-     * Izsauc no: `index()`, `table()`.
+     * Kad pielietojas: Izsauc no: `index()`, `table()`.
      */
     private function devicesIndexViewData(Request $request, User $user): array
     {
@@ -368,9 +364,11 @@ class DeviceController extends Controller
     }
 
     /**
-     * Normalizē visus ierīču saraksta filtrus vienotā formā.
+     * Ko dara: Normalizē visus ierīču saraksta filtrus vienotā formā.
      *
-     * Izsauc no: `devicesIndexViewData()`, `findByCode()`.
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()`, `findByCode()`.
      */
     private function normalizedIndexFilters(Request $request, User $user): array
     {
@@ -410,9 +408,11 @@ class DeviceController extends Controller
     }
 
     /**
-     * Sagatavo drošu kārtošanas konfigurāciju no query string.
+     * Ko dara: Sagatavo drošu kārtošanas konfigurāciju no query string.
      *
-     * Izsauc no: `devicesIndexViewData()`, `findByCode()`.
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()`, `findByCode()`.
      */
     private function normalizedDeviceSorting(Request $request, bool $canManageDevices): array
     {
@@ -442,9 +442,11 @@ class DeviceController extends Controller
     }
 
     /**
-     * Uzliek atlasītajam ierīču saraksta query visus filtru nosacījumus.
+     * Ko dara: Uzliek atlasītajam ierīču saraksta query visus filtru nosacījumus.
      *
-     * Izsauc no: `devicesIndexViewData()`, `findByCode()`.
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()`, `findByCode()`.
      */
     private function applyDeviceIndexFilters(
         Builder $query,
@@ -463,6 +465,8 @@ class DeviceController extends Controller
             ->when($filters['q'] !== '', function (Builder $deviceQuery) use ($filters) {
                 $term = $filters['q'];
 
+                // Vispārīgā meklēšana apvieno vairākus ierīces identifikācijas laukus.
+                // Iekšējais where bloks notur šos OR nosacījumus vienā grupā.
                 $deviceQuery->where(function (Builder $nestedQuery) use ($term) {
                     $nestedQuery->where('devices.name', 'like', "%{$term}%")
                         ->orWhere('devices.serial_number', 'like', "%{$term}%")
@@ -487,6 +491,8 @@ class DeviceController extends Controller
             ->when(! ($selectedRoom instanceof Room) && $filters['room_query'] !== '', function (Builder $deviceQuery) use ($filters) {
                 $term = $filters['room_query'];
 
+                // Ja telpa nav izvēlēta pēc ID, meklējam pēc telpas numura, nosaukuma vai nodaļas.
+                // Tas ļauj autocomplete laukam strādāt arī tad, ja lietotājs ieraksta tikai tekstu.
                 $deviceQuery->whereHas('room', function (Builder $roomQuery) use ($term) {
                     $roomQuery->where('room_number', 'like', "%{$term}%")
                         ->orWhere('room_name', 'like', "%{$term}%")
@@ -497,6 +503,8 @@ class DeviceController extends Controller
             ->when(! ($selectedType instanceof DeviceType) && $filters['type_query'] !== '', function (Builder $deviceQuery) use ($filters) {
                 $term = $filters['type_query'];
 
+                // Ierīces tipu var filtrēt gan pēc izvēlēta ID, gan pēc ievadīta teksta.
+                // Šis zars apstrādā teksta meklēšanu saistītajā device_types tabulā.
                 $deviceQuery->whereHas('type', function (Builder $typeQuery) use ($term) {
                     $typeQuery->where('type_name', 'like', "%{$term}%");
                 });
@@ -512,12 +520,11 @@ class DeviceController extends Controller
     }
 
     /**
-     * Pielieto filtrēšanas nosacījumu ierīcēm ar aktīviem (iesniegtiem) pieprasījumiem.
+     * Ko dara: Pielieto filtrēšanas nosacījumu ierīcēm ar aktīviem (iesniegtiem) pieprasījumiem.
      *
-     * Atlasa ierīces, kurām ir vismaz viens gaidošs remonta vai norakstīšanas pieteikums.
-     * Izmantota gan kopsavilkuma skaitļu aprēķinā, gan filtra aktivizēšanas gadījumā.
+     * Kā strādā: Atlasa ierīces, kurām ir vismaz viens gaidošs remonta vai norakstīšanas pieteikums. Izmantota gan kopsavilkuma skaitļu aprēķinā, gan filtra aktivizēšanas gadījumā.
      *
-     * Izsauc no: `devicesIndexViewData()` (kopsavilkumam), `applyDeviceIndexFilters()` (filtrēšanai).
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()` (kopsavilkumam), `applyDeviceIndexFilters()` (filtrēšanai).
      */
     private function activeDeviceRequestFilterQuery(Builder $query): Builder
     {
@@ -529,9 +536,11 @@ class DeviceController extends Controller
     }
 
     /**
-     * Uzliek query vajadzīgo kārtošanas kārtību.
+     * Ko dara: Uzliek query vajadzīgo kārtošanas kārtību.
      *
-     * Izsauc no: `devicesIndexViewData()`, `findByCode()`.
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()`, `findByCode()`.
      */
     private function applyDeviceIndexSorting(Builder $query, array $sorting): void
     {
@@ -575,9 +584,11 @@ class DeviceController extends Controller
     }
 
     /**
-     * Atgriež statusa kolonnas prioritāšu secību SQL CASE formā.
+     * Ko dara: Atgriež statusa kolonnas prioritāšu secību SQL CASE formā.
      *
-     * Izsauc no: `applyDeviceIndexSorting()` — kad kārtošanas kolonna ir "status".
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `applyDeviceIndexSorting()` — kad kārtošanas kolonna ir "status".
      */
     private function deviceStatusSortExpression(): string
     {
@@ -598,9 +609,11 @@ SQL;
     }
 
     /**
-     * Apraksta, kādi lauki lietotājam ir kārtojami un kā saucas paziņojumos.
+     * Ko dara: Apraksta, kādi lauki lietotājam ir kārtojami un kā saucas paziņojumos.
      *
-     * Izsauc no: `devicesIndexViewData()`, `normalizedDeviceSorting()`.
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()`, `normalizedDeviceSorting()`.
      */
     private function deviceSortOptions(bool $canManageDevices = true): array
     {
@@ -625,13 +638,11 @@ SQL;
     }
 
     /**
-     * Atgriež ierīces statusu sarakstu, ko drīkst redzēt konkrētais lietotājs.
+     * Ko dara: Atgriež ierīces statusu sarakstu, ko drīkst redzēt konkrētais lietotājs.
      *
-     * Parasts lietotājs redz tikai aktīvās un remontā esošās ierīces.
-     * Administrators redz visus statusus, izņemot gadījumu, ja ir aktivizēts
-     * preferenču iestatījums par norakstīto ierīču slēpšanu.
+     * Kā strādā: Parasts lietotājs redz tikai aktīvās un remontā esošās ierīces. Administrators redz visus statusus, izņemot gadījumu, ja ir aktivizēts preferenču iestatījums par norakstīto ierīču slēpšanu.
      *
-     * Izsauc no: `devicesIndexViewData()`, `normalizedIndexFilters()`.
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()`, `normalizedIndexFilters()`.
      */
     private function availableStatuses(User $user): array
     {
@@ -645,12 +656,11 @@ SQL;
     }
 
     /**
-     * Reģistrē filtrēšanas un kārtošanas darbības ierīču sarakstā audita žurnālā.
+     * Ko dara: Reģistrē filtrēšanas un kārtošanas darbības ierīču sarakstā audita žurnālā.
      *
-     * Tiek reģistrēts tikai tad, ja filtra vai kārtošanas vērtības atšķiras
-     * no noklusētajām, lai neaizpildītu žurnālu ar nevajadzīgiem ierakstiem.
+     * Kā strādā: Tiek reģistrēts tikai tad, ja filtra vai kārtošanas vērtības atšķiras no noklusētajām, lai neaizpildītu žurnālu ar nevajadzīgiem ierakstiem.
      *
-     * Izsauc no: `index()`, `table()` — pēc skata datu sagatavošanas.
+     * Kad pielietojas: Izsauc no: `index()`, `table()` — pēc skata datu sagatavošanas.
      */
     private function auditDeviceListInteractions(Request $request, User $user, array $filters, array $sorting): void
     {
@@ -691,14 +701,11 @@ SQL;
     }
 
     /**
-     * Saglabā jaunu ierīci sistēmā.
+     * Ko dara: Saglabā jaunu ierīci sistēmā.
      *
-     * Validē visus ievadlaukus, apstrādā attēla augšupielādi un reģistrē
-     * izveidi audita žurnālā. Pēc veiksmīgas izveides novirza uz ierīču sarakstu.
+     * Kā strādā: Validē visus ievadlaukus, apstrādā attēla augšupielādi un reģistrē izveidi audita žurnālā. Pēc veiksmīgas izveides novirza uz ierīču sarakstu.
      *
-     * Izsaukšana: POST /devices | Pieejams: administrators, IT vadītājs.
-     * Scenārijs: Administrators aizpilda ierīces izveides formu un noklikšķina
-     * "Pievienot ierīci". Forma pieejama ierīču sarakstā vai atsevišķā modālī.
+     * Kad pielietojas: Izsaukšana: POST /devices | Pieejams: administrators, IT vadītājs. Scenārijs: Administrators aizpilda ierīces izveides formu un noklikšķina "Pievienot ierīci". Forma pieejama ierīču sarakstā vai atsevišķā modālī.
      */
     public function store(Request $request)
     {
@@ -719,14 +726,11 @@ SQL;
     }
 
     /**
-     * Parāda detalizētu ierīces kartīti ar vēsturi, pieprasījumiem un remontiem.
+     * Ko dara: Parāda detalizētu ierīces kartīti ar vēsturi, pieprasījumiem un remontiem.
      *
-     * Ielādē visas saistītās relācijas — remontu vēsturi, pieprasījumus, nodošanas —
-     * un sagatavo telpu opcijas, pieprasījumu pieejamību un remontu statusa aprakstus.
+     * Kā strādā: Ielādē visas saistītās relācijas — remontu vēsturi, pieprasījumus, nodošanas — un sagatavo telpu opcijas, pieprasījumu pieejamību un remontu statusa aprakstus.
      *
-     * Izsaukšana: GET /devices/{device} | Pieejams: jebkurš autentificēts lietotājs ar tiesībām.
-     * Scenārijs: Lietotājs noklikšķina uz ierīces nosaukuma ierīču sarakstā.
-     * Parasts lietotājs var atvērt tikai savu ierīci; administrators — jebkuru.
+     * Kad pielietojas: Izsaukšana: GET /devices/{device} | Pieejams: jebkurš autentificēts lietotājs ar tiesībām. Scenārijs: Lietotājs noklikšķina uz ierīces nosaukuma ierīču sarakstā. Parasts lietotājs var atvērt tikai savu ierīci; administrators — jebkuru.
      */
     public function show(Request $request, Device $device)
     {
@@ -802,14 +806,11 @@ SQL;
     }
 
     /**
-     * Lietotāja skatā atļauj nomainīt tikai telpu savai ierīcei.
+     * Ko dara: Lietotāja skatā atļauj nomainīt tikai telpu savai ierīcei.
      *
-     * Pārbauda, vai ierīce pieder pieprasītājam, nav norakstīta un vai
-     * nav aktīvu pieprasījumu, kas bloķētu atrašanās vietas maiņu.
+     * Kā strādā: Pārbauda, vai ierīce pieder pieprasītājam, nav norakstīta un vai nav aktīvu pieprasījumu, kas bloķētu atrašanās vietas maiņu.
      *
-     * Izsaukšana: POST /devices/{device}/user-room | Pieejams: parasts autentificēts lietotājs (ne administrators).
-     * Scenārijs: Lietotājs ierīces detalizētajā skatā vai sarakstā nomaina savu telpu.
-     * Administratoram šī darbība nav pieejama — viņam jāizmanto pilnā rediģēšanas forma.
+     * Kad pielietojas: Izsaukšana: POST /devices/{device}/user-room | Pieejams: parasts autentificēts lietotājs (ne administrators). Scenārijs: Lietotājs ierīces detalizētajā skatā vai sarakstā nomaina savu telpu. Administratoram šī darbība nav pieejama — viņam jāizmanto pilnā rediģēšanas forma.
      */
     public function updateUserRoom(Request $request, Device $device): RedirectResponse
     {
@@ -858,15 +859,11 @@ SQL;
     }
 
     /**
-     * Atjaunina esošās ierīces datus, ievērojot aktīvo pieprasījumu bloķēšanu.
+     * Ko dara: Atjaunina esošās ierīces datus, ievērojot aktīvo pieprasījumu bloķēšanu.
      *
-     * Pirms saglabāšanas pārbauda, vai ierīcei nav aktīvu pieteikumu, kas
-     * aizliedz rediģēšanu. Saglabā attēla izmaiņas un reģistrē visas
-     * lauku izmaiņas audita žurnālā, salīdzinot "pirms" un "pēc" stāvokļus.
+     * Kā strādā: Pirms saglabāšanas pārbauda, vai ierīcei nav aktīvu pieteikumu, kas aizliedz rediģēšanu. Saglabā attēla izmaiņas un reģistrē visas lauku izmaiņas audita žurnālā, salīdzinot "pirms" un "pēc" stāvokļus.
      *
-     * Izsaukšana: PUT/PATCH /devices/{device} | Pieejams: administrators, IT vadītājs.
-     * Scenārijs: Administrators ierīces detalizētajā skatā vai sarakstā noklikšķina
-     * "Labot" un iesniedz aizpildīto formu ar izmainītajiem datiem.
+     * Kad pielietojas: Izsaukšana: PUT/PATCH /devices/{device} | Pieejams: administrators, IT vadītājs. Scenārijs: Administrators ierīces detalizētajā skatā vai sarakstā noklikšķina "Labot" un iesniedz aizpildīto formu ar izmainītajiem datiem.
      */
     public function update(Request $request, Device $device)
     {
@@ -896,14 +893,11 @@ SQL;
     }
 
     /**
-     * Dzēš ierīces ierakstu kopā ar visiem tās failu aktīviem.
+     * Ko dara: Dzēš ierīces ierakstu kopā ar visiem tās failu aktīviem.
      *
-     * Pirms dzēšanas tiek noņemts ierīces attēls un miniatūra, pēc tam
-     * ierakstīts audita žurnālā ar brīdinājuma līmeni.
+     * Kā strādā: Pirms dzēšanas tiek noņemts ierīces attēls un miniatūra, pēc tam ierakstīts audita žurnālā ar brīdinājuma līmeni.
      *
-     * Izsaukšana: DELETE /devices/{device} | Pieejams: administrators, IT vadītājs.
-     * Scenārijs: Administrators ierīces kartītes vai saraksta lapā izvēlas "Dzēst ierīci"
-     * un apstiprina darbību apstiprināšanas dialogā.
+     * Kad pielietojas: Izsaukšana: DELETE /devices/{device} | Pieejams: administrators, IT vadītājs. Scenārijs: Administrators ierīces kartītes vai saraksta lapā izvēlas "Dzēst ierīci" un apstiprina darbību apstiprināšanas dialogā.
      */
     public function destroy(Device $device)
     {
@@ -917,14 +911,11 @@ SQL;
     }
 
     /**
-     * Ātrā atjaunošana no tabulas dropdown darbībām — statuss, telpa vai atbildīgais.
+     * Ko dara: Ātrā atjaunošana no tabulas dropdown darbībām — statuss, telpa vai atbildīgais.
      *
-     * Ja darbība ir statusa maiņa uz "remonts", novirza uz remonta formas atvēršanu.
-     * Citādi darbību izpilda tieši un atgriež rezultātu kā sesijas ziņojumu.
+     * Kā strādā: Ja darbība ir statusa maiņa uz "remonts", novirza uz remonta formas atvēršanu. Citādi darbību izpilda tieši un atgriež rezultātu kā sesijas ziņojumu.
      *
-     * Izsaukšana: POST /devices/{device}/quick-update | Pieejams: administrators, IT vadītājs.
-     * Scenārijs: Administrators ierīču sarakstā izmanto rindas dropdown pogu, lai ātri
-     * mainītu ierīces statusu, telpu vai atbildīgo personu bez pilnas formas atvēršanas.
+     * Kad pielietojas: Izsaukšana: POST /devices/{device}/quick-update | Pieejams: administrators, IT vadītājs. Scenārijs: Administrators ierīču sarakstā izmanto rindas dropdown pogu, lai ātri mainītu ierīces statusu, telpu vai atbildīgo personu bez pilnas formas atvēršanas.
      */
     public function quickUpdate(Request $request, Device $device)
     {
@@ -960,14 +951,11 @@ SQL;
     }
 
     /**
-     * Pāradresē no vecā ātrās rediģēšanas GET ceļa uz pilno ierīces skatu.
+     * Ko dara: Pāradresē no vecā ātrās rediģēšanas GET ceļa uz pilno ierīces skatu.
      *
-     * Aizsargā pret kļūdainu GET pieprasījumu uz quick-update ceļu —
-     * rāda informatīvu kļūdas ziņojumu un novirza uz ierīces karti.
+     * Kā strādā: Aizsargā pret kļūdainu GET pieprasījumu uz quick-update ceļu — rāda informatīvu kļūdas ziņojumu un novirza uz ierīces karti.
      *
-     * Izsaukšana: GET /devices/{device}/quick-update | Pieejams: administrators, IT vadītājs.
-     * Scenārijs: Lietotājs mēģina pārlūkā tieši atvērt ātrās atjaunināšanas URL
-     * (piemēram, no pārlūka vēstures), kas ir nederīgs GET ceļš.
+     * Kad pielietojas: Izsaukšana: GET /devices/{device}/quick-update | Pieejams: administrators, IT vadītājs. Scenārijs: Lietotājs mēģina pārlūkā tieši atvērt ātrās atjaunināšanas URL (piemēram, no pārlūka vēstures), kas ir nederīgs GET ceļš.
      */
     public function quickUpdateRedirect(Device $device): RedirectResponse
     {
@@ -979,15 +967,11 @@ SQL;
     }
 
     /**
-     * Veic masveida darbību ar vairākām ierīcēm vienlaikus (statuss vai telpa).
+     * Ko dara: Veic masveida darbību ar vairākām ierīcēm vienlaikus (statuss vai telpa).
      *
-     * Apstrādā katru ierīci atsevišķi, uzskaita veiksmīgi apstrādātās un
-     * apkopo kļūdu ziņojumus par neizdevušajām. Rezultāts tiek attēlots
-     * kā vienots paziņojums par apstrādāto ierīču skaitu.
+     * Kā strādā: Apstrādā katru ierīci atsevišķi, uzskaita veiksmīgi apstrādātās un apkopo kļūdu ziņojumus par neizdevušajām. Rezultāts tiek attēlots kā vienots paziņojums par apstrādāto ierīču skaitu.
      *
-     * Izsaukšana: POST /devices/bulk-update | Pieejams: administrators, IT vadītājs.
-     * Scenārijs: Administrators ierīču sarakstā atzīmē vairākas ierīces ar izvēles
-     * rūtiņām un izvēlas masveida darbību — piemēram, mainīt statusu vai telpu visām.
+     * Kad pielietojas: Izsaukšana: POST /devices/bulk-update | Pieejams: administrators, IT vadītājs. Scenārijs: Administrators ierīču sarakstā atzīmē vairākas ierīces ar izvēles rūtiņām un izvēlas masveida darbību — piemēram, mainīt statusu vai telpu visām.
      */
     public function bulkUpdate(Request $request)
     {
@@ -1029,13 +1013,11 @@ SQL;
     }
 
     /**
-     * Atgriež bāzes vaicājumu ar ierīcēm, kuras drīkst redzēt konkrētais lietotājs.
+     * Ko dara: Atgriež bāzes vaicājumu ar ierīcēm, kuras drīkst redzēt konkrētais lietotājs.
      *
-     * Parasts lietotājs redz tikai savas ierīces (izņemot norakstītās).
-     * Administrators redz visas ierīces, bet var izvēlēties slēpt norakstītās
-     * atbilstoši saviem preferenču iestatījumiem.
+     * Kā strādā: Parasts lietotājs redz tikai savas ierīces (izņemot norakstītās). Administrators redz visas ierīces, bet var izvēlēties slēpt norakstītās atbilstoši saviem preferenču iestatījumiem.
      *
-     * Izsauc no: `devicesIndexViewData()` (tabulas vaicājumam un kopsavilkumam), `findByCode()`.
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()` (tabulas vaicājumam un kopsavilkumam), `findByCode()`.
      */
     private function visibleDevicesQuery(User $user): Builder
     {
@@ -1053,13 +1035,11 @@ SQL;
     }
 
     /**
-     * Atgriež telpu kolekciju, kurās atrodas lietotājam redzamās ierīces.
+     * Ko dara: Atgriež telpu kolekciju, kurās atrodas lietotājam redzamās ierīces.
      *
-     * Izmantota filtra izvēlnē — parādīt tikai tās telpas, kurās ir
-     * šim lietotājam pieejamas ierīces. Administrators redz visas telpas
-     * (izņemot norakstīto slēpšanas gadījumu).
+     * Kā strādā: Izmantota filtra izvēlnē — parādīt tikai tās telpas, kurās ir šim lietotājam pieejamas ierīces. Administrators redz visas telpas (izņemot norakstīto slēpšanas gadījumu).
      *
-     * Izsauc no: `devicesIndexViewData()` — telpu filtra aizpildīšanai.
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()` — telpu filtra aizpildīšanai.
      */
     private function accessibleRooms(User $user): Collection
     {
@@ -1082,12 +1062,11 @@ SQL;
     }
 
     /**
-     * Pārbauda, vai aktīvais lietotājs drīkst apskatīt konkrēto ierīci.
+     * Ko dara: Pārbauda, vai aktīvais lietotājs drīkst apskatīt konkrēto ierīci.
      *
-     * Izmanto modeļa metodi `canViewDevice`, lai noteiktu piekļuves tiesības.
-     * Ja lietotājs nav autentificēts vai nav tiesīgs, tiek atgriezta kļūda 403.
+     * Kā strādā: Izmanto modeļa metodi `canViewDevice`, lai noteiktu piekļuves tiesības. Ja lietotājs nav autentificēts vai nav tiesīgs, tiek atgriezta kļūda 403.
      *
-     * Izsauc no: `show()` — pirmā darbība pirms datu ielādes.
+     * Kad pielietojas: Izsauc no: `show()` — pirmā darbība pirms datu ielādes.
      */
     private function authorizeView(Device $device): void
     {
@@ -1097,12 +1076,11 @@ SQL;
     }
 
     /**
-     * Sagatavo visus palīgdatus ierīces izveides un rediģēšanas formai.
+     * Ko dara: Sagatavo visus palīgdatus ierīces izveides un rediģēšanas formai.
      *
-     * Iekļauj tipu, ēku, telpu un lietotāju sarakstus, kā arī noklusētās
-     * vērtības jaunas ierīces veidlapai — noklusēto telpu un atbildīgo personu.
+     * Kā strādā: Iekļauj tipu, ēku, telpu un lietotāju sarakstus, kā arī noklusētās vērtības jaunas ierīces veidlapai — noklusēto telpu un atbildīgo personu.
      *
-     * Izsauc no: `devicesIndexViewData()` (tikai administratoriem), `store()`, `update()`.
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()` (tikai administratoriem), `store()`, `update()`.
      */
     private function formData(): array
     {
@@ -1123,14 +1101,11 @@ SQL;
     }
 
     /**
-     * Validē un normalizē ierīces ievaddatus pirms saglabāšanas.
+     * Ko dara: Validē un normalizē ierīces ievaddatus pirms saglabāšanas.
      *
-     * Pārbauda obligātos laukus, koda unikalitāti, garantijas datuma loģiku.
-     * Ja ierīcei statuss ir "norakstīta", tiek automātiski pievienots noliktavas
-     * telpas un atbildīgās personas nulle. Statusu maiņu var bloķēt aktīvs
-     * remonta vai pieprasījuma ieraksts.
+     * Kā strādā: Pārbauda obligātos laukus, koda unikalitāti, garantijas datuma loģiku. Ja ierīcei statuss ir "norakstīta", tiek automātiski pievienots noliktavas telpas un atbildīgās personas nulle. Statusu maiņu var bloķēt aktīvs remonta vai pieprasījuma ieraksts.
      *
-     * Izsauc no: `store()` (jaunas ierīces izveide), `update()` (esošas rediģēšana).
+     * Kad pielietojas: Izsauc no: `store()` (jaunas ierīces izveide), `update()` (esošas rediģēšana).
      */
     private function validatedData(Request $request, ?Device $device = null): array
     {
@@ -1256,12 +1231,11 @@ SQL;
     }
 
     /**
-     * Atgriež pašreizējā administratora ID, ja tas ir aktīvs lietotājs.
+     * Ko dara: Atgriež pašreizējā administratora ID, ja tas ir aktīvs lietotājs.
      *
-     * Izmantota kā noklusētā atbildīgā persona jaunu ierīču veidlapā.
-     * Ja administrators nav aktīvs sistēmā, atgriež null.
+     * Kā strādā: Izmantota kā noklusētā atbildīgā persona jaunu ierīču veidlapā. Ja administrators nav aktīvs sistēmā, atgriež null.
      *
-     * Izsauc no: `formData()`, `fallbackResponsibleUserId()`.
+     * Kad pielietojas: Izsauc no: `formData()`, `fallbackResponsibleUserId()`.
      */
     private function defaultResponsibleUserId(): ?int
     {
@@ -1280,13 +1254,11 @@ SQL;
     }
 
     /**
-     * Atgriež pirmo derīgo atbildīgās personas ID, pārbaudot vairākus kandidātus pēc kārtas.
+     * Ko dara: Atgriež pirmo derīgo atbildīgās personas ID, pārbaudot vairākus kandidātus pēc kārtas.
      *
-     * Prioritātes secība: ierīces pašreizējais atbildīgais → pašreizējais administrators →
-     * ierīces izveidotājs. Tiek atgriezts pirmais kandidāts, kas pastāv aktīvo
-     * lietotāju sarakstā. Ja neviens neatbilst, atgriež null.
+     * Kā strādā: Prioritātes secība: ierīces pašreizējais atbildīgais → pašreizējais administrators → ierīces izveidotājs. Tiek atgriezts pirmais kandidāts, kas pastāv aktīvo lietotāju sarakstā. Ja neviens neatbilst, atgriež null.
      *
-     * Izsauc no: `validatedData()` — kad veidlapa neiesniedz atbildīgo personu.
+     * Kad pielietojas: Izsauc no: `validatedData()` — kad veidlapa neiesniedz atbildīgo personu.
      */
     private function fallbackResponsibleUserId(?Device $device = null): ?int
     {
@@ -1313,13 +1285,11 @@ SQL;
     }
 
     /**
-     * Atrod vai izveido sistēmas noliktavas telpu.
+     * Ko dara: Atrod vai izveido sistēmas noliktavas telpu.
      *
-     * Meklē telpu, kuras nosaukumā vai numurā ir vārds "noliktav".
-     * Ja tāda nav, izveido jaunu telpu piemērotā ēkā ar automātiski
-     * ģenerētu numuru un standarta noliktavas nosaukumu no WarehouseConfig.
+     * Kā strādā: Meklē telpu, kuras nosaukumā vai numurā ir vārds "noliktav". Ja tāda nav, izveido jaunu telpu piemērotā ēkā ar automātiski ģenerētu numuru un standarta noliktavas nosaukumu no WarehouseConfig.
      *
-     * Izsauc no: `validatedData()`, `writeoffWarehousePayload()`, `formData()`.
+     * Kad pielietojas: Izsauc no: `validatedData()`, `writeoffWarehousePayload()`, `formData()`.
      */
     private function ensureWarehouseRoom(): Room
     {
@@ -1350,12 +1320,11 @@ SQL;
     }
 
     /**
-     * Atgriež ierīces lauku vērtības, ko piemērot norakstīšanas gadījumā.
+     * Ko dara: Atgriež ierīces lauku vērtības, ko piemērot norakstīšanas gadījumā.
      *
-     * Norakstīta ierīce tiek automātiski pārvietota uz noliktavas telpu
-     * un atbrīvota no atbildīgās personas (assigned_to_id kļūst null).
+     * Kā strādā: Norakstīta ierīce tiek automātiski pārvietota uz noliktavas telpu un atbrīvota no atbildīgās personas (assigned_to_id kļūst null).
      *
-     * Izsauc no: `validatedData()`, `changeDeviceStatus()`.
+     * Kad pielietojas: Izsauc no: `validatedData()`, `changeDeviceStatus()`.
      */
     private function writeoffWarehousePayload(): array
     {
@@ -1369,13 +1338,11 @@ SQL;
     }
 
     /**
-     * Atrod vispiemērotāko ēku noliktavas telpas izveidei.
+     * Ko dara: Atrod vispiemērotāko ēku noliktavas telpas izveidei.
      *
-     * Priekšroka tiek dota ēkām ar "ludz" nosaukumā. Ja tādas nav,
-     * tiek izmantota pirmā ēka alfabētiskā secībā. Ja sistēmā vēl nav
-     * nevienas ēkas, tā tiek automātiski izveidota ar noklusēto nosaukumu.
+     * Kā strādā: Priekšroka tiek dota ēkām ar "ludz" nosaukumā. Ja tādas nav, tiek izmantota pirmā ēka alfabētiskā secībā. Ja sistēmā vēl nav nevienas ēkas, tā tiek automātiski izveidota ar noklusēto nosaukumu.
      *
-     * Izsauc no: `ensureWarehouseRoom()` — tikai tad, ja noliktavas telpa vēl neeksistē.
+     * Kad pielietojas: Izsauc no: `ensureWarehouseRoom()` — tikai tad, ja noliktavas telpa vēl neeksistē.
      */
     private function preferredWarehouseBuilding(): Building
     {
@@ -1403,12 +1370,11 @@ SQL;
     }
 
     /**
-     * Ģenerē nākamo pieejamo noliktavas telpas numuru norādītajā ēkā.
+     * Ko dara: Ģenerē nākamo pieejamo noliktavas telpas numuru norādītajā ēkā.
      *
-     * Pārbauda esošos telpu numurus un atrod pirmo neaizņemto numuru
-     * pēc kārtas, izmantojot noliktavas prefiksu un trīsciparu formatējumu.
+     * Kā strādā: Pārbauda esošos telpu numurus un atrod pirmo neaizņemto numuru pēc kārtas, izmantojot noliktavas prefiksu un trīsciparu formatējumu.
      *
-     * Izsauc no: `ensureWarehouseRoom()` — jaunu noliktavas telpu numura ģenerēšanai.
+     * Kad pielietojas: Izsauc no: `ensureWarehouseRoom()` — jaunu noliktavas telpu numura ģenerēšanai.
      */
     private function nextWarehouseRoomNumber(int $buildingId): string
     {
@@ -1430,12 +1396,11 @@ SQL;
     }
 
     /**
-     * Pārbauda, vai teksta virkne norāda uz noliktavas telpu.
+     * Ko dara: Pārbauda, vai teksta virkne norāda uz noliktavas telpu.
      *
-     * Meklē vārda sakni "noliktav" (reģistrjutīgi) telpas nosaukumā,
-     * numurā vai piezīmēs, lai identificētu esošo noliktavas telpu.
+     * Kā strādā: Meklē vārda sakni "noliktav" (reģistrjutīgi) telpas nosaukumā, numurā vai piezīmēs, lai identificētu esošo noliktavas telpu.
      *
-     * Izsauc no: `ensureWarehouseRoom()` — katrā telpas pārbaudes iterācijā.
+     * Kad pielietojas: Izsauc no: `ensureWarehouseRoom()` — katrā telpas pārbaudes iterācijā.
      */
     private function isWarehouseLabel(?string $value): bool
     {
@@ -1447,12 +1412,11 @@ SQL;
     }
 
     /**
-     * Pārbauda, vai ēkas nosaukums atbilst noliktavas vēlamajai atrašanās vietai.
+     * Ko dara: Pārbauda, vai ēkas nosaukums atbilst noliktavas vēlamajai atrašanās vietai.
      *
-     * Meklē vārdu "ludz" ēkas nosaukumā (reģistrjutīgi), jo sistēma ir
-     * paredzēta lietošanai Ludzā. Tiek izmantota, izvēloties piemērotāko ēku.
+     * Kā strādā: Meklē vārdu "ludz" ēkas nosaukumā (reģistrjutīgi), jo sistēma ir paredzēta lietošanai Ludzā. Tiek izmantota, izvēloties piemērotāko ēku.
      *
-     * Izsauc no: `preferredWarehouseBuilding()` — katrā ēkas pārbaudes iterācijā.
+     * Kad pielietojas: Izsauc no: `preferredWarehouseBuilding()` — katrā ēkas pārbaudes iterācijā.
      */
     private function matchesPreferredBuildingName(?string $value): bool
     {
@@ -1464,12 +1428,11 @@ SQL;
     }
 
     /**
-     * Atgriež to ierīces lauku sarakstu, kuru izmaiņas tiek reģistrētas auditā.
+     * Ko dara: Atgriež to ierīces lauku sarakstu, kuru izmaiņas tiek reģistrētas auditā.
      *
-     * Tiek izmantots pirms un pēc atjaunināšanas, lai salīdzinātu stāvokļus
-     * un ierakstītu tikai faktiskās izmaiņas audita žurnālā.
+     * Kā strādā: Tiek izmantots pirms un pēc atjaunināšanas, lai salīdzinātu stāvokļus un ierakstītu tikai faktiskās izmaiņas audita žurnālā.
      *
-     * Izsauc no: `update()` — pirms saglabāšanas iegūst "pirms" stāvokli.
+     * Kad pielietojas: Izsauc no: `update()` — pirms saglabāšanas iegūst "pirms" stāvokli.
      */
     private function trackedFields(): array
     {
@@ -1493,12 +1456,11 @@ SQL;
     }
 
     /**
-     * Apstrādā ierīces attēla augšupielādi, ja tāda ir pievienota pieprasījumam.
+     * Ko dara: Apstrādā ierīces attēla augšupielādi, ja tāda ir pievienota pieprasījumam.
      *
-     * Izmanto DeviceAssetManager, lai saglabātu attēlu un, ja nepieciešams,
-     * aizstātu iepriekšējo. Ja attēls nav pievienots, metode neko nedara.
+     * Kā strādā: Izmanto DeviceAssetManager, lai saglabātu attēlu un, ja nepieciešams, aizstātu iepriekšējo. Ja attēls nav pievienots, metode neko nedara.
      *
-     * Izsauc no: `store()`, `update()` — pēc pamata ierīces datu saglabāšanas.
+     * Kad pielietojas: Izsauc no: `store()`, `update()` — pēc pamata ierīces datu saglabāšanas.
      */
     private function syncUploads(Request $request, Device $device): void
     {
@@ -1518,12 +1480,11 @@ SQL;
     }
 
     /**
-     * Dzēš ierīces attēlu, ja pieprasījumā ir atzīmēts attēla noņemšanas karogs.
+     * Ko dara: Dzēš ierīces attēlu, ja pieprasījumā ir atzīmēts attēla noņemšanas karogs.
      *
-     * Ja pieprasījumā vienlaikus ir pievienots jauns attēls, noņemšana netiek
-     * veikta. Attēls tiek dzēsts gan no failu sistēmas, gan no modeļa lauka.
+     * Kā strādā: Ja pieprasījumā vienlaikus ir pievienots jauns attēls, noņemšana netiek veikta. Attēls tiek dzēsts gan no failu sistēmas, gan no modeļa lauka.
      *
-     * Izsauc no: `store()`, `update()` — pēc `syncUploads()` izsaukšanas.
+     * Kad pielietojas: Izsauc no: `store()`, `update()` — pēc `syncUploads()` izsaukšanas.
      */
     private function removeDeviceImage(Request $request, Device $device): void
     {
@@ -1542,12 +1503,11 @@ SQL;
     }
 
     /**
-     * Dzēš visus ar ierīci saistītos failu aktīvus pirms ierīces dzēšanas.
+     * Ko dara: Dzēš visus ar ierīci saistītos failu aktīvus pirms ierīces dzēšanas.
      *
-     * Tiek dzēsts gan pilnā izmēra attēls, gan miniatūra (thumbnail).
-     * Jāizsauc pirms `$device->delete()`, lai nepaliktu bāreņfaili.
+     * Kā strādā: Tiek dzēsts gan pilnā izmēra attēls, gan miniatūra (thumbnail). Jāizsauc pirms `$device->delete()`, lai nepaliktu bāreņfaili.
      *
-     * Izsauc no: `destroy()` — pirms ierīces ieraksta dzēšanas no datubāzes.
+     * Kad pielietojas: Izsauc no: `destroy()` — pirms ierīces ieraksta dzēšanas no datubāzes.
      */
     private function deleteDeviceAssets(Device $device): void
     {
@@ -1557,9 +1517,11 @@ SQL;
     }
 
     /**
-     * Atgriež cilvēkam saprotamu ierīces statusa nosaukumu latviešu valodā.
+     * Ko dara: Atgriež cilvēkam saprotamu ierīces statusa nosaukumu latviešu valodā.
      *
-     * Izsauc no: `statusLabels()` — katram statusa vērtību pārvēršanai.
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `statusLabels()` — katram statusa vērtību pārvēršanai.
      */
     private function statusLabel(string $status): string
     {
@@ -1571,9 +1533,11 @@ SQL;
     }
 
     /**
-     * Atgriež visu ierīces statusu cilvēkam saprotamo nosaukumu karti (statuss → nosaukums).
+     * Ko dara: Atgriež visu ierīces statusu cilvēkam saprotamo nosaukumu karti (statuss → nosaukums).
      *
-     * Izsauc no: `devicesIndexViewData()`, `show()`, `formData()`.
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()`, `show()`, `formData()`.
      */
     private function statusLabels(): array
     {
@@ -1585,13 +1549,11 @@ SQL;
 
 
     /**
-     * Atgriež aktīvā remonta statusa etiķeti, ja ierīcei notiek remonts.
+     * Ko dara: Atgriež aktīvā remonta statusa etiķeti, ja ierīcei notiek remonts.
      *
-     * Ja ierīcei nav aktīva remonta, atgriež null. Ja remonta statuss nav
-     * atpazīts, atgriež virkni "Gaida" kā noklusēto vērtību.
+     * Kā strādā: Ja ierīcei nav aktīva remonta, atgriež null. Ja remonta statuss nav atpazīts, atgriež virkni "Gaida" kā noklusēto vērtību.
      *
-     * Izsauc no: `devicesIndexViewData()` (deviceStates masīvam), `quickRelationEditBlockedReason()`,
-     * `deviceStatusEditBlockedReason()`, `repairReasonText()`.
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()` (deviceStates masīvam), `quickRelationEditBlockedReason()`, `deviceStatusEditBlockedReason()`, `repairReasonText()`.
      */
     private function visibleRepairStatusLabel(Device $device): ?string
     {
@@ -1603,12 +1565,11 @@ SQL;
     }
 
     /**
-     * Sagatavo aktīvā remonta kopsavilkuma datus rādīšanai ierīces kartītē.
+     * Ko dara: Sagatavo aktīvā remonta kopsavilkuma datus rādīšanai ierīces kartītē.
      *
-     * Atgriež masīvu ar remonta veidu, statusu, apstiprinātāju un aprakstu.
-     * Ja ierīcei nav aktīva remonta, atgriež null.
+     * Kā strādā: Atgriež masīvu ar remonta veidu, statusu, apstiprinātāju un aprakstu. Ja ierīcei nav aktīva remonta, atgriež null.
      *
-     * Izsauc no: `devicesIndexViewData()` — saraksta katras ierīces deviceStates masīvam.
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()` — saraksta katras ierīces deviceStates masīvam.
      */
     private function repairPreview(Device $device): ?array
     {
@@ -1631,11 +1592,11 @@ SQL;
     }
 
     /**
-     * Atgriež tekstu, kas skaidro, kāpēc ierīce nevar pieņemt jaunu pieprasījumu.
+     * Ko dara: Atgriež tekstu, kas skaidro, kāpēc ierīce nevar pieņemt jaunu pieprasījumu.
      *
-     * Iekļauj aktīvā remonta statusa nosaukumu, ja tāds ir noteikts.
+     * Kā strādā: Iekļauj aktīvā remonta statusa nosaukumu, ja tāds ir noteikts.
      *
-     * Izsauc no: `requestAvailabilityForDevice()` — kad ierīce ir aktīvā remontā.
+     * Kad pielietojas: Izsauc no: `requestAvailabilityForDevice()` — kad ierīce ir aktīvā remontā.
      */
     private function repairReasonText(Device $device): string
     {
@@ -1649,12 +1610,11 @@ SQL;
     }
 
     /**
-     * Atgriež lietotājam saprotamu remonta statusa paskaidrojumu.
+     * Ko dara: Atgriež lietotājam saprotamu remonta statusa paskaidrojumu.
      *
-     * Katram remonta statusa vērtībai atbilst atsevišķs teksts, kas skaidro,
-     * ko šis statuss nozīmē praksē. Ja ierīcei nav aktīva remonta, atgriež null.
+     * Kā strādā: Katram remonta statusa vērtībai atbilst atsevišķs teksts, kas skaidro, ko šis statuss nozīmē praksē. Ja ierīcei nav aktīva remonta, atgriež null.
      *
-     * Izsauc no: `show()` — ierīces detalizētajā skatā remonta statusa blakstekstam.
+     * Kad pielietojas: Izsauc no: `show()` — ierīces detalizētajā skatā remonta statusa blakstekstam.
      */
     private function repairStatusDescription(Device $device): ?string
     {
@@ -1672,13 +1632,11 @@ SQL;
     }
 
     /**
-     * Nosaka, kādus pieprasījumu veidus var izveidot konkrētajai ierīcei.
+     * Ko dara: Nosaka, kādus pieprasījumu veidus var izveidot konkrētajai ierīcei.
      *
-     * Atgriež masīvu ar pieejamības karodziņiem katram pieprasījuma veidam
-     * un iemeslu, ja kāds no tiem nav pieejams. Ierīce bloķē visus pieprasījumus,
-     * ja tai ir aktīvs remonts, norakstīts statuss vai gaidošs pieteikums.
+     * Kā strādā: Atgriež masīvu ar pieejamības karodziņiem katram pieprasījuma veidam un iemeslu, ja kāds no tiem nav pieejams. Ierīce bloķē visus pieprasījumus, ja tai ir aktīvs remonts, norakstīts statuss vai gaidošs pieteikums.
      *
-     * Izsauc no: `devicesIndexViewData()` (deviceStates masīvam), `show()`.
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()` (deviceStates masīvam), `show()`.
      */
     private function requestAvailabilityForDevice(
         Device $device,
@@ -1746,13 +1704,11 @@ SQL;
     }
 
     /**
-     * Sagatavo vizuālā statusa žetona (badge) datus gaidošajam pieprasījumam.
+     * Ko dara: Sagatavo vizuālā statusa žetona (badge) datus gaidošajam pieprasījumam.
      *
-     * Atgriež masīvu ar ikonu, etiķeti, krāsas klasi un saiti uz pieprasījumu sarakstu.
-     * Prioritāte: remonta pieprasījums → norakstīšanas pieprasījums → nodošanas pieprasījums.
-     * Ja nav gaidošu pieprasījumu, atgriež null.
+     * Kā strādā: Atgriež masīvu ar ikonu, etiķeti, krāsas klasi un saiti uz pieprasījumu sarakstu. Prioritāte: remonta pieprasījums → norakstīšanas pieprasījums → nodošanas pieprasījums. Ja nav gaidošu pieprasījumu, atgriež null.
      *
-     * Izsauc no: `devicesIndexViewData()` — saraksta katras ierīces deviceStates masīvam.
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()` — saraksta katras ierīces deviceStates masīvam.
      */
     private function pendingRequestBadge(
         Device $device,
@@ -1804,12 +1760,11 @@ SQL;
     }
 
     /**
-     * Izveido saiti uz pieprasījumu sarakstu ar filtriem un, ja iespējams, ar enkuru uz konkrētu ierakstu.
+     * Ko dara: Izveido saiti uz pieprasījumu sarakstu ar filtriem un, ja iespējams, ar enkuru uz konkrētu ierakstu.
      *
-     * Ja pieprasījuma ID ir zināms, tiek pievienots ierīces kods kā meklēšanas termins
-     * un enkurs (#repair-request-X), lai pārlūks ritinātu pie konkrētā ieraksta.
+     * Kā strādā: Ja pieprasījuma ID ir zināms, tiek pievienots ierīces kods kā meklēšanas termins un enkurs (#repair-request-X), lai pārlūks ritinātu pie konkrētā ieraksta.
      *
-     * Izsauc no: `pendingRequestBadge()` — žetona saites laukam.
+     * Kad pielietojas: Izsauc no: `pendingRequestBadge()` — žetona saites laukam.
      */
     private function requestIndexUrl(Device $device, bool $canManageRequests, string $type, ?int $requestId = null): ?string
     {
@@ -1851,13 +1806,11 @@ SQL;
     }
 
     /**
-     * Sagatavo gaidošā pieprasījuma priekšskatījuma datus uznirstošajam logam.
+     * Ko dara: Sagatavo gaidošā pieprasījuma priekšskatījuma datus uznirstošajam logam.
      *
-     * Atgriež strukturētu masīvu ar iesniedzēja vārdu, iesniegšanas laiku
-     * un pieprasījuma saturu (apraksts vai iemesls). Ja pieprasījums nav nodots,
-     * atgriež null. Nodošanas pieprasījumam papildu tiek iekļauts saņēmēja vārds.
+     * Kā strādā: Atgriež strukturētu masīvu ar iesniedzēja vārdu, iesniegšanas laiku un pieprasījuma saturu (apraksts vai iemesls). Ja pieprasījums nav nodots, atgriež null. Nodošanas pieprasījumam papildu tiek iekļauts saņēmēja vārds.
      *
-     * Izsauc no: `pendingRequestBadge()` — žetona hover priekšskatījuma laukam.
+     * Kad pielietojas: Izsauc no: `pendingRequestBadge()` — žetona hover priekšskatījuma laukam.
      */
     private function pendingRequestPreview(string $type, mixed $request): ?array
     {
@@ -1895,13 +1848,11 @@ SQL;
     }
 
     /**
-     * Izpilda ierīces ātrās darbības atbilstoši norādītajam darbības tipam.
+     * Ko dara: Izpilda ierīces ātrās darbības atbilstoši norādītajam darbības tipam.
      *
-     * Darbības tipi: `status` — maina statusu, `room` — pārvietot telpu,
-     * `assignee` — mainīt atbildīgo personu. Atgriež rezultāta masīvu
-     * ar `level` (success/error) un `message` laukiem.
+     * Kā strādā: Darbības tipi: `status` — maina statusu, `room` — pārvietot telpu, `assignee` — mainīt atbildīgo personu. Atgriež rezultāta masīvu ar `level` (success/error) un `message` laukiem.
      *
-     * Izsauc no: `quickUpdate()`, `bulkUpdate()`.
+     * Kad pielietojas: Izsauc no: `quickUpdate()`, `bulkUpdate()`.
      */
     private function performDeviceAction(Device $device, array $data): array
     {
@@ -1914,13 +1865,11 @@ SQL;
     }
 
     /**
-     * Maina ierīces statusu, veicot visas nepieciešamās pārbaudes.
+     * Ko dara: Maina ierīces statusu, veicot visas nepieciešamās pārbaudes.
      *
-     * Remonta statusa gadījumā tiek automātiski izveidots jauns remonta ieraksts
-     * datubāzes transakcijā. Norakstīšanas gadījumā ierīce tiek pārvietota uz
-     * noliktavas telpu. Visas izmaiņas tiek reģistrētas audita žurnālā.
+     * Kā strādā: Remonta statusa gadījumā tiek automātiski izveidots jauns remonta ieraksts datubāzes transakcijā. Norakstīšanas gadījumā ierīce tiek pārvietota uz noliktavas telpu. Visas izmaiņas tiek reģistrētas audita žurnālā.
      *
-     * Izsauc no: `performDeviceAction()` — kad darbības tips ir `status`.
+     * Kad pielietojas: Izsauc no: `performDeviceAction()` — kad darbības tips ir `status`.
      */
     private function changeDeviceStatus(Device $device, string $status): array
     {
@@ -1959,7 +1908,11 @@ SQL;
 
             $repair = null;
 
+            // Pārliekot ierīci remonta statusā no ātrās darbības, sistēma uzreiz izveido
+            // arī remonta ierakstu. Transakcija nodrošina, ka statuss un remonta ieraksts nesadalās.
             DB::transaction(function () use ($device, &$repair, $before) {
+                // Remonta ieraksts šeit tiek izveidots bez lietotāja pieteikuma,
+                // jo darbību manuāli sāk administrators no ierīču saraksta.
                 $repair = $this->createRepairRecord([
                     'device_id' => $device->id,
                     'issue_reported_by' => null,
@@ -1977,6 +1930,8 @@ SQL;
                     'request_id' => null,
                 ]);
 
+                // Ierīces statuss tiek mainīts tikai pēc veiksmīgas remonta ieraksta izveides,
+                // lai sarakstos nebūtu "remontā" esošas ierīces bez remonta kartītes.
                 $this->saveDevicePayload($device, ['status' => Device::STATUS_REPAIR]);
                 AuditTrail::created(auth()->id(), $repair);
                 AuditTrail::updatedFromState(auth()->id(), $device, $before, ['status' => $device->status]);
@@ -1994,6 +1949,8 @@ SQL;
 
         $payload = ['status' => $status];
         if ($status === Device::STATUS_WRITEOFF) {
+            // Norakstot ierīci tiešā statusa maiņā, tai vienlaikus jānoņem atbildīgais
+            // un jāpiešķir noliktavas atrašanās vieta, lai tā vairs netiktu rādīta lietošanā.
             $payload = array_merge($payload, $this->writeoffWarehousePayload());
         }
 
@@ -2009,12 +1966,11 @@ SQL;
     }
 
     /**
-     * Pārvieto ierīci uz citu telpu, validējot visus bloķēšanas nosacījumus.
+     * Ko dara: Pārvieto ierīci uz citu telpu, validējot visus bloķēšanas nosacījumus.
      *
-     * Pārbauda, vai ierīcei nav aktīvu pieprasījumu vai remonta, un vai telpa
-     * nav tā pati. Saglabā izmaiņas un reģistrē tās audita žurnālā.
+     * Kā strādā: Pārbauda, vai ierīcei nav aktīvu pieprasījumu vai remonta, un vai telpa nav tā pati. Saglabā izmaiņas un reģistrē tās audita žurnālā.
      *
-     * Izsauc no: `performDeviceAction()` — kad darbības tips ir `room`.
+     * Kad pielietojas: Izsauc no: `performDeviceAction()` — kad darbības tips ir `room`.
      */
     private function moveDevice(Device $device, mixed $roomId): array
     {
@@ -2051,12 +2007,11 @@ SQL;
     }
 
     /**
-     * Maina ierīces atbildīgo personu, validējot bloķēšanas nosacījumus.
+     * Ko dara: Maina ierīces atbildīgo personu, validējot bloķēšanas nosacījumus.
      *
-     * Pārbauda, vai jaunais atbildīgais pastāv aktīvo lietotāju sarakstā
-     * un vai ierīce vēl nav piešķirta tam pašam lietotājam.
+     * Kā strādā: Pārbauda, vai jaunais atbildīgais pastāv aktīvo lietotāju sarakstā un vai ierīce vēl nav piešķirta tam pašam lietotājam.
      *
-     * Izsauc no: `performDeviceAction()` — kad darbības tips ir `assignee`.
+     * Kad pielietojas: Izsauc no: `performDeviceAction()` — kad darbības tips ir `assignee`.
      */
     private function reassignDevice(Device $device, mixed $assignedToId): array
     {
@@ -2097,13 +2052,11 @@ SQL;
     }
 
     /**
-     * Pārbauda, vai ierīces telpas vai atbildīgās personas maiņa ir bloķēta.
+     * Ko dara: Pārbauda, vai ierīces telpas vai atbildīgās personas maiņa ir bloķēta.
      *
-     * Apvieno aktīvo pieprasījumu pārbaudi ar statusa pārbaudi — remontā esošai
-     * vai norakstītai ierīcei šādas izmaiņas nav atļautas. Atgriež iemesla
-     * tekstu vai null, ja maiņa ir atļauta.
+     * Kā strādā: Apvieno aktīvo pieprasījumu pārbaudi ar statusa pārbaudi — remontā esošai vai norakstītai ierīcei šādas izmaiņas nav atļautas. Atgriež iemesla tekstu vai null, ja maiņa ir atļauta.
      *
-     * Izsauc no: `moveDevice()`, `reassignDevice()` — pirms darbības izpildes.
+     * Kad pielietojas: Izsauc no: `moveDevice()`, `reassignDevice()` — pirms darbības izpildes.
      */
     private function quickRelationEditBlockedReason(Device $device): ?string
     {
@@ -2125,13 +2078,11 @@ SQL;
     }
 
     /**
-     * Pārbauda, vai ierīcei ir aktīvs pieprasījums, kas bloķē rediģēšanu.
+     * Ko dara: Pārbauda, vai ierīcei ir aktīvs pieprasījums, kas bloķē rediģēšanu.
      *
-     * Pārbauda, vai pastāv iesniegts remonta, norakstīšanas vai nodošanas
-     * pieprasījums. Ja pastāv, atgriež skaidrojošu kļūdas tekstu,
-     * pretējā gadījumā atgriež null.
+     * Kā strādā: Pārbauda, vai pastāv iesniegts remonta, norakstīšanas vai nodošanas pieprasījums. Ja pastāv, atgriež skaidrojošu kļūdas tekstu, pretējā gadījumā atgriež null.
      *
-     * Izsauc no: `quickRelationEditBlockedReason()`, `update()`.
+     * Kad pielietojas: Izsauc no: `quickRelationEditBlockedReason()`, `update()`.
      */
     private function activeRequestEditBlockedReason(Device $device): ?string
     {
@@ -2151,13 +2102,11 @@ SQL;
     }
 
     /**
-     * Pārbauda, vai ierīces statusa maiņa ir bloķēta.
+     * Ko dara: Pārbauda, vai ierīces statusa maiņa ir bloķēta.
      *
-     * Statusu nevar mainīt, ja ierīcei notiek aktīvs remonts vai tai ir
-     * gaidošs remonta, norakstīšanas vai nodošanas pieprasījums.
-     * Atgriež bloķēšanas iemeslu vai null, ja maiņa ir atļauta.
+     * Kā strādā: Statusu nevar mainīt, ja ierīcei notiek aktīvs remonts vai tai ir gaidošs remonta, norakstīšanas vai nodošanas pieprasījums. Atgriež bloķēšanas iemeslu vai null, ja maiņa ir atļauta.
      *
-     * Izsauc no: `validatedData()`, `changeDeviceStatus()`.
+     * Kad pielietojas: Izsauc no: `validatedData()`, `changeDeviceStatus()`.
      */
     private function deviceStatusEditBlockedReason(Device $device): ?string
     {
@@ -2183,12 +2132,11 @@ SQL;
     }
 
     /**
-     * Formatē telpu kolekciju kā opciju masīvu lietojamai izvēlnei.
+     * Ko dara: Formatē telpu kolekciju kā opciju masīvu lietojamai izvēlnei.
      *
-     * Katrai telpai tiek sagatavots `value`, `label`, `group`, `description`
-     * un `search` lauks, kas ļauj JavaScript pusē filtrēt un meklēt opcijās.
+     * Kā strādā: Katrai telpai tiek sagatavots `value`, `label`, `group`, `description` un `search` lauks, kas ļauj JavaScript pusē filtrēt un meklēt opcijās.
      *
-     * Izsauc no: `devicesIndexViewData()` (lietotāja telpu izvēlnei), `show()`.
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()` (lietotāja telpu izvēlnei), `show()`.
      */
     private function roomSelectOptions(Collection $rooms): Collection
     {
@@ -2216,13 +2164,11 @@ SQL;
     }
 
     /**
-     * Atgriež pilnu telpu sarakstu formatētu izvēlnēm ar grupēšanu pa ēkām un stāviem.
+     * Ko dara: Atgriež pilnu telpu sarakstu formatētu izvēlnēm ar grupēšanu pa ēkām un stāviem.
      *
-     * Parastajam lietotājam telpas maiņas izvēlnē jāredz visas telpas, ne tikai tās,
-     * kurās jau atrodas viņam piešķirtās ierīces. Tāpēc šī metode ielādē pilnu sarakstu
-     * no datubāzes un izmanto kopējo `roomSelectOptions()` formatēšanu.
+     * Kā strādā: Parastajam lietotājam telpas maiņas izvēlnē jāredz visas telpas, ne tikai tās, kurās jau atrodas viņam piešķirtās ierīces. Tāpēc šī metode ielādē pilnu sarakstu no datubāzes un izmanto kopējo `roomSelectOptions()` formatēšanu.
      *
-     * Izsauc no: `devicesIndexViewData()`, `show()`.
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()`, `show()`.
      */
     private function allRoomOptions(): Collection
     {
@@ -2237,12 +2183,11 @@ SQL;
     }
 
     /**
-     * Atgriež visu telpu sarakstu formatētu ātrajai izvēlnei ierīču tabulā.
+     * Ko dara: Atgriež visu telpu sarakstu formatētu ātrajai izvēlnei ierīču tabulā.
      *
-     * Atšķirībā no `roomSelectOptions`, šī metode ielādē telpas no datubāzes
-     * tieši, nefiltrējot pēc lietotāja, jo to izmanto tikai administratori.
+     * Kā strādā: Atšķirībā no `roomSelectOptions`, šī metode ielādē telpas no datubāzes tieši, nefiltrējot pēc lietotāja, jo to izmanto tikai administratori.
      *
-     * Izsauc no: `devicesIndexViewData()` — tikai administratoriem paredzētajai dropdown izvēlnei.
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()` — tikai administratoriem paredzētajai dropdown izvēlnei.
      */
     private function quickRoomOptions(): Collection
     {
@@ -2271,12 +2216,11 @@ SQL;
     }
 
     /**
-     * Atgriež aktīvo lietotāju sarakstu formatētu ātrajai ierīces piešķiršanas izvēlnei.
+     * Ko dara: Atgriež aktīvo lietotāju sarakstu formatētu ātrajai ierīces piešķiršanas izvēlnei.
      *
-     * Katram lietotājam tiek sagatavots `value`, `label`, `description` un `search`
-     * lauks, kas ietver vārdu, amatu un e-pastu meklēšanas vajadzībām.
+     * Kā strādā: Katram lietotājam tiek sagatavots `value`, `label`, `description` un `search` lauks, kas ietver vārdu, amatu un e-pastu meklēšanas vajadzībām.
      *
-     * Izsauc no: `devicesIndexViewData()` — tikai administratoriem paredzētajai atbildīgā maiņas izvēlnei.
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()` — tikai administratoriem paredzētajai atbildīgā maiņas izvēlnei.
      */
     private function quickAssigneeOptions(): Collection
     {
@@ -2301,12 +2245,11 @@ SQL;
     }
 
     /**
-     * Pārbauda, vai parastais lietotājs drīkst atjaunināt savas ierīces atrašanās vietu.
+     * Ko dara: Pārbauda, vai parastais lietotājs drīkst atjaunināt savas ierīces atrašanās vietu.
      *
-     * Telpu maiņa nav atļauta, ja ierīce ir remontā vai tai ir gaidošs pieteikums.
-     * Atgriež masīvu ar `allowed` (bool) un `reason` (string|null) laukiem.
+     * Kā strādā: Telpu maiņa nav atļauta, ja ierīce ir remontā vai tai ir gaidošs pieteikums. Atgriež masīvu ar `allowed` (bool) un `reason` (string|null) laukiem.
      *
-     * Izsauc no: `devicesIndexViewData()` (deviceStates masīvam), `show()`, `updateUserRoom()`.
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()` (deviceStates masīvam), `show()`, `updateUserRoom()`.
      */
     private function userRoomUpdateAvailability(Device $device, mixed $pendingRepairRequest, mixed $pendingWriteoffRequest, mixed $pendingTransferRequest): array
     {
@@ -2347,12 +2290,11 @@ SQL;
     }
 
     /**
-     * Novirza lietotāju pēc ātrās darbības uz iepriekšējo lapu vai ierīces skatu.
+     * Ko dara: Novirza lietotāju pēc ātrās darbības uz iepriekšējo lapu vai ierīces skatu.
      *
-     * Ja iepriekšējā lapa nav ātrās atjaunināšanas ceļš, tiek atgriezts uz to.
-     * Citādi — uz ierīces detalizēto karti. Piešķir sesijas ziņojumu ar darbības rezultātu.
+     * Kā strādā: Ja iepriekšējā lapa nav ātrās atjaunināšanas ceļš, tiek atgriezts uz to. Citādi — uz ierīces detalizēto karti. Piešķir sesijas ziņojumu ar darbības rezultātu.
      *
-     * Izsauc no: `quickUpdate()`, `updateUserRoom()`.
+     * Kad pielietojas: Izsauc no: `quickUpdate()`, `updateUserRoom()`.
      */
     private function redirectAfterQuickAction(Device $device, string $level, string $message): RedirectResponse
     {
@@ -2396,14 +2338,11 @@ SQL;
     }
 
     /**
-     * Saglabā ierīces datus, automātiski apstrādājot novecojušas shēmas kļūdas.
+     * Ko dara: Saglabā ierīces datus, automātiski apstrādājot novecojušas shēmas kļūdas.
      *
-     * Ja datubāze atgriež kļūdu par neatbilstošu kolonnu (piemēram, vecā ENUM vērtība
-     * vai NOT NULL datuma lauks), tiek izsaukts RuntimeSchemaBootstrapper un
-     * saglabāšana tiek atkārtota. Citas kļūdas tiek tūlīt pārraidītas tālāk.
+     * Kā strādā: Ja datubāze atgriež kļūdu par neatbilstošu kolonnu (piemēram, vecā ENUM vērtība vai NOT NULL datuma lauks), tiek izsaukts RuntimeSchemaBootstrapper un saglabāšana tiek atkārtota. Citas kļūdas tiek tūlīt pārraidītas tālāk.
      *
-     * Izsauc no: `store()`, `update()`, `updateUserRoom()`, `changeDeviceStatus()`,
-     * `moveDevice()`, `reassignDevice()`.
+     * Kad pielietojas: Izsauc no: `store()`, `update()`, `updateUserRoom()`, `changeDeviceStatus()`, `moveDevice()`, `reassignDevice()`.
      */
     private function saveDevicePayload(Device $device, array $payload): void
     {
@@ -2423,12 +2362,11 @@ SQL;
     }
 
     /**
-     * Pārbauda, vai datubāzes kļūda ir atgūstama vecās shēmas neatbilstība.
+     * Ko dara: Pārbauda, vai datubāzes kļūda ir atgūstama vecās shēmas neatbilstība.
      *
-     * Atgriež true, ja kļūda ir vai nu ENUM vērtības neatbilstība, vai datuma
-     * kolonnas NOT NULL ierobežojuma pārkāpums, kurus var automātiski novērst.
+     * Kā strādā: Atgriež true, ja kļūda ir vai nu ENUM vērtības neatbilstība, vai datuma kolonnas NOT NULL ierobežojuma pārkāpums, kurus var automātiski novērst.
      *
-     * Izsauc no: `saveDevicePayload()` — kļūdas apstrādes blokā.
+     * Kad pielietojas: Izsauc no: `saveDevicePayload()` — kļūdas apstrādes blokā.
      */
     private function isRecoverableLegacyDeviceSchemaMismatch(QueryException $exception): bool
     {
@@ -2437,13 +2375,11 @@ SQL;
     }
 
     /**
-     * Automātiski novērš novecojušas shēmas kļūdu, palaižot RuntimeSchemaBootstrapper.
+     * Ko dara: Automātiski novērš novecojušas shēmas kļūdu, palaižot RuntimeSchemaBootstrapper.
      *
-     * Ja kļūda saistīta ar NOT NULL datuma kolonnu, tiek papildu izpildīts
-     * ALTER TABLE, lai kolonnas pieņemtu null vērtības. Katra labojuma fakts
-     * tiek ierakstīts sistēmas žurnālā un sesijā rāda brīdinājumu.
+     * Kā strādā: Ja kļūda saistīta ar NOT NULL datuma kolonnu, tiek papildu izpildīts ALTER TABLE, lai kolonnas pieņemtu null vērtības. Katra labojuma fakts tiek ierakstīts sistēmas žurnālā un sesijā rāda brīdinājumu.
      *
-     * Izsauc no: `saveDevicePayload()` — kad `isRecoverableLegacyDeviceSchemaMismatch()` atgriež true.
+     * Kad pielietojas: Izsauc no: `saveDevicePayload()` — kad `isRecoverableLegacyDeviceSchemaMismatch()` atgriež true.
      */
     private function repairLegacyDeviceSchemaMismatch(QueryException $exception): void
     {
@@ -2463,12 +2399,11 @@ SQL;
     }
 
     /**
-     * Pārbauda, vai kļūda rodas no vecā ENUM vērtības neatbilstības statusu kolonnā.
+     * Ko dara: Pārbauda, vai kļūda rodas no vecā ENUM vērtības neatbilstības statusu kolonnā.
      *
-     * Vecās datubāzes shēmās statusa kolonna var būt ENUM, kas neatbalsta
-     * jaunās vērtības. Šī metode identificē šo konkrēto kļūdu pēc ziņojuma satura.
+     * Kā strādā: Vecās datubāzes shēmās statusa kolonna var būt ENUM, kas neatbalsta jaunās vērtības. Šī metode identificē šo konkrēto kļūdu pēc ziņojuma satura.
      *
-     * Izsauc no: `isRecoverableLegacyDeviceSchemaMismatch()`.
+     * Kad pielietojas: Izsauc no: `isRecoverableLegacyDeviceSchemaMismatch()`.
      */
     private function isLegacyStatusEnumMismatch(QueryException $exception): bool
     {
@@ -2479,12 +2414,11 @@ SQL;
     }
 
     /**
-     * Pārbauda, vai kļūda rodas no vecās shēmas datuma kolonnas NOT NULL ierobežojuma.
+     * Ko dara: Pārbauda, vai kļūda rodas no vecās shēmas datuma kolonnas NOT NULL ierobežojuma.
      *
-     * Vecās shēmās `purchase_date` un `warranty_until` var būt NOT NULL kolonnas,
-     * kas rada kļūdu, mēģinot saglabāt null vērtību.
+     * Kā strādā: Vecās shēmās `purchase_date` un `warranty_until` var būt NOT NULL kolonnas, kas rada kļūdu, mēģinot saglabāt null vērtību.
      *
-     * Izsauc no: `isRecoverableLegacyDeviceSchemaMismatch()`, `repairLegacyDeviceSchemaMismatch()`.
+     * Kad pielietojas: Izsauc no: `isRecoverableLegacyDeviceSchemaMismatch()`, `repairLegacyDeviceSchemaMismatch()`.
      */
     private function isLegacyNullableDeviceDateMismatch(QueryException $exception): bool
     {
@@ -2495,12 +2429,11 @@ SQL;
     }
 
     /**
-     * Veic ALTER TABLE, lai `purchase_date` un `warranty_until` kolonnas atļautu NULL.
+     * Ko dara: Veic ALTER TABLE, lai `purchase_date` un `warranty_until` kolonnas atļautu NULL.
      *
-     * Darbība tiek izpildīta tikai MySQL datubāzēs un tikai tad, ja kolonnas pastāv.
-     * Šis ir vienreizējs labojums instalācijām ar novecojušu migrāciju stāvokli.
+     * Kā strādā: Darbība tiek izpildīta tikai MySQL datubāzēs un tikai tad, ja kolonnas pastāv. Šis ir vienreizējs labojums instalācijām ar novecojušu migrāciju stāvokli.
      *
-     * Izsauc no: `repairLegacyDeviceSchemaMismatch()` — kad datuma kļūda ir identificēta.
+     * Kad pielietojas: Izsauc no: `repairLegacyDeviceSchemaMismatch()` — kad datuma kļūda ir identificēta.
      */
     private function ensureLegacyDeviceDateColumnsAllowNull(): void
     {

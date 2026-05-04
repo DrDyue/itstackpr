@@ -17,21 +17,25 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 /**
- * Lietotāju administrēšanas kontrolieris.
+ * Ko dara: Pārvalda sistēmas lietotājus administratora skatā.
+ *
+ * Kā strādā: Nodrošina lietotāju sarakstu, meklēšanu, profila apskati, izveidi, rediģēšanu, dzēšanas ierobežojumus un kārtošanu.
+ *
+ * Kad pielietojas: Kad administrators uztur sistēmas lietotājus un viņu lomas.
  */
 class UserController extends Controller
 {
+    // Lomas, ko administrators drīkst piešķirt sistēmas lietotājiem.
     private const ROLES = [User::ROLE_ADMIN, User::ROLE_USER];
+    // Atļautās lietotāju saraksta kārtošanas kolonnas.
     private const SORTABLE_COLUMNS = ['full_name', 'email', 'phone', 'role', 'job_title', 'is_active', 'last_login'];
 
     /**
-     * Parāda lietotāju sarakstu ar filtrēšanu, kārtošanu un kopsavilkumu.
+     * Ko dara: Parāda lietotāju sarakstu ar filtrēšanu, kārtošanu un kopsavilkumu.
      *
-     * Pieejams tikai administratoram. Filtri ietver vārdu, amatu, e-pastu,
-     * lomu, aktivitātes statusu un pēdējās pieslēgšanās laiku.
+     * Kā strādā: Pieejams tikai administratoram. Filtri ietver vārdu, amatu, e-pastu, lomu, aktivitātes statusu un pēdējās pieslēgšanās laiku.
      *
-     * Izsaukšana: GET /users | Pieejams: tikai administrators.
-     * Scenārijs: Administrators atver sadaļu "Lietotāji", lai pārvaldītu kontus.
+     * Kad pielietojas: Izsaukšana: GET /users | Pieejams: tikai administrators. Scenārijs: Administrators atver sadaļu "Lietotāji", lai pārvaldītu kontus.
      */
     public function index(Request $request)
     {
@@ -135,11 +139,11 @@ class UserController extends Controller
     }
 
     /**
-     * Atrod lietotāju pēc vārda un uzvārda aktīvajā filtrētajā sarakstā.
+     * Ko dara: Atrod lietotāju pēc vārda un uzvārda aktīvajā filtrētajā sarakstā.
      *
-     * Izsaukšana: GET /users/find-by-name | Pieejams: tikai administrators.
-     * Scenārijs: JavaScript izsauc AJAX pieprasījumu, kad administrators ievada
-     * vārdu meklēšanas lodziņā, lai ritinātu sarakstu pie atbilstošā ieraksta.
+     * Kā strādā: Apstrādā pieprasījumu, pārbauda tiesības un atgriež atbilstošo skatu, JSON atbildi vai pāradresāciju.
+     *
+     * Kad pielietojas: Izsaukšana: GET /users/find-by-name | Pieejams: tikai administrators.
      */
     public function findByName(Request $request): JsonResponse
     {
@@ -196,14 +200,11 @@ class UserController extends Controller
     }
 
     /**
-     * Parāda izvērstu lietotāja profila karti ar statistiku un aktivitātes vēsturi.
+     * Ko dara: Parāda izvērstu lietotāja profila karti ar statistiku un aktivitātes vēsturi.
      *
-     * Ielādē piesaistītās ierīces, aktīvos pieteikumus, nodošanas un audita žurnāla
-     * pēdējos ierakstus. Pieejams tikai administratoram.
+     * Kā strādā: Ielādē piesaistītās ierīces, aktīvos pieteikumus, nodošanas un audita žurnāla pēdējos ierakstus. Pieejams tikai administratoram.
      *
-     * Izsaukšana: GET /users/{user} | Pieejams: tikai administrators.
-     * Scenārijs: Administrators klikšķina uz lietotāja vārda sarakstā, lai apskatītu
-     * pilnu profilu ar ierīcēm, pieprasījumiem un aktivitātes vēsturi.
+     * Kad pielietojas: Izsaukšana: GET /users/{user} | Pieejams: tikai administrators. Scenārijs: Administrators klikšķina uz lietotāja vārda sarakstā, lai apskatītu pilnu profilu ar ierīcēm, pieprasījumiem un aktivitātes vēsturi.
      */
     public function show(User $user)
     {
@@ -325,13 +326,11 @@ class UserController extends Controller
     }
 
     /**
-     * Saglabā jaunu lietotāja kontu.
+     * Ko dara: Saglabā jaunu lietotāja kontu.
      *
-     * Paroli iepriekš šifrē ar bcrypt pirms ierakstīšanas datubāzē.
-     * Izveides notikums tiek reģistrēts audita žurnālā.
+     * Kā strādā: Paroli iepriekš šifrē ar bcrypt pirms ierakstīšanas datubāzē. Izveides notikums tiek reģistrēts audita žurnālā.
      *
-     * Izsaukšana: POST /users | Pieejams: tikai administrators.
-     * Scenārijs: Administrators aizpilda un iesniedz jauna lietotāja reģistrācijas formu.
+     * Kad pielietojas: Izsaukšana: POST /users | Pieejams: tikai administrators. Scenārijs: Administrators aizpilda un iesniedz jauna lietotāja reģistrācijas formu.
      */
     public function store(Request $request)
     {
@@ -347,16 +346,11 @@ class UserController extends Controller
     }
 
     /**
-     * Atjaunina esošā lietotāja datus.
+     * Ko dara: Atjaunina esošā lietotāja datus.
      *
-     * Ja tiek norādīta jauna parole, tā tiek šifrēta un paroles maiņas pieprasījuma
-     * lauks tiek notīrīts. Administrators savu kontu no šīs sadaļas rediģēt nevar —
-     * tādā gadījumā notiek pāradresācija uz profila modāli. Papildus tiek pārbaudīts,
-     * vai izmaiņas neatstāj sistēmu bez neviena administratora. Izmaiņas tiek
-     * salīdzinātas un reģistrētas audita žurnālā.
+     * Kā strādā: Ja tiek norādīta jauna parole, tā tiek šifrēta un paroles maiņas pieprasījuma lauks tiek notīrīts. Administrators savu kontu no šīs sadaļas rediģēt nevar — tādā gadījumā notiek pāradresācija uz profila modāli. Papildus tiek pārbaudīts, vai izmaiņas neatstāj sistēmu bez neviena administratora. Izmaiņas tiek salīdzinātas un reģistrētas audita žurnālā.
      *
-     * Izsaukšana: PUT/PATCH /users/{user} | Pieejams: tikai administrators.
-     * Scenārijs: Administrators rediģē lietotāja profila datus vai nomaina paroli.
+     * Kad pielietojas: Izsaukšana: PUT/PATCH /users/{user} | Pieejams: tikai administrators. Scenārijs: Administrators rediģē lietotāja profila datus vai nomaina paroli.
      */
     public function update(Request $request, User $user)
     {
@@ -399,15 +393,11 @@ class UserController extends Controller
     }
 
     /**
-     * Dzēš lietotāja kontu, ja tam nav piesaistītu ierakstu sistēmā.
+     * Ko dara: Dzēš lietotāja kontu, ja tam nav piesaistītu ierakstu sistēmā.
      *
-     * Pirms dzēšanas pārbauda visas saistītās relācijas — ierīces, telpas,
-     * pieteikumus, remonts u.c. Ja kaut kas ir piesaistīts, dzēšana tiek
-     * noraidīta ar detalizētu kļūdas paziņojumu. Administrators nevar dzēst pats sevi,
-     * un lietotāju nevar dzēst, kamēr tam vēl ir piesaistītas ierīces.
+     * Kā strādā: Pirms dzēšanas pārbauda visas saistītās relācijas — ierīces, telpas, pieteikumus, remonts u.c. Ja kaut kas ir piesaistīts, dzēšana tiek noraidīta ar detalizētu kļūdas paziņojumu. Administrators nevar dzēst pats sevi, un lietotāju nevar dzēst, kamēr tam vēl ir piesaistītas ierīces.
      *
-     * Izsaukšana: DELETE /users/{user} | Pieejams: tikai administrators.
-     * Scenārijs: Administrators nospiež dzēšanas pogu lietotāja rindā un apstiprina darbību.
+     * Kad pielietojas: Izsaukšana: DELETE /users/{user} | Pieejams: tikai administrators. Scenārijs: Administrators nospiež dzēšanas pogu lietotāja rindā un apstiprina darbību.
      */
     public function destroy(User $user)
     {
@@ -458,12 +448,11 @@ class UserController extends Controller
     }
 
     /**
-     * Validē un normalizē lietotāja ievaddatus pirms saglabāšanas.
+     * Ko dara: Validē un normalizē lietotāja ievaddatus pirms saglabāšanas.
      *
-     * Parole ir obligāta tikai jaunam lietotājam. E-pasta unikalitāte tiek pārbaudīta,
-     * izslēdzot pašreizējo lietotāju (ja rediģē). Tālrunis un amats ir izvēles lauki.
+     * Kā strādā: Parole ir obligāta tikai jaunam lietotājam. E-pasta unikalitāte tiek pārbaudīta, izslēdzot pašreizējo lietotāju (ja rediģē). Tālrunis un amats ir izvēles lauki.
      *
-     * Izsauc no: `store()`, `update()`.
+     * Kad pielietojas: Izsauc no: `store()`, `update()`.
      */
     private function validatedData(Request $request, ?User $user = null): array
     {
@@ -490,9 +479,11 @@ class UserController extends Controller
     }
 
     /**
-     * Atgriež lomu cilvēkam saprotamos nosaukumus Blade skatiem.
+     * Ko dara: Atgriež lomu cilvēkam saprotamos nosaukumus Blade skatiem.
      *
-     * Izsauc no: `index()`, `show()`.
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `index()`, `show()`.
      */
     private function roleLabels(): array
     {
@@ -504,13 +495,11 @@ class UserController extends Controller
     }
 
     /**
-     * Apakšvaicājums, kas atlasa lietotāja pēdējo pieslēgšanās laiku no audita žurnāla.
+     * Ko dara: Apakšvaicājums, kas atlasa lietotāja pēdējo pieslēgšanās laiku no audita žurnāla.
      *
-     * Izmanto kā "select sub" papildus kolonnas pievienošanai lietotāju vaicājumam,
-     * lai varētu kārtot un rādīt faktisko pieslēgšanās datumu, pat ja `last_login`
-     * kolonna ir tukša (piemēram, vecāki konti pirms audita ieviešanas).
+     * Kā strādā: Izmanto kā "select sub" papildus kolonnas pievienošanai lietotāju vaicājumam, lai varētu kārtot un rādīt faktisko pieslēgšanās datumu, pat ja `last_login` kolonna ir tukša (piemēram, vecāki konti pirms audita ieviešanas).
      *
-     * Izsauc no: `index()`, `show()`.
+     * Kad pielietojas: Izsauc no: `index()`, `show()`.
      */
     private function latestLoginAuditSubquery(): Builder
     {
@@ -523,13 +512,11 @@ class UserController extends Controller
     }
 
     /**
-     * Pievieno lietotāja modelim `effective_last_login` atribūtu.
+     * Ko dara: Pievieno lietotāja modelim `effective_last_login` atribūtu.
      *
-     * Izmanto `last_login` lauku kā primāro avotu, bet ja tas ir tukšs,
-     * mēģina atrast pieslēgšanās laiku no audita žurnāla apakšvaicājuma.
-     * Tas nodrošina, ka pieslēgšanās laiks ir redzams vienmēr, ja tas ir pieejams.
+     * Kā strādā: Izmanto `last_login` lauku kā primāro avotu, bet ja tas ir tukšs, mēģina atrast pieslēgšanās laiku no audita žurnāla apakšvaicājuma. Tas nodrošina, ka pieslēgšanās laiks ir redzams vienmēr, ja tas ir pieejams.
      *
-     * Izsauc no: `index()` (caur kolekcijas iterāciju), `show()`.
+     * Kad pielietojas: Izsauc no: `index()` (caur kolekcijas iterāciju), `show()`.
      */
     private function attachEffectiveLastLogin(User $user): void
     {
@@ -538,12 +525,11 @@ class UserController extends Controller
     }
 
     /**
-     * Normalizē kārtošanas parametrus no URL vaicājuma.
+     * Ko dara: Normalizē kārtošanas parametrus no URL vaicājuma.
      *
-     * Noklusētais kārtojums ir pēc vārda un uzvārda augošā secībā.
-     * Pārbauda, vai pieprasītā kolonna atrodas atļauto kolonnu sarakstā.
+     * Kā strādā: Noklusētais kārtojums ir pēc vārda un uzvārda augošā secībā. Pārbauda, vai pieprasītā kolonna atrodas atļauto kolonnu sarakstā.
      *
-     * Izsauc no: `index()`, `findByName()`.
+     * Kad pielietojas: Izsauc no: `index()`, `findByName()`.
      */
     private function normalizedSorting(Request $request): array
     {
@@ -566,12 +552,11 @@ class UserController extends Controller
     }
 
     /**
-     * Pielieto kārtošanu lietotāju vaicājumam.
+     * Ko dara: Pielieto kārtošanu lietotāju vaicājumam.
      *
-     * Lielākā daļa kolonnu tiek kārtota bez reģistrjutības (LOWER/COALESCE).
-     * Pēdējās pieslēgšanās kārtojums novieto NULL vērtības saraksta beigās.
+     * Kā strādā: Lielākā daļa kolonnu tiek kārtota bez reģistrjutības (LOWER/COALESCE). Pēdējās pieslēgšanās kārtojums novieto NULL vērtības saraksta beigās.
      *
-     * Izsauc no: `index()`, `findByName()`.
+     * Kad pielietojas: Izsauc no: `index()`, `findByName()`.
      */
     private function applySorting($query, array $sorting): void
     {
@@ -611,9 +596,11 @@ class UserController extends Controller
     }
 
     /**
-     * Atgriež kārtojamo lauku nosaukumu karti Blade skatam un kārtošanas normalizācijai.
+     * Ko dara: Atgriež kārtojamo lauku nosaukumu karti Blade skatam un kārtošanas normalizācijai.
      *
-     * Izsauc no: `index()`, `normalizedSorting()`.
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `index()`, `normalizedSorting()`.
      */
     private function sortOptions(): array
     {
@@ -628,13 +615,11 @@ class UserController extends Controller
         ];
     }
     /**
-     * Pārbauda, vai lietotāja lomas maiņa neatņems sistēmai pēdējo administratoru.
+     * Ko dara: Pārbauda, vai lietotāja lomas maiņa neatņems sistēmai pēdējo administratoru.
      *
-     * Atgriež true tikai tad, ja rediģētais lietotājs pašlaik ir administrators,
-     * jaunajos datos viņam šī loma tiek noņemta un sistēmā nepaliek neviens cits
-     * administrators.
+     * Kā strādā: Atgriež true tikai tad, ja rediģētais lietotājs pašlaik ir administrators, jaunajos datos viņam šī loma tiek noņemta un sistēmā nepaliek neviens cits administrators.
      *
-     * Izsauc no: `update()` — pirms lietotāja izmaiņu saglabāšanas.
+     * Kad pielietojas: Izsauc no: `update()` — pirms lietotāja izmaiņu saglabāšanas.
      */
     private function wouldRemoveLastAdmin(User $user, array $validated): bool
     {

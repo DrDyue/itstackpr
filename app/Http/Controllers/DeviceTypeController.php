@@ -9,24 +9,23 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Ierīču tipu pārvaldības CRUD kontrolieris.
+ * Ko dara: Pārvalda ierīču tipu katalogu.
  *
- * Nodrošina pilnu tipu sarakstu ar meklēšanu un kārtošanu,
- * kā arī tipu pievienošanu, rediģēšanu un dzēšanu.
- * Ierīces tipa dzēšana tiek bloķēta, ja tipam vēl ir piesaistītas ierīces.
+ * Kā strādā: Nodrošina tipu sarakstu, meklēšanu, izveidi, rediģēšanu un dzēšanu ar piesaistīto ierīču skaita kontroli.
+ *
+ * Kad pielietojas: Kad administrators uztur ierīču klasifikatoru, ko izmanto ierīču formās un filtros.
  */
 class DeviceTypeController extends Controller
 {
+    // Atļautās ierīču tipu saraksta kārtošanas kolonnas.
     private const SORTABLE_COLUMNS = ['type_name', 'devices_count'];
 
     /**
-     * Parāda ierīču tipu sarakstu ar meklēšanu un kārtošanu.
+     * Ko dara: Parāda ierīču tipu sarakstu ar meklēšanu un kārtošanu.
      *
-     * Administratoram rādāmi visi tipi. Katram tipam tiek uzskaitīts
-     * piesaistīto ierīču skaits, kas palīdz novērtēt tā izmantojamību.
+     * Kā strādā: Administratoram rādāmi visi tipi. Katram tipam tiek uzskaitīts piesaistīto ierīču skaits, kas palīdz novērtēt tā izmantojamību.
      *
-     * Izsaukšana: GET /device-types | Pieejams: administrators, IT vadītājs.
-     * Scenārijs: Vadītājs atver sadaļu "Ierīču tipi", lai pārvaldītu tipu sarakstu.
+     * Kad pielietojas: Izsaukšana: GET /device-types | Pieejams: administrators, IT vadītājs. Scenārijs: Vadītājs atver sadaļu "Ierīču tipi", lai pārvaldītu tipu sarakstu.
      */
     public function index(Request $request)
     {
@@ -70,13 +69,11 @@ class DeviceTypeController extends Controller
     }
 
     /**
-     * Atrod ierīces tipu pēc nosaukuma aktīvajā filtrētajā sarakstā.
+     * Ko dara: Atrod ierīces tipu pēc nosaukuma aktīvajā filtrētajā sarakstā.
      *
-     * Izmantota JavaScript meklēšanas lodziņā, lai iezīmētu atbilstošo
-     * rindu tabulā. Atgriež lapu un ieraksta ID priekš ritināšanas.
+     * Kā strādā: Izmantota JavaScript meklēšanas lodziņā, lai iezīmētu atbilstošo rindu tabulā. Atgriež lapu un ieraksta ID priekš ritināšanas.
      *
-     * Izsaukšana: GET /device-types/find-by-name | Pieejams: administrators, IT vadītājs.
-     * Scenārijs: JavaScript izsauc AJAX pieprasījumu, kad vadītājs raksta meklēšanas lodziņā.
+     * Kad pielietojas: Izsaukšana: GET /device-types/find-by-name | Pieejams: administrators, IT vadītājs. Scenārijs: JavaScript izsauc AJAX pieprasījumu, kad vadītājs raksta meklēšanas lodziņā.
      */
     public function findByName(Request $request): JsonResponse
     {
@@ -117,12 +114,11 @@ class DeviceTypeController extends Controller
     }
 
     /**
-     * Saglabā jaunu ierīces tipu datubāzē.
+     * Ko dara: Saglabā jaunu ierīces tipu datubāzē.
      *
-     * Validē nosaukumu, pārbauda unikalitāti un reģistrē izveides notikumu auditā.
+     * Kā strādā: Validē nosaukumu, pārbauda unikalitāti un reģistrē izveides notikumu auditā.
      *
-     * Izsaukšana: POST /device-types | Pieejams: administrators, IT vadītājs.
-     * Scenārijs: Vadītājs aizpilda un iesniedz tipa pievienošanas formu.
+     * Kad pielietojas: Izsaukšana: POST /device-types | Pieejams: administrators, IT vadītājs. Scenārijs: Vadītājs aizpilda un iesniedz tipa pievienošanas formu.
      */
     public function store(Request $request)
     {
@@ -137,13 +133,11 @@ class DeviceTypeController extends Controller
     }
 
     /**
-     * Atjaunina esošā ierīces tipa nosaukumu.
+     * Ko dara: Atjaunina esošā ierīces tipa nosaukumu.
      *
-     * Pirms saglabāšanas salīdzina "pirms" un "pēc" stāvokļus un
-     * pieraksta izmaiņas audita žurnālā.
+     * Kā strādā: Pirms saglabāšanas salīdzina "pirms" un "pēc" stāvokļus un pieraksta izmaiņas audita žurnālā.
      *
-     * Izsaukšana: PUT/PATCH /device-types/{deviceType} | Pieejams: administrators, IT vadītājs.
-     * Scenārijs: Vadītājs rediģē ierīces tipa nosaukumu un saglabā izmaiņas.
+     * Kad pielietojas: Izsaukšana: PUT/PATCH /device-types/{deviceType} | Pieejams: administrators, IT vadītājs. Scenārijs: Vadītājs rediģē ierīces tipa nosaukumu un saglabā izmaiņas.
      */
     public function update(Request $request, DeviceType $deviceType)
     {
@@ -160,13 +154,11 @@ class DeviceTypeController extends Controller
     }
 
     /**
-     * Dzēš ierīces tipu, ja tam nav piesaistītu ierīču.
+     * Ko dara: Dzēš ierīces tipu, ja tam nav piesaistītu ierīču.
      *
-     * Ja tipam vēl ir ierīces, dzēšana tiek noraidīta ar informatīvu kļūdas paziņojumu,
-     * lai netiktu sabojāta datu integritāte.
+     * Kā strādā: Ja tipam vēl ir ierīces, dzēšana tiek noraidīta ar informatīvu kļūdas paziņojumu, lai netiktu sabojāta datu integritāte.
      *
-     * Izsaukšana: DELETE /device-types/{deviceType} | Pieejams: administrators, IT vadītājs.
-     * Scenārijs: Vadītājs nospiež dzēšanas pogu tipa rindā un apstiprina darbību.
+     * Kad pielietojas: Izsaukšana: DELETE /device-types/{deviceType} | Pieejams: administrators, IT vadītājs. Scenārijs: Vadītājs nospiež dzēšanas pogu tipa rindā un apstiprina darbību.
      */
     public function destroy(DeviceType $deviceType)
     {
@@ -185,10 +177,11 @@ class DeviceTypeController extends Controller
     }
 
     /**
-     * Tipa detalizētais skats — pašlaik novirza uz sarakstu.
+     * Ko dara: Tipa detalizētais skats — pašlaik novirza uz sarakstu.
      *
-     * Šī metode ir saglabāta saderībai ar Laravel resursu maršrutiem.
-     * Ja nākotnē tiks veidota atsevišķa tipa lapas, tā tiks implementēta šeit.
+     * Kā strādā: Šī metode ir saglabāta saderībai ar Laravel resursu maršrutiem. Ja nākotnē tiks veidota atsevišķa tipa lapas, tā tiks implementēta šeit.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     public function show(DeviceType $deviceType)
     {
@@ -198,10 +191,11 @@ class DeviceTypeController extends Controller
     }
 
     /**
-     * Normalizē kārtošanas parametrus no URL vaicājuma.
+     * Ko dara: Normalizē kārtošanas parametrus no URL vaicājuma.
      *
-     * Pārbauda, vai pieprasītā kolonna ir atļauto kārtojamo kolonnu sarakstā.
-     * Noklusēts kārtojums ir pēc tipa nosaukuma augošā secībā.
+     * Kā strādā: Pārbauda, vai pieprasītā kolonna ir atļauto kārtojamo kolonnu sarakstā. Noklusēts kārtojums ir pēc tipa nosaukuma augošā secībā.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function normalizedSorting(Request $request): array
     {
@@ -224,7 +218,11 @@ class DeviceTypeController extends Controller
     }
 
     /**
-     * Atgriež kārtojamo lauku nosaukumu karti Blade skatam un audita paziņojumiem.
+     * Ko dara: Atgriež kārtojamo lauku nosaukumu karti Blade skatam un audita paziņojumiem.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function sortOptions(): array
     {
@@ -235,10 +233,11 @@ class DeviceTypeController extends Controller
     }
 
     /**
-     * Validē un normalizē ierīces tipa nosaukumu pirms saglabāšanas.
+     * Ko dara: Validē un normalizē ierīces tipa nosaukumu pirms saglabāšanas.
      *
-     * Pārbauda obligāto aizpildījumu, garuma ierobežojumu un unikalitāti
-     * (reģistrjutīgi). Metode pieņem esošu tipu, lai izslēgtu to no unikalitātes pārbaudes.
+     * Kā strādā: Pārbauda obligāto aizpildījumu, garuma ierobežojumu un unikalitāti (reģistrjutīgi). Metode pieņem esošu tipu, lai izslēgtu to no unikalitātes pārbaudes.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function validateTypeName(Request $request, ?DeviceType $deviceType = null): array
     {

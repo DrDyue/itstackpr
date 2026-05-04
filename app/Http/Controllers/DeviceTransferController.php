@@ -18,25 +18,25 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Ierīču nodošanas pieprasījumu plūsma.
+ * Ko dara: Pārvalda ierīču nodošanas pieteikumus starp lietotājiem.
  *
- * Lietotājs iesniedz nodošanu citam lietotājam, savukārt saņēmējs
- * pieņem vai noraida šo nodošanu.
+ * Kā strādā: Ļauj izveidot nodošanas pieteikumu, parāda sarakstu ar filtriem, apstrādā saņēmēja lēmumu un sagatavo nodošanas aktu.
+ *
+ * Kad pielietojas: Kad lietotājs vēlas nodot sev piešķirtu ierīci citam lietotājam vai saņēmējs apstiprina/noraida nodošanu.
  */
 class DeviceTransferController extends Controller
 {
     use HasRepairStatusLabels;
 
+    // Atļautās ierīču nodošanas pieteikumu saraksta kārtošanas kolonnas.
     private const SORTABLE_COLUMNS = ['code', 'name', 'requester', 'recipient', 'created_at', 'status'];
 
     /**
-     * Parāda ierīču nodošanas pieteikumu sarakstu ar lomas atkarīgu filtrēšanu.
+     * Ko dara: Parāda ierīču nodošanas pieteikumu sarakstu ar lomas atkarīgu filtrēšanu.
      *
-     * Administrators redz visus pieteikumus. Parasts lietotājs redz tikai savus iesniegtos
-     * un saņemtos pieteikumus. Atspoguļo gaidošo, apstiprināto un noraidīto pieteikumu kopsavilkumu.
+     * Kā strādā: Administrators redz visus pieteikumus. Parasts lietotājs redz tikai savus iesniegtos un saņemtos pieteikumus. Atspoguļo gaidošo, apstiprināto un noraidīto pieteikumu kopsavilkumu.
      *
-     * Izsaukšana: GET /device-transfers | Pieejams: jebkurš autentificēts lietotājs.
-     * Scenārijs: Lietotājs navigē uz "Ierīču nodošana" sadaļu vai atgriežas no pieteikuma skata.
+     * Kad pielietojas: Izsaukšana: GET /device-transfers | Pieejams: jebkurš autentificēts lietotājs. Scenārijs: Lietotājs navigē uz "Ierīču nodošana" sadaļu vai atgriežas no pieteikuma skata.
      */
     public function index(Request $request)
     {
@@ -180,13 +180,11 @@ class DeviceTransferController extends Controller
     }
 
     /**
-     * Atrod nodošanas pieteikumu pēc saistītās ierīces koda filtrētajā sarakstā.
+     * Ko dara: Atrod nodošanas pieteikumu pēc saistītās ierīces koda filtrētajā sarakstā.
      *
-     * Meklēšana ņem vērā aktīvos filtrus un atgriež lapas numuru un elementa ID.
-     * Nepradīmētiem lietotājiem meklēšana tiek ierobežota tikai uz viņu pieteikumiem.
+     * Kā strādā: Meklēšana ņem vērā aktīvos filtrus un atgriež lapas numuru un elementa ID. Nepradīmētiem lietotājiem meklēšana tiek ierobežota tikai uz viņu pieteikumiem.
      *
-     * Izsaukšana: GET /device-transfers/find-by-code | Pieejams: jebkurš autentificēts lietotājs.
-     * Scenārijs: JavaScript izsauc šo metodi, kad lietotājs raksta mājēšanas lodziņā.
+     * Kad pielietojas: Izsaukšana: GET /device-transfers/find-by-code | Pieejams: jebkurš autentificēts lietotājs. Scenārijs: JavaScript izsauc šo metodi, kad lietotājs raksta mājēšanas lodziņā.
      */
     public function findByCode(Request $request)
     {
@@ -254,7 +252,11 @@ class DeviceTransferController extends Controller
 
 
     /**
-     * Saglabā jaunu ierīces nodošanas pieprasījumu.
+     * Ko dara: Saglabā jaunu ierīces nodošanas pieprasījumu.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     public function store(Request $request)
     {
@@ -314,7 +316,11 @@ class DeviceTransferController extends Controller
     }
 
     /**
-     * Saņēmēja lēmums par ierīces pieņemšanu vai noraidīšanu.
+     * Ko dara: Saņēmēja lēmums par ierīces pieņemšanu vai noraidīšanu.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     public function review(Request $request, DeviceTransfer $deviceTransfer)
     {
@@ -361,6 +367,8 @@ class DeviceTransferController extends Controller
         // jaunajam lietotājam paziņojumu sūtītu tikai tad, ja atbildīgais tiešām mainījās.
         $previousAssignedUserId = null;
 
+        // Nodošanas lēmums un ierīces atbildīgā maiņa ir viena biznesa darbība.
+        // Transakcija pasargā no situācijas, kur pieteikums ir apstiprināts, bet ierīce vēl nav pārrakstīta.
         DB::transaction(function () use ($validated, $deviceTransfer, $reviewer, $keepCurrentRoom, &$previousAssignedUserId) {
             $deviceTransfer->update([
                 'status' => $validated['status'],
@@ -372,6 +380,8 @@ class DeviceTransferController extends Controller
                 return;
             }
 
+            // Bloķējam ierīci, jo nodošanas laikā mainās tās atbildīgais lietotājs un reizēm arī telpa.
+            // Tas neļauj paralēli izpildīt citu statusa vai atrašanās vietas maiņu tai pašai ierīcei.
             $device = $deviceTransfer->device()->lockForUpdate()->first();
 
             if (! $device || $device->status !== Device::STATUS_ACTIVE) {
@@ -384,6 +394,8 @@ class DeviceTransferController extends Controller
             $targetRoom = null;
 
             if (! $keepCurrentRoom) {
+                // Saņēmējs var atstāt ierīci esošajā telpā vai norādīt jaunu telpu,
+                // piemēram, ja pēc nodošanas ierīce fiziski pārvietojas uz citu kabinetu.
                 $targetRoom = filled($validated['room_id'] ?? null)
                     ? Room::query()->find($validated['room_id'])
                     : null;
@@ -395,6 +407,8 @@ class DeviceTransferController extends Controller
                 }
             }
 
+            // Šeit notiek faktiska īpašnieka/atbildīgā maiņa ierīces ierakstā.
+            // Ja telpa netika mainīta, saglabājas iepriekšējā atrašanās vieta.
             $device->forceFill([
                 'assigned_to_id' => $deviceTransfer->transfered_to_id,
                 'room_id' => $targetRoom?->id ?? $device->room_id,
@@ -432,12 +446,11 @@ class DeviceTransferController extends Controller
     }
 
     /**
-     * Parāda ierīces nodošanas aktu drukāšanai.
+     * Ko dara: Parāda ierīces nodošanas aktu drukāšanai.
      *
-     * Pieejams tikai apstiprinātiem pieteikumiem. Atgriež standalone HTML lapu ar
-     * visas informāciju par ierīci, abām pusēm un vietu parakstiem.
+     * Kā strādā: Pieejams tikai apstiprinātiem pieteikumiem. Atgriež standalone HTML lapu ar visas informāciju par ierīci, abām pusēm un vietu parakstiem.
      *
-     * Izsaukšana: GET /device-transfers/{deviceTransfer}/act | Pieejams: jebkurš autentificēts lietotājs.
+     * Kad pielietojas: Izsaukšana: GET /device-transfers/{deviceTransfer}/act | Pieejams: jebkurš autentificēts lietotājs.
      */
     public function printAct(DeviceTransfer $deviceTransfer)
     {
@@ -453,6 +466,13 @@ class DeviceTransferController extends Controller
         return view('device_transfers.print_act', ['transfer' => $deviceTransfer]);
     }
 
+    /**
+     * Ko dara: Atgriež lietotājam pieejamās ierīces konkrētās plūsmas izveides formai.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: saraksta datu sagatavošanas metodes un `store()`.
+     */
     private function availableDevicesForUser(User $user): Builder
     {
         return Device::query()
@@ -467,6 +487,13 @@ class DeviceTransferController extends Controller
             ->orderBy('name');
     }
 
+    /**
+     * Ko dara: Sagatavo ierīču izvēlnes opcijas formai vai filtram.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: saraksta datu sagatavošanas metodes.
+     */
     private function deviceOptions($devices)
     {
         return collect($devices)->map(function (Device $device) {
@@ -497,6 +524,13 @@ class DeviceTransferController extends Controller
         })->values();
     }
 
+    /**
+     * Ko dara: Sagatavo saņēmēju izvēlnes opcijas nodošanas formai.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `index()`.
+     */
     private function recipientOptions($users)
     {
         return collect($users)->map(fn (User $recipient) => [
@@ -511,6 +545,13 @@ class DeviceTransferController extends Controller
         ])->values();
     }
 
+    /**
+     * Ko dara: Pārbauda, vai ierīcei drīkst izveidot nodošanas pieteikumu.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `store()`.
+     */
     private function ensureDeviceCanAcceptTransferRequest(Device $device): void
     {
         if ($device->status === Device::STATUS_REPAIR) {
@@ -538,6 +579,13 @@ class DeviceTransferController extends Controller
         }
     }
 
+    /**
+     * Ko dara: Nosaka nodošanas pieteikuma sākotnējo atbildīgo lietotāju.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `store()`.
+     */
     private function transferOwnerId(User $actor, Device $device): ?int
     {
         if ($actor->canManageRequests()) {
@@ -548,7 +596,11 @@ class DeviceTransferController extends Controller
     }
 
     /**
-     * Sakārto saraksta filtru stāvokli nodošanas pieprasījumiem.
+     * Ko dara: Sakārto saraksta filtru stāvokli nodošanas pieprasījumiem.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function normalizedIndexFilters(Request $request, array $availableStatuses): array
     {
@@ -597,7 +649,11 @@ class DeviceTransferController extends Controller
     }
 
     /**
-     * Pielieto meklēšanu un filtrus nodošanas pieteikumu vaicājumam.
+     * Ko dara: Pielieto meklēšanu un filtrus nodošanas pieteikumu vaicājumam.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function applyIndexFilters(Builder $query, array $filters, array $skip = []): Builder
     {
@@ -676,7 +732,11 @@ class DeviceTransferController extends Controller
     }
 
     /**
-     * Pielieto drošu kārtošanu pēc atļautajām kolonnām.
+     * Ko dara: Pielieto drošu kārtošanu pēc atļautajām kolonnām.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function applySorting(Builder $query, array $sorting): void
     {
@@ -718,7 +778,11 @@ class DeviceTransferController extends Controller
     }
 
     /**
-     * Normalizē kārtošanas parametrus tabulas galvenei un toast paziņojumiem.
+     * Ko dara: Normalizē kārtošanas parametrus tabulas galvenei un toast paziņojumiem.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function normalizedSorting(Request $request): array
     {
@@ -741,7 +805,11 @@ class DeviceTransferController extends Controller
     }
 
     /**
-     * Lietotāja paziņojumiem izmantojamās kārtošanas etiķetes.
+     * Ko dara: Lietotāja paziņojumiem izmantojamās kārtošanas etiķetes.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function sortOptions(): array
     {
@@ -755,6 +823,13 @@ class DeviceTransferController extends Controller
         ];
     }
 
+    /**
+     * Ko dara: Reģistrē nodošanas pieteikumu saraksta filtrēšanu un kārtošanu audita žurnālā.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `index()`.
+     */
     private function auditDeviceTransferListInteractions(Request $request, User $user, array $filters, array $sorting): void
     {
         $filterPayload = array_filter([
@@ -799,7 +874,11 @@ class DeviceTransferController extends Controller
     }
 
     /**
-     * Sagatavo ierīču dropdown opcijas nodošanas pieteikumu filtram.
+     * Ko dara: Sagatavo ierīču dropdown opcijas nodošanas pieteikumu filtram.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function transferDeviceOptions($transfers)
     {
@@ -830,7 +909,11 @@ class DeviceTransferController extends Controller
     }
 
     /**
-     * Sagatavo lietotāju dropdown opcijas pieprasījumu filtriem.
+     * Ko dara: Sagatavo lietotāju dropdown opcijas pieprasījumu filtriem.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function transferUserOptions($users)
     {

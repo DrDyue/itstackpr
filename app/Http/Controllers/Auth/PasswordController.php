@@ -10,18 +10,20 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
 /**
- * Pašreizējā lietotāja paroles maiņa profila sadaļā.
+ * Ko dara: Pārvalda autentificēta lietotāja paroles maiņu.
+ *
+ * Kā strādā: Validē pašreizējo paroli, pārbauda jauno paroli, šifrē to un saglabā lietotāja kontā.
+ *
+ * Kad pielietojas: Kad lietotājs profila sadaļā maina savu paroli.
  */
 class PasswordController extends Controller
 {
     /**
-     * Atjauno pašreizējā lietotāja paroli ar validāciju un audita reģistrāciju.
+     * Ko dara: Atjauno pašreizējā lietotāja paroli ar validāciju un audita reģistrāciju.
      *
-     * Validē pašreizējo paroli un pārbauda jauno paroles nosacījumus. Parole tiek šifrēta
-     * pirms saglabāšanas. Pēc veiksmīgas maiņas sesija tiek signalizēta profila modāļa aizvēršanai.
+     * Kā strādā: Validē pašreizējo paroli un pārbauda jauno paroles nosacījumus. Parole tiek šifrēta pirms saglabāšanas. Pēc veiksmīgas maiņas sesija tiek signalizēta profila modāļa aizvēršanai.
      *
-     * Izsaukšana: PUT /password | Pieejams: autentificēts.
-     * Scenārijs: Lietotājs ievada jauno paroli profila modāļa paroles cilnē.
+     * Kad pielietojas: Izsaukšana: PUT /password | Pieejams: autentificēts. Scenārijs: Lietotājs ievada jauno paroli profila modāļa paroles cilnē.
      */
     public function update(Request $request): RedirectResponse
     {

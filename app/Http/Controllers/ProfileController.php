@@ -15,24 +15,32 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 /**
- * Lietotāja profila rediģēšana un konta dzēšana.
+ * Ko dara: Pārvalda lietotāja profilu, paroli, iestatījumus un konta dzēšanu.
+ *
+ * Kā strādā: Saglabā profila datus, administratora darba vides iestatījumus, auditē izmaiņas un apstrādā legacy shēmas gadījumus.
+ *
+ * Kad pielietojas: Kad lietotājs labo profilu vai administrators maina savas darba vides preferences.
  */
 class ProfileController extends Controller
 {
+    /**
+     * Ko dara: Inicializē profila kontrolierim vajadzīgo shēmas palīgservisu.
+     *
+     * Kā strādā: Laravel servisa konteiners padod RuntimeSchemaBootstrapper instanci, ko kontrolieris vēlāk izmanto profila iestatījumu saglabāšanā.
+     *
+     * Kad pielietojas: Kad Laravel izveido ProfileController instanci pirms profila maršrutu apstrādes.
+     */
     public function __construct(
         private readonly RuntimeSchemaBootstrapper $runtimeSchemaBootstrapper
     ) {
     }
 
     /**
-     * Profila rediģēšanas skats — novirza uz galveno lapu pēc lomas.
+     * Ko dara: Profila rediģēšanas skats — novirza uz galveno lapu pēc lomas.
      *
-     * Administrators tiek novirzīts uz darba virsmu, bet parasts lietotājs
-     * uz ierīču sarakstu. Ja pieprasījumā ir `profile_modal`, tas tiek
-     * pārsūtīts tālāk uz mērķa lapu, lai profila modālis atvērtos JavaScript pusē.
+     * Kā strādā: Administrators tiek novirzīts uz darba virsmu, bet parasts lietotājs uz ierīču sarakstu. Ja pieprasījumā ir `profile_modal`, tas tiek pārsūtīts tālāk uz mērķa lapu, lai profila modālis atvērtos JavaScript pusē.
      *
-     * Izsaukšana: GET /profile | Pieejams: jebkurš autentificēts lietotājs.
-     * Scenārijs: Lietotājs klikšķina uz "Manu profilu" vai tiek novirzīts uz šo URL.
+     * Kad pielietojas: Izsaukšana: GET /profile | Pieejams: jebkurš autentificēts lietotājs. Scenārijs: Lietotājs klikšķina uz "Manu profilu" vai tiek novirzīts uz šo URL.
      */
     public function edit(Request $request): RedirectResponse
     {
@@ -46,13 +54,11 @@ class ProfileController extends Controller
     }
 
     /**
-     * Saglabā lietotāja profila pamatdatus ar pūriņu izsekošanu audita žurnālā.
+     * Ko dara: Saglabā lietotāja profila pamatdatus ar pūriņu izsekošanu audita žurnālā.
      *
-     * Izmaiņas tiek salīdzinātas ar iepriekšējo stāvokli un reģistrētas audita žurnālā.
-     * Pēc veiksmīgas saglabāšanas nosūta sesijā signālu profila modāļa aizvēršanai.
+     * Kā strādā: Izmaiņas tiek salīdzinātas ar iepriekšējo stāvokli un reģistrētas audita žurnālā. Pēc veiksmīgas saglabāšanas nosūta sesijā signālu profila modāļa aizvēršanai.
      *
-     * Izsaukšana: PUT /profile | Pieejams: jebkurš autentificēts lietotājs.
-     * Scenārijs: Lietotājs aizpilda profila formu (vārds, e-pasts, tālrunis, amats) un saglabā.
+     * Kad pielietojas: Izsaukšana: PUT /profile | Pieejams: jebkurš autentificēts lietotājs. Scenārijs: Lietotājs aizpilda profila formu (vārds, e-pasts, tālrunis, amats) un saglabā.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
@@ -85,10 +91,11 @@ class ProfileController extends Controller
     }
 
     /**
-     * Saglabā administratora skata preferenču iestatījumus (piemēram, norakstīto ierīču slēpšana).
+     * Ko dara: Saglabā administratora skata preferenču iestatījumus (piemēram, norakstīto ierīču slēpšana).
      *
-     * Pieejams tikai administratoriem. Iestatījumi glabājas `user_settings` JSON kolonnā.
-     * Izmaiņas tiek reģistrētas audita žurnālā ar skaidru aprakstu.
+     * Kā strādā: Pieejams tikai administratoriem. Iestatījumi glabājas `user_settings` JSON kolonnā. Izmaiņas tiek reģistrētas audita žurnālā ar skaidru aprakstu.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     public function updateSettings(Request $request): RedirectResponse
     {
@@ -148,10 +155,11 @@ class ProfileController extends Controller
     }
 
     /**
-     * Saglabā profila iestatījumus, automātiski apstrādājot trūkstošās kolonnas.
+     * Ko dara: Saglabā profila iestatījumus, automātiski apstrādājot trūkstošās kolonnas.
      *
-     * Ja `user_settings` kolonna vēl nav datubāzē (legacy shēma), tiek izsaukts
-     * RuntimeSchemaBootstrapper, lai to izveidotu, un saglabāšana tiek atkārtota.
+     * Kā strādā: Ja `user_settings` kolonna vēl nav datubāzē (legacy shēma), tiek izsaukts RuntimeSchemaBootstrapper, lai to izveidotu, un saglabāšana tiek atkārtota.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function persistProfileSettings(User $user, array $settings): void
     {
@@ -178,7 +186,11 @@ class ProfileController extends Controller
     }
 
     /**
-     * Pārbauda, vai datubāzes kļūda ir par trūkstošo `user_settings` kolonnu.
+     * Ko dara: Pārbauda, vai datubāzes kļūda ir par trūkstošo `user_settings` kolonnu.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function isMissingUserSettingsColumn(QueryException $exception): bool
     {
@@ -186,10 +198,11 @@ class ProfileController extends Controller
     }
 
     /**
-     * Sagatavo cilvēkam saprotamu audita ieraksta aprakstu par iestatījumu maiņu.
+     * Ko dara: Sagatavo cilvēkam saprotamu audita ieraksta aprakstu par iestatījumu maiņu.
      *
-     * Ja vērtība nav mainījusies, apraksts to norāda. Ja mainījusies — parāda
-     * pirms/pēc pāreju (ieslēgts/izslēgts).
+     * Kā strādā: Ja vērtība nav mainījusies, apraksts to norāda. Ja mainījusies — parāda pirms/pēc pāreju (ieslēgts/izslēgts).
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     private function profileSettingsAuditDescription(User $user, array $before, array $after): string
     {
@@ -215,6 +228,13 @@ class ProfileController extends Controller
         return 'Admina darba vides iestatījumi mainīti: '.implode('; ', $changes).': '.AuditTrail::labelFor($user);
     }
 
+    /**
+     * Ko dara: Pārvērš profila iestatījuma tehnisko vērtību cilvēkam saprotamā tekstā.
+     *
+     * Kā strādā: Izmanto pieprasījuma datus, modeļus un palīgmetodes, lai sagatavotu vajadzīgo rezultātu vai izpildītu darbību.
+     *
+     * Kad pielietojas: Izsauc no: `profileSettingsAuditDescription()`.
+     */
     private function settingValueLabel(mixed $value, ?string $key = null): string
     {
         if ($key === User::SETTING_DEFAULT_START_PAGE) {
@@ -274,10 +294,11 @@ class ProfileController extends Controller
     }
 
     /**
-     * Dzēš lietotāja kontu pēc paroles apstiprināšanas.
+     * Ko dara: Dzēš lietotāja kontu pēc paroles apstiprināšanas.
      *
-     * Pirms dzēšanas reģistrē audita žurnālā brīdinājuma līmeņa notikumu.
-     * Sesija tiek pilnīgi atiestatīta, lai novērstu jebkādu sesijas noplūdi.
+     * Kā strādā: Pirms dzēšanas reģistrē audita žurnālā brīdinājuma līmeņa notikumu. Sesija tiek pilnīgi atiestatīta, lai novērstu jebkādu sesijas noplūdi.
+     *
+     * Kad pielietojas: Kad šai kontroliera plūsmai nepieciešama šīs metodes konkrētā atbildība.
      */
     public function destroy(Request $request): RedirectResponse
     {

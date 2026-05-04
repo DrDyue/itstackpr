@@ -10,18 +10,20 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * Iekšējais paroles maiņas pieprasījums administratoriem.
+ * Ko dara: Pārvalda paroles atjaunošanas pieprasījuma sākuma plūsmu.
+ *
+ * Kā strādā: Rāda paroles atiestatīšanas pieprasījuma formu un reģistrē administratoram apstrādājamu pieprasījumu.
+ *
+ * Kad pielietojas: Kad lietotājs nevar pieslēgties un izmanto “Aizmirsu paroli” darbību.
  */
 class PasswordResetLinkController extends Controller
 {
     /**
-     * Parāda paroles maiņas pieprasījuma formu.
+     * Ko dara: Parāda paroles maiņas pieprasījuma formu.
      *
-     * Forma ir noraižu draudzīga un ļauj lietotājiem lūgt administratora palaišanu
-     * paroles maiņai, jo automātiskā e-pasta sistēma nav iespējota.
+     * Kā strādā: Forma ir noraižu draudzīga un ļauj lietotājiem lūgt administratora palaišanu paroles maiņai, jo automātiskā e-pasta sistēma nav iespējota.
      *
-     * Izsaukšana: GET /forgot-password | Pieejams: nav autentificēts.
-     * Scenārijs: Lietotājs klikšķina uz "Aizmirsu paroli" pieslēgšanās lapā.
+     * Kad pielietojas: Izsaukšana: GET /forgot-password | Pieejams: nav autentificēts. Scenārijs: Lietotājs klikšķina uz "Aizmirsu paroli" pieslēgšanās lapā.
      */
     public function create(): View
     {
@@ -29,14 +31,11 @@ class PasswordResetLinkController extends Controller
     }
 
     /**
-     * Reģistrē paroles maiņas pieprasījumu administratoru apstrādei ar audita atzīmi.
+     * Ko dara: Reģistrē paroles maiņas pieprasījumu administratoru apstrādei ar audita atzīmi.
      *
-     * Meklē lietotāju pēc e-pasta un iestata maiņas pieprasījuma marķieri. Audita žurnāls
-     * tiek atjaunināts. Skaits norāda, ka pieprasījums tika saņemts neatkarīgi no tā, vai
-     * lietotājs tika atrasts (drošības dēļ).
+     * Kā strādā: Meklē lietotāju pēc e-pasta un iestata maiņas pieprasījuma marķieri. Audita žurnāls tiek atjaunināts. Skaits norāda, ka pieprasījums tika saņemts neatkarīgi no tā, vai lietotājs tika atrasts (drošības dēļ).
      *
-     * Izsaukšana: POST /forgot-password | Pieejams: nav autentificēts.
-     * Scenārijs: Lietotājs aizpilda paroles maiņas pieprasījuma formu un klikšķina Nosūtīt.
+     * Kad pielietojas: Izsaukšana: POST /forgot-password | Pieejams: nav autentificēts. Scenārijs: Lietotājs aizpilda paroles maiņas pieprasījuma formu un klikšķina Nosūtīt.
      */
     public function store(Request $request): RedirectResponse
     {

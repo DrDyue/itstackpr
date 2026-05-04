@@ -15,18 +15,20 @@ use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
 /**
- * Jauna lietotāja reģistrācija administratora vajadzībām.
+ * Ko dara: Pārvalda jaunu lietotāju reģistrāciju administratora pusē.
+ *
+ * Kā strādā: Rāda reģistrācijas formu, validē ievadi, šifrē paroli, izveido lietotāju un reģistrē notikumu auditā.
+ *
+ * Kad pielietojas: Kad administrators pievieno jaunu sistēmas lietotāju.
  */
 class RegisteredUserController extends Controller
 {
     /**
-     * Parāda jauna lietotāja reģistrācijas formu administratoram.
+     * Ko dara: Parāda jauna lietotāja reģistrācijas formu administratoram.
      *
-     * Pieejams tikai administratoram. Forma ļauj piešķirt lomu jaunajam kontam
-     * un aizpildīt visu nepieciešamo informāciju (vārds, e-pasts, tālrunis, amats).
+     * Kā strādā: Pieejams tikai administratoram. Forma ļauj piešķirt lomu jaunajam kontam un aizpildīt visu nepieciešamo informāciju (vārds, e-pasts, tālrunis, amats).
      *
-     * Izsaukšana: GET /register | Pieejams: tikai administrators.
-     * Scenārijs: Administrator navigē uz "Jauns lietotājs" vai atver reģistrācijas formu.
+     * Kad pielietojas: Izsaukšana: GET /register | Pieejams: tikai administrators. Scenārijs: Administrator navigē uz "Jauns lietotājs" vai atver reģistrācijas formu.
      */
     public function create(): View
     {
@@ -38,14 +40,11 @@ class RegisteredUserController extends Controller
     }
 
     /**
-     * Apstrādā jauna lietotāja reģistrācijas formu ar validāciju un audita reģistrāciju.
+     * Ko dara: Apstrādā jauna lietotāja reģistrācijas formu ar validāciju un audita reģistrāciju.
      *
-     * Paroli šifrē ar Hash::make pirms saglabāšanas. Pēc izveides izsauc Laravel `Registered`
-     * notikumu (kas var palaist e-pastu) un reģistrē izveidi audita žurnālā.
-     * Administrator tiek novirzīts uz lietotāju sarakstu.
+     * Kā strādā: Paroli šifrē ar Hash::make pirms saglabāšanas. Pēc izveides izsauc Laravel `Registered` notikumu (kas var palaist e-pastu) un reģistrē izveidi audita žurnālā. Administrator tiek novirzīts uz lietotāju sarakstu.
      *
-     * Izsaukšana: POST /register | Pieejams: tikai administrators.
-     * Scenārijs: Administrator aizpilda jauno lietotāju formu un klikšķina "Reģistrēt".
+     * Kad pielietojas: Izsaukšana: POST /register | Pieejams: tikai administrators. Scenārijs: Administrator aizpilda jauno lietotāju formu un klikšķina "Reģistrēt".
      */
     public function store(Request $request): RedirectResponse
     {
