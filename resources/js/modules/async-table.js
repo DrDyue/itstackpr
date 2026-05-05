@@ -3,6 +3,7 @@
 const asyncTableControllers = new Map();
 const asyncTableDebounceTimers = new WeakMap();
 const searchableSelectSubmitTimers = new WeakMap();
+const asyncTableFragmentCache = new Map();
 const TABLE_SEARCH_ROW_SELECTOR = '[data-table-search-value], [data-table-code]';
 let tableSearchNavigatorState = null;
 let tableSearchNavigatorElement = null;
@@ -545,6 +546,37 @@ const buildAsyncPaginationFragmentUrl = (pagination, href) => {
     targetUrl.search = sourceUrl.search;
 
     return targetUrl;
+};
+
+const prefetchAsyncPaginationButton = (button) => {
+    if (!button || button.disabled) {
+        return;
+    }
+
+    const pagination = button.closest?.('[data-async-pagination]');
+    const href = button.dataset?.pageUrl || '';
+    const fragmentUrl = href ? buildAsyncPaginationFragmentUrl(pagination, href) : null;
+    const cacheKey = fragmentUrl?.toString?.() || '';
+
+    if (!cacheKey || asyncTableFragmentCache.has(cacheKey)) {
+        return;
+    }
+
+    window.fetch(cacheKey, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        priority: 'low',
+    })
+        .then((response) => response.ok ? response.text() : null)
+        .then((html) => {
+            if (html) {
+                asyncTableFragmentCache.set(cacheKey, html);
+            }
+        })
+        .catch(() => {
+            // Prefetch ir tikai optimizācija, tāpēc kļūdas nerādām lietotājam.
+        });
 };
 
 // Vispārīgām tabulām manuālā meklēšana var iet pāri vairākām lapām,
@@ -1318,9 +1350,23 @@ export const registerAsyncTableGlobals = () => {
         }
 
         const requestKey = rootSelector;
+        const cacheKey = url.toString();
+        const cachedHtml = asyncTableFragmentCache.get(cacheKey);
 
         if (asyncTableControllers.has(requestKey)) {
             asyncTableControllers.get(requestKey)?.abort();
+        }
+
+        if (cachedHtml) {
+            const swapped = swapAsyncTableRoot(rootSelector, cachedHtml);
+
+            if (swapped) {
+                const nextUrl = historyUrl instanceof URL ? historyUrl : url;
+                window.history.replaceState({}, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+                return true;
+            }
+
+            asyncTableFragmentCache.delete(cacheKey);
         }
 
         const controller = new AbortController();
@@ -1341,6 +1387,7 @@ export const registerAsyncTableGlobals = () => {
             }
 
             const html = await response.text();
+            asyncTableFragmentCache.set(cacheKey, html);
             const swapped = swapAsyncTableRoot(rootSelector, html);
 
             if (!swapped) {
@@ -1432,6 +1479,13 @@ export const initializeAsyncTableFilters = () => {
         }
 
         window.submitAsyncTableForm(form, { resetPage: true });
+    });
+
+    document.addEventListener('mouseover', (event) => {
+        const paginationButton = event.target.closest('[data-async-pagination] button[data-page-url]');
+        if (paginationButton) {
+            prefetchAsyncPaginationButton(paginationButton);
+        }
     });
 
     document.addEventListener('click', (event) => {

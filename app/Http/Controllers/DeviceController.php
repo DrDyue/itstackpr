@@ -23,6 +23,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
@@ -85,7 +86,7 @@ class DeviceController extends Controller
     {
         $user = $this->user();
         abort_unless($user, 403);
-        $viewData = $this->devicesIndexViewData($request, $user);
+        $viewData = $this->devicesTableViewData($request, $user);
         $this->auditDeviceListInteractions($request, $user, $viewData['filters'], $viewData['sorting']);
         return view('devices.index-table', [
             'devices' => $viewData['devices'],
@@ -276,49 +277,7 @@ class DeviceController extends Controller
             ->withPath(route('devices.index'))
             ->withQueryString();
 
-        // deviceStates ir papildstāvokļu masīvs pa ierīces ID.
-        // Tas atdala UI pieejamības loģiku no pašiem Eloquent modeļiem, lai Blade skats paliek vienkāršāks.
-        $deviceStates = $devices
-            ->getCollection()
-            ->mapWithKeys(function (Device $device) use ($user) {
-                $pendingRepairRequest = $device->pendingRepairRequest;
-                $pendingWriteoffRequest = $device->pendingWriteoffRequest;
-                $pendingTransferRequest = $device->pendingTransferRequest;
-                $hasPendingRepairRequest = (bool) $pendingRepairRequest;
-                $hasPendingWriteoffRequest = (bool) $pendingWriteoffRequest;
-                $hasPendingTransferRequest = (bool) $pendingTransferRequest;
-                $requestAvailability = $this->requestAvailabilityForDevice(
-                    $device,
-                    $hasPendingRepairRequest,
-                    $hasPendingWriteoffRequest,
-                    $hasPendingTransferRequest,
-                );
-
-                return [
-                    $device->id => [
-                        'requestAvailability' => $requestAvailability,
-                        'roomUpdateAvailability' => $this->userRoomUpdateAvailability(
-                            $device,
-                            $pendingRepairRequest,
-                            $pendingWriteoffRequest,
-                            $pendingTransferRequest,
-                        ),
-                        'pendingRequestBadge' => $this->pendingRequestBadge(
-                            $device,
-                            $user->canManageRequests(),
-                            $hasPendingRepairRequest,
-                            $hasPendingWriteoffRequest,
-                            $hasPendingTransferRequest,
-                            $pendingRepairRequest,
-                            $pendingWriteoffRequest,
-                            $pendingTransferRequest,
-                        ),
-                        'repairStatusLabel' => $this->visibleRepairStatusLabel($device),
-                        'repairPreview' => $this->repairPreview($device),
-                    ],
-                ];
-            })
-            ->all();
+        $deviceStates = $this->deviceIndexStates($devices->getCollection(), $user);
 
         // Atgriežam vienu lielu datu paketi gan pilnajam skatam, gan asinhronajai tabulai.
         // Administratoram papildus pievieno arī formas datus ierīces izveidei/redigēšanai.
@@ -367,6 +326,86 @@ class DeviceController extends Controller
     }
 
     /**
+     * Ko dara: Sagatavo tikai tabulas fragmentam nepieciešamos datus.
+     *
+     * Kā strādā: Nelādē lapas kopsavilkumus, filtru opciju sarakstus un ierīces izveides formas datus,
+     * jo lapošanai jāatgriež tikai tabulas HTML ar rindas darbībām.
+     */
+    private function devicesTableViewData(Request $request, User $user): array
+    {
+        $canManageDevices = $user->canManageRequests();
+        $filters = $this->normalizedIndexFilters($request, $user);
+        $sorting = $this->normalizedDeviceSorting($request, $canManageDevices);
+
+        $selectedRoom = ctype_digit($filters['room_id'])
+            ? $this->accessibleRoomsQuery($user)
+                ->where('rooms.id', (int) $filters['room_id'])
+                ->first()
+            : null;
+        $selectedType = ctype_digit($filters['type'])
+            ? DeviceType::query()->select(['id', 'type_name'])->find((int) $filters['type'])
+            : null;
+        $selectedAssignedUser = $canManageDevices && ctype_digit($filters['assigned_to_id'])
+            ? User::query()->active()->select(['id', 'full_name', 'job_title', 'email'])->find((int) $filters['assigned_to_id'])
+            : null;
+
+        if ($selectedRoom) {
+            $filters['floor'] = (string) $selectedRoom->floor_number;
+            $filters['floor_query'] = $selectedRoom->floor_number . '. stāvs';
+            $filters['room_query'] = $selectedRoom->room_number . ($selectedRoom->room_name ? ' - ' . $selectedRoom->room_name : '');
+        }
+
+        if ($selectedType) {
+            $filters['type_query'] = $selectedType->type_name;
+        }
+
+        if ($selectedAssignedUser) {
+            $filters['assigned_to_query'] = $selectedAssignedUser->full_name;
+        }
+
+        $devicesQuery = $this->deviceIndexListQuery($user)
+            ->with([
+                'type',
+                'building',
+                'room.building',
+                'activeRepair.acceptedBy',
+                'activeRepair.request.responsibleUser',
+                'activeRepair.request.reviewedBy',
+                'latestRepair.acceptedBy',
+                'latestRepair.request.responsibleUser',
+                'latestRepair.request.reviewedBy',
+                'assignedTo',
+                'createdBy',
+                'pendingRepairRequest.responsibleUser',
+                'pendingWriteoffRequest.responsibleUser',
+                'pendingTransferRequest.responsibleUser',
+                'pendingTransferRequest.transferTo',
+            ]);
+
+        $this->applyDeviceIndexFilters($devicesQuery, $filters, $selectedAssignedUser, $selectedRoom, $selectedType);
+        $this->applyDeviceIndexSorting($devicesQuery, $sorting);
+
+        $devices = $devicesQuery
+            ->paginate(self::DEVICE_INDEX_PER_PAGE)
+            ->withPath(route('devices.index'))
+            ->withQueryString();
+
+        return [
+            'devices' => $devices,
+            'deviceStates' => $this->deviceIndexStates($devices->getCollection(), $user),
+            'filters' => $filters,
+            'sorting' => $sorting,
+            'sortOptions' => $this->deviceSortOptions($canManageDevices),
+            'statusLabels' => $this->statusLabels(),
+            'canManageDevices' => $canManageDevices,
+            'quickRoomOptions' => $canManageDevices ? $this->quickRoomOptions() : collect(),
+            'userRoomOptions' => $canManageDevices ? collect() : $this->allRoomOptions(),
+            'quickAssigneeOptions' => $canManageDevices ? $this->quickAssigneeOptions() : collect(),
+            'statuses' => $canManageDevices ? self::STATUSES : self::USER_VISIBLE_STATUSES,
+        ];
+    }
+
+    /**
      * Ko dara: Normalizē visus ierīču saraksta filtrus vienotā formā.
      *
      * Kā strādā: Nosaka lietotājam pieejamos statusus, uzliek profila noklusēto filtru tukšam admina pieprasījumam un normalizē visus URL filtrus vienā masīvā.
@@ -408,6 +447,53 @@ class DeviceController extends Controller
             'has_status_filter' => count($statuses) > 0 && count($statuses) < count($availableStatuses),
             'active_requests' => $request->boolean('active_requests'),
         ];
+    }
+
+    /**
+     * Ko dara: Sagatavo UI stāvokļus pašreizējās ierīču tabulas lapas rindām.
+     */
+    private function deviceIndexStates(Collection $devices, User $user): array
+    {
+        return $devices
+            ->mapWithKeys(function (Device $device) use ($user) {
+                $pendingRepairRequest = $device->pendingRepairRequest;
+                $pendingWriteoffRequest = $device->pendingWriteoffRequest;
+                $pendingTransferRequest = $device->pendingTransferRequest;
+                $hasPendingRepairRequest = (bool) $pendingRepairRequest;
+                $hasPendingWriteoffRequest = (bool) $pendingWriteoffRequest;
+                $hasPendingTransferRequest = (bool) $pendingTransferRequest;
+                $requestAvailability = $this->requestAvailabilityForDevice(
+                    $device,
+                    $hasPendingRepairRequest,
+                    $hasPendingWriteoffRequest,
+                    $hasPendingTransferRequest,
+                );
+
+                return [
+                    $device->id => [
+                        'requestAvailability' => $requestAvailability,
+                        'roomUpdateAvailability' => $this->userRoomUpdateAvailability(
+                            $device,
+                            $pendingRepairRequest,
+                            $pendingWriteoffRequest,
+                            $pendingTransferRequest,
+                        ),
+                        'pendingRequestBadge' => $this->pendingRequestBadge(
+                            $device,
+                            $user->canManageRequests(),
+                            $hasPendingRepairRequest,
+                            $hasPendingWriteoffRequest,
+                            $hasPendingTransferRequest,
+                            $pendingRepairRequest,
+                            $pendingWriteoffRequest,
+                            $pendingTransferRequest,
+                        ),
+                        'repairStatusLabel' => $this->visibleRepairStatusLabel($device),
+                        'repairPreview' => $this->repairPreview($device),
+                    ],
+                ];
+            })
+            ->all();
     }
 
     /**
@@ -2240,13 +2326,17 @@ SQL;
      */
     private function allRoomOptions(): Collection
     {
-        return $this->roomSelectOptions(
-            Room::query()
-                ->with('building')
-                ->orderBy('building_id')
-                ->orderBy('floor_number')
-                ->orderBy('room_number')
-                ->get()
+        return Cache::remember(
+            'device-table:all-room-options',
+            30,
+            fn () => $this->roomSelectOptions(
+                Room::query()
+                    ->with('building')
+                    ->orderBy('building_id')
+                    ->orderBy('floor_number')
+                    ->orderBy('room_number')
+                    ->get()
+            )
         );
     }
 
@@ -2259,7 +2349,7 @@ SQL;
      */
     private function quickRoomOptions(): Collection
     {
-        return Room::query()
+        return Cache::remember('device-table:quick-room-options', 30, fn () => Room::query()
             ->with('building')
             ->orderBy('floor_number')
             ->orderBy('room_number')
@@ -2280,7 +2370,7 @@ SQL;
                     $room->floor_number,
                 ])),
             ])
-            ->values();
+            ->values());
     }
 
     /**
@@ -2292,7 +2382,7 @@ SQL;
      */
     private function quickAssigneeOptions(): Collection
     {
-        return User::query()
+        return Cache::remember('device-table:quick-assignee-options', 30, fn () => User::query()
             ->active()
             ->orderBy('full_name')
             ->get()
@@ -2309,7 +2399,7 @@ SQL;
                     $managedUser->email,
                 ])),
             ])
-            ->values();
+            ->values());
     }
 
     /**
