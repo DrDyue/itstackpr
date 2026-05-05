@@ -6,9 +6,14 @@
  * Changing values here propagates everywhere they are used.
  */
 
-/* ========== PRIMARY COLOR PALETTE ========== */
+/*
+ * Dizaina sistēmas mainīgie.
+ * Lieto: šis fails tiek importēts `app.css`, tāpēc mainīgie ir pieejami visā frontendā.
+ * Šeit drīkst mainīt pamatkrāsas, atstarpes, ēnas un fontu izmērus, ja jāmaina
+ * kopējais sistēmas vizuālais pamats.
+ */
 :root {
-    /* Primary and status color constants */
+    /* Primārā krāsa un statusu krāsas pogām, badge elementiem un informatīviem stāvokļiem. */
     --color-primary: #0ea5e9;
     --color-primary-hover: #0077ed;
     --color-primary-dark: #0284c7;
@@ -29,7 +34,7 @@
     --color-info-light: #dbeafe;
     --color-info-dark: #1e3a8a;
     
-    /* Slate scale */
+    /* Neitrālā slate skala tekstiem, robežām, foniem un klusinātiem UI elementiem. */
     --color-slate-50: #f8fafc;
     --color-slate-100: #f1f5f9;
     --color-slate-200: #e2e8f0;
@@ -41,19 +46,19 @@
     --color-slate-800: #1e293b;
     --color-slate-900: #0f172a;
     
-    /* Dark theme */
+    /* Tumšās tēmas pamata virsmas un teksts vecākiem komponentiem, kas izmanto CSS mainīgos. */
     --color-dark-bg: #020617;
     --color-dark-surface: #0f172a;
     --color-dark-text: #e2e8f0;
     
-    /* Borders */
+    /* Kopīgi noapaļojumi kartēm, pogām, ievades laukiem un modāliem. */
     --border-radius-small: 8px;
     --border-radius-medium: 12px;
     --border-radius-large: 16px;
     --border-radius-xl: 20px;
     --border-radius-2xl: 24px;
     
-    /* Spacing */
+    /* Kopīgās atstarpes nelieliem legacy helperiem un vecākiem komponentiem. */
     --space-xs: 4px;
     --space-sm: 8px;
     --space-md: 12px;
@@ -62,13 +67,13 @@
     --space-2xl: 24px;
     --space-3xl: 32px;
     
-    /* Shadows */
+    /* Ēnu skala kartēm, pogām un hover stāvokļiem. */
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
     --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
     --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
     
-    /* Typography */
+    /* Fontu ģimene un pamata fontu izmēri legacy klasēm. */
     --font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     --font-size-xs: 12px;
     --font-size-sm: 14px;
@@ -79,9 +84,12 @@
     --font-size-3xl: 32px;
 }
 
-/* ========== REUSABLE COMPONENT CLASSES ========== */
+/*
+ * Vienkāršie atkārtoti lietojamie komponenti.
+ * Lieto vecāki Blade skati un atsevišķi UI elementi, kas nav pārbūvēti uz Tailwind `@apply`.
+ */
 
-/* Buttons - Global */
+/* Pogas pamatklase: izmanto kā bāzi vienkāršām primārajām, success un danger pogām. */
 .btn-base {
     display: inline-flex;
     align-items: center;
@@ -96,6 +104,7 @@
     transition: all 0.15s ease;
 }
 
+/* Primārā darbība: saglabāšana, apstiprināšana vai galvenais CTA. */
 .btn-primary {
     background-color: var(--color-primary);
     color: white;
@@ -110,6 +119,7 @@
     background-color: var(--color-danger-dark);
 }
 
+/* Pozitīva darbība: izveide, apstiprināšana vai sekmīgs stāvoklis. */
 .btn-success {
     background-color: var(--color-success);
     color: white;
@@ -119,7 +129,7 @@
     background-color: var(--color-success-dark);
 }
 
-/* Cards - Global */
+/* Vienkārša kartes virsma legacy skatiem, kuri neizmanto jaunās surface klases. */
 .card-base {
     background-color: white;
     border: 1px solid var(--color-slate-200);
@@ -134,7 +144,7 @@
     box-shadow: var(--shadow-md);
 }
 
-/* Status Pills */
+/* Kompakti statusu pill elementi: success/warning/danger stāvokļiem sarakstos un kartēs. */
 .status-base {
     display: inline-flex;
     align-items: center;
@@ -159,7 +169,11 @@
     color: var(--color-danger-dark);
 }
 
-/* ========== DARK THEME ========== */
+/*
+ * Dark theme mainīgo pārraksti.
+ * Lieto komponentiem, kas lasa `var(--color-...)`. Ja komponents ir stilots ar
+ * Tailwind klasēm, tā dark mode pārraksti parasti atrodas `app.css`.
+ */
 :root[data-theme='dark'] {
     --color-primary: #7dd3fc;
     --color-primary-dark: #bae6fd;
@@ -183,9 +197,13 @@
     color: #0f172a;
 }
 
-/* ========== UTILITIES ========== */
+/*
+ * Nelieli utilītu aliasi.
+ * Lieto reti un galvenokārt vecākos skatos; ja iespējams, jaunos elementos
+ * priekšroka ir Tailwind utilītēm tieši Blade failā.
+ */
 
-/* Spacing utility classes */
+/* Atstarpju helperi, kas balstās uz kopīgajiem `--space-*` mainīgajiem. */
 .pb-sm { padding-bottom: var(--space-sm); }
 .pb-md { padding-bottom: var(--space-md); }
 .pb-lg { padding-bottom: var(--space-lg); }
@@ -194,7 +212,7 @@
 .gap-md { gap: var(--space-md); }
 .gap-lg { gap: var(--space-lg); }
 
-/* Text & Links */
+/* Teksta helperi klusinātam vai primāras krāsas tekstam. */
 .text-muted {
     color: var(--color-slate-500);
 }
@@ -203,7 +221,7 @@
     color: var(--color-primary);
 }
 
-/* Borders */
+/* Robežu krāsu helperi vienkāršiem legacy elementiem. */
 .border-primary {
     border-color: var(--color-primary);
 }
@@ -212,7 +230,7 @@
     border-color: var(--color-slate-200);
 }
 
-/* Background */
+/* Fona helperi vienkāršām informatīvām virsmām. */
 .bg-slate-light {
     background-color: var(--color-slate-50);
 }

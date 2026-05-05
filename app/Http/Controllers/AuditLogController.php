@@ -18,6 +18,8 @@ use Illuminate\Http\Request;
  */
 class AuditLogController extends Controller
 {
+    private const AUDIT_LOG_PER_PAGE = 15;
+
     /**
      * Ko dara: Parāda auditam reģistrētās darbības administratoram.
      *
@@ -57,7 +59,7 @@ class AuditLogController extends Controller
         // Šādā gadījumā rādām tukšu, bet stabilu skatu, nevis ļaujam vaicājumam izgāzties.
         if (! $this->featureTableExists('audit_log')) {
             return view('audit_log.index', [
-                'logs' => $this->emptyPaginator(20),
+                'logs' => $this->emptyPaginator(self::AUDIT_LOG_PER_PAGE),
                 'filters' => $filters,
                 'summary' => [
                     'total' => 0,
@@ -130,7 +132,7 @@ class AuditLogController extends Controller
                 $logQuery->orderBy('timestamp', 'desc')->orderBy('id', 'desc');
         }
 
-        $logs = (clone $logQuery)->paginate(20)->withQueryString();
+        $logs = (clone $logQuery)->paginate(self::AUDIT_LOG_PER_PAGE)->withQueryString();
 
         // Kopsavilkumu skaitām neatkarīgi no aktīvajiem filtriem, lai augšējās kartītes
         // vienmēr parāda kopējo sistēmas audita situāciju.
@@ -293,7 +295,7 @@ class AuditLogController extends Controller
         // un iezīmētu konkrēto audita ierakstu.
         return response()->json([
             'found' => true,
-            'page' => intdiv((int) $foundIndex, 20) + 1,
+            'page' => intdiv((int) $foundIndex, self::AUDIT_LOG_PER_PAGE) + 1,
             'term' => $search,
             'highlight_id' => 'audit-log-'.$logs->values()[(int) $foundIndex]->id,
         ]);

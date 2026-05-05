@@ -2,6 +2,8 @@
     Drukājamais nodošanas akts.
     Atbildība: parāda ierīces nodošanas aktu drukāšanai. Ielādē bez galvenā app izkārtojuma.
     Datu avots: DeviceTransferController@printAct.
+    Eksporta piezīme: šis ir patstāvīgs drukas/PDF dokuments ar A4 izkārtojumu,
+    ko lietotājs var izdrukāt vai saglabāt no pārlūka drukas dialoga.
 --}}
 <!DOCTYPE html>
 <html lang="lv">
@@ -233,7 +235,7 @@
         <div class="doc-org-sub">IT inventāra uzskaites sistēma</div>
     </div>
 
-    {{-- Virsraksts --}}
+    {{-- Virsraksts definē dokumenta veidu un tiek atkārtots arī drukas/PDF eksportā. --}}
     <div class="doc-title">
         <h1>Ierīces nodošanas akts</h1>
     </div>
@@ -349,7 +351,7 @@
         </div>
     </div>
 
-    {{-- Kājene --}}
+    {{-- Kājene palīdz saprast, ka dokuments ģenerēts no sistēmas, un parāda ģenerēšanas laiku. --}}
     <div class="doc-footer">
         Dokuments ģenerēts automātiski no IT inventāra uzskaites sistēmas
         &bull; {{ now()->format('d.m.Y H:i') }}

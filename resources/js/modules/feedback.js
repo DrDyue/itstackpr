@@ -1,3 +1,6 @@
+// Feedback modulis pārvalda divas kopīgas UI plūsmas:
+// 1) toast paziņojumus, ko var izsaukt no jebkura moduļa ar `window.dispatchAppToast`;
+// 2) confirm dialogus, ko var izmantot ar `await window.openAppConfirm(...)`.
 const createToastIcon = (tone) => {
     if (tone === 'success') {
         return `
@@ -64,6 +67,8 @@ const ensureAppToastRoot = () => {
         return root;
     }
 
+    // Toast root tiek veidots tikai pēc vajadzības, lai lapās bez paziņojumiem
+    // DOM nav lieka tukša konteinera.
     root = document.createElement('div');
     root.dataset.appToastRoot = 'true';
     root.className = 'app-toast-stack pointer-events-none fixed bottom-4 right-4 z-[70] flex w-[min(30rem,calc(100vw-1.5rem))] flex-col items-stretch gap-3 sm:bottom-6 sm:right-6';
@@ -148,6 +153,8 @@ const ensureAppConfirmRoot = () => {
         return root;
     }
 
+    // Confirm dialogs tiek būvēts vienu reizi un pēc tam pārlietots visām darbībām.
+    // Tas ļauj saglabāt vienu focus/keyboard/dismiss loģiku visai aplikācijai.
     root = document.createElement('div');
     root.dataset.appConfirmRoot = 'true';
     root.className = 'app-confirm-overlay hidden';
@@ -174,6 +181,8 @@ const ensureAppConfirmRoot = () => {
 };
 
 export const registerFeedbackGlobals = () => {
+    // Globālie feedback helperi ir vajadzīgi Blade inline handleriem un Alpine komponentēm,
+    // kur importu sistēma nav pieejama tieši no markup.
     window.dispatchAppToast = ({ message = '', tone = 'info', title = '', priority = null } = {}) => {
         if (!message) {
             return;

@@ -1,5 +1,7 @@
 const THEME_STORAGE_KEY = 'itstack-theme';
 
+// Tēmas modulis ir neliels un apzināti izolēts:
+// tas lasa/saglabā izvēli localStorage un sinhronizē `data-theme` atribūtus ar pogām.
 const getStoredTheme = (readStorageValue) => {
     return readStorageValue(THEME_STORAGE_KEY, 'light') === 'dark' ? 'dark' : 'light';
 };
@@ -33,6 +35,9 @@ const syncThemeToggleUi = () => {
 };
 
 export const initializeThemeToggle = ({ readStorageValue, writeStorageValue }) => {
+    // Inicializācijas brīdī vispirms piemērojam saglabāto tēmu,
+    // pēc tam pieslēdzam pogas. `data-theme-bound` pasargā no dubultas event piesaistes,
+    // ja inicializatori tiek palaisti atkārtoti pēc frontend refaktora.
     applyTheme(getStoredTheme(readStorageValue));
     syncThemeToggleUi();
 

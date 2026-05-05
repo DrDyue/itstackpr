@@ -1,3 +1,6 @@
+// Async table modulis apkalpo Blade tabulas, kurām ir `data-async-table-form`
+// un `data-async-table-root`: filtri, kārtošana, meklēšana un lapošana notiek bez pilna reload.
+// Serveris joprojām renderē HTML, bet šeit tiek nomainīts tikai vajadzīgais tabulas fragments.
 // Vienam tabulas saknes selektoram glabājam vienu aktīvu AbortController,
 // lai nākamais pieprasījums var atcelt iepriekšējo un neielādē "novecojušu" HTML.
 const asyncTableControllers = new Map();
@@ -8,6 +11,8 @@ const TABLE_SEARCH_ROW_SELECTOR = '[data-table-search-value], [data-table-code]'
 let tableSearchNavigatorState = null;
 let tableSearchNavigatorElement = null;
 
+// Šie helperi ļauj event listeneriem strādāt ar jebkuru elementu tabulas iekšienē,
+// nezinot precīzu Blade markup struktūru.
 const findAsyncTableRoot = (element) => {
     if (!element) {
         return null;
@@ -32,6 +37,8 @@ const findAsyncTableForm = (element) => {
     return element.closest?.('[data-async-table-form]') ?? null;
 };
 
+// Ielādes skeleton tiek uzlikts virs esošās tabulas, lai filtrējot vai lapojot
+// lietotājs redzētu, ka notiek tieši tabulas, nevis visas lapas, atjaunošana.
 const createAsyncTableSkeleton = () => {
     const overlay = document.createElement('div');
     overlay.className = 'async-table-skeleton';
@@ -94,6 +101,8 @@ const setAsyncTableLoading = (rootSelector, isLoading) => {
     }
 };
 
+// Kārtošana tiek vadīta ar hidden laukiem formā, bet pogām vajag uzturēt
+// pieejamības tekstu un vizuālo "pending" stāvokli līdz fragmenta nomaiņai.
 const getCurrentSortDirection = (trigger) => {
     if (!trigger.classList.contains('device-sort-trigger-active')) {
         return '';
@@ -211,6 +220,8 @@ const swapAsyncTableRoot = (rootSelector, html) => {
     return true;
 };
 
+// Teksta filtrus debouncojam, lai katrs taustiņš neveidotu atsevišķu pieprasījumu.
+// Pēc īsas pauzes forma tiek iesniegta kā parasts async tabulas filtrs.
 const debounceAsyncTableSubmit = (form, delay = 260) => {
     if (asyncTableDebounceTimers.has(form)) {
         window.clearTimeout(asyncTableDebounceTimers.get(form));
@@ -224,6 +235,8 @@ const debounceAsyncTableSubmit = (form, delay = 260) => {
     asyncTableDebounceTimers.set(form, timerId);
 };
 
+// Pirms filtru tīrīšanas vai jauna pieprasījuma atceļam veco darbu:
+// debounce timerus, searchable select submit timerus un aktīvo fetch.
 const cancelPendingAsyncTableWork = (form) => {
     if (!form) {
         return;
@@ -354,6 +367,8 @@ const getAsyncTableFormByRootSelector = (rootSelector) => {
 const TABLE_SEARCH_HIT_DURATION = 1000;
 const TABLE_SEARCH_LINGER_DURATION = 10000;
 
+// Dažām rindām der fona iekrāsošana, citām - tikai kontūra,
+// lai highlight nepārkrāsotu statusu vai kartītes dizaina akcentus.
 const usesOutlineTableSearchHighlight = (row) => {
     if (!row) {
         return false;
@@ -407,6 +422,8 @@ const applyNavigatorHighlights = (root) => {
     });
 };
 
+// Highlight token aizsargā no veciem timeoutiem:
+// ja lietotājs ātri meklē nākamo ierakstu, iepriekšējā animācija nedrīkst noņemt jauno izcelšanu.
 const highlightTableRow = (row) => {
     const highlightToken = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
@@ -436,6 +453,8 @@ const highlightTableRow = (row) => {
     }, TABLE_SEARCH_HIT_DURATION + TABLE_SEARCH_LINGER_DURATION);
 };
 
+// Manuālais meklēšanas lauks nav parasts filtrs.
+// To saglabājam atsevišķi, lai pēc fragmenta nomaiņas ievadītais kods nepazūd no inputa.
 const getManualSearchInput = (form) => {
     return form?.querySelector('[data-async-code-search="true"], [data-table-manual-search="true"]');
 };
@@ -474,6 +493,8 @@ const getManualSearchMode = (input) => {
     return input.dataset.searchMode || (input.matches('[data-async-code-search="true"]') ? 'exact' : 'contains');
 };
 
+// Rindu meklēšana balstās uz datu atribūtiem, nevis redzamo tekstu.
+// Tas ļauj precīzi meklēt pēc koda arī tad, ja šūnā ir formatējums vai papildteksts.
 const getRowSearchValue = (row) => {
     return row.dataset.tableSearchValue || row.dataset.tableCode || '';
 };
@@ -548,6 +569,8 @@ const buildAsyncPaginationFragmentUrl = (pagination, href) => {
     return targetUrl;
 };
 
+// Hover prefetch paņem nākamās lapas fragmentu pirms klikšķa.
+// Ja lietotājs tiešām pārslēdz lapu, HTML bieži jau ir cache un maiņa notiek ātrāk.
 const prefetchAsyncPaginationButton = (button) => {
     if (!button || button.disabled) {
         return;
@@ -654,6 +677,8 @@ const searchAcrossPaginatedMatches = async (form, rootSelector, rawTerm, mode = 
     };
 };
 
+// Rezerves meklēšana vecākiem skatiem: staigā pa lapu HTML un atgriež pirmo lapu,
+// kur atrasts atbilstošs ieraksts.
 const searchAcrossPaginatedHtml = async (form, rootSelector, rawTerm, mode = 'contains') => {
     const currentPage = getCurrentAsyncPage();
     const baseUrl = buildAsyncTableUrl(form, { resetPage: false });
@@ -709,6 +734,8 @@ const searchAcrossPaginatedHtml = async (form, rootSelector, rawTerm, mode = 'co
     return null;
 };
 
+// Navigācijas URL saglabā lapu un highlight parametrus, lai atrasto ierakstu varētu
+// atjaunot arī pēc pārlūka back/forward vai pilnas lapas ielādes.
 const findTableRowById = (root, rowId) => {
     const normalizedRowId = String(rowId || '').trim();
 
@@ -740,6 +767,8 @@ const buildSearchNavigationUrl = (form, page, rawTerm, mode, highlightId = '') =
     return targetUrl;
 };
 
+// Ja meklēšana atrod vairākus ierakstus, rādam mazu navigatoru ar "iepriekšējais/nākamais".
+// Elements tiek veidots slinki tikai tad, kad tas tiešām vajadzīgs.
 const ensureTableSearchNavigatorElement = () => {
     if (tableSearchNavigatorElement?.isConnected) {
         return tableSearchNavigatorElement;
@@ -845,6 +874,8 @@ const scrollToAndHighlightTableRow = (row) => {
     });
 };
 
+// Navigatora pārvietošanās var prasīt lapas fragmenta nomaiņu,
+// jo nākamais rezultāts var atrasties citā tabulas lapā.
 const moveTableSearchNavigator = async (step) => {
     if (!tableSearchNavigatorState?.matches?.length) {
         return false;
@@ -1027,6 +1058,8 @@ const performManualTableSearch = async (form) => {
     }
 
     try {
+        // Ātrākajiem skatiem backend atdod precīzu lapu un rindas identifikatoru,
+        // tāpēc nav jāpārlasa visi lapotie HTML fragmenti pārlūkā.
         const endpointUrl = new URL(searchEndpoint, window.location.origin);
         appendSerializedFormParams(form, endpointUrl, { resetPage: false, includeManual: false });
         endpointUrl.searchParams.set(searchInput.name, rawTerm);
@@ -1117,6 +1150,8 @@ const shouldRunManualSearch = (form, submitter) => {
     return searchInput.value.trim() !== '';
 };
 
+// Pēc lapas ielādes vai async fragmenta nomaiņas pārbaudām URL highlight parametrus.
+// Ja vajadzīgā rinda vēl nav pašreizējā DOM, mēģinām atrast pareizo lapu caur search endpoint.
 export const restoreHighlightedSearchFromUrl = async () => {
     const currentUrl = new URL(window.location.href);
     const term = currentUrl.searchParams.get('highlight');
@@ -1198,6 +1233,8 @@ export const restoreHighlightedSearchFromUrl = async () => {
     window.history.replaceState({}, '', `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`);
 };
 
+// Blade skatos daļa darbību tiek piesaistīta inline atribūtos, tāpēc šeit eksportējam
+// stabilus `window.*` handlerus, kurus var izmantot bez moduļu importiem markup pusē.
 export const registerAsyncTableGlobals = () => {
     window.runManualTableSearchFromTrigger = (trigger) => {
         const form = findAsyncTableForm(trigger);
@@ -1264,6 +1301,8 @@ export const registerAsyncTableGlobals = () => {
         return false;
     };
 
+    // Pilnā async formas iesniegšana atjauno visu tabulas root fragmentu.
+    // To lieto filtri, kārtošana un manuālā meklēšana, kad jāmaina arī query parametri.
     window.submitAsyncTableForm = async (form, { url = null, resetPage = true, toastMessage = '', preserveSearchNavigator = false, manualSearchState = null } = {}) => {
         const rootSelector = form?.dataset?.asyncRoot;
 
@@ -1442,6 +1481,8 @@ export const initializeAsyncTableFilters = () => {
         window.submitAsyncTableForm(form, { resetPage: true });
     });
 
+    // Teksta ievades laukiem izmantojam debounce, bet manuālais koda meklētājs
+    // pats neko nefiltrē līdz submit/ikonas klikšķim.
     document.addEventListener('input', (event) => {
         const target = event.target;
         const form = findAsyncTableForm(target);
@@ -1466,6 +1507,7 @@ export const initializeAsyncTableFilters = () => {
         debounceAsyncTableSubmit(form, 280);
     });
 
+    // Select, checkbox, radio un citi change notikumi tabulu atjauno uzreiz.
     document.addEventListener('change', (event) => {
         const target = event.target;
         const form = findAsyncTableForm(target);
@@ -1481,6 +1523,8 @@ export const initializeAsyncTableFilters = () => {
         window.submitAsyncTableForm(form, { resetPage: true });
     });
 
+    // Lapošanas pogām pie hover mēģinām ielādēt fragmentu cache,
+    // lai klikšķa brīdī nebūtu jāgaida viss tīkla pieprasījums.
     document.addEventListener('mouseover', (event) => {
         const paginationButton = event.target.closest('[data-async-pagination] button[data-page-url]');
         if (paginationButton) {
@@ -1488,6 +1532,8 @@ export const initializeAsyncTableFilters = () => {
         }
     });
 
+    // Klikšķu delegācija apvieno manuālo meklēšanu, navigatoru, toast pogas,
+    // kārtošanu, lapošanu un quick filter saites vienā vietā.
     document.addEventListener('click', (event) => {
         const manualSearchTrigger = event.target.closest('[data-code-search-submit="true"], [data-table-search-submit="true"]');
         if (manualSearchTrigger) {
@@ -1602,6 +1648,8 @@ export const initializeAsyncTableFilters = () => {
         });
     });
 
+    // Custom searchable select dispatcho savu notikumu, jo redzamais input un hidden vērtība
+    // nav vienkāršs native select. Īss debounce apvieno ātras izvēles izmaiņas.
     document.addEventListener('searchable-select-updated', (event) => {
         const form = findAsyncTableForm(event.target);
 

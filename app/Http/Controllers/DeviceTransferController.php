@@ -469,9 +469,9 @@ class DeviceTransferController extends Controller
     }
 
     /**
-     * Ko dara: Parāda ierīces nodošanas aktu drukāšanai.
+     * Ko dara: Parāda ierīces nodošanas aktu drukāšanai vai PDF eksportam.
      *
-     * Kā strādā: Pieejams tikai apstiprinātiem pieteikumiem. Atgriež standalone HTML lapu ar visas informāciju par ierīci, abām pusēm un vietu parakstiem.
+     * Kā strādā: Pieejams tikai apstiprinātiem pieteikumiem. Atgriež standalone HTML dokumentu ar informāciju par ierīci, abām pusēm un vietu parakstiem, lai to varētu izdrukāt vai saglabāt kā PDF.
      *
      * Kad pielietojas: Izsaukšana: GET /device-transfers/{deviceTransfer}/act | Pieejams: jebkurš autentificēts lietotājs.
      */

@@ -409,7 +409,88 @@
                 </div>
             </div>
 
-            {{ $logs->links() }}
+            @if (method_exists($logs, 'hasPages') && $logs->hasPages())
+                @php
+                    // Audita žurnālam ir daudz ierakstu, tāpēc rādām tikai tuvākās lapas pogas
+                    // un pašu tabulu pārslēdzam asinhroni bez pilnas lapas pārlādes.
+                    $auditCurrentPage = $logs->currentPage();
+                    $auditLastPage = $logs->lastPage();
+                    $auditPageStart = max(1, $auditCurrentPage - 2);
+                    $auditPageEnd = min($auditLastPage, $auditCurrentPage + 2);
+                    $auditPageUrls = $logs->getUrlRange($auditPageStart, $auditPageEnd);
+                @endphp
+                <div
+                    class="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm"
+                    data-async-pagination
+                    data-async-pagination-root="#audit-log-index-root"
+                    data-async-pagination-endpoint="{{ route('audit-log.index') }}"
+                >
+                    <div class="text-slate-500">
+                        Rāda {{ $logs->firstItem() }}-{{ $logs->lastItem() }} no {{ $logs->total() }}
+                    </div>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <button
+                            type="button"
+                            class="rounded-lg border px-3 py-1.5 font-semibold transition {{ $logs->onFirstPage() ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-300' : 'border-slate-200 bg-white text-slate-700 hover:border-sky-300 hover:text-sky-700' }}"
+                            @disabled($logs->onFirstPage())
+                            data-page-url="{{ $logs->previousPageUrl() }}"
+                            onclick="return window.handleAsyncPaginationButtonClick ? window.handleAsyncPaginationButtonClick(this) : false"
+                        >
+                            Iepriekšējā
+                        </button>
+
+                        @if ($auditPageStart > 1)
+                            <button
+                                type="button"
+                                class="min-w-9 rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 transition hover:border-sky-300 hover:text-sky-700"
+                                data-page-url="{{ $logs->url(1) }}"
+                                onclick="return window.handleAsyncPaginationButtonClick ? window.handleAsyncPaginationButtonClick(this) : false"
+                            >
+                                1
+                            </button>
+                            @if ($auditPageStart > 2)
+                                <span class="px-1.5 text-slate-400">...</span>
+                            @endif
+                        @endif
+
+                        @foreach ($auditPageUrls as $page => $url)
+                            <button
+                                type="button"
+                                class="min-w-9 rounded-lg border px-3 py-1.5 font-semibold transition {{ $auditCurrentPage === $page ? 'border-sky-500 bg-sky-50 text-sky-700' : 'border-slate-200 bg-white text-slate-700 hover:border-sky-300 hover:text-sky-700' }}"
+                                aria-current="{{ $auditCurrentPage === $page ? 'page' : 'false' }}"
+                                data-page-url="{{ $url }}"
+                                onclick="return window.handleAsyncPaginationButtonClick ? window.handleAsyncPaginationButtonClick(this) : false"
+                            >
+                                {{ $page }}
+                            </button>
+                        @endforeach
+
+                        @if ($auditPageEnd < $auditLastPage)
+                            @if ($auditPageEnd < $auditLastPage - 1)
+                                <span class="px-1.5 text-slate-400">...</span>
+                            @endif
+                            <button
+                                type="button"
+                                class="min-w-9 rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 transition hover:border-sky-300 hover:text-sky-700"
+                                data-page-url="{{ $logs->url($auditLastPage) }}"
+                                onclick="return window.handleAsyncPaginationButtonClick ? window.handleAsyncPaginationButtonClick(this) : false"
+                            >
+                                {{ $auditLastPage }}
+                            </button>
+                        @endif
+
+                        <button
+                            type="button"
+                            class="rounded-lg border px-3 py-1.5 font-semibold transition {{ $logs->hasMorePages() ? 'border-slate-200 bg-white text-slate-700 hover:border-sky-300 hover:text-sky-700' : 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-300' }}"
+                            @disabled(! $logs->hasMorePages())
+                            data-page-url="{{ $logs->nextPageUrl() }}"
+                            onclick="return window.handleAsyncPaginationButtonClick ? window.handleAsyncPaginationButtonClick(this) : false"
+                        >
+                            Nākamā
+                        </button>
+                    </div>
+                </div>
+            @endif
         </div>
     </section>
 </x-app-layout>

@@ -9,6 +9,8 @@ const Alpine = window.Alpine;
 /* ==========================================================================
    Shared helpers (kept in this file by request to minimize file count)
    ========================================================================== */
+// `app.js` ir galvenais frontend ieejas punkts: šeit tiek saslēgti moduļi,
+// globālie loading/fetch hooki un Alpine komponentes, ko izmanto Blade skati.
 const runOnDomReady = (callback) => {
     if (typeof callback !== 'function') {
         return;
@@ -39,6 +41,8 @@ const writeStorageValue = (key, value) => {
     }
 };
 
+// Peldošais dropdown tiek lietots tur, kur panelim jāiziet ārpus vecāka overflow konteinera.
+// Pozīcija tiek rēķināta pret viewport, tāpēc izvēlne paliek redzama arī tabulu skrolla rāmjos.
 window.createFloatingDropdown = ({ preferDown = false, gap = 10, viewportPadding = 12, zIndex = 400 } = {}) => ({
     open: false,
     panelStyle: '',
@@ -139,6 +143,8 @@ const getNotificationPriority = (notification) => {
     return 100;
 };
 
+// Globālais loading manager uztur aktīvo async darbību skaitu.
+// Tas neļauj loading indikatoram pazust, kamēr paralēli vēl darbojas cits fetch/Axios/form submit.
 const createAppLoadingManager = () => {
     let activeCount = 0;
     let lastStartedAt = 0;
@@ -208,6 +214,9 @@ const createAppLoadingManager = () => {
 
 const appLoading = createAppLoadingManager();
 window.appLoading = appLoading;
+
+// Modāļa atvēršana reizēm prasa Alpine renderēšanu nākamajā frame.
+// Šis helperis parāda loading indikatoru līdz `modal-opened` notikumam vai fallback timeoutam.
 window.openModalWithLoading = (modalName, { fallbackMs = 1400 } = {}) => {
     if (!modalName) {
         return;
@@ -261,6 +270,8 @@ runOnDomReady(() => {
     appLoading.sync();
 });
 
+// Pilnas lapas navigācijām rāda loading indikatoru.
+// Async tabulu saites un quick filtri tiek izlaisti, jo tos apstrādā async-table modulis.
 document.addEventListener('click', (event) => {
     const link = event.target.closest('a[href]');
     if (!link) {
@@ -305,6 +316,8 @@ document.addEventListener('submit', (event) => {
     appLoading.start();
 });
 
+// Axios un fetch tiek aptīti vienā loading režīmā.
+// Moduļi var iedot `silentLoading: true`, ja pieprasījums ir fona polling vai prefetch.
 if (window.axios?.interceptors) {
     window.axios.interceptors.request.use((config) => {
         if (!config?.silentLoading) {
@@ -348,6 +361,8 @@ window.fetch = (input, init = {}) => {
     });
 };
 
+// Validācijas kļūdu fokusēšana strādā arī ar custom select komponentēm:
+// backend kļūda par `room_id` jānogādā uz redzamo `room_query` lauku, nevis hidden input.
 const resolveFocusableErrorField = (fieldName) => {
     if (!fieldName) {
         return null;
@@ -426,11 +441,14 @@ const focusFirstValidationError = () => {
     }, 140);
 };
 
+// Globālie helperi jāreģistrē pirms Alpine starta, jo Blade x-data var tos izmantot uzreiz.
 registerFeedbackGlobals();
 registerAsyncTableGlobals();
 registerRepairWorkflowGlobals();
 runOnDomReady(focusFirstValidationError);
 
+// Visas Alpine komponentes turam vienā reģistrācijas funkcijā, lai tās var droši reģistrēt
+// gan pirms `Alpine.start()`, gan `alpine:init` notikuma laikā bez dubultas piesaistes.
 const registerAlpineData = () => {
     if (!Alpine || window.__appAlpineDataRegistered) {
         return;
@@ -438,6 +456,8 @@ const registerAlpineData = () => {
 
     window.__appAlpineDataRegistered = true;
 
+    // Lokalizēts datuma izvēlētājs bez native date input atšķirībām starp pārlūkiem.
+    // Hidden vērtība paliek ISO formātā, bet lietotājam tiek rādīts dd.mm.yyyy.
     Alpine.data('localizedDatePicker', ({ value = '' } = {}) => ({
         open: false,
         value: value || '',
@@ -585,6 +605,8 @@ const registerAlpineData = () => {
         },
     }));
 
+    // Quick filter čipu stāvoklis. `minimum` ļauj dažām grupām neļaut noņemt pēdējo izvēli,
+    // bet citām grupām, piemēram auditam, atļaut arī tukšu atlasi.
     Alpine.data('filterChipGroup', ({ selected = [], minimum = 1 } = {}) => ({
         selected: Array.from(new Set((selected ?? []).map((value) => String(value)))),
         minimum: Math.max(Number.isFinite(Number(minimum)) ? Number(minimum) : 1, 0),
@@ -608,6 +630,8 @@ const registerAlpineData = () => {
         },
     }));
 
+    // Modāļa forma ar dirty-state aizsardzību.
+    // Ja lietotājs ir mainījis laukus, aizvēršana vispirms prasa apstiprinājumu.
     Alpine.data('managedModalForm', ({
         modalName = '',
         focusRef = 'firstField',
@@ -672,6 +696,8 @@ const registerAlpineData = () => {
         },
     }));
 
+    // Universāls detaļu drawer dažādiem pieteikumu/audita ierakstu tipiem.
+    // Serveris vai Blade sagatavo `item` objektu, bet šeit notiek tikai attēlošanas loģika.
     Alpine.data('requestDetailsDrawer', () => ({
         open: false,
         item: null,
@@ -800,6 +826,9 @@ const registerAlpineData = () => {
         },
     }));
 
+    // Live paziņojumi sarakstu lapām.
+    // Komponente pollē backendu ar fingerprint galveni, rāda tikai jaunus īslaicīgus toastus
+    // un vajadzības gadījumā atsvaidzina lapu, ja pašreizējā tabula ir skartā sadaļa.
     Alpine.data('liveRequestNotifications', ({ endpoint = '', storageKey = 'live-request-notifications', pollSeconds = 12, pageKind = '', visualMode = 'animated' } = {}) => ({
         endpoint,
         storageKey,
@@ -1156,6 +1185,8 @@ const registerAlpineData = () => {
         },
     }));
 
+    // Navigācijas paziņojumu centrs un emblēmas skaitītāji.
+    // Tas ir vieglāks par live toast plūsmu: glabā tikai cutoff timestamp un periodiski atjauno skaitļus.
     Alpine.data('navNotificationCenter', ({
         initialCount = 0,
         initialCounts = {},
@@ -1331,6 +1362,8 @@ const registerAlpineData = () => {
         },
     }));
 
+    // Meklējamais select komponents, ko lieto filtri un formas.
+    // Tas sinhronizē redzamo query tekstu ar hidden vērtību un dispatcho vienotu update notikumu.
     Alpine.data('searchableSelect', ({ selected = '', query = '', options = [], placeholder = '', emptyMessage = '', identifier = '', prioritizeSelected = false, selectedGroupLabel = 'Atlasītā vērtība' } = {}) => ({
         open: false,
         selected: String(selected ?? ''),

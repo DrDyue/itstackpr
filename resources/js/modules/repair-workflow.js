@@ -1,5 +1,6 @@
 // Atļauto statusu pāreju karte pasargā UI no neatļautu pāreju piedāvāšanas.
 // Backend tās tik un tā pārbauda, bet frontend jau iepriekš neļauj lietotājam kļūdīties.
+// Šis modulis dod Alpine komponentēm remonta dēļa un remonta procesa loģiku.
 const repairTransitionRules = {
     waiting: ['in-progress', 'cancelled'],
     'in-progress': ['waiting', 'completed', 'cancelled'],
@@ -39,6 +40,8 @@ export const registerRepairWorkflowGlobals = () => {
         form.submit();
     };
 
+    // `repairBoard` apkalpo drag-and-drop statusu maiņu remonta dēlī.
+    // Tas pats pāreju validators tiek lietots gan drag mērķu aktivizēšanai, gan submit brīdī.
     window.repairBoard = (config) => ({
         draggedRepair: null,
         dropTargetStatus: null,
@@ -121,6 +124,8 @@ export const registerRepairWorkflowGlobals = () => {
         },
     });
 
+    // `repairProcess` apkalpo remonta detaļu/formas stāvokli.
+    // Tas centralizē obligāto lauku pārbaudes, statusa maiņas payload un confirm/toast plūsmas.
     window.repairProcess = (config) => ({
         repairType: config.repairType,
         repairStatus: config.status,

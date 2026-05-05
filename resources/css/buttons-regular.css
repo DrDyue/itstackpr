@@ -1,5 +1,14 @@
-/* Button Styles - Regular CSS (without Tailwind) */
+/*
+ * Regulārā CSS pogu bibliotēka.
+ * Lieto: Blade skati un komponentes, kur pogas netiek veidotas ar Tailwind `@apply`.
+ * Šis fails ir apzināti bez Tailwind direktīvām, lai pogas varētu strādāt arī
+ * vietās, kur vajadzīgs vienkāršs, statisks CSS.
+ */
 
+/*
+ * Vispārīga darbību poga.
+ * Lieto kā neitrālu bāzi ikonai + tekstam, ja konkrēta krāsu semantika nav vajadzīga.
+ */
 .btn-action {
     display: inline-flex;
     align-items: center;
@@ -14,6 +23,10 @@
     transition: all 0.2s ease;
 }
 
+/*
+ * Izveides poga.
+ * Lieto jaunu ierakstu pievienošanai; zaļais tonis nozīmē pozitīvu, drošu darbību.
+ */
 .btn-create {
     display: inline-flex;
     align-items: center;
@@ -42,6 +55,10 @@
     box-shadow: 0 0 0 2px white, 0 0 0 4px #10b981;
 }
 
+/*
+ * Formas iesniegšanas poga.
+ * Lieto saglabāšanai vai nosūtīšanai, kur darbība ir galvenā formai.
+ */
 .btn-submit {
     display: inline-flex;
     align-items: center;
@@ -70,6 +87,11 @@
     box-shadow: 0 0 0 2px white, 0 0 0 4px #38bdf8;
 }
 
+/*
+ * Meklēšanas poga.
+ * Lieto filtru joslās un ierīču koda meklēšanā. `devices-code-search-btn` paliek
+ * kā alias vecākam ierīču skatam, lai nav jāmaina Blade markup.
+ */
 .btn-search,
 .devices-code-search-btn {
     display: inline-flex;
@@ -101,6 +123,10 @@
     box-shadow: 0 0 0 2px white, 0 0 0 4px #38bdf8;
 }
 
+/*
+ * Filtru notīrīšanas vai atcelšanas poga.
+ * Lieto sekundārām darbībām, kur lietotājam jāatgriežas neitrālā stāvoklī.
+ */
 .btn-clear {
     display: inline-flex;
     align-items: center;
@@ -125,6 +151,10 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
+/*
+ * Skatīšanas poga.
+ * Lieto navigācijai uz detaļu skatu vai audita/saistītā ieraksta apskati.
+ */
 .btn-view {
     display: inline-flex;
     align-items: center;
@@ -149,6 +179,10 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
+/*
+ * Rediģēšanas poga.
+ * Lieto ieraksta labošanai; dzintara tonis atdala izmaiņu darbību no izveides.
+ */
 .btn-edit {
     display: inline-flex;
     align-items: center;
@@ -172,6 +206,10 @@
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
+/*
+ * Atgriešanās poga.
+ * Lieto navigācijai atpakaļ vai sekundāram solim modāļos un formās.
+ */
 .btn-back {
     display: inline-flex;
     align-items: center;
@@ -196,6 +234,10 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
+/*
+ * Bīstama, bet vēl ne primāri destruktīva darbība.
+ * Lieto dzēšanas/noraidīšanas priekšskatam vai darbībai, kur vajadzīgs brīdinājums.
+ */
 .btn-danger {
     display: inline-flex;
     align-items: center;
@@ -220,6 +262,10 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
+/*
+ * Primāri destruktīva darbība.
+ * Lieto apstiprinātai dzēšanai vai kritiskai darbībai, kur pogai jābūt skaidri pamanāmai.
+ */
 .btn-danger-solid {
     display: inline-flex;
     align-items: center;
@@ -248,6 +294,10 @@
     box-shadow: 0 0 0 2px white, 0 0 0 4px #f87171;
 }
 
+/*
+ * Apstiprināšanas poga.
+ * Lieto pieteikumu vai izmaiņu apstiprināšanai.
+ */
 .btn-approve {
     display: inline-flex;
     align-items: center;
@@ -276,6 +326,10 @@
     box-shadow: 0 0 0 2px white, 0 0 0 4px #10b981;
 }
 
+/*
+ * Noraidīšanas poga.
+ * Lieto kompaktos pieteikumu sarakstos, kur blakus ir apstiprināšanas darbība.
+ */
 .btn-reject {
     display: inline-flex;
     align-items: center;
@@ -298,6 +352,11 @@
     background-color: #fee2e2;
 }
 
+/*
+ * Neaktīva poga.
+ * Lieto, kad darbība ir redzama, bet īslaicīgi nav pieejama. `cursor: not-allowed`
+ * skaidri pasaka, ka klikšķis nav paredzēts.
+ */
 .btn-disabled {
     display: inline-flex;
     align-items: flex-start;
