@@ -906,7 +906,8 @@ const performManualTableSearch = async (form) => {
     clearTableSearchHighlights(root);
     clearTableSearchNavigator({ rootSelector });
 
-    const paginatedResults = supportsPaginatedManualSearch(form)
+    const hasSearchEndpoint = Boolean(form.dataset.searchEndpoint);
+    const paginatedResults = supportsPaginatedManualSearch(form) && !hasSearchEndpoint
         ? await searchAcrossPaginatedMatches(form, rootSelector, rawTerm, searchMode)
         : {
             matches: findMatchingTableRows(root, rawTerm, searchMode).map((row, index) => ({
@@ -994,7 +995,7 @@ const performManualTableSearch = async (form) => {
         }
 
         const result = await response.json();
-        if (!result?.found && supportsPaginatedManualSearch(form)) {
+        if (!result?.found && supportsPaginatedManualSearch(form) && !hasSearchEndpoint) {
             const paginatedMatch = await searchAcrossPaginatedHtml(form, rootSelector, rawTerm, searchMode);
 
             if (paginatedMatch?.html) {
