@@ -1209,6 +1209,29 @@ export const registerAsyncTableGlobals = () => {
         return false;
     };
 
+    window.handleAsyncPaginationButtonClick = (button) => {
+        if (!button || button.disabled) {
+            return false;
+        }
+
+        const pagination = button.closest?.('[data-async-pagination]');
+        const href = button.dataset?.pageUrl || '';
+        const rootSelector = pagination?.dataset?.asyncPaginationRoot || '';
+        const fragmentUrl = href ? buildAsyncPaginationFragmentUrl(pagination, href) : null;
+
+        if (!fragmentUrl || !rootSelector) {
+            return false;
+        }
+
+        window.submitAsyncTableFragment({
+            url: fragmentUrl,
+            rootSelector,
+            historyUrl: new URL(href, window.location.origin),
+        });
+
+        return false;
+    };
+
     window.submitAsyncTableForm = async (form, { url = null, resetPage = true, toastMessage = '', preserveSearchNavigator = false, manualSearchState = null } = {}) => {
         const rootSelector = form?.dataset?.asyncRoot;
 

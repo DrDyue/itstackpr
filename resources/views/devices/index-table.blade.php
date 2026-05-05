@@ -521,15 +521,49 @@
     </div>
 
     @if (method_exists($devices, 'hasPages') && $devices->hasPages())
-        {{-- Lapošana izmanto tikai tabulas fragmenta endpointu, lai lapu maiņa nepārlādētu filtrus un pārējo skatu. --}}
+        {{-- Ierīču lapošana tiek zīmēta ar pogām, nevis saitēm, lai pārlūkam nebūtu href navigācijas, kas varētu pārlādēt lapu. --}}
         <div
-            class="mt-5"
+            class="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm"
             data-async-pagination
             data-async-pagination-root="#devices-table-root"
             data-async-pagination-endpoint="{{ route('devices.table') }}"
-            onclick="return window.handleAsyncPaginationClick ? window.handleAsyncPaginationClick(event) : true"
         >
-            {{ $devices->links() }}
+            <div class="text-slate-500">
+                Rāda {{ $devices->firstItem() }}-{{ $devices->lastItem() }} no {{ $devices->total() }}
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5">
+                <button
+                    type="button"
+                    class="rounded-lg border px-3 py-1.5 font-semibold transition {{ $devices->onFirstPage() ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-300' : 'border-slate-200 bg-white text-slate-700 hover:border-sky-300 hover:text-sky-700' }}"
+                    @disabled($devices->onFirstPage())
+                    data-page-url="{{ $devices->previousPageUrl() }}"
+                    onclick="return window.handleAsyncPaginationButtonClick ? window.handleAsyncPaginationButtonClick(this) : false"
+                >
+                    Iepriekšējā
+                </button>
+
+                @foreach ($devices->getUrlRange(1, $devices->lastPage()) as $page => $url)
+                    <button
+                        type="button"
+                        class="min-w-9 rounded-lg border px-3 py-1.5 font-semibold transition {{ $devices->currentPage() === $page ? 'border-sky-500 bg-sky-50 text-sky-700' : 'border-slate-200 bg-white text-slate-700 hover:border-sky-300 hover:text-sky-700' }}"
+                        aria-current="{{ $devices->currentPage() === $page ? 'page' : 'false' }}"
+                        data-page-url="{{ $url }}"
+                        onclick="return window.handleAsyncPaginationButtonClick ? window.handleAsyncPaginationButtonClick(this) : false"
+                    >
+                        {{ $page }}
+                    </button>
+                @endforeach
+
+                <button
+                    type="button"
+                    class="rounded-lg border px-3 py-1.5 font-semibold transition {{ $devices->hasMorePages() ? 'border-slate-200 bg-white text-slate-700 hover:border-sky-300 hover:text-sky-700' : 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-300' }}"
+                    @disabled(! $devices->hasMorePages())
+                    data-page-url="{{ $devices->nextPageUrl() }}"
+                    onclick="return window.handleAsyncPaginationButtonClick ? window.handleAsyncPaginationButtonClick(this) : false"
+                >
+                    Nākamā
+                </button>
+            </div>
         </div>
     @endif
 
