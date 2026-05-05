@@ -8,7 +8,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Nodošanas akts Nr. {{ $transfer->id }} — {{ $transfer->device->name ?? 'Ierīce' }}</title>
+    <title>Ierīces nodošanas akts — {{ $transfer->device->name ?? 'Ierīce' }}</title>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -238,8 +238,6 @@
         <h1>Ierīces nodošanas akts</h1>
     </div>
     <div class="doc-meta">
-        Akts Nr.&nbsp;<strong>{{ $transfer->id }}</strong>
-        &nbsp;&nbsp;|&nbsp;&nbsp;
         Datums: <strong>{{ $transfer->updated_at?->format('d.m.Y') ?? $transfer->created_at?->format('d.m.Y') }}</strong>
     </div>
 
@@ -355,7 +353,6 @@
     <div class="doc-footer">
         Dokuments ģenerēts automātiski no IT inventāra uzskaites sistēmas
         &bull; {{ now()->format('d.m.Y H:i') }}
-        &bull; Akts Nr. {{ $transfer->id }}
     </div>
 
 </body>
