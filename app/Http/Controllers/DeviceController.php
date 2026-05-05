@@ -41,7 +41,7 @@ class DeviceController extends Controller
     use HasRepairStatusLabels;
 
     // Ierīču tabulā lapojam īsi, lai galvenās darbības un lapošana paliek redzamas bez garas skrollēšanas.
-    private const DEVICE_INDEX_PER_PAGE = 5;
+    private const DEVICE_INDEX_PER_PAGE = 15;
 
     // Visi ierīces statusi, ko administrators drīkst redzēt un izmantot ierīču pārvaldībā.
     private const STATUSES = [Device::STATUS_ACTIVE, Device::STATUS_REPAIR, Device::STATUS_WRITEOFF];
