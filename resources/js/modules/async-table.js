@@ -1179,6 +1179,36 @@ export const registerAsyncTableGlobals = () => {
         return false;
     };
 
+    window.handleAsyncPaginationClick = (event) => {
+        const link = event?.target?.closest?.('a');
+        const pagination = event?.currentTarget?.matches?.('[data-async-pagination]')
+            ? event.currentTarget
+            : link?.closest?.('[data-async-pagination]');
+
+        if (!link || !pagination) {
+            return true;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const href = link.getAttribute('href');
+        const rootSelector = pagination.dataset?.asyncPaginationRoot || '';
+        const fragmentUrl = href ? buildAsyncPaginationFragmentUrl(pagination, href) : null;
+
+        if (!fragmentUrl || !rootSelector) {
+            return false;
+        }
+
+        window.submitAsyncTableFragment({
+            url: fragmentUrl,
+            rootSelector,
+            historyUrl: new URL(href, window.location.origin),
+        });
+
+        return false;
+    };
+
     window.submitAsyncTableForm = async (form, { url = null, resetPage = true, toastMessage = '', preserveSearchNavigator = false, manualSearchState = null } = {}) => {
         const rootSelector = form?.dataset?.asyncRoot;
 
@@ -1458,21 +1488,7 @@ export const initializeAsyncTableFilters = () => {
 
         const paginationLink = event.target.closest('[data-async-pagination] a');
         if (paginationLink) {
-            event.preventDefault();
-
-            const href = paginationLink.getAttribute('href');
-            const pagination = paginationLink.closest('[data-async-pagination]');
-            const paginationRootSelector = pagination?.dataset?.asyncPaginationRoot || '';
-            const paginationUrl = href ? buildAsyncPaginationFragmentUrl(pagination, href) : null;
-
-            if (paginationUrl && paginationRootSelector) {
-                window.submitAsyncTableFragment({
-                    url: paginationUrl,
-                    rootSelector: paginationRootSelector,
-                    historyUrl: new URL(href, window.location.origin),
-                });
-            }
-
+            window.handleAsyncPaginationClick(event);
             return;
         }
 

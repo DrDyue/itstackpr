@@ -527,6 +527,7 @@
             data-async-pagination
             data-async-pagination-root="#devices-table-root"
             data-async-pagination-endpoint="{{ route('devices.table') }}"
+            onclick="return window.handleAsyncPaginationClick ? window.handleAsyncPaginationClick(event) : true"
         >
             {{ $devices->links() }}
         </div>
