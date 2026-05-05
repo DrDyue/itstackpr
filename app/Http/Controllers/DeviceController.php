@@ -40,7 +40,7 @@ class DeviceController extends Controller
 {
     use HasRepairStatusLabels;
 
-    // Ierīču tabulā lapojam īsi, lai galvenās darbības un lapošana paliek redzamas bez garas skrollēšanas.
+    // Ierīču tabulā rādam 15 ierakstus lapā, lai saraksts paliek pārskatāms un lapošana nav pārlieku bieža.
     private const DEVICE_INDEX_PER_PAGE = 15;
 
     // Visi ierīces statusi, ko administrators drīkst redzēt un izmantot ierīču pārvaldībā.
@@ -77,9 +77,9 @@ class DeviceController extends Controller
     /**
      * Ko dara: Atgriež filtrētu ierīču tabulu (async).
      *
-     * Kā strādā: Atjaunina tikai tabulas HTML fragmentu, nevis visu lapu, lai paātrinātu filtrēšanas un kārtošanas darbības bez pilnas lapas pārlādēšanas.
+     * Kā strādā: Atjaunina tikai tabulas HTML fragmentu, nevis visu lapu, lai paātrinātu lapošanu, filtrēšanu un kārtošanu bez pilnas lapas pārlādēšanas.
      *
-     * Kad pielietojas: Izsaukšana: GET /devices/table | Pieejams: jebkurš autentificēts lietotājs. Scenārijs: JavaScript automātiski izsauc šo maršrutu, kad lietotājs maina filtru vērtību vai kārtošanas kolonnu ierīču sarakstā.
+     * Kad pielietojas: Izsaukšana: GET /devices/table | Pieejams: jebkurš autentificēts lietotājs. Scenārijs: JavaScript izsauc šo maršrutu, kad lietotājs pārslēdz lapu, maina filtru vērtību vai kārtošanas kolonnu ierīču sarakstā.
      */
     public function table(Request $request)
     {
@@ -110,7 +110,7 @@ class DeviceController extends Controller
     /**
      * Ko dara: Atrod ierīci pēc koda un atgriež informāciju par lapu kurā tā atrodas.
      *
-     * Kā strādā: Atgriež JSON ar lapu, ierīces ID un enkura ID iezīmēšanai tabulā. Ja ierīce nav atrasta ar norādīto kodu, atgriež `found: false`.
+     * Kā strādā: Ar ātru precīza koda SQL meklēšanu atrod ierīci, pēc sakārtota ID saraksta aprēķina tās lapu un atgriež JSON ar lapu, ierīces ID un enkura ID iezīmēšanai tabulā.
      *
      * Kad pielietojas: Izsaukšana: GET /devices/find-by-code?code=... | Pieejams: jebkurš autentificēts lietotājs. Scenārijs: Meklēšanas lodziņš ierīču sarakstā sūta AJAX pieprasījumu, kad lietotājs ievada ierīces kodu un nospiež meklēšanas ikonu.
      */
@@ -1084,6 +1084,8 @@ SQL;
 
     private function accessibleRoomsQuery(User $user): Builder
     {
+        // Kopīgā telpu pieejamības vaicājuma forma ļauj pilnajam skatam ielādēt kolekciju,
+        // bet koda meklēšanai pārbaudīt tikai konkrētu telpas ID bez visa saraksta ielādes.
         return Room::query()
             ->select(['id', 'building_id', 'floor_number', 'room_number', 'room_name', 'department'])
             ->with('building:id,building_name')

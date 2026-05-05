@@ -532,8 +532,24 @@ const buildAsyncTablePageUrl = (form, page) => {
     return targetUrl;
 };
 
-// Manuālā meklēšana var iet pāri vairākām lapām, tāpēc pa vienai ielādējam nākamo tabulas HTML
-// un tajā meklējam rindas, nevis paļaujamies tikai uz pašreiz atvērto lapu.
+// Lapošanas saitēm var būt atsevišķs fragmenta endpoint, lai pārslēgtu tikai tabulu,
+// bet pārlūka URL atstātu uz pilnās lapas adresi.
+const buildAsyncPaginationFragmentUrl = (pagination, href) => {
+    const endpoint = pagination?.dataset?.asyncPaginationEndpoint;
+    if (!endpoint) {
+        return null;
+    }
+
+    const sourceUrl = new URL(href, window.location.origin);
+    const targetUrl = new URL(endpoint, window.location.origin);
+    targetUrl.search = sourceUrl.search;
+
+    return targetUrl;
+};
+
+// Vispārīgām tabulām manuālā meklēšana var iet pāri vairākām lapām,
+// ielādējot nākamo tabulas HTML. Tabulām ar `data-search-endpoint` šo soli izlaižam
+// un izmantojam backend atgriezto precīzo lapu.
 const searchAcrossPaginatedMatches = async (form, rootSelector, rawTerm, mode = 'contains') => {
     const currentPage = getCurrentAsyncPage();
     const baseUrl = buildAsyncTableUrl(form, { resetPage: false });
@@ -867,9 +883,9 @@ const moveTableSearchNavigator = async (step) => {
     return true;
 };
 
-// Manuālā tabulas meklēšana strādā divos līmeņos:
-// 1) mēģina atrast sakritību esošajā vai ielādētajās lapās,
-// 2) ja vajag, izmanto backend search endpoint, kas atgriež pareizo lapu un highlight ID.
+// Manuālā tabulas meklēšana vispirms pārbauda pašreizējo DOM.
+// Ja formai ir backend search endpoint, uzreiz izmanto to pareizās lapas atrašanai;
+// pretējā gadījumā var pārstaigāt lapotos HTML fragmentus.
 const performManualTableSearch = async (form) => {
     const rootSelector = form?.dataset?.asyncRoot;
     const searchInput = getManualSearchInput(form);
@@ -1240,6 +1256,64 @@ export const registerAsyncTableGlobals = () => {
             }
         }
     };
+
+    // Ātrā fragmenta nomaiņa tiek izmantota lapošanai: serveris atgriež tikai tabulu,
+    // bet adrešu joslā saglabājam pilnās lapas URL ar pareizo `page` parametru.
+    window.submitAsyncTableFragment = async ({ url, rootSelector, historyUrl = null } = {}) => {
+        if (!(url instanceof URL) || !rootSelector) {
+            return false;
+        }
+
+        const requestKey = rootSelector;
+
+        if (asyncTableControllers.has(requestKey)) {
+            asyncTableControllers.get(requestKey)?.abort();
+        }
+
+        const controller = new AbortController();
+        asyncTableControllers.set(requestKey, controller);
+        setAsyncTableLoading(rootSelector, true);
+
+        try {
+            const response = await window.fetch(url.toString(), {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                signal: controller.signal,
+                priority: 'high',
+            });
+
+            if (!response.ok) {
+                throw new Error('Async table fragment request failed.');
+            }
+
+            const html = await response.text();
+            const swapped = swapAsyncTableRoot(rootSelector, html);
+
+            if (!swapped) {
+                window.location.assign((historyUrl || url).toString());
+                return false;
+            }
+
+            enhanceSortTriggerLabels(document.querySelector(rootSelector) || document);
+
+            const nextUrl = historyUrl instanceof URL ? historyUrl : url;
+            window.history.replaceState({}, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+
+            return true;
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                window.location.assign((historyUrl || url).toString());
+            }
+
+            return false;
+        } finally {
+            if (asyncTableControllers.get(requestKey) === controller) {
+                asyncTableControllers.delete(requestKey);
+                setAsyncTableLoading(rootSelector, false);
+            }
+        }
+    };
 };
 
 export const initializeAsyncTableFilters = () => {
@@ -1407,6 +1481,19 @@ export const initializeAsyncTableFilters = () => {
         if (asyncLink.matches('[data-async-clear="true"]')) {
             cancelPendingAsyncTableWork(form);
             clearAsyncTableFormUi(form, root);
+        }
+
+        const pagination = asyncLink.closest('[data-async-pagination]');
+        const paginationRootSelector = pagination?.dataset?.asyncPaginationRoot || '';
+        const paginationUrl = buildAsyncPaginationFragmentUrl(pagination, href);
+
+        if (paginationUrl && paginationRootSelector) {
+            window.submitAsyncTableFragment({
+                url: paginationUrl,
+                rootSelector: paginationRootSelector,
+                historyUrl: new URL(href, window.location.origin),
+            });
+            return;
         }
 
         window.submitAsyncTableForm(form, {

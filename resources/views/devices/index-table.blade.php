@@ -521,7 +521,13 @@
     </div>
 
     @if (method_exists($devices, 'hasPages') && $devices->hasPages())
-        <div class="mt-5" data-async-pagination>
+        {{-- Lapošana izmanto tikai tabulas fragmenta endpointu, lai lapu maiņa nepārlādētu filtrus un pārējo skatu. --}}
+        <div
+            class="mt-5"
+            data-async-pagination
+            data-async-pagination-root="#devices-table-root"
+            data-async-pagination-endpoint="{{ route('devices.table') }}"
+        >
             {{ $devices->links() }}
         </div>
     @endif
