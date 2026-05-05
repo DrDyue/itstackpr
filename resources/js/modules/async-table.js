@@ -1456,7 +1456,27 @@ export const initializeAsyncTableFilters = () => {
             return;
         }
 
-        const asyncLink = event.target.closest('a[data-async-link="true"], a.quick-status-filter, [data-async-pagination] a');
+        const paginationLink = event.target.closest('[data-async-pagination] a');
+        if (paginationLink) {
+            event.preventDefault();
+
+            const href = paginationLink.getAttribute('href');
+            const pagination = paginationLink.closest('[data-async-pagination]');
+            const paginationRootSelector = pagination?.dataset?.asyncPaginationRoot || '';
+            const paginationUrl = href ? buildAsyncPaginationFragmentUrl(pagination, href) : null;
+
+            if (paginationUrl && paginationRootSelector) {
+                window.submitAsyncTableFragment({
+                    url: paginationUrl,
+                    rootSelector: paginationRootSelector,
+                    historyUrl: new URL(href, window.location.origin),
+                });
+            }
+
+            return;
+        }
+
+        const asyncLink = event.target.closest('a[data-async-link="true"], a.quick-status-filter');
         if (!asyncLink) {
             return;
         }
@@ -1481,19 +1501,6 @@ export const initializeAsyncTableFilters = () => {
         if (asyncLink.matches('[data-async-clear="true"]')) {
             cancelPendingAsyncTableWork(form);
             clearAsyncTableFormUi(form, root);
-        }
-
-        const pagination = asyncLink.closest('[data-async-pagination]');
-        const paginationRootSelector = pagination?.dataset?.asyncPaginationRoot || '';
-        const paginationUrl = buildAsyncPaginationFragmentUrl(pagination, href);
-
-        if (paginationUrl && paginationRootSelector) {
-            window.submitAsyncTableFragment({
-                url: paginationUrl,
-                rootSelector: paginationRootSelector,
-                historyUrl: new URL(href, window.location.origin),
-            });
-            return;
         }
 
         window.submitAsyncTableForm(form, {
