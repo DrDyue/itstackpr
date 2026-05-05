@@ -1381,7 +1381,7 @@ export const initializeAsyncTableFilters = () => {
             return;
         }
 
-        const asyncLink = event.target.closest('a[data-async-link="true"], a.quick-status-filter');
+        const asyncLink = event.target.closest('a[data-async-link="true"], a.quick-status-filter, [data-async-pagination] a');
         if (!asyncLink) {
             return;
         }

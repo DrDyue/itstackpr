@@ -50,6 +50,12 @@
 @endphp
 
 <div id="devices-table-root">
+    @if (method_exists($devices, 'hasPages') && $devices->hasPages())
+        <div class="mt-5" data-async-pagination>
+            {{ $devices->links() }}
+        </div>
+    @endif
+
     <div class="repair-table-shell mt-5 rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
         <div class="repair-table-scroll">
             <table class="repair-table-content w-full min-w-full text-sm">
@@ -519,6 +525,12 @@
             </table>
         </div>
     </div>
+
+    @if (method_exists($devices, 'hasPages') && $devices->hasPages())
+        <div class="mt-5" data-async-pagination>
+            {{ $devices->links() }}
+        </div>
+    @endif
 
 @if (! $canManageDevices)
     @foreach ($devices as $userRoomDeviceModalItem)

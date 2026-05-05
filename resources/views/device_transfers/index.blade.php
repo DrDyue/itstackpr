@@ -228,7 +228,7 @@
                             toggleStatus(value) {
                                 const normalizedValue = String(value);
 
-                                // Statusa filtrs un "incoming" skats ir savstarpēji izslēdzoši.
+                                // Statusa filtrs un incoming skats ir savstarpēji izslēdzoši.
                                 // Ja lietotājs izvēlas statusu, incoming režīmu noņemam,
                                 // lai backend nesaņemtu pretrunīgus filtra signālus.
                                 this.incoming = false;

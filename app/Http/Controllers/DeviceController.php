@@ -40,6 +40,9 @@ class DeviceController extends Controller
 {
     use HasRepairStatusLabels;
 
+    // Ierīču tabulā lapojam īsi, lai galvenās darbības un lapošana paliek redzamas bez garas skrollēšanas.
+    private const DEVICE_INDEX_PER_PAGE = 5;
+
     // Visi ierīces statusi, ko administrators drīkst redzēt un izmantot ierīču pārvaldībā.
     private const STATUSES = [Device::STATUS_ACTIVE, Device::STATUS_REPAIR, Device::STATUS_WRITEOFF];
 
@@ -151,21 +154,26 @@ class DeviceController extends Controller
             ? $assignableUsers->firstWhere('id', (int) $filters['assigned_to_id'])
             : null;
 
-        $devicesQuery = $this->visibleDevicesQuery($user)->select('devices.id', 'devices.code');
+        $filters['code'] = '';
+
+        $devicesQuery = $this->deviceIndexListQuery($user);
         $this->applyDeviceIndexFilters($devicesQuery, $filters, $selectedAssignedUser, $selectedRoom, $selectedType);
+        $this->applyDeviceIndexSorting($devicesQuery, $this->normalizedDeviceSorting($request, $canManageDevices));
 
-        // Precīza koda meklēšanai pietiek ar vienu atlasītu ierīci, nav jāielādē viss saraksts.
-        $foundDevice = $devicesQuery
-            ->whereRaw('LOWER(TRIM(devices.code)) = ?', [mb_strtolower($code)])
-            ->first();
+        $orderedDevices = $devicesQuery->get();
+        $foundIndex = $orderedDevices->search(
+            fn (Device $device) => mb_strtolower(trim((string) $device->code)) === mb_strtolower($code)
+        );
 
-        if (! $foundDevice) {
+        if ($foundIndex === false) {
             return response()->json(['found' => false, 'page' => 1]);
         }
 
+        $foundDevice = $orderedDevices->get($foundIndex);
+
         return response()->json([
             'found' => true,
-            'page' => 1,
+            'page' => (int) floor($foundIndex / self::DEVICE_INDEX_PER_PAGE) + 1,
             'device_id' => $foundDevice->id,
             'device_code' => $foundDevice->code,
             'term' => $code,
@@ -236,12 +244,7 @@ class DeviceController extends Controller
 
         // Galvenais ierīču vaicājums ielādē visas attiecības, kas vajadzīgas rindas attēlošanai.
         // Joini šeit ir galvenokārt kārtošanai, bet with/withExists samazina papildu SQL pieprasījumus skatā.
-        $devicesQuery = $this->visibleDevicesQuery($user)
-            ->select('devices.*')
-            ->leftJoin('rooms as sort_rooms', 'sort_rooms.id', '=', 'devices.room_id')
-            ->leftJoin('buildings as sort_buildings', 'sort_buildings.id', '=', 'devices.building_id')
-            ->leftJoin('users as sort_users', 'sort_users.id', '=', 'devices.assigned_to_id')
-            ->leftJoin('device_types as sort_types', 'sort_types.id', '=', 'devices.device_type_id')
+        $devicesQuery = $this->deviceIndexListQuery($user)
             ->with([
                 'type',
                 'building',
@@ -258,21 +261,7 @@ class DeviceController extends Controller
                 'pendingWriteoffRequest.responsibleUser',
                 'pendingTransferRequest.responsibleUser',
                 'pendingTransferRequest.transferTo',
-            ])
-            ->withExists([
-                'repairRequests as has_pending_repair_request' => fn (Builder $query) => $query->where('status', RepairRequest::STATUS_SUBMITTED),
-                'writeoffRequests as has_pending_writeoff_request' => fn (Builder $query) => $query->where('status', WriteoffRequest::STATUS_SUBMITTED),
-                'transfers as has_pending_transfer_request' => fn (Builder $query) => $query->where('status', DeviceTransfer::STATUS_SUBMITTED),
-            ])
-            ->selectSub(
-                DB::table('repairs')
-                    ->select('status')
-                    ->whereColumn('repairs.device_id', 'devices.id')
-                    ->whereIn('status', ['waiting', 'in-progress'])
-                    ->orderByDesc('id')
-                    ->limit(1),
-                'sort_repair_progress'
-            );
+            ]);
 
         $this->applyDeviceIndexFilters(
             $devicesQuery,
@@ -284,11 +273,15 @@ class DeviceController extends Controller
 
         $this->applyDeviceIndexSorting($devicesQuery, $sorting);
 
-        $devices = $devicesQuery->get();
+        $devices = $devicesQuery
+            ->paginate(self::DEVICE_INDEX_PER_PAGE)
+            ->withPath(route('devices.index'))
+            ->withQueryString();
 
         // deviceStates ir papildstāvokļu masīvs pa ierīces ID.
         // Tas atdala UI pieejamības loģiku no pašiem Eloquent modeļiem, lai Blade skats paliek vienkāršāks.
         $deviceStates = $devices
+            ->getCollection()
             ->mapWithKeys(function (Device $device) use ($user) {
                 $pendingRepairRequest = $device->pendingRepairRequest;
                 $pendingWriteoffRequest = $device->pendingWriteoffRequest;
@@ -1059,6 +1052,35 @@ SQL;
             ->when(
                 $user->canManageRequests() && $user->prefersHiddenWrittenOffDevices(),
                 fn (Builder $query) => $query->where('status', '!=', Device::STATUS_WRITEOFF)
+            );
+    }
+
+    /**
+     * Ko dara: Sagatavo ierīču saraksta bāzes vaicājumu ar kārtošanai vajadzīgajiem laukiem.
+     *
+     * Kā strādā: Pievieno vienādu join/subselect komplektu gan tabulas lapošanai, gan koda meklēšanas lapas aprēķinam.
+     */
+    private function deviceIndexListQuery(User $user): Builder
+    {
+        return $this->visibleDevicesQuery($user)
+            ->select('devices.*')
+            ->leftJoin('rooms as sort_rooms', 'sort_rooms.id', '=', 'devices.room_id')
+            ->leftJoin('buildings as sort_buildings', 'sort_buildings.id', '=', 'devices.building_id')
+            ->leftJoin('users as sort_users', 'sort_users.id', '=', 'devices.assigned_to_id')
+            ->leftJoin('device_types as sort_types', 'sort_types.id', '=', 'devices.device_type_id')
+            ->withExists([
+                'repairRequests as has_pending_repair_request' => fn (Builder $query) => $query->where('status', RepairRequest::STATUS_SUBMITTED),
+                'writeoffRequests as has_pending_writeoff_request' => fn (Builder $query) => $query->where('status', WriteoffRequest::STATUS_SUBMITTED),
+                'transfers as has_pending_transfer_request' => fn (Builder $query) => $query->where('status', DeviceTransfer::STATUS_SUBMITTED),
+            ])
+            ->selectSub(
+                DB::table('repairs')
+                    ->select('status')
+                    ->whereColumn('repairs.device_id', 'devices.id')
+                    ->whereIn('status', ['waiting', 'in-progress'])
+                    ->orderByDesc('id')
+                    ->limit(1),
+                'sort_repair_progress'
             );
     }
 
