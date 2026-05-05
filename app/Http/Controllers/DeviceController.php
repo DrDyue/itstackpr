@@ -131,27 +131,21 @@ class DeviceController extends Controller
         // atrastu tikai to ierīci, kas tiešām ir redzama pašreizējā tabulā.
         $canManageDevices = $user->canManageRequests();
         $filters = $this->normalizedIndexFilters($request, $user);
-        $accessibleRooms = $this->accessibleRooms($user);
-        $types = DeviceType::query()
-            ->select(['id', 'type_name'])
-            ->orderBy('type_name')
-            ->get();
-        $assignableUsers = $canManageDevices
+        $selectedRoom = ctype_digit($filters['room_id'])
+            ? $this->accessibleRoomsQuery($user)
+                ->where('rooms.id', (int) $filters['room_id'])
+                ->first()
+            : null;
+        $selectedType = ctype_digit($filters['type'])
+            ? DeviceType::query()
+                ->select(['id', 'type_name'])
+                ->find((int) $filters['type'])
+            : null;
+        $selectedAssignedUser = $canManageDevices && ctype_digit($filters['assigned_to_id'])
             ? User::query()
                 ->active()
                 ->select(['id', 'full_name', 'job_title', 'email'])
-                ->orderBy('full_name')
-                ->get()
-            : collect();
-
-        $selectedRoom = ctype_digit($filters['room_id'])
-            ? $accessibleRooms->firstWhere('id', (int) $filters['room_id'])
-            : null;
-        $selectedType = ctype_digit($filters['type'])
-            ? $types->firstWhere('id', (int) $filters['type'])
-            : null;
-        $selectedAssignedUser = $canManageDevices && ctype_digit($filters['assigned_to_id'])
-            ? $assignableUsers->firstWhere('id', (int) $filters['assigned_to_id'])
+                ->find((int) $filters['assigned_to_id'])
             : null;
 
         $filters['code'] = '';
@@ -160,20 +154,24 @@ class DeviceController extends Controller
         $this->applyDeviceIndexFilters($devicesQuery, $filters, $selectedAssignedUser, $selectedRoom, $selectedType);
         $this->applyDeviceIndexSorting($devicesQuery, $this->normalizedDeviceSorting($request, $canManageDevices));
 
-        $orderedDevices = $devicesQuery->get();
-        $foundIndex = $orderedDevices->search(
-            fn (Device $device) => mb_strtolower(trim((string) $device->code)) === mb_strtolower($code)
-        );
+        $foundDevice = (clone $devicesQuery)
+            ->where('devices.code', $code)
+            ->first(['devices.id', 'devices.code'])
+            ?? (clone $devicesQuery)
+                ->whereRaw('LOWER(TRIM(devices.code)) = ?', [mb_strtolower($code)])
+                ->first(['devices.id', 'devices.code']);
 
-        if ($foundIndex === false) {
+        if (! $foundDevice) {
             return response()->json(['found' => false, 'page' => 1]);
         }
 
-        $foundDevice = $orderedDevices->get($foundIndex);
+        $foundIndex = $devicesQuery
+            ->pluck('devices.id')
+            ->search(fn (mixed $deviceId) => (int) $deviceId === (int) $foundDevice->id);
 
         return response()->json([
             'found' => true,
-            'page' => (int) floor($foundIndex / self::DEVICE_INDEX_PER_PAGE) + 1,
+            'page' => $foundIndex === false ? 1 : (int) floor($foundIndex / self::DEVICE_INDEX_PER_PAGE) + 1,
             'device_id' => $foundDevice->id,
             'device_code' => $foundDevice->code,
             'term' => $code,
@@ -1084,14 +1082,7 @@ SQL;
             );
     }
 
-    /**
-     * Ko dara: Atgriež telpu kolekciju, kurās atrodas lietotājam redzamās ierīces.
-     *
-     * Kā strādā: Izmantota filtra izvēlnē — parādīt tikai tās telpas, kurās ir šim lietotājam pieejamas ierīces. Administrators redz visas telpas (izņemot norakstīto slēpšanas gadījumu).
-     *
-     * Kad pielietojas: Izsauc no: `devicesIndexViewData()` — telpu filtra aizpildīšanai.
-     */
-    private function accessibleRooms(User $user): Collection
+    private function accessibleRoomsQuery(User $user): Builder
     {
         return Room::query()
             ->select(['id', 'building_id', 'floor_number', 'room_number', 'room_name', 'department'])
@@ -1104,7 +1095,19 @@ SQL;
                 if (! $user->canManageRequests()) {
                     $query->where('assigned_to_id', $user->id);
                 }
-            })
+            });
+    }
+
+    /**
+     * Ko dara: Atgriež telpu kolekciju, kurās atrodas lietotājam redzamās ierīces.
+     *
+     * Kā strādā: Izmantota filtra izvēlnē — parādīt tikai tās telpas, kurās ir šim lietotājam pieejamas ierīces. Administrators redz visas telpas (izņemot norakstīto slēpšanas gadījumu).
+     *
+     * Kad pielietojas: Izsauc no: `devicesIndexViewData()` — telpu filtra aizpildīšanai.
+     */
+    private function accessibleRooms(User $user): Collection
+    {
+        return $this->accessibleRoomsQuery($user)
             ->orderBy('building_id')
             ->orderBy('floor_number')
             ->orderBy('room_number')
