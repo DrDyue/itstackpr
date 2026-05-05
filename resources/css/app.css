@@ -10,7 +10,11 @@
 /* .sidebar: 1000 (fixed navigation - should be lower, see TODO below) */
 /* .device-action-bar: 10 | .request-detail-overlay: 100 | .searchable-select: 20 */
 
-/* Reset and Base Styles */
+/*
+ * Pamatatiestatīšana un globālā tipogrāfija.
+ * Lieto visā aplikācijā pirms Tailwind utilītēm, lai elementi sākas no vienāda
+ * box model, fonta un noklusētā lapas fona.
+ */
 * {
     margin: 0;
     padding: 0;
@@ -29,7 +33,11 @@ body {
     line-height: 1.6;
 }
 
-/* Auth Page Layout */
+/*
+ * Vecā autentifikācijas forma.
+ * Lieto pieteikšanās/reģistrācijas ekrānos, kur centrēta forma atrodas vienā kartē.
+ * Zemāk esošais `auth-wrapper` ir jaunāks dalītā ekrāna variants.
+ */
 .auth-container {
     min-height: 100vh;
     display: flex;
@@ -84,7 +92,10 @@ body {
     padding: 32px;
 }
 
-/* Form Styles */
+/*
+ * Autentifikācijas formas lauki.
+ * Lieto tikai auth kartēs; administrēšanas CRUD formas izmanto `.crud-*` klases.
+ */
 .form-group {
     margin-bottom: 20px;
 }
@@ -275,7 +286,11 @@ tbody td {
     }
 }
 
-/* Common layout helpers */
+/*
+ * Kopīgie layout un pārejas helperi.
+ * Lieto: Alpine `x-cloak`, body reset un globālais ielādes indikators starp lapu
+ * navigācijām vai async darbībām.
+ */
 [x-cloak] {
     display: none !important;
 }
@@ -433,7 +448,11 @@ tbody td {
     }
 }
 
-/* App Shell - Main content container */
+/*
+ * Galvenais lapas konteineris.
+ * Lieto visos app skatos kā satura platuma ierobežojumu. `app-shell-wide`
+ * ir paredzēts platām tabulām un dashboard skatiem.
+ */
 .app-shell {
     @apply mx-auto w-full max-w-7xl;
 }
@@ -480,7 +499,11 @@ tbody td {
     border-top: 1px solid #d5d5d7;
 }
 
-/* CRUD shared classes */
+/*
+ * Kopīgās CRUD formas un ievades lauki.
+ * Lieto izveides/rediģēšanas formās, modal formās un filtru joslās, lai label,
+ * input un pogu stāvokļi izskatās vienādi visās administrēšanas sadaļās.
+ */
 .crud-label {
     @apply mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-700;
 }
@@ -517,6 +540,11 @@ tbody td {
     @apply inline-flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100;
 }
 
+/*
+ * Ierīču formas sekcijas.
+ * Lieto ierīces izveides/rediģēšanas modālī un detaļu formās, kur lauki ir sadalīti
+ * loģiskās kartēs: identitāte, piesaiste, finanšu dati un attēls.
+ */
 .device-form-card {
     @apply rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md hover:border-slate-300;
 }
@@ -597,6 +625,11 @@ tbody td {
     @apply min-h-[7rem] resize-y;
 }
 
+/*
+ * Ierīces attēla augšupielāde un priekšskatījums.
+ * Lieto ierīces formā; priekšskatījuma un lightbox klases tur attēlu stabilā rāmī,
+ * lai lieli attēli neizjauc modāļa izkārtojumu.
+ */
 .device-image-field {
     @apply min-w-0;
 }
@@ -695,6 +728,10 @@ tbody td {
     @apply text-sm text-slate-500;
 }
 
+/*
+ * Ierīču tipu pārvaldības skats.
+ * Lieto tipu sarakstā ar kategoriju čipiem, kartēm un kārtošanas saitēm.
+ */
 .type-shell {
     @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
 }
@@ -775,6 +812,11 @@ tbody td {
     @apply font-semibold text-slate-900;
 }
 
+/*
+ * Kopīgais modāļu vizuālais karkass.
+ * Lieto ierīču, lietotāju, pieteikumu un remonta formu modāļos. Klases nosaukumā
+ * palicis `device-type`, jo sākotnēji šis dizains radās ierīču tipu sadaļai.
+ */
 .device-type-modal-head {
     @apply relative overflow-hidden border-b border-slate-200 px-6 py-4 sm:px-7;
     background:
@@ -888,6 +930,11 @@ tbody td {
     margin: 0;
 }
 
+/*
+ * Remonta procesa palīgbloki.
+ * Lieto remonta modāļos, lai parādītu nākamo soli, validācijas kopsavilkumu un
+ * ieteikumus pirms statusa maiņas vai saglabāšanas.
+ */
 .repair-next-step-panel {
     @apply rounded-[1.5rem] border border-sky-100 bg-sky-50/70 px-4 py-4;
 }
@@ -1012,6 +1059,11 @@ tbody td {
     @apply flex flex-wrap items-center justify-end gap-2;
 }
 
+/*
+ * Stikla/blur modāļa virsma.
+ * Lieto jaunākos modāļos, kur vajadzīgs vizuāli vieglāks panelis ar backdrop blur.
+ * `isolation` notur pseudo-elementu slāņus panelī un neļauj tiem sajaukties ar overlay.
+ */
 .modal-liquid-panel {
     background:
         linear-gradient(140deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.82)),
@@ -1063,7 +1115,10 @@ tbody td {
     @apply mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500;
 }
 
-/* Guest layout page */
+/*
+ * Viesu/autentifikācijas dalītais ekrāns.
+ * Lieto lielajos ekrānos: kreisajā pusē forma, labajā pusē vizuāls brand laukums.
+ */
 .auth-wrapper {
     display: flex;
     min-height: 100vh;
@@ -1180,7 +1235,11 @@ tbody td {
     }
 }
 
-/* Dashboard */
+/*
+ * Darba virsmas izkārtojums.
+ * Lieto admin dashboard skatam: KPI kartes, ēku/telpu koks, aktivitāšu plūsma,
+ * ātrās darbības un ierīču tabula.
+ */
 .dash-page {
     @apply mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8;
 }
@@ -1357,6 +1416,11 @@ tbody td {
     @apply flex flex-wrap gap-2;
 }
 
+/*
+ * Dashboard ēku/telpu struktūras panelis.
+ * Lieto kreisajā vai sānu panelī, kur ēkas, stāvi un telpas tiek rādītas kā
+ * atverams koks ar skaitītājiem.
+ */
 .dash-structure-stats {
     @apply grid grid-cols-3 gap-3 border-b border-slate-200 px-4 py-4;
 }
@@ -1423,6 +1487,10 @@ tbody td {
     @apply text-sm font-medium text-slate-900;
 }
 
+/*
+ * Dashboard ātro rādītāju un īsceļu kartes.
+ * Lieto nelieliem kopsavilkumiem un ātrai pārejai uz biežākajām darbībām.
+ */
 .dash-quick-grid {
     @apply grid gap-5 p-5 md:grid-cols-3;
 }
@@ -1455,6 +1523,10 @@ tbody td {
     @apply mt-1 text-sm text-slate-600;
 }
 
+/*
+ * Dashboard aktivitāšu un notikumu saraksti.
+ * Lieto audita, pieteikumu un sistēmas plūsmas īsajam pārskatam.
+ */
 .dash-activity-list,
 .dash-feed-list,
 .dash-action-list {
@@ -1617,6 +1689,11 @@ tbody td {
     @apply mt-6 grid gap-5;
 }
 
+/*
+ * Dashboard iebūvētā tabula.
+ * Lieto ierīču vai citu sarakstu īsajam pārskatam darba virsmā, nevis pilnajam
+ * administrēšanas sarakstam.
+ */
 .dash-table-wrap {
     @apply overflow-visible p-4;
 }
@@ -1693,6 +1770,11 @@ tbody td {
     @apply rounded-[1.25rem] border border-dashed border-slate-200 bg-slate-50/70 px-4 py-8 text-sm text-slate-500;
 }
 
+/*
+ * Dashboard telpu filtrēšanas darba zona.
+ * Lieto skatam, kur kreisajā pusē izvēlas ēku/stāvu/telpu, bet labajā pusē
+ * pārzīmējas atbilstošie ierīču vai pārskata dati.
+ */
 .dash-workspace-grid {
     @apply grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)];
 }
@@ -1774,6 +1856,11 @@ tbody td {
     @apply space-y-6;
 }
 
+/*
+ * Dashboard lokālā lapošana.
+ * Lieto darba virsmas tabulām; atdalīta no `.app-pagination`, jo dashboard panelim
+ * ir savs rāmja un atstarpju konteksts.
+ */
 .dashboard-pagination {
     @apply flex flex-col gap-3 border-t border-slate-200 px-5 py-4 md:flex-row md:items-center md:justify-between;
 }
@@ -1798,7 +1885,13 @@ tbody td {
     @apply cursor-default border border-slate-200 bg-slate-50 text-slate-400 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-400;
 }
 
-/* App Pagination - Light Mode */
+/*
+ * Kopīgā lapošana Laravel pagination komponentēm.
+ * Lieto: resources/views/vendor/pagination/tailwind.blade.php un vecāki saraksti,
+ * kuri joprojām renderē `$paginator->links()`.
+ * Piezīme: ierīču un audita tabulās daļa lapošanas ir pārbūvēta uz pogām ar async JS,
+ * bet šīs klases joprojām nodrošina vienotu izskatu pārējiem skatiem.
+ */
 .app-pagination {
     @apply flex flex-col gap-3 border-t border-slate-200 px-5 py-4 md:flex-row md:items-center md:justify-between;
 }
@@ -1934,7 +2027,11 @@ tbody td {
     }
 }
 
-/* Shared page chrome */
+/*
+ * Kopīgā lapas augšdaļa.
+ * Lieto lielākajā daļā administrēšanas skatu: virsraksts, ikona, eyebrow teksts,
+ * īss apraksts un labās puses darbību pogas.
+ */
 .page-hero {
     @apply mb-4 rounded-2xl border border-slate-200 bg-white px-6 py-3.5 shadow-sm backdrop-blur;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 16px -4px rgba(15, 23, 42, 0.08), inset 0 -1px 0 rgba(148, 163, 184, 0.12);
@@ -1997,6 +2094,11 @@ tbody td {
     @apply flex flex-wrap items-center gap-2.5;
 }
 
+/*
+ * Inline metriku čipi.
+ * Lieto page hero zonās un profila/inventāra pārskatos, kur pie virsraksta jāparāda
+ * īsi skaitītāji vai statusi.
+ */
 .inventory-inline-metrics {
     @apply flex flex-wrap gap-2;
 }
@@ -2041,6 +2143,10 @@ tbody td {
     @apply inline-flex min-w-7 items-center justify-center rounded-full bg-white/90 px-2 py-0.5 text-xs font-bold text-slate-900 ring-1 ring-black/5;
 }
 
+/*
+ * Kopīgās virsmu kartes.
+ * Lieto informatīvās kartēs, formu blakus paneļos un satura blokos, kur nav tabulas.
+ */
 .surface-card {
     @apply rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md;
 }
@@ -2049,6 +2155,10 @@ tbody td {
     @apply rounded-[1.5rem] border border-slate-200 bg-slate-50/70 p-5 transition hover:bg-slate-50/90;
 }
 
+/*
+ * Pilnas lapas formu izkārtojums.
+ * Lieto izveides/rediģēšanas lapās ar galveno formu un sānu paskaidrojumu vai darbību bloku.
+ */
 .form-page-grid {
     @apply grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem];
 }
@@ -2105,6 +2215,11 @@ tbody td {
     color: #64748b;
 }
 
+/*
+ * Pieteikumu tipu dalītāji.
+ * Lieto pieteikumu centros, kur vienā skatā ir vairākas grupas, piemēram remonts,
+ * norakstīšana un nodošana.
+ */
 .request-type-section {
     @apply pt-1;
 }
@@ -2187,6 +2302,10 @@ tbody td {
     }
 }
 
+/*
+ * Tukšo stāvokļu komponentes.
+ * Lieto tabulām, kartēm un sadaļām, kad nav ierakstu vai aktīvie filtri neko neatrod.
+ */
 .surface-empty {
     @apply rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500;
 }
@@ -2227,6 +2346,10 @@ tbody td {
     @apply pt-1;
 }
 
+/*
+ * Kopīgās filtru/meklēšanas joslas.
+ * Lieto tabulu augšā: meklēšanas lauki, filtrēšanas selecti, datumi un darbību pogas.
+ */
 .surface-toolbar {
     @apply rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-sm;
 }
@@ -2255,6 +2378,11 @@ tbody td {
     @apply grid gap-2.5 pt-3 md:justify-end lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)];
 }
 
+/*
+ * Lietotāja profila administrēšanas skats.
+ * Lieto lietotāja detaļās: kontaktinformācija, piesaistītās ierīces, pieteikumi
+ * un aktivitāšu vēsture.
+ */
 .user-profile-section-head {
     @apply flex flex-wrap items-start justify-between gap-4;
 }
@@ -2379,6 +2507,11 @@ tbody td {
     @apply mt-2 text-sm leading-6 text-slate-600;
 }
 
+/*
+ * Pieteikuma detaļu kartes.
+ * Lieto remonta, norakstīšanas un nodošanas pieteikumu rindās/detaļās, kur jārāda
+ * gan pieteikuma informācija, gan piesaistītā ierīce.
+ */
 .request-card-grid {
     @apply mt-4 grid gap-4 xl:grid-cols-[1.05fr_0.95fr];
 }
@@ -2448,6 +2581,11 @@ tbody td {
     scroll-margin-top: 7rem;
 }
 
+/*
+ * Atstarpes starp filtru joslu, aktīvajiem filtriem un tabulu.
+ * Lieto vairākos skatos, lai Blade failos nav jāliek individuāli `mt-*` katram
+ * iespējamam filtru kopsavilkuma stāvoklim.
+ */
 .surface-toolbar + .filter-summary,
 .filter-summary + .device-table-shell,
 .filter-summary + .app-table-shell,
@@ -2462,7 +2600,11 @@ tbody td {
     @apply mt-6;
 }
 
-/* Devices index - new filter and search design */
+/*
+ * Ierīču saraksta filtri un meklēšana.
+ * Lieto devices index skatā un daļēji arī pieteikumu skatos, kuri atkārtoti izmanto
+ * to pašu toolbar režģi un koda meklēšanas vadīklas.
+ */
 .devices-filter-surface {
     @apply relative mb-5 rounded-[1.75rem] border border-slate-200 bg-white px-4 py-3 shadow-sm transition duration-200;
     position: relative;
@@ -2497,6 +2639,10 @@ tbody td {
     @apply grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6;
 }
 
+/*
+ * Divdaļīgas toolbar zonas.
+ * Lieto skatos, kur kreisajā pusē ir meklēšana, bet labajā pusē vairāki filtri.
+ */
 .toolbar-panels {
     @apply grid grid-cols-1 gap-3 xl:grid-cols-[minmax(16rem,0.8fr)_minmax(0,2.2fr)];
 }
@@ -2513,6 +2659,10 @@ tbody td {
     @apply 2xl:grid-cols-5;
 }
 
+/*
+ * Nodošanas/pieteikumu filtru režģi.
+ * Lieto pieteikumu tabulās ar datumu, statusu, ierīces un lietotāja filtriem.
+ */
 .transfer-search-grid {
     @apply grid grid-cols-1 gap-2 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.35fr)];
 }
@@ -2648,7 +2798,10 @@ tbody td {
     }
 }
 
-/* Device search highlight animation */
+/*
+ * Ierīces meklēšanas pulse animācija.
+ * Lieto, kad pēc koda meklēšanas vai URL highlight jāizceļ konkrēta ierīces rinda.
+ */
 @keyframes device-highlight-pulse {
     0%, 100% {
         box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7);
@@ -2664,6 +2817,10 @@ tbody td {
     @apply flex flex-wrap items-center gap-3 md:justify-end;
 }
 
+/*
+ * Segmentētās izvēles vadīklas.
+ * Lieto statusa un lomas pārslēgšanai, kur viena no vairākām vērtībām ir aktīva.
+ */
 .status-segmented-control {
     @apply inline-flex w-full items-center gap-2 rounded-[1.25rem] border border-slate-200 bg-slate-50 p-1.5;
 }
@@ -2736,10 +2893,19 @@ tbody td {
     @apply grid w-full gap-3 md:grid-cols-1;
 }
 
+/*
+ * Filtru joslas apakšdaļa.
+ * Lieto ātrajiem statusu čipiem, notīrīšanas pogām un papildus toolbar darbībām.
+ */
 .filter-toolbar-footer {
     @apply flex flex-col gap-3 border-t border-slate-200 pt-4 md:flex-row md:items-center md:justify-between;
 }
 
+/*
+ * Meklējamais select komponents.
+ * Lieto Blade komponentē `x-searchable-select`; CSS nodrošina paneli, kļūdu stāvokļus,
+ * drag preview un augstu z-index, lai dropdown nepazūd zem tabulas.
+ */
 .searchable-select {
     @apply relative z-20;
 }
@@ -2902,6 +3068,13 @@ tbody td {
     @apply rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-6 text-center text-sm text-slate-500;
 }
 
+/*
+ * Async tabulu ielādes pārklājums.
+ * Lieto: resources/js/modules/async-table.js, kad filtri, kārtošana vai lapošana
+ * pārzīmē tikai tabulas fragmentu bez pilnas lapas pārlādes.
+ * Īpaši: `.async-table-loading-target` uzliek `position: relative`, lai pārklājums
+ * paliek piesaistīts konkrētajai tabulai, nevis visai lapai.
+ */
 .async-table-skeleton {
     @apply pointer-events-none absolute inset-0 z-30 flex items-start rounded-[1.5rem] border border-slate-200 bg-white/85 p-4 shadow-xl ring-1 ring-slate-100 backdrop-blur-sm;
 }
@@ -2961,6 +3134,11 @@ tbody td {
     }
 }
 
+/*
+ * Lokalizētais datuma izvēlētājs.
+ * Lieto `x-localized-date-input` komponentē, lai datumi būtu latviski un bez
+ * pārlūka native date input atšķirībām starp OS.
+ */
 .localized-date-picker {
     @apply relative;
 }
@@ -3054,6 +3232,10 @@ tbody td {
     @apply mt-4 flex flex-wrap justify-between gap-2 border-t border-slate-200 pt-3;
 }
 
+/*
+ * Ātrie statusu filtri.
+ * Lieto tabulu toolbar apakšdaļā kā čipus biežākajām atlases vērtībām.
+ */
 .quick-status-filters {
     @apply flex flex-wrap gap-2;
 }
@@ -3126,6 +3308,11 @@ tbody td {
     @apply border border-rose-300 bg-rose-100 text-rose-900 ring-rose-300;
 }
 
+/*
+ * Aktīvo filtru kopsavilkums.
+ * Lieto zem toolbar, lai lietotājs redzētu pašreizējo atlasi un varētu noņemt
+ * atsevišķus filtrus bez visas formas tīrīšanas.
+ */
 .filter-summary {
     @apply mb-3;
     @apply rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 shadow-sm;
@@ -3155,6 +3342,10 @@ tbody td {
     @apply border-slate-300 bg-white text-slate-700 transition hover:border-slate-400 hover:bg-slate-50;
 }
 
+/*
+ * Metriku kartes.
+ * Lieto dashboard un sarakstu augšdaļās, kur jārāda kopskaiti vai statusu skaits.
+ */
 .metric-card {
     @apply rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-sm;
 }
@@ -3195,6 +3386,11 @@ tbody td {
     @apply mt-1 text-sm text-slate-600;
 }
 
+/*
+ * Statusu pill komponentes.
+ * Lieto tabulās, pieteikumos, audita žurnālā un profila kartēs. Īpašie `pending`
+ * un `incoming` stāvokļi izmanto pielāgotu fonu, jo tiem jāizceļ darba rindas.
+ */
 .status-pill {
     @apply inline-flex min-h-[1.75rem] items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold leading-none whitespace-nowrap ring-1;
 }
@@ -3267,6 +3463,13 @@ tbody td {
     @apply bg-violet-100 text-violet-800 ring-violet-200;
 }
 
+/*
+ * Audita žurnāla darbību un objektu marķieri.
+ * Lieto: resources/views/audit_log/index.blade.php, kur tehniskie audita kodi
+ * tiek pārvērsti krāsainos, ātri nolasāmos badge elementos.
+ * Īpaši: krāsas ir semantiskas, tāpēc jauniem audita tipiem jāizvēlas tuvākais
+ * esošais tonis, nevis jāveido nejauša jauna krāsa.
+ */
 .audit-badge {
     @apply inline-flex min-h-[2.125rem] items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold leading-none whitespace-nowrap ring-1;
 }
@@ -3369,7 +3572,12 @@ tbody td {
   @apply bg-emerald-50 text-emerald-700 ring-emerald-100;
 }
 
-/* Shared action buttons */
+/*
+ * Kopīgās darbību pogas `app.css` pusē.
+ * Lieto vairākos tabulu un modāļu skatos. Daļa nosaukumu pārklājas ar
+ * `buttons-regular.css`; šis bloks paliek šeit, jo Vite/Tailwind būvē galveno
+ * aplikācijas stilu un šīs pogas tiek izmantotas kopā ar `@apply` komponentēm.
+ */
 .btn-action {
     display: inline-flex;
     align-items: center;
@@ -3471,6 +3679,11 @@ tbody td {
     box-shadow: 0 0 0 2px white, 0 0 0 4px #38bdf8;
 }
 
+/*
+ * Pieteikuma detaļu sānu panelis.
+ * Lieto, kad no saraksta jāatver plašāka pieteikuma/audita/remonta informācija
+ * virs pašreizējās lapas bez navigācijas prom no tabulas.
+ */
 .request-detail-overlay {
     position: fixed;
     inset: 0;
@@ -3514,6 +3727,11 @@ tbody td {
     width: min(35rem, 100vw);
 }
 
+/*
+ * Pieteikuma detaļu paneļa dark mode.
+ * Šī sadaļa izmanto `:root[data-theme='dark']`, jo tā strādā ar legacy paneļa
+ * struktūru, kas nav pilnībā pārcelta uz `html[data-theme='dark']` selektoriem.
+ */
 :root[data-theme='dark'] .request-detail-panel {
     border-left-color: rgba(71, 85, 105, 0.55);
     background:
@@ -4303,6 +4521,12 @@ tbody td {
     background-color: #fee2e2;
 }
 
+/*
+ * Tabulu darbību izvēlnes.
+ * Lieto katras rindas darbībām: skatīt, rediģēt, apstiprināt, noraidīt,
+ * ātri mainīt telpu/atbildīgo u.c. Z-index un `overflow: visible` ir būtiski,
+ * jo izvēlnes bieži atrodas skrollējamās tabulās.
+ */
 .table-action-menu {
     @apply relative inline-block;
 }
@@ -4327,6 +4551,11 @@ tbody td {
     @apply rotate-180 text-sky-600;
 }
 
+/*
+ * Darbību izvēlnes uzmanības stāvoklis.
+ * Lieto rindām, kur lietotājam gaida apstrādājama darbība; mazais pulse indikators
+ * palīdz to pamanīt arī garā tabulā.
+ */
 .table-action-summary-pending,
 .table-action-summary-single-pending {
     border-color: rgba(56, 189, 248, 0.34) !important;
@@ -4385,6 +4614,11 @@ tbody td {
     }
 }
 
+/*
+ * Darbību dropdown saturs.
+ * Lieto kā labajā pusē piesaistītu izvēlni; platuma varianti (`wide`, `dropdown`)
+ * ir vajadzīgi rindām ar vairākām darbību grupām.
+ */
 .table-action-list {
     @apply absolute right-0 z-50 mt-2 flex flex-col gap-1.5 rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl ring-1 ring-slate-200/50 w-max min-w-[18rem] max-w-[95vw] text-left;
     transform-origin: top right;
@@ -4599,6 +4833,11 @@ tbody td {
     @apply text-emerald-600;
 }
 
+/*
+ * Inline darbības panelis virs tabulas.
+ * Lieto ātrajām rindas darbībām, kur vajadzīgs papildu lauks pirms saglabāšanas
+ * (piemēram telpas vai atbildīgā maiņa), bet nav jāatver pilns modālis.
+ */
 .table-action-inline-panel {
     @apply fixed left-1/2 top-1/2 z-30 w-[min(32rem,calc(100vw-1.5rem))] -translate-x-1/2 -translate-y-1/2 rounded-[1.4rem] border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-200/70;
     background:
@@ -4860,6 +5099,12 @@ tbody td {
     @apply mx-4 mt-4;
 }
 
+/*
+ * Kopīgais tabulu karkass.
+ * Lieto: ierīču, audita, ēku, telpu, lietotāju un pieteikumu tabulās.
+ * `app-*` klases ir vispārīgām tabulām, `device-*` saglabātas vecākiem ierīču
+ * un darba virsmas skatiem, lai nav jāpārraksta visi Blade faili uzreiz.
+ */
 .app-table-shell,
 .device-table-shell {
     @apply relative w-full overflow-visible;
@@ -4905,6 +5150,11 @@ tbody td {
     min-width: 100rem;
 }
 
+/*
+ * Manuālās meklēšanas rindu izcelšana.
+ * Lieto: async-table.js pēc `data-table-row-id`, `data-table-search-value` vai
+ * `data-table-code` atrašanas. Parastais režīms iekrāso šūnas fonu.
+ */
 .table-search-hit:not(.table-search-outline) td {
     background-color: rgba(96, 165, 250, 0.78) !important;
     animation: table-search-highlight 1s ease;
@@ -4923,6 +5173,11 @@ tbody td {
     background-color: rgba(147, 197, 253, 0.88) !important;
 }
 
+/*
+ * Outline izcelšana tabulām, kur rindai jau ir nozīmīgs fons.
+ * Lieto: rindām ar `data-table-search-highlight-style="outline"`, piemēram,
+ * pieteikumiem, kur pending/ienākošā statusa krāsu nedrīkst aizkrāsot.
+ */
 .table-search-outline td {
     position: relative;
 }
@@ -4993,6 +5248,11 @@ tbody td {
     }
 }
 
+/*
+ * Meklēšanas navigators vairākiem atrastiem rezultātiem.
+ * Lieto: async-table.js, kad meklējums atrod vairāk nekā vienu rindu un lietotājam
+ * jāpārslēdzas starp rezultātiem bez atkārtotas meklēšanas.
+ */
 .table-search-navigator {
     position: fixed;
     left: 1.25rem;
@@ -5161,6 +5421,11 @@ tbody td {
     }
 }
 
+/*
+ * Horizontāli skrollējams tabulas ietvars.
+ * Lieto: platās inventāra un administrēšanas tabulās. `isolation: isolate`
+ * ir vajadzīgs, lai darbību izvēlnes un async pārklājumi pareizi kārtotos virs tabulas.
+ */
 .app-table-scroll,
 .device-table-scroll {
     @apply relative w-full overflow-x-auto overflow-y-visible rounded-[1.75rem];
@@ -5187,6 +5452,10 @@ tbody td {
     z-index: 120;
 }
 
+/*
+ * Tabulas ietvars, kur dropdown/popup drīkst iziet ārpus skrolla rāmja.
+ * Lieto: pieteikumu tabulās ar darbību izvēlnēm un preview popoveriem.
+ */
 .table-scroll-overlay-frame {
     overflow: visible;
     isolation: isolate;
@@ -5227,6 +5496,11 @@ tbody td {
     border-top-right-radius: 1.35rem;
 }
 
+/*
+ * Standarta kolonnu platumi.
+ * Lieto kopīgajās Blade tabulās, lai tabulu galvenes un rindas nepārlēkātu,
+ * kad mainās teksts, statuss vai darbību izvēlnes saturs.
+ */
 .table-col-image {
     width: 4rem;
 }
@@ -5314,6 +5588,12 @@ tbody td {
     table-layout: fixed;
 }
 
+/*
+ * Kopīgās tabulu rindu krāsas un statusu akcenti.
+ * Lieto visās `app-table-row`/`device-table-row` tabulās. Statusu klases ir
+ * apzināti atdalītas, lai pending, paroles pieprasījumi un ienākošie pieteikumi
+ * vizuāli paliek pamanāmi arī pēc hover.
+ */
 .app-table-row td,
 .device-table-row td {
     @apply transition-colors duration-200;
@@ -5380,6 +5660,11 @@ tbody td {
     @apply mt-1 text-xs text-slate-500;
 }
 
+/*
+ * Īpaši platās pieteikumu/remontu tabulas.
+ * Lieto: remonta, norakstīšanas, nodošanas un ierīču tabulas, kur rindās ir
+ * daudz darbību un popoveru. Šeit `overflow-visible` ir svarīgs dropdown izvēlnēm.
+ */
 .repair-table-shell {
     @apply relative overflow-visible;
 }
@@ -5408,6 +5693,10 @@ tbody td {
     @apply bg-slate-50/80;
 }
 
+/*
+ * Remontu saraksta toolbar.
+ * Lieto remonta tabulā filtriem, datumu laukiem un īpašajam datuma lauka slēdzim.
+ */
 .repairs-toolbar-surface {
     @apply space-y-3 shadow-[0_26px_60px_-45px_rgba(15,23,42,0.22)];
 }
@@ -5533,6 +5822,11 @@ tbody td {
     @apply items-start border-t border-slate-200/80 pt-4;
 }
 
+/*
+ * Audita žurnāla filtru josla.
+ * Lieto: resources/views/audit_log/index.blade.php meklēšanai, filtriem un
+ * svarīguma čipiem. Grid ir plašāks nekā citām tabulām, jo auditam ir vairāk filtru.
+ */
 .audit-toolbar-surface {
     @apply space-y-3;
 }
@@ -5562,6 +5856,11 @@ tbody td {
     @apply border-t border-slate-200/80 pt-4;
 }
 
+/*
+ * Tabulu kolonnu kārtošanas pogas.
+ * Lieto: ierīču, audita, ēku un citu sarakstu galvenēs. JS lasa `data-sort-*`
+ * atribūtus, bet CSS rūpējas tikai par aktīvo un hover stāvokli.
+ */
 .device-sort-trigger {
     @apply inline-flex items-center gap-2 rounded-lg px-1.5 py-1 font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900;
 }
@@ -5635,6 +5934,11 @@ tbody td {
     content: '↓';
 }
 
+/*
+ * Ierīces statusa šūnas paplašinātais attēlojums.
+ * Lieto ierīču un dashboard tabulās, kur statuss var saturēt aktīvu remontu
+ * vai atvērtu pieteikumu ar hover preview.
+ */
 .device-status-stack {
     @apply flex flex-col items-start gap-2;
 }
@@ -5706,6 +6010,11 @@ tbody td {
     @apply mt-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-sky-700;
 }
 
+/*
+ * Paziņojumu toast kartes.
+ * Lieto live notifikācijām un pieteikumu apstrādes paziņojumiem. Meta bloki
+ * ļauj vienā toastā parādīt saistīto ierīci, pieteicēju un īsu aprakstu.
+ */
 .notification-toast {
     @apply relative overflow-hidden;
 }
@@ -5799,6 +6108,11 @@ tbody td {
     @apply absolute right-4 top-4 shrink-0;
 }
 
+/*
+ * Sistēmas flash toast.
+ * Lieto īsiem success/info/warning/error paziņojumiem pēc darbībām. Pseudo-elementi
+ * veido augšējo krāsu joslu un maigu toni bez papildu HTML.
+ */
 .flash-toast {
     @apply pointer-events-auto relative flex items-start gap-3 overflow-hidden rounded-[1.35rem] border px-4 py-3 shadow-2xl backdrop-blur;
 }
@@ -5934,6 +6248,10 @@ tbody td {
     }
 }
 
+/*
+ * Ierīču tabulas mazie vizuālie elementi.
+ * Lieto remonta stāvokļa čipam un ierīces attēla thumbnail rāmim tabulas rindās.
+ */
 .device-repair-state-chip {
     @apply inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800;
 }
@@ -6184,6 +6502,11 @@ html[data-theme='dark'] .surface-toolbar-actions {
     border-color: rgba(51, 65, 85, 0.82) !important;
 }
 
+/*
+ * Dark mode tabulu un pagination pamatvirsmas.
+ * Lieto visām lielajām sarakstu tabulām, lai Tailwind light klases no Blade
+ * nepārsistu tumšo tēmu. Tāpēc šajā blokā daudzviet ir `!important`.
+ */
 html[data-theme='dark'] .device-table-scroll,
 html[data-theme='dark'] .app-table-scroll,
 html[data-theme='dark'] .dash-table-wrap,
@@ -6735,6 +7058,10 @@ html[data-theme='dark'] .btn-clear:hover {
     color: #f8fafc !important;
 }
 
+/*
+ * Dark mode lapošanas pogas.
+ * Lieto gan kopīgajam Laravel pagination skatam, gan dashboard lapošanai.
+ */
 html[data-theme='dark'] .table-action-summary:hover,
 html[data-theme='dark'] .dash-table-action-btn:hover,
 html[data-theme='dark'] .dashboard-pagination-btn:hover,
@@ -6764,6 +7091,12 @@ html[data-theme='dark'] .app-pagination-btn-disabled {
     color: #64748b !important;
 }
 
+/*
+ * Dark mode statusu un audita badge toņi.
+ * Lieto status pill, inventory chip un audita badge elementiem. Krāsu grupas
+ * ir apvienotas pēc nozīmes, lai viens semantiskais tonis izskatās vienādi
+ * vairākās sistēmas vietās.
+ */
 html[data-theme='dark'] .status-pill-success,
 html[data-theme='dark'] .audit-badge-emerald,
 html[data-theme='dark'] .inventory-inline-chip-emerald,
@@ -7001,6 +7334,11 @@ html[data-theme='dark'] .table-action-attention {
     color: #bae6fd;
 }
 
+/*
+ * Dark mode manuālās meklēšanas izcelšana.
+ * Lieto tās pašas klases kā light mode, bet ar zemāku fona intensitāti,
+ * lai izcēlums nepārspīdētu tumšajā tabulā.
+ */
 html[data-theme='dark'] .table-search-hit:not(.table-search-outline) td {
     background-color: rgba(59, 130, 246, 0.34) !important;
 }
@@ -7068,6 +7406,11 @@ html[data-theme='dark'] .table-search-outline.table-search-active td:last-child 
         inset 0 -2px 0 rgba(96, 165, 250, 0.94);
 }
 
+/*
+ * Dark mode globālajam ielādes indikatoram.
+ * Lieto augšējai loading joslai un peldošajam loading pill, lai pārejas neturpina
+ * izmantot gaišās tēmas baltos fonus.
+ */
 html[data-theme='dark'] .app-loading-bar-shell {
     background: rgba(30, 41, 59, 0.7);
 }
@@ -7090,6 +7433,10 @@ html[data-theme='dark'] .app-loading-orb-ring {
     border-right-color: rgba(96, 165, 250, 0.78);
 }
 
+/*
+ * Dark mode meklēšanas navigatora logs.
+ * Lieto peldošajam rezultātu pārslēdzējam, ko veido async-table.js.
+ */
 html[data-theme='dark'] .table-search-navigator-card {
     border-color: rgba(71, 85, 105, 0.72);
     background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(15, 23, 42, 0.95) 100%);
@@ -7133,6 +7480,10 @@ html[data-theme='dark'] .table-search-navigator-current-index {
     color: #38bdf8;
 }
 
+/*
+ * Dark mode tabulu sekundārais teksts un popoveri.
+ * Lieto dashboard, ierīču statusa preview un notifikāciju metadatos.
+ */
 html[data-theme='dark'] .device-status-split-sub,
 html[data-theme='dark'] .dash-table-subline,
 html[data-theme='dark'] .dash-table-link,
@@ -7154,6 +7505,10 @@ html[data-theme='dark'] .notification-toast-meta-copy {
     color: #f8fafc !important;
 }
 
+/*
+ * Dark mode dashboard paneļiem un telpu kokam.
+ * Lieto darba virsmas kartēm, ēku/stāvu/telpu blokiem un hover stāvokļiem.
+ */
 html[data-theme='dark'] .dash-panel,
 html[data-theme='dark'] .dash-structure-card,
 html[data-theme='dark'] .dash-floor-card,
@@ -7231,6 +7586,11 @@ html[data-theme='dark'] .searchable-select-empty {
     color: #94a3b8 !important;
 }
 
+/*
+ * Dark mode async ielādes pārklājums.
+ * Lieto tabulas fragmenta pārzīmēšanas laikā, lai loading stāvoklis neatšķirtos
+ * no pārējās tumšās tēmas.
+ */
 html[data-theme='dark'] .async-table-skeleton {
     background-color: rgba(15, 23, 42, 0.9) !important;
     border-color: rgba(51, 65, 85, 0.95) !important;
@@ -7246,6 +7606,10 @@ html[data-theme='dark'] .async-table-skeleton-line {
     background-image: linear-gradient(90deg, #334155, #475569, #334155) !important;
 }
 
+/*
+ * Dark mode datuma izvēlētājam.
+ * Lieto kalendāra mēnešu/gadu opcijām un atlasītajām dienām.
+ */
 html[data-theme='dark'] .localized-date-current-button,
 html[data-theme='dark'] .localized-date-option {
     background-color: rgba(15, 23, 42, 0.86) !important;
@@ -7278,6 +7642,11 @@ html[data-theme='dark'] .auth-demo-item {
     background-color: #111827 !important;
 }
 
+/*
+ * Dark mode toast paziņojumiem.
+ * Lieto gan live notifikācijām, gan flash toastiem; statusu varianti saglabā
+ * semantisko krāsu, bet ar tumšajai tēmai zemāku piesātinājumu.
+ */
 html[data-theme='dark'] .notification-toast {
     background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.94)) !important;
     border-color: rgba(51, 65, 85, 0.95) !important;
@@ -7399,6 +7768,10 @@ html[data-theme='dark'] .notification-toast-link-arrow {
     color: #cbd5e1 !important;
 }
 
+/*
+ * Dark mode ātrajiem filtru čipiem.
+ * Lieto statusu filtriem tabulu toolbar apakšdaļā.
+ */
 html[data-theme='dark'] .quick-status-filter-slate {
     background-color: #111827 !important;
     color: #cbd5e1 !important;
@@ -7437,6 +7810,10 @@ html[data-theme='dark'] .quick-status-filter-sky {
 html[data-theme='dark'] .quick-status-filter-sky.quick-status-filter-active {
     --tw-ring-color: rgba(56, 189, 248, 0.28) !important;
 }
+/*
+ * Dark mode modāļu un formu vizuālajam karkasam.
+ * Lieto glass panelim, ierīču tipu/formu modāļiem un attēla augšupielādes zonām.
+ */
 html[data-theme='dark'] .modal-liquid-panel {
     background:
         linear-gradient(140deg, rgba(15, 23, 42, 0.86), rgba(17, 24, 39, 0.76)),
@@ -7535,6 +7912,10 @@ html[data-theme='dark'] .quick-status-filter-rose {
     border-color: rgba(251, 113, 133, 0.28) !important;
 }
 
+/*
+ * Dark mode segmentētajām vadīklām un lomas slēdzim.
+ * Lieto statusa izvēlei un admin/darbinieka lomas pārslēgšanai.
+ */
 html[data-theme='dark'] .status-segmented-control {
     border-color: rgba(71, 85, 105, 0.7);
     background-color: rgba(15, 23, 42, 0.86);
@@ -7599,6 +7980,10 @@ html[data-theme='dark'] .devices-filter-divider-vertical {
     background-color: rgba(71, 85, 105, 0.5);
 }
 
+/*
+ * Dark mode tabulu kārtošanas pogām.
+ * Lieto galvenēs, kur aktīvai kolonnai jāpaliek pamanāmai uz tumša thead fona.
+ */
 html[data-theme='dark'] .device-sort-trigger {
     color: #cbd5e1 !important;
 }
@@ -7672,6 +8057,11 @@ html[data-theme='dark'] .auth-demo-item {
     background-color: #111827 !important;
 }
 
+/*
+ * Dark mode ievades laukiem.
+ * Lieto native input/textarea/select laukiem, kuri Blade pusē joprojām nāk ar
+ * gaišās tēmas klasēm.
+ */
 html[data-theme='dark'] input:not([type='checkbox']):not([type='radio']):not([type='hidden']),
 html[data-theme='dark'] textarea,
 html[data-theme='dark'] select {
@@ -7685,6 +8075,11 @@ html[data-theme='dark'] textarea::placeholder {
     color: #64748b !important;
 }
 
+/*
+ * Apstiprinājuma dialogs.
+ * Lieto destruktīvām vai svarīgām darbībām, kur pirms formas submit jāprasa
+ * lietotāja apstiprinājums.
+ */
 .app-confirm-overlay {
     position: fixed;
     inset: 0;
@@ -7847,6 +8242,10 @@ html[data-theme='dark'] textarea::placeholder {
     }
 }
 
+/*
+ * Dark mode apstiprinājuma dialogam un tukšajiem stāvokļiem.
+ * Lieto confirm overlay un empty-state komponentēm, lai tās nepārmanto gaišo fonu.
+ */
 html[data-theme='dark'] .app-confirm-dialog {
     border-color: rgba(51, 65, 85, 0.95);
     background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
@@ -7964,6 +8363,11 @@ html[data-theme='dark'] .user-profile-card-label {
     color: #94a3b8;
 }
 
+/*
+ * Lietotāja ierīces darbību rinda.
+ * Lieto darbinieka ierīces skatā, kur vairākas rindas darbības jānotur vienā
+ * kompaktā, labajā pusē izlīdzinātā grupā.
+ */
 .table-action-button-slate {
     @apply border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900;
 }
@@ -8000,6 +8404,11 @@ html[data-theme='dark'] .user-profile-card-label {
     padding: 0.75rem 0.875rem;
 }
 
+/*
+ * Darbinieka ierīces detalizētais skats.
+ * Lieto lietotājam redzamajā ierīces pārskatā: galvenā ierīces kartīte, statusa
+ * skaidrojums, izcelsmes dati un telpas maiņas modālis.
+ */
 .device-user-overview-grid {
     @apply grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.95fr)_minmax(0,0.9fr)];
 }
@@ -8233,6 +8642,10 @@ html[data-theme='dark'] .user-profile-card-label {
     @apply flex flex-wrap items-center justify-end gap-3 pt-2;
 }
 
+/*
+ * Dark mode profila un darbinieka ierīces detaļu kartēm.
+ * Lieto lietotāja profila sadaļām, ierīces pārskatam un telpas maiņas modālim.
+ */
 html[data-theme='dark'] .user-profile-link-card {
     color: #e2e8f0;
 }
