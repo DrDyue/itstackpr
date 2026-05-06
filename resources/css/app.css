@@ -839,31 +839,51 @@ tbody td {
 }
 
 .repair-modal-head {
-    @apply rounded-t-[1.55rem];
+    @apply rounded-t-[1.55rem] px-5 py-3 sm:px-6;
 }
 
-.repair-modal-head-top {
-    @apply flex flex-wrap items-center justify-between gap-2;
+.repair-modal-head-copy {
+    @apply space-y-0 pr-12 sm:pr-14;
 }
 
 .repair-modal-title-row {
-    @apply items-start gap-3;
+    @apply items-center gap-3;
 }
 
-.repair-modal-title-head {
-    @apply flex flex-col gap-1.5;
+.repair-modal-title-copy {
+    @apply min-w-0 flex-1;
+}
+
+.repair-modal-title-line {
+    @apply flex min-w-0 flex-wrap items-center gap-2;
+}
+
+.repair-modal-subtitle-row {
+    @apply mt-1 max-w-3xl;
+}
+
+.repair-modal-badge {
+    @apply px-2.5 py-1 text-[10px] leading-4 tracking-[0.12em];
 }
 
 .repair-modal-head-meta {
-    @apply mt-3 flex w-full flex-wrap items-center gap-1.5;
+    @apply mt-2 flex w-full flex-wrap items-center gap-1.5;
 }
 
 .repair-modal-head-chip {
     @apply inline-flex items-center rounded-full border border-slate-200 bg-white/90 px-2.5 py-1 text-[11px] font-semibold leading-5 text-slate-700 shadow-sm;
 }
 
+.repair-modal-head-actions {
+    @apply flex min-w-0 flex-wrap items-center gap-1.5;
+}
+
 .repair-modal-head-link {
     @apply inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/90 px-3 py-1 text-[11px] font-semibold leading-5 text-slate-700 shadow-sm transition hover:border-slate-300 hover:text-slate-900;
+}
+
+.repair-modal-head-link-violet {
+    @apply border-violet-200 bg-violet-50 text-violet-700 hover:border-violet-300 hover:bg-violet-100 hover:text-violet-800;
 }
 
 .device-type-modal-badge {

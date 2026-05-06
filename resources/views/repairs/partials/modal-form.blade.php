@@ -61,22 +61,22 @@
         <input type="hidden" name="modal_form" value="{{ $modalForm }}">
 
         <div class="device-type-modal-head repair-modal-head">
-            <div class="device-type-modal-head-copy">
-                <div class="repair-modal-head-top">
-                    <div class="device-type-modal-badge">
-                        <x-icon :name="$isEdit ? 'edit' : 'plus'" size="h-4 w-4" />
-                        <span>{{ $isEdit ? 'Rediģēšana' : 'Jauns ieraksts' }}</span>
-                    </div>
-                </div>
-
+            <div class="device-type-modal-head-copy repair-modal-head-copy">
                 <div class="device-type-modal-title-row repair-modal-title-row">
                     <div class="device-type-modal-icon">
                         <x-icon name="repair" size="h-6 w-6" />
                     </div>
 
-                    <div class="device-type-modal-title-copy">
-                        <div class="repair-modal-title-head">
+                    <div class="device-type-modal-title-copy repair-modal-title-copy">
+                        <div class="repair-modal-title-line">
                             <h2 class="device-type-modal-title">{{ $title }}</h2>
+                            <span class="device-type-modal-badge repair-modal-badge">
+                                <x-icon :name="$isEdit ? 'edit' : 'plus'" size="h-3.5 w-3.5" />
+                                <span>{{ $isEdit ? 'Rediģēšana' : 'Jauns ieraksts' }}</span>
+                            </span>
+                        </div>
+
+                        <div class="repair-modal-subtitle-row">
                             <p class="device-type-modal-subtitle">{{ $subtitle }}</p>
                         </div>
 
@@ -91,25 +91,24 @@
                                 <span class="repair-modal-head-chip">
                                     Tips: {{ $typeLabels[$repair->repair_type] ?? $repair->repair_type }}
                                 </span>
-                                @if ($deviceShowUrl)
-                                    <a href="{{ $deviceShowUrl }}" class="repair-modal-head-link">
-                                        <x-icon name="device" size="h-4 w-4" />
-                                        <span>Skatīt ierīci</span>
-                                    </a>
-                                @endif
+                                <div class="repair-modal-head-actions">
+                                    @if ($linkedRequestUrl)
+                                        <a href="{{ $linkedRequestUrl }}" class="repair-modal-head-link repair-modal-head-link-violet">
+                                            <x-icon name="repair-request" size="h-4 w-4" />
+                                            <span>Saistītais pieprasījums</span>
+                                        </a>
+                                    @endif
+                                    @if ($deviceShowUrl)
+                                        <a href="{{ $deviceShowUrl }}" class="repair-modal-head-link">
+                                            <x-icon name="device" size="h-4 w-4" />
+                                            <span>Skatīt ierīci</span>
+                                        </a>
+                                    @endif
+                                </div>
                             </div>
                         @endif
                     </div>
                 </div>
-
-                @if ($linkedRequestUrl)
-                    <div class="pt-1">
-                        <a href="{{ $linkedRequestUrl }}" class="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-semibold text-violet-700 hover:bg-violet-100">
-                            <x-icon name="repair-request" size="h-4 w-4" />
-                            <span>Saistītais pieprasījums</span>
-                        </a>
-                    </div>
-                @endif
             </div>
 
             <button type="button" class="device-type-modal-close" x-data @click="$dispatch('close-modal', '{{ $modalName }}')" aria-label="Aizvērt">
