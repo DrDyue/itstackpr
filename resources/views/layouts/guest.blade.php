@@ -97,32 +97,6 @@
                     <h2 class="text-3xl font-bold text-white leading-snug">IT inventāra<br>pārvaldības sistēma</h2>
                     <p class="mt-4 text-base text-white/75 leading-relaxed">Ludzas novada pašvaldības centralizēta platforma IT aprīkojuma uzskaitei un pieprasījumu apstrādei.</p>
 
-                    <ul class="mt-8 space-y-3">
-                        <li class="flex items-center gap-3 text-sm text-white/85">
-                            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                            </span>
-                            Centralizēta IT aprīkojuma uzskaite
-                        </li>
-                        <li class="flex items-center gap-3 text-sm text-white/85">
-                            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                            </span>
-                            Remonta un norakstīšanas pieteikumi
-                        </li>
-                        <li class="flex items-center gap-3 text-sm text-white/85">
-                            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                            </span>
-                            Ierīču nodošana starp telpām
-                        </li>
-                        <li class="flex items-center gap-3 text-sm text-white/85">
-                            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                            </span>
-                            Pilns revīzijas žurnāls visām darbībām
-                        </li>
-                    </ul>
                 </div>
             </div>
         </div>

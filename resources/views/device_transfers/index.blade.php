@@ -534,14 +534,14 @@
                                                     @endphp
 
                                                     @if ($isOwnerCanEdit)
-                                                        <button
-                                                            type="button"
+                                                        <a
+                                                            href="{{ $editTransferUrl }}"
                                                             class="table-action-item table-action-item-amber"
-                                                            @click="closePanel(); $dispatch('open-modal', 'transfer-request-edit-{{ $transfer->id }}')"
+                                                            @click="closePanel()"
                                                         >
                                                             <x-icon name="edit" size="h-4 w-4" />
                                                             <span>Rediģēt pieteikumu</span>
-                                                        </button>
+                                                        </a>
 
                                                         <x-post-action-button
                                                             :action="route('my-requests.destroy', ['requestType' => 'transfer', 'requestId' => $transfer->id])"

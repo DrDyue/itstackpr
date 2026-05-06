@@ -220,10 +220,10 @@
                                             </div>
                                         @elseif (! $canReview && $writeoffRequest->status === 'submitted')
                                             {{-- Līdz admina lēmumam pieteicējs drīkst tikai koriģēt vai atcelt savu iesniegumu. --}}
-                                            <button type="button" class="table-action-item table-action-item-amber" @click="closePanel(); $dispatch('open-modal', 'writeoff-request-edit-{{ $writeoffRequest->id }}')">
+                                            <a href="{{ $editRequestUrl }}" class="table-action-item table-action-item-amber" @click="closePanel()">
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Labot pieteikumu</span>
-                                            </button>
+                                            </a>
 
                                             <x-post-action-button
                                                 :action="route('my-requests.destroy', ['requestType' => 'writeoff', 'requestId' => $writeoffRequest->id])"

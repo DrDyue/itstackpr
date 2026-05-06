@@ -221,10 +221,10 @@
                                             </div>
                                         @elseif (! $canReview && $repairRequest->status === 'submitted')
                                             {{-- Pieteicējam līdz review brīdim atļaujam tikai labot vai atcelt savu paša pieteikumu. --}}
-                                            <button type="button" class="table-action-item table-action-item-amber" @click="closePanel(); $dispatch('open-modal', 'repair-request-edit-{{ $repairRequest->id }}')">
+                                            <a href="{{ $editRequestUrl }}" class="table-action-item table-action-item-amber" @click="closePanel()">
                                                 <x-icon name="edit" size="h-4 w-4" />
                                                 <span>Labot pieteikumu</span>
-                                            </button>
+                                            </a>
 
                                             <x-post-action-button
                                                 :action="route('my-requests.destroy', ['requestType' => 'repair', 'requestId' => $repairRequest->id])"
