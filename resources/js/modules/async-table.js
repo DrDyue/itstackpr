@@ -1466,9 +1466,9 @@ export const initializeAsyncTableFilters = () => {
     // Centrāls submit klausītājs ļauj visas AJAX tabulas apkalpot vienādi,
     // bez atsevišķa JS katram Blade skatam.
     document.addEventListener('submit', async (event) => {
-        const form = findAsyncTableForm(event.target);
+        const form = event.target;
 
-        if (!form) {
+        if (!(form instanceof HTMLFormElement) || !form.matches('[data-async-table-form]')) {
             return;
         }
 

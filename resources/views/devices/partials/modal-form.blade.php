@@ -35,10 +35,11 @@
         'manufacturer' => 'Ražotājs',
         'notes' => 'Piezīmes',
         'device_image' => 'Ierīces attēls',
+        'form' => 'Forma',
     ];
 @endphp
 
-<x-modal :name="$modalName" maxWidth="6xl">
+<x-modal :name="$modalName" :show="$shouldUseOldInput && $errors->any()" maxWidth="6xl">
     <form method="POST" action="{{ $action }}" enctype="multipart/form-data" class="flex max-h-[calc(100vh-2.5rem)] flex-col overflow-hidden">
         @csrf
         @if ($isEdit)

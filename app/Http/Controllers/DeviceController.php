@@ -15,6 +15,7 @@ use App\Support\AuditTrail;
 use App\Support\DeviceAssetManager;
 use App\Support\RuntimeSchemaBootstrapper;
 use App\Support\UserNotifier;
+use App\Support\UserFacingDatabaseError;
 use App\Support\WarehouseConfig;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\QueryException;
@@ -808,6 +809,8 @@ SQL;
             ));
         } catch (ValidationException $exception) {
             return $this->redirectDeviceValidationException($request, $exception);
+        } catch (QueryException $exception) {
+            return $this->redirectDeviceDatabaseException($request, $exception);
         }
 
         $this->syncUploads($request, $device);
@@ -991,6 +994,8 @@ SQL;
             $this->saveDevicePayload($device, $this->validatedData($request, $device));
         } catch (ValidationException $exception) {
             return $this->redirectDeviceValidationException($request, $exception, $device);
+        } catch (QueryException $exception) {
+            return $this->redirectDeviceDatabaseException($request, $exception, $device);
         }
 
         $this->syncUploads($request, $device);
@@ -1413,6 +1418,25 @@ SQL;
             ->withInput(array_merge($request->except('device_image'), [
                 'modal_form' => $modalForm,
             ]));
+    }
+
+    /**
+     * Ko dara: Datubāzes ierobežojumu kļūdas ierīces formā rāda kā validācijas kļūdu.
+     *
+     * Kā strādā: Saglabā ievadītos laukus, atver to pašu modāli un ieliek saprotamu
+     * kļūdas tekstu validācijas kopsavilkumā, nevis ļauj formai atgriezties tukšai.
+     *
+     * Kad pielietojas: Ja datubāze noraida ierīces saglabāšanu ar ierobežojuma kļūdu.
+     */
+    private function redirectDeviceDatabaseException(Request $request, QueryException $exception, ?Device $device = null)
+    {
+        return $this->redirectDeviceValidationException(
+            $request,
+            ValidationException::withMessages([
+                'form' => [UserFacingDatabaseError::message($exception)],
+            ]),
+            $device
+        );
     }
 
     /**
