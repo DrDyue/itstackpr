@@ -93,7 +93,7 @@
                     @endforeach
                 </div>
                 @if ($errors->has('priority'))
-                    <div class="mt-2 text-xs font-semibold text-rose-600">{{ $errors->first('priority') }}</div>
+                    <div class="form-field-error-message">{{ $errors->first('priority') }}</div>
                 @endif
             </div>
 
@@ -142,7 +142,7 @@
                     </div>
                 </div>
                 @if ($errors->has('repair_type'))
-                    <div class="mt-2 text-xs font-semibold text-rose-600">{{ $errors->first('repair_type') }}</div>
+                    <div class="form-field-error-message">{{ $errors->first('repair_type') }}</div>
                 @endif
             </div>
         </div>

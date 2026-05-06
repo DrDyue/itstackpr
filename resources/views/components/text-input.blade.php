@@ -1,6 +1,14 @@
 {{-- Vienotais teksta ievades lauka komponents. --}}
 @props(['disabled' => false])
 
-<input @disabled($disabled) {{ $attributes->merge(['class' => 'form-input']) }}>
+@php
+    $fieldName = $attributes->get('name');
+    $hasError = $fieldName && $errors->has($fieldName);
+@endphp
 
+<input
+    @disabled($disabled)
+    @if ($hasError) aria-invalid="true" @endif
+    {{ $attributes->class(['form-input', 'error' => $hasError]) }}
+>
 

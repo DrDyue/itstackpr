@@ -55,16 +55,23 @@ class UserRequestCenterController extends Controller
         $validated = $this->validateInput($request, [
             'request_type' => ['required', Rule::in(['repair', 'writeoff', 'transfer'])],
             'device_id' => ['required', 'exists:devices,id'],
-            'description' => [Rule::requiredIf(fn () => $request->input('request_type') === 'repair'), 'nullable', 'string'],
-            'reason' => [Rule::requiredIf(fn () => $request->input('request_type') === 'writeoff'), 'nullable', 'string'],
+            'description' => [Rule::requiredIf(fn () => $request->input('request_type') === 'repair'), 'nullable', 'string', 'min:10', 'max:2000'],
+            'reason' => [Rule::requiredIf(fn () => $request->input('request_type') === 'writeoff'), 'nullable', 'string', 'min:10', 'max:2000'],
             'transfered_to_id' => [Rule::requiredIf(fn () => $request->input('request_type') === 'transfer'), 'nullable', 'exists:users,id', Rule::notIn([$user->id])],
-            'transfer_reason' => [Rule::requiredIf(fn () => $request->input('request_type') === 'transfer'), 'nullable', 'string'],
+            'transfer_reason' => [Rule::requiredIf(fn () => $request->input('request_type') === 'transfer'), 'nullable', 'string', 'min:10', 'max:2000'],
         ], [
             'request_type.required' => 'Izvēlies pieteikuma tipu.',
             'description.required' => 'Apraksti remonta problēmu.',
+            'description.min' => 'Aprakstam jābūt vismaz 10 rakstzīmēm.',
+            'description.max' => 'Apraksts nedrīkst pārsniegt 2000 rakstzīmes.',
             'reason.required' => 'Apraksti norakstīšanas iemeslu.',
+            'reason.min' => 'Iemeslam jābūt vismaz 10 rakstzīmēm.',
+            'reason.max' => 'Iemesls nedrīkst pārsniegt 2000 rakstzīmes.',
             'transfered_to_id.required' => 'Izvēlies lietotāju, kam nodot ierīci.',
+            'transfered_to_id.not_in' => 'Nevar nodot ierīci sev pašam.',
             'transfer_reason.required' => 'Apraksti nodošanas iemeslu.',
+            'transfer_reason.min' => 'Iemeslam jābūt vismaz 10 rakstzīmēm.',
+            'transfer_reason.max' => 'Iemesls nedrīkst pārsniegt 2000 rakstzīmes.',
         ]);
 
         // Lietotājs drīkst veidot pieteikumu tikai savai aktīvajai ierīcei, kas
@@ -139,9 +146,11 @@ class UserRequestCenterController extends Controller
         // Katram pieteikuma tipam ir viens rediģējamais teksta lauks;
         // pārējos biznesa laukus pēc iesniegšanas lietotājs vairs nevar mainīt.
         $validated = $this->validateInput($request, [
-            $field => ['required', 'string'],
+            $field => ['required', 'string', 'min:10', 'max:2000'],
         ], [
             $field . '.required' => $config['required_message'],
+            $field . '.min' => $config['min_message'],
+            $field . '.max' => $config['max_message'],
         ]);
 
         $before = $editableRequest->only([$field]);
@@ -353,6 +362,8 @@ class UserRequestCenterController extends Controller
                 'type_label' => 'Remonta pieteikums',
                 'icon' => 'repair-request',
                 'required_message' => 'Apraksti remonta problēmu.',
+                'min_message' => 'Aprakstam jābūt vismaz 10 rakstzīmēm.',
+                'max_message' => 'Apraksts nedrīkst pārsniegt 2000 rakstzīmes.',
                 'updated_message' => 'Remonta pieteikums atjaunots.',
                 'deleted_message' => 'Remonta pieteikums atcelts.',
                 'deleted_audit_message' => 'Lietotājs atcēla iesniegtu remonta pieteikumu.',
@@ -368,6 +379,8 @@ class UserRequestCenterController extends Controller
                 'type_label' => 'Norakstīšanas pieteikums',
                 'icon' => 'writeoff',
                 'required_message' => 'Apraksti norakstīšanas iemeslu.',
+                'min_message' => 'Iemeslam jābūt vismaz 10 rakstzīmēm.',
+                'max_message' => 'Iemesls nedrīkst pārsniegt 2000 rakstzīmes.',
                 'updated_message' => 'Norakstīšanas pieteikums atjaunots.',
                 'deleted_message' => 'Norakstīšanas pieteikums atcelts.',
                 'deleted_audit_message' => 'Lietotājs atcēla iesniegtu norakstīšanas pieteikumu.',
@@ -383,6 +396,8 @@ class UserRequestCenterController extends Controller
                 'type_label' => 'Nodošanas pieteikums',
                 'icon' => 'transfer',
                 'required_message' => 'Apraksti nodošanas iemeslu.',
+                'min_message' => 'Iemeslam jābūt vismaz 10 rakstzīmēm.',
+                'max_message' => 'Iemesls nedrīkst pārsniegt 2000 rakstzīmes.',
                 'updated_message' => 'Nodošanas pieteikums atjaunots.',
                 'deleted_message' => 'Nodošanas pieteikums atcelts.',
                 'deleted_audit_message' => 'Lietotājs atcēla iesniegtu nodošanas pieteikumu.',

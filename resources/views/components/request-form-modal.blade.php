@@ -88,7 +88,7 @@
         @endif
 
         <div class="space-y-6">
-            <div>
+            <div class="{{ $errors->has('device_id') ? 'form-field-error' : '' }}">
                 <label class="crud-label">
                     Ierīce <span class="text-rose-500">*</span>
                 </label>
@@ -105,13 +105,13 @@
                     empty-message="Neviena ierīce neatbilst meklējumam."
                 />
                 @error('device_id')
-                    <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
+                    <div class="form-field-error-message">{{ $message }}</div>
                 @enderror
             </div>
 
             <div>
                 @if ($type === 'repair')
-                    <label class="crud-label">
+                    <label class="crud-label {{ $errors->has('description') ? 'text-rose-800' : '' }}">
                         Apraksts <span class="text-rose-500">*</span>
                     </label>
                     <textarea
@@ -119,15 +119,15 @@
                         rows="5"
                         minlength="10"
                         maxlength="2000"
-                        class="crud-control"
+                        class="crud-control {{ $errors->has('description') ? 'crud-control-error' : '' }}"
                         placeholder="Apraksti problēmu, kas jārisina..."
                         required
                     >{{ old('description', '') }}</textarea>
                     @error('description')
-                        <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
+                        <div class="form-field-error-message">{{ $message }}</div>
                     @enderror
                 @elseif ($type === 'writeoff')
-                    <label class="crud-label">
+                    <label class="crud-label {{ $errors->has('reason') ? 'text-rose-800' : '' }}">
                         Iemesls <span class="text-rose-500">*</span>
                     </label>
                     <textarea
@@ -135,15 +135,15 @@
                         rows="5"
                         minlength="10"
                         maxlength="2000"
-                        class="crud-control"
+                        class="crud-control {{ $errors->has('reason') ? 'crud-control-error' : '' }}"
                         placeholder="Norādi iemeslu norakstīšanai..."
                         required
                     >{{ old('reason', '') }}</textarea>
                     @error('reason')
-                        <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
+                        <div class="form-field-error-message">{{ $message }}</div>
                     @enderror
                 @elseif ($type === 'transfer')
-                    <div>
+                    <div class="{{ $errors->has('transfered_to_id') ? 'form-field-error' : '' }}">
                         <label class="crud-label">
                             Nodot lietotājam <span class="text-rose-500">*</span>
                         </label>
@@ -160,12 +160,12 @@
                             empty-message="Neviens lietotājs neatbilst meklējumam."
                         />
                         @error('transfered_to_id')
-                            <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
+                            <div class="form-field-error-message">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <div>
-                        <label class="crud-label">
+                        <label class="crud-label {{ $errors->has('transfer_reason') ? 'text-rose-800' : '' }}">
                             Iemesls <span class="text-rose-500">*</span>
                         </label>
                         <textarea
@@ -173,12 +173,12 @@
                             rows="5"
                             minlength="10"
                             maxlength="2000"
-                            class="crud-control"
+                            class="crud-control {{ $errors->has('transfer_reason') ? 'crud-control-error' : '' }}"
                             placeholder="Izskaidro, kāpēc nodot šo ierīci..."
                             required
                         >{{ old('transfer_reason', '') }}</textarea>
                         @error('transfer_reason')
-                            <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>
+                            <div class="form-field-error-message">{{ $message }}</div>
                         @enderror
                     </div>
                 @endif

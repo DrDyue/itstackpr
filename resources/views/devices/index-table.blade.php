@@ -607,7 +607,7 @@
                             :error="$isOldUserRoomModal ? $errors->first('room_id') : null"
                         />
                         @if ($isOldUserRoomModal && $errors->has('room_id'))
-                            <div class="text-sm text-rose-600">{{ $errors->first('room_id') }}</div>
+                            <div class="form-field-error-message">{{ $errors->first('room_id') }}</div>
                         @endif
                     </div>
                     <div class="device-user-room-modal-device mt-5">

@@ -350,7 +350,7 @@
                                 emptyMessage="Neviena telpa neatbilst meklējumam."
                                 :error="old('modal_form') === 'device_show_room' ? $errors->first('room_id') : null" />
                             @if (old('modal_form') === 'device_show_room' && $errors->has('room_id'))
-                                <div class="text-sm text-rose-600">{{ $errors->first('room_id') }}</div>
+                                <div class="form-field-error-message">{{ $errors->first('room_id') }}</div>
                             @endif
                         </div>
                         <div class="device-user-room-modal-actions">

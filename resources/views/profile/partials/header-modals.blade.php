@@ -69,25 +69,25 @@
                     <div class="grid gap-5 md:grid-cols-2">
                         <div class="md:col-span-2">
                             <x-input-label for="profile_modal_full_name" value="Vārds un uzvārds" />
-                            <x-text-input id="profile_modal_full_name" name="full_name" type="text" class="mt-2 block w-full" :value="$profileInfoValue('full_name', $user->full_name)" required autofocus autocomplete="name" x-ref="firstField" />
+                            <x-text-input id="profile_modal_full_name" name="full_name" type="text" class="mt-2 block w-full {{ $profileInfoError('full_name') ? 'error' : '' }}" :value="$profileInfoValue('full_name', $user->full_name)" maxlength="100" required autofocus autocomplete="name" x-ref="firstField" />
                             <x-input-error class="mt-2" :messages="$profileInfoError('full_name')" />
                         </div>
 
                         <div>
                             <x-input-label for="profile_modal_email" value="E-pasts" />
-                            <x-text-input id="profile_modal_email" name="email" type="email" class="mt-2 block w-full" :value="$profileInfoValue('email', $user->email)" required autocomplete="email" />
+                            <x-text-input id="profile_modal_email" name="email" type="email" class="mt-2 block w-full {{ $profileInfoError('email') ? 'error' : '' }}" :value="$profileInfoValue('email', $user->email)" maxlength="100" required autocomplete="email" />
                             <x-input-error class="mt-2" :messages="$profileInfoError('email')" />
                         </div>
 
                         <div>
                             <x-input-label for="profile_modal_phone" value="Tālrunis" />
-                            <x-text-input id="profile_modal_phone" name="phone" type="text" class="mt-2 block w-full" :value="$profileInfoValue('phone', $user->phone)" autocomplete="tel" />
+                            <x-text-input id="profile_modal_phone" name="phone" type="tel" class="mt-2 block w-full {{ $profileInfoError('phone') ? 'error' : '' }}" :value="$profileInfoValue('phone', $user->phone)" maxlength="100" autocomplete="tel" />
                             <x-input-error class="mt-2" :messages="$profileInfoError('phone')" />
                         </div>
 
                         <div class="md:col-span-2">
                             <x-input-label for="profile_modal_job_title" value="Amats" />
-                            <x-text-input id="profile_modal_job_title" name="job_title" type="text" class="mt-2 block w-full" :value="$profileInfoValue('job_title', $user->job_title)" autocomplete="organization-title" />
+                            <x-text-input id="profile_modal_job_title" name="job_title" type="text" class="mt-2 block w-full {{ $profileInfoError('job_title') ? 'error' : '' }}" :value="$profileInfoValue('job_title', $user->job_title)" maxlength="100" autocomplete="organization-title" />
                             <x-input-error class="mt-2" :messages="$profileInfoError('job_title')" />
                         </div>
                     </div>
@@ -135,19 +135,19 @@
 
                 <div>
                     <x-input-label for="profile_password_current_password" value="Pašreizējā parole" />
-                    <x-text-input id="profile_password_current_password" name="current_password" type="password" class="mt-2 block w-full" autocomplete="current-password" x-ref="firstField" />
+                    <x-text-input id="profile_password_current_password" name="current_password" type="password" class="mt-2 block w-full {{ $errors->updatePassword->has('current_password') ? 'error' : '' }}" autocomplete="current-password" x-ref="firstField" />
                     <x-input-error :messages="$errors->updatePassword->get('current_password')" class="mt-2" />
                 </div>
 
                 <div>
                     <x-input-label for="profile_password_password" value="Jauna parole" />
-                    <x-text-input id="profile_password_password" name="password" type="password" class="mt-2 block w-full" autocomplete="new-password" />
+                    <x-text-input id="profile_password_password" name="password" type="password" class="mt-2 block w-full {{ $errors->updatePassword->has('password') ? 'error' : '' }}" autocomplete="new-password" />
                     <x-input-error :messages="$errors->updatePassword->get('password')" class="mt-2" />
                 </div>
 
                 <div>
                     <x-input-label for="profile_password_password_confirmation" value="Atkārtota parole" />
-                    <x-text-input id="profile_password_password_confirmation" name="password_confirmation" type="password" class="mt-2 block w-full" autocomplete="new-password" />
+                    <x-text-input id="profile_password_password_confirmation" name="password_confirmation" type="password" class="mt-2 block w-full {{ $errors->updatePassword->has('password_confirmation') ? 'error' : '' }}" autocomplete="new-password" />
                     <x-input-error :messages="$errors->updatePassword->get('password_confirmation')" class="mt-2" />
                 </div>
 

@@ -245,11 +245,13 @@ class DeviceTypeController extends Controller
      */
     private function validateTypeName(Request $request, ?DeviceType $deviceType = null): array
     {
-        $data = $request->validate([
-            'type_name' => ['required', 'string', 'max:30'],
+        $data = $this->validateInput($request, [
+            'type_name' => ['required', 'string', 'min:2', 'max:30', 'regex:/^[\pL\pN][\pL\pN\s\-\/().]+$/u'],
         ], [
             'type_name.required' => "Ievadi ier\u{012B}ces tipa nosaukumu.",
+            'type_name.min' => 'Ierīces tipa nosaukumam jābūt vismaz 2 rakstzīmes garam.',
             'type_name.max' => 'Ierīces tipa nosaukums nedrīkst būt garāks par 30 rakstzīmēm.',
+            'type_name.regex' => 'Ierīces tipa nosaukumā izmanto burtus, ciparus, atstarpes un vienkāršas zīmes: -, /, (, ).',
         ]);
 
         // Pēc validācijas apgriežam atstarpes, lai "Monitors" un " Monitors "

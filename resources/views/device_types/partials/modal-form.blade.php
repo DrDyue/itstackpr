@@ -79,7 +79,10 @@
                             name="type_name"
                             value="{{ $shouldUseOldInput ? old('type_name') : ($type?->type_name ?? '') }}"
                             class="crud-control"
+                            minlength="2"
                             maxlength="30"
+                            pattern="[\p{L}\p{N}][\p{L}\p{N}\s\-\/().]+"
+                            title="Izmanto burtus, ciparus, atstarpes un vienkāršas zīmes: -, /, (, )."
                             required
                             autofocus
                             placeholder="Piemēram: Dators, Monitors, Klaviatūra"
