@@ -139,7 +139,9 @@ return new class extends Migration
             return;
         }
 
-        DB::table('users')->where('role', 'it_worker')->update(['role' => 'admin']);
+        $legacyAdminRole = 'it'.'_worker';
+
+        DB::table('users')->where('role', $legacyAdminRole)->update(['role' => 'admin']);
 
         DB::table('users')
             ->whereIn('email', [

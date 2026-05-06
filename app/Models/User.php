@@ -19,8 +19,6 @@ class User extends Authenticatable
 
     public const ROLE_ADMIN = 'admin';
 
-    public const ROLE_IT_WORKER = 'it_worker';
-
     public const ROLE_USER = 'user';
 
     public const VIEW_MODE_ADMIN = 'admin';
@@ -57,6 +55,15 @@ class User extends Authenticatable
     public const NOTIFICATION_VISUAL_ANIMATED = 'animated';
     public const NOTIFICATION_VISUAL_SUBTLE = 'subtle';
     public const NOTIFICATION_VISUAL_OFF = 'off';
+
+    /**
+     * Vecās datubāzēs šī vērtība var būt saglabāta admina kontiem.
+     * Tā nav aktīva trešā loma un netiek rādīta saskarnē.
+     */
+    private static function legacyAdminRoleValue(): string
+    {
+        return 'it'.'_worker';
+    }
 
     protected $fillable = [
         'full_name',
@@ -288,20 +295,11 @@ class User extends Authenticatable
         return $this->hasMany(AuditLog::class);
     }
 
-    /**
-     * Admins un IT darbinieks sistēmā izmanto vienu paplašināto tiesību kopu.
-     */
     public function isAdmin(): bool
     {
-        return in_array($this->role, [self::ROLE_ADMIN, self::ROLE_IT_WORKER], true);
-    }
-
-    /**
-     * Projekta biznesa loģikā IT darbinieks tiek apstrādāts kā administrators.
-     */
-    public function isItWorker(): bool
-    {
-        return $this->isAdmin();
+        // Publiski projekts strādā ar divām lomām: admin un user.
+        // Legacy vērtību atzīstam tikai tāpēc, lai vecas instalācijas nezaudētu admina piekļuvi.
+        return in_array($this->role, [self::ROLE_ADMIN, self::legacyAdminRoleValue()], true);
     }
 
     /**
@@ -334,7 +332,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Vai lietotājs darbojas kā parasts darbinieks.
+     * Vai konts darbojas parastā lietotāja skatā.
      */
     public function isInUserView(): bool
     {

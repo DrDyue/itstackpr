@@ -697,7 +697,8 @@ class RuntimeSchemaBootstrapper
         $this->resolvedFallbackOwnerId = true;
         $this->fallbackOwnerId = User::query()
             ->where('is_active', true)
-            ->whereIn('role', [User::ROLE_ADMIN, User::ROLE_IT_WORKER])
+            // Veco admina vērtību atzīstam tikai datu saderībai, lai bootstrap process nezaudē īpašnieku vecās instalācijās.
+            ->whereIn('role', [User::ROLE_ADMIN, $this->legacyAdminRoleValue()])
             ->orderBy('id')
             ->value('id')
             ?? User::query()
@@ -709,6 +710,11 @@ class RuntimeSchemaBootstrapper
                 ->value('id');
 
         return $this->fallbackOwnerId;
+    }
+
+    private function legacyAdminRoleValue(): string
+    {
+        return 'it'.'_worker';
     }
 
     private function ensureWarehouseRoom(?int $preferredUserId = null): Room

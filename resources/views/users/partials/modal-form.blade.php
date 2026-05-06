@@ -138,9 +138,10 @@
                                      Tāpēc vizuālais stāvoklis dzīvo Alpine mainīgajā, bet forma iesniedz hidden input. --}}
                                 <input type="hidden" name="role" :value="role">
                                 <div class="role-toggle role-toggle-compact">
+                                    {{-- Lietotāju pārvaldībā apzināti rādam tikai aktīvās projekta lomas: admin un lietotājs. --}}
                                     @foreach ($roles as $roleValue)
                                         <button type="button" class="role-toggle-btn" :class="role === @js($roleValue) ? 'role-toggle-active' : ''" @click="role = @js($roleValue)">
-                                            <x-icon :name="$roleValue === 'admin' ? 'users' : ($roleValue === 'it_worker' ? 'repair' : 'profile')" size="h-4 w-4" />
+                                            <x-icon :name="$roleValue === 'admin' ? 'users' : 'profile'" size="h-4 w-4" />
                                             <span>{{ $roleLabels[$roleValue] ?? $roleValue }}</span>
                                         </button>
                                     @endforeach

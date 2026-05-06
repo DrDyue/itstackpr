@@ -520,8 +520,7 @@ class UserController extends Controller
     {
         return [
             User::ROLE_ADMIN => 'Admins',
-            User::ROLE_IT_WORKER => 'IT darbinieks',
-            User::ROLE_USER => 'Darbinieks',
+            User::ROLE_USER => 'Lietotājs',
         ];
     }
 

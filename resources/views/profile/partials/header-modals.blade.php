@@ -227,6 +227,7 @@
                             <x-input-label value="Noklusētais skata režīms" />
                             <input type="hidden" name="default_view_mode" :value="val">
                             <div class="mt-2 flex gap-1.5">
+                                {{-- Šī izvēle maina admina noklusēto skatu pēc pieslēgšanās; tā neveido jaunas lietotāju lomas. --}}
                                 <button type="button" @click="pick('{{ \App\Models\User::VIEW_MODE_ADMIN }}')"
                                     class="quick-status-filter quick-status-filter-slate flex-1"
                                     :class="val === '{{ \App\Models\User::VIEW_MODE_ADMIN }}' ? 'quick-status-filter-active quick-status-filter-sky' : ''">
@@ -237,7 +238,7 @@
                                     class="quick-status-filter quick-status-filter-slate flex-1"
                                     :class="val === '{{ \App\Models\User::VIEW_MODE_USER }}' ? 'quick-status-filter-active quick-status-filter-emerald' : ''">
                                     <x-icon name="user" size="h-4 w-4" />
-                                    <span>Darbinieks</span>
+                                    <span>Lietotājs</span>
                                 </button>
                                 <button type="button" @click="pick('{{ \App\Models\User::DEFAULT_VIEW_MODE_LAST }}')"
                                     class="quick-status-filter quick-status-filter-slate flex-1"

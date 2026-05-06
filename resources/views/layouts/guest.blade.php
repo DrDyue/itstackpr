@@ -79,7 +79,7 @@
                     <div class="auth-info space-y-1">
                         @if (request()->routeIs('login'))
                             <p>Demo admins: artis.berzins@ludzas.lv | Parole: password</p>
-                            <p>Demo darbinieks: ilze.strautina@ludzas.lv | Parole: password</p>
+                            <p>Demo lietotājs: ilze.strautina@ludzas.lv | Parole: password</p>
                         @else
                             <p>Jaunu lietotāju izveido administrators.</p>
                         @endif

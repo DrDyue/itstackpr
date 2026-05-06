@@ -52,7 +52,7 @@
         ],
         'user-role' => [
             'admin' => ['label' => 'Admins', 'tone' => 'violet', 'icon' => 'users'],
-            'user' => ['label' => 'Darbinieks', 'tone' => 'info', 'icon' => 'profile'],
+            'user' => ['label' => 'Lietotājs', 'tone' => 'info', 'icon' => 'profile'],
         ],
         'severity' => [
             'info' => ['label' => 'Info', 'tone' => 'neutral', 'icon' => 'audit'],

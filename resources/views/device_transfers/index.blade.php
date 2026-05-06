@@ -465,11 +465,11 @@
                                     </td>
                                     <td class="px-4 py-4">
                                         <div class="font-semibold text-slate-900">{{ $transfer->responsibleUser?->full_name ?: '-' }}</div>
-                                        <div class="mt-1 text-xs text-slate-500">{{ $transfer->responsibleUser?->job_title ?: ($transfer->responsibleUser?->email ?: 'Darbinieks') }}</div>
+                                        <div class="mt-1 text-xs text-slate-500">{{ $transfer->responsibleUser?->job_title ?: ($transfer->responsibleUser?->email ?: 'Lietotājs') }}</div>
                                     </td>
                                     <td class="px-4 py-4">
                                         <div class="font-semibold text-slate-900">{{ $transfer->transferTo?->full_name ?: '-' }}</div>
-                                        <div class="mt-1 text-xs text-slate-500">{{ $transfer->transferTo?->job_title ?: ($transfer->transferTo?->email ?: 'Darbinieks') }}</div>
+                                        <div class="mt-1 text-xs text-slate-500">{{ $transfer->transferTo?->job_title ?: ($transfer->transferTo?->email ?: 'Lietotājs') }}</div>
                                     </td>
                                     <td class="px-4 py-4">
                                         <div class="relative" x-data="{ open: false }">

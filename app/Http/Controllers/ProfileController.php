@@ -267,7 +267,7 @@ class ProfileController extends Controller
         if ($key === User::SETTING_DEFAULT_VIEW_MODE) {
             return match ($value) {
                 User::VIEW_MODE_ADMIN => 'admina skats',
-                User::VIEW_MODE_USER => 'darbinieka skats',
+                User::VIEW_MODE_USER => 'lietotāja skats',
                 User::DEFAULT_VIEW_MODE_LAST => 'atcerēties pēdējo',
                 default => 'nav norādīts',
             };

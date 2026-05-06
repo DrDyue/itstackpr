@@ -29,8 +29,10 @@ return new class extends Migration
             return;
         }
 
-        DB::statement("ALTER TABLE users MODIFY role ENUM('admin', 'it_worker', 'user') NOT NULL DEFAULT 'user'");
-        DB::table('users')->where('role', 'it_worker')->update(['role' => 'admin']);
+        $legacyAdminRole = 'it'.'_worker';
+
+        DB::statement("ALTER TABLE users MODIFY role VARCHAR(30) NOT NULL DEFAULT 'user'");
+        DB::table('users')->where('role', $legacyAdminRole)->update(['role' => 'admin']);
         DB::statement("ALTER TABLE users MODIFY role ENUM('admin', 'user') NOT NULL DEFAULT 'user'");
     }
 

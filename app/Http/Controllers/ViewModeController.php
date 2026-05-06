@@ -50,7 +50,7 @@ class ViewModeController extends Controller
             'success',
             $validated['mode'] === User::VIEW_MODE_ADMIN
                 ? 'Ieslēgts admina skats.'
-                : 'Ieslēgts darbinieka skats.'
+                : 'Ieslēgts lietotāja skats.'
         );
     }
 }

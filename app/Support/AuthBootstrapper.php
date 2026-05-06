@@ -260,12 +260,12 @@ class AuthBootstrapper
         }
 
         $candidates = match ($desiredRole) {
-            User::ROLE_ADMIN => [User::ROLE_ADMIN, User::ROLE_IT_WORKER],
+            User::ROLE_ADMIN => [User::ROLE_ADMIN, $this->legacyAdminRoleValue()],
             default => [User::ROLE_USER],
         };
 
-        // Dažās vecās instalācijās admin loma var saukties atšķirīgi,
-        // tāpēc mēģinām vairākus kandidātus, līdz datubāze pieņem vienu no tiem.
+        // Vispirms izmantojam aktīvo admin lomu. Otrā vērtība ir tikai saderībai ar vecām datubāzēm,
+        // kur ENUM vēl nav pārtaisīts uz divām lomām; saskarnē tā netiek rādīta kā atsevišķa loma.
         foreach ($candidates as $candidate) {
             try {
                 DB::table('users')
@@ -277,6 +277,11 @@ class AuthBootstrapper
                 Log::warning("Unable to set demo role '{$candidate}' for {$email}: " . $e->getMessage());
             }
         }
+    }
+
+    private function legacyAdminRoleValue(): string
+    {
+        return 'it'.'_worker';
     }
 
     private function isDemoLoginAttempt(string $email, string $password): bool

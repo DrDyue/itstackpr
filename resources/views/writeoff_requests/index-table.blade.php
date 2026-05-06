@@ -117,7 +117,7 @@
                         </td>
                         <td class="px-4 py-4">
                             <div class="font-semibold text-slate-900">{{ $writeoffRequest->responsibleUser?->full_name ?: '-' }}</div>
-                            <div class="mt-1 text-xs text-slate-500">{{ $writeoffRequest->responsibleUser?->job_title ?: ($writeoffRequest->responsibleUser?->email ?: 'Darbinieks') }}</div>
+                            <div class="mt-1 text-xs text-slate-500">{{ $writeoffRequest->responsibleUser?->job_title ?: ($writeoffRequest->responsibleUser?->email ?: 'Lietotājs') }}</div>
                         </td>
                         <td class="px-4 py-4">
                             <div class="relative" x-data="{ open: false }">

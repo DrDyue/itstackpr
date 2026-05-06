@@ -2930,6 +2930,11 @@ tbody td {
     z-index: 150;
 }
 
+/*
+ * Searchable select drag preview.
+ * Lieto, kad izvēles laukam tiek vilkts vai pārkārtots saturs. Atsevišķas
+ * `top` un `bottom` klases rāda, kur jaunā vērtība tiks ievietota.
+ */
 .searchable-select-input-drag-preview {
     @apply border-sky-300 bg-white ring-2 ring-sky-100;
     box-shadow:
@@ -3035,6 +3040,11 @@ tbody td {
     }
 }
 
+/*
+ * Searchable select trigger un dropdown panelis.
+ * Trigger saglabā stabilu formas augstumu, bet panelis ir absolūti pozicionēts
+ * virs tabulām un modāļiem, tāpēc tam ir savs z-index un skrolla ierobežojumi.
+ */
 .searchable-select-toggle {
     @apply absolute right-2 top-1/2 z-20 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border border-slate-200/70 bg-white/90 text-slate-500 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-700 active:scale-[0.98] cursor-pointer;
 }
@@ -3740,6 +3750,11 @@ tbody td {
     box-shadow: -24px 0 60px rgba(2, 6, 23, 0.58);
 }
 
+/*
+ * Pieteikuma detaļu paneļa saturs.
+ * Lieto sānu overlay panelī: augšdaļa, galvenā kopsavilkuma kartīte, detaļu
+ * režģis, teksta bloki un apakšējā darbību zona.
+ */
 .request-detail-head {
     display: flex;
     align-items: flex-start;
@@ -3860,6 +3875,11 @@ tbody td {
     line-height: 1.55;
 }
 
+/*
+ * Pieteikuma detaļu kopsavilkuma kartes.
+ * Lieto augšējām statusa un metadatu rindām, kur informācija jālasa ātri un
+ * jāietilpst šaurā sānu panelī.
+ */
 .request-detail-summary,
 .request-detail-card,
 .request-detail-summary-card {
@@ -3993,6 +4013,11 @@ tbody td {
     justify-content: flex-start;
 }
 
+/*
+ * Pieteikuma detaļu informācijas režģis.
+ * Lieto telpai, ierīcei, pieprasītājam un aprakstam; `auto-fit` ļauj kartēm
+ * pārkārtoties starp šauru overlay paneli un platāku audita paneli.
+ */
 .request-detail-grid {
     display: grid;
     gap: 1rem;
@@ -4103,6 +4128,11 @@ tbody td {
     white-space: pre-wrap;
 }
 
+/*
+ * Detaļu papildu apraksta bloki.
+ * Lieto garākiem tekstiem un sarakstiem, kur jānošķir galvenā vērtība no
+ * paskaidrojošām rindām bez jauna modāļa vai tabulas.
+ */
 .request-detail-detail-block {
     margin-top: 0.85rem;
     display: flex;
@@ -4167,6 +4197,11 @@ tbody td {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(248, 250, 252, 0.86));
 }
 
+/*
+ * Pieteikuma detaļu paneļa dark mode saturs.
+ * Šie pārraksti atkārto paneļa iekšējo struktūru, jo komponentē ir daudz
+ * manuālu gradientu un statusu krāsu, ko nevar nosegt ar vienu virsmas klasi.
+ */
 :root[data-theme='dark'] .request-detail-eyebrow,
 :root[data-theme='dark'] .request-detail-date,
 :root[data-theme='dark'] .request-detail-card-label,
@@ -4233,6 +4268,11 @@ tbody td {
     box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.28);
 }
 
+/*
+ * Detaļu paneļa dark mode ikonu toņi.
+ * Katra klase atbilst statusa vai informācijas semantikai, lai ikonai paliek
+ * tā pati nozīme gan gaišajā, gan tumšajā tēmā.
+ */
 :root[data-theme='dark'] .request-detail-card-icon {
     background: rgba(14, 165, 233, 0.16);
     color: #7dd3fc;
@@ -4275,6 +4315,11 @@ tbody td {
     box-shadow: inset 0 0 0 1px rgba(244, 63, 94, 0.22);
 }
 
+/*
+ * Detaļu paneļa dark mode sekundārie elementi.
+ * Lieto saitēm, muted kartēm, detalizētiem sarakstiem un footer zonai, kas
+ * gaišajā tēmā izmanto atsevišķus gradientus.
+ */
 :root[data-theme='dark'] .request-detail-link {
     background: rgba(14, 165, 233, 0.16);
     color: #7dd3fc;
@@ -4306,6 +4351,11 @@ tbody td {
     background: linear-gradient(180deg, rgba(15, 23, 42, 0), rgba(15, 23, 42, 0.74));
 }
 
+/*
+ * Legacy pogu aliasi app.css failā.
+ * Lieto skati, kas vēl importē pogas no galvenā bundle. Ja iespējams, jauniem
+ * elementiem dod priekšroku `buttons-regular.css` vai Tailwind `@apply` klasēm.
+ */
 .btn-clear {
     display: inline-flex;
     align-items: center;
@@ -4958,7 +5008,11 @@ tbody td {
     @apply text-left leading-5;
 }
 
-/* Final polish overrides for action dropdowns */
+/*
+ * Darbību dropdown gala izkārtojums.
+ * Šis bloks nosaka kopīgo izvēlnes platumu, sadaļu atstarpes un rindas pogu
+ * uzvedību pēc tam, kad dažādi skati ir pielikuši savas semantiskās krāsas.
+ */
 .table-action-list {
     @apply absolute right-0 z-50 mt-2 flex flex-col gap-1.5 border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-200/50 w-max max-w-[95vw] text-left min-w-[19rem] rounded-2xl p-2.5;
     transform-origin: top right;
@@ -6280,7 +6334,11 @@ tbody td {
     @apply w-full rounded-[1.25rem] border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:font-semibold file:text-white hover:file:bg-slate-800;
 }
 
-/* Theme switcher and dark mode */
+/*
+ * Tēmas pārslēdzējs un lapas fona pamats.
+ * Lieto navigācijas profila izvēlnē un guest/app layout fonos. `color-scheme`
+ * ļauj pārlūkam pareizi krāsot iebūvētos formu elementus.
+ */
 :root {
     color-scheme: light;
 }
@@ -6456,6 +6514,11 @@ html[data-theme='dark'] .app-brand-fallback {
     box-shadow: 0 18px 30px -24px rgba(14, 165, 233, 0.6);
 }
 
+/*
+ * Dark mode kopīgās virsmas.
+ * Lieto lielākajām kartēm, toolbariem, dropdowniem un auth elementiem, kuriem
+ * Blade failos vēl ir gaišās Tailwind klases.
+ */
 html[data-theme='dark'] .app-main-nav,
 html[data-theme='dark'] .app-mobile-nav-panel,
 html[data-theme='dark'] .app-dropdown-content,
@@ -6594,6 +6657,11 @@ html[data-theme='dark'] .auth-link-row {
     border-color: rgba(51, 65, 85, 0.85) !important;
 }
 
+/*
+ * Dark mode Tailwind utilītu pārraksti.
+ * Lieto kā drošības slāni skatiem, kur krāsas nāk tieši no Blade klasēm, nevis
+ * no app.css komponentu klasēm. Tāpēc selektori ir plaši un ar `!important`.
+ */
 html[data-theme='dark'] .text-slate-800 {
     color: #e2e8f0 !important;
 }
@@ -6653,6 +6721,11 @@ html[data-theme='dark'] .auth-link:hover {
     color: #bae6fd !important;
 }
 
+/*
+ * Dark mode formas un ievades lauki.
+ * Lieto auth, CRUD un filtru formās, lai native input/select/textarea elementi
+ * tumšajā tēmā saglabā salasāmu tekstu, robežas un focus stāvokli.
+ */
 html[data-theme='dark'] .form-input,
 html[data-theme='dark'] .form-select {
     background-color: #0f172a !important;
@@ -6837,6 +6910,11 @@ html[data-theme='dark'] .table-action-item-primary:hover {
     background-color: rgba(14, 165, 233, 0.25) !important;
 }
 
+/*
+ * Dark mode tabulas darbību semantiskās krāsas.
+ * Lieto dropdown rindām un inline pogām, lai skatīt/rediģēt/apstiprināt/noraidīt
+ * saglabā atšķiramu nozīmi arī uz tumša fona.
+ */
 html[data-theme='dark'] .table-action-item-amber {
     color: #fbbf24 !important;
     border-color: rgba(251, 191, 36, 0.3) !important;
@@ -6975,6 +7053,11 @@ html[data-theme='dark'] .table-action-button-emerald:hover {
     background-color: rgba(52, 211, 153, 0.1) !important;
 }
 
+/*
+ * Dark mode navigācija.
+ * Lieto desktop un mobile navigācijas saitēm, aktīvajām sadaļām un hover
+ * stāvokļiem, kas Blade failos tiek zīmēti ar gaišajām utilītēm.
+ */
 html[data-theme='dark'] .app-main-nav a,
 html[data-theme='dark'] .app-main-nav button,
 html[data-theme='dark'] .app-mobile-nav-panel a,
@@ -6997,6 +7080,11 @@ html[data-theme='dark'] .app-mobile-nav-panel .hover\:bg-slate-50:hover {
     color: #f8fafc !important;
 }
 
+/*
+ * Dark mode legacy pogas.
+ * Lieto regulārajām pogām, kas nav pilnībā Tailwind komponentes, lai tām paliek
+ * salasāmi hover un disabled stāvokļi.
+ */
 html[data-theme='dark'] .btn-back,
 html[data-theme='dark'] .btn-clear {
     background-color: #0f172a !important;
@@ -8489,6 +8577,11 @@ html[data-theme='dark'] .user-profile-card-label {
     @apply text-white;
 }
 
+/*
+ * Darbinieka ierīces ātrās metadatu rindas.
+ * Lieto statusa čipiem un galvenajiem faktiem, kas jāparāda blakus ierīces
+ * attēlam bez pilnas tabulas.
+ */
 .device-user-glance-meta {
     @apply mt-5 flex flex-wrap gap-2;
 }
@@ -8577,6 +8670,11 @@ html[data-theme='dark'] .user-profile-card-label {
     @apply mt-4 text-sm leading-7 text-slate-700;
 }
 
+/*
+ * Darbinieka ierīces telpas maiņas modālis.
+ * Searchable select panelim šeit ir īpaši platuma un z-index noteikumi, jo
+ * tas atveras modāļa iekšpusē un nedrīkst tikt nogriezts.
+ */
 .device-user-room-modal-shell {
     @apply relative flex max-h-[calc(100vh-3rem)] flex-col overflow-visible rounded-[1.55rem] border border-slate-200 bg-white shadow-[0_24px_50px_-34px_rgba(15,23,42,0.45)];
 }

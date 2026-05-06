@@ -422,7 +422,8 @@
                             <div class="min-w-0 text-left leading-tight">
                                 <div class="truncate font-semibold text-slate-900">{{ $user?->full_name ?? 'Lietotājs' }}</div>
                                 <div class="mt-1 inline-flex max-w-full items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                                    <span class="truncate">{{ $isAdmin ? ($canManageRequests ? 'admina skats' : 'darbinieka skats') : ($user?->role ?? '') }}</span>
+                                    {{-- Adminam šeit rādam skata režīmu, nevis trešo lomu. Lomas pašas ir tikai admin un user. --}}
+                                    <span class="truncate">{{ $isAdmin ? ($canManageRequests ? 'admina skats' : 'lietotāja skats') : ($user?->role ?? '') }}</span>
                                 </div>
                             </div>
                             <svg class="ms-1 h-4 w-4 fill-current text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
