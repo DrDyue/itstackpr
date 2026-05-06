@@ -337,7 +337,7 @@ class RepairController extends Controller
 
         $validated = $this->validateInput($request, [
             'target_status' => ['required', Rule::in(self::STATUSES)],
-            'cost' => ['nullable', 'numeric', 'min:0'],
+            'cost' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
         ], [
             'target_status.required' => 'Izvēlies jauno remonta statusu.',
         ]);
@@ -512,6 +512,7 @@ class RepairController extends Controller
             'device_id.required' => 'Izvēlies ierīci remonta ierakstam.',
             'description.required' => 'Apraksti remonta darbu vai problēmu.',
             'description.max' => 'Apraksts nedrīkst pārsniegt 2000 rakstzīmes.',
+            'cost.max' => 'Izmaksas nedrīkst pārsniegt 99 999 999,99.',
             'repair_type.required' => 'Izvēlies remonta tipu.',
         ]);
 
@@ -614,13 +615,16 @@ class RepairController extends Controller
     private function validatedTransitionDraft(Request $request, Repair $repair, string $targetStatus): array
     {
         $draft = $this->validateInput($request, [
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'max:2000'],
             'repair_type' => ['nullable', Rule::in(self::TYPES)],
             'priority' => ['nullable', Rule::in(self::PRIORITIES)],
-            'cost' => ['nullable', 'numeric', 'min:0'],
+            'cost' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'vendor_name' => ['nullable', 'string', 'max:100'],
             'vendor_contact' => ['nullable', 'string', 'max:100'],
             'invoice_number' => ['nullable', 'string', 'max:50'],
+        ], [
+            'description.max' => 'Apraksts nedrīkst pārsniegt 2000 rakstzīmes.',
+            'cost.max' => 'Izmaksas nedrīkst pārsniegt 99 999 999,99.',
         ]);
 
         $draft = [

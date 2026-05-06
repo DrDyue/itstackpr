@@ -102,6 +102,8 @@
                     <div class="relative">
                         <input
                             type="number"
+                            min="0"
+                            max="99999999.99"
                             step="0.01"
                             name="cost"
                             value="{{ old('cost', $currentRepair?->cost) }}"
@@ -158,15 +160,15 @@
 
         <div class="mt-4 grid gap-4 md:grid-cols-3">
             <x-ui.form-field label="Pakalpojuma sniedzējs" name="vendor_name">
-                <input type="text" name="vendor_name" value="{{ old('vendor_name', $currentRepair?->vendor_name) }}" class="crud-control {{ $errors->has('vendor_name') ? 'crud-control-error' : '' }}" x-model="vendorName">
+                <input type="text" name="vendor_name" value="{{ old('vendor_name', $currentRepair?->vendor_name) }}" maxlength="100" class="crud-control {{ $errors->has('vendor_name') ? 'crud-control-error' : '' }}" x-model="vendorName">
             </x-ui.form-field>
 
             <x-ui.form-field label="Vendora kontakts" name="vendor_contact">
-                <input type="text" name="vendor_contact" value="{{ old('vendor_contact', $currentRepair?->vendor_contact) }}" class="crud-control {{ $errors->has('vendor_contact') ? 'crud-control-error' : '' }}" x-model="vendorContact">
+                <input type="text" name="vendor_contact" value="{{ old('vendor_contact', $currentRepair?->vendor_contact) }}" maxlength="100" class="crud-control {{ $errors->has('vendor_contact') ? 'crud-control-error' : '' }}" x-model="vendorContact">
             </x-ui.form-field>
 
             <x-ui.form-field label="Rēķina numurs" name="invoice_number">
-                <input type="text" name="invoice_number" value="{{ old('invoice_number', $currentRepair?->invoice_number) }}" class="crud-control {{ $errors->has('invoice_number') ? 'crud-control-error' : '' }}" x-model="invoiceNumber">
+                <input type="text" name="invoice_number" value="{{ old('invoice_number', $currentRepair?->invoice_number) }}" maxlength="50" class="crud-control {{ $errors->has('invoice_number') ? 'crud-control-error' : '' }}" x-model="invoiceNumber">
             </x-ui.form-field>
         </div>
     </div>

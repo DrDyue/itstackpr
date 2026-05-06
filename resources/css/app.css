@@ -1015,12 +1015,53 @@ tbody td {
     @apply mt-0.5 inline-flex shrink-0 text-amber-600;
 }
 
+.validation-summary {
+    @apply rounded-2xl border border-rose-200 bg-white shadow-sm ring-1 ring-rose-100/80;
+}
+
+.validation-summary-head {
+    @apply flex items-start gap-3 border-b border-rose-100 bg-rose-50/80 px-4 py-3.5;
+}
+
+.validation-summary-icon {
+    @apply mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-700 ring-1 ring-rose-200;
+}
+
+.validation-summary-title {
+    @apply text-sm font-semibold text-rose-950;
+}
+
+.validation-summary-subtitle {
+    @apply mt-1 text-sm leading-5 text-rose-800;
+}
+
+.validation-summary-grid {
+    @apply grid gap-4 px-4 py-4 md:grid-cols-[minmax(0,1fr)_minmax(16rem,0.8fr)];
+}
+
+.validation-summary-grid-single {
+    @apply md:grid-cols-1;
+}
+
+.validation-summary-section {
+    @apply mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500;
+}
+
+.validation-summary-list,
+.validation-summary-tips {
+    @apply space-y-2;
+}
+
 .validation-summary-link {
-    @apply inline-flex w-full items-start gap-1 rounded-xl px-2 py-1.5 text-left text-sm text-rose-800 transition hover:bg-rose-100/70 focus:outline-none focus:ring-2 focus:ring-rose-200;
+    @apply flex w-full items-start gap-3 rounded-xl border border-rose-100 bg-rose-50/60 px-3 py-2.5 text-left text-sm leading-5 text-rose-800 transition hover:border-rose-200 hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-200;
 }
 
 .validation-summary-link strong {
-    @apply font-semibold text-rose-900;
+    @apply inline-flex min-w-24 shrink-0 text-xs font-semibold uppercase tracking-[0.08em] text-rose-950;
+}
+
+.validation-summary-tips li {
+    @apply rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm leading-5 text-slate-600;
 }
 
 .device-type-modal-close {

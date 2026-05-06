@@ -7,7 +7,7 @@
     {{-- Nosaukums + Statuss (rediģēšanā) — galvenā rinda, bez konteinera --}}
     <div class="grid gap-3 md:grid-cols-12">
         <x-ui.form-field class="{{ $isCreating ? 'md:col-span-12' : 'md:col-span-8' }}" label="Nosaukums" name="name" :required="true">
-            <input type="text" name="name" value="{{ $fieldValue('name', $current?->name) }}" class="crud-control" required>
+            <input type="text" name="name" value="{{ $fieldValue('name', $current?->name) }}" maxlength="200" class="crud-control" required>
         </x-ui.form-field>
 
         @if (!$isCreating)
@@ -60,11 +60,11 @@
             </x-ui.form-field>
 
             <x-ui.form-field label="Ražotājs" name="manufacturer">
-                <input type="text" name="manufacturer" value="{{ $fieldValue('manufacturer', $current?->manufacturer) }}" class="crud-control">
+                <input type="text" name="manufacturer" value="{{ $fieldValue('manufacturer', $current?->manufacturer) }}" maxlength="100" class="crud-control">
             </x-ui.form-field>
 
             <x-ui.form-field label="Modelis" name="model" :required="true">
-                <input type="text" name="model" value="{{ $fieldValue('model', $current?->model) }}" class="crud-control" required>
+                <input type="text" name="model" value="{{ $fieldValue('model', $current?->model) }}" maxlength="100" class="crud-control" required>
             </x-ui.form-field>
         </div>
     </div>
@@ -74,11 +74,11 @@
         <div class="form-field-group-label">Identifikatori</div>
         <div class="grid gap-3 md:grid-cols-2">
             <x-ui.form-field label="Kods" name="code" :required="true">
-                <input type="text" name="code" value="{{ $fieldValue('code', $current?->code) }}" class="crud-control" required>
+                <input type="text" name="code" value="{{ $fieldValue('code', $current?->code) }}" maxlength="20" class="crud-control" required>
             </x-ui.form-field>
 
             <x-ui.form-field label="Sērijas numurs" name="serial_number">
-                <input type="text" name="serial_number" value="{{ $fieldValue('serial_number', $current?->serial_number) }}" class="crud-control">
+                <input type="text" name="serial_number" value="{{ $fieldValue('serial_number', $current?->serial_number) }}" maxlength="100" class="crud-control">
             </x-ui.form-field>
         </div>
     </div>

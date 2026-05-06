@@ -41,7 +41,7 @@
                 str_contains($field, 'date') => ['Pārbaudi datumus. Ja aizpildi vairākus datumus, tiem savstarpēji jāsaskan.'],
                 str_contains($field, 'email') => ['Pārbaudi e-pastu. Tam jābūt pilnai adresei, piemēram, vards@domeins.lv.'],
                 str_contains($field, 'password') => ['Pārbaudi paroles laukus. Ja maini paroli, abām ievadītajām vērtībām jāsakrīt.'],
-                default => ['Izlabo iezīmēto lauku un mēģini vēlreiz. Ja problēma atkārtojas, atver ierakstu no jauna un pārbaudi, vai saistītie dati vēl ir pieejami.'],
+                default => [],
             };
         })
         ->unique()
@@ -70,7 +70,7 @@
             </div>
         </div>
 
-        <div class="validation-summary-grid">
+        <div class="validation-summary-grid {{ $tips->isEmpty() ? 'validation-summary-grid-single' : '' }}">
             <div>
                 <div class="validation-summary-section">Kas jāizlabo</div>
                 <ul class="validation-summary-list">
@@ -83,7 +83,7 @@
                                 @click="window.focusValidationField(@js($error['field']))"
                             >
                                 @if ($error['label'])
-                                    <strong>{{ $error['label'] }}:</strong>
+                                    <strong>{{ $error['label'] }}</strong>
                                 @endif
                                 <span>{{ $error['message'] }}</span>
                             </button>

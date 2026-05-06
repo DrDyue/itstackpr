@@ -44,13 +44,13 @@
         />
     </x-ui.form-field>
     <x-ui.form-field label="Stāvs" name="floor_number" :required="true">
-        <input type="number" name="floor_number" value="{{ $value('floor_number') }}" class="crud-control" required>
+        <input type="number" name="floor_number" value="{{ $value('floor_number') }}" min="-10" max="200" step="1" class="crud-control" required>
     </x-ui.form-field>
     <x-ui.form-field label="Telpas numurs" name="room_number" :required="true">
-        <input type="text" name="room_number" value="{{ $value('room_number') }}" class="crud-control" required>
+        <input type="text" name="room_number" value="{{ $value('room_number') }}" maxlength="20" class="crud-control" required>
     </x-ui.form-field>
     <x-ui.form-field label="Telpas nosaukums" name="room_name">
-        <input type="text" name="room_name" value="{{ $value('room_name') }}" class="crud-control">
+        <input type="text" name="room_name" value="{{ $value('room_name') }}" maxlength="100" class="crud-control">
     </x-ui.form-field>
     <x-ui.form-field label="Atbildīgais lietotājs" name="user_id">
         <x-searchable-select
@@ -65,9 +65,9 @@
         />
     </x-ui.form-field>
     <x-ui.form-field label="Nodaļa" name="department">
-        <input type="text" name="department" value="{{ $value('department') }}" class="crud-control">
+        <input type="text" name="department" value="{{ $value('department') }}" maxlength="100" class="crud-control">
     </x-ui.form-field>
     <x-ui.form-field class="md:col-span-2" label="Piezīmes" name="notes">
-        <textarea name="notes" rows="3" class="crud-control">{{ $value('notes') }}</textarea>
+        <textarea name="notes" rows="3" maxlength="200" class="crud-control">{{ $value('notes') }}</textarea>
     </x-ui.form-field>
 </div>

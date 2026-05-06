@@ -105,16 +105,16 @@
 
                     <div class="grid gap-4 md:grid-cols-2">
                         <x-ui.form-field class="md:col-span-2" label="Vārds un uzvārds" name="full_name" :required="true">
-                            <input type="text" name="full_name" value="{{ $fieldValue('full_name', $user?->full_name) }}" class="crud-control" required>
+                            <input type="text" name="full_name" value="{{ $fieldValue('full_name', $user?->full_name) }}" maxlength="100" class="crud-control" required>
                         </x-ui.form-field>
                         <x-ui.form-field label="E-pasts" name="email" :required="true">
-                            <input type="email" name="email" value="{{ $fieldValue('email', $user?->email) }}" class="crud-control" required>
+                            <input type="email" name="email" value="{{ $fieldValue('email', $user?->email) }}" maxlength="100" class="crud-control" required>
                         </x-ui.form-field>
                         <x-ui.form-field label="Tālrunis" name="phone">
-                            <input type="text" name="phone" value="{{ $fieldValue('phone', $user?->phone) }}" class="crud-control">
+                            <input type="tel" name="phone" value="{{ $fieldValue('phone', $user?->phone) }}" maxlength="100" class="crud-control">
                         </x-ui.form-field>
                         <x-ui.form-field class="md:col-span-2" label="Amats" name="job_title">
-                            <input type="text" name="job_title" value="{{ $fieldValue('job_title', $user?->job_title) }}" class="crud-control">
+                            <input type="text" name="job_title" value="{{ $fieldValue('job_title', $user?->job_title) }}" maxlength="100" class="crud-control">
                         </x-ui.form-field>
                     </div>
                 </section>
@@ -154,10 +154,10 @@
                         </label>
                         <x-ui.form-field label="{{ $isEdit ? 'Jauna parole' : 'Parole' }}" name="password" :required="! $isEdit">
                             {{-- Izveidojot lietotāju parole ir obligāta; rediģējot tukša parole nozīmē "nemainīt esošo paroli". --}}
-                            <input type="password" name="password" class="crud-control" @required(! $isEdit)>
+                            <input type="password" name="password" minlength="6" class="crud-control" @required(! $isEdit)>
                         </x-ui.form-field>
                         <x-ui.form-field label="Apstiprināt paroli" name="password_confirmation" :required="! $isEdit">
-                            <input type="password" name="password_confirmation" class="crud-control" @required(! $isEdit)>
+                            <input type="password" name="password_confirmation" minlength="6" class="crud-control" @required(! $isEdit)>
                         </x-ui.form-field>
                     </div>
                 </section>

@@ -1292,7 +1292,7 @@ SQL;
                 'room_id' => [Rule::requiredIf($requiresAssignmentAndRoom), 'nullable', 'exists:rooms,id'],
                 'assigned_to_id' => [Rule::requiredIf($requiresAssignmentAndRoom), 'nullable', 'exists:users,id'],
                 'purchase_date' => ['nullable', 'date'],
-                'purchase_price' => ['nullable', 'numeric', 'min:0'],
+                'purchase_price' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
                 'warranty_until' => ['nullable', 'date'],
                 'serial_number' => ['nullable', 'string', 'max:100'],
                 'manufacturer' => ['nullable', 'string', 'max:100'],
@@ -1308,6 +1308,7 @@ SQL;
                 'assigned_to_id.required' => 'Izvēlies atbildīgo personu.',
                 'room_id.required' => 'Izvēlies telpu.',
                 'purchase_price.min' => 'Iegādes cenai jābūt 0 vai lielākai.',
+                'purchase_price.max' => 'Iegādes cena nedrīkst pārsniegt 99 999 999,99.',
                 'notes.max' => 'Piezīmes nedrīkst pārsniegt 2000 rakstzīmes.',
             ]
         );
