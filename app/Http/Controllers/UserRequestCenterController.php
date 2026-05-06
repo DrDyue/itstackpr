@@ -50,42 +50,55 @@ class UserRequestCenterController extends Controller
     {
         $user = $this->requireRegularUser();
 
-        // Viena forma apkalpo trīs pieteikumu veidus, tāpēc katra apraksta lauka
-        // obligātums ir atkarīgs no izvēlētā request_type.
-        $validated = $this->validateInput($request, [
-            'request_type' => ['required', Rule::in(['repair', 'writeoff', 'transfer'])],
-            'device_id' => ['required', 'exists:devices,id'],
-            'description' => [Rule::requiredIf(fn () => $request->input('request_type') === 'repair'), 'nullable', 'string', 'min:10', 'max:2000'],
-            'reason' => [Rule::requiredIf(fn () => $request->input('request_type') === 'writeoff'), 'nullable', 'string', 'min:10', 'max:2000'],
-            'transfered_to_id' => [Rule::requiredIf(fn () => $request->input('request_type') === 'transfer'), 'nullable', 'exists:users,id', Rule::notIn([$user->id])],
-            'transfer_reason' => [Rule::requiredIf(fn () => $request->input('request_type') === 'transfer'), 'nullable', 'string', 'min:10', 'max:2000'],
-        ], [
-            'request_type.required' => 'Izvēlies pieteikuma tipu.',
-            'description.required' => 'Apraksti remonta problēmu.',
-            'description.min' => 'Aprakstam jābūt vismaz 10 rakstzīmēm.',
-            'description.max' => 'Apraksts nedrīkst pārsniegt 2000 rakstzīmes.',
-            'reason.required' => 'Apraksti norakstīšanas iemeslu.',
-            'reason.min' => 'Iemeslam jābūt vismaz 10 rakstzīmēm.',
-            'reason.max' => 'Iemesls nedrīkst pārsniegt 2000 rakstzīmes.',
-            'transfered_to_id.required' => 'Izvēlies lietotāju, kam nodot ierīci.',
-            'transfered_to_id.not_in' => 'Nevar nodot ierīci sev pašam.',
-            'transfer_reason.required' => 'Apraksti nodošanas iemeslu.',
-            'transfer_reason.min' => 'Iemeslam jābūt vismaz 10 rakstzīmēm.',
-            'transfer_reason.max' => 'Iemesls nedrīkst pārsniegt 2000 rakstzīmes.',
-        ]);
-
-        // Lietotājs drīkst veidot pieteikumu tikai savai aktīvajai ierīcei, kas
-        // vēl nav norakstīta un nav paslēpta ar pieejamības nosacījumiem.
-        $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
-        if (! $device) {
-            throw ValidationException::withMessages([
-                'device_id' => ['Vari veidot pieteikumus tikai savai aktīvajai ierīcei.'],
+        try {
+            // Viena forma apkalpo trīs pieteikumu veidus, tāpēc katra apraksta lauka
+            // obligātums ir atkarīgs no izvēlētā request_type.
+            $validated = $this->validateInput($request, [
+                'request_type' => ['required', Rule::in(['repair', 'writeoff', 'transfer'])],
+                'device_id' => ['required', 'exists:devices,id'],
+                'description' => [Rule::requiredIf(fn () => $request->input('request_type') === 'repair'), 'nullable', 'string', 'min:10', 'max:2000'],
+                'reason' => [Rule::requiredIf(fn () => $request->input('request_type') === 'writeoff'), 'nullable', 'string', 'min:10', 'max:2000'],
+                'transfered_to_id' => [Rule::requiredIf(fn () => $request->input('request_type') === 'transfer'), 'nullable', 'exists:users,id', Rule::notIn([$user->id])],
+                'transfer_reason' => [Rule::requiredIf(fn () => $request->input('request_type') === 'transfer'), 'nullable', 'string', 'min:10', 'max:2000'],
+            ], [
+                'request_type.required' => 'Izvēlies pieteikuma tipu.',
+                'description.required' => 'Apraksti remonta problēmu.',
+                'description.min' => 'Aprakstam jābūt vismaz 10 rakstzīmēm.',
+                'description.max' => 'Apraksts nedrīkst pārsniegt 2000 rakstzīmes.',
+                'reason.required' => 'Apraksti norakstīšanas iemeslu.',
+                'reason.min' => 'Iemeslam jābūt vismaz 10 rakstzīmēm.',
+                'reason.max' => 'Iemesls nedrīkst pārsniegt 2000 rakstzīmes.',
+                'transfered_to_id.required' => 'Izvēlies lietotāju, kam nodot ierīci.',
+                'transfered_to_id.not_in' => 'Nevar nodot ierīci sev pašam.',
+                'transfer_reason.required' => 'Apraksti nodošanas iemeslu.',
+                'transfer_reason.min' => 'Iemeslam jābūt vismaz 10 rakstzīmēm.',
+                'transfer_reason.max' => 'Iemesls nedrīkst pārsniegt 2000 rakstzīmes.',
             ]);
-        }
 
-        // Pirms ieraksta izveides pārbaudām, vai nav cita aktīva pieteikuma,
-        // kas bloķē remonta, norakstīšanas vai nodošanas sākšanu.
-        $this->ensureDeviceCanAcceptRequest($device, $validated['request_type']);
+            // Lietotājs drīkst veidot pieteikumu tikai savai aktīvajai ierīcei, kas
+            // vēl nav norakstīta un nav paslēpta ar pieejamības nosacījumiem.
+            $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
+            if (! $device) {
+                throw ValidationException::withMessages([
+                    'device_id' => ['Vari veidot pieteikumus tikai savai aktīvajai ierīcei.'],
+                ]);
+            }
+
+            // Pirms ieraksta izveides pārbaudām, vai nav cita aktīva pieteikuma,
+            // kas bloķē remonta, norakstīšanas vai nodošanas sākšanu.
+            $this->ensureDeviceCanAcceptRequest($device, $validated['request_type']);
+        } catch (ValidationException $exception) {
+            $requestType = in_array($request->input('request_type'), ['repair', 'writeoff', 'transfer'], true)
+                ? (string) $request->input('request_type')
+                : 'repair';
+            $routeName = match ($requestType) {
+                'writeoff' => 'writeoff-requests.index',
+                'transfer' => 'device-transfers.index',
+                default => 'repair-requests.index',
+            };
+
+            return $this->redirectRequestValidationException($request, $exception, $routeName, $requestType);
+        }
 
         // Tālāk pēc pieprasījuma tipa izveidojam konkrētās tabulas ierakstu un
         // lietotāju pārvirzām uz atbilstošo pieteikumu sadaļu.

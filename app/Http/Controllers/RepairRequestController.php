@@ -271,24 +271,28 @@ class RepairRequestController extends Controller
             return redirect()->route('repair-requests.index')->with('error', 'Remonta pieteikumus šobrīd nevar saglabāt, jo tabula repair_requests nav pieejama.');
         }
 
-        $validated = $this->validateInput($request, [
-            'device_id' => ['required', 'exists:devices,id'],
-            'description' => ['required', 'string', 'min:10', 'max:2000'],
-        ], [
-            'device_id.required' => 'Izvēlies ierīci, kurai piesaki remontu.',
-            'description.required' => 'Apraksti remonta problēmu.',
-            'description.min' => 'Aprakstam jābūt vismaz 10 rakstzīmēm.',
-            'description.max' => 'Apraksts nedrīkst pārsniegt 2000 rakstzīmes.',
-        ]);
-
-        $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
-        if (! $device) {
-            throw ValidationException::withMessages([
-                'device_id' => ['Vari pieteikt remontu tikai savai piesaistītai ierīcei.'],
+        try {
+            $validated = $this->validateInput($request, [
+                'device_id' => ['required', 'exists:devices,id'],
+                'description' => ['required', 'string', 'min:10', 'max:2000'],
+            ], [
+                'device_id.required' => 'Izvēlies ierīci, kurai piesaki remontu.',
+                'description.required' => 'Apraksti remonta problēmu.',
+                'description.min' => 'Aprakstam jābūt vismaz 10 rakstzīmēm.',
+                'description.max' => 'Apraksts nedrīkst pārsniegt 2000 rakstzīmes.',
             ]);
-        }
 
-        $this->ensureDeviceCanAcceptRepairRequest($device);
+            $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
+            if (! $device) {
+                throw ValidationException::withMessages([
+                    'device_id' => ['Vari pieteikt remontu tikai savai piesaistītai ierīcei.'],
+                ]);
+            }
+
+            $this->ensureDeviceCanAcceptRepairRequest($device);
+        } catch (ValidationException $exception) {
+            return $this->redirectRequestValidationException($request, $exception, 'repair-requests.index', 'repair');
+        }
 
         $repairRequest = RepairRequest::create([
             'device_id' => $device->id,

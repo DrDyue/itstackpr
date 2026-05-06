@@ -242,7 +242,12 @@ class RepairController extends Controller
             return redirect()->route('repairs.index')->with('error', 'Remontus šobrīd nevar saglabāt, jo tabula repairs nav pieejama.');
         }
 
-        $validated = $this->validatedData($request);
+        try {
+            $validated = $this->validatedData($request);
+        } catch (ValidationException $exception) {
+            return $this->redirectRepairValidationException($request, $exception);
+        }
+
         $validated['accepted_by'] = $manager->id;
 
         $repair = $this->createRepairRecord($validated);
@@ -287,7 +292,12 @@ class RepairController extends Controller
             'request_id',
         ]);
 
-        $repair->update($this->validatedData($request, $repair));
+        try {
+            $repair->update($this->validatedData($request, $repair));
+        } catch (ValidationException $exception) {
+            return $this->redirectRepairValidationException($request, $exception, $repair);
+        }
+
         $repair->load(['device', 'executor', 'acceptedBy', 'request.responsibleUser', 'request.reviewedBy']);
         $this->syncDeviceStatus($repair, $before['status'] ?? null);
 
@@ -603,6 +613,29 @@ class RepairController extends Controller
         }
 
         return $validated;
+    }
+
+    /**
+     * Ko dara: Pēc remonta formas validācijas kļūdas atver atpakaļ pareizo remonta modāli.
+     *
+     * Kā strādā: Manuālās biznesa validācijas kļūdas pārvērš redirectā uz `repairs.index`
+     * ar `modal_form` un query signālu, lai Blade atver create vai konkrētā remonta edit modāli.
+     *
+     * Kad pielietojas: `store()` un `update()` kļūdu apstrādē.
+     */
+    private function redirectRepairValidationException(Request $request, ValidationException $exception, ?Repair $repair = null)
+    {
+        $modalForm = (string) $request->input('modal_form', $repair ? 'repair_edit_'.$repair->id : 'repair_create');
+        $query = str_starts_with($modalForm, 'repair_edit_') && $repair
+            ? ['repair_modal' => 'edit', 'modal_repair' => $repair->id]
+            : ['repair_modal' => 'create'];
+
+        return redirect()
+            ->route('repairs.index', $query)
+            ->withErrors($exception->errors())
+            ->withInput(array_merge($request->all(), [
+                'modal_form' => $modalForm,
+            ]));
     }
 
     /**

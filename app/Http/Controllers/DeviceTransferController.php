@@ -282,49 +282,53 @@ class DeviceTransferController extends Controller
             return redirect()->route('device-transfers.index')->with('error', 'Ierīču nodošanas pieteikumus šobrīd nevar saglabāt, jo tabula device_transfers nav pieejama.');
         }
 
-        // Validācija nodrošina, ka ir izvēlēta ierīce, cits saņēmējs un norādīts
-        // nodošanas iemesls, ko vēlāk redz gan vadītājs, gan saņēmējs.
-        $validated = $this->validateInput($request, [
-            'device_id' => ['required', 'exists:devices,id'],
-            'transfered_to_id' => ['required', 'exists:users,id', Rule::notIn([$user->id])],
-            'transfer_reason' => ['required', 'string', 'min:10', 'max:2000'],
-        ], [
-            'device_id.required' => 'Izvēlies ierīci, kuru vēlies nodot.',
-            'transfered_to_id.required' => 'Izvēlies saņēmēju.',
-            'transfer_reason.required' => 'Apraksti nodošanas iemeslu.',
-            'transfer_reason.min' => 'Iemeslam jābūt vismaz 10 rakstzīmēm.',
-            'transfer_reason.max' => 'Iemesls nedrīkst pārsniegt 2000 rakstzīmes.',
-        ]);
-
-        // Ierīci meklējam tikai starp lietotājam pieejamajām aktīvajām ierīcēm,
-        // lai nevarētu pieteikt svešas vai norakstītas ierīces nodošanu.
-        $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
-        if (! $device) {
-            throw ValidationException::withMessages([
-                'device_id' => [$user->canManageRequests()
-                    ? 'Admins var pieteikt nodošanu tikai aktīvai un piešķirtai ierīcei.'
-                    : 'Vari pieteikt nodošanu tikai savai piesaistītai ierīcei.'],
+        try {
+            // Validācija nodrošina, ka ir izvēlēta ierīce, cits saņēmējs un norādīts
+            // nodošanas iemesls, ko vēlāk redz gan vadītājs, gan saņēmējs.
+            $validated = $this->validateInput($request, [
+                'device_id' => ['required', 'exists:devices,id'],
+                'transfered_to_id' => ['required', 'exists:users,id', Rule::notIn([$user->id])],
+                'transfer_reason' => ['required', 'string', 'min:10', 'max:2000'],
+            ], [
+                'device_id.required' => 'Izvēlies ierīci, kuru vēlies nodot.',
+                'transfered_to_id.required' => 'Izvēlies saņēmēju.',
+                'transfer_reason.required' => 'Apraksti nodošanas iemeslu.',
+                'transfer_reason.min' => 'Iemeslam jābūt vismaz 10 rakstzīmēm.',
+                'transfer_reason.max' => 'Iemesls nedrīkst pārsniegt 2000 rakstzīmes.',
             ]);
-        }
 
-        // Nodošanas pieteikuma atbildīgais ir pašreizējais īpašnieks; vadītāja
-        // gadījumā to nosakām pēc pašas ierīces piesaistes.
-        $ownerId = $this->transferOwnerId($user, $device);
-        if (! $ownerId) {
-            throw ValidationException::withMessages([
-                'device_id' => ['Izvēlētajai ierīcei nav piešķirta atbildīgā persona.'],
-            ]);
-        }
+            // Ierīci meklējam tikai starp lietotājam pieejamajām aktīvajām ierīcēm,
+            // lai nevarētu pieteikt svešas vai norakstītas ierīces nodošanu.
+            $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
+            if (! $device) {
+                throw ValidationException::withMessages([
+                    'device_id' => [$user->canManageRequests()
+                        ? 'Admins var pieteikt nodošanu tikai aktīvai un piešķirtai ierīcei.'
+                        : 'Vari pieteikt nodošanu tikai savai piesaistītai ierīcei.'],
+                ]);
+            }
 
-        if ((int) $validated['transfered_to_id'] === (int) $ownerId) {
-            throw ValidationException::withMessages([
-                'transfered_to_id' => ['Saņēmējs nevar būt tas pats lietotājs, kam ierīce jau ir piešķirta.'],
-            ]);
-        }
+            // Nodošanas pieteikuma atbildīgais ir pašreizējais īpašnieks; vadītāja
+            // gadījumā to nosakām pēc pašas ierīces piesaistes.
+            $ownerId = $this->transferOwnerId($user, $device);
+            if (! $ownerId) {
+                throw ValidationException::withMessages([
+                    'device_id' => ['Izvēlētajai ierīcei nav piešķirta atbildīgā persona.'],
+                ]);
+            }
 
-        // Pārliecināmies, ka ierīcei jau nav cita aktīva pieprasījuma, kas
-        // konfliktētu ar nodošanu.
-        $this->ensureDeviceCanAcceptTransferRequest($device);
+            if ((int) $validated['transfered_to_id'] === (int) $ownerId) {
+                throw ValidationException::withMessages([
+                    'transfered_to_id' => ['Saņēmējs nevar būt tas pats lietotājs, kam ierīce jau ir piešķirta.'],
+                ]);
+            }
+
+            // Pārliecināmies, ka ierīcei jau nav cita aktīva pieprasījuma, kas
+            // konfliktētu ar nodošanu.
+            $this->ensureDeviceCanAcceptTransferRequest($device);
+        } catch (ValidationException $exception) {
+            return $this->redirectRequestValidationException($request, $exception, 'device-transfers.index', 'transfer');
+        }
 
         $transfer = DeviceTransfer::create([
             'device_id' => $device->id,

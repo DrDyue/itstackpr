@@ -271,24 +271,28 @@ class WriteoffRequestController extends Controller
             return redirect()->route('writeoff-requests.index')->with('error', 'Norakstīšanas pieteikumus šobrīd nevar saglabāt, jo tabula writeoff_requests nav pieejama.');
         }
 
-        $validated = $this->validateInput($request, [
-            'device_id' => ['required', 'exists:devices,id'],
-            'reason' => ['required', 'string', 'min:10', 'max:2000'],
-        ], [
-            'device_id.required' => 'Izvēlies ierīci, kuru vēlies norakstīt.',
-            'reason.required' => 'Apraksti norakstīšanas iemeslu.',
-            'reason.min' => 'Iemeslam jābūt vismaz 10 rakstzīmēm.',
-            'reason.max' => 'Iemesls nedrīkst pārsniegt 2000 rakstzīmes.',
-        ]);
-
-        $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
-        if (! $device) {
-            throw ValidationException::withMessages([
-                'device_id' => ['Vari pieteikt norakstīšanu tikai savai piesaistītai ierīcei.'],
+        try {
+            $validated = $this->validateInput($request, [
+                'device_id' => ['required', 'exists:devices,id'],
+                'reason' => ['required', 'string', 'min:10', 'max:2000'],
+            ], [
+                'device_id.required' => 'Izvēlies ierīci, kuru vēlies norakstīt.',
+                'reason.required' => 'Apraksti norakstīšanas iemeslu.',
+                'reason.min' => 'Iemeslam jābūt vismaz 10 rakstzīmēm.',
+                'reason.max' => 'Iemesls nedrīkst pārsniegt 2000 rakstzīmes.',
             ]);
-        }
 
-        $this->ensureDeviceCanAcceptWriteoffRequest($device);
+            $device = $this->availableDevicesForUser($user)->find($validated['device_id']);
+            if (! $device) {
+                throw ValidationException::withMessages([
+                    'device_id' => ['Vari pieteikt norakstīšanu tikai savai piesaistītai ierīcei.'],
+                ]);
+            }
+
+            $this->ensureDeviceCanAcceptWriteoffRequest($device);
+        } catch (ValidationException $exception) {
+            return $this->redirectRequestValidationException($request, $exception, 'writeoff-requests.index', 'writeoff');
+        }
 
         $writeoffRequest = WriteoffRequest::create([
             'device_id' => $device->id,

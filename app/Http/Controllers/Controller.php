@@ -9,6 +9,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Ko dara: Nodrošina kopīgās palīgmetodes visiem Laravel kontrolieriem projektā.
@@ -113,6 +114,23 @@ abstract class Controller
             array_merge($this->validationMessages(), $messages),
             array_merge($this->validationAttributes(), $attributes)
         )->validate();
+    }
+
+    /**
+     * Ko dara: Atgriež pieteikuma formas validācijas kļūdas uz pareizo sarakstu ar atvērtu modāli.
+     *
+     * Kā strādā: Saglabā visu ievadi, piespiedu kārtā pieliek `request_form_type`, un ar kļūdām novirza uz attiecīgo pieteikumu sarakstu.
+     *
+     * Kad pielietojas: Remonta, norakstīšanas un nodošanas pieteikumu izveidē, ja biznesa validācija neizdodas pēc pamata validācijas.
+     */
+    protected function redirectRequestValidationException(Request $request, ValidationException $exception, string $routeName, string $requestType)
+    {
+        return redirect()
+            ->route($routeName)
+            ->withErrors($exception->errors())
+            ->withInput(array_merge($request->all(), [
+                'request_form_type' => $requestType,
+            ]));
     }
 
     /**

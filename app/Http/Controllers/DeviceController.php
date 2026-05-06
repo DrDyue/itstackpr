@@ -800,11 +800,15 @@ SQL;
     {
         $user = $this->requireManager();
 
-        $device = new Device();
-        $this->saveDevicePayload($device, array_merge(
-            $this->validatedData($request),
-            ['created_by' => $user->id]
-        ));
+        try {
+            $device = new Device();
+            $this->saveDevicePayload($device, array_merge(
+                $this->validatedData($request),
+                ['created_by' => $user->id]
+            ));
+        } catch (ValidationException $exception) {
+            return $this->redirectDeviceValidationException($request, $exception);
+        }
 
         $this->syncUploads($request, $device);
         $this->removeDeviceImage($request, $device);
@@ -983,7 +987,12 @@ SQL;
         // "jaunu" ierīci, ja ierīces forma saglabāta bez atbildīgā maiņas.
         $previousAssignedUserId = $device->assigned_to_id ? (int) $device->assigned_to_id : null;
 
-        $this->saveDevicePayload($device, $this->validatedData($request, $device));
+        try {
+            $this->saveDevicePayload($device, $this->validatedData($request, $device));
+        } catch (ValidationException $exception) {
+            return $this->redirectDeviceValidationException($request, $exception, $device);
+        }
+
         $this->syncUploads($request, $device);
         $this->removeDeviceImage($request, $device);
 
@@ -1381,6 +1390,29 @@ SQL;
         $data['device_image_url'] = $device?->device_image_url;
 
         return $data;
+    }
+
+    /**
+     * Ko dara: Pēc ierīces formas validācijas kļūdas atgriež lietotāju tieši tajā pašā modālī.
+     *
+     * Kā strādā: Saglabā ievadi sesijā, pievieno kļūdas un URL query ieliek modāļa atvēršanas signālu.
+     * Tas ir vajadzīgs arī manuāli mestām validācijas kļūdām pēc pamatvalidācijas, piemēram, datumu savstarpējai pārbaudei.
+     *
+     * Kad pielietojas: `store()` un `update()` kļūdu apstrādē.
+     */
+    private function redirectDeviceValidationException(Request $request, ValidationException $exception, ?Device $device = null)
+    {
+        $modalForm = (string) $request->input('modal_form', $device ? 'device_edit_'.$device->id : 'device_create');
+        $query = str_starts_with($modalForm, 'device_edit_') && $device
+            ? ['device_modal' => 'edit', 'modal_device' => $device->id]
+            : ['device_modal' => 'create'];
+
+        return redirect()
+            ->route('devices.index', $query)
+            ->withErrors($exception->errors())
+            ->withInput(array_merge($request->except('device_image'), [
+                'modal_form' => $modalForm,
+            ]));
     }
 
     /**
