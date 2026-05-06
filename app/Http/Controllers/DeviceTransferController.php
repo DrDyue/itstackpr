@@ -687,8 +687,6 @@ class DeviceTransferController extends Controller
     private function applyIndexFilters(Builder $query, array $filters, array $skip = []): Builder
     {
         $skipLookup = array_flip($skip);
-        $user = $this->user();
-        $canManageTransfers = $user?->canManageRequests() ?? false;
 
         // Precīzais koda filtrs tiek normalizēts uz mazajiem burtiem, lai atrastu
         // konkrēto ierīci arī tad, ja ievadē ir atšķirīgs reģistrs vai atstarpes.
@@ -749,21 +747,6 @@ class DeviceTransferController extends Controller
 
             if ($selectedStatuses !== [] && count($selectedStatuses) < 3) {
                 $query->whereIn('device_transfers.status', $selectedStatuses);
-
-                // Parastam lietotājam "submitted" statusā nedrīkst parādīties
-                // citu lietotāju nodošanas pieteikumi, ja tas nav ienākošo skats.
-                if (
-                    ! $canManageTransfers
-                    && ! $filters['incoming']
-                    && in_array(DeviceTransfer::STATUS_SUBMITTED, $selectedStatuses, true)
-                    && $user
-                ) {
-                    $query->where(function (Builder $visibilityQuery) use ($user) {
-                        $visibilityQuery
-                            ->where('device_transfers.status', '!=', DeviceTransfer::STATUS_SUBMITTED)
-                            ->orWhere('device_transfers.responsible_user_id', $user->id);
-                    });
-                }
             }
         }
 

@@ -217,55 +217,27 @@
                         </div>
                     </div>
 
-                    <div
-                        class="filter-toolbar-footer"
-                        x-data="{
-                            selected: Array.from(new Set((@js($filters['statuses']) ?? []).map((value) => String(value)))),
-                            incoming: @js($isIncomingFilter),
-                            isSelected(value) {
-                                return this.selected.includes(String(value));
-                            },
-                            toggleStatus(value) {
-                                const normalizedValue = String(value);
-
-                                // Statusa filtrs un incoming skats ir savstarpēji izslēdzoši.
-                                // Ja lietotājs izvēlas statusu, incoming režīmu noņemam,
-                                // lai backend nesaņemtu pretrunīgus filtra signālus.
-                                this.incoming = false;
-
-                                if (this.isSelected(normalizedValue)) {
-                                    this.selected = this.selected.filter((item) => item !== normalizedValue);
-                                    return;
-                                }
-
-                                this.selected = [normalizedValue];
-                            },
-                            toggleIncoming() {
-                                this.incoming = ! this.incoming;
-
-                                if (this.incoming) {
-                                    // Incoming skats apzināti notīra statusu čipus,
-                                    // jo tas jau pats definē šaurāku "gaida manu darbību" kontekstu.
-                                    this.selected = [];
-                                }
-                            },
-                        }"
-                    >
+                    <div class="filter-toolbar-footer">
                         <div class="quick-filter-groups">
                             @if (! $isAdmin)
+                                @php
+                                    $incomingBaseQuery = request()->except(['incoming', 'status', 'page', 'clear', 'highlight', 'highlight_mode', 'highlight_id']);
+                                    $incomingUrl = route('device-transfers.index', $isIncomingFilter
+                                        ? array_merge($incomingBaseQuery, ['statuses_filter' => 1])
+                                        : array_merge($incomingBaseQuery, ['incoming' => 1, 'statuses_filter' => 1]));
+                                @endphp
                                 <div class="quick-filter-group">
                                     <div class="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Ātrie filtri</div>
                                     <div class="quick-status-filters">
-                                        <button
-                                            type="button"
-                                            @click="toggleIncoming(); $nextTick(() => window.submitAsyncTableForm($el.closest('form'), { resetPage: true }))"
-                                            class="quick-status-filter quick-status-filter-sky"
-                                            :class="incoming ? 'quick-status-filter-active' : ''"
+                                        <a
+                                            href="{{ $incomingUrl }}"
+                                            data-async-link="true"
+                                            class="quick-status-filter quick-status-filter-sky {{ $isIncomingFilter ? 'quick-status-filter-active' : '' }}"
                                         >
                                             <x-icon name="transfer" size="h-4 w-4" />
                                             <span>Ienākošās nodošanas</span>
                                             <span class="quick-filter-count" x-text="livePendingCount">{{ $incomingPendingCount }}</span>
-                                        </button>
+                                        </a>
                                     </div>
                                 </div>
                             @endif
@@ -275,6 +247,11 @@
                                 <div class="quick-status-filters">
                                     @foreach ($statuses as $status)
                                         @php
+                                            $isActiveStatus = ! $isIncomingFilter && count($filters['statuses']) === 1 && ($filters['statuses'][0] ?? null) === $status;
+                                            $statusBaseQuery = request()->except(['status', 'incoming', 'page', 'clear', 'highlight', 'highlight_mode', 'highlight_id']);
+                                            $statusUrl = route('device-transfers.index', $isActiveStatus
+                                                ? array_merge($statusBaseQuery, ['statuses_filter' => 1])
+                                                : array_merge($statusBaseQuery, ['status' => [$status], 'statuses_filter' => 1]));
                                             $toneClass = $status === 'submitted'
                                                 ? 'quick-status-filter-amber'
                                                 : ($status === 'approved' ? 'quick-status-filter-emerald' : 'quick-status-filter-rose');
@@ -285,25 +262,16 @@
                                                 default => 'information-circle',
                                             };
                                         @endphp
-                                        <button
-                                            type="button"
-                                            @click="toggleStatus(@js($status)); $nextTick(() => window.submitAsyncTableForm($el.closest('form'), { resetPage: true }))"
-                                            class="quick-status-filter {{ $toneClass }}"
-                                            :class="isSelected(@js($status)) && !incoming ? 'quick-status-filter-active' : ''"
+                                        <a
+                                            href="{{ $statusUrl }}"
+                                            data-async-link="true"
+                                            class="quick-status-filter {{ $toneClass }} {{ $isActiveStatus ? 'quick-status-filter-active' : '' }}"
                                         >
                                             <x-icon :name="$iconName" size="h-4 w-4" />
                                             <span>{{ $statusLabels[$status] ?? $status }}</span>
-                                            <span class="quick-filter-count" @if($status === 'submitted') x-text="livePendingCount" @endif>{{ $transferSummary[$status] ?? 0 }}</span>
-                                        </button>
+                                            <span class="quick-filter-count">{{ $transferSummary[$status] ?? 0 }}</span>
+                                        </a>
                                     @endforeach
-
-                                    <template x-for="value in selected" :key="'device-transfer-status-' + value">
-                                        <input type="hidden" name="status[]" :value="value">
-                                    </template>
-
-                                    {{-- Hidden `incoming=1` tiek iesniegts tikai tad, kad incoming režīms ir aktīvs.
-                                         Tas ļauj vienu un to pašu backend endpoint izmantot diviem skatījumiem. --}}
-                                    <input x-bind:disabled="!incoming" type="hidden" name="incoming" value="1">
                                 </div>
                             </div>
                         </div>
