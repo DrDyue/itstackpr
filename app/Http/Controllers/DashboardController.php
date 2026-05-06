@@ -326,7 +326,7 @@ class DashboardController extends Controller
                 'pendingTransferRequest.responsibleUser:id,full_name',
                 'pendingTransferRequest.transferTo:id,full_name',
             ])
-            ->latest('id')
+            ->latest('devices.id')
             ->get();
 
         // UI stāvokļus sagatavojam pēc ierīces ID, lai Blade skats var ātri

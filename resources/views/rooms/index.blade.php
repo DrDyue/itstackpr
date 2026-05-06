@@ -9,6 +9,19 @@
 --}}
 <x-app-layout>
     @php
+        $sorting = $sorting ?? ['sort' => 'building_name', 'direction' => 'asc'];
+        $sortOptions = $sortOptions ?? [];
+        $sortDirectionLabels = ['asc' => 'augošajā secībā', 'desc' => 'dilstošajā secībā'];
+        $sortableHeaders = [
+            'building_name' => ['label' => 'Ēka'],
+            'floor_number' => ['label' => 'Stāvs'],
+            'room_number' => ['label' => 'Numurs'],
+            'room_name' => ['label' => 'Nosaukums'],
+            'department' => ['label' => 'Nodaļa'],
+            'responsible_user' => ['label' => 'Atbildīgais'],
+            'devices_count' => ['label' => 'Ierīces'],
+        ];
+
         // Searchable-select komponentēm sagatavojam vienotu `value/label/description/search` formātu.
         // Tas ļauj filtriem strādāt pēc ID, bet lietotājam rādīt cilvēkam saprotamu tekstu.
         $buildingOptions = $buildings->map(fn ($building) => [
@@ -68,8 +81,8 @@
         {{-- Telpu saraksta forma ir pilnvērtīgs GET filtrs un vienlaikus async tabulas avots. --}}
         <form method="GET" action="{{ route('rooms.index') }}" class="devices-filter-surface devices-filter-surface-elevated" data-async-table-form data-async-root="#rooms-index-root" data-search-endpoint="{{ route('rooms.find-by-name') }}">
             {{-- Kārtošanas hidden lauki tiek uzturēti vienādi ar citām sistēmas tabulām. --}}
-            <input type="hidden" name="sort" value="{{ $sorting['sort'] ?? 'id' }}" data-sort-hidden="field">
-            <input type="hidden" name="direction" value="{{ $sorting['direction'] ?? 'asc' }}" data-sort-hidden="direction">
+            <input type="hidden" name="sort" value="{{ $sorting['sort'] }}" data-sort-hidden="field">
+            <input type="hidden" name="direction" value="{{ $sorting['direction'] }}" data-sort-hidden="direction">
 
             <div class="devices-filter-header">
                 <div class="devices-filter-section">
@@ -170,13 +183,31 @@
             <table class="app-table-content app-table-content-compact min-w-full text-sm">
                 <thead class="app-table-head bg-slate-50 text-left text-slate-500">
                     <tr>
-                        <th class="px-4 py-3">Ēka</th>
-                        <th class="px-4 py-3">Stāvs</th>
-                        <th class="px-4 py-3">Numurs</th>
-                        <th class="px-4 py-3">Nosaukums</th>
-                        <th class="px-4 py-3">Nodaļa</th>
-                        <th class="px-4 py-3">Atbildīgais</th>
-                        <th class="px-4 py-3">Ierīces</th>
+                        @foreach ($sortableHeaders as $column => $header)
+                            @php
+                                $isCurrentSort = $sorting['sort'] === $column;
+                                $nextDirection = $isCurrentSort && $sorting['direction'] === 'asc' ? 'desc' : 'asc';
+                                $sortMessage = 'Tabula "Telpas" kārtota pēc ' . ($sortOptions[$column]['label'] ?? mb_strtolower($header['label'])) . ' ' . ($sortDirectionLabels[$nextDirection] ?? '');
+                            @endphp
+                            <th class="px-4 py-3">
+                                <button
+                                    type="button"
+                                    class="device-sort-trigger {{ $isCurrentSort ? 'device-sort-trigger-active' : '' }}"
+                                    data-sort-trigger="true"
+                                    data-sort-field="{{ $column }}"
+                                    data-sort-direction="{{ $nextDirection }}"
+                                    data-sort-toast="{{ $sortMessage }}"
+                                >
+                                    <span>{{ $header['label'] }}</span>
+                                    <span class="device-sort-icon" aria-hidden="true">
+                                        <svg class="h-[1.05em] w-[1.05em]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 9 3.75-3.75L15.75 9" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 15-3.75 3.75L8.25 15" />
+                                        </svg>
+                                    </span>
+                                </button>
+                            </th>
+                        @endforeach
                         <th class="px-4 py-3">Piezīmes</th>
                         <th class="px-4 py-3">Darbības</th>
                     </tr>

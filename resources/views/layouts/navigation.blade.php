@@ -220,7 +220,7 @@
                         <button
                             @click="open = ! open"
                             @click.outside="open = false"
-                            class="relative inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-sky-50 px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-sky-200 hover:from-sky-50 hover:to-white hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                            class="nav-notification-trigger relative inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-sky-50 px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-sky-200 hover:from-sky-50 hover:to-white hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
                         >
                             <x-icon name="mail" size="h-5 w-5" />
                             <span class="hidden sm:inline">Paziņojumi</span>
@@ -247,10 +247,10 @@
                             x-transition:leave="transition ease-in duration-150"
                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                             x-transition:leave-end="opacity-0 translate-y-2 scale-95"
-                            class="absolute right-0 z-50 mt-2 w-96 origin-top-right rounded-3xl border border-slate-200 bg-white shadow-2xl ring-1 ring-black/5 focus:outline-none"
+                            class="nav-notification-panel absolute right-0 z-50 mt-2 w-96 origin-top-right rounded-3xl border border-slate-200 bg-white shadow-2xl ring-1 ring-black/5 focus:outline-none"
                             x-cloak
                         >
-                            <div class="rounded-t-3xl border-b border-slate-100 bg-slate-50/50 px-5 py-4">
+                            <div class="nav-notification-panel-head rounded-t-3xl border-b border-slate-100 bg-slate-50/50 px-5 py-4">
                                 <div
                                     x-cloak
                                     x-show="readFeedbackVisible"
@@ -388,7 +388,7 @@
                                 @endif
                             </div>
 
-                            <div class="rounded-b-3xl border-t border-slate-100 bg-slate-50/50 px-5 py-3">
+                            <div class="nav-notification-panel-foot rounded-b-3xl border-t border-slate-100 bg-slate-50/50 px-5 py-3">
                                 @if (! $canManageRequests)
                                     <a href="{{ route('device-transfers.index') }}" class="flex items-center justify-between text-sm font-semibold text-sky-700 transition hover:text-sky-900">
                                         <span>Skatīt visus nodošanas pieteikumus</span>
@@ -403,7 +403,7 @@
                                         x-show="unreadCount > 0"
                                         x-transition.opacity
                                         :disabled="markingAllRead"
-                                        class="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800 disabled:cursor-wait disabled:opacity-70"
+                                        class="nav-notification-read-button mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800 disabled:cursor-wait disabled:opacity-70"
                                     >
                                         <x-icon name="check-circle" size="h-4 w-4" />
                                         Atzīmēt kā lasītu

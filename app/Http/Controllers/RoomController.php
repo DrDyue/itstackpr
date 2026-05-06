@@ -20,6 +20,16 @@ use Illuminate\Validation\Rule;
  */
 class RoomController extends Controller
 {
+    private const SORTABLE_COLUMNS = [
+        'building_name',
+        'floor_number',
+        'room_number',
+        'room_name',
+        'department',
+        'responsible_user',
+        'devices_count',
+    ];
+
     /**
      * Ko dara: Parāda telpu sarakstu ar filtriem, kopsavilkumu un meklēšanas opcijām.
      *
@@ -40,27 +50,29 @@ class RoomController extends Controller
             'floor_query' => trim((string) $request->query('floor_query', '')),
             'user_id' => trim((string) $request->query('user_id', '')),
         ];
+        $sorting = $this->resolveSorting($request);
 
         // Telpu sarakstā ielādējam ēku, atbildīgo un ierīču skaitu, jo šie dati
         // tiek rādīti tabulā bez papildu vaicājumiem katrai rindai.
-        $rooms = Room::query()
-            ->select(['id', 'building_id', 'floor_number', 'room_number', 'room_name', 'department', 'user_id', 'notes'])
+        $roomsQuery = Room::query()
+            ->select(['rooms.id', 'rooms.building_id', 'rooms.floor_number', 'rooms.room_number', 'rooms.room_name', 'rooms.department', 'rooms.user_id', 'rooms.notes'])
             ->with([
                 'building:id,building_name',
                 'user:id,full_name',
             ])
             ->withCount('devices')
-            ->when($filters['building_id'] !== '' && ctype_digit($filters['building_id']), fn (Builder $query) => $query->where('building_id', (int) $filters['building_id']))
-            ->when($filters['floor'] !== '' && is_numeric($filters['floor']), fn (Builder $query) => $query->where('floor_number', (int) $filters['floor']))
+            ->when($filters['building_id'] !== '' && ctype_digit($filters['building_id']), fn (Builder $query) => $query->where('rooms.building_id', (int) $filters['building_id']))
+            ->when($filters['floor'] !== '' && is_numeric($filters['floor']), fn (Builder $query) => $query->where('rooms.floor_number', (int) $filters['floor']))
             ->when($filters['floor'] === '' && $filters['floor_query'] !== '', function (Builder $query) use ($filters) {
                 if (is_numeric($filters['floor_query'])) {
-                    $query->where('floor_number', (int) $filters['floor_query']);
+                    $query->where('rooms.floor_number', (int) $filters['floor_query']);
                 }
             })
-            ->when($filters['user_id'] !== '' && ctype_digit($filters['user_id']), fn (Builder $query) => $query->where('user_id', (int) $filters['user_id']))
-            ->orderBy('building_id')
-            ->orderBy('floor_number')
-            ->orderBy('room_number')
+            ->when($filters['user_id'] !== '' && ctype_digit($filters['user_id']), fn (Builder $query) => $query->where('rooms.user_id', (int) $filters['user_id']));
+
+        $this->applySorting($roomsQuery, $sorting);
+
+        $rooms = $roomsQuery
             ->paginate(20)
             ->withQueryString();
 
@@ -76,6 +88,16 @@ class RoomController extends Controller
             ], "Filtr\u{0113}ts telpu saraksts.");
         }
 
+        if (($sorting['sort'] ?? 'building_name') !== 'building_name' || ($sorting['direction'] ?? 'asc') !== 'asc' || $request->has('sort')) {
+            AuditTrail::sort(
+                $this->user(),
+                'Room',
+                $this->sortOptions()[$sorting['sort']]['label'] ?? 'ēkas nosaukuma',
+                $sorting['direction'] ?? 'asc',
+                'Kārtots telpu saraksts pēc '.($this->sortOptions()[$sorting['sort']]['label'] ?? 'ēkas nosaukuma').' '.(($sorting['direction'] ?? 'asc') === 'asc' ? 'augošajā secībā' : 'dilstošajā secībā').'.'
+            );
+        }
+
         // Skatam atdodam gan lapoto sarakstu, gan izvēļņu vērtības filtru un
         // modālo logu aizpildīšanai.
         return view('rooms.index', [
@@ -84,6 +106,8 @@ class RoomController extends Controller
                 'total' => Room::query()->count(),
             ],
             'filters' => $filters,
+            'sorting' => $sorting,
+            'sortOptions' => $this->sortOptions(),
             'buildings' => Building::query()
                 ->select(['id', 'building_name', 'city', 'address'])
                 ->orderBy('building_name')
@@ -131,22 +155,25 @@ class RoomController extends Controller
             'floor_query' => trim((string) $request->query('floor_query', '')),
             'user_id' => trim((string) $request->query('user_id', '')),
         ];
+        $sorting = $this->resolveSorting($request);
 
         // Sarakstu sakārtojam tāpat kā index skatā, jo atrastais indekss nosaka
         // lapas numuru un rindas izcelšanu.
         $rooms = Room::query()
-            ->when($filters['building_id'] !== '' && ctype_digit($filters['building_id']), fn (Builder $query) => $query->where('building_id', (int) $filters['building_id']))
-            ->when($filters['floor'] !== '' && is_numeric($filters['floor']), fn (Builder $query) => $query->where('floor_number', (int) $filters['floor']))
+            ->select(['rooms.id', 'rooms.building_id', 'rooms.floor_number', 'rooms.room_number', 'rooms.room_name', 'rooms.department', 'rooms.user_id'])
+            ->withCount('devices')
+            ->when($filters['building_id'] !== '' && ctype_digit($filters['building_id']), fn (Builder $query) => $query->where('rooms.building_id', (int) $filters['building_id']))
+            ->when($filters['floor'] !== '' && is_numeric($filters['floor']), fn (Builder $query) => $query->where('rooms.floor_number', (int) $filters['floor']))
             ->when($filters['floor'] === '' && $filters['floor_query'] !== '', function (Builder $query) use ($filters) {
                 if (is_numeric($filters['floor_query'])) {
-                    $query->where('floor_number', (int) $filters['floor_query']);
+                    $query->where('rooms.floor_number', (int) $filters['floor_query']);
                 }
             })
-            ->when($filters['user_id'] !== '' && ctype_digit($filters['user_id']), fn (Builder $query) => $query->where('user_id', (int) $filters['user_id']))
-            ->orderBy('building_id')
-            ->orderBy('floor_number')
-            ->orderBy('room_number')
-            ->get(['id', 'room_number', 'room_name']);
+            ->when($filters['user_id'] !== '' && ctype_digit($filters['user_id']), fn (Builder $query) => $query->where('rooms.user_id', (int) $filters['user_id']));
+
+        $this->applySorting($rooms, $sorting);
+
+        $rooms = $rooms->get();
 
         // Meklējam gan pēc telpas numura, gan nosaukuma, jo lietotājs var ievadīt
         // jebkuru no šiem apzīmējumiem.
@@ -280,6 +307,84 @@ class RoomController extends Controller
         $data['notes'] = $data['notes'] ?: null;
 
         return $data;
+    }
+
+    private function resolveSorting(Request $request): array
+    {
+        $sort = trim((string) $request->query('sort', 'building_name'));
+        $direction = trim((string) $request->query('direction', 'asc'));
+
+        if (! in_array($sort, self::SORTABLE_COLUMNS, true)) {
+            $sort = 'building_name';
+        }
+
+        if (! in_array($direction, ['asc', 'desc'], true)) {
+            $direction = 'asc';
+        }
+
+        return [
+            'sort' => $sort,
+            'direction' => $direction,
+        ];
+    }
+
+    private function sortOptions(): array
+    {
+        return [
+            'building_name' => ['label' => 'ēkas nosaukuma'],
+            'floor_number' => ['label' => 'stāva'],
+            'room_number' => ['label' => 'telpas numura'],
+            'room_name' => ['label' => 'telpas nosaukuma'],
+            'department' => ['label' => 'nodaļas'],
+            'responsible_user' => ['label' => 'atbildīgā'],
+            'devices_count' => ['label' => 'ierīču skaita'],
+        ];
+    }
+
+    private function applySorting(Builder $query, array $sorting): void
+    {
+        $direction = $sorting['direction'] ?? 'asc';
+
+        if (in_array($sorting['sort'] ?? 'building_name', ['building_name', 'responsible_user'], true)) {
+            $query
+                ->leftJoin('buildings as sortable_buildings', 'sortable_buildings.id', '=', 'rooms.building_id')
+                ->leftJoin('users as sortable_users', 'sortable_users.id', '=', 'rooms.user_id');
+        }
+
+        switch ($sorting['sort'] ?? 'building_name') {
+            case 'building_name':
+                $query->orderByRaw('LOWER(COALESCE(sortable_buildings.building_name, "")) '.$direction);
+                break;
+            case 'responsible_user':
+                $query->orderByRaw('LOWER(COALESCE(sortable_users.full_name, "")) '.$direction);
+                break;
+            case 'devices_count':
+                $query->orderBy('devices_count', $direction);
+                break;
+            case 'floor_number':
+                $query->orderBy('rooms.floor_number', $direction);
+                break;
+            case 'room_name':
+                $query->orderByRaw('LOWER(COALESCE(rooms.room_name, "")) '.$direction);
+                break;
+            case 'department':
+                $query->orderByRaw('LOWER(COALESCE(rooms.department, "")) '.$direction);
+                break;
+            case 'room_number':
+            default:
+                $query->orderByRaw('LOWER(COALESCE(rooms.room_number, "")) '.$direction);
+                break;
+        }
+
+        if (($sorting['sort'] ?? '') !== 'floor_number') {
+            $query->orderBy('rooms.floor_number');
+        }
+
+        if (($sorting['sort'] ?? '') !== 'room_number') {
+            $query->orderByRaw('LOWER(COALESCE(rooms.room_number, "")) asc');
+        }
+
+        $query->orderBy('rooms.id');
     }
 
 }
