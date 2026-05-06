@@ -85,6 +85,7 @@ class RepairController extends Controller
                 'sorting' => $sorting,
                 'sortOptions' => $this->sortOptions(),
                 'deviceOptions' => collect(),
+                'createDeviceOptions' => collect(),
                 'requesterOptions' => collect(),
                 'featureMessage' => 'Tabula repairs šobrīd nav pieejama.',
             ]);
@@ -104,6 +105,9 @@ class RepairController extends Controller
         $requesterOptions = $this->repairRequesterOptions(
             clone $this->applyIndexFilters(clone $baseQuery, $filters, ['requester_id'])
         );
+        $createDeviceOptions = $canManageRepairs
+            ? $this->deviceOptions($this->availableDevicesForCreate()->get())
+            : collect();
 
         $repairsQuery = (clone $baseQuery)
             ->with([
@@ -146,6 +150,7 @@ class RepairController extends Controller
             'sorting' => $sorting,
             'sortOptions' => $this->sortOptions(),
             'deviceOptions' => $deviceOptions,
+            'createDeviceOptions' => $createDeviceOptions,
             'requesterOptions' => $requesterOptions,
             'selectedModalRepair' => ctype_digit((string) $request->query('modal_repair'))
                 ? Repair::query()

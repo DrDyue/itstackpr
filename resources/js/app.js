@@ -313,6 +313,10 @@ document.addEventListener('submit', (event) => {
         return;
     }
 
+    if (form.dataset.appConfirmMessage && form.dataset.appConfirmBypass !== '1') {
+        return;
+    }
+
     appLoading.start();
 });
 

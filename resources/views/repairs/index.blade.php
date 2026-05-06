@@ -352,9 +352,9 @@
                     ['label' => 'Datuma lauks', 'value' => ($filters['date_from'] || $filters['date_to']) ? (($filters['date_field'] ?? 'start_date') === 'end_date' ? 'Beigu datums' : 'Sākuma datums') : null, 'remove' => ['date_field', 'date_from', 'date_to']],
                     ['label' => 'No datuma', 'value' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->format('d.m.Y') : null, 'remove' => 'date_from'],
                     ['label' => 'Līdz datumam', 'value' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->format('d.m.Y') : null, 'remove' => 'date_to'],
-                    ['label' => 'Statuss', 'value' => $activeStatusLabel, 'remove' => 'status'],
+                    ['label' => 'Statuss', 'value' => $activeStatusLabel, 'remove' => 'status', 'removeUrl' => route('repairs.index', array_merge(request()->except(['status', 'page', 'clear', 'highlight', 'highlight_mode', 'highlight_id']), ['statuses_filter' => '1']))],
                     ['label' => 'Prioritāte', 'value' => $activePriorityLabel, 'remove' => 'priorities'],
-                    ['label' => 'Remonta tips', 'value' => $activeTypeLabel ? $repairTypeLabels[$activeTypeLabel] ?? $activeTypeLabel : null, 'remove' => 'type'],
+                    ['label' => 'Remonta tips', 'value' => $activeTypeLabel ? $repairTypeLabels[$activeTypeLabel] ?? $activeTypeLabel : null, 'remove' => 'repair_type'],
                     ['label' => 'Piešķirts', 'value' => ($filters['mine'] ?? false) ? 'Man' : null, 'remove' => 'mine'],
                 ]"
                 :clear-url="route('repairs.index', ['statuses_filter' => '1'])"
@@ -592,7 +592,7 @@
                     'mode' => 'create',
                     'modalName' => 'repair-create-modal',
                     'repair' => null,
-                    'deviceOptions' => $deviceOptions,
+                    'deviceOptions' => $createDeviceOptions ?? collect(),
                     'priorities' => $priorities,
                     'statusLabels' => $statusLabels,
                     'priorityLabels' => $priorityLabels,

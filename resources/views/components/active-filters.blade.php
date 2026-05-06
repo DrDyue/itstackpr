@@ -20,7 +20,7 @@
         $query = request()->query();
         // Noņemot vienu filtru, apzināti notīrām arī `page` un `clear`,
         // lai lietotājs pēc URL pārbūves nonāktu konsekventā filtru stāvoklī no pirmās lapas.
-        foreach ([...$removeKeys, 'page', 'clear'] as $key) {
+        foreach ([...$removeKeys, 'page', 'clear', 'highlight', 'highlight_mode', 'highlight_id'] as $key) {
             unset($query[$key]);
         }
 

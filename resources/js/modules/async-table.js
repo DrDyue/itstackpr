@@ -281,7 +281,7 @@ const clearAsyncTableFormUi = (form, root) => {
     }
 
     form.querySelectorAll('input[type="text"], input[type="search"], input[type="number"], textarea').forEach((input) => {
-        if (input.matches('[data-sort-hidden], [data-async-manual="true"]')) {
+        if (input.matches('[data-sort-hidden]')) {
             return;
         }
 
@@ -1147,7 +1147,7 @@ const shouldRunManualSearch = (form, submitter) => {
         return true;
     }
 
-    return searchInput.value.trim() !== '';
+    return false;
 };
 
 // Pēc lapas ielādes vai async fragmenta nomaiņas pārbaudām URL highlight parametrus.

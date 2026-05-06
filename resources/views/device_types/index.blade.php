@@ -102,14 +102,6 @@
                 </div>
             </form>
 
-            @if (session('error'))
-                <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
-            @endif
-
-            @if (session('success'))
-                <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
-            @endif
-
             <div class="app-table-shell">
                 <div class="app-table-scroll rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
                     <table class="app-table-content app-table-content-compact min-w-full text-sm">
@@ -190,7 +182,11 @@
                                                     form-class="inline"
                                                     button-class="btn-danger"
                                                     :button-attributes="['aria-label' => 'Dzēst ' . $type->type_name]"
-                                                    onsubmit="return confirm('Dzēst ierīces tipu &quot;{{ e($type->type_name) }}&quot;?')"
+                                                    data-app-confirm-title="Dzēst ierīces tipu?"
+                                                    data-app-confirm-message="Vai tiešām dzēst ierīces tipu &quot;{{ e($type->type_name) }}&quot;?"
+                                                    data-app-confirm-accept="Jā, dzēst"
+                                                    data-app-confirm-cancel="Nē"
+                                                    data-app-confirm-tone="danger"
                                                 >
                                                     <x-icon name="trash" size="h-4 w-4" />
                                                     <span>Dzēst</span>
