@@ -7,6 +7,9 @@
     $defaultDeviceFilter = old('default_device_filter', $user?->defaultDeviceFilter() ?? \App\Models\User::DEVICE_FILTER_ALL);
     $notificationVisualMode = old('notification_visual_mode', $user?->notificationVisualMode() ?? \App\Models\User::NOTIFICATION_VISUAL_ANIMATED);
     $defaultRequestFilter = old('default_request_filter', $user?->defaultRequestFilter() ?? \App\Models\User::REQUEST_FILTER_SUBMITTED);
+    $isProfileInfoForm = old('profile_form') === 'profile_info';
+    $profileInfoValue = fn (string $field, mixed $default = null) => $isProfileInfoForm ? old($field, $default) : $default;
+    $profileInfoError = fn (string $field) => $isProfileInfoForm ? $errors->get($field) : [];
 @endphp
 
 @if ($user)
@@ -61,30 +64,31 @@
                 <form method="post" action="{{ route('profile.update') }}" class="space-y-6" @input="markDirty()" @change="markDirty()" @submit="handleSubmit()">
                     @csrf
                     @method('patch')
+                    <input type="hidden" name="profile_form" value="profile_info">
 
                     <div class="grid gap-5 md:grid-cols-2">
                         <div class="md:col-span-2">
                             <x-input-label for="profile_modal_full_name" value="Vārds un uzvārds" />
-                            <x-text-input id="profile_modal_full_name" name="full_name" type="text" class="mt-2 block w-full" :value="old('full_name', $user->full_name)" required autofocus autocomplete="name" x-ref="firstField" />
-                            <x-input-error class="mt-2" :messages="$errors->get('full_name')" />
+                            <x-text-input id="profile_modal_full_name" name="full_name" type="text" class="mt-2 block w-full" :value="$profileInfoValue('full_name', $user->full_name)" required autofocus autocomplete="name" x-ref="firstField" />
+                            <x-input-error class="mt-2" :messages="$profileInfoError('full_name')" />
                         </div>
 
                         <div>
                             <x-input-label for="profile_modal_email" value="E-pasts" />
-                            <x-text-input id="profile_modal_email" name="email" type="email" class="mt-2 block w-full" :value="old('email', $user->email)" required autocomplete="email" />
-                            <x-input-error class="mt-2" :messages="$errors->get('email')" />
+                            <x-text-input id="profile_modal_email" name="email" type="email" class="mt-2 block w-full" :value="$profileInfoValue('email', $user->email)" required autocomplete="email" />
+                            <x-input-error class="mt-2" :messages="$profileInfoError('email')" />
                         </div>
 
                         <div>
                             <x-input-label for="profile_modal_phone" value="Tālrunis" />
-                            <x-text-input id="profile_modal_phone" name="phone" type="text" class="mt-2 block w-full" :value="old('phone', $user->phone)" autocomplete="tel" />
-                            <x-input-error class="mt-2" :messages="$errors->get('phone')" />
+                            <x-text-input id="profile_modal_phone" name="phone" type="text" class="mt-2 block w-full" :value="$profileInfoValue('phone', $user->phone)" autocomplete="tel" />
+                            <x-input-error class="mt-2" :messages="$profileInfoError('phone')" />
                         </div>
 
                         <div class="md:col-span-2">
                             <x-input-label for="profile_modal_job_title" value="Amats" />
-                            <x-text-input id="profile_modal_job_title" name="job_title" type="text" class="mt-2 block w-full" :value="old('job_title', $user->job_title)" autocomplete="organization-title" />
-                            <x-input-error class="mt-2" :messages="$errors->get('job_title')" />
+                            <x-text-input id="profile_modal_job_title" name="job_title" type="text" class="mt-2 block w-full" :value="$profileInfoValue('job_title', $user->job_title)" autocomplete="organization-title" />
+                            <x-input-error class="mt-2" :messages="$profileInfoError('job_title')" />
                         </div>
                     </div>
 
@@ -355,7 +359,7 @@
         </x-modal>
     @endif
 
-    @if ($errors->isNotEmpty() && ! $errors->hasBag('updatePassword') && ! $errors->hasBag('profileSettings'))
+    @if ($isProfileInfoForm && $errors->isNotEmpty() && ! $errors->hasBag('updatePassword') && ! $errors->hasBag('profileSettings'))
         {{-- Pēc validācijas kļūdas parastajam profilam modāli atveram atkārtoti,
              lai lietotājs uzreiz redzētu kļūdas un nezaudētu ievades kontekstu. --}}
         <script>window.addEventListener('DOMContentLoaded', () => window.dispatchEvent(new CustomEvent('open-modal', { detail: 'profile-modal' })));</script>

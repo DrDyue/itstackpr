@@ -286,6 +286,7 @@
                                     $editUrl = $isCurrentUser
                                         ? route('profile.edit', ['profile_modal' => 'edit'])
                                         : route('users.index', ['user_modal' => 'edit', 'modal_user' => $managedUser->id]);
+                                    $editModalName = 'user-edit-modal-' . $managedUser->id;
                                 @endphp
                                 <tr id="user-{{ $managedUser->id }}" class="request-notification-target app-table-row border-t border-slate-100 align-top {{ $managedUser->password_reset_requested_at ? 'app-table-row-password-request' : ($managedUser->role === 'admin' ? 'app-table-row-accent-violet' : 'app-table-row-accent-sky') }}" data-table-row-id="user-{{ $managedUser->id }}" data-table-search-value="{{ \Illuminate\Support\Str::lower(trim((string) $managedUser->full_name)) }}" data-table-search-highlight-style="{{ $managedUser->password_reset_requested_at ? 'outline' : 'background' }}">
                                     <td class="px-4 py-4">
@@ -383,16 +384,30 @@
 
                                                 <div class="table-action-section">
                                                     <div class="table-action-section-title">Pārvaldība</div>
-                                                    <a href="{{ $editUrl }}" class="table-action-item table-action-item-amber" @click="closePanel()" @if (! $isCurrentUser) data-async-link="true" @endif>
-                                                        <x-icon name="edit" size="h-4 w-4" />
-                                                        <span>{{ $isCurrentUser ? 'Rediģēt profilu' : 'Rediģēt' }}</span>
-                                                    </a>
+                                                    @if ($isCurrentUser)
+                                                        <a href="{{ $editUrl }}" class="table-action-item table-action-item-amber" @click="closePanel()">
+                                                            <x-icon name="edit" size="h-4 w-4" />
+                                                            <span>Rediģēt profilu</span>
+                                                        </a>
+                                                    @else
+                                                        <button type="button" class="table-action-item table-action-item-amber" @click="closePanel(); $dispatch('open-modal', '{{ $editModalName }}')">
+                                                            <x-icon name="edit" size="h-4 w-4" />
+                                                            <span>Rediģēt</span>
+                                                        </button>
+                                                    @endif
 
                                                     @if ($managedUser->password_reset_requested_at)
-                                                        <a href="{{ $editUrl }}" class="table-action-item table-action-item-violet" @click="closePanel()" @if (! $isCurrentUser) data-async-link="true" @endif>
-                                                            <x-icon name="key" size="h-4 w-4" />
-                                                            <span>Mainīt paroli</span>
-                                                        </a>
+                                                        @if ($isCurrentUser)
+                                                            <a href="{{ $editUrl }}" class="table-action-item table-action-item-violet" @click="closePanel()">
+                                                                <x-icon name="key" size="h-4 w-4" />
+                                                                <span>Mainīt paroli</span>
+                                                            </a>
+                                                        @else
+                                                            <button type="button" class="table-action-item table-action-item-violet" @click="closePanel(); $dispatch('open-modal', '{{ $editModalName }}')">
+                                                                <x-icon name="key" size="h-4 w-4" />
+                                                                <span>Mainīt paroli</span>
+                                                            </button>
+                                                        @endif
                                                     @endif
 
                                                     <a href="{{ $assignedDevicesUrl }}" class="table-action-item" @click="closePanel()">

@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Ko dara: Pārvalda sistēmas lietotājus administratora skatā.
@@ -358,7 +359,15 @@ class UserController extends Controller
     {
         $this->requireAdmin();
 
-        $validated = $this->validatedData($request);
+        try {
+            $validated = $this->validatedData($request);
+        } catch (ValidationException $exception) {
+            return redirect()
+                ->route('users.index', ['user_modal' => 'create'])
+                ->withErrors($exception->validator)
+                ->withInput();
+        }
+
         // Administratora ievadīto sākotnējo paroli uzreiz pārvēršam hash vērtībā;
         // datubāzē glabājas tikai pārbaudei izmantojams paroles nospiedums.
         $validated['password'] = Hash::make($validated['password']);
