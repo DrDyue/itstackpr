@@ -445,6 +445,268 @@ const focusFirstValidationError = () => {
     }, 140);
 };
 
+const deviceValidationFieldLabels = {
+    code: 'Kods',
+    name: 'Nosaukums',
+    device_type_id: 'Tips',
+    model: 'Modelis',
+    status: 'Statuss',
+    assigned_to_id: 'Atbildīgā persona',
+    room_id: 'Telpa',
+    purchase_date: 'Iegādes datums',
+    purchase_price: 'Iegādes cena',
+    warranty_until: 'Garantija līdz',
+    serial_number: 'Sērijas numurs',
+    manufacturer: 'Ražotājs',
+    notes: 'Piezīmes',
+    device_image: 'Ierīces attēls',
+};
+
+const deviceTextLimits = {
+    code: 20,
+    name: 200,
+    model: 100,
+    serial_number: 100,
+    manufacturer: 100,
+    notes: 2000,
+};
+
+const getDeviceField = (form, fieldName) => form.querySelector(`[name="${CSS.escape(fieldName)}"]`);
+
+const getDeviceFieldValue = (form, fieldName) => {
+    const field = getDeviceField(form, fieldName);
+    return field ? String(field.value ?? '').trim() : '';
+};
+
+const isIsoDateValue = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00`));
+
+const addDeviceValidationError = (errors, field, message) => {
+    errors.push({
+        field,
+        label: deviceValidationFieldLabels[field] ?? field,
+        message,
+    });
+};
+
+const validateDeviceForm = (form) => {
+    const errors = [];
+
+    ['code', 'name', 'device_type_id', 'model', 'status'].forEach((field) => {
+        if (getDeviceFieldValue(form, field) === '') {
+            addDeviceValidationError(errors, field, `Aizpildi lauku "${deviceValidationFieldLabels[field]}".`);
+        }
+    });
+
+    Object.entries(deviceTextLimits).forEach(([field, max]) => {
+        const value = getDeviceFieldValue(form, field);
+        if (value.length > max) {
+            addDeviceValidationError(errors, field, `Lauks "${deviceValidationFieldLabels[field]}" nedrīkst būt garāks par ${max} rakstzīmēm.`);
+        }
+    });
+
+    const status = getDeviceFieldValue(form, 'status');
+    if (status !== '' && !['active', 'repair', 'writeoff'].includes(status)) {
+        addDeviceValidationError(errors, 'status', 'Izvēlies vienu no pieejamajiem ierīces statusiem.');
+    }
+
+    ['assigned_to_id', 'room_id'].forEach((field) => {
+        if (status !== 'writeoff' && getDeviceFieldValue(form, field) === '') {
+            addDeviceValidationError(errors, field, `Izvēlies vērtību laukā "${deviceValidationFieldLabels[field]}".`);
+        }
+    });
+
+    const price = getDeviceFieldValue(form, 'purchase_price');
+    if (price !== '') {
+        const normalizedPrice = Number(price.replace(',', '.'));
+        if (!Number.isFinite(normalizedPrice)) {
+            addDeviceValidationError(errors, 'purchase_price', 'Iegādes cenā ievadi skaitli.');
+        } else if (normalizedPrice < 0) {
+            addDeviceValidationError(errors, 'purchase_price', 'Iegādes cenai jābūt 0 vai lielākai.');
+        } else if (normalizedPrice > 99999999.99) {
+            addDeviceValidationError(errors, 'purchase_price', 'Iegādes cena nedrīkst pārsniegt 99 999 999,99.');
+        }
+    }
+
+    ['purchase_date', 'warranty_until'].forEach((field) => {
+        const value = getDeviceFieldValue(form, field);
+        if (value !== '' && !isIsoDateValue(value)) {
+            addDeviceValidationError(errors, field, `Laukā "${deviceValidationFieldLabels[field]}" ievadi derīgu datumu.`);
+        }
+    });
+
+    const purchaseDate = getDeviceFieldValue(form, 'purchase_date');
+    const warrantyUntil = getDeviceFieldValue(form, 'warranty_until');
+    if (isIsoDateValue(purchaseDate) && isIsoDateValue(warrantyUntil) && warrantyUntil < purchaseDate) {
+        addDeviceValidationError(errors, 'warranty_until', 'Garantijas datums nevar būt agrāks par iegādes datumu.');
+    }
+
+    const imageField = getDeviceField(form, 'device_image');
+    const imageFile = imageField?.files?.[0] ?? null;
+    if (imageFile) {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        const maxUploadKb = Number(form.dataset.maxUploadKb || 5120);
+        if (!allowedTypes.includes(imageFile.type)) {
+            addDeviceValidationError(errors, 'device_image', 'Ierīces attēlam jābūt JPG, PNG vai WEBP failam.');
+        }
+        if (Number.isFinite(maxUploadKb) && imageFile.size > maxUploadKb * 1024) {
+            addDeviceValidationError(errors, 'device_image', `Ierīces attēls nedrīkst būt lielāks par ${maxUploadKb} KB.`);
+        }
+    }
+
+    return errors;
+};
+
+const fieldWrapperForDeviceError = (form, fieldName) => {
+    const field = getDeviceField(form, fieldName);
+    if (!field) {
+        return null;
+    }
+
+    return field.closest('label') ?? field.closest('.searchable-select')?.parentElement ?? field.parentElement;
+};
+
+const focusDeviceValidationField = (form, fieldName) => {
+    const queryFieldFallbacks = {
+        device_type_id: 'device_type_query',
+        assigned_to_id: 'assigned_to_query',
+        room_id: 'room_query',
+        status: 'status_query',
+    };
+    const field = form.querySelector(`[name="${CSS.escape(fieldName)}"]:not([type="hidden"])`)
+        ?? (queryFieldFallbacks[fieldName]
+            ? form.querySelector(`[name="${CSS.escape(queryFieldFallbacks[fieldName])}"]`)
+            : null);
+
+    if (!field) {
+        return;
+    }
+
+    const scrollContainer = field.closest('.overflow-y-auto');
+    if (scrollContainer) {
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const fieldRect = field.getBoundingClientRect();
+        const nextTop = scrollContainer.scrollTop + (fieldRect.top - containerRect.top) - (containerRect.height / 2) + (fieldRect.height / 2);
+        scrollContainer.scrollTo({ top: Math.max(0, nextTop), behavior: 'smooth' });
+    } else {
+        field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    window.setTimeout(() => {
+        field.focus({ preventScroll: true });
+        if (typeof field.select === 'function' && field instanceof HTMLInputElement && field.type !== 'file') {
+            field.select();
+        }
+    }, 40);
+};
+
+const clearDeviceClientValidation = (form) => {
+    form.querySelectorAll('.device-client-validation-summary').forEach((summary) => summary.remove());
+    form.querySelectorAll('.device-client-validation-message').forEach((message) => message.remove());
+    form.querySelectorAll('.device-client-validation-error').forEach((wrapper) => {
+        wrapper.classList.remove('device-client-validation-error', 'form-field-error');
+    });
+};
+
+const renderDeviceClientValidation = (form, errors) => {
+    clearDeviceClientValidation(form);
+
+    const body = form.querySelector('.device-type-modal-body') ?? form;
+    const errorCount = errors.length;
+    const problemWord = errorCount === 1 ? 'problēma' : (errorCount >= 2 && errorCount <= 9 ? 'problēmas' : 'problēmu');
+    const summary = document.createElement('div');
+    summary.className = 'validation-summary device-client-validation-summary mb-5';
+    summary.setAttribute('role', 'alert');
+    summary.setAttribute('aria-live', 'polite');
+    summary.dataset.firstErrorField = errors[0]?.field ?? '';
+    summary.innerHTML = `
+        <div class="validation-summary-head">
+            <span class="validation-summary-icon">!</span>
+            <div>
+                <div class="validation-summary-title"></div>
+                <div class="validation-summary-subtitle">Atrastas ${errorCount} ${problemWord}. Izlabo atzīmētos laukus un saglabā vēlreiz.</div>
+            </div>
+        </div>
+        <div class="validation-summary-grid validation-summary-grid-single">
+            <div>
+                <div class="validation-summary-section">Kas jāizlabo</div>
+                <ul class="validation-summary-list"></ul>
+            </div>
+        </div>
+    `;
+    summary.querySelector('.validation-summary-title').textContent = form.dataset.validationTitle || 'Neizdevās saglabāt ierīci';
+
+    const list = summary.querySelector('.validation-summary-list');
+    errors.forEach((error) => {
+        const item = document.createElement('li');
+        const button = document.createElement('button');
+        const label = document.createElement('strong');
+        const message = document.createElement('span');
+
+        button.type = 'button';
+        button.className = 'validation-summary-link';
+        label.textContent = error.label;
+        message.textContent = error.message;
+        button.append(label, message);
+        button.addEventListener('click', () => focusDeviceValidationField(form, error.field));
+        item.append(button);
+        list.append(item);
+
+        const wrapper = fieldWrapperForDeviceError(form, error.field);
+        if (!wrapper) {
+            return;
+        }
+
+        wrapper.classList.add('form-field-error', 'device-client-validation-error');
+
+        if (!wrapper.querySelector('.device-client-validation-message')) {
+            const fieldMessage = document.createElement('div');
+            fieldMessage.className = 'form-field-error-message device-client-validation-message';
+            fieldMessage.textContent = error.message;
+            wrapper.append(fieldMessage);
+        }
+    });
+
+    body.prepend(summary);
+    window.dispatchAppToast?.({
+        tone: 'error',
+        title: 'Forma nav saglabāta',
+        message: `Ierīci nevar saglabāt, jo formā ir ${errorCount} ${problemWord}.`,
+        priority: 90,
+    });
+    window.setTimeout(() => focusDeviceValidationField(form, errors[0]?.field), 60);
+};
+
+document.addEventListener('submit', (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || form.dataset.deviceForm !== 'true') {
+        return;
+    }
+
+    const errors = validateDeviceForm(form);
+    if (errors.length === 0) {
+        clearDeviceClientValidation(form);
+        return;
+    }
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    renderDeviceClientValidation(form, errors);
+}, true);
+
+document.addEventListener('input', (event) => {
+    const form = event.target?.closest?.('form[data-device-form="true"]');
+    if (form) {
+        clearDeviceClientValidation(form);
+    }
+});
+
+document.addEventListener('change', (event) => {
+    const form = event.target?.closest?.('form[data-device-form="true"]');
+    if (form) {
+        clearDeviceClientValidation(form);
+    }
+});
+
 // Globālie helperi jāreģistrē pirms Alpine starta, jo Blade x-data var tos izmantot uzreiz.
 registerFeedbackGlobals();
 registerAsyncTableGlobals();

@@ -40,7 +40,16 @@
 @endphp
 
 <x-modal :name="$modalName" :show="$shouldUseOldInput && $errors->any()" maxWidth="6xl">
-    <form method="POST" action="{{ $action }}" enctype="multipart/form-data" class="flex max-h-[calc(100vh-2.5rem)] flex-col overflow-hidden">
+    <form
+        method="POST"
+        action="{{ $action }}"
+        enctype="multipart/form-data"
+        class="flex max-h-[calc(100vh-2.5rem)] flex-col overflow-hidden"
+        data-device-form="true"
+        data-validation-title="{{ $isEdit ? 'Neizdevās saglabāt ierīces izmaiņas' : 'Neizdevās izveidot ierīci' }}"
+        data-max-upload-kb="{{ (int) config('devices.max_upload_kb', 5120) }}"
+        novalidate
+    >
         @csrf
         @if ($isEdit)
             @method('PUT')
