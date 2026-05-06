@@ -46,7 +46,7 @@
 
             <div class="{{ $currentRepair ? 'lg:col-span-3' : 'lg:col-span-2' }}">
                 <x-ui.form-field label="Apraksts" name="description">
-                    <textarea name="description" rows="4" class="crud-control min-h-[7.5rem] {{ $errors->has('description') ? 'crud-control-error' : '' }}" x-model="description">{{ old('description', $currentRepair?->description) }}</textarea>
+                    <textarea name="description" rows="4" maxlength="2000" class="crud-control min-h-[7.5rem] {{ $errors->has('description') ? 'crud-control-error' : '' }}" x-model="description">{{ old('description', $currentRepair?->description) }}</textarea>
                 </x-ui.form-field>
             </div>
         </div>

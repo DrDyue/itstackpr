@@ -46,7 +46,7 @@
         <div class="grid gap-4 md:grid-cols-12">
             <label class="block md:col-span-7">
                 <span class="crud-label">Piezīmes</span>
-                <textarea name="notes" rows="4" class="crud-control device-notes-input">{{ $fieldValue('notes', $current?->notes) }}</textarea>
+                <textarea name="notes" rows="4" maxlength="2000" class="crud-control device-notes-input">{{ $fieldValue('notes', $current?->notes) }}</textarea>
             </label>
 
             <div class="device-image-field md:col-span-5">

@@ -287,11 +287,13 @@ class DeviceTransferController extends Controller
         $validated = $this->validateInput($request, [
             'device_id' => ['required', 'exists:devices,id'],
             'transfered_to_id' => ['required', 'exists:users,id', Rule::notIn([$user->id])],
-            'transfer_reason' => ['required', 'string'],
+            'transfer_reason' => ['required', 'string', 'min:10', 'max:2000'],
         ], [
             'device_id.required' => 'Izvēlies ierīci, kuru vēlies nodot.',
             'transfered_to_id.required' => 'Izvēlies saņēmēju.',
             'transfer_reason.required' => 'Apraksti nodošanas iemeslu.',
+            'transfer_reason.min' => 'Iemeslam jābūt vismaz 10 rakstzīmēm.',
+            'transfer_reason.max' => 'Iemesls nedrīkst pārsniegt 2000 rakstzīmes.',
         ]);
 
         // Ierīci meklējam tikai starp lietotājam pieejamajām aktīvajām ierīcēm,

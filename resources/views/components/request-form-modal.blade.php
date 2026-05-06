@@ -117,6 +117,8 @@
                     <textarea
                         name="description"
                         rows="5"
+                        minlength="10"
+                        maxlength="2000"
                         class="crud-control"
                         placeholder="Apraksti problēmu, kas jārisina..."
                         required
@@ -131,6 +133,8 @@
                     <textarea
                         name="reason"
                         rows="5"
+                        minlength="10"
+                        maxlength="2000"
                         class="crud-control"
                         placeholder="Norādi iemeslu norakstīšanai..."
                         required
@@ -167,6 +171,8 @@
                         <textarea
                             name="transfer_reason"
                             rows="5"
+                            minlength="10"
+                            maxlength="2000"
                             class="crud-control"
                             placeholder="Izskaidro, kāpēc nodot šo ierīci..."
                             required

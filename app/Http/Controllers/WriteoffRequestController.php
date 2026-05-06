@@ -273,10 +273,12 @@ class WriteoffRequestController extends Controller
 
         $validated = $this->validateInput($request, [
             'device_id' => ['required', 'exists:devices,id'],
-            'reason' => ['required', 'string'],
+            'reason' => ['required', 'string', 'min:10', 'max:2000'],
         ], [
             'device_id.required' => 'Izvēlies ierīci, kuru vēlies norakstīt.',
             'reason.required' => 'Apraksti norakstīšanas iemeslu.',
+            'reason.min' => 'Iemeslam jābūt vismaz 10 rakstzīmēm.',
+            'reason.max' => 'Iemesls nedrīkst pārsniegt 2000 rakstzīmes.',
         ]);
 
         $device = $this->availableDevicesForUser($user)->find($validated['device_id']);

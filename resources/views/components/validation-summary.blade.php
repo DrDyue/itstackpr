@@ -11,6 +11,10 @@
     $errorBag = $bag ?? $errors;
     $errorKeys = collect($errorBag->keys())->values();
     $firstErrorField = $focusFirstError ? $errorKeys->first() : null;
+    $errorCount = $errorBag->count();
+    $problemWord = $errorCount === 1
+        ? 'problēma'
+        : ($errorCount >= 2 && $errorCount <= 9 ? 'problēmas' : 'problēmu');
     // Kļūdas pārveidojam vienotā masīvā ar tehnisko lauka nosaukumu,
     // cilvēkam saprotamu label un pašu validācijas ziņu.
     $displayErrors = collect($errorBag->messages())
@@ -61,7 +65,7 @@
             <div>
                 <div class="validation-summary-title">{{ $title }}</div>
                 <div class="validation-summary-subtitle">
-                    Atrastas {{ $errorBag->count() }} {{ \Illuminate\Support\Str::plural('problēma', $errorBag->count()) }}. Izlabo atzīmētos laukus un saglabā vēlreiz.
+                    Atrastas {{ $errorCount }} {{ $problemWord }}. Izlabo atzīmētos laukus un saglabā vēlreiz.
                 </div>
             </div>
         </div>

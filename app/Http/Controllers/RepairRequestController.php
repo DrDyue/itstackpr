@@ -273,10 +273,12 @@ class RepairRequestController extends Controller
 
         $validated = $this->validateInput($request, [
             'device_id' => ['required', 'exists:devices,id'],
-            'description' => ['required', 'string'],
+            'description' => ['required', 'string', 'min:10', 'max:2000'],
         ], [
             'device_id.required' => 'Izvēlies ierīci, kurai piesaki remontu.',
             'description.required' => 'Apraksti remonta problēmu.',
+            'description.min' => 'Aprakstam jābūt vismaz 10 rakstzīmēm.',
+            'description.max' => 'Apraksts nedrīkst pārsniegt 2000 rakstzīmes.',
         ]);
 
         $device = $this->availableDevicesForUser($user)->find($validated['device_id']);

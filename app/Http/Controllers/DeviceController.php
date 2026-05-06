@@ -1296,7 +1296,7 @@ SQL;
                 'warranty_until' => ['nullable', 'date'],
                 'serial_number' => ['nullable', 'string', 'max:100'],
                 'manufacturer' => ['nullable', 'string', 'max:100'],
-                'notes' => ['nullable', 'string'],
+                'notes' => ['nullable', 'string', 'max:2000'],
                 'device_image' => ['nullable', 'image', 'max:'.(int) config('devices.max_upload_kb', 5120)],
             ],
             [
@@ -1308,6 +1308,7 @@ SQL;
                 'assigned_to_id.required' => 'Izvēlies atbildīgo personu.',
                 'room_id.required' => 'Izvēlies telpu.',
                 'purchase_price.min' => 'Iegādes cenai jābūt 0 vai lielākai.',
+                'notes.max' => 'Piezīmes nedrīkst pārsniegt 2000 rakstzīmes.',
             ]
         );
 

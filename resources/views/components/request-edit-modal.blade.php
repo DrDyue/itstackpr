@@ -99,7 +99,7 @@
                 <span class="crud-label">{{ $fieldLabel }}</span>
                 {{-- Drošības un biznesa noteikumu dēļ lietotājs šeit labo tikai tekstu.
                      Ierīces piesaiste, saņēmējs un statusi paliek nemainīgi un tiek kontrolēti backendā. --}}
-                <textarea name="{{ $fieldName }}" rows="7" class="crud-control" required>{{ old($fieldName, (string) ($requestModel->{$fieldName} ?? '')) }}</textarea>
+                <textarea name="{{ $fieldName }}" rows="7" minlength="10" maxlength="2000" class="crud-control" required>{{ old($fieldName, (string) ($requestModel->{$fieldName} ?? '')) }}</textarea>
                 @error($fieldName)
                     @if (old('modal_form') === $modalForm)
                         <div class="mt-2 text-sm text-rose-600">{{ $message }}</div>

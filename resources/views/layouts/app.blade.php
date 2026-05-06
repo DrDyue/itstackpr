@@ -92,6 +92,41 @@
             </div>
         @endif
 
+        @if ($errors->any())
+            @php
+                $validationErrorCount = $errors->count();
+                $validationProblemWord = $validationErrorCount === 1
+                    ? 'problēma'
+                    : ($validationErrorCount >= 2 && $validationErrorCount <= 9 ? 'problēmas' : 'problēmu');
+            @endphp
+            <div x-data="{ open: true }" x-init="setTimeout(() => open = false, 5200)" class="pointer-events-none flex flex-col">
+                <div
+                    x-cloak
+                    x-show="open"
+                    x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="translate-y-5 scale-[0.96] opacity-0"
+                    x-transition:enter-end="translate-y-0 scale-100 opacity-100"
+                    x-transition:leave="transition ease-in duration-250"
+                    x-transition:leave-start="translate-y-0 scale-100 opacity-100"
+                    x-transition:leave-end="translate-y-4 scale-[0.97] opacity-0"
+                    class="flash-toast flash-toast-error"
+                >
+                    <div class="flash-toast-icon">
+                        <x-icon name="exclamation-triangle" size="h-4 w-4" />
+                    </div>
+                    <div class="flash-toast-body">
+                        <div class="flash-toast-title">Forma nav saglabāta</div>
+                        <div class="flash-toast-message">
+                            Atrastas {{ $validationErrorCount }} {{ $validationProblemWord }}. {{ $errors->first() }}
+                        </div>
+                    </div>
+                    <button type="button" class="flash-toast-close" @click="open = false" aria-label="Aizvērt">
+                        <x-icon name="x-mark" size="h-4 w-4" />
+                    </button>
+                </div>
+            </div>
+        @endif
+
         @auth
             {{-- Šeit frontend polling režīmā saņem un attēlo toast paziņojumus. --}}
             @php

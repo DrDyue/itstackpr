@@ -500,7 +500,7 @@ class RepairController extends Controller
     {
         $validated = $this->validateInput($request, [
             'device_id' => ['required', 'exists:devices,id'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'max:2000'],
             'repair_type' => ['required', Rule::in(self::TYPES)],
             'priority' => ['nullable', Rule::in(self::PRIORITIES)],
             'cost' => ['nullable', 'numeric', 'min:0'],
@@ -511,6 +511,7 @@ class RepairController extends Controller
         ], [
             'device_id.required' => 'Izvēlies ierīci remonta ierakstam.',
             'description.required' => 'Apraksti remonta darbu vai problēmu.',
+            'description.max' => 'Apraksts nedrīkst pārsniegt 2000 rakstzīmes.',
             'repair_type.required' => 'Izvēlies remonta tipu.',
         ]);
 
