@@ -364,9 +364,13 @@ class DeviceTransferController extends Controller
             return back()->with('error', 'Ierīču nodošanas pieteikumu tabula šobrīd nav pieejama.');
         }
 
+        // Nodošanu drīkst izskatīt tikai saņēmējs, kuram ierīce tiek nodota.
+        // Tas neļauj citam lietotājam apstiprināt svešu pieteikumu un pārrakstīt ierīci uz sevi.
         $canReview = (int) $deviceTransfer->transfered_to_id === (int) $reviewer->id;
         abort_unless($canReview, 403);
 
+        // Pieteikums ir vienreizējs lēmums. Pēc apstiprināšanas vai noraidīšanas
+        // to vairs nedrīkst apstrādāt atkārtoti, jo tas mainītu ierīces atbildīgo.
         if ($deviceTransfer->status !== DeviceTransfer::STATUS_SUBMITTED) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Šis pieteikums jau ir izskatīts.'], 409);
@@ -375,6 +379,8 @@ class DeviceTransferController extends Controller
             return back()->with('error', 'Šis pieteikums jau ir izskatīts.');
         }
 
+        // Ja forma nesūta telpas izvēli, noklusēti saglabājam esošo telpu.
+        // Tas ir svarīgi nodošanām, kur mainās tikai atbildīgais lietotājs, nevis ierīces atrašanās vieta.
         $keepCurrentRoom = ! $request->exists('keep_current_room') || $request->boolean('keep_current_room');
 
         $validated = $this->validateInput($request, [
@@ -399,6 +405,8 @@ class DeviceTransferController extends Controller
         // Nodošanas lēmums un ierīces atbildīgā maiņa ir viena biznesa darbība.
         // Transakcija pasargā no situācijas, kur pieteikums ir apstiprināts, bet ierīce vēl nav pārrakstīta.
         DB::transaction(function () use ($validated, $deviceTransfer, $reviewer, $keepCurrentRoom, &$previousAssignedUserId) {
+            // Vispirms saglabājam pašu lēmumu par pieteikumu.
+            // Ja lēmums ir noraidījums, tālāk ierīces dati netiek mainīti.
             $deviceTransfer->update([
                 'status' => $validated['status'],
                 'reviewed_by_user_id' => $reviewer->id,
@@ -419,6 +427,8 @@ class DeviceTransferController extends Controller
                 ]);
             }
 
+            // Vecais atbildīgais tiek paturēts paziņojumu loģikai:
+            // pēc nodošanas sistēma var saprast, vai ierīce tiešām ieguva jaunu lietotāju.
             $previousAssignedUserId = $device->assigned_to_id ? (int) $device->assigned_to_id : null;
             $targetRoom = null;
 
@@ -444,6 +454,8 @@ class DeviceTransferController extends Controller
                 'building_id' => $targetRoom?->building_id ?? $device->building_id,
             ]);
 
+            // Saglabāšana pabeidz nodošanas biznesa darbību: pēc šīs vietas ierīces kartītē
+            // redzams jaunais atbildīgais un, ja izvēlēts, arī jaunā telpa/ēka.
             $device->save();
         });
 

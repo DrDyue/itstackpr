@@ -67,6 +67,9 @@ class AuditTrail
         string $severity = 'info'
     ): void {
         try {
+            // Šī ir centralizētā audita ieejas vieta.
+            // Kontrolieri izsauc AuditTrail palīgmetodes, bet tieši šeit visi notikumi
+            // tiek pārvērsti vienotā audit_log ierakstā ar lietotāju, darbību, objektu un smaguma pakāpi.
             // Audita rakstīšana nedrīkst apstādināt galveno biznesa darbību.
             // Ja audit_log tabula vai inserts īslaicīgi nav pieejams, sistēma turpina pamatplūsmu.
             AuditLog::create([
@@ -128,6 +131,9 @@ class AuditTrail
         ?string $description = null,
         ?string $severity = null
     ): void {
+        // Pirms un pēc stāvokļa salīdzināšana ļauj auditā parādīt konkrēti mainītos laukus.
+        // Tas ir vērtīgāk nekā vispārīgs teksts "ieraksts atjaunināts", jo administrators
+        // vēlāk var saprast, kas tieši tika mainīts.
         $changes = self::changesFromState($before, $after, $ignoredFields);
 
         self::updated(

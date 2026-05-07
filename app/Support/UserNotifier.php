@@ -186,11 +186,15 @@ class UserNotifier
     private function notify(?int $userId, array $payload): void
     {
         if (! $userId) {
+            // Dažiem sistēmas notikumiem var nebūt konkrēta saņēmēja.
+            // Tādā gadījumā paziņojumu neveidojam, lai datubāzē nebūtu nederīgu ierakstu.
             return;
         }
 
         // Šajā līmenī saglabājam jau gatavu, frontendam paredzētu struktūru,
         // lai UI vēlāk var vienādi renderēt dažādu tipu notikumus.
+        // Vieni un tie paši dati tiek izmantoti gan īsajam toast paziņojumam,
+        // gan pilnajam paziņojumu centram navigācijā.
         UserNotification::query()->create([
             'user_id' => $userId,
             'type' => $payload['type'],
@@ -251,6 +255,9 @@ class UserNotifier
      */
     private function canStore(): bool
     {
+        // Šo pārbaudi izmanto publiskās paziņojumu metodes pirms notify().
+        // Ja migrācija nav palaista, sistēma izlaiž paziņojumu saglabāšanu,
+        // bet lietotāja galvenā darbība, piemēram pieteikuma apstiprināšana, turpinās.
         return Schema::hasTable('user_notifications');
     }
 }

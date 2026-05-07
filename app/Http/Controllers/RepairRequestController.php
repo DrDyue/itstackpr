@@ -316,6 +316,9 @@ class RepairRequestController extends Controller
      */
     public function review(Request $request, RepairRequest $repairRequest)
     {
+        // Kontroliera sākumā tiek noteikts lēmuma pieņēmējs.
+        // Šī metode nav parasts lietotāja labojums: tā maina ierīces dzīves ciklu,
+        // tāpēc to drīkst izpildīt tikai vadītāja/administratora līmeņa lietotājs.
         $manager = $this->requireManager();
 
         if (! $this->featureTableExists('repair_requests')) {
@@ -326,6 +329,9 @@ class RepairRequestController extends Controller
             return back()->with('error', 'Remonta pieteikumu tabula šobrīd nav pieejama.');
         }
 
+        // Atkārtotu izskatīšanu bloķējam pirms transakcijas.
+        // Tas pasargā no situācijas, kur jau apstiprināts vai noraidīts pieteikums
+        // vēlreiz izveidotu papildu remonta ierakstu.
         if ($repairRequest->status !== RepairRequest::STATUS_SUBMITTED) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Šis pieteikums jau ir izskatīts.'], 409);
@@ -334,6 +340,8 @@ class RepairRequestController extends Controller
             return back()->with('error', 'Šis pieteikums jau ir izskatīts.');
         }
 
+        // Lēmums tiek validēts pret sistēmā atļautajiem statusiem, nevis uzticēts
+        // formas ievadei. Tādā veidā backend pusē nevar iesūtīt neparedzētu statusu.
         $validated = $this->validateInput($request, [
             'status' => ['required', Rule::in([RepairRequest::STATUS_APPROVED, RepairRequest::STATUS_REJECTED])],
         ], [
@@ -365,6 +373,8 @@ class RepairRequestController extends Controller
                     ]);
                 }
 
+                // Papildu biznesa drošība: pat ja ierīce nav norakstīta, tai nedrīkst
+                // vienlaikus būt vairāki aktīvi remonta procesi.
                 if ($device->repairs()->whereIn('status', ['waiting', 'in-progress'])->exists()) {
                     throw ValidationException::withMessages([
                         'status' => ['Šai ierīcei jau ir aktīvs remonta ieraksts.'],
@@ -394,11 +404,15 @@ class RepairRequestController extends Controller
                 // un sarakstos tiek rādīta kā remontā esoša.
                 $device->forceFill(['status' => 'repair'])->save();
 
+                // Dažās instalācijās repair_id kolonna var būt pievienota ar jaunāku migrāciju.
+                // Pārbaude ļauj kodam strādāt arī tad, ja vecāka datubāze vēl nav pilnībā atjaunota.
                 if (array_key_exists('repair_id', $repairRequest->getAttributes())) {
                     $payload['repair_id'] = $createdRepair->id;
                 }
             }
 
+            // Pieteikuma ierakstu atjauninām tajā pašā transakcijā, kurā izveidojām remontu.
+            // Ja kāda iepriekšējā pārbaude izgāžas, arī pieteikums nepaliek kļūdaini apstiprināts.
             $repairRequest->update($payload);
         });
 

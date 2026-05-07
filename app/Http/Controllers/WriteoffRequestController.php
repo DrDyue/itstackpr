@@ -316,6 +316,8 @@ class WriteoffRequestController extends Controller
      */
     public function review(Request $request, WriteoffRequest $writeoffRequest)
     {
+        // Norakstīšana ir administratīvs lēmums, jo tā izņem ierīci no aktīvas aprites.
+        // Tāpēc pirms jebkādas datu maiņas pārbaudām vadītāja tiesības.
         $manager = $this->requireManager();
 
         if (! $this->featureTableExists('writeoff_requests')) {
@@ -326,6 +328,8 @@ class WriteoffRequestController extends Controller
             return back()->with('error', 'Norakstīšanas pieteikumu tabula šobrīd nav pieejama.');
         }
 
+        // Norakstīšanas pieteikumu izskata tikai vienu reizi.
+        // Atkārtota apstiprināšana varētu vēlreiz pārvietot ierīci vai sagrozīt audita vēsturi.
         if ($writeoffRequest->status !== WriteoffRequest::STATUS_SUBMITTED) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Šis pieteikums jau ir izskatīts.'], 409);
@@ -365,6 +369,8 @@ class WriteoffRequestController extends Controller
                 ]);
             }
 
+            // Norakstīt drīkst tikai aktīvu ierīci bez aktīva remonta.
+            // Tas novērš konfliktu starp divām dzīves cikla plūsmām: remontu un norakstīšanu.
             if ($device->status !== Device::STATUS_ACTIVE || $device->activeRepair()->exists()) {
                 throw ValidationException::withMessages([
                     'status' => ['Norakstīt var tikai aktīvu ierīci bez aktīva remonta procesā.'],
@@ -500,6 +506,8 @@ class WriteoffRequestController extends Controller
      */
     private function writeoffWarehousePayload(?int $preferredUserId = null): array
     {
+        // Šī palīgmetode atdala norakstīšanas pieteikuma loģiku no noliktavas datu sagatavošanas.
+        // Rezultātā review() metodē paliek skaidrs biznesa solis: nomainīt statusu un pārvietot ierīci.
         $warehouseRoom = $this->ensureWarehouseRoom($preferredUserId);
 
         return [
@@ -518,6 +526,9 @@ class WriteoffRequestController extends Controller
      */
     private function ensureWarehouseRoom(?int $preferredUserId = null): Room
     {
+        // Vispirms mēģinām izmantot jau esošu noliktavas telpu.
+        // Meklēšana notiek vairākos laukos, jo reālā datubāzē "noliktava" var būt ierakstīta
+        // kā telpas nosaukums, numurs vai piezīme.
         $warehouseRoom = Room::query()
             ->with('building')
             ->get()
@@ -528,9 +539,12 @@ class WriteoffRequestController extends Controller
             });
 
         if ($warehouseRoom) {
+            // Ja noliktava jau atrasta, jaunu telpu neveidojam, lai sistēmā nerastos dublikāti.
             return $warehouseRoom;
         }
 
+        // Ja noliktavas telpas vēl nav, sistēma pati sagatavo minimālo atrašanās vietu.
+        // Tas nozīmē, ka norakstīšana var strādāt arī tukšākā vai tikko uzstādītā datubāzē.
         $building = $this->preferredWarehouseBuilding();
 
         return Room::query()->create([
