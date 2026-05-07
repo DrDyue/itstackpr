@@ -7,6 +7,7 @@ const asyncTableControllers = new Map();
 const asyncTableDebounceTimers = new WeakMap();
 const searchableSelectSubmitTimers = new WeakMap();
 const asyncTableFragmentCache = new Map();
+const manualTableSearchControllers = new Map();
 const TABLE_SEARCH_ROW_SELECTOR = '[data-table-search-value], [data-table-code]';
 let tableSearchNavigatorState = null;
 let tableSearchNavigatorElement = null;
@@ -261,7 +262,30 @@ const cancelPendingAsyncTableWork = (form) => {
     if (controller) {
         controller.abort();
         asyncTableControllers.delete(rootSelector);
+        setAsyncTableLoading(rootSelector, false);
     }
+};
+
+const cancelPendingManualTableSearch = (rootSelector) => {
+    if (!rootSelector) {
+        return;
+    }
+
+    manualTableSearchControllers.get(rootSelector)?.abort();
+    manualTableSearchControllers.delete(rootSelector);
+};
+
+const resetManualTableSearchController = (rootSelector) => {
+    if (!rootSelector) {
+        return null;
+    }
+
+    cancelPendingManualTableSearch(rootSelector);
+
+    const controller = new AbortController();
+    manualTableSearchControllers.set(rootSelector, controller);
+
+    return controller;
 };
 
 const getAlpineComponentData = (element) => {
@@ -957,6 +981,11 @@ const performManualTableSearch = async (form) => {
         return false;
     }
 
+    // Manual lookup must win over pending filter debounce/fetch work. Otherwise a stale
+    // table response can replace the highlighted search result immediately after it loads.
+    cancelPendingAsyncTableWork(form);
+    cancelPendingManualTableSearch(rootSelector);
+
     const root = document.querySelector(rootSelector);
     if (!root) {
         return false;
@@ -1057,6 +1086,8 @@ const performManualTableSearch = async (form) => {
         return true;
     }
 
+    const manualSearchController = resetManualTableSearchController(rootSelector);
+
     try {
         // Ātrākajiem skatiem backend atdod precīzu lapu un rindas identifikatoru,
         // tāpēc nav jāpārlasa visi lapotie HTML fragmenti pārlūkā.
@@ -1069,6 +1100,7 @@ const performManualTableSearch = async (form) => {
                 Accept: 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
             },
+            signal: manualSearchController?.signal,
         });
 
         if (!response.ok) {
@@ -1123,11 +1155,17 @@ const performManualTableSearch = async (form) => {
 
         window.location.assign(targetUrl.toString());
     } catch (error) {
-        window.dispatchAppToast({
-            title: 'Meklēšana neizdevās',
-            message: 'Neizdevās atrast ierakstu. Mēģini vēlreiz.',
-            tone: 'error',
-        });
+        if (error.name !== 'AbortError') {
+            window.dispatchAppToast({
+                title: 'Meklēšana neizdevās',
+                message: 'Neizdevās atrast ierakstu. Mēģini vēlreiz.',
+                tone: 'error',
+            });
+        }
+    } finally {
+        if (manualTableSearchControllers.get(rootSelector) === manualSearchController) {
+            manualTableSearchControllers.delete(rootSelector);
+        }
     }
 
     return true;
