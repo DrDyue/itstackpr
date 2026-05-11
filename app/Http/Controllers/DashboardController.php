@@ -23,6 +23,8 @@ use Illuminate\View\View;
  */
 class DashboardController extends Controller
 {
+    private const DASHBOARD_DEVICES_PER_PAGE = 15;
+
     /**
      * Ko dara: Parāda darba virsmu vai parasto lietotāju novirza uz viņa ierīcēm.
      *
@@ -264,8 +266,10 @@ class DashboardController extends Controller
         // Ja ierīču tabula nav pieejama, informācijas panelis atgriež tukšu
         // kolekciju un neaptur visas sākumlapas ielādi.
         if (! $this->featureTableExists('devices')) {
+            $dashboardDevices = $this->emptyPaginator(self::DASHBOARD_DEVICES_PER_PAGE);
+
             return [
-                'dashboardDevices' => collect(),
+                'dashboardDevices' => $dashboardDevices,
                 'dashboardDeviceCount' => 0,
                 'dashboardDeviceStates' => [],
             ];
@@ -327,11 +331,13 @@ class DashboardController extends Controller
                 'pendingTransferRequest.transferTo:id,full_name',
             ])
             ->latest('devices.id')
-            ->get();
+            ->paginate(self::DASHBOARD_DEVICES_PER_PAGE)
+            ->withPath(route('dashboard.devices'))
+            ->withQueryString();
 
         // UI stāvokļus sagatavojam pēc ierīces ID, lai Blade skats var ātri
         // atrast remonta statusu, priekšskatījumu un gaidošā pieprasījuma badge.
-        $dashboardDeviceStates = $dashboardDevices
+        $dashboardDeviceStates = $dashboardDevices->getCollection()
             ->mapWithKeys(fn (Device $device) => [
                 $device->id => [
                     'repairStatusLabel' => $this->visibleRepairStatusLabel($device),
@@ -343,7 +349,7 @@ class DashboardController extends Controller
 
         return [
             'dashboardDevices' => $dashboardDevices,
-            'dashboardDeviceCount' => $dashboardDevices->count(),
+            'dashboardDeviceCount' => $dashboardDevices->total(),
             'dashboardDeviceStates' => $dashboardDeviceStates,
         ];
     }

@@ -189,6 +189,7 @@
                 room_id: @js($filters['room_id']),
                 sort: @js($sorting['sort']),
                 direction: @js($sorting['direction']),
+                page: @js((string) request()->query('page', '1')),
             },
             async fetchDevices(params = {}) {
                 this.isLoading = true;
@@ -222,22 +223,26 @@
                 }
             },
             filterByFloor(floorId) {
-                this.currentFilters = { ...this.currentFilters, floor: floorId, room_id: '' };
+                this.currentFilters = { ...this.currentFilters, floor: floorId, room_id: '', page: '1' };
                 this.updateActiveState(floorId, null);
                 this.fetchDevices();
             },
             filterByRoom(roomId, floorId) {
-                this.currentFilters = { ...this.currentFilters, floor: floorId, room_id: roomId };
+                this.currentFilters = { ...this.currentFilters, floor: floorId, room_id: roomId, page: '1' };
                 this.updateActiveState(floorId, roomId);
                 this.fetchDevices();
             },
             clearFilters() {
-                this.currentFilters = { ...this.currentFilters, floor: '', room_id: '' };
+                this.currentFilters = { ...this.currentFilters, floor: '', room_id: '', page: '1' };
                 this.updateActiveState(null, null);
                 this.fetchDevices();
             },
             sortBy(field, direction) {
-                this.currentFilters = { ...this.currentFilters, sort: field, direction };
+                this.currentFilters = { ...this.currentFilters, sort: field, direction, page: '1' };
+                this.fetchDevices();
+            },
+            goToPage(page) {
+                this.currentFilters = { ...this.currentFilters, page };
                 this.fetchDevices();
             },
             updateActiveState(floorId, roomId) {
@@ -274,6 +279,17 @@
                 sortTrigger.dataset.sortField || 'created_at',
                 sortTrigger.dataset.sortDirection || 'desc'
             );
+        });
+
+        document.addEventListener('click', (event) => {
+            const paginationLink = event.target.closest('#dashboard-devices-table [data-dashboard-pagination] a');
+            if (!paginationLink || !window.dashboardFilter) {
+                return;
+            }
+
+            event.preventDefault();
+            const page = new URL(paginationLink.href, window.location.origin).searchParams.get('page') || '1';
+            window.dashboardFilter.goToPage(page);
         });
     </script>
 </x-app-layout>

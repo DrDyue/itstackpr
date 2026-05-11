@@ -58,8 +58,8 @@ Route::middleware('auth')->group(function () {
         ->where('path', '.*')
         ->name('device-assets.show');
 
-    Route::resource('repairs', RepairController::class)->only(['index', 'show']);
     Route::get('/repairs/find-by-code', [RepairController::class, 'findByCode'])->name('repairs.find-by-code');
+    Route::resource('repairs', RepairController::class)->only(['index', 'show']);
 
     Route::get('/repair-requests', [RepairRequestController::class, 'index'])->name('repair-requests.index');
     Route::get('/repair-requests/find-by-code', [RepairRequestController::class, 'findByCode'])->name('repair-requests.find-by-code');

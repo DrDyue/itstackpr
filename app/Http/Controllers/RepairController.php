@@ -207,11 +207,12 @@ class RepairController extends Controller
         $this->applyIndexFilters($searchQuery, $filters);
         $this->applySorting($searchQuery, $sorting);
 
-        // Precīzs normalizēta koda salīdzinājums novērš daļējas sakritības, kas
-        // varētu izcelt nepareizu remonta rindu.
-        $repair = $searchQuery->first(function ($repair) use ($code) {
-            return mb_strtolower(trim((string) ($repair->device_code ?? ''))) === mb_strtolower($code);
-        });
+        // Precīzs normalizēta koda salīdzinājums jāveic SQL pusē. Eloquent Builder
+        // `first()` nepieņem callback, tāpēc Collection stila pārbaude šeit salauza
+        // ātro meklēšanu, kad frontend sauca `/repairs/find-by-code`.
+        $repair = $searchQuery
+            ->whereRaw('LOWER(TRIM(repair_search_device.code)) = ?', [mb_strtolower($code)])
+            ->first();
 
         if ($repair) {
             return response()->json([

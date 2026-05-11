@@ -223,4 +223,10 @@
             </tbody>
         </table>
     </div>
+
+    @if ($dashboardDevices->hasPages())
+        <div class="mt-4" data-dashboard-pagination>
+            {{ $dashboardDevices->links() }}
+        </div>
+    @endif
 </div>
